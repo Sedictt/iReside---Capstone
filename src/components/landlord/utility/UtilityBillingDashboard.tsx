@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -78,10 +78,136 @@ type ReadingSaveRequest = {
 	note: string;
 };
 
+function getPreviousMonthString(monthStr: string): string {
+	const [yearStr, monthStrPart] = monthStr.split("-");
+	const year = parseInt(yearStr, 10);
+	const month = parseInt(monthStrPart, 10);
+	if (month === 1) {
+		return `${year - 1}-12`;
+	}
+	return `${year}-${String(month - 1).padStart(2, "0")}`;
+}
+
+function resolvePreviousReading({
+	targetMonth,
+	unitId,
+	leaseId,
+	utilityType,
+	allReadings,
+	monthlyDrafts,
+}: {
+	targetMonth: string;
+	unitId: string;
+	leaseId: string | null;
+	utilityType: "water" | "electricity";
+	allReadings: any[];
+	monthlyDrafts: Record<string, ReadingDraft[]>;
+}): number {
+	// 1. Check in-memory drafts for prior months (iterating backwards from previous month)
+	let checkMonth = targetMonth;
+	for (let i = 0; i < 12; i++) {
+		checkMonth = getPreviousMonthString(checkMonth);
+		const draftsForMonth = monthlyDrafts[checkMonth];
+		if (draftsForMonth) {
+			const d = draftsForMonth.find(
+				(item) => item.unitId === unitId || (leaseId && item.leaseId === leaseId)
+			);
+			if (d) {
+				const util = utilityType === "water" ? d.water : d.electricity;
+				const parsed = parseFloat(util.current);
+				if (!isNaN(parsed) && parsed >= 0 && util.current.trim() !== "") {
+					return parsed;
+				}
+			}
+		}
+	}
+
+	// 2. Look in recorded readings strictly before targetMonth (chronological)
+	const priorReadings = (allReadings || [])
+		.filter((r: any) => {
+			const matchesUnit = r.unit_id === unitId || (leaseId && r.lease_id === leaseId);
+			const matchesType = r.utility_type === utilityType;
+			const periodStartMonth = (r.billing_period_start || "").slice(0, 7);
+			return matchesUnit && matchesType && periodStartMonth < targetMonth;
+		})
+		.sort((a: any, b: any) => {
+			const timeA = new Date(a.billing_period_end || a.billing_period_start || a.created_at).getTime();
+			const timeB = new Date(b.billing_period_end || b.billing_period_start || b.created_at).getTime();
+			return timeB - timeA; // Most recent prior reading first
+		});
+
+	if (priorReadings.length > 0) {
+		return Number(priorReadings[0].current_reading) || 0;
+	}
+
+	return 0;
+}
+
+function resolveUtilityItem({
+	targetMonth,
+	unitId,
+	leaseId,
+	utilityType,
+	readingsData,
+	allReadings,
+	monthlyDrafts,
+	rate,
+}: {
+	targetMonth: string;
+	unitId: string;
+	leaseId: string | null;
+	utilityType: "water" | "electricity";
+	readingsData: { readings?: any[] };
+	allReadings: any[];
+	monthlyDrafts: Record<string, ReadingDraft[]>;
+	rate: number;
+}) {
+	const currentReading = (readingsData?.readings || []).find(
+		(r: any) => (r.unit_id === unitId || (leaseId && r.lease_id === leaseId)) && r.utility_type === utilityType
+	);
+
+	const existingDraft = monthlyDrafts[targetMonth]?.find(
+		(d) => d.unitId === unitId || (leaseId && d.leaseId === leaseId)
+	);
+	const existingUtil = utilityType === "water" ? existingDraft?.water : existingDraft?.electricity;
+
+	const resolvedPrior = resolvePreviousReading({
+		targetMonth,
+		unitId,
+		leaseId,
+		utilityType,
+		allReadings,
+		monthlyDrafts,
+	});
+
+	if (currentReading) {
+		const recordedPrev = Number(currentReading.previous_reading) || 0;
+		return {
+			previous: recordedPrev > 0 ? recordedPrev : (resolvedPrior || 0),
+			current: currentReading.current_reading !== undefined && currentReading.current_reading !== null 
+				? currentReading.current_reading.toString() 
+				: (existingUtil?.current || ""),
+			exists: true,
+			rate,
+		};
+	}
+
+	return {
+		previous: existingUtil && existingUtil.previous !== undefined && existingUtil.previous !== 0 && resolvedPrior === 0
+			? existingUtil.previous
+			: resolvedPrior,
+		current: existingUtil?.current || "",
+		exists: false,
+		rate,
+	};
+}
+
 function buildDraftsFromWorkspace(
 	workspaceData: BillingWorkspace,
 	readingsData: { readings?: any[] },
-	allReadings: any[]
+	allReadings: any[],
+	targetMonth: string,
+	monthlyDrafts: Record<string, ReadingDraft[]> = {}
 ): ReadingDraft[] {
 	const draftsList: ReadingDraft[] = [];
 	const seenUnitIds = new Set<string>();
@@ -100,20 +226,6 @@ function buildDraftsFromWorkspace(
 				? "occupied"
 				: (unit.status === "maintenance" ? "maintenance" : "vacant");
 
-			const currentWater = (readingsData?.readings || []).find(
-				(r: any) => (r.unit_id === unit.id || (leaseId && r.lease_id === leaseId)) && r.utility_type === "water"
-			);
-			const currentElec = (readingsData?.readings || []).find(
-				(r: any) => (r.unit_id === unit.id || (leaseId && r.lease_id === leaseId)) && r.utility_type === "electricity"
-			);
-
-			const sortedWater = (allReadings || [])
-				.filter((r: any) => (r.unit_id === unit.id || (leaseId && r.lease_id === leaseId)) && r.utility_type === "water")
-				.sort((a: any, b: any) => new Date(b.billing_period_end).getTime() - new Date(a.billing_period_end).getTime());
-			const sortedElec = (allReadings || [])
-				.filter((r: any) => (r.unit_id === unit.id || (leaseId && r.lease_id === leaseId)) && r.utility_type === "electricity")
-				.sort((a: any, b: any) => new Date(b.billing_period_end).getTime() - new Date(a.billing_period_end).getTime());
-
 			const propertyWaterConfig = (workspaceData.utilityConfigs || []).find(
 				(c: any) => c.property_id === property.id && c.utility_type === "water" && c.unit_id === null
 			);
@@ -128,6 +240,9 @@ function buildDraftsFromWorkspace(
 				(c: any) => c.unit_id === unit.id && c.utility_type === "electricity"
 			);
 
+			const waterRate = unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0;
+			const elecRate = unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0;
+
 			draftsList.push({
 				unitId: unit.id,
 				unitName: unit.name || "Unknown Unit",
@@ -137,18 +252,26 @@ function buildDraftsFromWorkspace(
 				tenantName: activeLease?.tenant?.full_name || null,
 				occupancyStatus,
 				rentAmount: activeLease?.monthly_rent ?? unit.rent_amount ?? 0,
-				water: {
-					previous: currentWater ? currentWater.previous_reading : (sortedWater[0]?.current_reading || 0),
-					current: currentWater ? currentWater.current_reading.toString() : "",
-					exists: !!currentWater,
-					rate: unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0
-				},
-				electricity: {
-					previous: currentElec ? currentElec.previous_reading : (sortedElec[0]?.current_reading || 0),
-					current: currentElec ? currentElec.current_reading.toString() : "",
-					exists: !!currentElec,
-					rate: unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0
-				}
+				water: resolveUtilityItem({
+					targetMonth,
+					unitId: unit.id,
+					leaseId,
+					utilityType: "water",
+					readingsData,
+					allReadings,
+					monthlyDrafts,
+					rate: waterRate,
+				}),
+				electricity: resolveUtilityItem({
+					targetMonth,
+					unitId: unit.id,
+					leaseId,
+					utilityType: "electricity",
+					readingsData,
+					allReadings,
+					monthlyDrafts,
+					rate: elecRate,
+				}),
 			});
 		});
 	});
@@ -157,19 +280,6 @@ function buildDraftsFromWorkspace(
 	(workspaceData.activeLeases || []).forEach((lease: any) => {
 		if (lease.unit?.id && !seenUnitIds.has(lease.unit.id)) {
 			seenUnitIds.add(lease.unit.id);
-			const currentWater = (readingsData?.readings || []).find(
-				(r: any) => (r.unit_id === lease.unit.id || r.lease_id === lease.id) && r.utility_type === "water"
-			);
-			const currentElec = (readingsData?.readings || []).find(
-				(r: any) => (r.unit_id === lease.unit.id || r.lease_id === lease.id) && r.utility_type === "electricity"
-			);
-
-			const sortedWater = (allReadings || [])
-				.filter((r: any) => (r.unit_id === lease.unit.id || r.lease_id === lease.id) && r.utility_type === "water")
-				.sort((a: any, b: any) => new Date(b.billing_period_end).getTime() - new Date(a.billing_period_end).getTime());
-			const sortedElec = (allReadings || [])
-				.filter((r: any) => (r.unit_id === lease.unit.id || r.lease_id === lease.id) && r.utility_type === "electricity")
-				.sort((a: any, b: any) => new Date(b.billing_period_end).getTime() - new Date(a.billing_period_end).getTime());
 
 			const propertyWaterConfig = (workspaceData.utilityConfigs || []).find(
 				(c: any) => c.property_id === lease.property?.id && c.utility_type === "water" && c.unit_id === null
@@ -185,6 +295,9 @@ function buildDraftsFromWorkspace(
 				(c: any) => c.unit_id === lease.unit?.id && c.utility_type === "electricity"
 			);
 
+			const waterRate = unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0;
+			const elecRate = unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0;
+
 			draftsList.push({
 				unitId: lease.unit.id,
 				unitName: lease.unit.name || "Unknown Unit",
@@ -194,18 +307,26 @@ function buildDraftsFromWorkspace(
 				tenantName: lease.tenant?.full_name || null,
 				occupancyStatus: "occupied",
 				rentAmount: lease.monthly_rent || 0,
-				water: {
-					previous: currentWater ? currentWater.previous_reading : (sortedWater[0]?.current_reading || 0),
-					current: currentWater ? currentWater.current_reading.toString() : "",
-					exists: !!currentWater,
-					rate: unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0
-				},
-				electricity: {
-					previous: currentElec ? currentElec.previous_reading : (sortedElec[0]?.current_reading || 0),
-					current: currentElec ? currentElec.current_reading.toString() : "",
-					exists: !!currentElec,
-					rate: unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0
-				}
+				water: resolveUtilityItem({
+					targetMonth,
+					unitId: lease.unit.id,
+					leaseId: lease.id,
+					utilityType: "water",
+					readingsData,
+					allReadings,
+					monthlyDrafts,
+					rate: waterRate,
+				}),
+				electricity: resolveUtilityItem({
+					targetMonth,
+					unitId: lease.unit.id,
+					leaseId: lease.id,
+					utilityType: "electricity",
+					readingsData,
+					allReadings,
+					monthlyDrafts,
+					rate: elecRate,
+				}),
 			});
 		}
 	});
@@ -258,6 +379,31 @@ export function UtilityBillingDashboard() {
 	// Unit Detail View State
 	const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
 	const [drafts, setDrafts] = useState<ReadingDraft[]>([]);
+	const monthlyDraftsRef = useRef<Record<string, ReadingDraft[]>>({});
+	const allReadingsRef = useRef<any[]>([]);
+
+	// Hydrate in-memory drafts cache from offline storage on mount
+	useEffect(() => {
+		try {
+			const cached = OfflineStorage.get<Record<string, ReadingDraft[]>>("utility_monthly_drafts")?.data;
+			if (cached && typeof cached === "object") {
+				monthlyDraftsRef.current = cached;
+			}
+		} catch (e) {
+			console.warn("Failed to load cached monthly drafts", e);
+		}
+	}, []);
+
+	// Helper to update both state and monthly draft cache
+	const updateDraftsAndCache = useCallback((newDrafts: ReadingDraft[]) => {
+		setDrafts(newDrafts);
+		monthlyDraftsRef.current[selectedMonth] = newDrafts;
+		try {
+			OfflineStorage.set("utility_monthly_drafts", monthlyDraftsRef.current, null, "utility");
+		} catch (e) {
+			// Storage quota safety
+		}
+	}, [selectedMonth]);
 
 	const fetchData = useCallback(async () => {
 		try {
@@ -266,8 +412,8 @@ export function UtilityBillingDashboard() {
 			// Attempt live fetch if online
 			if (typeof navigator !== "undefined" && navigator.onLine) {
 				const [workspaceRes, readingsRes] = await Promise.all([
-					fetch("/api/landlord/payment-settings"),
-					fetch(`/api/landlord/utility-readings?month=${selectedMonth}`)
+					fetch("/api/landlord/payment-settings", { cache: "no-store" }),
+					fetch(`/api/landlord/utility-readings?month=${selectedMonth}&_t=${Date.now()}`, { cache: "no-store" })
 				]);
 
 				if (workspaceRes.ok && readingsRes.ok) {
@@ -275,17 +421,25 @@ export function UtilityBillingDashboard() {
 					const readingsData = await readingsRes.json();
 					setWorkspace(workspaceData);
 
-					const latestRes = await fetch("/api/landlord/utility-readings");
+					const latestRes = await fetch(`/api/landlord/utility-readings?_t=${Date.now()}`, { cache: "no-store" });
 					const latestData = latestRes.ok ? await latestRes.json() : { readings: [] };
 					const allReadings = latestData.readings || [];
+					allReadingsRef.current = allReadings;
 
 					// Cache snapshots locally for offline use
 					OfflineStorage.set("utility_workspace", workspaceData, null, "utility");
 					OfflineStorage.set(`utility_readings_${selectedMonth}`, readingsData, null, "utility");
 					OfflineStorage.set("utility_all_readings", latestData, null, "utility");
 
-					const newDrafts = buildDraftsFromWorkspace(workspaceData, readingsData, allReadings);
+					const newDrafts = buildDraftsFromWorkspace(
+						workspaceData,
+						readingsData,
+						allReadings,
+						selectedMonth,
+						monthlyDraftsRef.current
+					);
 					setDrafts(newDrafts);
+					monthlyDraftsRef.current[selectedMonth] = newDrafts;
 					return;
 				} else {
 					console.warn("[UtilityBilling] Live fetch incomplete:", {
@@ -308,11 +462,19 @@ export function UtilityBillingDashboard() {
 				const workspaceData = cachedWorkspace.data;
 				const readingsData = cachedReadings?.data || { readings: [] };
 				const allReadings = cachedAllReadings?.data?.readings || [];
+				allReadingsRef.current = allReadings;
 
 				setWorkspace(workspaceData);
 
-				const newDrafts = buildDraftsFromWorkspace(workspaceData, readingsData, allReadings);
+				const newDrafts = buildDraftsFromWorkspace(
+					workspaceData,
+					readingsData,
+					allReadings,
+					selectedMonth,
+					monthlyDraftsRef.current
+				);
 				setDrafts(newDrafts);
+				monthlyDraftsRef.current[selectedMonth] = newDrafts;
 				if (typeof navigator !== "undefined" && !navigator.onLine) {
 					toast.info("Offline Mode: Hydrated utility records and tariffs from local cache.");
 				}
@@ -514,11 +676,12 @@ export function UtilityBillingDashboard() {
 				`Recorded ${toSave.length} sub-meter readings offline`
 			);
 
-			setDrafts(prev => prev.map(d => ({
+			const updated = drafts.map(d => ({
 				...d,
 				water: { ...d.water, exists: d.water.current !== "" ? true : d.water.exists },
 				electricity: { ...d.electricity, exists: d.electricity.current !== "" ? true : d.electricity.exists },
-			})));
+			}));
+			updateDraftsAndCache(updated);
 
 			toast.success(`Saved ${toSave.length} readings locally! They will sync automatically when reconnected.`);
 			return;
@@ -551,12 +714,13 @@ export function UtilityBillingDashboard() {
 				toast.success(`Successfully saved ${toSave.length} submeter readings as draft`);
 			}
 
-			// Optimistically mark recorded in local state
-			setDrafts(prev => prev.map(d => ({
+			// Optimistically mark recorded in local state and cache
+			const updated = drafts.map(d => ({
 				...d,
 				water: { ...d.water, exists: d.water.current !== "" ? true : d.water.exists },
 				electricity: { ...d.electricity, exists: d.electricity.current !== "" ? true : d.electricity.exists },
-			})));
+			}));
+			updateDraftsAndCache(updated);
 
 			await fetchData();
 			await fetchPendingInvoices();
@@ -571,11 +735,12 @@ export function UtilityBillingDashboard() {
 					{ readings: toSave, postInvoices, month: selectedMonth },
 					`Recorded ${toSave.length} sub-meter readings offline`
 				);
-				setDrafts(prev => prev.map(d => ({
+				const updated = drafts.map(d => ({
 					...d,
 					water: { ...d.water, exists: d.water.current !== "" ? true : d.water.exists },
 					electricity: { ...d.electricity, exists: d.electricity.current !== "" ? true : d.electricity.exists },
-				})));
+				}));
+				updateDraftsAndCache(updated);
 				toast.success(`Saved ${toSave.length} readings offline! Will sync upon reconnection.`);
 			} else {
 				console.error("[UtilityBilling] Save error:", err);
@@ -792,7 +957,25 @@ export function UtilityBillingDashboard() {
 
 					<MonthPicker
 						value={selectedMonth}
-						onChange={(newMonth) => setSelectedMonth(newMonth)}
+						onChange={(newMonth) => {
+							if (newMonth === selectedMonth) return;
+							monthlyDraftsRef.current[selectedMonth] = drafts;
+							try {
+								OfflineStorage.set("utility_monthly_drafts", monthlyDraftsRef.current, null, "utility");
+							} catch (e) {}
+
+							if (workspace) {
+								const optimisticDrafts = buildDraftsFromWorkspace(
+									workspace,
+									{ readings: [] },
+									allReadingsRef.current,
+									newMonth,
+									monthlyDraftsRef.current
+								);
+								setDrafts(optimisticDrafts);
+							}
+							setSelectedMonth(newMonth);
+						}}
 						className={cn(activeTab !== "readings" && "ml-auto lg:ml-0")}
 						align="right"
 					/>
@@ -943,8 +1126,10 @@ export function UtilityBillingDashboard() {
 																			onChange={(e) => {
 																				const newDrafts = [...drafts];
 																				const index = drafts.findIndex(d => d.unitId === draft.unitId);
-																				newDrafts[index] = { ...newDrafts[index], water: { ...draft.water, current: e.target.value } };
-																				setDrafts(newDrafts);
+																				if (index !== -1) {
+																					newDrafts[index] = { ...newDrafts[index], water: { ...draft.water, current: e.target.value } };
+																					updateDraftsAndCache(newDrafts);
+																				}
 																			}}
 																			className="w-24 h-8 rounded-lg border border-border/70 bg-background/80 px-2.5 py-1 text-center font-mono text-xs font-semibold text-sky-400 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 transition-all"
 																		/>
@@ -980,8 +1165,10 @@ export function UtilityBillingDashboard() {
 																			onChange={(e) => {
 																				const newDrafts = [...drafts];
 																				const index = drafts.findIndex(d => d.unitId === draft.unitId);
-																				newDrafts[index] = { ...newDrafts[index], electricity: { ...draft.electricity, current: e.target.value } };
-																				setDrafts(newDrafts);
+																				if (index !== -1) {
+																					newDrafts[index] = { ...newDrafts[index], electricity: { ...draft.electricity, current: e.target.value } };
+																					updateDraftsAndCache(newDrafts);
+																				}
 																			}}
 																			className="w-24 h-8 rounded-lg border border-border/70 bg-background/80 px-2.5 py-1 text-center font-mono text-xs font-semibold text-amber-400 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all"
 																		/>
@@ -1301,7 +1488,7 @@ export function UtilityBillingDashboard() {
 					const idx = newDrafts.findIndex(d => d.unitId === selectedUnitId || (d.leaseId && d.leaseId === selectedUnitId));
 					if (idx !== -1) {
 						newDrafts[idx] = { ...newDrafts[idx], ...patch };
-						setDrafts(newDrafts);
+						updateDraftsAndCache(newDrafts);
 					}
 				}}
 				onSave={() => {
