@@ -150,6 +150,14 @@ export function CommandCenter({
                 cta: "View unit map",
                 urgency: "low",
             },
+        {
+            id: "utility-billing",
+            title: "Record Monthly Submeters",
+            detail: "Record water and electric readings to post utility charges to invoices.",
+            href: "/landlord/utility-billing",
+            cta: "Record submeters",
+            urgency: "low",
+        },
     ];
 
     return (
@@ -242,6 +250,13 @@ export function CommandCenter({
                                 href: "/landlord/invoices", 
                                 color: "text-blue-400",
                                 description: "Track rental payments, monitor pending balances, and issue invoices."
+                            },
+                            { 
+                                label: "Utility Submeters", 
+                                icon: Zap, 
+                                href: "/landlord/utility-billing", 
+                                color: "text-amber-400",
+                                description: "Record water & electric readings, calculate usage, and post invoice updates."
                             },
                             { 
                                 label: "Tenant Records", 

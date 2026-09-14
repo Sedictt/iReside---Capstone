@@ -19,6 +19,7 @@ import {
     MessageSquare,
     FolderOpen,
     RefreshCw,
+    Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { PaymentModal } from "@/components/landlord/dashboard/PaymentModal";
@@ -462,6 +463,39 @@ export default function LandlordDashboard() {
                                 </div>
                             );
                         })}
+                    </div>
+                </section>
+
+                {/* Monthly Utility Billing Cycle Section */}
+                <section className="relative z-0 h-auto w-full rounded-[2.5rem] p-4 sm:p-6 md:p-8 neumorphic-panel outline-none focus-within:ring-2 focus-within:ring-primary/20 transition-all" tabIndex={-1} aria-labelledby="utility-heading">
+                    <div className="flex flex-wrap items-center justify-between gap-4 px-2">
+                        <div className="flex min-w-0 items-center gap-4">
+                            <div className="flex size-14 items-center justify-center rounded-[1.25rem] neumorphic-inset-card text-amber-500 shrink-0 transition-transform hover:scale-105">
+                                <Zap className="size-6" aria-hidden="true" />
+                            </div>
+                            <div>
+                                <h2 id="utility-heading" className="text-2xl font-black tracking-tight text-foreground">Utility Submeters</h2>
+                                <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 mt-1">Record monthly water & power readings, compute exact consumption, and update active invoices.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Link 
+                                href="/landlord/utility-billing?tab=verify" 
+                                className="group shrink-0 flex items-center gap-2 rounded-xl px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
+                                aria-label="Verify pending utility and invoice payments"
+                            >
+                                Verify Queue
+                                <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                            </Link>
+                            <Link 
+                                href="/landlord/utility-billing" 
+                                className="group shrink-0 flex items-center gap-2 rounded-xl px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-bold bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95 transition-all"
+                                aria-label="Open utility billing to record readings"
+                            >
+                                <Zap className="size-3.5" />
+                                Record Readings
+                            </Link>
+                        </div>
                     </div>
                 </section>
 

@@ -1,93 +1,123 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 import { 
- Zap, 
- Droplets, 
- Search, 
- Save, 
- History, 
- Settings2, 
- Loader2,
- Building2,
- AlertCircle,
- Edit3,
- X,
- Camera,
- DollarSign,
- Check,
- ArrowUpRight,
- Trash2,
- BarChart3,
- Calendar
+	Zap, 
+	Droplets, 
+	Search, 
+	Save, 
+	History, 
+	Settings2, 
+	Loader2,
+	Building2,
+	AlertCircle,
+	Edit3,
+	X,
+	Camera,
+	DollarSign,
+	Check,
+	ArrowUpRight,
+	Trash2,
+	BarChart3,
+	Calendar,
+	Send,
+	ShieldCheck,
+	CheckCircle2,
+	Clock,
+	FileText,
+	QrCode,
+	ChevronRight,
+	ExternalLink
 } from "lucide-react";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useProperty } from "@/context/PropertyContext";
-import type { BillingWorkspace } from "@/lib/billing/server";
+import type { BillingWorkspace, InvoiceListItem } from "@/lib/billing/server";
 import { BillingOperationsPanel } from "@/components/landlord/BillingOperationsPanel";
+import { InvoiceModal } from "@/components/landlord/invoices/InvoiceModal";
 import { OfflineStorage } from "@/lib/offline/offlineStorage";
 import { mutationQueue } from "@/lib/offline/mutationQueue";
 
 type ReadingDraft = {
- leaseId: string;
- unitName: string;
- propertyId: string;
- rentAmount: number;
- water: {
- previous: number;
- current: string;
- exists: boolean;
- rate: number;
- };
- electricity: {
- previous: number;
- current: string;
- exists: boolean;
- rate: number;
- };
+	leaseId: string;
+	unitName: string;
+	propertyId: string;
+	rentAmount: number;
+	water: {
+		previous: number;
+		current: string;
+		exists: boolean;
+		rate: number;
+	};
+	electricity: {
+		previous: number;
+		current: string;
+		exists: boolean;
+		rate: number;
+	};
 };
 
 type ReadingSaveRequest = {
- leaseId: string;
- utilityType: string;
- billingPeriodStart: string;
- billingPeriodEnd: string;
- previousReading: number;
- currentReading: number;
- note: string;
+	leaseId: string;
+	utilityType: string;
+	billingPeriodStart: string;
+	billingPeriodEnd: string;
+	previousReading: number;
+	currentReading: number;
+	note: string;
 };
 
 export function UtilityBillingDashboard() {
- const { selectedPropertyId: globalPropertyId } = useProperty();
- const [activeTab, setActiveTab] = useState<"readings" | "rates" | "payments" | "history">("readings");
- const [workspace, setWorkspace] = useState<BillingWorkspace | null>(null);
- const [loading, setLoading] = useState(true);
- const [saving, setSaving] = useState(false);
- const [searchQuery, setSearchQuery] = useState("");
- const [selectedPropertyId, setSelectedPropertyId] = useState<string>("all");
- const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
- const [selectedHistoryMonth, setSelectedHistoryMonth] = useState<string | null>(null);
+	const searchParams = useSearchParams();
+	const { selectedPropertyId: globalPropertyId } = useProperty();
+	const [activeTab, setActiveTab] = useState<"readings" | "verify" | "rates" | "history">("readings");
+	const [workspace, setWorkspace] = useState<BillingWorkspace | null>(null);
+	const [loading, setLoading] = useState(true);
+	const [saving, setSaving] = useState(false);
+	const [searchQuery, setSearchQuery] = useState("");
+	const [selectedPropertyId, setSelectedPropertyId] = useState<string>("all");
+	const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+	const [selectedHistoryMonth, setSelectedHistoryMonth] = useState<string | null>(null);
 
- // History summary data per month
- type MonthSummary = { totalElec: number; totalWater: number; readingCount: number };
- const [historySummaries, setHistorySummaries] = useState<Record<string, MonthSummary>>({});
- const [historySummariesLoading, setHistorySummariesLoading] = useState(false);
- 
- // Sync local property selection with global navbar selector
- useEffect(() => {
- setSelectedPropertyId(globalPropertyId);
- }, [globalPropertyId]);
- 
- // Unit Detail View State
- const [selectedLeaseId, setSelectedLeaseId] = useState<string | null>(null);
- const [isApplyAllOpen, setIsApplyAllOpen] = useState(false);
- 
- const [drafts, setDrafts] = useState<ReadingDraft[]>([]);
+	// Incoming Payments Verification Queue State
+	const [pendingInvoices, setPendingInvoices] = useState<InvoiceListItem[]>([]);
+	const [loadingPendingInvoices, setLoadingPendingInvoices] = useState(false);
+	const [activeVerifyInvoiceId, setActiveVerifyInvoiceId] = useState<string | null>(null);
 
- 	const fetchData = useCallback(async () => {
+	// History summary data per month
+	type MonthSummary = { totalElec: number; totalWater: number; readingCount: number };
+	const [historySummaries, setHistorySummaries] = useState<Record<string, MonthSummary>>({});
+	const [historySummariesLoading, setHistorySummariesLoading] = useState(false);
+	
+	// Sync local property selection with global navbar selector
+	useEffect(() => {
+		setSelectedPropertyId(globalPropertyId);
+	}, [globalPropertyId]);
+
+	// Sync tab from URL search parameters if provided (e.g. ?tab=verify)
+	useEffect(() => {
+		const tabParam = searchParams.get("tab");
+		if (tabParam === "readings" || tabParam === "verify" || tabParam === "rates" || tabParam === "history") {
+			setActiveTab(tabParam);
+		} else if (tabParam === "payments") {
+			setActiveTab("verify");
+		}
+		const monthParam = searchParams.get("month");
+		if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
+			setSelectedMonth(monthParam);
+		}
+	}, [searchParams]);
+	
+	// Unit Detail View State
+	const [selectedLeaseId, setSelectedLeaseId] = useState<string | null>(null);
+	const [drafts, setDrafts] = useState<ReadingDraft[]>([]);
+
+	const fetchData = useCallback(async () => {
 		try {
 			setLoading(true);
 
@@ -219,7 +249,6 @@ export function UtilityBillingDashboard() {
 			}
 		} catch (err) {
 			console.error(err);
-			// Fall back to cache on fetch error
 			const cachedWorkspace = OfflineStorage.get<BillingWorkspace>("utility_workspace");
 			if (cachedWorkspace?.data) {
 				setWorkspace(cachedWorkspace.data);
@@ -232,9 +261,33 @@ export function UtilityBillingDashboard() {
 		}
 	}, [selectedMonth]);
 
+	// Fetch pending verification invoices
+	const fetchPendingInvoices = useCallback(async () => {
+		try {
+			setLoadingPendingInvoices(true);
+			const params = new URLSearchParams();
+			if (selectedPropertyId && selectedPropertyId !== "all") {
+				params.set("propertyId", selectedPropertyId);
+			}
+			const res = await fetch(`/api/landlord/invoices?${params.toString()}`);
+			if (res.ok) {
+				const data = await res.json();
+				const list: InvoiceListItem[] = data.invoices || [];
+				// Filter for invoices awaiting landlord payment review
+				const needsReview = list.filter((inv) => inv.status === "under_review" || (inv as any).workflowStatus === "review_ready");
+				setPendingInvoices(needsReview);
+			}
+		} catch (e) {
+			console.error("Failed to load verification queue:", e);
+		} finally {
+			setLoadingPendingInvoices(false);
+		}
+	}, [selectedPropertyId]);
+
 	useEffect(() => {
 		fetchData();
-	}, [fetchData]);
+		fetchPendingInvoices();
+	}, [fetchData, fetchPendingInvoices]);
 
 	// Fetch history summaries when history tab is active
 	useEffect(() => {
@@ -259,14 +312,14 @@ export function UtilityBillingDashboard() {
 						const readings: { utility_type: string; previous_reading: number; current_reading: number }[] = json.readings || [];
 						let totalElec = 0;
 						let totalWater = 0;
-						for (const r of readings) {
-							const usage = r.current_reading - r.previous_reading;
+						readings.forEach((r) => {
+							const usage = Math.max(0, (r.current_reading || 0) - (r.previous_reading || 0));
 							if (r.utility_type === "electricity") totalElec += usage;
 							else if (r.utility_type === "water") totalWater += usage;
-						}
+						});
 						results[m] = { totalElec, totalWater, readingCount: readings.length };
 					} catch {
-						results[m] = { totalElec: 0, totalWater: 0, readingCount: 0 };
+						// ignore per-month error
 					}
 				})
 			);
@@ -277,7 +330,6 @@ export function UtilityBillingDashboard() {
 		};
 		fetchSummaries();
 		return () => { alive = false; };
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [activeTab]);
 
 	const filteredDrafts = drafts.filter(d => {
@@ -286,7 +338,48 @@ export function UtilityBillingDashboard() {
 		return matchesProperty && matchesSearch;
 	});
 
-	const handleSaveReadings = async () => {
+	// Compute real-time progress & consumption totals
+	const readingsSummary = useMemo(() => {
+		let recordedCount = 0;
+		let totalElecKwh = 0;
+		let totalWaterM3 = 0;
+		let totalEstimatedUtilRevenue = 0;
+
+		filteredDrafts.forEach((d) => {
+			const waterPrev = d.water.previous || 0;
+			const waterCurr = parseFloat(d.water.current);
+			const hasWater = !isNaN(waterCurr) && waterCurr >= waterPrev;
+			const waterUsage = hasWater ? waterCurr - waterPrev : 0;
+			const waterCost = waterUsage * (d.water.rate || 0);
+
+			const elecPrev = d.electricity.previous || 0;
+			const elecCurr = parseFloat(d.electricity.current);
+			const hasElec = !isNaN(elecCurr) && elecCurr >= elecPrev;
+			const elecUsage = hasElec ? elecCurr - elecPrev : 0;
+			const elecCost = elecUsage * (d.electricity.rate || 0);
+
+			const hasAnyRecorded = (d.water.exists || (d.water.current !== "" && !isNaN(waterCurr))) && 
+			                       (d.electricity.exists || (d.electricity.current !== "" && !isNaN(elecCurr)));
+
+			if (hasAnyRecorded) {
+				recordedCount += 1;
+			}
+
+			totalElecKwh += elecUsage;
+			totalWaterM3 += waterUsage;
+			totalEstimatedUtilRevenue += waterCost + elecCost;
+		});
+
+		return {
+			recordedCount,
+			totalUnits: filteredDrafts.length,
+			totalElecKwh,
+			totalWaterM3,
+			totalEstimatedUtilRevenue,
+		};
+	}, [filteredDrafts]);
+
+	const handleSaveReadings = async (postInvoices: boolean = false) => {
 		const toSave: ReadingSaveRequest[] = [];
 		const [y, m] = selectedMonth.split("-").map(Number);
 		const start = `${selectedMonth}-01`;
@@ -294,32 +387,38 @@ export function UtilityBillingDashboard() {
 		const end = `${selectedMonth}-${String(lastDay).padStart(2, "0")}`;
 
 		drafts.forEach(d => {
-			if (!d.water.exists && d.water.current !== "") {
-				toSave.push({
-					leaseId: d.leaseId,
-					utilityType: "water",
-					billingPeriodStart: start,
-					billingPeriodEnd: end,
-					previousReading: d.water.previous,
-					currentReading: parseFloat(d.water.current),
-					note: ""
-				});
+			if (d.water.current !== "") {
+				const val = parseFloat(d.water.current);
+				if (!isNaN(val)) {
+					toSave.push({
+						leaseId: d.leaseId,
+						utilityType: "water",
+						billingPeriodStart: start,
+						billingPeriodEnd: end,
+						previousReading: d.water.previous,
+						currentReading: val,
+						note: ""
+					});
+				}
 			}
-			if (!d.electricity.exists && d.electricity.current !== "") {
-				toSave.push({
-					leaseId: d.leaseId,
-					utilityType: "electricity",
-					billingPeriodStart: start,
-					billingPeriodEnd: end,
-					previousReading: d.electricity.previous,
-					currentReading: parseFloat(d.electricity.current),
-					note: ""
-				});
+			if (d.electricity.current !== "") {
+				const val = parseFloat(d.electricity.current);
+				if (!isNaN(val)) {
+					toSave.push({
+						leaseId: d.leaseId,
+						utilityType: "electricity",
+						billingPeriodStart: start,
+						billingPeriodEnd: end,
+						previousReading: d.electricity.previous,
+						currentReading: val,
+						note: ""
+					});
+				}
 			}
 		});
 
 		if (toSave.length === 0) {
-			toast.info("No new readings to save");
+			toast.info("No readings entered yet. Enter meter numbers before saving.");
 			return;
 		}
 
@@ -329,11 +428,10 @@ export function UtilityBillingDashboard() {
 				"SAVE_SUBMETER_READINGS",
 				"/api/landlord/utility-readings",
 				"POST",
-				{ readings: toSave },
+				{ readings: toSave, postInvoices, month: selectedMonth },
 				`Recorded ${toSave.length} sub-meter readings offline`
 			);
 
-			// Mark drafts as locally saved
 			setDrafts(prev => prev.map(d => ({
 				...d,
 				water: { ...d.water, exists: d.water.current !== "" ? true : d.water.exists },
@@ -349,21 +447,34 @@ export function UtilityBillingDashboard() {
 			const res = await fetch("/api/landlord/utility-readings", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(toSave)
+				body: JSON.stringify({
+					readings: toSave,
+					postInvoices,
+					month: selectedMonth
+				})
 			});
 
 			if (!res.ok) throw new Error("Save failed");
+			const json = await res.json();
 			
-			toast.success(`Successfully saved ${toSave.length} readings`);
+			if (postInvoices) {
+				const invoiceResult = json.invoiceResult;
+				const created = invoiceResult?.created ?? 0;
+				const updated = invoiceResult?.updated ?? 0;
+				toast.success(`Saved readings and issued/updated ${created + updated} monthly invoices for tenants!`);
+			} else {
+				toast.success(`Successfully saved ${toSave.length} submeter readings`);
+			}
+
 			fetchData();
+			fetchPendingInvoices();
 		} catch (err) {
 			console.warn("[UtilityBilling] Online save failed, enqueuing offline:", err);
-			// Enqueue offline fallback
 			mutationQueue.enqueue(
 				"SAVE_SUBMETER_READINGS",
 				"/api/landlord/utility-readings",
 				"POST",
-				{ readings: toSave },
+				{ readings: toSave, postInvoices, month: selectedMonth },
 				`Recorded ${toSave.length} sub-meter readings offline`
 			);
 			setDrafts(prev => prev.map(d => ({
@@ -377,878 +488,1127 @@ export function UtilityBillingDashboard() {
 		}
 	};
 
-    const handleApplyToAll = async () => {
-        toast.success("Applying property defaults to all units...");
-        setIsApplyAllOpen(false);
-    };
+	const handleSaveSingleUnit = async (leaseId: string) => {
+		const draft = drafts.find(d => d.leaseId === leaseId);
+		if (!draft) return;
 
-    const activeDraft = drafts.find(d => d.leaseId === selectedLeaseId);
+		const toSave: ReadingSaveRequest[] = [];
+		const [y, m] = selectedMonth.split("-").map(Number);
+		const start = `${selectedMonth}-01`;
+		const lastDay = new Date(y, m, 0).getDate();
+		const end = `${selectedMonth}-${String(lastDay).padStart(2, "0")}`;
 
-    if (loading && !workspace) {
-        return (
-            <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
-                <Loader2 className="size-10 animate-spin text-primary" />
-                <p className="text-sm font-medium text-muted-foreground">Loading utility data...</p>
-            </div>
-        );
-    }
+		if (draft.water.current !== "") {
+			toSave.push({
+				leaseId: draft.leaseId,
+				utilityType: "water",
+				billingPeriodStart: start,
+				billingPeriodEnd: end,
+				previousReading: draft.water.previous,
+				currentReading: parseFloat(draft.water.current) || 0,
+				note: ""
+			});
+		}
+		if (draft.electricity.current !== "") {
+			toSave.push({
+				leaseId: draft.leaseId,
+				utilityType: "electricity",
+				billingPeriodStart: start,
+				billingPeriodEnd: end,
+				previousReading: draft.electricity.previous,
+				currentReading: parseFloat(draft.electricity.current) || 0,
+				note: ""
+			});
+		}
 
-    return (
-    <div className="flex flex-col space-y-6 pb-20 max-w-7xl mx-auto px-4 md:px-8">
-        {/* Page Header */}
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-            <div className="space-y-1">
-                <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-                    Utility Billing
-                </h1>
-                <p className="text-sm font-medium text-neutral-400">
-                    Centralized command for meter readings, billing strategies, and automated recovery.
-                </p>
-            </div>
+		if (toSave.length === 0) {
+			toast.info("Please enter at least one current reading");
+			return;
+		}
 
-            <div className="flex flex-wrap items-center gap-3">
-                {activeTab === "readings" && (
-                    <button 
-                        onClick={handleSaveReadings}
-                        disabled={saving}
-                        className="flex h-11 items-center gap-2 rounded-2xl bg-primary px-6 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 cursor-pointer"
-                    >
-                        {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-                        Save All Readings
-                    </button>
-                )}
-            </div>
-        </div>
+		try {
+			setSaving(true);
+			const res = await fetch("/api/landlord/utility-readings", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					readings: toSave,
+					postInvoices: true,
+					month: selectedMonth
+				})
+			});
+			if (!res.ok) throw new Error();
+			toast.success(`Saved and billed readings for ${draft.unitName}`);
+			fetchData();
+			fetchPendingInvoices();
+			setSelectedLeaseId(null);
+		} catch (e) {
+			toast.error("Failed to save unit reading");
+		} finally {
+			setSaving(false);
+		}
+	};
 
-        {/* Unified Command Bar */}
-        <div className="flex flex-col items-center justify-between gap-4 border border-white/5 neumorphic-panel p-3 md:p-4 rounded-3xl backdrop-blur-xl xl:flex-row">
-            {/* Segmented Pill Tabs */}
-            <div className="flex items-center gap-1 rounded-2xl neumorphic-extruded p-1 w-full sm:w-auto overflow-x-auto">
-                {[
-                    { id: "readings", label: "Meter Readings", icon: Zap },
-                    { id: "rates", label: "Billing Settings", icon: Settings2 },
-                    { id: "payments", label: "GCash Payments", icon: DollarSign },
-                    { id: "history", label: "History", icon: History }
-                ].map((tab) => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id as any)}
-                        className={cn(
-                            "flex items-center gap-2 rounded-xl px-5 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap cursor-pointer",
-                            activeTab === tab.id
-                                ? "neumorphic-panel text-white ring-1 ring-border shadow-sm"
-                                : "text-neutral-400 hover:neumorphic-inset hover:text-white"
-                        )}
-                    >
-                        <tab.icon className={cn("size-3.5", activeTab === tab.id ? "text-primary" : "text-neutral-400")} />
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
+	const activeDraft = drafts.find(d => d.leaseId === selectedLeaseId);
 
-            {/* Search & Cycle Info */}
-            <div className="flex w-full items-center gap-3 xl:w-auto">
-                {activeTab === "readings" && (
-                    <div className="relative flex-1 xl:w-72">
-                        <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
-                        <input 
-                            placeholder="Search units or tenants..." 
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="h-11 w-full rounded-2xl neumorphic-extruded pl-10 pr-4 text-xs font-black text-white focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-neutral-500"
-                        />
-                    </div>
-                )}
+	if (loading && !workspace) {
+		return (
+			<div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
+				<Loader2 className="size-10 animate-spin text-primary" />
+				<p className="text-sm font-medium text-muted-foreground">Loading utility data...</p>
+			</div>
+		);
+	}
 
-                <div className="flex h-11 items-center gap-2 rounded-2xl neumorphic-extruded px-4 text-xs font-black text-foreground shrink-0" title="Selected Billing Cycle">
-                    <Calendar className="size-3.5 text-primary shrink-0" />
-                    <input 
-                        type="month"
-                        value={selectedMonth}
-                        onChange={(e) => {
-                            if (e.target.value) {
-                                setSelectedMonth(e.target.value);
-                            }
-                        }}
-                        className="bg-transparent text-[11px] font-black uppercase tracking-wider text-foreground outline-none cursor-pointer"
-                        aria-label="Select billing cycle month"
-                    />
-                </div>
-            </div>
-        </div>
+	return (
+		<div className="flex flex-col space-y-6 pb-20 max-w-7xl mx-auto px-4 md:px-8">
+			{/* Page Header */}
+			<div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+				<div className="space-y-1">
+					<div className="flex items-center gap-2">
+						<span className="flex h-6 items-center rounded-full neumorphic-inset px-3 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+							Utilities Command
+						</span>
+						<span className="text-[11px] font-medium text-muted-foreground">Cycle {selectedMonth}</span>
+					</div>
+					<h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+						Utility & Submeter Billing
+					</h1>
+					<p className="text-sm font-medium text-neutral-400 max-w-2xl">
+						Record room meters, automatically calculate tenant consumption, and issue itemized monthly invoices in one smooth flow.
+					</p>
+				</div>
 
- {/* Content Area */}
- <AnimatePresence mode="wait">
- {activeTab === "readings" && (
- <motion.div 
- key="readings"
- initial={{ opacity: 0, y: 10 }}
- animate={{ opacity: 1, y: 0 }}
- exit={{ opacity: 0, y: -10 }}
- className="space-y-4"
- >
- <div className="rounded-2xl neumorphic-panel overflow-hidden">
- <div className="overflow-x-auto">
- <table className="w-full text-left border-collapse">
- <thead>
- <tr className="border-b border-white/5 neumorphic-inset dark:bg-white/[0.02]">
- <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">Unit</th>
- <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground text-center">Water Readings</th>
- <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground text-center">Electricity Readings</th>
- <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground text-right">Actions</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-border">
- {filteredDrafts.length === 0 ? (
- <tr>
- <td colSpan={4} className="px-6 py-20 text-center">
- <div className="flex flex-col items-center gap-3 text-muted-foreground">
- <Building2 className="size-12 opacity-20" />
- <p className="text-sm font-medium">No units found matching your criteria</p>
- </div>
- </td>
- </tr>
- ) : filteredDrafts.map((draft) => (
- <tr key={draft.leaseId} className="hover:neumorphic-inset/5 transition-colors">
- <td className="px-6 py-5">
- <div className="flex flex-col">
- <span className="text-base font-black text-foreground">{draft.unitName}</span>
- <span className="text-xs text-muted-foreground">₱{draft.rentAmount.toLocaleString()} / month</span>
- </div>
- </td>
- 
- <td className="px-6 py-5">
-  <div className="flex items-center justify-center gap-4">
-  <div className="text-center">
-  <span className="text-[10px] block text-muted-foreground uppercase font-black mb-0.5">Prev</span>
-  {draft.water.exists ? (
-  <span className="font-mono text-sm text-muted-foreground/70">{draft.water.previous}</span>
-  ) : (
-  <input 
-  type="number" 
-  value={draft.water.previous}
-  placeholder="0"
-  onChange={(e) => {
-  const val = parseFloat(e.target.value);
-  const newDrafts = [...drafts];
-  const index = drafts.findIndex(d => d.leaseId === draft.leaseId);
-  newDrafts[index] = { ...newDrafts[index], water: { ...draft.water, previous: isNaN(val) ? 0 : val } };
-  setDrafts(newDrafts);
-  }}
-  className="w-16 neumorphic-inset dark:bg-white/[0.05] rounded-md px-2 py-1 text-center font-mono text-sm font-semibold text-muted-foreground outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
-  />
-  )}
-  </div>
-  <div className="h-8 w-px bg-border" />
-  <div className="text-center">
-  <span className="text-[10px] block text-sky-600 uppercase font-black mb-0.5">Current</span>
-  {draft.water.exists ? (
-  <span className="font-mono text-sm font-black text-sky-600">{draft.water.current}</span>
-  ) : (
-  <input 
-  type="number" 
-  value={draft.water.current}
-  placeholder="----"
-  onChange={(e) => {
-  const newDrafts = [...drafts];
-  const index = drafts.findIndex(d => d.leaseId === draft.leaseId);
-  newDrafts[index] = { ...newDrafts[index], water: { ...draft.water, current: e.target.value } };
-  setDrafts(newDrafts);
-  }}
-  className="w-16 neumorphic-inset dark:bg-white/[0.05] rounded-md px-2 py-1 text-center font-mono text-sm font-black text-sky-600 dark:text-sky-400 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
-  />
-  )}
-  </div>
-  </div>
-  </td>
+				<div className="flex flex-wrap items-center gap-3">
+					{activeTab === "readings" && (
+						<>
+							<button 
+								onClick={() => handleSaveReadings(false)}
+								disabled={saving}
+								className="flex h-11 items-center gap-2 rounded-2xl border border-border/80 bg-card px-5 text-xs font-bold text-foreground transition-all hover:bg-muted active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm"
+								title="Save submeter readings without issuing invoices yet"
+							>
+								<Save className="size-3.5 text-muted-foreground" />
+								<span>Save Draft</span>
+							</button>
 
-  <td className="px-6 py-5">
-  <div className="flex items-center justify-center gap-4">
-  <div className="text-center">
-  <span className="text-[10px] block text-muted-foreground uppercase font-black mb-0.5">Prev</span>
-  {draft.electricity.exists ? (
-  <span className="font-mono text-sm text-muted-foreground/70">{draft.electricity.previous}</span>
-  ) : (
-  <input 
-  type="number" 
-  value={draft.electricity.previous}
-  placeholder="0"
-  onChange={(e) => {
-  const val = parseFloat(e.target.value);
-  const newDrafts = [...drafts];
-  const index = drafts.findIndex(d => d.leaseId === draft.leaseId);
-  newDrafts[index] = { ...newDrafts[index], electricity: { ...draft.electricity, previous: isNaN(val) ? 0 : val } };
-  setDrafts(newDrafts);
-  }}
-  className="w-16 neumorphic-inset dark:bg-white/[0.05] rounded-md px-2 py-1 text-center font-mono text-sm font-semibold text-muted-foreground outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
-  />
-  )}
-  </div>
-  <div className="h-8 w-px bg-border" />
-  <div className="text-center">
-  <span className="text-[10px] block text-amber-600 uppercase font-black mb-0.5">Current</span>
-  {draft.electricity.exists ? (
-  <span className="font-mono text-sm font-black text-amber-600">{draft.electricity.current}</span>
-  ) : (
-  <input 
-  type="number" 
-  value={draft.electricity.current}
-  placeholder="----"
-  onChange={(e) => {
-  const newDrafts = [...drafts];
-  const index = drafts.findIndex(d => d.leaseId === draft.leaseId);
-  newDrafts[index] = { ...newDrafts[index], electricity: { ...draft.electricity, current: e.target.value } };
-  setDrafts(newDrafts);
-  }}
-  className="w-16 neumorphic-inset dark:bg-white/[0.05] rounded-md px-2 py-1 text-center font-mono text-sm font-black text-amber-600 dark:text-amber-400 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
-  />
-  )}
-  </div>
-  </div>
-  </td>
+							<button 
+								onClick={() => handleSaveReadings(true)}
+								disabled={saving}
+								className="flex h-11 items-center gap-2 rounded-2xl bg-primary px-6 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 cursor-pointer"
+								title="Save readings and immediately post itemized invoices to tenants"
+							>
+								{saving ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+								<span>Post & Bill Invoices</span>
+							</button>
+						</>
+					)}
+				</div>
+			</div>
 
- <td className="px-6 py-5 text-right">
- <div className="flex items-center justify-end gap-3">
- {(draft.water.exists || draft.water.current) && (draft.electricity.exists || draft.electricity.current) && (
- <div className="size-6 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
- <Check className="size-3.5" />
- </div>
- )}
- <button 
- onClick={() => setSelectedLeaseId(draft.leaseId)}
- className="inline-flex items-center justify-center size-9 rounded-lg neumorphic-panel text-muted-foreground transition-all hover:border-primary hover:text-primary "
- >
- <Edit3 className="size-4" />
- </button>
- </div>
- </td>
- </tr>
- ))}
- </tbody>
- </table>
- </div>
- </div>
- </motion.div>
- )}
+			{/* Unified Command Bar */}
+			<div className="flex flex-col items-center justify-between gap-4 border border-white/5 neumorphic-panel p-3 md:p-4 rounded-3xl backdrop-blur-xl xl:flex-row">
+				{/* Segmented Pill Tabs */}
+				<div className="flex items-center gap-1 rounded-2xl neumorphic-extruded p-1 w-full sm:w-auto overflow-x-auto">
+					{[
+						{ 
+							id: "readings", 
+							label: "Meter Readings", 
+							icon: Zap,
+							badge: `${readingsSummary.recordedCount}/${readingsSummary.totalUnits}`
+						},
+						{ 
+							id: "verify", 
+							label: "Verify Payments", 
+							icon: ShieldCheck,
+							badge: pendingInvoices.length > 0 ? pendingInvoices.length.toString() : undefined,
+							badgeAlert: pendingInvoices.length > 0
+						},
+						{ 
+							id: "rates", 
+							label: "Rate Tariffs", 
+							icon: Settings2 
+						},
+						{ 
+							id: "history", 
+							label: "Billing Archive", 
+							icon: History 
+						}
+					].map((tab) => (
+						<button
+							key={tab.id}
+							onClick={() => setActiveTab(tab.id as any)}
+							className={cn(
+								"flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all whitespace-nowrap cursor-pointer",
+								activeTab === tab.id
+									? "neumorphic-panel text-foreground ring-1 ring-border shadow-sm font-black"
+									: "text-neutral-400 hover:neumorphic-inset hover:text-foreground"
+							)}
+						>
+							<tab.icon className={cn("size-3.5", activeTab === tab.id ? "text-primary" : "text-neutral-400")} />
+							<span>{tab.label}</span>
+							{tab.badge && (
+								<span className={cn(
+									"px-2 py-0.5 rounded-full text-[10px] font-mono font-bold",
+									tab.badgeAlert 
+										? "bg-amber-500 text-zinc-950 font-black animate-pulse" 
+										: activeTab === tab.id 
+											? "bg-primary/20 text-primary" 
+											: "bg-muted text-muted-foreground"
+								)}>
+									{tab.badge}
+								</span>
+							)}
+						</button>
+					))}
+				</div>
 
- {activeTab === "rates" && (
- <motion.div 
- key="rates"
- initial={{ opacity: 0, y: 10 }}
- animate={{ opacity: 1, y: 0 }}
- exit={{ opacity: 0, y: -10 }}
- >
- <BillingOperationsPanel propertyId={selectedPropertyId} viewMode="rates" />
- </motion.div>
- )}
+				{/* Search & Cycle Info */}
+				<div className="flex w-full items-center gap-3 xl:w-auto">
+					{activeTab === "readings" && (
+						<div className="relative flex-1 xl:w-72">
+							<Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
+							<input 
+								placeholder="Search units or rooms..." 
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+								className="h-11 w-full rounded-2xl neumorphic-extruded pl-10 pr-4 text-xs font-medium text-foreground focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-neutral-500"
+							/>
+						</div>
+					)}
 
- {activeTab === "payments" && (
- <motion.div 
- key="payments"
- initial={{ opacity: 0, y: 10 }}
- animate={{ opacity: 1, y: 0 }}
- exit={{ opacity: 0, y: -10 }}
- >
- <BillingOperationsPanel propertyId={selectedPropertyId} viewMode="gcash" />
- </motion.div>
- )}
+					<div className="flex h-11 items-center gap-2 rounded-2xl neumorphic-extruded px-4 text-xs font-bold text-foreground shrink-0" title="Selected Billing Cycle Month">
+						<Calendar className="size-3.5 text-primary shrink-0" />
+						<input 
+							type="month"
+							value={selectedMonth}
+							onChange={(e) => {
+								if (e.target.value) {
+									setSelectedMonth(e.target.value);
+								}
+							}}
+							className="bg-transparent text-[11px] font-bold uppercase tracking-wider text-foreground outline-none cursor-pointer"
+							aria-label="Select billing cycle month"
+						/>
+					</div>
+				</div>
+			</div>
 
- {activeTab === "history" && (
- <motion.div 
- key="history"
- initial={{ opacity: 0, y: 10 }}
- animate={{ opacity: 1, y: 0 }}
- exit={{ opacity: 0, y: -10 }}
- className="space-y-12"
- >
- {/* Hero Header */}
- <div className="relative overflow-hidden rounded-[2.5rem] neumorphic-panel p-10 dark:bg-white/[0.01]">
- <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
- <History className="size-48 -rotate-12" />
- </div>
- <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
- <div className="space-y-3">
- <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
- <BarChart3 className="size-3" />
- Billing Archives
- </div>
- <h3 className="text-3xl font-black text-foreground tracking-tight">Audit Trail & History</h3>
- <p className="text-sm text-muted-foreground max-w-md leading-relaxed font-medium">
- Review past billing cycles, verify consumption reports, and monitor collection recovery performance across your portfolio.
- </p>
- </div>
- <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
- <div className="relative group min-w-[300px]">
- <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
- <input 
- placeholder="Search month, year or status..."
- className="w-full pl-11 pr-4 py-3.5 rounded-2xl neumorphic-inset dark:bg-white/[0.03] text-sm font-black outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
- />
- </div>
- <button className="h-12 px-6 rounded-2xl bg-foreground text-background text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-foreground/10 active:scale-95">
- Export History
- </button>
- </div>
- </div>
- </div>
+			{/* Content Area */}
+			<AnimatePresence mode="wait">
+				{activeTab === "readings" && (
+					<motion.div 
+						key="readings"
+						initial={{ opacity: 0, y: 10 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: -10 }}
+						className="space-y-6"
+					>
+						{/* Progress & Live Consumption Dashboard */}
+						<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+							<div className="rounded-2xl neumorphic-panel p-4 flex flex-col justify-between">
+								<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Units Logged</span>
+								<div className="mt-2 flex items-baseline gap-2">
+									<span className="text-2xl font-black text-foreground">{readingsSummary.recordedCount}</span>
+									<span className="text-xs font-bold text-muted-foreground">/ {readingsSummary.totalUnits} Units</span>
+								</div>
+								<div className="mt-3 h-1.5 w-full bg-muted/40 rounded-full overflow-hidden">
+									<div 
+										className="h-full bg-primary rounded-full transition-all duration-500"
+										style={{ width: `${readingsSummary.totalUnits > 0 ? (readingsSummary.recordedCount / readingsSummary.totalUnits) * 100 : 0}%` }}
+									/>
+								</div>
+							</div>
 
- <div className="space-y-6">
- <div className="flex items-center gap-4 px-2 mb-4">
- <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 whitespace-nowrap">Audit Trail History</span>
- <div className="h-px flex-1 bg-border/40" />
- </div>
+							<div className="rounded-2xl neumorphic-panel p-4 flex flex-col justify-between">
+								<span className="text-[10px] font-black uppercase tracking-wider text-amber-500 flex items-center gap-1.5">
+									<Zap className="size-3" /> Electricity Recorded
+								</span>
+								<div className="mt-2 flex items-baseline gap-1.5">
+									<span className="text-2xl font-black text-foreground">{readingsSummary.totalElecKwh.toFixed(1)}</span>
+									<span className="text-xs font-bold text-muted-foreground">kWh</span>
+								</div>
+								<span className="text-[10px] text-muted-foreground mt-2">Active cycle total</span>
+							</div>
 
- <div className="space-y-3">
- {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => {
- const d = new Date();
- d.setDate(1);
- d.setMonth(d.getMonth() - i);
- const monthStr = d.toISOString().slice(0, 7);
- const monthLabel = d.toLocaleDateString('en-US', { month: 'short' });
- const yearLabel = d.getFullYear().toString();
- const reportTitle = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
- const summary = historySummaries[monthStr];
- const totalElec = summary?.totalElec ?? 0;
- const totalWater = summary?.totalWater ?? 0;
- const readingCount = summary?.readingCount ?? 0;
- const hasData = readingCount > 0;
- const isCurrentMonth = i === 0;
+							<div className="rounded-2xl neumorphic-panel p-4 flex flex-col justify-between">
+								<span className="text-[10px] font-black uppercase tracking-wider text-sky-500 flex items-center gap-1.5">
+									<Droplets className="size-3" /> Water Recorded
+								</span>
+								<div className="mt-2 flex items-baseline gap-1.5">
+									<span className="text-2xl font-black text-foreground">{readingsSummary.totalWaterM3.toFixed(1)}</span>
+									<span className="text-xs font-bold text-muted-foreground">m³</span>
+								</div>
+								<span className="text-[10px] text-muted-foreground mt-2">Active cycle total</span>
+							</div>
 
- return (
- <button 
- key={monthStr}
- onClick={() => setSelectedHistoryMonth(monthStr)}
- className="group relative w-full grid grid-cols-1 md:grid-cols-12 items-center gap-6 p-6 rounded-[2rem] neumorphic-panel hover:border-primary/40 hover:bg-primary/[0.01] hover:shadow-primary/5 active:scale-[0.99] text-left dark:bg-white/[0.01] transition-all"
- >
- {/* Date Block */}
- <div className="md:col-span-2 flex md:flex-col items-center md:items-start gap-4">
- <div className="size-16 flex items-center justify-center rounded-2xl neumorphic-inset group-hover:border-primary/20 group-hover:bg-primary/5 transition-all">
- <div className="text-center">
- <p className="text-[10px] font-black uppercase leading-none text-muted-foreground group-hover:text-primary transition-colors">{monthLabel}</p>
- <p className="text-xl font-black mt-1 text-foreground">{yearLabel}</p>
- </div>
- </div>
- <div className="md:hidden h-8 w-px bg-border" />
- <div className={cn(
- "px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.2em] border whitespace-nowrap",
- isCurrentMonth 
- ? "bg-blue-500/10 text-blue-600 border-blue-500/10" 
- : hasData 
- ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/10" 
- : "neumorphic-inset text-muted-foreground/40 border-border"
- )}>
- {isCurrentMonth ? "In Progress" : hasData ? "Cycle Closed" : "No Data"}
- </div>
- </div>
+							<div className="rounded-2xl neumorphic-panel p-4 flex flex-col justify-between">
+								<span className="text-[10px] font-black uppercase tracking-wider text-emerald-500 flex items-center gap-1.5">
+									<DollarSign className="size-3" /> Est. Utility Billing
+								</span>
+								<div className="mt-2 flex items-baseline gap-1">
+									<span className="text-xs font-black text-muted-foreground">₱</span>
+									<span className="text-2xl font-black text-foreground">{readingsSummary.totalEstimatedUtilRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+								</div>
+								<span className="text-[10px] text-muted-foreground mt-2">To be added to rent</span>
+							</div>
+						</div>
 
- {/* Report Title & Metrics */}
- <div className="md:col-span-6 space-y-3">
- <h4 className="text-lg font-black text-foreground group-hover:text-primary transition-colors">
- {reportTitle} Report
- </h4>
- <div className="flex flex-wrap gap-6">
- <div className="flex items-center gap-2">
- <div className="size-6 flex items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
- <Zap className="size-3" />
- </div>
- <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
- {historySummariesLoading ? "--" : totalElec.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
- <span className="opacity-40">kWh</span>
- </span>
- </div>
- <div className="flex items-center gap-2">
- <div className="size-6 flex items-center justify-center rounded-lg bg-sky-500/10 text-sky-500">
- <Droplets className="size-3" />
- </div>
- <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
- {historySummariesLoading ? "--" : totalWater.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
- <span className="opacity-40">m³</span>
- </span>
- </div>
- </div>
- </div>
+						{/* Batch Readings Table */}
+						<div className="rounded-2xl neumorphic-panel overflow-hidden border border-border/40">
+							<div className="overflow-x-auto">
+								<table className="w-full text-left border-collapse">
+									<thead>
+										<tr className="border-b border-border neumorphic-inset bg-muted/20">
+											<th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Unit & Base Rent</th>
+											<th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">Water Reading (m³)</th>
+											<th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">Electricity Reading (kWh)</th>
+											<th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">Estimated Total</th>
+											<th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground text-right">Actions</th>
+										</tr>
+									</thead>
+									<tbody className="divide-y divide-border">
+										{filteredDrafts.length === 0 ? (
+											<tr>
+												<td colSpan={5} className="px-6 py-20 text-center">
+													<div className="flex flex-col items-center gap-3 text-muted-foreground">
+														<Building2 className="size-12 opacity-20" />
+														<p className="text-sm font-medium">No units found matching your criteria</p>
+													</div>
+												</td>
+											</tr>
+										) : filteredDrafts.map((draft) => {
+											const waterPrev = draft.water.previous || 0;
+											const waterCurr = parseFloat(draft.water.current);
+											const hasWater = !isNaN(waterCurr) && waterCurr >= waterPrev;
+											const waterUsage = hasWater ? waterCurr - waterPrev : 0;
+											const waterCost = waterUsage * (draft.water.rate || 0);
 
- {/* Status & Actions */}
- <div className="md:col-span-4 flex items-center justify-between md:justify-end gap-10">
- <div className="text-right space-y-2 flex-1 md:flex-initial">
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Readings Logged</p>
- <div className="flex items-center justify-end gap-3">
- <span className="text-[10px] font-black text-foreground">
- {historySummariesLoading ? "--" : `${readingCount} reading${readingCount !== 1 ? "s" : ""}`}
- </span>
- </div>
- </div>
- <div className="size-12 flex items-center justify-center rounded-2xl neumorphic-inset text-muted-foreground group-hover:bg-primary group-hover:text-white group-hover:shadow-primary/20 transition-all">
- <ArrowUpRight className="size-5" />
- </div>
- </div>
- </button>
- );
- })}
- </div>
- </div>
- </motion.div>
- )}
- </AnimatePresence>
+											const elecPrev = draft.electricity.previous || 0;
+											const elecCurr = parseFloat(draft.electricity.current);
+											const hasElec = !isNaN(elecCurr) && elecCurr >= elecPrev;
+											const elecUsage = hasElec ? elecCurr - elecPrev : 0;
+											const elecCost = elecUsage * (draft.electricity.rate || 0);
 
- {/* History Detail Modal */}
- <HistoryDetailModal 
- month={selectedHistoryMonth} 
- isOpen={!!selectedHistoryMonth} 
- onClose={() => setSelectedHistoryMonth(null)} 
- />
+											const totalEst = draft.rentAmount + waterCost + elecCost;
+											const isComplete = (draft.water.exists || hasWater) && (draft.electricity.exists || hasElec);
 
- {/* Unit Detail Modal */}
- <UnitDetailModal 
- isOpen={!!selectedLeaseId} 
- onClose={() => setSelectedLeaseId(null)}
- draft={activeDraft}
- onUpdate={(patch) => {
- if (!selectedLeaseId) return;
- const newDrafts = [...drafts];
- const index = drafts.findIndex(d => d.leaseId === selectedLeaseId);
- newDrafts[index] = { ...newDrafts[index], ...patch };
- setDrafts(newDrafts);
- }}
- />
+											return (
+												<tr key={draft.leaseId} className="hover:bg-muted/10 transition-colors">
+													{/* Unit Info */}
+													<td className="px-6 py-5">
+														<div className="flex flex-col">
+															<span className="text-base font-black text-foreground">{draft.unitName}</span>
+															<span className="text-xs font-medium text-muted-foreground">
+																Base Rent: ₱{draft.rentAmount.toLocaleString()}
+															</span>
+														</div>
+													</td>
+													
+													{/* Water Reading Column */}
+													<td className="px-6 py-5">
+														<div className="flex flex-col items-center gap-1.5">
+															<div className="flex items-center justify-center gap-3">
+																<div className="text-center">
+																	<span className="text-[9px] block text-muted-foreground uppercase font-black">Prev</span>
+																	<span className="font-mono text-xs text-muted-foreground/80 font-bold">{draft.water.previous}</span>
+																</div>
+																<div className="h-6 w-px bg-border/80" />
+																<div className="text-center">
+																	<span className="text-[9px] block text-sky-600 uppercase font-black">Curr</span>
+																	{draft.water.exists ? (
+																		<span className="font-mono text-xs font-black text-sky-600">{draft.water.current}</span>
+																	) : (
+																		<input 
+																			type="number" 
+																			value={draft.water.current}
+																			placeholder="0.0"
+																			onChange={(e) => {
+																				const newDrafts = [...drafts];
+																				const index = drafts.findIndex(d => d.leaseId === draft.leaseId);
+																				newDrafts[index] = { ...newDrafts[index], water: { ...draft.water, current: e.target.value } };
+																				setDrafts(newDrafts);
+																			}}
+																			className="w-20 neumorphic-inset rounded-lg px-2 py-1 text-center font-mono text-xs font-bold text-sky-600 outline-none focus:ring-2 focus:ring-sky-500/20"
+																		/>
+																	)}
+																</div>
+															</div>
+															{hasWater && waterUsage > 0 && (
+																<span className="text-[10px] font-bold text-sky-600 bg-sky-500/10 px-2 py-0.5 rounded-md">
+																	+{waterUsage.toFixed(1)} m³ (₱{waterCost.toFixed(2)})
+																</span>
+															)}
+														</div>
+													</td>
 
- {/* Apply All Confirmation */}
- <AnimatePresence>
- {isApplyAllOpen && (
- <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
- <motion.div 
- initial={{ opacity: 0, scale: 0.95 }}
- animate={{ opacity: 1, scale: 1 }}
- exit={{ opacity: 0, scale: 0.95 }}
- className="w-full max-w-md rounded-3xl neumorphic-panel p-8 "
- >
- <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
- <AlertCircle className="size-8" />
- </div>
- <div className="space-y-2 mb-8">
- <h3 className="text-xl font-black text-foreground">Apply Property Defaults?</h3>
- <p className="text-sm text-muted-foreground leading-relaxed">
- This will overwrite all individual unit settings with the property-wide default rates. This action cannot be undone.
- </p>
- </div>
- <div className="flex gap-3">
- <button 
- onClick={() => setIsApplyAllOpen(false)}
- className="flex-1 rounded-xl py-3 text-sm font-black text-muted-foreground hover:neumorphic-inset transition-all"
- >
- Cancel
- </button>
- <button 
- onClick={handleApplyToAll}
- className="flex-1 rounded-xl bg-amber-600 py-3 text-sm font-black text-white hover:bg-amber-700 active:scale-95 transition-all"
- >
- Apply to All
- </button>
- </div>
- </motion.div>
- </div>
- )}
- </AnimatePresence>
- </div>
- );
+													{/* Electricity Reading Column */}
+													<td className="px-6 py-5">
+														<div className="flex flex-col items-center gap-1.5">
+															<div className="flex items-center justify-center gap-3">
+																<div className="text-center">
+																	<span className="text-[9px] block text-muted-foreground uppercase font-black">Prev</span>
+																	<span className="font-mono text-xs text-muted-foreground/80 font-bold">{draft.electricity.previous}</span>
+																</div>
+																<div className="h-6 w-px bg-border/80" />
+																<div className="text-center">
+																	<span className="text-[9px] block text-amber-600 uppercase font-black">Curr</span>
+																	{draft.electricity.exists ? (
+																		<span className="font-mono text-xs font-black text-amber-600">{draft.electricity.current}</span>
+																	) : (
+																		<input 
+																			type="number" 
+																			value={draft.electricity.current}
+																			placeholder="0.0"
+																			onChange={(e) => {
+																				const newDrafts = [...drafts];
+																				const index = drafts.findIndex(d => d.leaseId === draft.leaseId);
+																				newDrafts[index] = { ...newDrafts[index], electricity: { ...draft.electricity, current: e.target.value } };
+																				setDrafts(newDrafts);
+																			}}
+																			className="w-20 neumorphic-inset rounded-lg px-2 py-1 text-center font-mono text-xs font-bold text-amber-600 outline-none focus:ring-2 focus:ring-amber-500/20"
+																		/>
+																	)}
+																</div>
+															</div>
+															{hasElec && elecUsage > 0 && (
+																<span className="text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-md">
+																	+{elecUsage.toFixed(1)} kWh (₱{elecCost.toFixed(2)})
+																</span>
+															)}
+														</div>
+													</td>
+
+													{/* Total Estimated Calculation */}
+													<td className="px-6 py-5 text-center">
+														<div className="flex flex-col items-center">
+															<span className="text-sm font-black text-foreground font-mono">
+																₱{totalEst.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+															</span>
+															{(waterCost > 0 || elecCost > 0) && (
+																<span className="text-[9px] text-muted-foreground font-medium">
+																	Util: +₱{(waterCost + elecCost).toFixed(2)}
+																</span>
+															)}
+														</div>
+													</td>
+
+													{/* Row Status & Quick Edit */}
+													<td className="px-6 py-5 text-right">
+														<div className="flex items-center justify-end gap-2.5">
+															{isComplete ? (
+																<span className="flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20" title="Both readings recorded for this cycle">
+																	<Check className="size-3" /> Ready
+																</span>
+															) : (
+																<span className="text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full" title="Pending meter readings">
+																	Pending
+																</span>
+															)}
+															<button 
+																onClick={() => setSelectedLeaseId(draft.leaseId)}
+																className="inline-flex items-center justify-center size-8 rounded-lg border border-border text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+																title="Inspect or adjust unit details"
+															>
+																<Edit3 className="size-3.5" />
+															</button>
+														</div>
+													</td>
+												</tr>
+											);
+										})}
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</motion.div>
+				)}
+
+				{/* Verify Payments Queue Tab */}
+				{(activeTab === "verify") && (
+					<motion.div 
+						key="verify"
+						initial={{ opacity: 0, y: 10 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: -10 }}
+						className="space-y-6"
+					>
+						{/* Tab Header Banner */}
+						<div className="rounded-2xl border border-border/50 bg-card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+							<div className="space-y-1">
+								<div className="flex items-center gap-2">
+									<h2 className="text-xl font-black text-foreground">Payment Verification Queue</h2>
+									<span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-600 border border-amber-500/20">
+										{pendingInvoices.length} Awaiting Review
+									</span>
+								</div>
+								<p className="text-xs text-muted-foreground">
+									Inspect tenant-uploaded GCash screenshots, verify reference numbers, and issue official receipts in one click.
+								</p>
+							</div>
+
+							<Link 
+								href="/landlord/settings?category=Finance"
+								className="shrink-0 flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+							>
+								<QrCode className="size-3.5 text-primary" />
+								<span>Configure Receiving QR</span>
+								<ArrowUpRight className="size-3" />
+							</Link>
+						</div>
+
+						{loadingPendingInvoices ? (
+							<div className="flex h-48 items-center justify-center">
+								<Loader2 className="size-8 animate-spin text-primary" />
+							</div>
+						) : pendingInvoices.length === 0 ? (
+							<div className="rounded-3xl border border-dashed border-border/80 bg-muted/5 p-12 text-center flex flex-col items-center justify-center space-y-4">
+								<div className="flex size-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
+									<CheckCircle2 className="size-7" />
+								</div>
+								<div className="space-y-1">
+									<h3 className="text-lg font-black text-foreground">All Caught Up!</h3>
+									<p className="text-xs text-muted-foreground max-w-sm mx-auto">
+										There are no tenant payments currently awaiting verification. Incoming GCash transaction proofs will appear here automatically.
+									</p>
+								</div>
+								<Link 
+									href="/landlord/invoices" 
+									className="mt-2 text-xs font-bold text-primary hover:underline flex items-center gap-1"
+								>
+									<span>View Full Finance Ledger</span>
+									<ChevronRight className="size-3" />
+								</Link>
+							</div>
+						) : (
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								{pendingInvoices.map((inv) => (
+									<div 
+										key={inv.id}
+										className="rounded-2xl border border-border/60 bg-card p-5 space-y-4 hover:border-primary/40 transition-all shadow-sm"
+									>
+										<div className="flex items-start justify-between gap-3">
+											<div>
+												<span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider block">
+													{inv.invoiceNumber}
+												</span>
+												<h4 className="text-base font-black text-foreground mt-0.5">{inv.tenant}</h4>
+												<p className="text-xs text-muted-foreground">{inv.unit} • {inv.property}</p>
+											</div>
+											<div className="text-right">
+												<span className="text-lg font-black text-foreground font-mono">
+													₱{inv.amount.toLocaleString()}
+												</span>
+												<span className="block text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full mt-1">
+													Needs Verification
+												</span>
+											</div>
+										</div>
+
+										<div className="flex items-center justify-between border-t border-border/40 pt-3 text-xs">
+											<div className="flex items-center gap-2">
+												<span className="text-muted-foreground">Method:</span>
+												<span className="font-bold text-foreground capitalize">{inv.paymentMethod || "GCash"}</span>
+												{inv.referenceNumber && (
+													<span className="font-mono text-[10px] bg-muted px-2 py-0.5 rounded text-foreground font-bold">
+														Ref: {inv.referenceNumber}
+													</span>
+												)}
+											</div>
+
+											<button
+												onClick={() => setActiveVerifyInvoiceId(inv.id)}
+												className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-black text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all shadow-sm cursor-pointer"
+											>
+												<ShieldCheck className="size-3.5" />
+												<span>Review & Confirm</span>
+											</button>
+										</div>
+									</div>
+								))}
+							</div>
+						)}
+					</motion.div>
+				)}
+
+				{/* Rates Tab */}
+				{activeTab === "rates" && (
+					<motion.div 
+						key="rates"
+						initial={{ opacity: 0, y: 10 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: -10 }}
+					>
+						<BillingOperationsPanel propertyId={selectedPropertyId} viewMode="rates" />
+					</motion.div>
+				)}
+
+				{/* History Tab */}
+				{activeTab === "history" && (
+					<motion.div 
+						key="history"
+						initial={{ opacity: 0, y: 10 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: -10 }}
+						className="space-y-12"
+					>
+						{/* Hero Header */}
+						<div className="relative overflow-hidden rounded-[2.5rem] neumorphic-panel p-8 md:p-10">
+							<div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+								<div className="space-y-2">
+									<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
+										<BarChart3 className="size-3" />
+										Billing Archives
+									</div>
+									<h3 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">Audit Trail & Consumption History</h3>
+									<p className="text-xs md:text-sm text-muted-foreground max-w-md leading-relaxed font-medium">
+										Review past billing cycles, inspect historical consumption logs, and track utility recovery rates across your portfolio.
+									</p>
+								</div>
+								<div className="flex items-center gap-3">
+									<Link 
+										href="/landlord/invoices?tab=ledger"
+										className="h-11 px-5 rounded-2xl bg-foreground text-background text-xs font-black uppercase tracking-wider hover:opacity-90 transition-all flex items-center gap-2 shadow-sm"
+									>
+										<span>Full Financial Ledger</span>
+										<ArrowUpRight className="size-3.5" />
+									</Link>
+								</div>
+							</div>
+						</div>
+
+						<div className="space-y-4">
+							<div className="flex items-center gap-4 px-2 mb-2">
+								<span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 whitespace-nowrap">Cycle Logs</span>
+								<div className="h-px flex-1 bg-border/40" />
+							</div>
+
+							<div className="space-y-3">
+								{[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => {
+									const d = new Date();
+									d.setDate(1);
+									d.setMonth(d.getMonth() - i);
+									const monthStr = d.toISOString().slice(0, 7);
+									const monthLabel = d.toLocaleDateString('en-US', { month: 'short' });
+									const yearLabel = d.getFullYear().toString();
+									const reportTitle = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+									const summary = historySummaries[monthStr];
+									const totalElec = summary?.totalElec ?? 0;
+									const totalWater = summary?.totalWater ?? 0;
+									const readingCount = summary?.readingCount ?? 0;
+									const hasData = readingCount > 0;
+									const isCurrentMonth = i === 0;
+
+									return (
+										<button 
+											key={monthStr}
+											onClick={() => setSelectedHistoryMonth(monthStr)}
+											className="group relative w-full grid grid-cols-1 md:grid-cols-12 items-center gap-4 p-5 rounded-2xl neumorphic-panel hover:border-primary/40 hover:bg-primary/[0.01] active:scale-[0.99] text-left transition-all cursor-pointer"
+										>
+											{/* Date Block */}
+											<div className="md:col-span-3 flex items-center gap-4">
+												<div className="size-14 flex items-center justify-center rounded-xl neumorphic-inset group-hover:border-primary/20 group-hover:bg-primary/5 transition-all shrink-0">
+													<div className="text-center">
+														<p className="text-[9px] font-black uppercase leading-none text-muted-foreground group-hover:text-primary transition-colors">{monthLabel}</p>
+														<p className="text-lg font-black mt-0.5 text-foreground">{yearLabel}</p>
+													</div>
+												</div>
+												<div>
+													<h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">
+														{reportTitle}
+													</h4>
+													<span className={cn(
+														"inline-block px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider mt-1",
+														isCurrentMonth 
+															? "bg-blue-500/10 text-blue-600" 
+															: hasData 
+																? "bg-emerald-500/10 text-emerald-600" 
+																: "bg-muted text-muted-foreground"
+													)}>
+														{isCurrentMonth ? "Active Cycle" : hasData ? "Closed" : "No Readings"}
+													</span>
+												</div>
+											</div>
+
+											{/* Metrics */}
+											<div className="md:col-span-7 flex items-center gap-8">
+												<div>
+													<span className="text-[9px] font-bold text-muted-foreground uppercase block">Electricity</span>
+													<span className="text-xs font-black text-foreground font-mono">
+														{historySummariesLoading ? "..." : `${totalElec.toFixed(1)} kWh`}
+													</span>
+												</div>
+												<div>
+													<span className="text-[9px] font-bold text-muted-foreground uppercase block">Water</span>
+													<span className="text-xs font-black text-foreground font-mono">
+														{historySummariesLoading ? "..." : `${totalWater.toFixed(1)} m³`}
+													</span>
+												</div>
+												<div>
+													<span className="text-[9px] font-bold text-muted-foreground uppercase block">Units Logged</span>
+													<span className="text-xs font-black text-foreground font-mono">
+														{historySummariesLoading ? "..." : `${readingCount} records`}
+													</span>
+												</div>
+											</div>
+
+											{/* Action Arrow */}
+											<div className="md:col-span-2 flex justify-end">
+												<div className="flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground group-hover:text-primary group-hover:border-primary/30 transition-all">
+													<ChevronRight className="size-4" />
+												</div>
+											</div>
+										</button>
+									);
+								})}
+							</div>
+						</div>
+					</motion.div>
+				)}
+			</AnimatePresence>
+
+			{/* Unit Detail Modal */}
+			<UnitDetailModal 
+				isOpen={!!selectedLeaseId} 
+				onClose={() => setSelectedLeaseId(null)} 
+				draft={activeDraft} 
+				onUpdate={(patch) => {
+					if (!selectedLeaseId) return;
+					const newDrafts = [...drafts];
+					const idx = newDrafts.findIndex(d => d.leaseId === selectedLeaseId);
+					if (idx !== -1) {
+						newDrafts[idx] = { ...newDrafts[idx], ...patch };
+						setDrafts(newDrafts);
+					}
+				}}
+				onSave={() => {
+					if (selectedLeaseId) {
+						handleSaveSingleUnit(selectedLeaseId);
+					}
+				}}
+				saving={saving}
+			/>
+
+			{/* History Audit Breakdown Modal */}
+			<AuditDetailModal 
+				isOpen={!!selectedHistoryMonth} 
+				onClose={() => setSelectedHistoryMonth(null)} 
+				month={selectedHistoryMonth} 
+			/>
+
+			{/* Verification Invoice Modal */}
+			{activeVerifyInvoiceId && (
+				<InvoiceModal 
+					invoiceId={activeVerifyInvoiceId}
+					onClose={() => setActiveVerifyInvoiceId(null)}
+					onUpdated={() => {
+						fetchPendingInvoices();
+						fetchData();
+					}}
+				/>
+			)}
+		</div>
+	);
 }
 
-function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, isOpen: boolean, onClose: () => void }) {
- const [data, setData] = useState<{
- unit_name?: string;
- utility_type: string;
- previous_reading: number;
- current_reading: number;
- }[]>([]);
- const [loading, setLoading] = useState(false);
-
- useEffect(() => {
- if (isOpen && month) {
- const fetchHistory = async () => {
- try {
- setLoading(true);
- const res = await fetch(`/api/landlord/utility-readings?month=${month}`);
- const json = await res.json();
- setData(json.readings || []);
- } catch (error) {
- console.error("Failed to fetch history readings:", error);
- } finally {
- setLoading(false);
- }
- };
- fetchHistory();
- }
- }, [isOpen, month]);
-
- if (!isOpen) return null;
-
- return (
- <AnimatePresence>
- {isOpen && (
- <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-10">
- <motion.div 
- initial={{ opacity: 0 }}
- animate={{ opacity: 1 }}
- exit={{ opacity: 0 }}
- className="absolute inset-0 bg-black/40 backdrop-blur-sm"
- onClick={onClose}
- />
- <motion.div 
- initial={{ opacity: 0, scale: 0.95, y: 20 }}
- animate={{ opacity: 1, scale: 1, y: 0 }}
- exit={{ opacity: 0, scale: 0.95, y: 20 }}
- className="relative h-full max-h-[85vh] w-full max-w-4xl overflow-hidden neumorphic-panel flex flex-col rounded-[2.5rem] dark:bg-[#121212]"
- >
- {/* Header */}
- <div className="flex items-center justify-between border-b border-white/5/50 p-8">
- <div>
- <h2 className="text-2xl font-black text-foreground">
- {month ? <ClientOnlyDate date={month + "-01"} format={{ month: 'long', year: 'numeric' }} /> : ""} Archive
- </h2>
- <p className="text-xs text-muted-foreground font-black uppercase tracking-widest mt-1">Detailed Consumption Audit</p>
- </div>
- <button 
- onClick={onClose} 
- className="size-12 flex items-center justify-center rounded-2xl neumorphic-inset text-muted-foreground hover:bg-red-500 hover:text-white transition-all "
- >
- <X className="size-5" />
- </button>
- </div>
-
- {/* Content */}
- <div className="flex-1 overflow-y-auto p-8 space-y-8">
- {loading ? (
- <div className="flex flex-col items-center justify-center py-20 space-y-4">
- <Loader2 className="size-8 animate-spin text-primary" />
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Retrieving archive data...</p>
- </div>
- ) : (
- <div className="space-y-8">
- {(() => {
- let totalElec = 0;
- let totalWater = 0;
- for (const r of data) {
- const usage = r.current_reading - r.previous_reading;
- if (r.utility_type === "electricity") totalElec += usage;
- else if (r.utility_type === "water") totalWater += usage;
- }
- return (
- <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
- <div className="p-8 rounded-3xl neumorphic-panel transition-all hover:neumorphic-inset">
- <div className="flex items-center gap-3 text-amber-500 mb-4">
- <Zap className="size-5" />
- <span className="text-[10px] font-black uppercase tracking-widest">Total Electricity</span>
- </div>
- <div className="flex items-baseline gap-2">
- <span className="text-4xl font-black text-foreground tracking-tight">{totalElec.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
- <span className="text-xs font-black text-muted-foreground uppercase">kWh</span>
- </div>
- </div>
- <div className="p-8 rounded-3xl neumorphic-panel transition-all hover:neumorphic-inset">
- <div className="flex items-center gap-3 text-sky-500 mb-4">
- <Droplets className="size-5" />
- <span className="text-[10px] font-black uppercase tracking-widest">Total Water</span>
- </div>
- <div className="flex items-baseline gap-2">
- <span className="text-4xl font-black text-foreground tracking-tight">{totalWater.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
- <span className="text-xs font-black text-muted-foreground uppercase">m³</span>
- </div>
- </div>
- </div>
- );
- })()}
-
- <div className="rounded-[2rem] overflow-hidden neumorphic-panel">
- <div className="overflow-x-auto">
- <table className="w-full text-left">
- <thead className="neumorphic-inset border-b border-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
- <tr>
- <th className="px-8 py-5">Unit</th>
- <th className="px-8 py-5">Utility</th>
- <th className="px-8 py-5">Previous</th>
- <th className="px-8 py-5">Current</th>
- <th className="px-8 py-5">Consumption</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-border/50">
- {data.length > 0 ? data.map((reading, idx) => (
- <tr key={`${reading.unit_name || 'unknown'}-${reading.utility_type}`} className="hover:neumorphic-inset/10 transition-colors group">
- <td className="px-8 py-5 text-sm font-black text-foreground group-hover:text-primary transition-colors">{reading.unit_name || "N/A"}</td>
- <td className="px-8 py-5 capitalize text-[10px] font-black text-muted-foreground tracking-widest">
- <div className="flex items-center gap-2.5">
- {reading.utility_type === 'water' ? (
- <div className="size-6 flex items-center justify-center rounded-lg bg-sky-500/10 text-sky-500">
- <Droplets className="size-3" />
- </div>
- ) : (
- <div className="size-6 flex items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
- <Zap className="size-3" />
- </div>
- )}
- {reading.utility_type}
- </div>
- </td>
- <td className="px-8 py-5 text-sm font-mono text-muted-foreground">{reading.previous_reading}</td>
- <td className="px-8 py-5 text-sm font-mono font-black text-foreground">{reading.current_reading}</td>
- <td className="px-8 py-5">
- <div className="flex items-center gap-2">
- <span className="text-sm font-mono font-black text-primary">
- {(reading.current_reading - reading.previous_reading).toFixed(2)}
- </span>
- <span className="text-[10px] font-black text-muted-foreground/40 uppercase">{reading.utility_type === 'water' ? 'm³' : 'kWh'}</span>
- </div>
- </td>
- </tr>
- )) : (
- <tr>
- <td colSpan={5} className="px-8 py-20 text-center">
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">No records found for this cycle</p>
- </td>
- </tr>
- )}
- </tbody>
- </table>
- </div>
- </div>
- </div>
- )}
- </div>
-
- {/* Footer */}
- <div className="border-t border-border/50 p-8 neumorphic-inset">
- <button 
- onClick={onClose}
- className="w-full py-4 rounded-2xl bg-foreground text-background text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all active:scale-95"
- >
- Close Audit View
- </button>
- </div>
- </motion.div>
- </div>
- )}
- </AnimatePresence>
- );
-}
-
-function UnitDetailModal({ isOpen, onClose, draft, onUpdate }: { isOpen: boolean, onClose: () => void, draft?: ReadingDraft, onUpdate: (p: Partial<ReadingDraft>) => void }) {
- if (!draft) return null;
-
- return (
- <AnimatePresence>
- {isOpen && (
- <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-10">
- <motion.div 
- initial={{ opacity: 0 }}
- animate={{ opacity: 1 }}
- exit={{ opacity: 0 }}
- className="absolute inset-0 bg-black/40 backdrop-blur-sm"
- onClick={onClose}
- />
- <motion.div 
- initial={{ opacity: 0, scale: 0.95, y: 20 }}
- animate={{ opacity: 1, scale: 1, y: 0 }}
- exit={{ opacity: 0, scale: 0.95, y: 20 }}
- className="relative h-full max-h-[85vh] w-full max-w-2xl overflow-hidden neumorphic-panel flex flex-col rounded-3xl dark:bg-[#1E1E1E]"
- >
- {/* Modal Header */}
- <div className="flex items-center justify-between border-b border-white/5 p-6 md:px-8">
- <div className="flex items-center gap-4">
- <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
- <Building2 className="size-6" />
- </div>
- <div>
- <h2 className="text-xl font-black text-foreground">{draft.unitName}</h2>
- <p className="text-xs text-muted-foreground">Unit Billing Profile</p>
- </div>
- </div>
- <button 
- onClick={onClose} 
- className="size-10 flex items-center justify-center rounded-xl neumorphic-inset text-muted-foreground hover:bg-red-50 hover:text-white transition-all"
- >
- <X className="size-5" />
- </button>
- </div>
-
- {/* Modal Content */}
- <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
- {/* Summary Cards */}
- <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
- <div className="rounded-2xl neumorphic-inset p-6 transition-all hover:border-primary/30 dark:bg-white/[0.02]">
- <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground block mb-2">Base Monthly Rent</span>
- <div className="flex items-baseline gap-2">
- <span className="text-xl font-black text-muted-foreground/40">₱</span>
- <input 
- type="number" 
- value={draft.rentAmount}
- onChange={(e) => onUpdate({ rentAmount: parseFloat(e.target.value) })}
- className="bg-transparent text-2xl font-black text-foreground outline-none w-full focus:text-primary"
- />
- </div>
- </div>
- <div className="rounded-2xl bg-emerald-500/[0.03] p-6 flex flex-col justify-center dark:border-emerald-500/10">
- <div className="flex items-center gap-2">
- <div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
- <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-500/80">Account Status</span>
- </div>
- <span className="text-lg font-black text-foreground mt-1">Active Lease</span>
- </div>
- </div>
-
- <ResourceSection 
- type="water"
- label="Water Meter"
- icon={Droplets}
- colorClass="sky"
- draft={draft.water}
- onUpdate={(patch) => onUpdate({ water: { ...draft.water, ...patch } })}
- />
-
- <ResourceSection 
- type="electricity"
- label="Electricity Meter"
- icon={Zap}
- colorClass="amber"
- draft={draft.electricity}
- onUpdate={(patch) => onUpdate({ electricity: { ...draft.electricity, ...patch } })}
- />
-
- {/* Additional Charges */}
- <div className="space-y-4">
- <div className="flex items-center justify-between">
- <div className="flex items-center gap-2">
- <DollarSign className="size-4 text-primary" />
- <h3 className="text-sm font-black uppercase tracking-wider text-foreground">Service Add-ons</h3>
- </div>
- <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Optional Charges</span>
- </div>
- <div className="rounded-2xl neumorphic-panel overflow-hidden dark:bg-white/[0.01]">
- <div className="divide-y divide-border">
- {[
- { label: "Internet Fiber", cost: 1500 },
- { label: "Sanitation & Trash", cost: 150 },
- ].map((service) => (
- <div key={service.label} className="flex items-center justify-between group p-5 hover:neumorphic-inset/30 transition-colors">
- <div className="flex items-center gap-3">
- <div className="size-2 rounded-full bg-primary/40" />
- <span className="text-sm font-black text-foreground">{service.label}</span>
- </div>
- <div className="flex items-center gap-4">
- <span className="font-mono text-sm font-black text-primary">₱{service.cost.toLocaleString()}</span>
- <button className="opacity-0 group-hover:opacity-100 p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">
- <Trash2 className="size-3.5" />
- </button>
- </div>
- </div>
- ))}
- </div>
- <button className="w-full py-4 border-t border-border neumorphic-inset text-[10px] font-black text-muted-foreground uppercase tracking-widest hover:neumorphic-inset hover:text-primary transition-all">
- + Append Supplemental Charge
- </button>
- </div>
- </div>
- </div>
-
- {/* Modal Footer */}
- <div className="border-t border-border p-6 md:px-8 neumorphic-inset">
- <button 
- onClick={onClose}
- className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 text-sm font-black text-white shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.01] active:scale-95"
- >
- <Check className="size-4" />
- Save All Changes
- </button>
- </div>
- </motion.div>
- </div>
- )}
- </AnimatePresence>
- );
-}
-
-function ResourceSection({ label, icon: Icon, colorClass, draft, onUpdate }: { 
- type: string,
- label: string, 
- icon: React.ElementType, 
- colorClass: string,
- draft: {
- previous: number;
- current: string;
- exists: boolean;
- rate: number;
- },
- onUpdate: (patch: Partial<{
- previous: number;
- current: string;
- exists: boolean;
- rate: number;
- }>) => void
+function UnitDetailModal({ 
+	isOpen, 
+	onClose, 
+	draft, 
+	onUpdate,
+	onSave,
+	saving
+}: { 
+	isOpen: boolean;
+	onClose: () => void;
+	draft?: ReadingDraft;
+	onUpdate: (p: Partial<ReadingDraft>) => void;
+	onSave?: () => void;
+	saving?: boolean;
 }) {
- const isSky = colorClass === "sky";
- const bgClass = isSky ? "dark:border-sky-500/10" : "dark:border-amber-500/10";
- const borderClass = isSky ? "border-sky-200" : "border-amber-200";
- const accentClass = isSky ? "text-sky-600 dark:text-sky-400" : "text-amber-600 dark:text-amber-400";
+	if (!draft) return null;
 
- return (
- <div className="space-y-4">
- <div className={cn("flex items-center gap-2", accentClass)}>
- <Icon className="size-5" />
- <h3 className="text-sm font-black uppercase tracking-wider">{label}</h3>
- </div>
- <div className={cn("grid grid-cols-1 md:grid-cols-5 gap-6 rounded-3xl neumorphic-panel p-6 overflow-hidden", bgClass)}>
- <div className="md:col-span-3 space-y-4">
- <div className="grid grid-cols-2 gap-4">
- <div className="space-y-2">
- <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground block pl-1">Previous</label>
- <div className="flex items-center gap-2">
- <input 
- type="number" 
- value={draft.previous}
- onChange={(e) => onUpdate({ previous: parseFloat(e.target.value) })}
- className="w-full rounded-xl neumorphic-panel px-4 py-3 text-sm font-black outline-none focus:border-primary "
- />
- </div>
- </div>
- <div className="space-y-2">
- <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground block pl-1">Current</label>
- <div className="flex items-center gap-2">
- <input 
- type="number" 
- value={draft.current}
- placeholder="Enter reading..."
- onChange={(e) => onUpdate({ current: e.target.value })}
- className={cn("w-full rounded-xl neumorphic-panel px-4 py-3 text-sm font-black outline-none focus:border-primary ", accentClass)}
- />
- </div>
- </div>
- </div>
- 
- <div className="flex items-center gap-3">
- <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl neumorphic-panel text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all ">
- <Camera className="size-3.5" />
- Upload Photo Proof
- </button>
- </div>
- </div>
+	return (
+		<AnimatePresence>
+			{isOpen && (
+				<div className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-10">
+					<motion.div 
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+						onClick={onClose}
+					/>
+					<motion.div 
+						initial={{ opacity: 0, scale: 0.95, y: 20 }}
+						animate={{ opacity: 1, scale: 1, y: 0 }}
+						exit={{ opacity: 0, scale: 0.95, y: 20 }}
+						className="relative h-full max-h-[85vh] w-full max-w-2xl overflow-hidden neumorphic-panel flex flex-col rounded-3xl dark:bg-[#1E1E1E]"
+					>
+						{/* Modal Header */}
+						<div className="flex items-center justify-between border-b border-border/40 p-6 md:px-8">
+							<div className="flex items-center gap-4">
+								<div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+									<Building2 className="size-6" />
+								</div>
+								<div>
+									<h2 className="text-xl font-black text-foreground">{draft.unitName}</h2>
+									<p className="text-xs text-muted-foreground">Unit Billing & Submeter Profile</p>
+								</div>
+							</div>
+							<button 
+								onClick={onClose} 
+								className="size-10 flex items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-muted transition-all"
+							>
+								<X className="size-5" />
+							</button>
+						</div>
 
- <div className="md:col-span-2 flex flex-col justify-center">
- <div className={cn("text-center p-6 rounded-2xl neumorphic-panel")}>
- <span className={cn("text-[10px] font-black uppercase tracking-widest mb-2 block opacity-80", accentClass)}>Rate per Unit</span>
- <div className="flex items-center justify-center gap-2">
- <span className="text-lg font-black text-muted-foreground/40">₱</span>
- <input 
- type="number" 
- value={draft.rate}
- step="0.01"
- onChange={(e) => onUpdate({ rate: parseFloat(e.target.value) })}
- className="w-20 bg-transparent text-center text-3xl font-black tracking-tight outline-none focus:text-primary"
- />
- <span className="text-[10px] font-black text-muted-foreground/40 mt-2">{isSky ? "/ m³" : "/ kWh"}</span>
- </div>
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mt-2">Unit Override</p>
- </div>
- </div>
- </div>
- </div>
- );
+						{/* Modal Content */}
+						<div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<div className="rounded-2xl neumorphic-inset p-5">
+									<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground block mb-1">Base Monthly Rent</span>
+									<div className="flex items-baseline gap-1.5">
+										<span className="text-lg font-black text-muted-foreground">₱</span>
+										<input 
+											type="number" 
+											value={draft.rentAmount}
+											onChange={(e) => onUpdate({ rentAmount: parseFloat(e.target.value) || 0 })}
+											className="bg-transparent text-2xl font-black text-foreground outline-none w-full focus:text-primary font-mono"
+										/>
+									</div>
+								</div>
+								<div className="rounded-2xl bg-emerald-500/[0.05] border border-emerald-500/20 p-5 flex flex-col justify-center">
+									<div className="flex items-center gap-2">
+										<div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+										<span className="text-[10px] font-black uppercase tracking-wider text-emerald-600">Lease Status</span>
+									</div>
+									<span className="text-base font-black text-foreground mt-1">Active Tenant Occupancy</span>
+								</div>
+							</div>
+
+							<ResourceSection 
+								type="water"
+								label="Water Submeter"
+								icon={Droplets}
+								colorClass="sky"
+								draft={draft.water}
+								onUpdate={(patch) => onUpdate({ water: { ...draft.water, ...patch } })}
+							/>
+
+							<ResourceSection 
+								type="electricity"
+								label="Electricity Submeter"
+								icon={Zap}
+								colorClass="amber"
+								draft={draft.electricity}
+								onUpdate={(patch) => onUpdate({ electricity: { ...draft.electricity, ...patch } })}
+							/>
+						</div>
+
+						{/* Modal Footer */}
+						<div className="border-t border-border p-6 md:px-8 neumorphic-inset flex items-center gap-3">
+							<button
+								type="button"
+								onClick={onClose}
+								className="flex-1 py-3.5 rounded-2xl border border-border text-xs font-bold text-muted-foreground hover:bg-muted transition-all"
+							>
+								Cancel
+							</button>
+							<button 
+								type="button"
+								onClick={onSave || onClose}
+								disabled={saving}
+								className="flex-[2] flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 cursor-pointer"
+							>
+								{saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+								<span>Save & Bill This Unit</span>
+							</button>
+						</div>
+					</motion.div>
+				</div>
+			)}
+		</AnimatePresence>
+	);
 }
 
+function ResourceSection({ 
+	label, 
+	icon: Icon, 
+	colorClass, 
+	draft, 
+	onUpdate 
+}: { 
+	type: string;
+	label: string; 
+	icon: React.ElementType; 
+	colorClass: string;
+	draft: {
+		previous: number;
+		current: string;
+		exists: boolean;
+		rate: number;
+	};
+	onUpdate: (patch: Partial<{
+		previous: number;
+		current: string;
+		exists: boolean;
+		rate: number;
+	}>) => void;
+}) {
+	const isSky = colorClass === "sky";
+	const bgClass = isSky ? "dark:border-sky-500/10" : "dark:border-amber-500/10";
+	const accentClass = isSky ? "text-sky-600 dark:text-sky-400" : "text-amber-600 dark:text-amber-400";
+
+	const prev = draft.previous || 0;
+	const curr = parseFloat(draft.current);
+	const hasValidDelta = !isNaN(curr) && curr >= prev;
+	const usage = hasValidDelta ? curr - prev : 0;
+	const cost = usage * (draft.rate || 0);
+
+	return (
+		<div className="space-y-3">
+			<div className={cn("flex items-center justify-between", accentClass)}>
+				<div className="flex items-center gap-2">
+					<Icon className="size-4" />
+					<h3 className="text-xs font-black uppercase tracking-wider">{label}</h3>
+				</div>
+				{hasValidDelta && usage > 0 && (
+					<span className="text-[10px] font-mono font-bold bg-muted px-2 py-0.5 rounded text-foreground">
+						+{usage.toFixed(1)} {isSky ? "m³" : "kWh"} = ₱{cost.toFixed(2)}
+					</span>
+				)}
+			</div>
+			<div className={cn("grid grid-cols-1 md:grid-cols-5 gap-4 rounded-2xl neumorphic-panel p-5 overflow-hidden border border-border/40", bgClass)}>
+				<div className="md:col-span-3 space-y-4">
+					<div className="grid grid-cols-2 gap-3">
+						<div className="space-y-1">
+							<label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block">Previous</label>
+							<input 
+								type="number" 
+								value={draft.previous}
+								onChange={(e) => onUpdate({ previous: parseFloat(e.target.value) || 0 })}
+								className="w-full rounded-xl neumorphic-panel px-3 py-2 text-xs font-mono font-bold outline-none focus:border-primary"
+							/>
+						</div>
+						<div className="space-y-1">
+							<label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block">Current</label>
+							<input 
+								type="number" 
+								value={draft.current}
+								placeholder="Enter reading..."
+								onChange={(e) => onUpdate({ current: e.target.value })}
+								className={cn("w-full rounded-xl neumorphic-panel px-3 py-2 text-xs font-mono font-black outline-none focus:border-primary", accentClass)}
+							/>
+						</div>
+					</div>
+				</div>
+
+				<div className="md:col-span-2 flex flex-col justify-center">
+					<div className="text-center p-3 rounded-xl neumorphic-panel border border-border/40">
+						<span className={cn("text-[9px] font-black uppercase tracking-widest block opacity-80", accentClass)}>Tariff Rate</span>
+						<div className="flex items-center justify-center gap-1 mt-1">
+							<span className="text-sm font-black text-muted-foreground">₱</span>
+							<input 
+								type="number" 
+								value={draft.rate}
+								step="0.01"
+								onChange={(e) => onUpdate({ rate: parseFloat(e.target.value) || 0 })}
+								className="w-16 bg-transparent text-center text-lg font-black font-mono tracking-tight outline-none focus:text-primary"
+							/>
+							<span className="text-[10px] font-bold text-muted-foreground">{isSky ? "/ m³" : "/ kWh"}</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+function AuditDetailModal({ isOpen, onClose, month }: { isOpen: boolean; onClose: () => void; month: string | null }) {
+	type AuditRecord = {
+		unit_name: string;
+		tenant_name: string;
+		utility_type: string;
+		previous_reading: number;
+		current_reading: number;
+		usage: number;
+		billed_rate: number;
+		computed_charge: number;
+		entered_at: string;
+	};
+
+	const [loading, setLoading] = useState(false);
+	const [records, setRecords] = useState<AuditRecord[]>([]);
+
+	useEffect(() => {
+		if (!isOpen || !month) return;
+		let alive = true;
+		const load = async () => {
+			setLoading(true);
+			try {
+				const res = await fetch(`/api/landlord/utility-readings?month=${month}`);
+				if (!res.ok) throw new Error();
+				const json = await res.json();
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				const mapped: AuditRecord[] = (json.readings || []).map((r: any) => ({
+					unit_name: r.unit?.name || r.unit_id || "Unknown Unit",
+					tenant_name: r.lease?.tenant?.full_name || "Unknown Tenant",
+					utility_type: r.utility_type,
+					previous_reading: r.previous_reading,
+					current_reading: r.current_reading,
+					usage: Math.max(0, (r.current_reading || 0) - (r.previous_reading || 0)),
+					billed_rate: r.billed_rate || 0,
+					computed_charge: r.computed_charge || 0,
+					entered_at: r.entered_at || r.created_at,
+				}));
+				if (alive) setRecords(mapped);
+			} catch (e) {
+				console.error(e);
+			} finally {
+				if (alive) setLoading(false);
+			}
+		};
+		load();
+		return () => { alive = false; };
+	}, [isOpen, month]);
+
+	if (!isOpen || !month) return null;
+
+	const [y, m] = month.split("-").map(Number);
+	const dateObj = new Date(y, m - 1);
+	const monthFormatted = dateObj.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+	let totalElec = 0;
+	let totalWater = 0;
+	let totalCost = 0;
+	records.forEach((r) => {
+		if (r.utility_type === "electricity") totalElec += r.usage;
+		else if (r.utility_type === "water") totalWater += r.usage;
+		totalCost += r.computed_charge;
+	});
+
+	return (
+		<AnimatePresence>
+			<div className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-10">
+				<motion.div 
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 1 }}
+					exit={{ opacity: 0 }}
+					className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+					onClick={onClose}
+				/>
+				<motion.div 
+					initial={{ opacity: 0, scale: 0.95, y: 20 }}
+					animate={{ opacity: 1, scale: 1, y: 0 }}
+					exit={{ opacity: 0, scale: 0.95, y: 20 }}
+					className="relative h-full max-h-[85vh] w-full max-w-4xl overflow-hidden neumorphic-panel flex flex-col rounded-3xl"
+				>
+					{/* Modal Header */}
+					<div className="flex items-center justify-between border-b border-border p-6 md:px-8">
+						<div className="flex items-center gap-4">
+							<div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+								<History className="size-6" />
+							</div>
+							<div>
+								<h2 className="text-xl font-black text-foreground">{monthFormatted} Breakdown</h2>
+								<p className="text-xs text-muted-foreground">Historical Audit Record</p>
+							</div>
+						</div>
+						<button 
+							onClick={onClose} 
+							className="size-10 flex items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-muted transition-all"
+						>
+							<X className="size-5" />
+						</button>
+					</div>
+
+					{/* Modal Content */}
+					<div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+						{/* Summary Stats */}
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+							<div className="rounded-2xl neumorphic-panel p-5">
+								<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Total Electricity</span>
+								<div className="mt-2 flex items-baseline gap-2">
+									<span className="text-2xl font-black text-amber-500 font-mono">{totalElec.toFixed(1)}</span>
+									<span className="text-xs font-black text-muted-foreground">kWh</span>
+								</div>
+							</div>
+							<div className="rounded-2xl neumorphic-panel p-5">
+								<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Total Water</span>
+								<div className="mt-2 flex items-baseline gap-2">
+									<span className="text-2xl font-black text-sky-500 font-mono">{totalWater.toFixed(1)}</span>
+									<span className="text-xs font-black text-muted-foreground">m³</span>
+								</div>
+							</div>
+							<div className="rounded-2xl neumorphic-panel p-5">
+								<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Total Billed</span>
+								<div className="mt-2 flex items-baseline gap-1">
+									<span className="text-xs font-black text-muted-foreground">₱</span>
+									<span className="text-2xl font-black text-foreground font-mono">{totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+								</div>
+							</div>
+						</div>
+
+						{/* Breakdown Table */}
+						{loading ? (
+							<div className="flex h-48 items-center justify-center">
+								<Loader2 className="size-8 animate-spin text-primary" />
+							</div>
+						) : (
+							<div className="rounded-2xl neumorphic-panel overflow-hidden border border-border">
+								<table className="w-full text-left border-collapse text-xs">
+									<thead>
+										<tr className="border-b border-border bg-muted/20">
+											<th className="px-6 py-4 font-bold text-muted-foreground">Unit</th>
+											<th className="px-6 py-4 font-bold text-muted-foreground">Type</th>
+											<th className="px-6 py-4 font-bold text-muted-foreground text-center">Prev</th>
+											<th className="px-6 py-4 font-bold text-muted-foreground text-center">Curr</th>
+											<th className="px-6 py-4 font-bold text-muted-foreground text-center">Usage</th>
+											<th className="px-6 py-4 font-bold text-muted-foreground text-right">Charge</th>
+										</tr>
+									</thead>
+									<tbody className="divide-y divide-border font-mono">
+										{records.length === 0 ? (
+											<tr>
+												<td colSpan={6} className="px-6 py-12 text-center text-muted-foreground font-sans">
+													No utility readings recorded for this cycle.
+												</td>
+											</tr>
+										) : records.map((r, idx) => (
+											<tr key={idx} className="hover:bg-muted/10">
+												<td className="px-6 py-3 font-sans font-bold text-foreground">{r.unit_name}</td>
+												<td className="px-6 py-3 font-sans capitalize">
+													{r.utility_type === "water" ? (
+														<span className="text-sky-600 font-bold">Water</span>
+													) : (
+														<span className="text-amber-600 font-bold">Electric</span>
+													)}
+												</td>
+												<td className="px-6 py-3 text-center text-muted-foreground">{r.previous_reading}</td>
+												<td className="px-6 py-3 text-center text-foreground font-bold">{r.current_reading}</td>
+												<td className="px-6 py-3 text-center text-foreground font-bold">{r.usage.toFixed(1)}</td>
+												<td className="px-6 py-3 text-right text-foreground font-bold">₱{r.computed_charge.toFixed(2)}</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						)}
+					</div>
+
+					{/* Modal Footer */}
+					<div className="border-t border-border p-6 md:px-8 neumorphic-inset flex justify-end">
+						<button 
+							onClick={onClose}
+							className="px-6 py-3 rounded-2xl border border-border text-xs font-bold text-foreground hover:bg-muted transition-all"
+						>
+							Close
+						</button>
+					</div>
+				</motion.div>
+			</div>
+		</AnimatePresence>
+	);
+}
