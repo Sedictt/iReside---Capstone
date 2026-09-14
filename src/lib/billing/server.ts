@@ -95,7 +95,6 @@ export type InvoiceListItem = {
     reviewAction: Payment["review_action"] | null;
     inPersonIntentExpiresAt: string | null;
     hasRefundRequest: boolean;
-    paymentProofUrl?: string | null;
 };
 
 export type InvoiceReadingDetail = Pick<
@@ -411,7 +410,6 @@ function buildInvoiceListItem(
         reviewAction: payment.review_action,
         inPersonIntentExpiresAt: payment.in_person_intent_expires_at,
         hasRefundRequest: !!(payment.metadata as any)?.refund_preference,
-        paymentProofUrl: payment.payment_proof_url,
     };
 }
 
