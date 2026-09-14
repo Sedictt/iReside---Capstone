@@ -485,12 +485,12 @@ The following sections provide an architectural breakdown of every system functi
 8. Click **Send Lease for Tenant Signature**. Once the tenant signs, the status changes to `Active`.
 
 #### Workflow C: Logging Utilities & Verifying GCash Payments
-1. On the 25th of the month, click **Invoices → Record Submeter**.
-2. Select the unit, input the latest electricity meter reading (kWh) and water reading (m³), and click **Compute & Post**.
-3. The system automatically attaches the utility charge to the tenant's upcoming invoice.
-4. When a tenant pays, navigate to **Invoices → Pending Verifications**:
-   - Inspect the uploaded GCash screenshot and verify the reference number against your GCash app.
-   - Click **Approve Payment**. The invoice status updates to `Paid`, and an Official Receipt PDF is automatically dispatched to the tenant.
+1. Navigate to **Utility Billing** via the sidebar menu, the **Utility Submeters** card on the Landlord Dashboard, or the **Record Submeters** button in **Invoices**.
+2. Under the **Meter Readings** tab, enter current electricity (kWh) and water (m³) readings in the batch table (or click a unit row for the individual detail modal). Real-time consumption deltas and estimated charges calculate automatically.
+3. Click **Post & Bill Invoices** (or **Save Draft** to review later). The system records the readings, generates or updates active monthly invoices with itemized submeter charges, and dispatches instant notifications to tenants.
+4. When tenants submit payment, open the **Verify Payments** tab in **Utility Billing** (or open **Invoices** and filter by **Under Review**).
+5. Review the tenant's payment card and click **Review & Confirm** to inspect the uploaded GCash screenshot proof against your GCash SMS or banking app.
+6. Click **Approve Payment**. The invoice status updates to `Paid`, the remaining balance is cleared, and an Official Receipt PDF is automatically dispatched to the tenant.
 
 ---
 
