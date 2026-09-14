@@ -42,6 +42,7 @@ import { BillingOperationsPanel } from "@/components/landlord/BillingOperationsP
 import { InvoiceModal } from "@/components/landlord/invoices/InvoiceModal";
 import { OfflineStorage } from "@/lib/offline/offlineStorage";
 import { mutationQueue } from "@/lib/offline/mutationQueue";
+import { MonthPicker } from "@/components/ui/MonthPicker";
 
 type ReadingDraft = {
 	unitId: string;
@@ -655,6 +656,13 @@ export function UtilityBillingDashboard() {
 
 	const activeDraft = drafts.find(d => d.unitId === selectedUnitId || (d.leaseId && d.leaseId === selectedUnitId));
 
+	const formattedCycleMonth = useMemo(() => {
+		if (!selectedMonth || !selectedMonth.includes("-")) return selectedMonth;
+		const [y, m] = selectedMonth.split("-");
+		const date = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1);
+		return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+	}, [selectedMonth]);
+
 	if (loading && !workspace) {
 		return (
 			<div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
@@ -665,7 +673,7 @@ export function UtilityBillingDashboard() {
 	}
 
 	return (
-		<div className="flex flex-col space-y-6 pb-20 max-w-7xl mx-auto px-4 md:px-8">
+		<div className="flex flex-col space-y-8 pb-20 w-full">
 			{/* Page Header */}
 			<div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
 				<div className="space-y-1">
@@ -674,7 +682,7 @@ export function UtilityBillingDashboard() {
 							<Zap className="size-3" />
 							Billing Cycle
 						</span>
-						<span className="text-xs font-medium text-muted-foreground">{selectedMonth}</span>
+						<span className="text-xs font-medium text-muted-foreground">{formattedCycleMonth}</span>
 					</div>
 					<h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
 						Utility & Submeter Billing
@@ -712,9 +720,9 @@ export function UtilityBillingDashboard() {
 			</div>
 
 			{/* Unified Command Bar */}
-			<div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card/40 p-2.5 backdrop-blur-md lg:flex-row lg:items-center lg:justify-between">
+			<div className="relative z-30 overflow-visible flex flex-col gap-3 rounded-2xl border border-border/60 bg-card/40 p-2.5 sm:p-3 backdrop-blur-md lg:flex-row lg:items-center lg:justify-between shadow-sm">
 				{/* Segmented Pill Tabs */}
-				<div className="flex items-center gap-1 overflow-x-auto scrollbar-none p-1 rounded-xl bg-muted/40 border border-border/50">
+				<div className="flex shrink-0 items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-none p-1 sm:p-1.5 rounded-xl bg-muted/40 border border-border/50 min-w-max">
 					{[
 						{ 
 							id: "readings", 
@@ -744,13 +752,13 @@ export function UtilityBillingDashboard() {
 							key={tab.id}
 							onClick={() => setActiveTab(tab.id as any)}
 							className={cn(
-								"flex shrink-0 items-center gap-2 rounded-lg px-3.5 py-2 text-xs transition-all whitespace-nowrap cursor-pointer",
+								"flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 sm:px-3.5 sm:py-2 text-xs font-medium transition-all whitespace-nowrap cursor-pointer",
 								activeTab === tab.id
-									? "bg-card text-foreground font-semibold shadow-sm border border-border/70"
-									: "text-muted-foreground hover:text-foreground hover:bg-card/40 font-medium"
+									? "bg-card text-foreground font-semibold shadow-sm border border-border/80"
+									: "text-muted-foreground hover:text-foreground hover:bg-card/40"
 							)}
 						>
-							<tab.icon className={cn("size-3.5", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
+							<tab.icon className={cn("size-3.5 shrink-0", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
 							<span>{tab.label}</span>
 							{tab.badge && (
 								<span className={cn(
@@ -769,33 +777,25 @@ export function UtilityBillingDashboard() {
 				</div>
 
 				{/* Search & Cycle Filter */}
-				<div className="flex items-center gap-2.5 w-full lg:w-auto">
+				<div className="relative z-30 flex items-center gap-2.5 w-full lg:w-auto lg:justify-end">
 					{activeTab === "readings" && (
-						<div className="relative flex-1 sm:w-64 lg:w-60">
+						<div className="relative flex-1 min-w-[130px] sm:w-56 md:w-64">
 							<Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
 							<input 
 								placeholder="Search unit or room..." 
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
-								className="h-9 w-full rounded-xl border border-border/70 bg-card/60 pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all"
+								className="h-9.5 w-full rounded-xl border border-border/70 bg-card/60 pl-8.5 pr-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all"
 							/>
 						</div>
 					)}
 
-					<div className="flex h-9 items-center gap-2 rounded-xl border border-border/70 bg-card/60 px-3 text-xs font-medium text-foreground shrink-0 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/15 transition-all" title="Selected Billing Cycle Month">
-						<Calendar className="size-3.5 text-primary shrink-0" />
-						<input 
-							type="month"
-							value={selectedMonth}
-							onChange={(e) => {
-								if (e.target.value) {
-									setSelectedMonth(e.target.value);
-								}
-							}}
-							className="bg-transparent text-xs font-semibold text-foreground outline-none cursor-pointer"
-							aria-label="Select billing cycle month"
-						/>
-					</div>
+					<MonthPicker
+						value={selectedMonth}
+						onChange={(newMonth) => setSelectedMonth(newMonth)}
+						className={cn(activeTab !== "readings" && "ml-auto lg:ml-0")}
+						align="right"
+					/>
 				</div>
 			</div>
 
@@ -810,8 +810,8 @@ export function UtilityBillingDashboard() {
 						className="space-y-6"
 					>
 						{/* Progress & Live Consumption Dashboard */}
-						<div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 backdrop-blur-sm flex flex-col justify-between">
+						<div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5 backdrop-blur-sm flex flex-col justify-between">
 								<span className="text-[11px] font-semibold text-muted-foreground">Units Logged</span>
 								<div className="mt-2 flex items-baseline gap-1.5">
 									<span className="text-2xl font-bold font-mono text-foreground">{readingsSummary.recordedCount}</span>
@@ -825,7 +825,7 @@ export function UtilityBillingDashboard() {
 								</div>
 							</div>
 
-							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 backdrop-blur-sm flex flex-col justify-between">
+							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5 backdrop-blur-sm flex flex-col justify-between">
 								<span className="text-[11px] font-semibold text-amber-500 flex items-center gap-1.5">
 									<Zap className="size-3.5" /> Electricity Recorded
 								</span>
@@ -836,7 +836,7 @@ export function UtilityBillingDashboard() {
 								<span className="text-[10px] text-muted-foreground mt-2">Active cycle usage</span>
 							</div>
 
-							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 backdrop-blur-sm flex flex-col justify-between">
+							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5 backdrop-blur-sm flex flex-col justify-between">
 								<span className="text-[11px] font-semibold text-sky-400 flex items-center gap-1.5">
 									<Droplets className="size-3.5" /> Water Recorded
 								</span>
@@ -847,7 +847,7 @@ export function UtilityBillingDashboard() {
 								<span className="text-[10px] text-muted-foreground mt-2">Active cycle usage</span>
 							</div>
 
-							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 backdrop-blur-sm flex flex-col justify-between">
+							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5 backdrop-blur-sm flex flex-col justify-between">
 								<span className="text-[11px] font-semibold text-emerald-500 flex items-center gap-1.5">
 									<DollarSign className="size-3.5" /> Est. Utility Billing
 								</span>
@@ -946,7 +946,7 @@ export function UtilityBillingDashboard() {
 																				newDrafts[index] = { ...newDrafts[index], water: { ...draft.water, current: e.target.value } };
 																				setDrafts(newDrafts);
 																			}}
-																			className="w-20 rounded-lg border border-border/70 bg-background/80 px-2 py-1 text-center font-mono text-xs font-semibold text-sky-400 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 transition-all"
+																			className="w-24 h-8 rounded-lg border border-border/70 bg-background/80 px-2.5 py-1 text-center font-mono text-xs font-semibold text-sky-400 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 transition-all"
 																		/>
 																	)}
 																</div>
@@ -983,7 +983,7 @@ export function UtilityBillingDashboard() {
 																				newDrafts[index] = { ...newDrafts[index], electricity: { ...draft.electricity, current: e.target.value } };
 																				setDrafts(newDrafts);
 																			}}
-																			className="w-20 rounded-lg border border-border/70 bg-background/80 px-2 py-1 text-center font-mono text-xs font-semibold text-amber-400 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all"
+																			className="w-24 h-8 rounded-lg border border-border/70 bg-background/80 px-2.5 py-1 text-center font-mono text-xs font-semibold text-amber-400 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all"
 																		/>
 																	)}
 																</div>
