@@ -387,6 +387,7 @@ export function UtilityBillingDashboard() {
 		const end = `${selectedMonth}-${String(lastDay).padStart(2, "0")}`;
 
 		drafts.forEach(d => {
+			if (!d.leaseId) return;
 			if (d.water.current !== "") {
 				const val = parseFloat(d.water.current);
 				if (!isNaN(val)) {
