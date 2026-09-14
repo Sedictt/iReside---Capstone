@@ -1,0 +1,355 @@
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useProperty } from '@/context/PropertyContext';
+import Link from 'next/link';
+import { 
+    Building2, 
+    CreditCard, 
+    Ticket, 
+    Wrench,
+    Users, 
+    ArrowUpRight, 
+    AlertTriangle, 
+    CheckCircle2, 
+    Clock, 
+    ChevronRight,
+    ChevronDown,
+    TrendingUp,
+    MessageSquare,
+    ShieldAlert
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
+
+interface AnalyticsData {
+    primaryKpis?: Array<{
+        title: string;
+        value: string;
+        change: string;
+        changeType: 'positive' | 'negative' | 'neutral';
+    }>;
+    financialChart?: {
+        month?: {
+            labels: string[];
+            earnings: number[];
+            expenses: number[];
+        };
+    };
+    operationalSnapshot?: {
+        status: string;
+        summary: string;
+    };
+}
+
+interface PaymentOverviewData {
+    Overdue?: any[];
+    'Near Due'?: any[];
+    Paid?: any[];
+}
+
+export function LandlordOverviewView() {
+    const { profile } = useAuth();
+    const { properties, selectedPropertyId, setSelectedPropertyId } = useProperty();
+    
+    const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+    const [payments, setPayments] = useState<PaymentOverviewData | null>(null);
+    const [ticketsCount, setTicketsCount] = useState<number>(0);
+    const [loading, setLoading] = useState(true);
+
+    const fetchData = async () => {
+        try {
+            const queryParam = selectedPropertyId && selectedPropertyId !== 'all' 
+                ? `?propertyId=${selectedPropertyId}` 
+                : '';
+                
+            const [analyticsRes, paymentsRes, ticketsRes] = await Promise.all([
+                fetch(`/api/landlord/analytics/overview${queryParam}`).catch(() => null),
+                fetch(`/api/landlord/payments/overview${queryParam}`).catch(() => null),
+                fetch(`/api/landlord/maintenance${queryParam}`).catch(() => null),
+            ]);
+
+            if (analyticsRes && analyticsRes.ok) {
+                const aData = await analyticsRes.json();
+                setAnalytics(aData);
+            }
+
+            if (paymentsRes && paymentsRes.ok) {
+                const pData = await paymentsRes.json();
+                setPayments(pData);
+            }
+
+            if (ticketsRes && ticketsRes.ok) {
+                const tData = await ticketsRes.json();
+                const openTickets = (tData.requests || []).filter((r: any) => r.status !== 'resolved' && r.status !== 'cancelled');
+                setTicketsCount(openTickets.length);
+            }
+        } catch (err) {
+            console.error('[MobileOverview] Error loading data:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        setLoading(true);
+        fetchData();
+    }, [selectedPropertyId]);
+
+    const overdueCount = payments?.Overdue?.length || 0;
+    const nearDueCount = payments?.['Near Due']?.length || 0;
+    const paidCount = payments?.Paid?.length || 0;
+
+    // Selected Property name
+    const currentPropertyName = useMemo(() => {
+        if (!selectedPropertyId || selectedPropertyId === 'all') return 'All Properties';
+        return properties.find(p => p.id === selectedPropertyId)?.name || 'All Properties';
+    }, [properties, selectedPropertyId]);
+
+    // Monthly revenue mini-chart data
+    const chartData = useMemo(() => {
+        const months = analytics?.financialChart?.month?.labels || ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
+        const values = analytics?.financialChart?.month?.earnings || [45000, 52000, 48000, 61000, 58000, 65000];
+        const max = Math.max(...values, 10000);
+        return months.map((label, i) => {
+            let displayLabel = label;
+            if (/^week\s*(\d+)/i.test(label)) {
+                displayLabel = label.replace(/^week\s*(\d+)/i, 'W$1');
+            } else if (/^wk\s*(\d+)/i.test(label)) {
+                displayLabel = label.replace(/^wk\s*(\d+)/i, 'W$1');
+            } else if (label.toLowerCase().startsWith('week')) {
+                displayLabel = label.replace(/week\s*/i, 'W');
+            } else if (label.length > 4) {
+                displayLabel = label.slice(0, 3);
+            }
+            return {
+                label: displayLabel,
+                value: values[i] || 0,
+                heightPercent: Math.round(((values[i] || 0) / max) * 100),
+            };
+        });
+    }, [analytics]);
+
+    // KPI values
+    const occupancyKpi = analytics?.primaryKpis?.find(k => k.title.toLowerCase().includes('occupancy'))?.value || '92%';
+    const totalCollectedKpi = analytics?.primaryKpis?.find(k => k.title.toLowerCase().includes('collected') || k.title.toLowerCase().includes('revenue'))?.value || '₱0';
+
+    return (
+        <PullToRefresh onRefresh={fetchData} className="h-full flex flex-col">
+            <div className="flex-1 min-h-0 flex flex-col justify-between pb-1.5 gap-2">
+                {/* Prominently Highlighted Property Dropdown Selector */}
+                <div className="px-4 shrink-0">
+                    <div className="relative w-full">
+                        <div className="flex items-center justify-between w-full px-3.5 py-2 rounded-2xl bg-white dark:bg-card border-2 border-primary/40 shadow-xs hover:border-primary/60 transition-all active:scale-[0.99] pointer-events-none">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="flex size-7.5 items-center justify-center rounded-xl bg-primary/20 text-primary shrink-0 shadow-xs">
+                                    <Building2 className="size-4" />
+                                </div>
+                                <div className="flex flex-col text-left min-w-0">
+                                    <span className="text-[9px] font-black uppercase tracking-wider text-primary leading-none mb-0.5">Select Property</span>
+                                    <span className="text-xs sm:text-sm font-bold text-foreground truncate">
+                                        {currentPropertyName}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0 pl-2">
+                                <span className="text-[9px] font-extrabold text-primary uppercase tracking-tight bg-primary/10 px-1.5 py-0.5 rounded-md">Switch</span>
+                                <div className="flex size-6 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                                    <ChevronDown className="size-3.5" />
+                                </div>
+                            </div>
+                        </div>
+                        <select
+                            value={selectedPropertyId || 'all'}
+                            onChange={(e) => setSelectedPropertyId(e.target.value)}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 text-base"
+                            aria-label="Filter by property"
+                        >
+                            <option value="all">All Properties</option>
+                            {properties.map((p) => (
+                                <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                {/* Greeting Hero Card */}
+                <div className="mx-4 shrink-0 rounded-2xl px-3.5 py-2.5 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border border-primary/20 shadow-xs relative overflow-hidden">
+                    <div className="flex items-start justify-between relative z-10">
+                        <div>
+                            <span className="text-[9px] font-black uppercase tracking-wider text-primary">Landlord Hub</span>
+                            <h2 className="text-sm font-black tracking-tight text-foreground">
+                                Welcome, {profile?.first_name || 'Landlord'}
+                            </h2>
+                            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">
+                                {overdueCount > 0 
+                                    ? `⚠️ ${overdueCount} payment${overdueCount > 1 ? 's are' : ' is'} overdue for review`
+                                    : 'Everything looks on track today'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Key Metrics Grid */}
+                <div className="grid grid-cols-2 gap-2.5 px-4 shrink-0">
+                    {/* Occupancy Card */}
+                    <div className="rounded-2xl p-2.5 bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex flex-col justify-between min-h-[74px]">
+                        <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-medium text-muted-foreground">Occupancy</span>
+                            <div className="p-1 rounded-lg bg-emerald-500/10 text-emerald-500">
+                                <Users className="size-3.5" />
+                            </div>
+                        </div>
+                        <div className="mt-0.5">
+                            <h3 className="text-base sm:text-lg font-black text-foreground">{occupancyKpi}</h3>
+                            <p className="text-[9px] text-muted-foreground">Active leases</p>
+                        </div>
+                    </div>
+
+                    {/* Revenue / Collections Card */}
+                    <div className="rounded-2xl p-2.5 bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex flex-col justify-between min-h-[74px]">
+                        <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-medium text-muted-foreground">Collected</span>
+                            <div className="p-1 rounded-lg bg-primary/10 text-primary">
+                                <CreditCard className="size-3.5" />
+                            </div>
+                        </div>
+                        <div className="mt-0.5">
+                            <h3 className="text-base sm:text-lg font-black text-foreground truncate">{totalCollectedKpi}</h3>
+                            <p className="text-[9px] text-muted-foreground">This period</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Action Required / Alerts Section */}
+                <div className="px-4 shrink-0">
+                    <div className="flex items-center justify-between mb-1">
+                        <h3 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                            Action Items
+                        </h3>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                        {/* Payments Attention */}
+                        <Link
+                            href="/mobile/landlord/payments"
+                            className="flex items-center justify-between p-2 sm:p-2.5 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs active:scale-[0.98] transition-all hover:border-primary/40"
+                        >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <div className={cn(
+                                    'size-7 rounded-xl flex items-center justify-center shrink-0',
+                                    overdueCount > 0 ? 'bg-red-500/15 text-red-500' : 'bg-emerald-500/15 text-emerald-500'
+                                )}>
+                                    {overdueCount > 0 ? <AlertTriangle className="size-3.5" /> : <CheckCircle2 className="size-3.5" />}
+                                </div>
+                                <div className="min-w-0">
+                                    <h4 className="text-xs font-bold text-foreground truncate">
+                                        {overdueCount > 0 ? `${overdueCount} Overdue Invoices` : 'All Invoices Paid / Current'}
+                                    </h4>
+                                    <p className="text-[10px] text-muted-foreground truncate">
+                                        {nearDueCount > 0 ? `${nearDueCount} due in next 7 days` : 'Tap to review all payments'}
+                                    </p>
+                                </div>
+                            </div>
+                            <ChevronRight className="size-3.5 text-muted-foreground shrink-0" />
+                        </Link>
+
+                        {/* Maintenance Tickets */}
+                        <Link
+                            href="/mobile/landlord/tickets"
+                            className="flex items-center justify-between p-2 sm:p-2.5 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs active:scale-[0.98] transition-all hover:border-primary/40"
+                        >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <div className={cn(
+                                    'size-7 rounded-xl flex items-center justify-center shrink-0',
+                                    ticketsCount > 0 ? 'bg-amber-500/15 text-amber-500' : 'bg-primary/15 text-primary'
+                                )}>
+                                    <Wrench className="size-3.5" />
+                                </div>
+                                <div className="min-w-0">
+                                    <h4 className="text-xs font-bold text-foreground truncate">
+                                        {ticketsCount > 0 ? `${ticketsCount} Open Maintenance Requests` : 'No Pending Maintenance'}
+                                    </h4>
+                                    <p className="text-[10px] text-muted-foreground truncate">
+                                        Tap to view issue photos &amp; status
+                                    </p>
+                                </div>
+                            </div>
+                            <ChevronRight className="size-3.5 text-muted-foreground shrink-0" />
+                        </Link>
+
+                        {/* Tenant Broadcast Quick Link */}
+                        <Link
+                            href="/mobile/landlord/messages"
+                            className="flex items-center justify-between p-2 sm:p-2.5 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs active:scale-[0.98] transition-all hover:border-primary/40"
+                        >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="size-7 rounded-xl bg-blue-500/15 text-blue-500 flex items-center justify-center shrink-0">
+                                    <MessageSquare className="size-3.5" />
+                                </div>
+                                <div className="min-w-0">
+                                    <h4 className="text-xs font-bold text-foreground truncate">
+                                        Announcements &amp; Chats
+                                    </h4>
+                                    <p className="text-[10px] text-muted-foreground truncate">
+                                        Broadcast a notice or message residents
+                                    </p>
+                                </div>
+                            </div>
+                            <ChevronRight className="size-3.5 text-muted-foreground shrink-0" />
+                        </Link>
+                    </div>
+                </div>
+
+                {/* Brief Revenue Trend Chart (Mobile-optimized — auto-fills remaining height) */}
+                <div className="px-4 flex-1 min-h-[140px] flex flex-col justify-end">
+                    <div className="rounded-2xl p-3 bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex-1 flex flex-col justify-between min-h-0">
+                        <div className="flex items-center justify-between shrink-0">
+                            <div className="flex items-center gap-1.5">
+                                <TrendingUp className="size-3.5 text-primary" />
+                                <h3 className="text-xs font-black tracking-tight text-foreground">Revenue Trend</h3>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground">Last 6 Months</span>
+                        </div>
+
+                        {/* Revenue Stat Strip */}
+                        <div className="flex items-baseline justify-between shrink-0 my-0.5">
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-base font-black text-foreground">
+                                    {totalCollectedKpi}
+                                </span>
+                                <span className="text-[10px] font-semibold text-muted-foreground">total collected</span>
+                            </div>
+                            <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                                <TrendingUp className="size-3" />
+                                Active
+                            </div>
+                        </div>
+
+                        {/* SVG/CSS Micro Bar Chart — fills full available height */}
+                        <div className="flex items-stretch justify-between gap-2.5 flex-1 min-h-[70px] pt-1 pb-0.5 w-full">
+                            {chartData.map((item, idx) => (
+                                <div key={idx} className="flex-1 flex flex-col items-center justify-end gap-1 group h-full">
+                                    <span className="text-[9px] font-bold text-muted-foreground shrink-0">
+                                        ₱{item.value >= 1000 ? `${(item.value / 1000).toFixed(item.value % 1000 === 0 ? 0 : 1)}k` : item.value}
+                                    </span>
+                                    <div className="w-full flex-1 min-h-[32px] bg-slate-100 dark:bg-muted/40 rounded-t-lg relative flex items-end justify-center overflow-hidden border border-slate-200/80 dark:border-white/5">
+                                        <div 
+                                            className={cn(
+                                                "w-full rounded-t-md transition-all duration-500",
+                                                item.value > 0 ? "bg-primary" : "bg-primary/25"
+                                            )}
+                                            style={{ height: `${item.value > 0 ? Math.max(item.heightPercent, 18) : 8}%` }}
+                                        />
+                                    </div>
+                                    <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground shrink-0">{item.label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </PullToRefresh>
+    );
+}
