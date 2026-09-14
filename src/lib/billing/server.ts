@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import crypto from "crypto";
+import { NotificationService } from "@/lib/services/notification";
 
 import {
     computeUtilityCharge,
@@ -86,6 +87,8 @@ export type InvoiceListItem = {
     type: string;
     proofStatus: "none" | "submitted" | "confirmed";
     paymentMethod: string | null;
+    referenceNumber: string | null;
+    paymentProofUrl: string | null;
     itemCount: number;
     hasReceipt: boolean;
     amountTag: Payment["amount_tag"] | null;
@@ -399,6 +402,8 @@ function buildInvoiceListItem(
         type: paymentTypeLabel(items, payment.description),
         proofStatus,
         paymentMethod: payment.method,
+        referenceNumber: payment.reference_number ?? null,
+        paymentProofUrl: payment.payment_proof_url ?? null,
         itemCount: items.length + readings.length,
         hasReceipt: receipts.length > 0,
         amountTag: payment.amount_tag,
@@ -776,17 +781,17 @@ export async function generateMonthlyInvoices(
     if (leaseError) throw leaseError;
 
     if (!leases || leases.length === 0) {
-        return { created: 0, skipped: 0, billingCycle: cycleKey };
+        return { created: 0, updated: 0, skipped: 0, billingCycle: cycleKey };
     }
 
     const existingPaymentIds = await supabase
         .from("payments")
-        .select("lease_id")
+        .select("id, lease_id, status, paid_amount")
         .eq("landlord_id", landlordId)
         .eq("billing_cycle", cycleKey);
 
     if (existingPaymentIds.error) throw existingPaymentIds.error;
-    const existingLeaseIds = new Set((existingPaymentIds.data ?? []).map((row) => row.lease_id));
+    const existingPaymentsMap = new Map((existingPaymentIds.data ?? []).map((row) => [row.lease_id, row]));
 
     const typedLeases = leases as unknown as BillingLeaseRow[];
     const unitIds = typedLeases.map((lease) => lease.unit_id);
@@ -828,14 +833,10 @@ export async function generateMonthlyInvoices(
     }
 
     let created = 0;
+    let updated = 0;
     let skipped = 0;
 
     for (const lease of typedLeases) {
-        if (existingLeaseIds.has(lease.id)) {
-            skipped += 1;
-            continue;
-        }
-
         const terms = parseLeaseBillingTerms(lease.terms ?? null);
         const dueDate = new Date(cycleStart.getFullYear(), cycleStart.getMonth(), Math.max(1, Math.min(terms.dueDay, 28)));
         const itemRows: Omit<PaymentItem, "id" | "created_at">[] = [];
@@ -889,6 +890,75 @@ export async function generateMonthlyInvoices(
         const subtotal = itemRows.reduce((sum, item) => sum + Number(item.amount ?? 0), 0);
         const totalAmount = subtotal;
 
+        const existingPayment = existingPaymentsMap.get(lease.id);
+        if (existingPayment) {
+            // If already settled, verified, or has paid balance, skip to protect financial records
+            if (existingPayment.status !== "pending" || Number(existingPayment.paid_amount || 0) > 0) {
+                skipped += 1;
+                continue;
+            }
+
+            const paymentId = existingPayment.id;
+
+            // Remove existing utility items so we can insert freshly computed submeter items
+            await supabase
+                .from("payment_items")
+                .delete()
+                .eq("payment_id", paymentId)
+                .in("category", ["water", "electricity"]);
+
+            const utilityItems = itemRows
+                .filter((item) => item.category === "water" || item.category === "electricity")
+                .map((item) => ({ ...item, payment_id: paymentId }));
+
+            if (utilityItems.length > 0) {
+                await supabase.from("payment_items").insert(utilityItems);
+            }
+
+            // Recalculate full total
+            const { data: currentItems } = await supabase
+                .from("payment_items")
+                .select("amount")
+                .eq("payment_id", paymentId);
+
+            const newTotal = (currentItems ?? []).reduce((sum, item) => sum + Number(item.amount || 0), 0);
+
+            await supabase
+                .from("payments")
+                .update({
+                    amount: newTotal,
+                    subtotal: newTotal,
+                    balance_remaining: newTotal,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq("id", paymentId);
+
+            if (leaseReadings.length > 0) {
+                await supabase
+                    .from("utility_readings")
+                    .update({ payment_id: paymentId })
+                    .in("id", leaseReadings.map((reading) => reading.id));
+            }
+
+            if (lease.tenant_id) {
+                try {
+                    const notificationService = new NotificationService(supabase);
+                    await notificationService.createNotification({
+                        userId: lease.tenant_id,
+                        type: "payment",
+                        title: "Monthly Invoice Updated",
+                        message: `Your ${formatDateLong(cycleKey)} invoice (₱${newTotal.toLocaleString()}) has been updated with latest submeter charges.`,
+                        data: { link: "/tenant/payments" },
+                    });
+                } catch (notifErr) {
+                    console.warn("[Billing] Failed to send tenant update notification:", notifErr);
+                }
+            }
+
+            updated += 1;
+            continue;
+        }
+
         const { data: paymentRow, error: paymentError } = await supabase
             .from("payments")
             .insert({
@@ -933,10 +1003,25 @@ export async function generateMonthlyInvoices(
             if (readingUpdateError) throw readingUpdateError;
         }
 
+        if (lease.tenant_id) {
+            try {
+                const notificationService = new NotificationService(supabase);
+                await notificationService.createNotification({
+                    userId: lease.tenant_id,
+                    type: "payment",
+                    title: "New Monthly Invoice Issued",
+                    message: `Your ${formatDateLong(cycleKey)} invoice (₱${totalAmount.toLocaleString()}) is ready for review and payment.`,
+                    data: { link: "/tenant/payments" },
+                });
+            } catch (notifErr) {
+                console.warn("[Billing] Failed to send tenant invoice notification:", notifErr);
+            }
+        }
+
         created += 1;
     }
 
-    return { created, skipped, billingCycle: cycleKey };
+    return { created, updated, skipped, billingCycle: cycleKey };
 }
 
 export async function recordUtilityReading(

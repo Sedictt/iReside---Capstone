@@ -25,24 +25,57 @@ export async function POST(request: Request) {
   try {
     const contentType = request.headers.get("content-type");
 
+    const { searchParams } = new URL(request.url);
+    const postInvoicesParam = searchParams.get("postInvoices") === "true";
+
     if (contentType?.includes("application/json")) {
       const body = await request.json();
 
+      let readingsPayload: any[] = [];
+      let shouldPostInvoices = postInvoicesParam;
+      let specifiedMonth: string | undefined = searchParams.get("month") ?? undefined;
+
       if (Array.isArray(body)) {
-        const readings = bulkSchema.parse(body);
-        const results = [];
-
-        for (const payload of readings) {
-          const reading = await billingService.recordUtilityReading(userId, payload);
-          results.push(reading);
+        readingsPayload = body;
+      } else if (body && typeof body === "object" && Array.isArray(body.readings)) {
+        readingsPayload = body.readings;
+        if (body.postInvoices !== undefined) {
+          shouldPostInvoices = Boolean(body.postInvoices);
         }
-
-        return NextResponse.json({ readings: results });
+        if (body.month) {
+          specifiedMonth = String(body.month);
+        }
       } else {
         const payload = readingSchema.parse(body);
         const reading = await billingService.recordUtilityReading(userId, payload);
-        return NextResponse.json({ reading });
+
+        let invoiceResult = null;
+        if (shouldPostInvoices) {
+          const { generateMonthlyInvoices } = await import("@/lib/billing/server");
+          const month = specifiedMonth || payload.billingPeriodStart.slice(0, 7);
+          invoiceResult = await generateMonthlyInvoices(supabase, userId, month, [payload.leaseId]);
+        }
+
+        return NextResponse.json({ reading, invoiceResult });
       }
+
+      const readings = bulkSchema.parse(readingsPayload);
+      const results = [];
+
+      for (const payload of readings) {
+        const reading = await billingService.recordUtilityReading(userId, payload);
+        results.push(reading);
+      }
+
+      let invoiceResult = null;
+      if (shouldPostInvoices && results.length > 0) {
+        const { generateMonthlyInvoices } = await import("@/lib/billing/server");
+        const month = specifiedMonth || readings[0]?.billingPeriodStart?.slice(0, 7);
+        const leaseIds = Array.from(new Set(readings.map((r) => r.leaseId)));
+        invoiceResult = await generateMonthlyInvoices(supabase, userId, month, leaseIds);
+      }
+
+      return NextResponse.json({ readings: results, invoiceResult });
     }
 
     // Fallback to FormData (for single reading with proof image)

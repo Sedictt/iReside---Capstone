@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
-import { CalendarDays, FileText, Plus, Search, Filter, Download, AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import Link from "next/link";
+import { CalendarDays, FileText, Plus, Search, Filter, Download, AlertCircle, CheckCircle2, Clock, Zap } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 import { InvoiceModal } from "@/components/landlord/invoices/InvoiceModal";
@@ -235,6 +236,13 @@ export default function InvoicesPage() {
           <p className="mt-2 text-sm text-muted-foreground">Manage your unified ledger, track expenses, and oversee rent invoices.</p>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            href="/landlord/utility-billing"
+            className="group inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-2.5 text-sm font-semibold text-foreground shadow-sm backdrop-blur-md transition-all hover:border-amber-500/40 hover:text-amber-500 active:scale-95"
+          >
+            <Zap className="size-4 text-amber-500" />
+            Record Submeters
+          </Link>
           <button
             type="button"
             onClick={() => {
