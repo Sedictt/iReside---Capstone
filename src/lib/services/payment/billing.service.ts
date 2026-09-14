@@ -66,23 +66,23 @@ export class BillingService {
     }
 
     // 1. Verify lease ownership
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(payload.leaseId);
     let lease: { id: string; unit_id: string; landlord_id: string } | null = null;
-
-    if (isUuid) {
-      const { data, error } = await this.supabase
+    try {
+      const { data: directLease, error: directError } = await this.supabase
         .from("leases")
         .select("id, unit_id, landlord_id")
         .eq("id", payload.leaseId)
         .eq("landlord_id", landlordId)
         .maybeSingle();
 
-      if (!error && data) {
-        lease = data;
+      if (!directError && directLease) {
+        lease = directLease;
       }
+    } catch {
+      // Postgres error on UUID casting or similar; fallback below
     }
 
-    // Fallback: if lease not found by direct UUID (or if leaseId was a non-UUID slug, unit ID, or test/mock ID)
+    // Fallback: if lease not found by direct ID (or if leaseId was a non-UUID slug, unit ID, or mock ID)
     if (!lease) {
       const { data: activeLeases, error: activeError } = await this.supabase
         .from("leases")
@@ -181,7 +181,7 @@ export class BillingService {
       const { data: updatedReading, error: updateError } = await this.supabase
         .from("utility_readings")
         .update({
-          lease_id: payload.leaseId,
+          lease_id: lease.id,
           previous_reading: payload.previousReading,
           current_reading: payload.currentReading,
           usage,
@@ -205,7 +205,7 @@ export class BillingService {
         .from("utility_readings")
         .insert({
           landlord_id: landlordId,
-          lease_id: payload.leaseId,
+          lease_id: lease.id,
           property_id: unit.property_id,
           unit_id: lease.unit_id,
           utility_type: payload.utilityType,
@@ -220,7 +220,6 @@ export class BillingService {
           note: payload.note ?? null,
           proof_image_path: payload.proofImagePath ?? null,
           proof_image_url: payload.proofImageUrl ?? null,
-          status: "pending",
           entered_at: currentTimestamp,
           created_at: currentTimestamp,
           updated_at: currentTimestamp,
