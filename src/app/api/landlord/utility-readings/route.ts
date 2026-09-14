@@ -5,7 +5,8 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { BillingService } from "@/lib/services/payment";
 
 const readingSchema = z.object({
-  leaseId: z.string().trim().min(1, "Lease ID is required"),
+  leaseId: z.string().trim().min(1, "Lease or unit identifier is required"),
+  unitId: z.string().trim().optional().nullable(),
   utilityType: z.enum(["water", "electricity"]),
   billingPeriodStart: z.string(),
   billingPeriodEnd: z.string(),
@@ -86,6 +87,7 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const payload = readingSchema.parse({
       leaseId: formData.get("leaseId"),
+      unitId: formData.get("unitId"),
       utilityType: formData.get("utilityType"),
       billingPeriodStart: formData.get("billingPeriodStart"),
       billingPeriodEnd: formData.get("billingPeriodEnd"),

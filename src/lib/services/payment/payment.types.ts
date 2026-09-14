@@ -123,6 +123,7 @@ export interface CreateExpenseInput {
 /** Input for recording a utility meter reading. */
 export interface RecordUtilityReadingInput {
   leaseId: string;
+  unitId?: string | null;
   utilityType: Database["public"]["Enums"]["utility_type"];
   billingPeriodStart: string;
   billingPeriodEnd: string;

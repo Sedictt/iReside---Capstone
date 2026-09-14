@@ -1069,10 +1069,58 @@ export async function recordUtilityReading(
             .eq("status", "active");
 
         if (!activeError && activeLeases) {
-            lease = activeLeases.find((l) => l.id === payload.leaseId || l.unit_id === payload.leaseId) ?? null;
-            if (!lease && activeLeases.length === 1) {
+            lease = activeLeases.find((l) => l.id === payload.leaseId || l.unit_id === payload.leaseId || ((payload as any).unitId && l.unit_id === (payload as any).unitId)) ?? null;
+            if (!lease && activeLeases.length === 1 && !(payload as any).unitId) {
                 lease = activeLeases[0];
             }
+        }
+    }
+
+    // Fallback: if unit is vacant (no active lease), look up unit directly and use/create baseline draft lease
+    if (!lease) {
+        const candidateUnitId = (payload as any).unitId || payload.leaseId;
+        try {
+            const { data: unitRecord } = await supabase
+                .from("units")
+                .select("id, property_id, rent_amount, properties!inner(id, landlord_id)")
+                .eq("id", candidateUnitId)
+                .eq("properties.landlord_id", landlordId)
+                .maybeSingle();
+
+            if (unitRecord) {
+                const { data: existingUnitLease } = await supabase
+                    .from("leases")
+                    .select("id, unit_id, landlord_id")
+                    .eq("unit_id", unitRecord.id)
+                    .eq("landlord_id", landlordId)
+                    .order("created_at", { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (existingUnitLease) {
+                    lease = existingUnitLease;
+                } else {
+                    const { data: newDraftLease } = await supabase
+                        .from("leases")
+                        .insert({
+                            landlord_id: landlordId,
+                            tenant_id: landlordId,
+                            unit_id: unitRecord.id,
+                            monthly_rent: unitRecord.rent_amount || 0,
+                            status: "draft",
+                            start_date: payload.billingPeriodStart || new Date().toISOString().slice(0, 10),
+                            end_date: "2099-12-31"
+                        })
+                        .select("id, unit_id, landlord_id")
+                        .single();
+
+                    if (newDraftLease) {
+                        lease = newDraftLease;
+                    }
+                }
+            }
+        } catch {
+            // Fall through
         }
     }
 

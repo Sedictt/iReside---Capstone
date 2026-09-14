@@ -44,9 +44,13 @@ import { OfflineStorage } from "@/lib/offline/offlineStorage";
 import { mutationQueue } from "@/lib/offline/mutationQueue";
 
 type ReadingDraft = {
-	leaseId: string;
+	unitId: string;
 	unitName: string;
 	propertyId: string;
+	propertyName: string;
+	leaseId: string | null;
+	tenantName: string | null;
+	occupancyStatus: "occupied" | "vacant" | "maintenance";
 	rentAmount: number;
 	water: {
 		previous: number;
@@ -64,6 +68,7 @@ type ReadingDraft = {
 
 type ReadingSaveRequest = {
 	leaseId: string;
+	unitId?: string;
 	utilityType: string;
 	billingPeriodStart: string;
 	billingPeriodEnd: string;
@@ -71,6 +76,142 @@ type ReadingSaveRequest = {
 	currentReading: number;
 	note: string;
 };
+
+function buildDraftsFromWorkspace(
+	workspaceData: BillingWorkspace,
+	readingsData: { readings?: any[] },
+	allReadings: any[]
+): ReadingDraft[] {
+	const draftsList: ReadingDraft[] = [];
+	const seenUnitIds = new Set<string>();
+
+	// 1. Iterate over all properties and their units
+	(workspaceData.properties || []).forEach((property: any) => {
+		(property.units || []).forEach((unit: any) => {
+			seenUnitIds.add(unit.id);
+			const activeLease = (workspaceData.activeLeases || []).find(
+				(l: any) => l.unit?.id === unit.id
+			);
+
+			const leaseId = activeLease ? activeLease.id : null;
+			const isOccupied = !!activeLease;
+			const occupancyStatus: "occupied" | "vacant" | "maintenance" = isOccupied
+				? "occupied"
+				: (unit.status === "maintenance" ? "maintenance" : "vacant");
+
+			const currentWater = (readingsData?.readings || []).find(
+				(r: any) => (r.unit_id === unit.id || (leaseId && r.lease_id === leaseId)) && r.utility_type === "water"
+			);
+			const currentElec = (readingsData?.readings || []).find(
+				(r: any) => (r.unit_id === unit.id || (leaseId && r.lease_id === leaseId)) && r.utility_type === "electricity"
+			);
+
+			const sortedWater = (allReadings || [])
+				.filter((r: any) => (r.unit_id === unit.id || (leaseId && r.lease_id === leaseId)) && r.utility_type === "water")
+				.sort((a: any, b: any) => new Date(b.billing_period_end).getTime() - new Date(a.billing_period_end).getTime());
+			const sortedElec = (allReadings || [])
+				.filter((r: any) => (r.unit_id === unit.id || (leaseId && r.lease_id === leaseId)) && r.utility_type === "electricity")
+				.sort((a: any, b: any) => new Date(b.billing_period_end).getTime() - new Date(a.billing_period_end).getTime());
+
+			const propertyWaterConfig = (workspaceData.utilityConfigs || []).find(
+				(c: any) => c.property_id === property.id && c.utility_type === "water" && c.unit_id === null
+			);
+			const unitWaterConfig = (workspaceData.utilityConfigs || []).find(
+				(c: any) => c.unit_id === unit.id && c.utility_type === "water"
+			);
+
+			const propertyElecConfig = (workspaceData.utilityConfigs || []).find(
+				(c: any) => c.property_id === property.id && c.utility_type === "electricity" && c.unit_id === null
+			);
+			const unitElecConfig = (workspaceData.utilityConfigs || []).find(
+				(c: any) => c.unit_id === unit.id && c.utility_type === "electricity"
+			);
+
+			draftsList.push({
+				unitId: unit.id,
+				unitName: unit.name || "Unknown Unit",
+				propertyId: property.id || "",
+				propertyName: property.name || "",
+				leaseId,
+				tenantName: activeLease?.tenant?.full_name || null,
+				occupancyStatus,
+				rentAmount: activeLease?.monthly_rent ?? unit.rent_amount ?? 0,
+				water: {
+					previous: currentWater ? currentWater.previous_reading : (sortedWater[0]?.current_reading || 0),
+					current: currentWater ? currentWater.current_reading.toString() : "",
+					exists: !!currentWater,
+					rate: unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0
+				},
+				electricity: {
+					previous: currentElec ? currentElec.previous_reading : (sortedElec[0]?.current_reading || 0),
+					current: currentElec ? currentElec.current_reading.toString() : "",
+					exists: !!currentElec,
+					rate: unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0
+				}
+			});
+		});
+	});
+
+	// 2. Include any active lease whose unit might not have been returned in property.units
+	(workspaceData.activeLeases || []).forEach((lease: any) => {
+		if (lease.unit?.id && !seenUnitIds.has(lease.unit.id)) {
+			seenUnitIds.add(lease.unit.id);
+			const currentWater = (readingsData?.readings || []).find(
+				(r: any) => (r.unit_id === lease.unit.id || r.lease_id === lease.id) && r.utility_type === "water"
+			);
+			const currentElec = (readingsData?.readings || []).find(
+				(r: any) => (r.unit_id === lease.unit.id || r.lease_id === lease.id) && r.utility_type === "electricity"
+			);
+
+			const sortedWater = (allReadings || [])
+				.filter((r: any) => (r.unit_id === lease.unit.id || r.lease_id === lease.id) && r.utility_type === "water")
+				.sort((a: any, b: any) => new Date(b.billing_period_end).getTime() - new Date(a.billing_period_end).getTime());
+			const sortedElec = (allReadings || [])
+				.filter((r: any) => (r.unit_id === lease.unit.id || r.lease_id === lease.id) && r.utility_type === "electricity")
+				.sort((a: any, b: any) => new Date(b.billing_period_end).getTime() - new Date(a.billing_period_end).getTime());
+
+			const propertyWaterConfig = (workspaceData.utilityConfigs || []).find(
+				(c: any) => c.property_id === lease.property?.id && c.utility_type === "water" && c.unit_id === null
+			);
+			const unitWaterConfig = (workspaceData.utilityConfigs || []).find(
+				(c: any) => c.unit_id === lease.unit?.id && c.utility_type === "water"
+			);
+
+			const propertyElecConfig = (workspaceData.utilityConfigs || []).find(
+				(c: any) => c.property_id === lease.property?.id && c.utility_type === "electricity" && c.unit_id === null
+			);
+			const unitElecConfig = (workspaceData.utilityConfigs || []).find(
+				(c: any) => c.unit_id === lease.unit?.id && c.utility_type === "electricity"
+			);
+
+			draftsList.push({
+				unitId: lease.unit.id,
+				unitName: lease.unit.name || "Unknown Unit",
+				propertyId: lease.property?.id || "",
+				propertyName: lease.property?.name || "",
+				leaseId: lease.id,
+				tenantName: lease.tenant?.full_name || null,
+				occupancyStatus: "occupied",
+				rentAmount: lease.monthly_rent || 0,
+				water: {
+					previous: currentWater ? currentWater.previous_reading : (sortedWater[0]?.current_reading || 0),
+					current: currentWater ? currentWater.current_reading.toString() : "",
+					exists: !!currentWater,
+					rate: unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0
+				},
+				electricity: {
+					previous: currentElec ? currentElec.previous_reading : (sortedElec[0]?.current_reading || 0),
+					current: currentElec ? currentElec.current_reading.toString() : "",
+					exists: !!currentElec,
+					rate: unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0
+				}
+			});
+		}
+	});
+
+	draftsList.sort((a, b) => a.unitName.localeCompare(b.unitName, undefined, { numeric: true, sensitivity: "base" }));
+	return draftsList;
+}
 
 export function UtilityBillingDashboard() {
 	const searchParams = useSearchParams();
@@ -114,7 +255,7 @@ export function UtilityBillingDashboard() {
 	}, [searchParams]);
 	
 	// Unit Detail View State
-	const [selectedLeaseId, setSelectedLeaseId] = useState<string | null>(null);
+	const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
 	const [drafts, setDrafts] = useState<ReadingDraft[]>([]);
 
 	const fetchData = useCallback(async () => {
@@ -142,47 +283,7 @@ export function UtilityBillingDashboard() {
 					OfflineStorage.set(`utility_readings_${selectedMonth}`, readingsData, null, "utility");
 					OfflineStorage.set("utility_all_readings", latestData, null, "utility");
 
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					const newDrafts: ReadingDraft[] = (workspaceData.activeLeases || []).map((lease: any) => {
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any
-						const currentWater = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "water");
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any
-						const currentElec = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "electricity");
-
-						// Find the most recent reading for baseline
-						const sortedWater = allReadings.filter((r: any) => r.lease_id === lease.id && r.utility_type === "water").sort((a: any, b: any) => new Date(b.billing_period_end).getTime() - new Date(a.billing_period_end).getTime());
-						const sortedElec = allReadings.filter((r: any) => r.lease_id === lease.id && r.utility_type === "electricity").sort((a: any, b: any) => new Date(b.billing_period_end).getTime() - new Date(a.billing_period_end).getTime());
-
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any
-						const propertyWaterConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.property_id === lease.property?.id && c.utility_type === "water" && c.unit_id === null);
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any
-						const unitWaterConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.unit_id === lease.unit?.id && c.utility_type === "water");
-
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any
-						const propertyElecConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.property_id === lease.property?.id && c.utility_type === "electricity" && c.unit_id === null);
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any
-						const unitElecConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.unit_id === lease.unit?.id && c.utility_type === "electricity");
-
-						return {
-							leaseId: lease.id,
-							unitName: lease.unit?.name || "Unknown",
-							propertyId: lease.property?.id || "",
-							rentAmount: lease.monthly_rent || 0,
-							water: {
-								previous: currentWater ? currentWater.previous_reading : (sortedWater[0]?.current_reading || 0),
-								current: currentWater ? currentWater.current_reading.toString() : "",
-								exists: !!currentWater,
-								rate: unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0
-							},
-							electricity: {
-								previous: currentElec ? currentElec.previous_reading : (sortedElec[0]?.current_reading || 0),
-								current: currentElec ? currentElec.current_reading.toString() : "",
-								exists: !!currentElec,
-								rate: unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0
-							}
-						};
-					});
-
+					const newDrafts = buildDraftsFromWorkspace(workspaceData, readingsData, allReadings);
 					setDrafts(newDrafts);
 					return;
 				} else {
@@ -209,46 +310,7 @@ export function UtilityBillingDashboard() {
 
 				setWorkspace(workspaceData);
 
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				const newDrafts: ReadingDraft[] = (workspaceData.activeLeases || []).map((lease: any) => {
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					const currentWater = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "water");
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					const currentElec = readingsData.readings.find((r: any) => r.lease_id === lease.id && r.utility_type === "electricity");
-
-					const sortedWater = allReadings.filter((r: any) => r.lease_id === lease.id && r.utility_type === "water").sort((a: any, b: any) => new Date(b.billing_period_end).getTime() - new Date(a.billing_period_end).getTime());
-					const sortedElec = allReadings.filter((r: any) => r.lease_id === lease.id && r.utility_type === "electricity").sort((a: any, b: any) => new Date(b.billing_period_end).getTime() - new Date(a.billing_period_end).getTime());
-
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					const propertyWaterConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.property_id === lease.property?.id && c.utility_type === "water" && c.unit_id === null);
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					const unitWaterConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.unit_id === lease.unit?.id && c.utility_type === "water");
-
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					const propertyElecConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.property_id === lease.property?.id && c.utility_type === "electricity" && c.unit_id === null);
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					const unitElecConfig = (workspaceData.utilityConfigs || []).find((c: any) => c.unit_id === lease.unit?.id && c.utility_type === "electricity");
-
-					return {
-						leaseId: lease.id,
-						unitName: lease.unit?.name || "Unknown",
-						propertyId: lease.property?.id || "",
-						rentAmount: lease.monthly_rent || 0,
-						water: {
-							previous: currentWater ? currentWater.previous_reading : (sortedWater[0]?.current_reading || 0),
-							current: currentWater ? currentWater.current_reading.toString() : "",
-							exists: !!currentWater,
-							rate: unitWaterConfig?.rate_per_unit || propertyWaterConfig?.rate_per_unit || 0
-						},
-						electricity: {
-							previous: currentElec ? currentElec.previous_reading : (sortedElec[0]?.current_reading || 0),
-							current: currentElec ? currentElec.current_reading.toString() : "",
-							exists: !!currentElec,
-							rate: unitElecConfig?.rate_per_unit || propertyElecConfig?.rate_per_unit || 0
-						}
-					};
-				});
-
+				const newDrafts = buildDraftsFromWorkspace(workspaceData, readingsData, allReadings);
 				setDrafts(newDrafts);
 				if (typeof navigator !== "undefined" && !navigator.onLine) {
 					toast.info("Offline Mode: Hydrated utility records and tariffs from local cache.");
@@ -402,12 +464,14 @@ export function UtilityBillingDashboard() {
 		const end = `${selectedMonth}-${String(lastDay).padStart(2, "0")}`;
 
 		drafts.forEach(d => {
-			if (!d.leaseId) return;
+			const targetId = d.leaseId || d.unitId;
+			if (!targetId) return;
 			if (d.water.current !== "") {
 				const val = parseFloat(d.water.current);
 				if (!isNaN(val)) {
 					toSave.push({
-						leaseId: d.leaseId,
+						leaseId: targetId,
+						unitId: d.unitId,
 						utilityType: "water",
 						billingPeriodStart: start,
 						billingPeriodEnd: end,
@@ -421,7 +485,8 @@ export function UtilityBillingDashboard() {
 				const val = parseFloat(d.electricity.current);
 				if (!isNaN(val)) {
 					toSave.push({
-						leaseId: d.leaseId,
+						leaseId: targetId,
+						unitId: d.unitId,
 						utilityType: "electricity",
 						billingPeriodStart: start,
 						billingPeriodEnd: end,
@@ -520,8 +585,8 @@ export function UtilityBillingDashboard() {
 		}
 	};
 
-	const handleSaveSingleUnit = async (leaseId: string) => {
-		const draft = drafts.find(d => d.leaseId === leaseId);
+	const handleSaveSingleUnit = async (targetId: string) => {
+		const draft = drafts.find(d => d.unitId === targetId || d.leaseId === targetId);
 		if (!draft) return;
 
 		const toSave: ReadingSaveRequest[] = [];
@@ -529,10 +594,12 @@ export function UtilityBillingDashboard() {
 		const start = `${selectedMonth}-01`;
 		const lastDay = new Date(y, m, 0).getDate();
 		const end = `${selectedMonth}-${String(lastDay).padStart(2, "0")}`;
+		const readingLeaseId = draft.leaseId || draft.unitId;
 
 		if (draft.water.current !== "") {
 			toSave.push({
-				leaseId: draft.leaseId,
+				leaseId: readingLeaseId,
+				unitId: draft.unitId,
 				utilityType: "water",
 				billingPeriodStart: start,
 				billingPeriodEnd: end,
@@ -543,7 +610,8 @@ export function UtilityBillingDashboard() {
 		}
 		if (draft.electricity.current !== "") {
 			toSave.push({
-				leaseId: draft.leaseId,
+				leaseId: readingLeaseId,
+				unitId: draft.unitId,
 				utilityType: "electricity",
 				billingPeriodStart: start,
 				billingPeriodEnd: end,
@@ -576,7 +644,7 @@ export function UtilityBillingDashboard() {
 			toast.success(`Saved and billed readings for ${draft.unitName}`);
 			await fetchData();
 			await fetchPendingInvoices();
-			setSelectedLeaseId(null);
+			setSelectedUnitId(null);
 		} catch (e: any) {
 			console.error("[UtilityBilling] Single unit save error:", e);
 			toast.error(e.message || "Failed to save unit reading");
@@ -585,7 +653,7 @@ export function UtilityBillingDashboard() {
 		}
 	};
 
-	const activeDraft = drafts.find(d => d.leaseId === selectedLeaseId);
+	const activeDraft = drafts.find(d => d.unitId === selectedUnitId || (d.leaseId && d.leaseId === selectedUnitId));
 
 	if (loading && !workspace) {
 		return (
@@ -830,12 +898,24 @@ export function UtilityBillingDashboard() {
 											const isComplete = (draft.water.exists || hasWater) && (draft.electricity.exists || hasElec);
 
 											return (
-												<tr key={draft.leaseId} className="hover:bg-muted/10 transition-colors">
+												<tr key={draft.unitId} className="hover:bg-muted/10 transition-colors">
 													{/* Unit Info */}
 													<td className="px-6 py-5">
-														<div className="flex flex-col">
-															<span className="text-base font-black text-foreground">{draft.unitName}</span>
+														<div className="flex flex-col gap-1">
+															<div className="flex items-center gap-2">
+																<span className="text-base font-black text-foreground">{draft.unitName}</span>
+																{draft.occupancyStatus === "occupied" ? (
+																	<span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+																		Occupied
+																	</span>
+																) : (
+																	<span className="text-[10px] font-bold text-muted-foreground/80 bg-muted/60 px-2 py-0.5 rounded-md border border-border">
+																		Vacant
+																	</span>
+																)}
+															</div>
 															<span className="text-xs font-medium text-muted-foreground">
+																{draft.occupancyStatus === "occupied" && draft.tenantName ? `${draft.tenantName} • ` : ""}
 																Base Rent: ₱{draft.rentAmount.toLocaleString()}
 															</span>
 														</div>
@@ -861,7 +941,7 @@ export function UtilityBillingDashboard() {
 																			placeholder="0.0"
 																			onChange={(e) => {
 																				const newDrafts = [...drafts];
-																				const index = drafts.findIndex(d => d.leaseId === draft.leaseId);
+																				const index = drafts.findIndex(d => d.unitId === draft.unitId);
 																				newDrafts[index] = { ...newDrafts[index], water: { ...draft.water, current: e.target.value } };
 																				setDrafts(newDrafts);
 																			}}
@@ -898,7 +978,7 @@ export function UtilityBillingDashboard() {
 																			placeholder="0.0"
 																			onChange={(e) => {
 																				const newDrafts = [...drafts];
-																				const index = drafts.findIndex(d => d.leaseId === draft.leaseId);
+																				const index = drafts.findIndex(d => d.unitId === draft.unitId);
 																				newDrafts[index] = { ...newDrafts[index], electricity: { ...draft.electricity, current: e.target.value } };
 																				setDrafts(newDrafts);
 																			}}
@@ -919,11 +999,17 @@ export function UtilityBillingDashboard() {
 													<td className="px-6 py-5 text-center">
 														<div className="flex flex-col items-center">
 															<span className="text-sm font-black text-foreground font-mono">
-																₱{totalEst.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+																₱{(draft.occupancyStatus === "occupied" ? totalEst : (waterCost + elecCost)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
 															</span>
-															{(waterCost > 0 || elecCost > 0) && (
+															{draft.occupancyStatus === "occupied" ? (
+																(waterCost > 0 || elecCost > 0) && (
+																	<span className="text-[9px] text-muted-foreground font-medium">
+																		Util: +₱{(waterCost + elecCost).toFixed(2)}
+																	</span>
+																)
+															) : (
 																<span className="text-[9px] text-muted-foreground font-medium">
-																	Util: +₱{(waterCost + elecCost).toFixed(2)}
+																	Submeter Only (Vacant)
 																</span>
 															)}
 														</div>
@@ -942,7 +1028,7 @@ export function UtilityBillingDashboard() {
 																</span>
 															)}
 															<button 
-																onClick={() => setSelectedLeaseId(draft.leaseId)}
+																onClick={() => setSelectedUnitId(draft.unitId)}
 																className="inline-flex items-center justify-center size-8 rounded-lg border border-border text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
 																title="Inspect or adjust unit details"
 															>
@@ -1205,21 +1291,21 @@ export function UtilityBillingDashboard() {
 
 			{/* Unit Detail Modal */}
 			<UnitDetailModal 
-				isOpen={!!selectedLeaseId} 
-				onClose={() => setSelectedLeaseId(null)} 
+				isOpen={!!selectedUnitId} 
+				onClose={() => setSelectedUnitId(null)} 
 				draft={activeDraft} 
 				onUpdate={(patch) => {
-					if (!selectedLeaseId) return;
+					if (!selectedUnitId) return;
 					const newDrafts = [...drafts];
-					const idx = newDrafts.findIndex(d => d.leaseId === selectedLeaseId);
+					const idx = newDrafts.findIndex(d => d.unitId === selectedUnitId || (d.leaseId && d.leaseId === selectedUnitId));
 					if (idx !== -1) {
 						newDrafts[idx] = { ...newDrafts[idx], ...patch };
 						setDrafts(newDrafts);
 					}
 				}}
 				onSave={() => {
-					if (selectedLeaseId) {
-						handleSaveSingleUnit(selectedLeaseId);
+					if (selectedUnitId) {
+						handleSaveSingleUnit(selectedUnitId);
 					}
 				}}
 				saving={saving}
@@ -1315,12 +1401,22 @@ function UnitDetailModal({
 										/>
 									</div>
 								</div>
-								<div className="rounded-2xl bg-emerald-500/[0.05] border border-emerald-500/20 p-5 flex flex-col justify-center">
+								<div className={`rounded-2xl p-5 flex flex-col justify-center ${
+									draft.occupancyStatus === "occupied"
+										? "bg-emerald-500/[0.05] border border-emerald-500/20"
+										: "bg-muted/40 border border-border"
+								}`}>
 									<div className="flex items-center gap-2">
-										<div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-										<span className="text-[10px] font-black uppercase tracking-wider text-emerald-600">Lease Status</span>
+										<div className={`size-2 rounded-full ${draft.occupancyStatus === "occupied" ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/60"}`} />
+										<span className={`text-[10px] font-black uppercase tracking-wider ${draft.occupancyStatus === "occupied" ? "text-emerald-600" : "text-muted-foreground"}`}>
+											{draft.occupancyStatus === "occupied" ? "Lease Status" : "Unit Status"}
+										</span>
 									</div>
-									<span className="text-base font-black text-foreground mt-1">Active Tenant Occupancy</span>
+									<span className="text-base font-black text-foreground mt-1">
+										{draft.occupancyStatus === "occupied"
+											? (draft.tenantName ? `Active Tenant: ${draft.tenantName}` : "Active Tenant Occupancy")
+											: "Vacant Unit (No Active Tenant)"}
+									</span>
 								</div>
 							</div>
 
