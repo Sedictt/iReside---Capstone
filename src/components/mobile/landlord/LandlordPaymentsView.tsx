@@ -22,11 +22,12 @@ import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 
 interface InvoiceItem {
     id: string;
+    invoiceNumber?: string;
     tenantName: string;
     unitNumber: string;
     propertyName?: string;
     amount: number;
-    status: 'paid' | 'pending' | 'overdue' | 'cancelled';
+    status: string;
     dueDate: string;
     paymentProofUrl?: string | null;
     createdAt?: string;
@@ -38,7 +39,7 @@ export function LandlordPaymentsView() {
     const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeTab, setActiveTab] = useState<'proofs' | 'all' | 'overdue' | 'paid'>('proofs');
+    const [activeTab, setActiveTab] = useState<'all' | 'proofs' | 'overdue' | 'paid'>('all');
     
     // Lightbox state for inspecting payment proof receipts
     const [inspectInvoice, setInspectInvoice] = useState<InvoiceItem | null>(null);
@@ -53,7 +54,21 @@ export function LandlordPaymentsView() {
             const res = await fetch(`/api/landlord/invoices${queryParam}`);
             if (res.ok) {
                 const data = await res.json();
-                setInvoices(Array.isArray(data) ? data : []);
+                const rawList = Array.isArray(data) ? data : Array.isArray(data?.invoices) ? data.invoices : [];
+                const formattedInvoices: InvoiceItem[] = rawList.map((inv: any) => ({
+                    id: inv.id,
+                    invoiceNumber: inv.invoiceNumber || inv.invoice_number,
+                    tenantName: inv.tenantName || inv.tenant || 'Unknown tenant',
+                    unitNumber: inv.unitNumber || inv.unit || 'N/A',
+                    propertyName: inv.propertyName || inv.property,
+                    amount: Number(inv.amount || 0),
+                    status: (inv.status || 'pending').toLowerCase(),
+                    dueDate: inv.dueDate || inv.due_date || '',
+                    paymentProofUrl: inv.paymentProofUrl || inv.payment_proof_url || null,
+                    createdAt: inv.createdAt || inv.issuedDate || inv.created_at,
+                    notes: inv.notes || inv.type,
+                }));
+                setInvoices(formattedInvoices);
             }
         } catch (err) {
             console.error('[MobilePayments] Failed to fetch invoices:', err);
@@ -69,26 +84,35 @@ export function LandlordPaymentsView() {
 
     // Filter logic
     const pendingProofsCount = useMemo(() => {
-        return invoices.filter(inv => inv.status === 'pending' && Boolean(inv.paymentProofUrl)).length;
+        return invoices.filter(inv => 
+            (inv.status === 'pending' || inv.status === 'under_review' || inv.status === 'intent_submitted') && 
+            Boolean(inv.paymentProofUrl)
+        ).length;
     }, [invoices]);
 
     const filteredInvoices = useMemo(() => {
+        const q = searchQuery.toLowerCase().trim();
         return invoices.filter((inv) => {
-            // Search filter
-            const matchesSearch = 
-                inv.tenantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                inv.unitNumber.toLowerCase().includes(searchQuery.toLowerCase());
-            if (!matchesSearch) return false;
+            // Instant search filter on any character typed
+            if (q) {
+                const matchesSearch = 
+                    (inv.tenantName || '').toLowerCase().includes(q) ||
+                    (inv.unitNumber || '').toLowerCase().includes(q) ||
+                    (inv.invoiceNumber || '').toLowerCase().includes(q) ||
+                    (inv.status || '').toLowerCase().includes(q) ||
+                    String(inv.amount || '').includes(q);
+                if (!matchesSearch) return false;
+            }
 
             // Tab filter
             if (activeTab === 'proofs') {
-                return inv.status === 'pending' && Boolean(inv.paymentProofUrl);
+                return (inv.status === 'pending' || inv.status === 'under_review' || inv.status === 'intent_submitted') && Boolean(inv.paymentProofUrl);
             }
             if (activeTab === 'overdue') {
                 return inv.status === 'overdue';
             }
             if (activeTab === 'paid') {
-                return inv.status === 'paid';
+                return inv.status === 'paid' || inv.status === 'completed' || inv.status === 'confirmed';
             }
             return true; // 'all'
         });
@@ -106,6 +130,7 @@ export function LandlordPaymentsView() {
                     action,
                     note: action === 'confirm' ? 'Approved via iReside Mobile' : reason || 'Payment rejected via mobile',
                     rejectionReason: action === 'reject' ? (reason || 'Invalid payment receipt') : undefined,
+                    nonExactAction: action === 'confirm' ? 'accept_partial' : 'reject',
                 }),
             });
 
@@ -133,93 +158,106 @@ export function LandlordPaymentsView() {
     return (
         <PullToRefresh onRefresh={fetchInvoices}>
             <div className="flex flex-col gap-3 pb-3">
-                {/* Search Bar */}
-                <div className="px-4 pt-1 flex items-center">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-                        <input
-                            type="text"
-                            placeholder="Search tenant or unit…"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
-                        />
+                {/* Sticky Search & Tabs Bar */}
+                <div className="sticky top-[56px] z-30 bg-background/95 backdrop-blur-md pb-2.5 pt-1 flex flex-col gap-2.5 border-b border-slate-200/80 dark:border-white/10 -mt-1 shadow-xs">
+                    {/* Search Bar */}
+                    <div className="px-4 flex items-center">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+                            <input
+                                type="text"
+                                placeholder="Search tenant, unit, invoice…"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 rounded-xl pl-9 pr-8 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
+                            />
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+                                    aria-label="Clear search"
+                                >
+                                    <X className="size-3.5" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Notification Banner */}
+                    {actionMessage && (
+                        <div className={cn(
+                            "mx-4 p-3 rounded-xl text-xs font-bold flex items-center justify-between animate-in fade-in duration-200",
+                            actionMessage.type === 'success' 
+                                ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400" 
+                                : "bg-red-500/15 border border-red-500/30 text-red-400"
+                        )}>
+                            <span>{actionMessage.text}</span>
+                            <button onClick={() => setActionMessage(null)} className="p-1">
+                                <X className="size-3.5" />
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Tab Filters */}
+                    <div className="px-4 flex gap-1.5">
+                        <button
+                            onClick={() => setActiveTab('all')}
+                            className={cn(
+                                "flex-1 py-1.5 px-2 rounded-xl text-xs font-bold text-center transition-all whitespace-nowrap",
+                                activeTab === 'all'
+                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                    : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
+                            )}
+                        >
+                            All
+                        </button>
+
+                        <button
+                            onClick={() => setActiveTab('proofs')}
+                            className={cn(
+                                "flex-1 py-1.5 px-1 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 whitespace-nowrap",
+                                activeTab === 'proofs'
+                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                    : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
+                            )}
+                        >
+                            <span>Proofs</span>
+                            {pendingProofsCount > 0 && (
+                                <span className={cn(
+                                    "px-1.5 py-0.2 rounded-full text-[10px] font-black",
+                                    activeTab === 'proofs' ? "bg-white text-primary" : "bg-primary/20 text-primary"
+                                )}>
+                                    {pendingProofsCount}
+                                </span>
+                            )}
+                        </button>
+
+                        <button
+                            onClick={() => setActiveTab('overdue')}
+                            className={cn(
+                                "flex-1 py-1.5 px-2 rounded-xl text-xs font-bold text-center transition-all whitespace-nowrap",
+                                activeTab === 'overdue'
+                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                    : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
+                            )}
+                        >
+                            Overdue
+                        </button>
+
+                        <button
+                            onClick={() => setActiveTab('paid')}
+                            className={cn(
+                                "flex-1 py-1.5 px-2 rounded-xl text-xs font-bold text-center transition-all whitespace-nowrap",
+                                activeTab === 'paid'
+                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                    : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
+                            )}
+                        >
+                            Paid
+                        </button>
                     </div>
                 </div>
-
-            {/* Notification Banner */}
-            {actionMessage && (
-                <div className={cn(
-                    "mx-4 p-3 rounded-xl text-xs font-bold flex items-center justify-between animate-in fade-in duration-200",
-                    actionMessage.type === 'success' 
-                        ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400" 
-                        : "bg-red-500/15 border border-red-500/30 text-red-400"
-                )}>
-                    <span>{actionMessage.text}</span>
-                    <button onClick={() => setActionMessage(null)} className="p-1">
-                        <X className="size-3.5" />
-                    </button>
-                </div>
-            )}
-
-            {/* Tab Filters */}
-            <div className="px-4 flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
-                <button
-                    onClick={() => setActiveTab('proofs')}
-                    className={cn(
-                        "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5",
-                        activeTab === 'proofs'
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
-                    )}
-                >
-                    <span>Proofs to Review</span>
-                    {pendingProofsCount > 0 && (
-                        <span className={cn(
-                            "px-1.5 py-0.2 rounded-full text-[10px] font-black",
-                            activeTab === 'proofs' ? "bg-white text-primary" : "bg-primary/20 text-primary"
-                        )}>
-                            {pendingProofsCount}
-                        </span>
-                    )}
-                </button>
-
-                <button
-                    onClick={() => setActiveTab('all')}
-                    className={cn(
-                        "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
-                        activeTab === 'all'
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
-                    )}
-                >
-                    All Invoices
-                </button>
-
-                <button
-                    onClick={() => setActiveTab('overdue')}
-                    className={cn(
-                        "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
-                        activeTab === 'overdue'
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
-                    )}
-                >
-                    Overdue
-                </button>
-
-                <button
-                    onClick={() => setActiveTab('paid')}
-                    className={cn(
-                        "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
-                        activeTab === 'paid'
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
-                    )}
-                >
-                    Paid
-                </button>
-            </div>
 
             {/* Invoices List */}
             <div className="px-4 flex flex-col gap-2.5">
@@ -239,9 +277,11 @@ export function LandlordPaymentsView() {
                 ) : (
                     filteredInvoices.map((invoice) => {
                         const hasProof = Boolean(invoice.paymentProofUrl);
-                        const isPending = invoice.status === 'pending';
+                        const isPaid = invoice.status === 'paid' || invoice.status === 'completed' || invoice.status === 'confirmed';
                         const isOverdue = invoice.status === 'overdue';
-                        const isPaid = invoice.status === 'paid';
+                        const isUnderReview = invoice.status === 'under_review' || invoice.status === 'intent_submitted';
+                        const isPending = invoice.status === 'pending' || invoice.status === 'reminder_sent' || invoice.status === 'awaiting_in_person';
+                        const canReview = hasProof && (isPending || isUnderReview);
 
                         return (
                             <div 
@@ -252,7 +292,9 @@ export function LandlordPaymentsView() {
                                 <div className="flex items-start justify-between gap-2">
                                     <div>
                                         <h4 className="text-xs font-bold text-foreground">{invoice.tenantName}</h4>
-                                        <span className="text-[11px] text-muted-foreground">Unit {invoice.unitNumber}</span>
+                                        <span className="text-[11px] text-muted-foreground">
+                                            {invoice.unitNumber.toLowerCase().startsWith('unit') ? invoice.unitNumber : `Unit ${invoice.unitNumber}`}
+                                        </span>
                                     </div>
                                     <div className="text-right">
                                         <div className="text-xs font-black text-foreground">
@@ -262,7 +304,8 @@ export function LandlordPaymentsView() {
                                             "inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider mt-0.5",
                                             isPaid && "bg-emerald-500/10 text-emerald-500",
                                             isOverdue && "bg-red-500/10 text-red-500",
-                                            isPending && "bg-amber-500/10 text-amber-500"
+                                            (isUnderReview || (isPending && hasProof)) && "bg-blue-500/10 text-blue-500",
+                                            isPending && !hasProof && "bg-amber-500/10 text-amber-500"
                                         )}>
                                             {isPaid ? 'Paid' : isOverdue ? 'Overdue' : hasProof ? 'Proof Attached' : 'Pending'}
                                         </span>
@@ -307,7 +350,7 @@ export function LandlordPaymentsView() {
                                 )}
 
                                 {/* Quick Review Actions for Pending Proofs */}
-                                {isPending && (
+                                {canReview && (
                                     <div className="flex items-center gap-2 mt-1">
                                         <button
                                             onClick={() => handleReviewPayment(invoice.id, 'confirm')}
@@ -339,7 +382,9 @@ export function LandlordPaymentsView() {
                     {/* Header */}
                     <div className="flex items-center justify-between pb-3 text-white border-b border-white/10">
                         <div>
-                            <h4 className="text-xs font-bold">{inspectInvoice.tenantName} - Unit {inspectInvoice.unitNumber}</h4>
+                            <h4 className="text-xs font-bold">
+                                {inspectInvoice.tenantName} - {inspectInvoice.unitNumber.toLowerCase().startsWith('unit') ? inspectInvoice.unitNumber : `Unit ${inspectInvoice.unitNumber}`}
+                            </h4>
                             <p className="text-[10px] text-white/70">₱{inspectInvoice.amount.toLocaleString()} Receipt Proof</p>
                         </div>
                         <button

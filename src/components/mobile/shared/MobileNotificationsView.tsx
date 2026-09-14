@@ -12,11 +12,11 @@ import {
     CheckCheck,
     Trash2,
     Sparkles,
-    RefreshCw,
     Clock,
     AlertCircle,
     ChevronRight,
     Inbox,
+    CheckCircle2,
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 import { useAuth } from '@/context/AuthContext';
@@ -88,7 +88,6 @@ export function MobileNotificationsView() {
 
     const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'urgent'>('all');
     const [isClearingAll, setIsClearingAll] = useState(false);
-    const [isRefreshing, setIsRefreshing] = useState(false);
 
     const role = profile?.role as 'tenant' | 'landlord' | undefined;
 
@@ -103,15 +102,6 @@ export function MobileNotificationsView() {
         return notifications;
     }, [notifications, activeTab]);
 
-    const handleManualRefresh = async () => {
-        setIsRefreshing(true);
-        try {
-            await refresh();
-        } finally {
-            setIsRefreshing(false);
-        }
-    };
-
     const handleMarkAllRead = async () => {
         if (unreadCount === 0 || isClearingAll) return;
         setIsClearingAll(true);
@@ -125,6 +115,11 @@ export function MobileNotificationsView() {
     const handleNotificationClick = async (item: Notification) => {
         if (!item.read) {
             await markAsRead(item.id);
+        }
+
+        // Application notifications are read-only on mobile (no application management on mobile)
+        if (item.type === 'application') {
+            return;
         }
 
         const data = (item.data || {}) as Record<string, any>;
@@ -263,21 +258,9 @@ export function MobileNotificationsView() {
                         </button>
                     </div>
 
-                    {/* Actions: Mark all read & manual refresh */}
-                    <div className="flex items-center gap-1">
-                        <button
-                            onClick={handleManualRefresh}
-                            disabled={isRefreshing || loading}
-                            className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                            title="Refresh notifications"
-                            aria-label="Refresh"
-                        >
-                            <RefreshCw
-                                size={16}
-                                className={cn((isRefreshing || loading) && 'animate-spin')}
-                            />
-                        </button>
-                        {unreadCount > 0 && (
+                    {/* Actions: Mark all read */}
+                    {unreadCount > 0 && (
+                        <div className="flex items-center">
                             <button
                                 onClick={handleMarkAllRead}
                                 disabled={isClearingAll}
@@ -287,8 +270,8 @@ export function MobileNotificationsView() {
                                 <CheckCheck size={15} />
                                 <span className="hidden sm:inline">Mark all read</span>
                             </button>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Error Banner */}
@@ -355,17 +338,19 @@ export function MobileNotificationsView() {
                         {filteredNotifications.map((item) => {
                             const visuals = getNotificationVisuals(item.type);
                             const Icon = visuals.icon;
+                            const isReadOnly = item.type === 'application';
 
                             return (
                                 <div
                                     key={item.id}
                                     onClick={() => handleNotificationClick(item)}
                                     className={cn(
-                                        'group relative p-3.5 rounded-2xl border transition-all cursor-pointer',
+                                        'group relative p-3.5 rounded-2xl border transition-all',
+                                        isReadOnly ? 'cursor-default' : 'cursor-pointer',
                                         'border-slate-300 dark:border-white/15',
                                         !item.read
-                                            ? 'bg-card shadow-sm hover:border-[#5e9a7a]/40'
-                                            : 'bg-card/60 opacity-85 hover:opacity-100 hover:bg-card'
+                                            ? cn('bg-card shadow-sm', !isReadOnly && 'hover:border-[#5e9a7a]/40')
+                                            : cn('bg-card/60 opacity-85', !isReadOnly && 'hover:opacity-100 hover:bg-card')
                                     )}
                                 >
                                     <div className="flex items-start gap-3">
@@ -431,10 +416,12 @@ export function MobileNotificationsView() {
                                             >
                                                 <Trash2 size={14} />
                                             </button>
-                                            <ChevronRight
-                                                size={14}
-                                                className="text-muted-foreground/40 group-hover:text-foreground group-hover:translate-x-0.5 transition-all mt-auto"
-                                            />
+                                            {!isReadOnly && (
+                                                <ChevronRight
+                                                    size={14}
+                                                    className="text-muted-foreground/40 group-hover:text-foreground group-hover:translate-x-0.5 transition-all mt-auto"
+                                                />
+                                            )}
                                         </div>
                                     </div>
                                 </div>

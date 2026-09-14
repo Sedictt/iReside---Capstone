@@ -70,8 +70,8 @@ const LANDLORD_TABS = [
     },
     {
         href: '/mobile/landlord/tickets',
-        label: 'Tickets',
-        icon: Ticket,
+        label: 'Maintenance',
+        icon: Wrench,
         matchPrefix: '/mobile/landlord/tickets',
     },
     {

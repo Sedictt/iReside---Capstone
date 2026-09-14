@@ -8,6 +8,7 @@ import {
     Building2, 
     CreditCard, 
     Ticket, 
+    Wrench,
     Users, 
     ArrowUpRight, 
     AlertTriangle, 
@@ -264,11 +265,11 @@ export function LandlordOverviewView() {
                                     'size-7 rounded-xl flex items-center justify-center shrink-0',
                                     ticketsCount > 0 ? 'bg-amber-500/15 text-amber-500' : 'bg-primary/15 text-primary'
                                 )}>
-                                    <Ticket className="size-3.5" />
+                                    <Wrench className="size-3.5" />
                                 </div>
                                 <div className="min-w-0">
                                     <h4 className="text-xs font-bold text-foreground truncate">
-                                        {ticketsCount > 0 ? `${ticketsCount} Open Maintenance Tickets` : 'No Pending Maintenance'}
+                                        {ticketsCount > 0 ? `${ticketsCount} Open Maintenance Requests` : 'No Pending Maintenance'}
                                     </h4>
                                     <p className="text-[10px] text-muted-foreground truncate">
                                         Tap to view issue photos &amp; status

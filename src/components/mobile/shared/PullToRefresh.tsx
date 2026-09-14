@@ -15,7 +15,7 @@ export function PullToRefresh({
     onRefresh,
     children,
     className,
-    pullThreshold = 70,
+    pullThreshold = 60,
 }: PullToRefreshProps) {
     const [pullDistance, setPullDistance] = useState(0);
     const [isRefreshing, setIsRefreshing] = useState(false);

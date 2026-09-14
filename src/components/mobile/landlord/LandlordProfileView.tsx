@@ -21,14 +21,15 @@ import {
     FileText, 
     Activity,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
+    X
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import type { AuditLogItem } from '@/app/api/audit-logs/route';
 
-const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
+const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80";
 
 export function LandlordProfileView() {
     const { profile } = useAuth();
@@ -45,8 +46,7 @@ export function LandlordProfileView() {
     const fetchAuditLogs = async () => {
         try {
             const queryParams = new URLSearchParams();
-            if (categoryFilter !== 'all') queryParams.set('category', categoryFilter);
-            if (searchQuery.trim()) queryParams.set('search', searchQuery.trim());
+            queryParams.set('limit', '250');
 
             const res = await fetch(`/api/audit-logs?${queryParams.toString()}`);
             if (res.ok) {
@@ -63,13 +63,26 @@ export function LandlordProfileView() {
     useEffect(() => {
         setLoadingLogs(true);
         fetchAuditLogs();
-    }, [categoryFilter]);
+    }, []);
 
-    const handleSearchSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoadingLogs(true);
-        fetchAuditLogs();
-    };
+    // Instant filter on every keystroke
+    const filteredLogs = useMemo(() => {
+        const q = searchQuery.toLowerCase().trim();
+        return logs.filter((item) => {
+            // Category filter
+            if (categoryFilter !== 'all') {
+                const itemCat = (item.category || '').toLowerCase();
+                if (itemCat !== categoryFilter.toLowerCase()) return false;
+            }
+            // Instant search query filter
+            if (!q) return true;
+            const title = (item.title || '').toLowerCase();
+            const desc = (item.description || '').toLowerCase();
+            const action = (item.action || '').toLowerCase();
+            const category = (item.category || '').toLowerCase();
+            return title.includes(q) || desc.includes(q) || action.includes(q) || category.includes(q);
+        });
+    }, [logs, searchQuery, categoryFilter]);
 
     const handleLogout = async () => {
         try {
@@ -141,25 +154,27 @@ export function LandlordProfileView() {
                         </h3>
                     </div>
 
-                    {/* Search Bar */}
-                    <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-                            <input
-                                type="text"
-                                placeholder="Filter actions or keywords…"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            className="px-3 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold active:scale-95 transition-all"
-                        >
-                            Search
-                        </button>
-                    </form>
+                    {/* Instant Search Bar */}
+                    <div className="relative flex items-center">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+                        <input
+                            type="text"
+                            placeholder="Filter actions, title, or keywords…"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 rounded-xl pl-9 pr-8 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
+                        />
+                        {searchQuery && (
+                            <button
+                                type="button"
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+                                aria-label="Clear search"
+                            >
+                                <X className="size-3.5" />
+                            </button>
+                        )}
+                    </div>
 
                 {/* Category Pills */}
                 <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
@@ -186,16 +201,16 @@ export function LandlordProfileView() {
                             <div className="w-8 h-8 rounded-full border-2 border-muted border-t-primary animate-spin" />
                             <span className="text-xs text-muted-foreground">Loading audit records…</span>
                         </div>
-                    ) : logs.length === 0 ? (
+                    ) : filteredLogs.length === 0 ? (
                         <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/50 p-8 text-center flex flex-col items-center justify-center shadow-xs">
                             <ShieldCheck className="size-8 text-muted-foreground/50 mb-2" />
                             <h4 className="text-xs font-bold text-foreground">No audit logs found</h4>
                             <p className="text-[11px] text-muted-foreground mt-0.5">
-                                No logged events match the current filter.
+                                {searchQuery ? 'No audit records match your search.' : 'No logged events match the current filter.'}
                             </p>
                         </div>
                     ) : (
-                        logs.map((item) => {
+                        filteredLogs.map((item) => {
                             const isExpanded = expandedLogId === item.id;
                             const isWarning = item.severity === 'warning';
                             const isError = item.severity === 'critical' || (item.severity as any) === 'error';

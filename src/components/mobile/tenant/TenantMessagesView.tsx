@@ -15,7 +15,8 @@ import {
     CheckCheck,
     Clock,
     Building2,
-    User
+    User,
+    X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
@@ -272,14 +273,24 @@ export function TenantMessagesView() {
                     <div className="flex flex-col gap-2.5 px-4 pb-3">
                         {/* Search Bar */}
                         <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
                             <input
                                 type="text"
                                 placeholder="Search conversations…"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
+                                className="w-full bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 rounded-xl pl-9 pr-8 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
                             />
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+                                    aria-label="Clear search"
+                                >
+                                    <X className="size-3.5" />
+                                </button>
+                            )}
                         </div>
 
                         {/* Conversations List */}

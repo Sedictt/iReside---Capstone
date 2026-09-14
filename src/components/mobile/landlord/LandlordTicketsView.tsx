@@ -35,12 +35,21 @@ interface MaintenanceRequest {
     ai_triage_notes?: string;
 }
 
+function normalizeStatus(status?: string | null): 'pending' | 'in_progress' | 'resolved' | 'other' {
+    if (!status) return 'other';
+    const s = status.toLowerCase().replace(/[\s_-]+/g, '');
+    if (s === 'open' || s === 'pending') return 'pending';
+    if (s === 'inprogress' || s === 'assigned') return 'in_progress';
+    if (s === 'resolved' || s === 'closed') return 'resolved';
+    return 'other';
+}
+
 export function LandlordTicketsView() {
     const { selectedPropertyId } = useProperty();
     const [tickets, setTickets] = useState<MaintenanceRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'in_progress' | 'resolved'>('open');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'in_progress' | 'resolved'>('all');
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [lightboxImage, setLightboxImage] = useState<string | null>(null);
     const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -76,6 +85,7 @@ export function LandlordTicketsView() {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    requestId: ticketId,
                     id: ticketId,
                     status: nextStatus,
                 }),
@@ -102,123 +112,176 @@ export function LandlordTicketsView() {
     };
 
     const openTicketsCount = useMemo(() => {
-        return tickets.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
+        return tickets.filter(t => normalizeStatus(t.status) === 'pending').length;
+    }, [tickets]);
+
+    const inProgressTicketsCount = useMemo(() => {
+        return tickets.filter(t => normalizeStatus(t.status) === 'in_progress').length;
     }, [tickets]);
 
     const filteredTickets = useMemo(() => {
-        return tickets.filter((t) => {
-            const tenantName = t.tenant?.full_name || '';
-            const unitName = t.unit?.name || '';
-            const matchesSearch = 
-                t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                tenantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                unitName.toLowerCase().includes(searchQuery.toLowerCase());
-            if (!matchesSearch) return false;
+        const q = searchQuery.toLowerCase().trim();
+        const list = tickets.filter((t) => {
+            const tenantName = (t.tenant?.full_name || '').toLowerCase();
+            const unitName = (t.unit?.name || '').toLowerCase();
+            const title = (t.title || '').toLowerCase();
+            const desc = (t.description || '').toLowerCase();
+            const category = (t.category || '').toLowerCase();
+            const priority = (t.priority || '').toLowerCase();
+
+            if (q) {
+                const matchesSearch = 
+                    title.includes(q) ||
+                    desc.includes(q) ||
+                    tenantName.includes(q) ||
+                    unitName.includes(q) ||
+                    category.includes(q) ||
+                    priority.includes(q);
+                if (!matchesSearch) return false;
+            }
+
+            const currentStatus = normalizeStatus(t.status);
 
             if (statusFilter === 'open') {
-                return t.status === 'pending';
+                return currentStatus === 'pending';
             }
             if (statusFilter === 'in_progress') {
-                return t.status === 'in_progress';
+                return currentStatus === 'in_progress';
             }
             if (statusFilter === 'resolved') {
-                return t.status === 'resolved';
+                return currentStatus === 'resolved';
             }
             return true; // 'all'
+        });
+
+        // Put resolved tickets last; active (pending / in_progress) tickets first
+        return list.sort((a, b) => {
+            const statusA = normalizeStatus(a.status);
+            const statusB = normalizeStatus(b.status);
+            const isResolvedA = statusA === 'resolved' ? 1 : 0;
+            const isResolvedB = statusB === 'resolved' ? 1 : 0;
+
+            if (isResolvedA !== isResolvedB) {
+                return isResolvedA - isResolvedB; // 0 (unresolved) comes before 1 (resolved)
+            }
+
+            const dateA = new Date(a.created_at || 0).getTime();
+            const dateB = new Date(b.created_at || 0).getTime();
+            return dateB - dateA;
         });
     }, [tickets, searchQuery, statusFilter]);
 
     return (
         <PullToRefresh onRefresh={fetchTickets}>
             <div className="flex flex-col gap-3 pb-3">
-                {/* Search Bar */}
-                <div className="px-4 pt-1 flex items-center">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-                        <input
-                            type="text"
-                            placeholder="Search tickets, units…"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 rounded-xl pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
-                        />
+                {/* Sticky Search & Category Tabs Bar */}
+                <div className="sticky top-[56px] z-30 bg-background/95 backdrop-blur-md pb-2.5 pt-1 flex flex-col gap-2.5 border-b border-slate-200/80 dark:border-white/10 -mt-1 shadow-xs">
+                    {/* Search Bar */}
+                    <div className="px-4 flex items-center">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+                            <input
+                                type="text"
+                                placeholder="Search maintenance, units…"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 rounded-xl pl-9 pr-8 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
+                            />
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+                                    aria-label="Clear search"
+                                >
+                                    <X className="size-3.5" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Notification Banner */}
+                    {toast && (
+                        <div className={cn(
+                            "mx-4 p-3 rounded-xl text-xs font-bold flex items-center justify-between animate-in fade-in duration-200",
+                            toast.type === 'success' 
+                                ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400" 
+                                : "bg-red-500/15 border border-red-500/30 text-red-400"
+                        )}>
+                            <span>{toast.message}</span>
+                            <button onClick={() => setToast(null)} className="p-1">
+                                <X className="size-3.5" />
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Status Filter Tabs */}
+                    <div className="px-4 flex gap-1.5 overflow-x-auto scrollbar-none">
+                        <button
+                            onClick={() => setStatusFilter('all')}
+                            className={cn(
+                                "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
+                                statusFilter === 'all'
+                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                    : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
+                            )}
+                        >
+                            All
+                        </button>
+
+                        <button
+                            onClick={() => setStatusFilter('open')}
+                            className={cn(
+                                "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5",
+                                statusFilter === 'open'
+                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                    : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
+                            )}
+                        >
+                            <span>Open</span>
+                            {openTicketsCount > 0 && (
+                                <span className={cn(
+                                    "px-1.5 py-0.2 rounded-full text-[10px] font-black",
+                                    statusFilter === 'open' ? "bg-white text-primary" : "bg-primary/20 text-primary"
+                                )}>
+                                    {openTicketsCount}
+                                </span>
+                            )}
+                        </button>
+
+                        <button
+                            onClick={() => setStatusFilter('in_progress')}
+                            className={cn(
+                                "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5",
+                                statusFilter === 'in_progress'
+                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                    : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
+                            )}
+                        >
+                            <span>In Progress</span>
+                            {inProgressTicketsCount > 0 && (
+                                <span className={cn(
+                                    "px-1.5 py-0.2 rounded-full text-[10px] font-black",
+                                    statusFilter === 'in_progress' ? "bg-white text-primary" : "bg-primary/20 text-primary"
+                                )}>
+                                    {inProgressTicketsCount}
+                                </span>
+                            )}
+                        </button>
+
+                        <button
+                            onClick={() => setStatusFilter('resolved')}
+                            className={cn(
+                                "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
+                                statusFilter === 'resolved'
+                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                    : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
+                            )}
+                        >
+                            Resolved
+                        </button>
                     </div>
                 </div>
-
-            {/* Notification Banner */}
-            {toast && (
-                <div className={cn(
-                    "mx-4 p-3 rounded-xl text-xs font-bold flex items-center justify-between animate-in fade-in duration-200",
-                    toast.type === 'success' 
-                        ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400" 
-                        : "bg-red-500/15 border border-red-500/30 text-red-400"
-                )}>
-                    <span>{toast.message}</span>
-                    <button onClick={() => setToast(null)} className="p-1">
-                        <X className="size-3.5" />
-                    </button>
-                </div>
-            )}
-
-            {/* Status Filter Tabs */}
-            <div className="px-4 flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
-                <button
-                    onClick={() => setStatusFilter('open')}
-                    className={cn(
-                        "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5",
-                        statusFilter === 'open'
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
-                    )}
-                >
-                    <span>Open</span>
-                    {openTicketsCount > 0 && (
-                        <span className={cn(
-                            "px-1.5 py-0.2 rounded-full text-[10px] font-black",
-                            statusFilter === 'open' ? "bg-white text-primary" : "bg-primary/20 text-primary"
-                        )}>
-                            {openTicketsCount}
-                        </span>
-                    )}
-                </button>
-
-                <button
-                    onClick={() => setStatusFilter('in_progress')}
-                    className={cn(
-                        "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
-                        statusFilter === 'in_progress'
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
-                    )}
-                >
-                    In Progress
-                </button>
-
-                <button
-                    onClick={() => setStatusFilter('resolved')}
-                    className={cn(
-                        "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
-                        statusFilter === 'resolved'
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
-                    )}
-                >
-                    Resolved
-                </button>
-
-                <button
-                    onClick={() => setStatusFilter('all')}
-                    className={cn(
-                        "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
-                        statusFilter === 'all'
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
-                    )}
-                >
-                    All
-                </button>
-            </div>
 
             {/* Tickets List */}
             <div className="px-4 flex flex-col gap-2.5">
@@ -241,6 +304,7 @@ export function LandlordTicketsView() {
                         const hasImages = Boolean(ticket.images && ticket.images.length > 0);
                         const priority = ticket.priority?.toLowerCase() || 'medium';
                         const isUrgent = priority === 'urgent' || priority === 'high';
+                        const normStatus = normalizeStatus(ticket.status);
 
                         return (
                             <div
@@ -261,12 +325,12 @@ export function LandlordTicketsView() {
                                         </span>
 
                                         <span className={cn(
-                                            "px-2 py-0.5 rounded-full text-[9px] font-bold capitalize",
-                                            ticket.status === 'resolved' && "bg-emerald-500/10 text-emerald-400",
-                                            ticket.status === 'in_progress' && "bg-blue-500/10 text-blue-400",
-                                            ticket.status === 'pending' && "bg-amber-500/10 text-amber-400"
+                                            "px-2 py-0.5 rounded-full text-[9px] font-bold",
+                                            normStatus === 'resolved' && "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+                                            normStatus === 'in_progress' && "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+                                            normStatus === 'pending' && "bg-amber-500/10 text-amber-400 border border-amber-500/20"
                                         )}>
-                                            {ticket.status.replace('_', ' ')}
+                                            {normStatus === 'in_progress' ? 'In Progress' : normStatus === 'resolved' ? 'Resolved' : 'Pending'}
                                         </span>
                                     </div>
 
@@ -328,18 +392,18 @@ export function LandlordTicketsView() {
 
                                     {/* Action Buttons */}
                                     <div className="flex items-center gap-1.5">
-                                        {ticket.status === 'pending' && (
+                                        {normStatus === 'pending' && (
                                             <button
                                                 onClick={() => handleUpdateStatus(ticket.id, 'in_progress')}
                                                 disabled={updatingId === ticket.id}
                                                 className="px-2.5 py-1.5 rounded-lg bg-blue-500/15 border border-blue-500/25 text-blue-400 text-[10px] font-black uppercase tracking-tight flex items-center gap-1 active:scale-95 transition-all disabled:opacity-50"
                                             >
                                                 <Wrench className="size-3" />
-                                                <span>In Progress</span>
+                                                <span>Start Work</span>
                                             </button>
                                         )}
 
-                                        {ticket.status !== 'resolved' && (
+                                        {normStatus !== 'resolved' && (
                                             <button
                                                 onClick={() => handleUpdateStatus(ticket.id, 'resolved')}
                                                 disabled={updatingId === ticket.id}
