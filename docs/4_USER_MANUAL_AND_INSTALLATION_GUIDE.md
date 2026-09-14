@@ -280,11 +280,12 @@ To ensure users can always download the applications regardless of the deploymen
 7. Once countersigned, the lease status transitions to `Active`.
 
 #### Procedure 3: Recording Utility Submeters & Verifying Payments
-1. On your monthly meter-reading date, click **Invoices** → **Record Submeter**.
-2. Select the unit, input the current electricity reading (kWh) and water reading (m³), then click **Compute & Post**.
-3. When tenants pay, navigate to **Invoices** → **Pending Verifications**.
-4. Review the uploaded GCash screenshot and match the 13-digit Reference Number against your GCash SMS confirmation.
-5. Click **Approve Payment**. The invoice status updates to `Paid`, and an Official Receipt PDF is issued to the tenant.
+1. Navigate to **Utility Billing** via the sidebar menu, the **Utility Submeters** card on the Landlord Dashboard, or the **Record Submeters** button in **Invoices**.
+2. Under the **Meter Readings** tab, enter the current electricity reading (kWh) and water reading (m³) for each unit directly in the batch table (or click a unit row for the individual detail modal). Real-time consumption deltas (`+kWh`, `+m³`) and estimated invoice amounts calculate automatically.
+3. Click **Post & Bill Invoices** (or **Save Draft** to store values for review). The system records the readings, generates or updates active monthly invoices with itemized utility charges, links submeter records, and notifies tenants immediately.
+4. When tenants submit payments with proof, open the **Verify Payments** tab in **Utility Billing** (or visit **Invoices** filtered by **Under Review**).
+5. Review the tenant's payment details and click **Review & Confirm** to examine the uploaded GCash screenshot proof against your GCash SMS or bank notification.
+6. Click **Approve Payment**. The invoice status updates to `Paid`, the remaining balance is cleared, and an Official Receipt is generated and issued to the tenant.
 
 ---
 
