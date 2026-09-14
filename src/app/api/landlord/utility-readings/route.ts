@@ -5,7 +5,7 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { BillingService } from "@/lib/services/payment";
 
 const readingSchema = z.object({
-  leaseId: z.string().uuid(),
+  leaseId: z.string().trim().min(1, "Lease ID is required"),
   utilityType: z.enum(["water", "electricity"]),
   billingPeriodStart: z.string(),
   billingPeriodEnd: z.string(),
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         if (shouldPostInvoices) {
           const { generateMonthlyInvoices } = await import("@/lib/billing/server");
           const month = specifiedMonth || payload.billingPeriodStart.slice(0, 7);
-          invoiceResult = await generateMonthlyInvoices(supabase, userId, month, [payload.leaseId]);
+          invoiceResult = await generateMonthlyInvoices(supabase, userId, month, [reading.lease_id || payload.leaseId]);
         }
 
         return NextResponse.json({ reading, invoiceResult });
@@ -71,7 +71,11 @@ export async function POST(request: Request) {
       if (shouldPostInvoices && results.length > 0) {
         const { generateMonthlyInvoices } = await import("@/lib/billing/server");
         const month = specifiedMonth || readings[0]?.billingPeriodStart?.slice(0, 7);
-        const leaseIds = Array.from(new Set(readings.map((r) => r.leaseId)));
+        const leaseIds = Array.from(
+          new Set(
+            results.map((r) => r.lease_id || readings.find((rd) => rd.leaseId)?.leaseId).filter(Boolean)
+          )
+        ) as string[];
         invoiceResult = await generateMonthlyInvoices(supabase, userId, month, leaseIds);
       }
 
@@ -110,6 +114,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ reading });
   } catch (error: any) {
     console.error("Failed to record utility reading:", error);
+    if (error instanceof z.ZodError) {
+      const msg = error.issues.map((i) => `${i.path.join(".") || "field"}: ${i.message}`).join("; ");
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
     return NextResponse.json(
       { error: error?.message || "Failed to record utility reading." },
       { status: 500 },
