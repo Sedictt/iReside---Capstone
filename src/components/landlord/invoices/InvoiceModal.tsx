@@ -13,7 +13,7 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Tooltip } from "@/components/ui/tooltip";
 
-import { formatDateLong, formatPhpCurrency } from "@/lib/billing/utils";
+import { formatDateLong, formatPhpCurrency, getInvoiceDisplayStatus } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Upload, Camera, Trash2 } from "lucide-react";
@@ -326,8 +326,9 @@ export function InvoiceModal({
         }
     };
 
-    const currentStatus = ((invoice?.workflowStatus ?? invoice?.status) as keyof typeof statusConfig) || "pending";
-     const statusStyle = statusConfig[currentStatus] || statusConfig.pending;
+    const displayStatus = invoice ? getInvoiceDisplayStatus(invoice) : "pending";
+    const currentStatus = (displayStatus as keyof typeof statusConfig) || "pending";
+    const statusStyle = statusConfig[currentStatus] || statusConfig.pending;
 
      const handleClose = () => {
          setRefundProofFile(null);
