@@ -570,7 +570,7 @@ export class LeaseService {
     // 1. Fetch and validate lease
     const { data: lease, error: leaseError } = await this.supabase
       .from("leases")
-      .select("id, status, landlord_id, tenant_signature, tenant_signed_at, landlord_signed_at")
+      .select("id, status, landlord_id, tenant_signature, tenant_signed_at, landlord_signed_at, unit_id")
       .eq("id", leaseId)
       .maybeSingle();
 
@@ -676,6 +676,14 @@ export class LeaseService {
             updated_at: signedAt,
           } as any)
           .eq("id", application.id);
+      }
+
+      // Automatically update unit status to occupied
+      if (lease.unit_id) {
+        await adminClient
+          .from("units")
+          .update({ status: "occupied", updated_at: signedAt })
+          .eq("id", lease.unit_id);
       }
     };
 

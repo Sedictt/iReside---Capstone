@@ -271,13 +271,13 @@ To ensure users can always download the applications regardless of the deploymen
 7. Save the unit. It immediately registers on the Interactive 2D Unit Map.
 
 #### Procedure 2: Onboarding a Tenant & Executing a Lease
-1. Navigate to **Tenants** → click **Add Tenant** → select **Invite via Magic Link**.
-2. Enter the tenant's full legal name, email address, assigned unit, and lease commencement date.
-3. Click **Send Invitation**.
-4. Once the tenant completes profile activation, navigate to **Leases** → **Create Lease**.
-5. Enter deposit amount, advance rent months, and house rules.
-6. Sign using the digital signature pad and click **Dispatch to Tenant for Signature**.
-7. Once countersigned, the lease status transitions to `Active`.
+1. Navigate to **Tenants** → click **Add Tenant** → select **Invite Link**.
+2. Select Target Property, unit, and set the link expiration date.
+3. Click **Generate Onboarding Link**.
+4. Once the applicant submits, review their details in **Applications** and click **Move to Approval**.
+5. Specify deposit and advance rent amounts, then click **Request Payment**.
+6. Verify the tenant's payment proof and click **Finalize Approval & Create Lease**.
+7. Once the tenant signs via their digital link, countersign the agreement in **Leases** to transition status to **Active**.
 
 #### Procedure 3: Recording Utility Submeters & Verifying Payments
 1. Navigate to **Utility Billing** via the sidebar menu, the **Utility Submeters** card on the Landlord Dashboard, or the **Record Submeters** button in **Invoices**.
@@ -291,10 +291,15 @@ To ensure users can always download the applications regardless of the deploymen
 
 ### 6.2 Tenant / Resident Operations Guide
 
-#### Procedure 1: Accepting Onboarding Invitation & Activating Account
-1. Open the invitation email received from iReside and click **Activate Your Unit Account**.
-2. On the setup screen (`/invite/[token]`), set a secure password (minimum 8 characters).
-3. Review the property privacy policy and click **Complete Registration**.
+#### Procedure 1: Submitting an Application & Signing the Digital Lease
+1. Open the property's application link or scan the building flyer QR code. Fill out your legal details, contact information, employment status, and attach required identification documents, then tap **Submit Application**.
+2. Once reviewed and accepted by the landlord, open the payment request email and tap **Open Payment Portal**.
+3. Review the required move-in charges (Advance Rent and Security Deposit):
+   - **For GCash:** Scan the landlord's QR code or copy the account number, complete the transfer in GCash, enter the 13-digit GCash Reference Number, attach the transaction screenshot, and tap **Submit Payment**. Confirm the transaction prompt to receive your unique immutable System Transaction Reference Number.
+   - **For Cash:** Coordinate with the landlord to settle the move-in fees in person; the landlord will verify and record the cash bypass.
+4. After payment confirmation, check your email for your iReside account credentials and your secure **Digital Lease Signing Link**.
+5. Tap the signing link (`/signing/tenant/[leaseId]`), review the full lease agreement, draw your signature using the digital signing pad, and tap **Sign Lease Agreement**.
+6. Once the landlord countersigns, your lease status updates to `Active` and you can log in to your tenant dashboard at `/tenant` to view receipts, pay future monthly rent, and submit maintenance tickets.
 
 #### Procedure 2: Paying Monthly Rent via GCash & Uploading Proof
 1. Log in at `/tenant`.

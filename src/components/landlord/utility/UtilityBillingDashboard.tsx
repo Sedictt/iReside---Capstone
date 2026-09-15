@@ -476,7 +476,7 @@ export function UtilityBillingDashboard() {
 				setDrafts(newDrafts);
 				monthlyDraftsRef.current[selectedMonth] = newDrafts;
 				if (typeof navigator !== "undefined" && !navigator.onLine) {
-					toast.info("Offline Mode: Hydrated utility records and tariffs from local cache.");
+					toast.info("Offline Mode: Hydrated utility records and rates from local cache.");
 				}
 			} else {
 				if (typeof navigator !== "undefined" && !navigator.onLine) {
@@ -904,7 +904,7 @@ export function UtilityBillingDashboard() {
 						},
 						{ 
 							id: "rates", 
-							label: "Rate Tariffs", 
+							label: "Utility Rates", 
 							icon: Settings2 
 						},
 						{ 
@@ -1727,7 +1727,7 @@ function ResourceSection({
 
 				<div className="md:col-span-2 flex flex-col justify-center">
 					<div className="text-center p-3 rounded-xl neumorphic-panel border border-border/40">
-						<span className={cn("text-[9px] font-black uppercase tracking-widest block opacity-80", accentClass)}>Tariff Rate</span>
+						<span className={cn("text-[9px] font-black uppercase tracking-widest block opacity-80", accentClass)}>Billing Rate</span>
 						<div className="flex items-center justify-center gap-1 mt-1">
 							<span className="text-sm font-black text-muted-foreground">₱</span>
 							<input 

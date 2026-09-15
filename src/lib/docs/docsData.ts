@@ -91,7 +91,7 @@ export const CATEGORY_DEFINITIONS: Record<
     label: "Utilities & Submeters",
     iconName: "Zap",
     audience: "tenant",
-    description: "Tracking electricity and water meter readings, tariffs, and monthly consumption trends.",
+    description: "Tracking electricity and water meter readings, utility rates, and monthly consumption trends.",
   },
   tenant_community: {
     label: "Community & Building Map",
@@ -878,16 +878,16 @@ export const DOCS_ARTICLES: DocArticle[] = [
     relatedArticleIds: ["invite-tenants-magic-link", "setup-gcash-qr"],
     steps: [
       {
-        title: "Draft New Lease Agreement",
-        description: "Go to Leases > Click '+ Create Lease'. Choose the property, unit, tenant name, start date, and lease duration (e.g. 6 or 12 months).",
+        title: "Automated Lease Drafting",
+        description: "When an applicant completes screening and move-in payment verification under Applications, clicking 'Finalize Approval & Create Lease' automatically generates the lease agreement pre-filled with all unit terms and deposit amounts.",
       },
       {
-        title: "Set Financial Terms & Due Days",
-        description: "Enter monthly rent (e.g. ₱15,000), security deposit, advance rental, and the payment due day (e.g. 5th of every month).",
+        title: "Tenant Digital Signature",
+        description: "The incoming tenant receives their login credentials and a secure signing link via email. They review the full agreement and draw their digital signature on any device.",
       },
       {
-        title: "Send for Tenant Signature",
-        description: "Click 'Send for E-Signature'. The tenant receives an alert to draw their signature. Once signed, you countersign with 1-click to activate the contract.",
+        title: "Landlord Countersignature & Activation",
+        description: "You receive an instant notification once the tenant signs. Open the agreement in Lease Hub and click 'Countersign Lease'. Countersigning immediately activates the contract and marks the unit as occupied.",
         tip: "Both parties can download the finalized, tamper-proof signed PDF anytime directly from the portal.",
       },
     ],
@@ -945,7 +945,7 @@ export const DOCS_ARTICLES: DocArticle[] = [
       },
       {
         title: "Record Submeter Utility Readings",
-        description: "Go to Utilities > Enter current electric (kWh) and water (m³) numbers. The system automatically computes: (Current - Previous) × Tariff Rate.",
+        description: "Go to Utilities > Enter current electric (kWh) and water (m³) numbers. The system automatically computes: (Current - Previous) × Utility Rate.",
         tip: "Always enter readings before issuing the final monthly statement so electricity and water are combined into a single easy bill.",
       },
       {
