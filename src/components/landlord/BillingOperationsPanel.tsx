@@ -29,9 +29,10 @@ import {
  Phone,
  Upload,
  Check,
- AlertCircle,
- RotateCcw,
- Eye
+ 	AlertCircle,
+	RotateCcw,
+	Eye,
+	AlertTriangle
 } from "lucide-react";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import Image from "next/image";
@@ -239,6 +240,9 @@ export function BillingOperationsPanel({
 	} | null>(null);
 
 	const originalConfigsRef = useRef<UtilityConfigDraft[] | null>(null);
+
+	const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+	const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
 	useEffect(() => {
 		let alive = true;
@@ -620,18 +624,61 @@ export function BillingOperationsPanel({
 		}
 	}, [viewMode]);
 
+	const handleRequestDiscard = useCallback(() => {
+		setShowDiscardConfirm(true);
+	}, []);
+
+	const handleRequestSave = useCallback(() => {
+		if (viewMode === "gcash") {
+			const cleanName = accountName.trim();
+			const cleanNumber = accountNumber.replace(/\D/g, "");
+
+			if (!cleanName || cleanName.length < 2) {
+				dispatch({
+					type: "SET_MESSAGE",
+					payload: { type: "error", value: "Please provide a valid Account Name (minimum 2 characters)." }
+				});
+				return;
+			}
+
+			if (!/^09\d{9}$/.test(cleanNumber)) {
+				dispatch({
+					type: "SET_MESSAGE",
+					payload: { type: "error", value: "Please provide a valid 11-digit GCash mobile number starting with 09 (e.g. 09171234567)." }
+				});
+				return;
+			}
+		}
+		setShowSaveConfirm(true);
+	}, [viewMode, accountName, accountNumber]);
+
+	const handleConfirmDiscard = useCallback(() => {
+		discard();
+		setShowDiscardConfirm(false);
+	}, [discard]);
+
+	const handleConfirmSave = useCallback(async () => {
+		const success = await save();
+		if (success) {
+			setShowSaveConfirm(false);
+		}
+	}, [save]);
+
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
 				if (isPanelDirty && !saving) {
 					e.preventDefault();
-					save();
+					handleRequestSave();
 				}
+			} else if (e.key === "Escape") {
+				if (showSaveConfirm && !saving) setShowSaveConfirm(false);
+				else if (showDiscardConfirm) setShowDiscardConfirm(false);
 			}
 		};
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [isPanelDirty, saving, save]);
+	}, [isPanelDirty, saving, handleRequestSave, showSaveConfirm, showDiscardConfirm]);
 
 	useEffect(() => {
 		if (embedded) {
@@ -773,7 +820,7 @@ export function BillingOperationsPanel({
 								{diff.items.length > 0 ? (
 									<>
 										<button 
-											onClick={discard}
+											onClick={handleRequestDiscard}
 											className="px-4 py-3 rounded-xl border border-red-500/20 text-red-600 hover:bg-red-500/10 text-xs font-black uppercase tracking-wider transition-all cursor-pointer inline-flex items-center gap-2"
 										>
 											<RotateCcw className="size-3.5" />
@@ -787,7 +834,7 @@ export function BillingOperationsPanel({
 												Back to Editor
 											</button>
 											<button 
-												onClick={save}
+												onClick={handleRequestSave}
 												disabled={saving}
 												className="px-6 py-3 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-widest text-primary-foreground hover:opacity-95 active:scale-95 disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-2"
 											>
@@ -861,6 +908,194 @@ export function BillingOperationsPanel({
 						</motion.div>
 					</div>
 				)}
+				{/* Discard Confirmation Modal */}
+				{showDiscardConfirm && (
+					<div className="fixed inset-0 z-[125] flex items-center justify-center p-4">
+						<motion.div 
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							onClick={() => setShowDiscardConfirm(false)}
+							className="absolute inset-0 bg-background/70 backdrop-blur-md"
+						/>
+						<motion.div 
+							initial={{ opacity: 0, scale: 0.95, y: 10 }}
+							animate={{ opacity: 1, scale: 1, y: 0 }}
+							exit={{ opacity: 0, scale: 0.95, y: 10 }}
+							className="relative w-full max-w-md rounded-3xl neumorphic-panel border border-border/80 bg-card p-6 sm:p-7 shadow-2xl space-y-5"
+						>
+							<div className="flex items-start gap-3.5">
+								<div className="size-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+									<RotateCcw className="size-5" />
+								</div>
+								<div className="space-y-1">
+									<h3 className="text-lg font-black text-foreground">
+										Discard Unsaved Changes?
+									</h3>
+									<p className="text-xs text-muted-foreground leading-relaxed">
+										Are you sure you want to revert your edits? Any unsaved modifications will be permanently lost.
+									</p>
+								</div>
+							</div>
+
+							<div className="rounded-2xl border border-border/70 bg-muted/30 p-4 space-y-2 text-xs">
+								<div className="flex justify-between items-center">
+									<span className="text-muted-foreground font-medium">Scope</span>
+									<span className="font-bold text-foreground">
+										{viewMode === "gcash" ? "GCash Payment Settings" : (propertyId !== "all" && workspace.properties.find(p => p.id === propertyId)?.name) || "All Properties"}
+									</span>
+								</div>
+								{viewMode === "rates" && (
+									<div className="flex justify-between items-center border-t border-border/40 pt-2">
+										<span className="text-muted-foreground font-medium">Pending Edits</span>
+										<span className="font-black text-amber-600 dark:text-amber-400">
+											{pendingChangesCount} {pendingChangesCount === 1 ? "rule modification" : "rule modifications"}
+										</span>
+									</div>
+								)}
+								<div className="flex justify-between items-center border-t border-border/40 pt-2">
+									<span className="text-muted-foreground font-medium">Action</span>
+									<span className="font-medium text-foreground">
+										Revert back to last saved state
+									</span>
+								</div>
+							</div>
+
+							<div className="flex items-center gap-3 pt-2">
+								<button
+									type="button"
+									onClick={() => setShowDiscardConfirm(false)}
+									className="flex-1 py-3 rounded-xl border border-border/80 hover:neumorphic-inset font-bold text-xs text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+								>
+									Keep Editing
+								</button>
+								<button
+									type="button"
+									onClick={handleConfirmDiscard}
+									className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-black text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 cursor-pointer"
+								>
+									<RotateCcw className="size-3.5" />
+									Discard Changes
+								</button>
+							</div>
+						</motion.div>
+					</div>
+				)}
+
+				{/* Save Confirmation Modal */}
+				{showSaveConfirm && (
+					<div className="fixed inset-0 z-[125] flex items-center justify-center p-4">
+						<motion.div 
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							onClick={() => !saving && setShowSaveConfirm(false)}
+							className="absolute inset-0 bg-background/70 backdrop-blur-md"
+						/>
+						<motion.div 
+							initial={{ opacity: 0, scale: 0.95, y: 10 }}
+							animate={{ opacity: 1, scale: 1, y: 0 }}
+							exit={{ opacity: 0, scale: 0.95, y: 10 }}
+							className="relative w-full max-w-md rounded-3xl neumorphic-panel border border-border/80 bg-card p-6 sm:p-7 shadow-2xl space-y-5"
+						>
+							<div className="flex items-start gap-3.5">
+								<div className="size-11 rounded-2xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
+									<Save className="size-5" />
+								</div>
+								<div className="space-y-1">
+									<h3 className="text-lg font-black text-foreground">
+										Confirm & Save Changes?
+									</h3>
+									<p className="text-xs text-muted-foreground leading-relaxed">
+										{viewMode === "gcash"
+											? "Apply your updated GCash recipient credentials. Tenants will see these details immediately when paying rent."
+											: "Apply updated utility rates and rules to the live configuration for this property."}
+									</p>
+								</div>
+							</div>
+
+							<div className="rounded-2xl border border-border/70 bg-muted/30 p-4 space-y-2.5 text-xs">
+								{viewMode === "rates" ? (
+									<>
+										<div className="flex justify-between items-center">
+											<span className="text-muted-foreground font-medium">Target Property</span>
+											<span className="font-bold text-foreground">
+												{(propertyId !== "all" && workspace.properties.find(p => p.id === propertyId)?.name) || "All Properties"}
+											</span>
+										</div>
+										<div className="flex justify-between items-center border-t border-border/40 pt-2">
+											<span className="text-muted-foreground font-medium">Total Updates</span>
+											<span className="font-black text-primary">
+												{pendingChangesCount} {pendingChangesCount === 1 ? "rule" : "rules"}
+											</span>
+										</div>
+										{diff.items.filter(i => i.type === "modified").length > 0 && (
+											<div className="flex justify-between items-center">
+												<span className="text-muted-foreground">Modified Rules</span>
+												<span className="font-bold text-foreground">
+													{diff.items.filter(i => i.type === "modified").length}
+												</span>
+											</div>
+										)}
+										{diff.items.filter(i => i.type === "added").length > 0 && (
+											<div className="flex justify-between items-center">
+												<span className="text-muted-foreground">New Overrides</span>
+												<span className="font-bold text-emerald-600 dark:text-emerald-400">
+													+{diff.items.filter(i => i.type === "added").length}
+												</span>
+											</div>
+										)}
+										{diff.items.filter(i => i.type === "deleted").length > 0 && (
+											<div className="flex justify-between items-center">
+												<span className="text-muted-foreground">Removed Overrides</span>
+												<span className="font-bold text-red-500">
+													-{diff.items.filter(i => i.type === "deleted").length}
+												</span>
+											</div>
+										)}
+									</>
+								) : (
+									<>
+										<div className="flex justify-between items-center">
+											<span className="text-muted-foreground font-medium">Account Name</span>
+											<span className="font-bold text-foreground truncate max-w-[200px]">{accountName}</span>
+										</div>
+										<div className="flex justify-between items-center border-t border-border/40 pt-2">
+											<span className="text-muted-foreground font-medium">GCash Number</span>
+											<span className="font-mono font-bold text-foreground">{accountNumber}</span>
+										</div>
+										<div className="flex justify-between items-center border-t border-border/40 pt-2">
+											<span className="text-muted-foreground font-medium">Rent Invoices</span>
+											<span className={cn("font-bold", isEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground")}>
+												{isEnabled ? "Enabled (Active)" : "Disabled"}
+											</span>
+										</div>
+									</>
+								)}
+							</div>
+
+							<div className="flex items-center gap-3 pt-2">
+								<button
+									type="button"
+									onClick={() => setShowSaveConfirm(false)}
+									disabled={saving}
+									className="flex-1 py-3 rounded-xl border border-border/80 hover:neumorphic-inset font-bold text-xs text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50"
+								>
+									Cancel
+								</button>
+								<button
+									type="button"
+									onClick={handleConfirmSave}
+									disabled={saving}
+									className="flex-[1.3] py-3 rounded-xl neumorphic-primary text-primary-foreground font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
+								>
+									{saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+									Confirm & Save
+								</button>
+							</div>
+						</motion.div>
+					</div>
+				)}
 			</AnimatePresence>
 
 			{/* Collapsible Sticky Action Footer (Rendered ONLY when changes exist and not embedded) */}
@@ -920,7 +1155,7 @@ export function BillingOperationsPanel({
 
 												<button
 													type="button"
-													onClick={discard}
+													onClick={handleRequestDiscard}
 													disabled={saving}
 													className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-red-500/20 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
 													title="Revert all unsaved changes"
@@ -931,7 +1166,7 @@ export function BillingOperationsPanel({
 
 												<button
 													type="button"
-													onClick={save}
+													onClick={handleRequestSave}
 													disabled={saving}
 													className="group relative inline-flex items-center gap-2.5 overflow-hidden rounded-xl neumorphic-primary px-6 py-2.5 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-md transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
 												>
@@ -1148,7 +1383,7 @@ export function BillingOperationsPanel({
 										{!embedded && (
 											<button
 												type="button"
-												onClick={save}
+												onClick={handleRequestSave}
 												disabled={saving}
 												className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl neumorphic-primary px-6 py-3 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-md transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer shrink-0"
 											>
@@ -1471,7 +1706,7 @@ export function BillingOperationsPanel({
 									<>
 										<button
 											type="button"
-											onClick={discard}
+											onClick={handleRequestDiscard}
 											disabled={saving}
 											className="px-4 py-2.5 rounded-xl border border-red-500/20 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 text-xs font-black transition-all cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
 										>
@@ -1490,7 +1725,7 @@ export function BillingOperationsPanel({
 								)}
 								<button
 									type="button"
-									onClick={save}
+									onClick={handleRequestSave}
 									disabled={saving || !isPanelDirty}
 									className="inline-flex items-center gap-2 rounded-xl neumorphic-primary px-6 py-2.5 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-md transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
 								>
