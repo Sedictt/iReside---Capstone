@@ -18,7 +18,6 @@ import {
  ArrowRight,
  ShieldCheck,
  CreditCard,
- MoreHorizontal,
  DollarSign,
  Calendar,
  ChevronDown,
@@ -1552,14 +1551,6 @@ export function BillingOperationsPanel({
  </span>
  </div>
  </div>
- </div>
- <div className="flex items-center gap-2">
- <button className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:neumorphic-inset transition-all">
- View Inventory
- </button>
- <button className="size-12 flex items-center justify-center rounded-xl hover:neumorphic-inset transition-colors neumorphic-panel">
- <MoreHorizontal className="size-5 text-muted-foreground" />
- </button>
  </div>
  </div>
  </div>
