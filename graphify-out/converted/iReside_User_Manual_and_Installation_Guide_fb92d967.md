@@ -163,14 +163,18 @@ Procedure 1: Creating a Property & Setting Up Units
 5. Select the property, click Units, then click + Add Unit.
 6. Specify Unit Number (e.g., Unit 302), Floor (3), Monthly Base Rent (e.g., ₱9,000), and Occupant Capacity (2).
 7. Save the unit. It immediately registers on the Interactive 2D Unit Map.
-Procedure 2: Onboarding a Tenant & Executing a Lease
-1. Navigate to Tenants → click Add Tenant → select Invite via Magic Link.
-2. Enter the tenant's full legal name, email address, assigned unit, and lease commencement date.
-3. Click Send Invitation.
-4. Once the tenant completes profile activation, navigate to Leases → Create Lease.
-5. Enter deposit amount, advance rent months, and house rules.
-6. Sign using the digital signature pad and click Dispatch to Tenant for Signature.
-7. Once countersigned, the lease status transitions to Active.
+Procedure 2: Onboarding a Tenant, Verifying Move-In Payment & Executing a Lease
+1. Navigate to Applications (or Tenants → Invite Link) and generate an Online Application link or building flyer QR code for the vacant unit.
+2. The prospective tenant opens the link, completes their background and employment details, attaches valid identification, and submits the application.
+3. Review the application under Applications:
+   - If requirements are not met, click Decline and specify the reason. The applicant receives an email explanation with a direct link to reapply if desired.
+   - If satisfied, click Move to Approval. Confirm lease commencement date, monthly rent, advance rent, and security deposit amounts. The application transitions to Payment Pending, and a secure 48-hour payment portal link is automatically dispatched to the applicant via email.
+4. When the applicant submits move-in payment proof (GCash screenshot and reference number) or chooses cash:
+   - For GCash: Review the submitted proof against your GCash SMS or bank notification. If there is a discrepancy, click Resolve Discrepancy to return the full payment (with refund proof attached), refund an overpayment, or request the shortfall.
+   - For Cash: Click Cash Payment Bypass and record the receipt confirmation note to bypass online proof requirements and credit the payment in person.
+5. Once payment is verified, click Finalize Approval & Create Lease. The system automatically provisions the tenant's user account and profile, auto-generates the complete legal lease agreement from unit terms and verified deposit/rent amounts, records initial ledger payments, and emails the tenant their login credentials along with their secure digital signing link.
+6. The tenant opens their digital signing link (/signing/tenant/[leaseId]), reviews the generated agreement, and draws their digital signature.
+7. The landlord receives an instant alert that the tenant has signed. The landlord opens the lease in Lease Hub (or follows the notification link) and clicks Countersign Lease. Once countersigned, the lease status transitions to Active, the unit registers as Occupied on the 2D floorplan, and the finalized, signed PDF is archived for both parties.
 Procedure 3: Recording Utility Submeters & Verifying Payments
 1. On your monthly meter-reading date, click Invoices → Record Submeter.
 2. Select the unit, input the current electricity reading (kWh) and water reading (m³), then click Compute & Post.
@@ -178,10 +182,15 @@ Procedure 3: Recording Utility Submeters & Verifying Payments
 4. Review the uploaded GCash screenshot and match the 13-digit Reference Number against your GCash SMS confirmation.
 5. Click Approve Payment. The invoice status updates to Paid, and an Official Receipt PDF is issued to the tenant.
 6.2 Tenant / Resident Operations Guide
-Procedure 1: Accepting Onboarding Invitation & Activating Account
-1. Open the invitation email received from iReside and click Activate Your Unit Account.
-2. On the setup screen (/invite/[token]), set a secure password (minimum 8 characters).
-3. Review the property privacy policy and click Complete Registration.
+Procedure 1: Submitting an Application & Signing the Digital Lease
+1. Open the property's application link or scan the building flyer QR code. Fill out your legal details, contact information, employment status, and attach required identification documents, then tap Submit Application.
+2. Once reviewed and accepted by the landlord, open the payment request email and tap Open Payment Portal.
+3. Review the required move-in charges (Advance Rent and Security Deposit):
+   - For GCash: Scan the landlord's QR code or copy the account number, complete the transfer in GCash, enter the 13-digit GCash Reference Number, attach the transaction screenshot, and tap Submit Payment. Confirm the transaction prompt to receive your unique immutable System Transaction Reference Number.
+   - For Cash: Coordinate with the landlord to settle the move-in fees in person; the landlord will verify and record the cash bypass.
+4. After payment confirmation, check your email for your iReside account credentials and your secure Digital Lease Signing Link.
+5. Tap the signing link (/signing/tenant/[leaseId]), review the full lease agreement, draw your signature using the digital signing pad, and tap Sign Lease Agreement.
+6. Once the landlord countersigns, your lease status updates to Active and you can log in to your tenant dashboard at /tenant to view receipts, pay future monthly rent, and submit maintenance tickets.
 Procedure 2: Paying Monthly Rent via GCash & Uploading Proof
 1. Log in at /tenant.
 2. On your dashboard, locate the Outstanding Balance card and tap Pay Invoice.
