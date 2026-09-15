@@ -29,7 +29,9 @@ import {
  Phone,
  Upload,
  Check,
- AlertCircle
+ AlertCircle,
+ RotateCcw,
+ Eye
 } from "lucide-react";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import Image from "next/image";
@@ -53,6 +55,19 @@ type UtilityConfigDraft = {
  note: string | null;
  responsibility_mode?: "landlord_bills" | "tenant_direct";
 };
+
+export interface ConfigDiffItem {
+ type: "modified" | "added" | "deleted";
+ localId: string;
+ propertyId: string;
+ propertyName: string;
+ unitId: string | null;
+ unitName: string | null;
+ utilityType: "water" | "electricity";
+ summary: string;
+ oldValue?: string;
+ newValue?: string;
+}
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -80,6 +95,7 @@ const utilityMeta = {
 type State = {
  workspace: BillingWorkspace | null;
  configs: UtilityConfigDraft[];
+ deletedConfigIds: string[];
  loading: boolean;
  saving: boolean;
  message: { type: "error" | "success"; value: string } | null;
@@ -100,6 +116,7 @@ type Action =
  | { type: "UPDATE_CONFIG"; id: string; payload: Partial<UtilityConfigDraft> }
  | { type: "ADD_CONFIG"; payload: UtilityConfigDraft }
  | { type: "REMOVE_CONFIG"; id: string }
+ | { type: "CLEAR_DELETED_CONFIGS" }
  | { type: "SET_LOADING"; payload: boolean }
  | { type: "SET_SAVING"; payload: boolean }
  | { type: "SET_MESSAGE"; payload: { type: "error" | "success"; value: string } | null }
@@ -123,11 +140,19 @@ function reducer(state: State, action: Action): State {
  };
  case "ADD_CONFIG":
  return { ...state, configs: [...state.configs, action.payload] };
- case "REMOVE_CONFIG":
+ case "REMOVE_CONFIG": {
+ const target = state.configs.find((c) => c.localId === action.id);
+ const nextDeleted = target?.id && !state.deletedConfigIds.includes(target.id)
+ ? [...state.deletedConfigIds, target.id]
+ : state.deletedConfigIds;
  return {
  ...state,
  configs: state.configs.filter((c) => c.localId !== action.id),
+ deletedConfigIds: nextDeleted,
  };
+ }
+ case "CLEAR_DELETED_CONFIGS":
+ return { ...state, deletedConfigIds: [] };
  case "SET_LOADING":
  return { ...state, loading: action.payload };
  case "SET_SAVING":
@@ -150,6 +175,7 @@ function reducer(state: State, action: Action): State {
 const initialState: State = {
  workspace: null,
  configs: [],
+ deletedConfigIds: [],
  loading: true,
  saving: false,
  message: null,
@@ -172,6 +198,7 @@ export function BillingOperationsPanel({
 	onDirtyChange,
 	onRegisterSave,
 	onRegisterDiscard,
+	onSaved,
 }: {
 	viewMode?: "rates" | "gcash";
 	propertyId?: string;
@@ -180,6 +207,7 @@ export function BillingOperationsPanel({
 	onDirtyChange?: (isDirty: boolean) => void;
 	onRegisterSave?: (saveFn: () => Promise<boolean>) => void;
 	onRegisterDiscard?: (discardFn: () => void) => void;
+	onSaved?: (workspace: BillingWorkspace) => void;
 }) {
 	const [state, dispatch] = useReducer(reducer, initialState);
 	const {
@@ -210,7 +238,7 @@ export function BillingOperationsPanel({
 		qrPreview: string | null;
 	} | null>(null);
 
-	const initialConfigsRef = useRef<string | null>(null);
+	const originalConfigsRef = useRef<UtilityConfigDraft[] | null>(null);
 
 	useEffect(() => {
 		let alive = true;
@@ -235,6 +263,7 @@ export function BillingOperationsPanel({
 						effective_from: config.effective_from,
 						effective_to: config.effective_to,
 						note: config.note,
+						responsibility_mode: config.note === "tenant_direct" ? "tenant_direct" : "landlord_bills",
 					}),
 				);
 
@@ -262,18 +291,11 @@ export function BillingOperationsPanel({
 					qrPreview: (payload.paymentDestination as any)?.qr_image_url ?? null
 				};
 
-				initialConfigsRef.current = JSON.stringify(seededConfigs.map((c) => ({
-					id: c.id,
-					property_id: c.property_id,
-					unit_id: c.unit_id,
-					utility_type: c.utility_type,
-					billing_mode: c.billing_mode,
-					rate_per_unit: Number(c.rate_per_unit) || 0,
-					responsibility_mode: c.responsibility_mode
-				})));
+				originalConfigsRef.current = seededConfigs.map(c => ({ ...c }));
 
 				dispatch({ type: "SET_WORKSPACE", payload });
 				dispatch({ type: "SET_CONFIGS", payload: seededConfigs });
+				dispatch({ type: "CLEAR_DELETED_CONFIGS" });
 				dispatch({ 
 					type: "UPDATE_PAYMENT", 
 					payload: {
@@ -318,20 +340,117 @@ export function BillingOperationsPanel({
 		);
 	}, [accountName, accountNumber, isEnabled, removeQr, state.qrFile]);
 
-	const isRatesDirty = useMemo(() => {
-		if (!initialConfigsRef.current) return false;
-		const currentSerialized = JSON.stringify(configs.map((c) => ({
-			id: c.id,
-			property_id: c.property_id,
-			unit_id: c.unit_id,
-			utility_type: c.utility_type,
-			billing_mode: c.billing_mode,
-			rate_per_unit: Number(c.rate_per_unit) || 0,
-			responsibility_mode: c.responsibility_mode
-		})));
-		return currentSerialized !== initialConfigsRef.current;
-	}, [configs]);
+	const diff = useMemo(() => {
+		if (!originalConfigsRef.current || !workspace) {
+			return {
+				items: [] as ConfigDiffItem[],
+				totalCount: 0,
+				isDirty: false,
+			};
+		}
 
+		const propertyMap = new Map(workspace.properties.map(p => [p.id, p]));
+		const originalMap = new Map(originalConfigsRef.current.map(c => [c.localId, c]));
+		const originalById = new Map<string, UtilityConfigDraft>();
+		for (const orig of originalConfigsRef.current) {
+			if (orig.id) originalById.set(orig.id, orig);
+		}
+
+		const items: ConfigDiffItem[] = [];
+
+		const getStrategyLabel = (c: UtilityConfigDraft) => {
+			if (c.billing_mode === "included_in_rent") return "Included in Rent";
+			if (c.responsibility_mode === "tenant_direct") return "Direct to Provider";
+			return `Submetered (₱${c.rate_per_unit}/${c.unit_label === "kwh" ? "kWh" : "m³"})`;
+		};
+
+		for (const curr of configs) {
+			const prop = propertyMap.get(curr.property_id);
+			const propertyName = prop?.name || "Property";
+			const unit = prop?.units.find(u => u.id === curr.unit_id);
+			const unitName = unit ? unit.name : (curr.unit_id ? "Custom Unit" : null);
+
+			const orig = originalMap.get(curr.localId) || (curr.id ? originalById.get(curr.id) : undefined);
+
+			if (!orig) {
+				// Newly added override
+				items.push({
+					type: "added",
+					localId: curr.localId,
+					propertyId: curr.property_id,
+					propertyName,
+					unitId: curr.unit_id,
+					unitName,
+					utilityType: curr.utility_type,
+					summary: `New rule added for ${unitName || "unassigned unit"}`,
+					newValue: getStrategyLabel(curr),
+				});
+			} else {
+				// Compare with original
+				const isStrategyDiff = curr.billing_mode !== orig.billing_mode || curr.responsibility_mode !== orig.responsibility_mode;
+				const isRateDiff = Number(curr.rate_per_unit) !== Number(orig.rate_per_unit);
+				const isUnitDiff = curr.unit_id !== orig.unit_id;
+				const isDateDiff = curr.effective_from !== orig.effective_from;
+
+				if (isStrategyDiff || isRateDiff || isUnitDiff || isDateDiff) {
+					const oldLabel = getStrategyLabel(orig);
+					const newLabel = getStrategyLabel(curr);
+					let changeDesc = "";
+					if (isStrategyDiff) {
+						changeDesc = `Strategy changed from ${orig.billing_mode === "included_in_rent" ? "Included" : (orig.responsibility_mode === "tenant_direct" ? "Direct" : "Submetered")} to ${curr.billing_mode === "included_in_rent" ? "Included" : (curr.responsibility_mode === "tenant_direct" ? "Direct" : "Submetered")}`;
+					} else if (isRateDiff) {
+						changeDesc = `Rate updated from ₱${orig.rate_per_unit} to ₱${curr.rate_per_unit}`;
+					} else if (isUnitDiff) {
+						changeDesc = "Assigned unit changed";
+					} else if (isDateDiff) {
+						changeDesc = `Effective date changed from ${orig.effective_from} to ${curr.effective_from}`;
+					}
+
+					items.push({
+						type: "modified",
+						localId: curr.localId,
+						propertyId: curr.property_id,
+						propertyName,
+						unitId: curr.unit_id,
+						unitName,
+						utilityType: curr.utility_type,
+						summary: changeDesc,
+						oldValue: oldLabel,
+						newValue: newLabel,
+					});
+				}
+			}
+		}
+
+		// Check deleted overrides
+		for (const deletedId of state.deletedConfigIds) {
+			const orig = originalById.get(deletedId);
+			if (orig) {
+				const prop = propertyMap.get(orig.property_id);
+				const unit = prop?.units.find(u => u.id === orig.unit_id);
+				items.push({
+					type: "deleted",
+					localId: orig.localId,
+					propertyId: orig.property_id,
+					propertyName: prop?.name || "Property",
+					unitId: orig.unit_id,
+					unitName: unit ? unit.name : "Unit",
+					utilityType: orig.utility_type,
+					summary: `Unit rule removed (reverts to Property Default)`,
+					oldValue: getStrategyLabel(orig),
+					newValue: "Property Default",
+				});
+			}
+		}
+
+		return {
+			items,
+			totalCount: items.length,
+			isDirty: items.length > 0,
+		};
+	}, [configs, state.deletedConfigIds, workspace]);
+
+	const isRatesDirty = diff.isDirty;
 	const isPanelDirty = viewMode === "gcash" ? isGcashDirty : isRatesDirty;
 
 	useEffect(() => {
@@ -387,9 +506,12 @@ export function BillingOperationsPanel({
 						is_active: Boolean(config.is_active),
 						effective_from: config.effective_from || today,
 						effective_to: config.effective_to || null,
-						note: config.note || null,
+						note: config.responsibility_mode === "tenant_direct" ? "tenant_direct" : (config.note || null),
 					}));
 				formData.append("utilityConfigs", JSON.stringify(validConfigs));
+				if (state.deletedConfigIds.length > 0) {
+					formData.append("deletedConfigIds", JSON.stringify(state.deletedConfigIds));
+				}
 			}
 
 			const response = await fetch("/api/landlord/payment-settings", { method: "POST", body: formData });
@@ -406,17 +528,48 @@ export function BillingOperationsPanel({
 				isEnabled: (payload.paymentDestination as any)?.is_enabled ?? isEnabled,
 				qrPreview: (payload.paymentDestination as any)?.qr_image_url ?? qrPreview
 			};
+
 			if (viewMode === "rates") {
-				initialConfigsRef.current = JSON.stringify(configs.map((c) => ({
-					id: c.id,
-					property_id: c.property_id,
-					unit_id: c.unit_id,
-					utility_type: c.utility_type,
-					billing_mode: c.billing_mode,
-					rate_per_unit: Number(c.rate_per_unit) || 0,
-					responsibility_mode: c.responsibility_mode
-				})));
+				const freshConfigs = payload.utilityConfigs.map((config) =>
+					makeDraft({
+						localId: config.id,
+						id: config.id,
+						property_id: config.property_id,
+						unit_id: config.unit_id,
+						utility_type: config.utility_type,
+						billing_mode: config.billing_mode,
+						rate_per_unit: Number(config.rate_per_unit),
+						unit_label: config.unit_label as "kwh" | "cubic_meter",
+						is_active: config.is_active,
+						effective_from: config.effective_from,
+						effective_to: config.effective_to,
+						note: config.note,
+						responsibility_mode: config.note === "tenant_direct" ? "tenant_direct" : "landlord_bills",
+					}),
+				);
+
+				for (const property of payload.properties) {
+					for (const utility of ["water", "electricity"] as const) {
+						const exists = freshConfigs.some((config) => 
+							config.property_id === property.id && 
+							config.utility_type === utility && 
+							config.unit_id === null
+						);
+						if (!exists) {
+							freshConfigs.push(makeDraft({ 
+								property_id: property.id, 
+								utility_type: utility, 
+								unit_label: utility === "water" ? "cubic_meter" : "kwh" 
+							}));
+						}
+					}
+				}
+
+				originalConfigsRef.current = freshConfigs.map(c => ({ ...c }));
+				dispatch({ type: "SET_CONFIGS", payload: freshConfigs });
+				dispatch({ type: "CLEAR_DELETED_CONFIGS" });
 			}
+
 			dispatch({ 
 				type: "UPDATE_PAYMENT", 
 				payload: {
@@ -425,8 +578,10 @@ export function BillingOperationsPanel({
 					qrPreview: (payload.paymentDestination as any)?.qr_image_url ?? null
 				}
 			});
+			dispatch({ type: "SET_SHOW_BREAKDOWN", payload: false });
 			const successMsg = viewMode === "gcash" ? "GCash settings saved successfully." : "Utility rates saved successfully.";
 			dispatch({ type: "SET_MESSAGE", payload: { type: "success", value: successMsg } });
+			onSaved?.(payload);
 			return true;
 		} catch (error: any) {
 			dispatch({ type: "SET_MESSAGE", payload: { type: "error", value: error?.message || "Failed to save settings." } });
@@ -434,24 +589,49 @@ export function BillingOperationsPanel({
 		} finally {
 			dispatch({ type: "SET_SAVING", payload: false });
 		}
-	}, [viewMode, accountName, accountNumber, isEnabled, removeQr, state.qrFile, configs, qrPreview]);
+	}, [viewMode, accountName, accountNumber, isEnabled, removeQr, state.qrFile, configs, qrPreview, state.deletedConfigIds, onSaved]);
 
 	const discard = useCallback(() => {
-		if (viewMode === "gcash" && initialPaymentRef.current) {
-			dispatch({
-				type: "UPDATE_PAYMENT",
-				payload: {
-					accountName: initialPaymentRef.current.accountName,
-					accountNumber: initialPaymentRef.current.accountNumber,
-					isEnabled: initialPaymentRef.current.isEnabled,
-					qrPreview: initialPaymentRef.current.qrPreview,
-					qrFile: null,
-					removeQr: false,
-				}
-			});
-			dispatch({ type: "SET_MESSAGE", payload: null });
+		if (viewMode === "gcash") {
+			if (initialPaymentRef.current) {
+				dispatch({
+					type: "UPDATE_PAYMENT",
+					payload: {
+						accountName: initialPaymentRef.current.accountName,
+						accountNumber: initialPaymentRef.current.accountNumber,
+						isEnabled: initialPaymentRef.current.isEnabled,
+						qrPreview: initialPaymentRef.current.qrPreview,
+						qrFile: null,
+						removeQr: false,
+					}
+				});
+				dispatch({ type: "SET_MESSAGE", payload: null });
+			}
+		} else {
+			if (originalConfigsRef.current) {
+				dispatch({
+					type: "SET_CONFIGS",
+					payload: originalConfigsRef.current.map(c => ({ ...c }))
+				});
+				dispatch({ type: "CLEAR_DELETED_CONFIGS" });
+				dispatch({ type: "SET_SHOW_BREAKDOWN", payload: false });
+				dispatch({ type: "SET_MESSAGE", payload: null });
+			}
 		}
 	}, [viewMode]);
+
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+				if (isPanelDirty && !saving) {
+					e.preventDefault();
+					save();
+				}
+			}
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [isPanelDirty, saving, save]);
 
 	useEffect(() => {
 		if (embedded) {
@@ -461,229 +641,334 @@ export function BillingOperationsPanel({
 	}, [embedded, onRegisterSave, onRegisterDiscard, save, discard]);
 
 
+	if (loading) {
+		return (
+			<div className="flex h-64 flex-col items-center justify-center space-y-4 rounded-3xl neumorphic-panel">
+				<Loader2 className="size-8 animate-spin text-primary" />
+				<p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Loading settings...</p>
+			</div>
+		);
+	}
 
- if (loading) {
- return (
- <div className="flex h-64 flex-col items-center justify-center space-y-4 rounded-3xl neumorphic-panel">
- <Loader2 className="size-8 animate-spin text-primary" />
- <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Loading settings...</p>
- </div>
- );
- }
+	if (!workspace) return null;
 
- if (!workspace) return null;
+	const pendingChangesCount = diff.totalCount;
 
- const pendingChangesCount = configs.length;
+	return (
+		<div className="space-y-12">
+			<AnimatePresence>
+				{showBreakdown && (
+					<div className="fixed inset-0 z-[110] flex items-end justify-center p-6 sm:items-center">
+						<motion.div 
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: false })}
+							className="absolute inset-0 bg-background/60 backdrop-blur-sm"
+						/>
+						<motion.div 
+							initial={{ opacity: 0, scale: 0.95, y: 20 }}
+							animate={{ opacity: 1, scale: 1, y: 0 }}
+							exit={{ opacity: 0, scale: 0.95, y: 20 }}
+							className="relative w-full max-w-2xl overflow-hidden rounded-[2.5rem] neumorphic-panel flex flex-col max-h-[80vh]"
+						>
+							<div className="p-8 border-b border-border/40 flex items-center justify-between sticky top-0 bg-card z-10">
+								<div>
+									<div className="flex items-center gap-3">
+										<h3 className="text-xl font-black text-foreground">Review Pending Changes</h3>
+										<span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-wider">
+											{pendingChangesCount} {pendingChangesCount === 1 ? "Update" : "Updates"}
+										</span>
+									</div>
+									<p className="text-xs text-muted-foreground mt-1">
+										{pendingChangesCount > 0 
+											? "Verify your changes before writing them to the live utility configuration."
+											: "No pending changes. All configurations match the saved settings."}
+									</p>
+								</div>
+								<button 
+									onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: false })}
+									className="size-10 flex items-center justify-center rounded-xl hover:neumorphic-inset transition-colors cursor-pointer"
+								>
+									<X className="size-5 text-muted-foreground" />
+								</button>
+							</div>
 
- return (
- <div className="space-y-12">
- <AnimatePresence>
- {showBreakdown && (
- <div className="fixed inset-0 z-[110] flex items-end justify-center p-6 sm:items-center">
- <motion.div 
- initial={{ opacity: 0 }}
- animate={{ opacity: 1 }}
- exit={{ opacity: 0 }}
- onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: false })}
- className="absolute inset-0 bg-background/60 backdrop-blur-sm"
- />
- <motion.div 
- initial={{ opacity: 0, scale: 0.95, y: 20 }}
- animate={{ opacity: 1, scale: 1, y: 0 }}
- exit={{ opacity: 0, scale: 0.95, y: 20 }}
- className="relative w-full max-w-2xl overflow-hidden rounded-[2.5rem] neumorphic-panel flex flex-col max-h-[70vh]"
- >
- <div className="p-8 border-b border-white/5 flex items-center justify-between sticky top-0 bg-card z-10">
- <div>
- <h3 className="text-xl font-black text-foreground">Configuration Breakdown</h3>
- <p className="text-xs text-muted-foreground mt-1">Reviewing {pendingChangesCount} strategies being applied</p>
- </div>
- <button 
- onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: false })}
- className="size-10 flex items-center justify-center rounded-xl hover:neumorphic-inset transition-colors"
- >
- <X className="size-5 text-muted-foreground" />
- </button>
- </div>
+							<div className="flex-1 overflow-y-auto p-6 space-y-3">
+								{diff.items.length === 0 ? (
+									<div className="flex flex-col items-center justify-center py-12 text-center">
+										<CheckCircle2 className="size-12 text-emerald-500 mb-3 opacity-80" />
+										<p className="text-sm font-bold text-foreground">All Configurations Up to Date</p>
+										<p className="text-xs text-muted-foreground mt-1 max-w-xs">
+											There are no unsaved edits. Any changes made to building rates or unit rules will appear here for review.
+										</p>
+									</div>
+								) : (
+									diff.items.map((item) => {
+										const Meta = utilityMeta[item.utilityType];
+										return (
+											<div 
+												key={item.localId} 
+												className="p-4 rounded-2xl neumorphic-inset border border-border/30 flex flex-col gap-3 transition-colors"
+											>
+												<div className="flex items-center justify-between gap-3">
+													<div className="flex items-center gap-3">
+														<div className={cn("size-9 flex items-center justify-center rounded-xl border shrink-0", Meta.bg, Meta.tint, Meta.border)}>
+															<Meta.icon className="size-4" />
+														</div>
+														<div>
+															<p className="text-sm font-black text-foreground">
+																{item.propertyName}
+																<span className="text-muted-foreground font-normal ml-1.5">
+																	• {item.unitName || "Building Default"}
+																</span>
+															</p>
+															<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/70">
+																{item.utilityType} Management
+															</span>
+														</div>
+													</div>
+													<div>
+														{item.type === "added" && (
+															<span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider">
+																New Rule
+															</span>
+														)}
+														{item.type === "modified" && (
+															<span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider">
+																Modified
+															</span>
+														)}
+														{item.type === "deleted" && (
+															<span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 text-[10px] font-black uppercase tracking-wider">
+																Removed
+															</span>
+														)}
+													</div>
+												</div>
 
- <div className="flex-1 overflow-y-auto p-4 space-y-2">
- {configs.map((c) => {
- const property = workspace.properties.find(p => p.id === c.property_id);
- const unit = property?.units.find(u => u.id === c.unit_id);
- const Meta = utilityMeta[c.utility_type];
- const strategyLabel = c.billing_mode === "included_in_rent" 
- ? "Included" 
- : (c.responsibility_mode === "tenant_direct" ? "Direct" : "Submetered");
+												<div className="pl-12">
+													<p className="text-xs text-foreground/80 font-medium">
+														{item.summary}
+													</p>
+													{item.oldValue && item.newValue && (
+														<div className="flex items-center gap-2 mt-2 text-xs">
+															<span className="px-2.5 py-1 rounded-lg bg-muted/60 text-muted-foreground line-through text-[11px] font-medium">
+																{item.oldValue}
+															</span>
+															<ArrowRight className="size-3 text-muted-foreground shrink-0" />
+															<span className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary font-bold text-[11px]">
+																{item.newValue}
+															</span>
+														</div>
+													)}
+												</div>
+											</div>
+										);
+									})
+								)}
+							</div>
 
- return (
- <div key={c.localId} className="flex items-center justify-between p-4 rounded-2xl neumorphic-inset /50 hover:neumorphic-inset transition-colors">
- <div className="flex items-center gap-4">
- <div className={cn("size-10 flex items-center justify-center rounded-xl border", Meta.bg, Meta.tint, Meta.border)}>
- <Meta.icon className="size-5" />
- </div>
- <div className="space-y-1">
- <p className="text-sm font-black text-foreground">
- {unit ? unit.name : property?.name || "Global"}
- </p>
- <div className="flex items-center gap-2">
- <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{c.utility_type}</span>
- <div className="size-1 rounded-full bg-border" />
- <span className={cn(
- "text-[10px] font-black uppercase tracking-widest",
- strategyLabel === "Included" ? "text-emerald-600" : (strategyLabel === "Direct" ? "text-blue-600" : "text-amber-600")
- )}>
- {strategyLabel}
- </span>
- </div>
- </div>
- </div>
- <div className="text-right">
- {c.billing_mode === "tenant_paid" && c.responsibility_mode !== "tenant_direct" ? (
- <p className="text-sm font-black text-foreground">
- ₱{c.rate_per_unit}<span className="text-[10px] text-muted-foreground/40 ml-1">/{c.unit_label === "kwh" ? "kWh" : "m³"}</span>
- </p>
- ) : (
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">No Rate</p>
- )}
- </div>
- </div>
- );
- })}
- </div>
+							<div className="p-6 border-t border-border/40 neumorphic-inset flex items-center justify-between gap-3">
+								{diff.items.length > 0 ? (
+									<>
+										<button 
+											onClick={discard}
+											className="px-4 py-3 rounded-xl border border-red-500/20 text-red-600 hover:bg-red-500/10 text-xs font-black uppercase tracking-wider transition-all cursor-pointer inline-flex items-center gap-2"
+										>
+											<RotateCcw className="size-3.5" />
+											Discard All
+										</button>
+										<div className="flex items-center gap-2">
+											<button 
+												onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: false })}
+												className="px-5 py-3 rounded-xl hover:neumorphic-inset text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+											>
+												Back to Editor
+											</button>
+											<button 
+												onClick={save}
+												disabled={saving}
+												className="px-6 py-3 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-widest text-primary-foreground hover:opacity-95 active:scale-95 disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-2"
+											>
+												{saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+												Save Changes
+											</button>
+										</div>
+									</>
+								) : (
+									<button 
+										onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: false })}
+										className="w-full py-3.5 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all cursor-pointer"
+									>
+										Close
+									</button>
+								)}
+							</div>
+						</motion.div>
+					</div>
+				)}
 
- <div className="p-6 border-t border-border neumorphic-inset">
- <button 
- onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: false })}
- className="w-full py-4 rounded-2xl neumorphic-primary text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all"
- >
- Back to Editor
- </button>
- </div>
- </motion.div>
- </div>
- )}
+				{helpContent && (
+					<div className="fixed top-0 left-0 w-screen h-screen z-[100] flex items-center justify-center p-6">
+						<motion.div 
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							onClick={() => dispatch({ type: 'SET_HELP', payload: null })}
+							className="absolute inset-0 bg-background/60 backdrop-blur-md"
+						/>
+						<motion.div 
+							initial={{ opacity: 0, scale: 0.95, y: 20 }}
+							animate={{ opacity: 1, scale: 1, y: 0 }}
+							exit={{ opacity: 0, scale: 0.95, y: 20 }}
+							className="relative w-full max-w-lg overflow-hidden rounded-[2.5rem] neumorphic-panel p-10 "
+						>
+							<div className="absolute -right-12 -top-12 opacity-[0.03]">
+								<HelpCircle className="size-48" />
+							</div>
 
- {helpContent && (
- <div className="fixed top-0 left-0 w-screen h-screen z-[100] flex items-center justify-center p-6">
- <motion.div 
- initial={{ opacity: 0 }}
- animate={{ opacity: 1 }}
- exit={{ opacity: 0 }}
- onClick={() => dispatch({ type: 'SET_HELP', payload: null })}
- className="absolute inset-0 bg-background/60 backdrop-blur-md"
- />
- <motion.div 
- initial={{ opacity: 0, scale: 0.95, y: 20 }}
- animate={{ opacity: 1, scale: 1, y: 0 }}
- exit={{ opacity: 0, scale: 0.95, y: 20 }}
- className="relative w-full max-w-lg overflow-hidden rounded-[2.5rem] neumorphic-panel p-10 "
- >
- <div className="absolute -right-12 -top-12 opacity-[0.03]">
- <HelpCircle className="size-48" />
- </div>
+							<div className="relative z-10 space-y-6">
+								<div className="flex items-center justify-between">
+									<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
+										<Info className="size-3" />
+										Strategy Guide
+									</div>
+									<button 
+										onClick={() => dispatch({ type: 'SET_HELP', payload: null })}
+										className="size-10 flex items-center justify-center rounded-xl hover:neumorphic-inset transition-colors"
+									>
+										<X className="size-5 text-muted-foreground" />
+									</button>
+								</div>
 
- <div className="relative z-10 space-y-6">
- <div className="flex items-center justify-between">
- <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
- <Info className="size-3" />
- Strategy Guide
- </div>
- <button 
- onClick={() => dispatch({ type: 'SET_HELP', payload: null })}
- className="size-10 flex items-center justify-center rounded-xl hover:neumorphic-inset transition-colors"
- >
- <X className="size-5 text-muted-foreground" />
- </button>
- </div>
+								<div className="space-y-2">
+									<h4 className="text-2xl font-black text-foreground">{helpContent.title}</h4>
+									<div className="size-12 bg-primary rounded-full" />
+								</div>
 
- <div className="space-y-2">
- <h4 className="text-2xl font-black text-foreground">{helpContent.title}</h4>
- <div className="size-12 bg-primary rounded-full" />
- </div>
+								<div className="text-sm text-muted-foreground leading-relaxed">
+									{helpContent.content}
+								</div>
 
- <div className="text-sm text-muted-foreground leading-relaxed">
- {helpContent.content}
- </div>
+								<button
+									onClick={() => dispatch({ type: 'SET_HELP', payload: null })}
+									className="w-full py-4 rounded-2xl bg-primary text-white font-black text-sm shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+								>
+									Got it, thanks!
+								</button>
+							</div>
+						</motion.div>
+					</div>
+				)}
+			</AnimatePresence>
 
- <button
- onClick={() => dispatch({ type: 'SET_HELP', payload: null })}
- className="w-full py-4 rounded-2xl bg-primary text-white font-black text-sm shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
- >
- Got it, thanks!
- </button>
- </div>
- </motion.div>
- </div>
- )}
- </AnimatePresence>
- {/* Collapsible Sticky Action Footer (Hidden when embedded in settings) */}
- {!embedded && (
- <div className="fixed -bottom-4 left-0 right-0 z-50 flex justify-center pointer-events-none">
- <motion.div 
- layout
- initial={false}
- animate={{ 
- width: isFooterExpanded ? "auto" : "48px",
- height: isFooterExpanded ? "auto" : "48px"
- }}
- transition={{ type: "spring", stiffness: 400, damping: 40 }}
- className={cn(
- "pointer-events-auto bg-background/80 dark:bg-zinc-900/90 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative overflow-hidden",
- isFooterExpanded ? "px-3 py-3 rounded-[2rem]" : "rounded-full"
- )}
- >
- <AnimatePresence mode="wait">
- {isFooterExpanded ? (
- <motion.div 
- key="expanded"
- initial={{ opacity: 0, x: -20 }}
- animate={{ opacity: 1, x: 0 }}
- exit={{ opacity: 0, x: -20 }}
- className="flex items-center gap-6 pl-5 pr-2"
- >
- <button 
- onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: true })}
- className="hidden md:flex flex-col text-left hover:opacity-70 transition-opacity"
- >
- <span className="text-[10px] font-black uppercase tracking-widest text-primary">Review & Save</span>
- <p className="text-[10px] text-muted-foreground whitespace-nowrap">
- Apply <span className="font-black text-foreground underline decoration-primary/30 underline-offset-4">{pendingChangesCount}</span> configurations to property.
- </p>
- </button>
- <div className="h-8 w-px bg-border hidden md:block" />
- <button
- onClick={save}
- disabled={saving}
- className="group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl neumorphic-primary px-8 py-3.5 text-sm font-black transition-all hover:scale-[1.05] active:scale-95 disabled:opacity-50"
- >
- <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
- {saving ? <Loader2 className="size-5 animate-spin" /> : <Save className="size-5" />}
- Confirm Changes
- </button>
- <button 
- onClick={() => dispatch({ type: 'SET_FOOTER_EXPANDED', payload: false })}
- className="size-10 flex items-center justify-center rounded-xl hover:neumorphic-inset transition-colors "
- >
- <ChevronDown className="size-4 text-muted-foreground" />
- </button>
- </motion.div>
- ) : (
- <motion.button
- key="collapsed"
- initial={{ opacity: 0, scale: 0.5 }}
- animate={{ opacity: 1, scale: 1 }}
- exit={{ opacity: 0, scale: 0.5 }}
- onClick={() => dispatch({ type: 'SET_FOOTER_EXPANDED', payload: true })}
- className="flex size-12 items-center justify-center text-primary transition-all hover:bg-primary/5"
- title="Expand Commit Console"
- >
- <ChevronUp className="size-6" />
- </motion.button>
- )}
- </AnimatePresence>
- </motion.div>
- </div>
- )}
+			{/* Collapsible Sticky Action Footer (Rendered ONLY when changes exist and not embedded) */}
+			{!embedded && (
+				<AnimatePresence>
+					{isPanelDirty && (
+						<div className="fixed bottom-6 left-0 right-0 z-50 flex justify-center pointer-events-none px-4">
+							<motion.div 
+								layout
+								initial={{ opacity: 0, y: 40, scale: 0.96 }}
+								animate={{ opacity: 1, y: 0, scale: 1 }}
+								exit={{ opacity: 0, y: 40, scale: 0.96 }}
+								transition={{ type: "spring", stiffness: 450, damping: 35 }}
+								className={cn(
+									"pointer-events-auto bg-background/95 dark:bg-zinc-900/95 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.25)] border border-border/80 relative overflow-hidden",
+									isFooterExpanded ? "px-4 py-3 rounded-[2rem]" : "rounded-full"
+								)}
+							>
+								<AnimatePresence mode="wait">
+									{isFooterExpanded ? (
+										<motion.div 
+											key="expanded"
+											initial={{ opacity: 0, x: -15 }}
+											animate={{ opacity: 1, x: 0 }}
+											exit={{ opacity: 0, x: -15 }}
+											className="flex items-center gap-4 sm:gap-6 pl-3 pr-1"
+										>
+											<div className="flex flex-col text-left">
+												<div className="flex items-center gap-2">
+													<span className="size-2 rounded-full bg-amber-500 animate-pulse" />
+													<span className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
+														Unsaved Changes
+													</span>
+												</div>
+												<p className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5 font-medium">
+													<span className="font-black text-foreground">
+														{pendingChangesCount}
+													</span> {pendingChangesCount === 1 ? "change pending" : "changes pending"}
+													{propertyId !== "all" && workspace.properties.find(p => p.id === propertyId) ? (
+														<span className="hidden sm:inline"> for {workspace.properties.find(p => p.id === propertyId)?.name}</span>
+													) : null}
+												</p>
+											</div>
+
+											<div className="h-8 w-px bg-border/60" />
+
+											<div className="flex items-center gap-2">
+												<button 
+													type="button"
+													onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: true })}
+													className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-border/70 hover:neumorphic-inset text-xs font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+													title="Review specific changes"
+												>
+													<Eye className="size-3.5" />
+													<span className="hidden md:inline">Review</span>
+												</button>
+
+												<button
+													type="button"
+													onClick={discard}
+													disabled={saving}
+													className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-red-500/20 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+													title="Revert all unsaved changes"
+												>
+													<RotateCcw className="size-3.5" />
+													<span className="hidden md:inline">Discard</span>
+												</button>
+
+												<button
+													type="button"
+													onClick={save}
+													disabled={saving}
+													className="group relative inline-flex items-center gap-2.5 overflow-hidden rounded-xl neumorphic-primary px-6 py-2.5 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-md transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
+												>
+													{saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+													Save Changes
+												</button>
+											</div>
+
+											<button 
+												type="button"
+												onClick={() => dispatch({ type: 'SET_FOOTER_EXPANDED', payload: false })}
+												className="size-8 flex items-center justify-center rounded-lg hover:neumorphic-inset transition-colors cursor-pointer"
+												title="Collapse dock"
+											>
+												<ChevronDown className="size-4 text-muted-foreground" />
+											</button>
+										</motion.div>
+									) : (
+										<motion.button
+											key="collapsed"
+											initial={{ opacity: 0, scale: 0.6 }}
+											animate={{ opacity: 1, scale: 1 }}
+											exit={{ opacity: 0, scale: 0.6 }}
+											onClick={() => dispatch({ type: 'SET_FOOTER_EXPANDED', payload: true })}
+											className="flex size-11 items-center justify-center text-primary transition-all hover:bg-primary/5 cursor-pointer relative"
+											title={`Expand console (${pendingChangesCount} unsaved)`}
+										>
+											<span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-amber-500" />
+											<ChevronUp className="size-5" />
+										</motion.button>
+									)}
+								</AnimatePresence>
+							</motion.div>
+						</div>
+					)}
+				</AnimatePresence>
+			)}
 
 				{message && (
 					<motion.div
@@ -1171,32 +1456,50 @@ export function BillingOperationsPanel({
  </div>
  </div>
  ))}
- {embedded && (
- <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 rounded-2xl neumorphic-panel mt-8">
- <div>
- <p className="text-sm font-black text-foreground">Save Utility Rate Rules</p>
- <p className="text-xs text-muted-foreground">Save default rates and unit overrides for this property.</p>
- </div>
- <div className="flex items-center gap-3">
- <button
- type="button"
- onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: true })}
- className="px-4 py-2.5 rounded-xl border border-border/60 hover:neumorphic-inset text-xs font-black text-muted-foreground hover:text-foreground transition-all cursor-pointer"
- >
- Review Breakdown
- </button>
- <button
- type="button"
- onClick={save}
- disabled={saving}
- className="inline-flex items-center gap-2 rounded-xl neumorphic-primary px-6 py-2.5 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-md transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
- >
- {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
- Confirm Changes
- </button>
- </div>
- </div>
- )}
+					{embedded && (
+						<div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 rounded-2xl neumorphic-panel mt-8">
+							<div>
+								<p className="text-sm font-black text-foreground">Save Utility Rate Rules</p>
+								<p className="text-xs text-muted-foreground mt-0.5">
+									{isPanelDirty
+										? `${pendingChangesCount} unsaved ${pendingChangesCount === 1 ? "change" : "changes"} ready to apply.`
+										: "All default rates and unit overrides are saved and up to date."}
+								</p>
+							</div>
+							<div className="flex items-center gap-3">
+								{isPanelDirty && (
+									<>
+										<button
+											type="button"
+											onClick={discard}
+											disabled={saving}
+											className="px-4 py-2.5 rounded-xl border border-red-500/20 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 text-xs font-black transition-all cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
+										>
+											<RotateCcw className="size-3.5" />
+											Discard
+										</button>
+										<button
+											type="button"
+											onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: true })}
+											className="px-4 py-2.5 rounded-xl border border-border/60 hover:neumorphic-inset text-xs font-black text-muted-foreground hover:text-foreground transition-all cursor-pointer inline-flex items-center gap-1.5"
+										>
+											<Eye className="size-3.5" />
+											Review Changes
+										</button>
+									</>
+								)}
+								<button
+									type="button"
+									onClick={save}
+									disabled={saving || !isPanelDirty}
+									className="inline-flex items-center gap-2 rounded-xl neumorphic-primary px-6 py-2.5 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-md transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
+								>
+									{saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+									Save Changes
+								</button>
+							</div>
+						</div>
+					)}
  </section>
  )}
  </div>

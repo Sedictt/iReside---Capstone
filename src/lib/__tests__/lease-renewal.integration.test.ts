@@ -86,21 +86,24 @@ describe("Lease Renewal Integration", () => {
         if (error) throw error;
         expect(lease).toBeDefined();
 
+        // Clean up prior notifications if any
+        await supabase.from('notifications').delete().eq('user_id', testTenant.id).eq('type', 'lease_renewal_available');
+
         // 2. Call the renewal check function
         const { error: funcError } = await supabase.rpc('check_renewal_windows');
         if (funcError) throw funcError;
 
-        // 3. Verify notification was created
+        // 3. Verify notification was created for this specific lease
         const { data: notifications } = await supabase
             .from('notifications')
             .select('*')
             .eq('user_id', testTenant.id)
             .eq('type', 'lease_renewal_available')
-            .order('created_at', { ascending: false })
-            .limit(1);
+            .order('created_at', { ascending: false });
 
-        expect(notifications?.[0]).toBeDefined();
-        expect(notifications?.[0].data.lease_id).toBe(testLease.id);
+        const targetNotification = notifications?.find(n => n.data?.lease_id === testLease.id);
+        expect(targetNotification).toBeDefined();
+        expect(targetNotification?.data.lease_id).toBe(testLease.id);
     });
 
     it("should allow submitting a renewal request", async () => {
