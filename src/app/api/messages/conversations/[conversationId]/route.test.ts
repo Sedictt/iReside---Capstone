@@ -16,6 +16,7 @@ vi.mock("@/lib/supabase/admin", () => ({
 vi.mock("@/lib/messages/engine", () => ({
     ensureUserInConversation: ensureUserInConversationMock,
     getProfilePreviewMap: vi.fn(),
+    invalidateSummariesCache: vi.fn(),
 }));
 
 vi.mock("@/lib/messages/redaction-service", () => ({

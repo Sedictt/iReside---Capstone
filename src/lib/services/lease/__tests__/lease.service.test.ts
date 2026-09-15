@@ -510,7 +510,7 @@ describe("LeaseService", () => {
     });
 
     it("throws LeaseSigningEligibilityError when lease status is not pending_landlord_signature", async () => {
-      const activeLease = { ...pendingLease, status: "active" };
+      const activeLease = { ...pendingLease, status: "active", landlord_signed_at: "2026-06-01T00:00:00Z" };
       chain.maybeSingle.mockResolvedValue({ data: activeLease, error: null });
 
       await expect(

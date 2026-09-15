@@ -351,6 +351,7 @@ export function UtilityBillingDashboard() {
 	const [pendingInvoices, setPendingInvoices] = useState<InvoiceListItem[]>([]);
 	const [loadingPendingInvoices, setLoadingPendingInvoices] = useState(false);
 	const [activeVerifyInvoiceId, setActiveVerifyInvoiceId] = useState<string | null>(null);
+	const [isRatesDirty, setIsRatesDirty] = useState(false);
 
 	// History summary data per month
 	type MonthSummary = { totalElec: number; totalWater: number; readingCount: number };
@@ -905,7 +906,9 @@ export function UtilityBillingDashboard() {
 						{ 
 							id: "rates", 
 							label: "Utility Rates", 
-							icon: Settings2 
+							icon: Settings2,
+							badge: isRatesDirty ? "Unsaved" : undefined,
+							badgeAlert: isRatesDirty
 						},
 						{ 
 							id: "history", 
@@ -1349,7 +1352,15 @@ export function UtilityBillingDashboard() {
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: -10 }}
 					>
-						<BillingOperationsPanel propertyId={selectedPropertyId} viewMode="rates" />
+						<BillingOperationsPanel 
+							propertyId={selectedPropertyId} 
+							viewMode="rates" 
+							onDirtyChange={setIsRatesDirty}
+							onSaved={() => {
+								setIsRatesDirty(false);
+								fetchData();
+							}}
+						/>
 					</motion.div>
 				)}
 
