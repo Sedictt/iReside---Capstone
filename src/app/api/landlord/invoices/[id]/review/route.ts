@@ -238,9 +238,13 @@ export async function POST(request: Request, context: RouteContext) {
                     balanceRemaining = Math.max(0, Number(payment.amount) - acceptedAmount);
                 } else {
                     reviewAction = "accept_partial";
+                    paidAmount = Number(beforeState.paid_amount || 0) + acceptedAmount;
+                    balanceRemaining = Math.max(0, Number(payment.amount) - paidAmount);
                 }
             } else {
                 reviewAction = parsed.action === "confirm_received" ? "confirm_received" : "accept_partial";
+                paidAmount = Number(beforeState.paid_amount || 0) + acceptedAmount;
+                balanceRemaining = Math.max(0, Number(payment.amount) - paidAmount);
             }
 
             if (parsed.action === "confirm_received") {
@@ -311,6 +315,7 @@ export async function POST(request: Request, context: RouteContext) {
             const { error: receiptedError } = await adminClient
                 .from("payments")
                 .update({
+                    status: "completed",
                     workflow_status: "receipted",
                     receipt_number: receipt.receipt_number,
                     last_action_at: nowIso,
