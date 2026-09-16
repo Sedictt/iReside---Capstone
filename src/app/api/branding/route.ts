@@ -140,8 +140,8 @@ export async function GET(request: NextRequest) {
         DEFAULT_BRANDING.rentalArchetype,
       primaryColor: customTheme?.primaryColor || DEFAULT_BRANDING.primaryColor,
       secondaryColor: customTheme?.secondaryColor || DEFAULT_BRANDING.secondaryColor,
-      logoUrl: customTheme?.logoUrl || (property?.images?.[0] ? property.images[0] : null),
-      bannerUrl: customTheme?.bannerUrl || (property?.images?.[0] ? property.images[0] : null),
+      logoUrl: customTheme?.logoUrl !== undefined ? customTheme.logoUrl : (property?.images?.[0] ? property.images[0] : null),
+      bannerUrl: customTheme?.bannerUrl !== undefined ? customTheme.bannerUrl : (property?.images?.[0] ? property.images[0] : null),
       setupCompleted: (customTheme as any)?.setup_completed ?? (customTheme as any)?.setupCompleted ?? false,
       setupCompletedAt: (customTheme as any)?.setup_completed_at ?? (customTheme as any)?.setupCompletedAt ?? null,
     };
@@ -200,8 +200,8 @@ export async function POST(request: NextRequest) {
       secondaryColor: body.secondaryColor || DEFAULT_BRANDING.secondaryColor,
       propertyTagline: body.propertyTagline || DEFAULT_BRANDING.propertyTagline,
       rentalArchetype: body.rentalArchetype || DEFAULT_BRANDING.rentalArchetype,
-      logoUrl: body.logoUrl || null,
-      bannerUrl: body.bannerUrl || null,
+      logoUrl: body.logoUrl !== undefined ? body.logoUrl : (currentBranding?.logoUrl ?? null),
+      bannerUrl: body.bannerUrl !== undefined ? body.bannerUrl : (currentBranding?.bannerUrl ?? null),
       setup_completed: body.setupCompleted !== undefined ? body.setupCompleted : currentBranding?.setup_completed ?? false,
       setup_completed_at: body.setupCompletedAt !== undefined ? body.setupCompletedAt : currentBranding?.setup_completed_at ?? null,
     };
@@ -255,8 +255,8 @@ export async function POST(request: NextRequest) {
       rentalArchetype: body.rentalArchetype || DEFAULT_BRANDING.rentalArchetype,
       primaryColor: body.primaryColor || DEFAULT_BRANDING.primaryColor,
       secondaryColor: body.secondaryColor || DEFAULT_BRANDING.secondaryColor,
-      logoUrl: body.logoUrl || null,
-      bannerUrl: body.bannerUrl || null,
+      logoUrl: body.logoUrl !== undefined ? body.logoUrl : (currentBranding?.logoUrl ?? null),
+      bannerUrl: body.bannerUrl !== undefined ? body.bannerUrl : (currentBranding?.bannerUrl ?? null),
     };
 
     // A Windows installer cannot change its embedded icon or Start-menu name at

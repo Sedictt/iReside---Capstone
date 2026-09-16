@@ -42,7 +42,18 @@ export function DashboardBanner({
     const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
 
     // Active Banner with BrandContext & LocalStorage Persistence
-    const [activeBanner, setActiveBanner] = useState<string>(brand.bannerUrl || image);
+    const [activeBanner, setActiveBanner] = useState<string>(() => {
+        if (brand.bannerUrl) return brand.bannerUrl;
+        if (typeof window !== "undefined") {
+            try {
+                const saved = localStorage.getItem("ireside_landlord_custom_banner_url");
+                if (saved) return saved;
+            } catch {
+                // Ignore storage errors
+            }
+        }
+        return image;
+    });
 
     useEffect(() => {
         if (brand.bannerUrl) {
@@ -53,11 +64,15 @@ export function DashboardBanner({
             const saved = localStorage.getItem("ireside_landlord_custom_banner_url");
             if (saved) {
                 setActiveBanner(saved);
+                return;
             }
         } catch {
             // Ignore storage errors
         }
+        setActiveBanner(image);
+    }, [brand.bannerUrl, image]);
 
+    useEffect(() => {
         const handleBannerUpdated = (e: CustomEvent<string>) => {
             if (e.detail) {
                 setActiveBanner(e.detail);
@@ -66,7 +81,7 @@ export function DashboardBanner({
 
         window.addEventListener("banner-updated" as any, handleBannerUpdated);
         return () => window.removeEventListener("banner-updated" as any, handleBannerUpdated);
-    }, [brand.bannerUrl]);
+    }, []);
     
     const { profile, user, loading: authLoading } = useAuth();
     const rawName = profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || "";
