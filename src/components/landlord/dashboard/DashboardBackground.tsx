@@ -10,13 +10,22 @@ interface DashboardBackgroundProps {
 }
 
 export function DashboardBackground({ image, className }: DashboardBackgroundProps) {
+    const isWhitelistedHost =
+        image.startsWith("/") ||
+        image.includes("images.unsplash.com") ||
+        image.includes("supabase.co") ||
+        image.includes("googleusercontent.com") ||
+        image.includes("ui-avatars.com") ||
+        image.includes("api.qrserver.com");
+
     return (
-        <div className="absolute inset-0 overflow-hidden rounded-[2.5rem]">
+        <div className={cn("absolute inset-0 overflow-hidden rounded-[2.5rem]", className)}>
             <Image
                 src={image}
                 alt="Dashboard Banner"
                 fill
                 sizes="100vw"
+                unoptimized={!isWhitelistedHost}
                 className="object-cover transition-transform duration-[2000ms] group-hover:scale-110 opacity-60 dark:opacity-40"
             />
             
