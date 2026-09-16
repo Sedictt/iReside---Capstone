@@ -10,6 +10,7 @@ export default function LandlordDocsPageRoute() {
   return (
     <div className="h-screen w-full bg-zinc-950 text-foreground overflow-hidden flex flex-col">
       <DocumentationHub
+        defaultBackHref="/landlord/dashboard"
         onNavigateTab={(tabId) => {
           router.push(`/landlord/settings?tab=${tabId}`);
         }}

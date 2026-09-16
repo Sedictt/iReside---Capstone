@@ -15,7 +15,6 @@ import {
   BookOpen,
   Building2,
   Home,
-  Sparkles,
   ExternalLink,
   Search,
   LayoutGrid,
@@ -36,10 +35,12 @@ import {
 } from "@/lib/docs/docsData";
 import { generateDocsPdf } from "@/lib/docs/generateDocsPdf";
 import { searchDocs } from "@/lib/docs/searchEngine";
+import { resolveDocsBackLink } from "@/lib/docs/navigation";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useBrand } from "@/context/BrandContext";
+import { useAuth } from "@/hooks/useAuth";
 
 // Dynamically import HTMLFlipBook to ensure SSR compatibility
 const HTMLFlipBook = dynamic(() => import("react-pageflip"), {
@@ -155,6 +156,7 @@ export function EBookReader({
   defaultBackHref,
 }: EBookReaderProps) {
   const pathname = usePathname();
+  const { profile } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
@@ -223,21 +225,14 @@ export function EBookReader({
     return searchDocs(searchQuery, { audience: targetAudience });
   }, [searchQuery, targetAudience]);
 
-  // Back href calculation
-  const backHref = useMemo(() => {
-    if (defaultBackHref) return defaultBackHref;
-    if (pathname?.startsWith("/tenant") || targetAudience === "tenant") {
-      return "/tenant/dashboard";
-    }
-    return "/landlord/dashboard";
-  }, [defaultBackHref, pathname, targetAudience]);
-
-  const backLabel = useMemo(() => {
-    if (pathname?.startsWith("/tenant") || targetAudience === "tenant") {
-      return "Back to Resident Portal";
-    }
-    return "Back to Dashboard";
-  }, [pathname, targetAudience]);
+  // Back link & label calculation (strictly decoupled from targetAudience)
+  const { href: backHref, label: backLabel } = useMemo(() => {
+    return resolveDocsBackLink({
+      defaultBackHref,
+      pathname,
+      userRole: profile?.role,
+    });
+  }, [defaultBackHref, pathname, profile?.role]);
 
   // Turn Next with Anti-Spam Animation Guard
   const handleTurnNext = () => {
@@ -768,30 +763,53 @@ export function EBookReader({
 
                       {/* Footer Button */}
                       <div className="pt-2 border-t border-zinc-200 flex items-center justify-between text-xs shrink-0">
-                        {article.actionShortcut?.href ? (
-                          <Link
-                            href={article.actionShortcut.href}
-                            className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-white text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5"
-                          >
-                            <span>{article.actionShortcut.label}</span>
-                            <ExternalLink className="size-2.5" />
-                          </Link>
-                        ) : article.actionShortcut?.tabId && onNavigateTab ? (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (article.actionShortcut?.tabId && onNavigateTab) {
-                                onNavigateTab(article.actionShortcut.tabId);
-                              }
-                            }}
-                            className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-white text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5"
-                          >
-                            <span>{article.actionShortcut.label}</span>
-                            <ExternalLink className="size-2.5" />
-                          </button>
-                        ) : (
-                          <span className="text-[9px] text-zinc-400">iReside Guide</span>
-                        )}
+                        {(() => {
+                          const isCrossPortalLink =
+                            (pathname?.startsWith("/landlord") && article.actionShortcut?.href?.startsWith("/tenant")) ||
+                            (pathname?.startsWith("/tenant") && article.actionShortcut?.href?.startsWith("/landlord"));
+
+                          if (isCrossPortalLink && article.actionShortcut) {
+                            return (
+                              <span 
+                                className="px-2 py-0.5 rounded bg-zinc-100 text-zinc-500 text-[9px] font-semibold tracking-wide border border-zinc-200"
+                                title={`This feature is accessible in the ${article.audience === "tenant" ? "Resident" : "Landlord"} Portal.`}
+                              >
+                                {article.actionShortcut.label} ({article.audience === "tenant" ? "Resident" : "Landlord"} only)
+                              </span>
+                            );
+                          }
+
+                          if (article.actionShortcut?.href) {
+                            return (
+                              <Link
+                                href={article.actionShortcut.href}
+                                className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-white text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5"
+                              >
+                                <span>{article.actionShortcut.label}</span>
+                                <ExternalLink className="size-2.5" />
+                              </Link>
+                            );
+                          }
+
+                          if (article.actionShortcut?.tabId && onNavigateTab) {
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (article.actionShortcut?.tabId && onNavigateTab) {
+                                    onNavigateTab(article.actionShortcut.tabId);
+                                  }
+                                }}
+                                className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-white text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5"
+                              >
+                                <span>{article.actionShortcut.label}</span>
+                                <ExternalLink className="size-2.5" />
+                              </button>
+                            );
+                          }
+
+                          return <span className="text-[9px] text-zinc-400">iReside Guide</span>;
+                        })()}
 
                         <span className="font-mono text-[9px] text-zinc-400 font-bold">
                           {(idx + 2).toString().padStart(2, "0")}
