@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser, requireRole } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { landlordProfilePatchSchema } from "@/lib/validation/landlord-settings";
 
 /**
  * GET /api/landlord/profile
@@ -86,6 +87,16 @@ export async function PATCH(request: Request) {
 
     try {
         const body = await request.json();
+
+        // 0. Server-side Input Validation
+        const validation = landlordProfilePatchSchema.safeParse(body);
+        if (!validation.success) {
+            const firstError = validation.error.issues[0]?.message || "Invalid input data";
+            return NextResponse.json({ 
+                error: firstError, 
+                details: validation.error.flatten().fieldErrors 
+            }, { status: 400 });
+        }
 
         // 1. Fetch current profile state
         const { data: currentProfile, error: fetchErr } = await admin
