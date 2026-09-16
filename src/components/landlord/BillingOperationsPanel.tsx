@@ -1941,17 +1941,29 @@ function UtilityConfigEditor({
  <input 
  type="number" 
  step="0.01"
- value={config.rate_per_unit}
- onChange={(e) => onChange(config.localId, { rate_per_unit: parseFloat(e.target.value) })}
+ min="0"
+ max="99999"
+ value={Number.isNaN(config.rate_per_unit) ? "" : config.rate_per_unit}
+ onChange={(e) => {
+ const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+ onChange(config.localId, { rate_per_unit: Number.isNaN(val) ? 0 : Math.max(0, val) });
+ }}
  className={cn(
  "w-full rounded-2xl neumorphic-panel font-black tracking-tight text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/5",
- isOverride ? "h-12 pl-8 pr-4 text-lg" : "h-16 pl-10 pr-4 text-2xl"
+ isOverride ? "h-12 pl-8 pr-4 text-lg" : "h-16 pl-10 pr-4 text-2xl",
+ config.rate_per_unit <= 0 && "border-amber-500/50"
  )}
  />
  <div className={cn("absolute top-1/2 -translate-y-1/2 flex flex-col items-end", isOverride ? "right-4" : "right-5")}>
  <span className="text-[10px] font-black text-primary uppercase tracking-widest">{config.utility_type === "water" ? "m³" : "kWh"}</span>
  </div>
  </div>
+ {config.rate_per_unit <= 0 && (
+ <p className="mt-1 text-[11px] font-bold text-amber-500 flex items-center gap-1">
+ <AlertCircle className="size-3 shrink-0" />
+ Rate must be greater than ₱0.00
+ </p>
+ )}
  </Field>
  
  <Field label="Start Date">
