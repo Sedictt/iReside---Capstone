@@ -20,13 +20,18 @@ export function DocumentationHub({
 }: DocumentationHubProps) {
   const [audience, setAudience] = useState<DocAudience>(initialAudience);
 
+  // Derive default back href if not explicitly provided
+  const resolvedBackHref =
+    defaultBackHref ||
+    (initialAudience === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard");
+
   return (
     <div className={cn("w-full space-y-4", className)}>
       <EBookReader
         audience={audience}
         onAudienceChange={setAudience}
         onNavigateTab={onNavigateTab}
-        defaultBackHref={defaultBackHref}
+        defaultBackHref={resolvedBackHref}
       />
     </div>
   );
