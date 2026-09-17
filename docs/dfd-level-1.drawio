@@ -1,0 +1,734 @@
+<mxfile host="app.diagrams.net" modified="2026-09-17T11:00:00.000Z" agent="iReside Systems Engineering" version="21.0.0" type="device">
+  <diagram id="iReside-DFD-Level-1" name="DFD Level 1 (Decomposition)">
+    <mxGraphModel dx="2400" dy="3600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="3400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ============================================== -->
+        <!-- TITLE BLOCK                                    -->
+        <!-- ============================================== -->
+        <mxCell id="title" value="iReside Property Management System — DFD Level 1 (Decomposition)&lt;br&gt;&lt;font style=&quot;font-size: 12px; font-weight: normal; color: #475569;&quot;&gt;Gane &amp;amp; Sarson Notation • Columnar Left-to-Right Flow • External Entities (Left) → Processes (Center) → Data Stores (Right)&lt;br&gt;Strictly Landlord &amp;amp; Tenant (No Admin) • Decomposition of Process 0 from Level 0&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;fontFamily=Helvetica;fontColor=#0f172a;" vertex="1" parent="1">
+          <mxGeometry x="350" y="20" width="1500" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================== -->
+        <!-- COLUMN 1: EXTERNAL ENTITIES (FAR LEFT)         -->
+        <!-- Gane & Sarson: Double-bordered squares          -->
+        <!-- ============================================== -->
+
+        <!-- LANDLORD ENTITY -->
+        <mxCell id="landlord_outer" value="" style="whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#1e293b;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="60" y="300" width="220" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="landlord" value="&lt;b style=&quot;font-size: 16px; color: #0f172a;&quot;&gt;LANDLORD&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #64748b;&quot;&gt;Property Owner / Manager&lt;br&gt;[External Entity]&lt;/font&gt;" style="whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1e293b;strokeWidth=1;fontSize=14;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="68" y="308" width="204" height="94" as="geometry" />
+        </mxCell>
+
+        <!-- TENANT ENTITY -->
+        <mxCell id="tenant_outer" value="" style="whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#1e293b;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="60" y="2700" width="220" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="tenant" value="&lt;b style=&quot;font-size: 16px; color: #0f172a;&quot;&gt;TENANT&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #64748b;&quot;&gt;Resident / Applicant&lt;br&gt;[External Entity]&lt;/font&gt;" style="whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1e293b;strokeWidth=1;fontSize=14;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="68" y="2708" width="204" height="94" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================== -->
+        <!-- COLUMN 2: PROCESSES (CENTER)                    -->
+        <!-- Gane & Sarson: Rounded rectangles with ID bar   -->
+        <!-- ============================================== -->
+
+        <!-- P1.0 Authentication & Account Management -->
+        <mxCell id="p1" value="&lt;b style=&quot;font-size: 13px; color: #1d4ed8;&quot;&gt;1.0&lt;/b&gt;&lt;hr style=&quot;border-color: #93c5fd;&quot;&gt;&lt;b style=&quot;font-size: 13px; color: #0f172a;&quot;&gt;Authentication &amp;amp;&lt;br&gt;Account Management&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#eff6ff;strokeColor=#2563eb;strokeWidth=2;fontFamily=Helvetica;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="700" y="150" width="240" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- P2.0 Property & Unit Management -->
+        <mxCell id="p2" value="&lt;b style=&quot;font-size: 13px; color: #1d4ed8;&quot;&gt;2.0&lt;/b&gt;&lt;hr style=&quot;border-color: #93c5fd;&quot;&gt;&lt;b style=&quot;font-size: 13px; color: #0f172a;&quot;&gt;Property &amp;amp;&lt;br&gt;Unit Management&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#eff6ff;strokeColor=#2563eb;strokeWidth=2;fontFamily=Helvetica;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="700" y="470" width="240" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- P3.0 Interactive Unit Map & Floor Planner -->
+        <mxCell id="p3" value="&lt;b style=&quot;font-size: 13px; color: #1d4ed8;&quot;&gt;3.0&lt;/b&gt;&lt;hr style=&quot;border-color: #93c5fd;&quot;&gt;&lt;b style=&quot;font-size: 13px; color: #0f172a;&quot;&gt;Interactive Unit Map &amp;amp;&lt;br&gt;Floor Planner&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#eff6ff;strokeColor=#2563eb;strokeWidth=2;fontFamily=Helvetica;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="700" y="790" width="240" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- P4.0 Tenant Application & Intake -->
+        <mxCell id="p4" value="&lt;b style=&quot;font-size: 13px; color: #1d4ed8;&quot;&gt;4.0&lt;/b&gt;&lt;hr style=&quot;border-color: #93c5fd;&quot;&gt;&lt;b style=&quot;font-size: 13px; color: #0f172a;&quot;&gt;Tenant Application &amp;amp;&lt;br&gt;Intake Management&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#eff6ff;strokeColor=#2563eb;strokeWidth=2;fontFamily=Helvetica;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="700" y="1110" width="240" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- P5.0 Lease Contract Management -->
+        <mxCell id="p5" value="&lt;b style=&quot;font-size: 13px; color: #1d4ed8;&quot;&gt;5.0&lt;/b&gt;&lt;hr style=&quot;border-color: #93c5fd;&quot;&gt;&lt;b style=&quot;font-size: 13px; color: #0f172a;&quot;&gt;Lease Contract&lt;br&gt;Management&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#eff6ff;strokeColor=#2563eb;strokeWidth=2;fontFamily=Helvetica;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="700" y="1430" width="240" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- P6.0 Billing & Payment Management -->
+        <mxCell id="p6" value="&lt;b style=&quot;font-size: 13px; color: #1d4ed8;&quot;&gt;6.0&lt;/b&gt;&lt;hr style=&quot;border-color: #93c5fd;&quot;&gt;&lt;b style=&quot;font-size: 13px; color: #0f172a;&quot;&gt;Billing &amp;amp; Payment&lt;br&gt;Management&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#eff6ff;strokeColor=#2563eb;strokeWidth=2;fontFamily=Helvetica;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="700" y="1750" width="240" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- P7.0 Maintenance & Incident Management -->
+        <mxCell id="p7" value="&lt;b style=&quot;font-size: 13px; color: #1d4ed8;&quot;&gt;7.0&lt;/b&gt;&lt;hr style=&quot;border-color: #93c5fd;&quot;&gt;&lt;b style=&quot;font-size: 13px; color: #0f172a;&quot;&gt;Maintenance &amp;amp;&lt;br&gt;Incident Management&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#eff6ff;strokeColor=#2563eb;strokeWidth=2;fontFamily=Helvetica;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="700" y="2070" width="240" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- P8.0 Communication & Real-Time Messaging -->
+        <mxCell id="p8" value="&lt;b style=&quot;font-size: 13px; color: #1d4ed8;&quot;&gt;8.0&lt;/b&gt;&lt;hr style=&quot;border-color: #93c5fd;&quot;&gt;&lt;b style=&quot;font-size: 13px; color: #0f172a;&quot;&gt;Communication &amp;amp;&lt;br&gt;Real-Time Messaging&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#eff6ff;strokeColor=#2563eb;strokeWidth=2;fontFamily=Helvetica;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="700" y="2390" width="240" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- P9.0 Community Hub & Amenity Management -->
+        <mxCell id="p9" value="&lt;b style=&quot;font-size: 13px; color: #1d4ed8;&quot;&gt;9.0&lt;/b&gt;&lt;hr style=&quot;border-color: #93c5fd;&quot;&gt;&lt;b style=&quot;font-size: 13px; color: #0f172a;&quot;&gt;Community Hub &amp;amp;&lt;br&gt;Amenity Management&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#eff6ff;strokeColor=#2563eb;strokeWidth=2;fontFamily=Helvetica;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="700" y="2710" width="240" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================== -->
+        <!-- COLUMN 3: DATA STORES (FAR RIGHT)              -->
+        <!-- Gane & Sarson: Open-ended rectangles            -->
+        <!-- (closed left with green ID bar, open right)     -->
+        <!-- ============================================== -->
+
+        <!-- D1: profiles & user_security_settings -->
+        <mxCell id="d1_id" value="&lt;b style=&quot;color: #ffffff; font-size: 12px;&quot;&gt;D1&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="155" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d1" value="&lt;font style=&quot;font-size: 11px; color: #0f172a;&quot;&gt;&lt;b&gt;profiles&lt;/b&gt; &amp;amp;&lt;br&gt;&lt;b&gt;user_security_settings&lt;/b&gt;&lt;/font&gt;" style="shape=partialRectangle;whiteSpace=wrap;html=1;top=1;bottom=1;right=0;left=0;fillColor=#ecfdf5;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=left;verticalAlign=middle;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="150" width="250" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- D2: properties & units -->
+        <mxCell id="d2_id" value="&lt;b style=&quot;color: #ffffff; font-size: 12px;&quot;&gt;D2&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="490" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d2" value="&lt;font style=&quot;font-size: 11px; color: #0f172a;&quot;&gt;&lt;b&gt;properties&lt;/b&gt; &amp;amp; &lt;b&gt;units&lt;/b&gt;&lt;/font&gt;" style="shape=partialRectangle;whiteSpace=wrap;html=1;top=1;bottom=1;right=0;left=0;fillColor=#ecfdf5;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=left;verticalAlign=middle;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="485" width="250" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- D3: property_floor_configs & unit_map_positions -->
+        <mxCell id="d3_id" value="&lt;b style=&quot;color: #ffffff; font-size: 12px;&quot;&gt;D3&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="810" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d3" value="&lt;font style=&quot;font-size: 11px; color: #0f172a;&quot;&gt;&lt;b&gt;property_floor_configs&lt;/b&gt; &amp;amp;&lt;br&gt;&lt;b&gt;unit_map_positions&lt;/b&gt;&lt;/font&gt;" style="shape=partialRectangle;whiteSpace=wrap;html=1;top=1;bottom=1;right=0;left=0;fillColor=#ecfdf5;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=left;verticalAlign=middle;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="805" width="250" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- D4: applications & tenant_intake_invites -->
+        <mxCell id="d4_id" value="&lt;b style=&quot;color: #ffffff; font-size: 12px;&quot;&gt;D4&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="1130" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d4" value="&lt;font style=&quot;font-size: 11px; color: #0f172a;&quot;&gt;&lt;b&gt;applications&lt;/b&gt; &amp;amp;&lt;br&gt;&lt;b&gt;tenant_intake_invites&lt;/b&gt;&lt;/font&gt;" style="shape=partialRectangle;whiteSpace=wrap;html=1;top=1;bottom=1;right=0;left=0;fillColor=#ecfdf5;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=left;verticalAlign=middle;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="1125" width="250" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- D5: leases & lease_signing_audit -->
+        <mxCell id="d5_id" value="&lt;b style=&quot;color: #ffffff; font-size: 12px;&quot;&gt;D5&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="1450" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d5" value="&lt;font style=&quot;font-size: 11px; color: #0f172a;&quot;&gt;&lt;b&gt;leases&lt;/b&gt; &amp;amp;&lt;br&gt;&lt;b&gt;lease_signing_audit&lt;/b&gt;&lt;/font&gt;" style="shape=partialRectangle;whiteSpace=wrap;html=1;top=1;bottom=1;right=0;left=0;fillColor=#ecfdf5;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=left;verticalAlign=middle;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="1445" width="250" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- D6: payments, utility_readings & receipts -->
+        <mxCell id="d6_id" value="&lt;b style=&quot;color: #ffffff; font-size: 12px;&quot;&gt;D6&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="1770" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d6" value="&lt;font style=&quot;font-size: 11px; color: #0f172a;&quot;&gt;&lt;b&gt;payments&lt;/b&gt;, &lt;b&gt;utility_readings&lt;/b&gt;&lt;br&gt;&amp;amp; &lt;b&gt;payment_receipts&lt;/b&gt;&lt;/font&gt;" style="shape=partialRectangle;whiteSpace=wrap;html=1;top=1;bottom=1;right=0;left=0;fillColor=#ecfdf5;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=left;verticalAlign=middle;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="1765" width="250" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- D7: maintenance_requests & expenses -->
+        <mxCell id="d7_id" value="&lt;b style=&quot;color: #ffffff; font-size: 12px;&quot;&gt;D7&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="2090" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d7" value="&lt;font style=&quot;font-size: 11px; color: #0f172a;&quot;&gt;&lt;b&gt;maintenance_requests&lt;/b&gt;&lt;br&gt;&amp;amp; &lt;b&gt;expenses&lt;/b&gt;&lt;/font&gt;" style="shape=partialRectangle;whiteSpace=wrap;html=1;top=1;bottom=1;right=0;left=0;fillColor=#ecfdf5;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=left;verticalAlign=middle;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2085" width="250" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- D8: conversations, messages & notifications -->
+        <mxCell id="d8_id" value="&lt;b style=&quot;color: #ffffff; font-size: 12px;&quot;&gt;D8&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="2410" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d8" value="&lt;font style=&quot;font-size: 11px; color: #0f172a;&quot;&gt;&lt;b&gt;conversations&lt;/b&gt;, &lt;b&gt;messages&lt;/b&gt;&lt;br&gt;&amp;amp; &lt;b&gt;notifications&lt;/b&gt;&lt;/font&gt;" style="shape=partialRectangle;whiteSpace=wrap;html=1;top=1;bottom=1;right=0;left=0;fillColor=#ecfdf5;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=left;verticalAlign=middle;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2405" width="250" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- D9: community_posts & amenity_bookings -->
+        <mxCell id="d9_id" value="&lt;b style=&quot;color: #ffffff; font-size: 12px;&quot;&gt;D9&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="2730" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d9" value="&lt;font style=&quot;font-size: 11px; color: #0f172a;&quot;&gt;&lt;b&gt;community_posts&lt;/b&gt;&lt;br&gt;&amp;amp; &lt;b&gt;amenity_bookings&lt;/b&gt;&lt;/font&gt;" style="shape=partialRectangle;whiteSpace=wrap;html=1;top=1;bottom=1;right=0;left=0;fillColor=#ecfdf5;strokeColor=#059669;strokeWidth=1.5;fontFamily=Helvetica;align=left;verticalAlign=middle;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2725" width="250" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================== -->
+        <!-- ENTITY → PROCESS FLOWS (Landlord Inbound)      -->
+        <!-- ============================================== -->
+
+        <!-- Landlord → P1.0 -->
+        <mxCell id="f_l_p1" value="Auth Credentials &amp;amp; 2FA Setup" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;align=left;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="landlord_outer" target="p1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="440" y="328" />
+              <mxPoint x="440" y="195" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Landlord → P2.0 -->
+        <mxCell id="f_l_p2" value="Property Specs &amp;amp; Unit Configs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;align=left;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="landlord_outer" target="p2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="460" y="355" />
+              <mxPoint x="460" y="515" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Landlord → P3.0 -->
+        <mxCell id="f_l_p3" value="Floor Blueprint &amp;amp; Grid Coords" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;align=left;exitX=1;exitY=0.6;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="landlord_outer" target="p3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="480" y="366" />
+              <mxPoint x="480" y="835" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Landlord → P4.0 -->
+        <mxCell id="f_l_p4" value="Intake Invites &amp;amp; Screening Decisions" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;align=left;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="landlord_outer" target="p4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="500" y="377" />
+              <mxPoint x="500" y="1155" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Landlord → P5.0 -->
+        <mxCell id="f_l_p5" value="Lease Terms &amp;amp; Countersignatures" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;align=left;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="landlord_outer" target="p5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="170" y="500" />
+              <mxPoint x="520" y="500" />
+              <mxPoint x="520" y="1475" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Landlord → P6.0 -->
+        <mxCell id="f_l_p6" value="Meter Readings, Tariffs &amp;amp; Cash Records" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;align=left;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="landlord_outer" target="p6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="170" y="530" />
+              <mxPoint x="540" y="530" />
+              <mxPoint x="540" y="1795" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Landlord → P7.0 -->
+        <mxCell id="f_l_p7" value="Maintenance Work Orders" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;align=left;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="landlord_outer" target="p7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="170" y="560" />
+              <mxPoint x="560" y="560" />
+              <mxPoint x="560" y="2115" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Landlord → P8.0 -->
+        <mxCell id="f_l_p8" value="Direct Messages" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;align=left;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="landlord_outer" target="p8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="170" y="590" />
+              <mxPoint x="580" y="590" />
+              <mxPoint x="580" y="2435" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Landlord → P9.0 -->
+        <mxCell id="f_l_p9" value="Bulletins &amp;amp; Amenity Approvals" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;align=left;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="landlord_outer" target="p9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="170" y="620" />
+              <mxPoint x="600" y="620" />
+              <mxPoint x="600" y="2755" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ============================================== -->
+        <!-- PROCESS → ENTITY FLOWS (Landlord Outbound)     -->
+        <!-- ============================================== -->
+
+        <!-- P1.0 → Landlord -->
+        <mxCell id="f_p1_l" value="Session Auth &amp;amp; Dashboard" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;strokeWidth=1.5;fontSize=9;fontColor=#5b21b6;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;dashed=1;dashPattern=8 4;exitX=0;exitY=0.3;exitDx=0;exitDy=0;entryX=1;entryY=0.2;entryDx=0;entryDy=0;" edge="1" parent="1" source="p1" target="landlord_outer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="400" y="177" />
+              <mxPoint x="400" y="322" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P2.0 → Landlord -->
+        <mxCell id="f_p2_l" value="Property Portfolio &amp;amp; Unit Roster" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;strokeWidth=1.5;fontSize=9;fontColor=#5b21b6;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;dashed=1;dashPattern=8 4;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.4;entryDx=0;entryDy=0;" edge="1" parent="1" source="p2" target="landlord_outer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="420" y="533" />
+              <mxPoint x="420" y="344" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P3.0 → Landlord -->
+        <mxCell id="f_p3_l" value="Rendered 2D Unit Map" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;strokeWidth=1.5;fontSize=9;fontColor=#5b21b6;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;dashed=1;dashPattern=8 4;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.6;entryDx=0;entryDy=0;" edge="1" parent="1" source="p3" target="landlord_outer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="380" y="853" />
+              <mxPoint x="380" y="366" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P4.0 → Landlord -->
+        <mxCell id="f_p4_l" value="Applicant Queue &amp;amp; KYC Proofs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;strokeWidth=1.5;fontSize=9;fontColor=#5b21b6;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;dashed=1;dashPattern=8 4;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.7;entryDx=0;entryDy=0;" edge="1" parent="1" source="p4" target="landlord_outer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="1173" />
+              <mxPoint x="360" y="377" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P5.0 → Landlord -->
+        <mxCell id="f_p5_l" value="Executed Contracts" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;strokeWidth=1.5;fontSize=9;fontColor=#5b21b6;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;dashed=1;dashPattern=8 4;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.8;entryDx=0;entryDy=0;" edge="1" parent="1" source="p5" target="landlord_outer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="340" y="1493" />
+              <mxPoint x="340" y="388" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ============================================== -->
+        <!-- ENTITY → PROCESS FLOWS (Tenant Inbound)        -->
+        <!-- ============================================== -->
+
+        <!-- Tenant → P1.0 -->
+        <mxCell id="f_t_p1" value="Credentials &amp;amp; Profile Updates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;align=left;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" edge="1" parent="1" source="tenant_outer" target="p1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="170" y="2600" />
+              <mxPoint x="620" y="2600" />
+              <mxPoint x="620" y="213" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Tenant → P4.0 -->
+        <mxCell id="f_t_p4" value="Rental Application &amp;amp; KYC Files" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;align=left;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" edge="1" parent="1" source="tenant_outer" target="p4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="500" y="2728" />
+              <mxPoint x="500" y="1173" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Tenant → P5.0 -->
+        <mxCell id="f_t_p5" value="Digital Signatures &amp;amp; Renewals" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;align=left;exitX=1;exitY=0.35;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" edge="1" parent="1" source="tenant_outer" target="p5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="520" y="2739" />
+              <mxPoint x="520" y="1493" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Tenant → P6.0 -->
+        <mxCell id="f_t_p6" value="GCash Proofs &amp;amp; Ref IDs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;align=left;exitX=1;exitY=0.45;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" edge="1" parent="1" source="tenant_outer" target="p6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="540" y="2750" />
+              <mxPoint x="540" y="1813" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Tenant → P7.0 -->
+        <mxCell id="f_t_p7" value="Repair Requests &amp;amp; Photos" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;align=left;exitX=1;exitY=0.55;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" edge="1" parent="1" source="tenant_outer" target="p7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="2761" />
+              <mxPoint x="560" y="2133" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Tenant → P8.0 -->
+        <mxCell id="f_t_p8" value="Chat Inquiries" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;align=left;exitX=1;exitY=0.65;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" edge="1" parent="1" source="tenant_outer" target="p8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="580" y="2772" />
+              <mxPoint x="580" y="2453" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Tenant → P9.0 -->
+        <mxCell id="f_t_p9" value="Poll Votes &amp;amp; Bookings" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;align=left;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" edge="1" parent="1" source="tenant_outer" target="p9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="600" y="2783" />
+              <mxPoint x="600" y="2773" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ============================================== -->
+        <!-- PROCESS → ENTITY FLOWS (Tenant Outbound)       -->
+        <!-- ============================================== -->
+
+        <!-- P1.0 → Tenant -->
+        <mxCell id="f_p1_t" value="Session Token &amp;amp; Portal Routing" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;strokeWidth=1.5;fontSize=9;fontColor=#5b21b6;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;dashed=1;dashPattern=8 4;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="p1" target="tenant_outer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="640" y="222" />
+              <mxPoint x="640" y="2630" />
+              <mxPoint x="170" y="2630" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P4.0 → Tenant -->
+        <mxCell id="f_p4_t" value="Application Status &amp;amp; Credentials" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;strokeWidth=1.5;fontSize=9;fontColor=#5b21b6;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;dashed=1;dashPattern=8 4;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.3;entryDx=0;entryDy=0;" edge="1" parent="1" source="p4" target="tenant_outer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="480" y="1182" />
+              <mxPoint x="480" y="2733" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P5.0 → Tenant -->
+        <mxCell id="f_p5_t" value="Signed Lease PDF" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;strokeWidth=1.5;fontSize=9;fontColor=#5b21b6;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;dashed=1;dashPattern=8 4;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.4;entryDx=0;entryDy=0;" edge="1" parent="1" source="p5" target="tenant_outer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="460" y="1502" />
+              <mxPoint x="460" y="2744" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P6.0 → Tenant -->
+        <mxCell id="f_p6_t" value="Monthly Invoices &amp;amp; Official Receipts" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;strokeWidth=1.5;fontSize=9;fontColor=#5b21b6;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;dashed=1;dashPattern=8 4;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="p6" target="tenant_outer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="440" y="1822" />
+              <mxPoint x="440" y="2755" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P7.0 → Tenant -->
+        <mxCell id="f_p7_t" value="Ticket Updates &amp;amp; Status" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;strokeWidth=1.5;fontSize=9;fontColor=#5b21b6;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;dashed=1;dashPattern=8 4;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.6;entryDx=0;entryDy=0;" edge="1" parent="1" source="p7" target="tenant_outer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="420" y="2142" />
+              <mxPoint x="420" y="2766" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P8.0 → Tenant -->
+        <mxCell id="f_p8_t" value="Replies &amp;amp; Alerts" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;strokeWidth=1.5;fontSize=9;fontColor=#5b21b6;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;dashed=1;dashPattern=8 4;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.7;entryDx=0;entryDy=0;" edge="1" parent="1" source="p8" target="tenant_outer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="400" y="2462" />
+              <mxPoint x="400" y="2777" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P9.0 → Tenant -->
+        <mxCell id="f_p9_t" value="Bulletins &amp;amp; Booking Passes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;strokeWidth=1.5;fontSize=9;fontColor=#5b21b6;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;dashed=1;dashPattern=8 4;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.8;entryDx=0;entryDy=0;" edge="1" parent="1" source="p9" target="tenant_outer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="380" y="2782" />
+              <mxPoint x="380" y="2788" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P2.0 → Tenant (Assigned Unit Details) -->
+        <mxCell id="f_p2_t" value="Assigned Unit Specs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;strokeWidth=1.5;fontSize=9;fontColor=#5b21b6;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;dashed=1;dashPattern=8 4;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.15;entryDx=0;entryDy=0;" edge="1" parent="1" source="p2" target="tenant_outer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="542" />
+              <mxPoint x="360" y="2717" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P3.0 → Tenant (Floor Map) -->
+        <mxCell id="f_p3_t" value="Spatial Floor Map" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;strokeWidth=1.5;fontSize=9;fontColor=#5b21b6;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#e2e8f0;dashed=1;dashPattern=8 4;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.2;entryDx=0;entryDy=0;" edge="1" parent="1" source="p3" target="tenant_outer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="340" y="862" />
+              <mxPoint x="340" y="2722" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ============================================== -->
+        <!-- PROCESS → DATA STORE FLOWS (PRIMARY WRITES)    -->
+        <!-- These are the main write operations             -->
+        <!-- ============================================== -->
+
+        <!-- P1.0 → D1 (Store Credentials & 2FA) -->
+        <mxCell id="f_p1_d1" value="Store Credentials &amp;amp; 2FA Config" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=1.5;fontSize=9;fontColor=#065f46;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#d1fae5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="p1" target="d1_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- P2.0 → D2 (Store Unit Specs & Base Pricing) -->
+        <mxCell id="f_p2_d2" value="Unit Specs &amp;amp; Base Pricing" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=1.5;fontSize=9;fontColor=#065f46;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#d1fae5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="p2" target="d2_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- P3.0 → D3 (Store Visual Grid Coordinates) -->
+        <mxCell id="f_p3_d3" value="Visual Grid Coordinates (X,Y)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=1.5;fontSize=9;fontColor=#065f46;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#d1fae5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="p3" target="d3_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- P4.0 → D4 (Store KYC Documents & Application Details) -->
+        <mxCell id="f_p4_d4" value="KYC Documents &amp;amp; Application Details" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=1.5;fontSize=9;fontColor=#065f46;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#d1fae5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="p4" target="d4_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- P5.0 → D5 (Store Executed Lease & Signature Audit) -->
+        <mxCell id="f_p5_d5" value="Executed Lease &amp;amp; Signature Audit" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=1.5;fontSize=9;fontColor=#065f46;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#d1fae5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="p5" target="d5_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- P6.0 → D6 (Store Invoices, Readings & Receipts) -->
+        <mxCell id="f_p6_d6" value="Invoices, Meter Readings &amp;amp; Receipts" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=1.5;fontSize=9;fontColor=#065f46;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#d1fae5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="p6" target="d6_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- P7.0 → D7 (Store Defect Tickets & Expense Costs) -->
+        <mxCell id="f_p7_d7" value="Defect Tickets &amp;amp; Expense Costs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=1.5;fontSize=9;fontColor=#065f46;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#d1fae5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="p7" target="d7_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- P8.0 → D8 (Store Chat Messages & Notifications) -->
+        <mxCell id="f_p8_d8" value="Chat Messages &amp;amp; Push Alerts" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=1.5;fontSize=9;fontColor=#065f46;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#d1fae5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="p8" target="d8_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- P9.0 → D9 (Store Posts, Votes & Bookings) -->
+        <mxCell id="f_p9_d9" value="Bulletins, Poll Votes &amp;amp; Bookings" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=1.5;fontSize=9;fontColor=#065f46;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#d1fae5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="p9" target="d9_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================== -->
+        <!-- DATA STORE → PROCESS FLOWS (PRIMARY READS)     -->
+        <!-- These are the main read operations              -->
+        <!-- ============================================== -->
+
+        <!-- D1 → P1.0 (User Role & Session Hash) -->
+        <mxCell id="f_d1_p1" value="User Role &amp;amp; Session Hash" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#059669;strokeWidth=1.3;fontSize=9;fontColor=#065f46;fontFamily=Helvetica;labelBackgroundColor=#ffffff;labelBorderColor=#d1fae5;dashed=1;dashPattern=6 3;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.3;entryDx=0;entryDy=0;" edge="1" parent="1" source="d1_id" target="p1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1300" y="175" />
+              <mxPoint x="1300" y="120" />
+              <mxPoint x="940" y="120" />
+              <mxPoint x="940" y="177" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ============================================== -->
+        <!-- CROSS-STORE FLOWS (CRITICAL INTERCONNECTIONS)  -->
+        <!-- These show realistic multi-store dependencies   -->
+        <!-- ============================================== -->
+
+        <!-- D2 → P3.0 (Room Dimensions & Base Rent) -->
+        <mxCell id="f_d2_p3" value="Room Dimensions &amp;amp; Rent" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b45309;strokeWidth=1.3;fontSize=9;fontColor=#92400e;fontFamily=Helvetica;labelBackgroundColor=#fffbeb;labelBorderColor=#fde68a;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="d2_id" target="p3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1200" y="510" />
+              <mxPoint x="1200" y="720" />
+              <mxPoint x="940" y="720" />
+              <mxPoint x="940" y="813" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- D5 → P3.0 (Occupancy Status) -->
+        <mxCell id="f_d5_p3" value="Live Occupancy Status" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b45309;strokeWidth=1.3;fontSize=9;fontColor=#92400e;fontFamily=Helvetica;labelBackgroundColor=#fffbeb;labelBorderColor=#fde68a;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="d5_id" target="p3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1250" y="1470" />
+              <mxPoint x="1250" y="900" />
+              <mxPoint x="940" y="900" />
+              <mxPoint x="940" y="858" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- D2 → P4.0 (Vacant Unit Availability) -->
+        <mxCell id="f_d2_p4" value="Vacant Unit Availability" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b45309;strokeWidth=1.3;fontSize=9;fontColor=#92400e;fontFamily=Helvetica;labelBackgroundColor=#fffbeb;labelBorderColor=#fde68a;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="d2_id" target="p4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1180" y="510" />
+              <mxPoint x="1180" y="1040" />
+              <mxPoint x="940" y="1040" />
+              <mxPoint x="940" y="1133" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P4.0 → D1 (Provision Approved Tenant Account) -->
+        <mxCell id="f_p4_d1" value="Provision Tenant Account" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b45309;strokeWidth=1.3;fontSize=9;fontColor=#92400e;fontFamily=Helvetica;labelBackgroundColor=#fffbeb;labelBorderColor=#fde68a;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.8;entryDx=0;entryDy=0;" edge="1" parent="1" source="p4" target="d1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1100" y="1133" />
+              <mxPoint x="1100" y="290" />
+              <mxPoint x="1440" y="290" />
+              <mxPoint x="1440" y="190" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- D4 → P5.0 (Approved Applicant Data) -->
+        <mxCell id="f_d4_p5" value="Approved Applicant Data" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b45309;strokeWidth=1.3;fontSize=9;fontColor=#92400e;fontFamily=Helvetica;labelBackgroundColor=#fffbeb;labelBorderColor=#fde68a;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="d4_id" target="p5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1280" y="1150" />
+              <mxPoint x="1280" y="1350" />
+              <mxPoint x="940" y="1350" />
+              <mxPoint x="940" y="1453" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- D2 → P5.0 (Unit Rental Terms) -->
+        <mxCell id="f_d2_p5" value="Unit Rental Terms" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b45309;strokeWidth=1.3;fontSize=9;fontColor=#92400e;fontFamily=Helvetica;labelBackgroundColor=#fffbeb;labelBorderColor=#fde68a;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="d2_id" target="p5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1160" y="510" />
+              <mxPoint x="1160" y="1380" />
+              <mxPoint x="940" y="1380" />
+              <mxPoint x="940" y="1498" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P5.0 → D2 (Update Unit Status to 'Occupied') -->
+        <mxCell id="f_p5_d2" value="Update Unit Status to Occupied" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b45309;strokeWidth=1.3;fontSize=9;fontColor=#92400e;fontFamily=Helvetica;labelBackgroundColor=#fffbeb;labelBorderColor=#fde68a;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.8;entryDx=0;entryDy=0;" edge="1" parent="1" source="p5" target="d2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1080" y="1453" />
+              <mxPoint x="1080" y="610" />
+              <mxPoint x="1440" y="610" />
+              <mxPoint x="1440" y="525" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- D5 → P6.0 (Monthly Rent & Deposit Schedule) -->
+        <mxCell id="f_d5_p6" value="Monthly Rent &amp;amp; Deposit Terms" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b45309;strokeWidth=1.3;fontSize=9;fontColor=#92400e;fontFamily=Helvetica;labelBackgroundColor=#fffbeb;labelBorderColor=#fde68a;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="d5_id" target="p6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1230" y="1470" />
+              <mxPoint x="1230" y="1680" />
+              <mxPoint x="940" y="1680" />
+              <mxPoint x="940" y="1773" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- D1 → P6.0 (Resident Billing Info) -->
+        <mxCell id="f_d1_p6" value="Resident Billing Info" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b45309;strokeWidth=1.3;fontSize=9;fontColor=#92400e;fontFamily=Helvetica;labelBackgroundColor=#fffbeb;labelBorderColor=#fde68a;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="d1_id" target="p6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1320" y="175" />
+              <mxPoint x="1320" y="1700" />
+              <mxPoint x="940" y="1700" />
+              <mxPoint x="940" y="1818" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- D5 → P7.0 (Validate Tenant Leased Unit) -->
+        <mxCell id="f_d5_p7" value="Validate Tenant Leased Unit" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b45309;strokeWidth=1.3;fontSize=9;fontColor=#92400e;fontFamily=Helvetica;labelBackgroundColor=#fffbeb;labelBorderColor=#fde68a;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="d5_id" target="p7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1210" y="1470" />
+              <mxPoint x="1210" y="2000" />
+              <mxPoint x="940" y="2000" />
+              <mxPoint x="940" y="2093" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- D1 → P8.0 (Recipient Contact Info) -->
+        <mxCell id="f_d1_p8" value="Recipient Contact Info" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b45309;strokeWidth=1.3;fontSize=9;fontColor=#92400e;fontFamily=Helvetica;labelBackgroundColor=#fffbeb;labelBorderColor=#fde68a;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="d1_id" target="p8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1340" y="175" />
+              <mxPoint x="1340" y="2340" />
+              <mxPoint x="940" y="2340" />
+              <mxPoint x="940" y="2413" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- D1 → P9.0 (Verified Resident Roster) -->
+        <mxCell id="f_d1_p9" value="Verified Resident Roster" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b45309;strokeWidth=1.3;fontSize=9;fontColor=#92400e;fontFamily=Helvetica;labelBackgroundColor=#fffbeb;labelBorderColor=#fde68a;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="d1_id" target="p9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1360" y="175" />
+              <mxPoint x="1360" y="2660" />
+              <mxPoint x="940" y="2660" />
+              <mxPoint x="940" y="2733" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ============================================== -->
+        <!-- LEGEND                                         -->
+        <!-- ============================================== -->
+        <mxCell id="legend_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#94a3b8;strokeWidth=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="3050" width="400" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_title" value="&lt;b style=&quot;font-size: 13px; color: #0f172a;&quot;&gt;LEGEND&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="1520" y="3060" width="100" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_1" value="&lt;font color=&quot;#475569&quot;&gt;━━ Solid Gray: Entity → Process (Inbound Data)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="1520" y="3090" width="360" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_2" value="&lt;font color=&quot;#7c3aed&quot;&gt;┅┅ Dashed Purple: Process → Entity (Outbound Data)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="1520" y="3115" width="360" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_3" value="&lt;font color=&quot;#059669&quot;&gt;━━ Solid Green: Process → Data Store (Write)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="1520" y="3140" width="360" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_4" value="&lt;font color=&quot;#059669&quot;&gt;┅┅ Dashed Green: Data Store → Process (Read)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="1520" y="3165" width="360" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_5" value="&lt;font color=&quot;#b45309&quot;&gt;━━ Amber: Cross-Store Interconnection (Read/Write to Non-Primary Store)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="1520" y="3190" width="360" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_6" value="&lt;font color=&quot;#0f172a&quot;&gt;■ Double Square = External Entity &amp;nbsp;│&amp;nbsp; ▢ Rounded = Process &amp;nbsp;│&amp;nbsp; ▭ Open-end = Data Store&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="1520" y="3215" width="370" height="20" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

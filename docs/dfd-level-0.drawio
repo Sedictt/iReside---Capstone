@@ -1,126 +1,87 @@
-<mxfile host="app.diagrams.net" modified="2026-09-17T09:50:00.000Z" agent="iReside Systems Engineering" version="21.0.0" type="device">
+<mxfile host="app.diagrams.net" modified="2026-09-17T10:45:00.000Z" agent="iReside Systems Engineering" version="21.0.0" type="device">
   <diagram id="iReside-DFD-Level-0" name="DFD Level 0 (Context Diagram)">
-    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1200" math="0" shadow="0">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="1000" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
 
-        <!-- ============================================== -->
-        <!-- HEADER / TITLE BLOCK                           -->
-        <!-- ============================================== -->
-        <mxCell id="title" value="iReside Property Management System — Data Flow Diagram (DFD) Level 0&lt;br&gt;&lt;font style=&quot;font-size: 13px; font-weight: normal; color: #475569;&quot;&gt;Gane &amp;amp; Sarson Methodology • Hierarchical Downward Flow • Strictly Landlord &amp;amp; Tenant (No Admin)&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;fontFamily=Helvetica;fontColor=#0f172a;" vertex="1" parent="1">
-          <mxGeometry x="350" y="25" width="1000" height="50" as="geometry" />
+        <!-- TITLE BLOCK -->
+        <mxCell id="title" value="iReside Property Management System — DFD Level 0 (Context Diagram)&lt;br&gt;&lt;font style=&quot;font-size: 13px; font-weight: normal; color: #475569;&quot;&gt;Gane &amp;amp; Sarson Notation • Columnar Left-to-Right Flow • Strictly Landlord &amp;amp; Tenant (No Admin)&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;fontFamily=Helvetica;fontColor=#0f172a;" vertex="1" parent="1">
+          <mxGeometry x="250" y="30" width="1000" height="50" as="geometry" />
         </mxCell>
 
         <!-- ============================================== -->
-        <!-- TIER 1: EXTERNAL DATA SOURCES (INITIATORS)     -->
+        <!-- COLUMN 1: EXTERNAL ENTITIES (FAR LEFT)         -->
         <!-- ============================================== -->
-        <mxCell id="tier1_label" value="TIER 1: EXTERNAL DATA SOURCES (INITIATING ENTITIES)" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;fontStyle=1;fontFamily=Helvetica;fontColor=#64748b;letterSpacing=2;" vertex="1" parent="1">
-          <mxGeometry x="600" y="85" width="500" height="20" as="geometry" />
+
+        <!-- LANDLORD ENTITY (GANE & SARSON DOUBLE SQUARE) -->
+        <mxCell id="landlord_outer" value="" style="whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#1e293b;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="80" y="160" width="220" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="landlord" value="&lt;b style=&quot;font-size: 16px; color: #0f172a;&quot;&gt;LANDLORD&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #64748b;&quot;&gt;Property Owner / Manager&lt;br&gt;[External Entity]&lt;/font&gt;" style="whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1e293b;strokeWidth=1;fontSize=14;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="88" y="168" width="204" height="94" as="geometry" />
         </mxCell>
 
-        <!-- LANDLORD SOURCE (GANE & SARSON DOUBLE SQUARE) -->
-        <mxCell id="landlord_source_outer" value="" style="whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#0284c7;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="220" y="115" width="300" height="95" as="geometry" />
+        <!-- TENANT ENTITY (GANE & SARSON DOUBLE SQUARE) -->
+        <mxCell id="tenant_outer" value="" style="whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#1e293b;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="80" y="600" width="220" height="110" as="geometry" />
         </mxCell>
-        <mxCell id="landlord_source" value="&lt;b style=&quot;font-size: 16px;&quot;&gt;LANDLORD&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #64748b;&quot;&gt;Property Owner / Manager&lt;br&gt;[External Data Source]&lt;/font&gt;" style="whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0284c7;strokeWidth=1;fontSize=14;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="228" y="123" width="284" height="79" as="geometry" />
-        </mxCell>
-
-        <!-- TENANT SOURCE (GANE & SARSON DOUBLE SQUARE) -->
-        <mxCell id="tenant_source_outer" value="" style="whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#0284c7;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="1180" y="115" width="300" height="95" as="geometry" />
-        </mxCell>
-        <mxCell id="tenant_source" value="&lt;b style=&quot;font-size: 16px;&quot;&gt;TENANT&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #64748b;&quot;&gt;Resident / Prospective Applicant&lt;br&gt;[External Data Source]&lt;/font&gt;" style="whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0284c7;strokeWidth=1;fontSize=14;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="1188" y="123" width="284" height="79" as="geometry" />
+        <mxCell id="tenant" value="&lt;b style=&quot;font-size: 16px; color: #0f172a;&quot;&gt;TENANT&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #64748b;&quot;&gt;Resident / Applicant&lt;br&gt;[External Entity]&lt;/font&gt;" style="whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1e293b;strokeWidth=1;fontSize=14;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="88" y="608" width="204" height="94" as="geometry" />
         </mxCell>
 
         <!-- ============================================== -->
-        <!-- TIER 2: SYSTEM BOUNDARY & CENTRAL PROCESS 0    -->
+        <!-- COLUMN 2: PROCESS 0 (CENTER / MIDDLE)          -->
         <!-- ============================================== -->
-        <mxCell id="tier2_label" value="TIER 2: SYSTEM BOUNDARY &amp;amp; CENTRAL PROCESS" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;fontStyle=1;fontFamily=Helvetica;fontColor=#64748b;letterSpacing=2;" vertex="1" parent="1">
-          <mxGeometry x="600" y="475" width="500" height="20" as="geometry" />
-        </mxCell>
-
-        <!-- PROCESS 0 (GANE & SARSON ROUNDED RECTANGLE WITH ID HEADER) -->
-        <mxCell id="process0" value="&lt;b style=&quot;font-size: 16px;&quot;&gt;0&lt;/b&gt;&lt;hr&gt;&lt;b style=&quot;font-size: 18px;&quot;&gt;iReside Property Management System&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #334155; line-height: 1.6;&quot;&gt;&lt;b&gt;Encapsulated Core Modules (P1.0 – P9.0):&lt;/b&gt;&lt;br&gt;P1.0 Authentication &amp;amp; Account • P2.0 Property &amp;amp; Unit Management&lt;br&gt;P3.0 Interactive Unit Map &amp;amp; Floor Planner • P4.0 Tenant Intake &amp;amp; Applications&lt;br&gt;P5.0 Lease Contract Management • P6.0 Billing &amp;amp; Payment Management&lt;br&gt;P7.0 Maintenance &amp;amp; Incident Management • P8.0 Communication &amp;amp; Real-Time Messaging&lt;br&gt;P9.0 Community Hub &amp;amp; Amenity Management&lt;/font&gt;" style="swimlane;html=1;startSize=32;rounded=1;arcSize=14;fillColor=#f8fafc;strokeColor=#4338ca;strokeWidth=3;fontFamily=Helvetica;fontSize=14;fontStyle=1;align=center;collapsible=0;" vertex="1" parent="1">
-          <mxGeometry x="540" y="505" width="620" height="195" as="geometry" />
+        <mxCell id="process0" value="&lt;b style=&quot;font-size: 16px; color: #1d4ed8;&quot;&gt;0&lt;/b&gt;&lt;hr style=&quot;border-color: #2563eb;&quot;&gt;&lt;b style=&quot;font-size: 18px; color: #0f172a;&quot;&gt;iReside Property Management System&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #475569; line-height: 1.6;&quot;&gt;Central Operational System Boundary&lt;br&gt;(Decomposes into Processes 1.0 to 9.0 in Level 1)&lt;/font&gt;" style="swimlane;html=1;startSize=32;rounded=1;arcSize=14;fillColor=#ffffff;strokeColor=#2563eb;strokeWidth=2.5;fontFamily=Helvetica;fontSize=14;fontStyle=1;align=center;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="780" y="280" width="480" height="300" as="geometry" />
         </mxCell>
 
         <!-- ============================================== -->
-        <!-- TIER 3: EXTERNAL DATA SINKS (RECIPIENTS)       -->
+        <!-- INBOUND & OUTBOUND FLOWS (LANDLORD)            -->
         <!-- ============================================== -->
-        <mxCell id="tier3_label" value="TIER 3: EXTERNAL DATA SINKS (RECIPIENT ENTITIES)" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;fontStyle=1;fontFamily=Helvetica;fontColor=#64748b;letterSpacing=2;" vertex="1" parent="1">
-          <mxGeometry x="600" y="940" width="500" height="20" as="geometry" />
-        </mxCell>
-
-        <!-- LANDLORD SINK (GANE & SARSON DOUBLE SQUARE) -->
-        <mxCell id="landlord_sink_outer" value="" style="whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#0284c7;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="220" y="975" width="300" height="95" as="geometry" />
-        </mxCell>
-        <mxCell id="landlord_sink" value="&lt;b style=&quot;font-size: 16px;&quot;&gt;LANDLORD&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #64748b;&quot;&gt;Property Owner / Manager&lt;br&gt;[External Data Sink]&lt;/font&gt;" style="whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0284c7;strokeWidth=1;fontSize=14;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="228" y="983" width="284" height="79" as="geometry" />
-        </mxCell>
-
-        <!-- TENANT SINK (GANE & SARSON DOUBLE SQUARE) -->
-        <mxCell id="tenant_sink_outer" value="" style="whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#0284c7;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="1180" y="975" width="300" height="95" as="geometry" />
-        </mxCell>
-        <mxCell id="tenant_sink" value="&lt;b style=&quot;font-size: 16px;&quot;&gt;TENANT&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px; color: #64748b;&quot;&gt;Resident / Prospective Applicant&lt;br&gt;[External Data Sink]&lt;/font&gt;" style="whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0284c7;strokeWidth=1;fontSize=14;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="1188" y="983" width="284" height="79" as="geometry" />
-        </mxCell>
-
-        <!-- ============================================== -->
-        <!-- INBOUND DATA FLOWS (TIER 1 -> TIER 2: DOWNWARD)-->
-        <!-- ============================================== -->
-
-        <!-- Landlord Inbound Flow -->
-        <mxCell id="flow_in_landlord" value="&lt;b style=&quot;color: #047857;&quot;&gt;LANDLORD INBOUND DATA FLOWS&lt;/b&gt;&lt;br&gt;• 1. Auth Credentials &amp;amp; 2FA Setup [P1.0]&lt;br&gt;• 2. Property Setup &amp;amp; Unit Configurations [P2.0]&lt;br&gt;• 3. Floor Plan Blueprint &amp;amp; Grid Coordinates [P3.0]&lt;br&gt;• 4. Intake Invites &amp;amp; Screening Decisions [P4.0]&lt;br&gt;• 5. Lease Terms &amp;amp; Countersignatures [P5.0]&lt;br&gt;• 6. Meter Readings, Tariffs &amp;amp; Cash Records [P6.0]&lt;br&gt;• 7. Maintenance Work Orders &amp;amp; Expense Logs [P7.0]&lt;br&gt;• 8. Direct Chat &amp;amp; Broadcast Alerts [P8.0]&lt;br&gt;• 9. Community Bulletins &amp;amp; Amenity Approvals [P9.0]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;strokeColor=#059669;strokeWidth=2.5;fontSize=11;fontColor=#0f172a;align=left;labelBackgroundColor=#ecfdf5;labelBorderColor=#a7f3d0;" edge="1" parent="1" source="landlord_source_outer" target="process0">
-          <mxGeometry x="-0.15" y="-35" relative="1" as="geometry">
+        <!-- Inbound: Landlord -> Process 0 -->
+        <mxCell id="flow_in_landlord" value="&lt;b style=&quot;color: #1e293b;&quot;&gt;Landlord Inbound Data Flows:&lt;/b&gt;&lt;br&gt;• Auth Credentials &amp;amp; 2FA [P1.0]&lt;br&gt;• Property &amp;amp; Unit Configurations [P2.0]&lt;br&gt;• Floor Blueprint &amp;amp; Unit Coordinates [P3.0]&lt;br&gt;• Intake Invites &amp;amp; Application Review [P4.0]&lt;br&gt;• Lease Terms &amp;amp; Countersignatures [P5.0]&lt;br&gt;• Meter Readings, Tariffs &amp;amp; Cash Records [P6.0]&lt;br&gt;• Maintenance Work Orders &amp;amp; Expenses [P7.0]&lt;br&gt;• Direct Messages &amp;amp; Alerts [P8.0]&lt;br&gt;• Bulletins &amp;amp; Amenity Approvals [P9.0]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;strokeColor=#475569;strokeWidth=1.8;fontSize=10;fontColor=#0f172a;align=left;labelBackgroundColor=#ffffff;labelBorderColor=#cbd5e1;" edge="1" parent="1" source="landlord_outer" target="process0">
+          <mxGeometry x="-0.15" y="-15" relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="370" y="340" />
-              <mxPoint x="450" y="340" />
-              <mxPoint x="450" y="554" />
+              <mxPoint x="480" y="193" />
+              <mxPoint x="480" y="355" />
             </Array>
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
 
-        <!-- Tenant Inbound Flow -->
-        <mxCell id="flow_in_tenant" value="&lt;b style=&quot;color: #047857;&quot;&gt;TENANT INBOUND DATA FLOWS&lt;/b&gt;&lt;br&gt;• 1. Auth Credentials &amp;amp; Profile Updates [P1.0]&lt;br&gt;• 2. Rental Application &amp;amp; KYC Proof Documents [P4.0]&lt;br&gt;• 3. Digital Signatures, Renewal &amp;amp; Move-Out Notices [P5.0]&lt;br&gt;• 4. GCash Payment Proofs &amp;amp; Reference IDs [P6.0]&lt;br&gt;• 5. Maintenance Service Claims &amp;amp; Photos [P7.0]&lt;br&gt;• 6. Direct Chat Inquiries &amp;amp; Messages [P8.0]&lt;br&gt;• 7. Community Comments, Poll Votes &amp;amp; Bookings [P9.0]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;strokeColor=#059669;strokeWidth=2.5;fontSize=11;fontColor=#0f172a;align=left;labelBackgroundColor=#ecfdf5;labelBorderColor=#a7f3d0;" edge="1" parent="1" source="tenant_source_outer" target="process0">
-          <mxGeometry x="-0.15" y="35" relative="1" as="geometry">
+        <!-- Outbound: Process 0 -> Landlord -->
+        <mxCell id="flow_out_landlord" value="&lt;b style=&quot;color: #1e293b;&quot;&gt;Landlord Outbound Data Flows:&lt;/b&gt;&lt;br&gt;• Session Auth &amp;amp; Dashboard Access [P1.0]&lt;br&gt;• Property &amp;amp; Unit Occupancy Status [P2.0]&lt;br&gt;• Rendered 2D Unit Map [P3.0]&lt;br&gt;• Tenant Applications &amp;amp; KYC Proofs [P4.0]&lt;br&gt;• Executed Leases &amp;amp; Renewal Requests [P5.0]&lt;br&gt;• GCash Proofs, Ledgers &amp;amp; ORs [P6.0]&lt;br&gt;• Maintenance Tickets &amp;amp; Photos [P7.0]&lt;br&gt;• Resident Messages &amp;amp; Receipts [P8.0]&lt;br&gt;• Community Activity &amp;amp; Requests [P9.0]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.4;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;strokeColor=#475569;strokeWidth=1.8;fontSize=10;fontColor=#0f172a;align=left;labelBackgroundColor=#ffffff;labelBorderColor=#cbd5e1;" edge="1" parent="1" source="process0" target="landlord_outer">
+          <mxGeometry x="0.15" y="15" relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="1330" y="340" />
-              <mxPoint x="1250" y="340" />
-              <mxPoint x="1250" y="554" />
+              <mxPoint x="540" y="400" />
+              <mxPoint x="540" y="243" />
             </Array>
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
 
         <!-- ============================================== -->
-        <!-- OUTBOUND DATA FLOWS (TIER 2 -> TIER 3: DOWNWARD)-->
+        <!-- INBOUND & OUTBOUND FLOWS (TENANT)              -->
         <!-- ============================================== -->
-
-        <!-- Landlord Outbound Flow -->
-        <mxCell id="flow_out_landlord" value="&lt;b style=&quot;color: #0369a1;&quot;&gt;LANDLORD OUTBOUND DATA FLOWS&lt;/b&gt;&lt;br&gt;• 1. Authorized Session &amp;amp; Role Permissions [P1.0]&lt;br&gt;• 2. Property Portfolio &amp;amp; Unit Summaries [P2.0]&lt;br&gt;• 3. Rendered 2D Blueprint &amp;amp; Live Occupancy Map [P3.0]&lt;br&gt;• 4. Submitted Applications &amp;amp; KYC Files [P4.0]&lt;br&gt;• 5. Executed Contracts &amp;amp; Tenancy Requests [P5.0]&lt;br&gt;• 6. Payment Proofs, Ledgers &amp;amp; Official Receipts [P6.0]&lt;br&gt;• 7. Maintenance Tickets &amp;amp; Photo Evidence [P7.0]&lt;br&gt;• 8. Resident Messages &amp;amp; Delivery Receipts [P8.0]&lt;br&gt;• 9. Community Activity &amp;amp; Amenity Requests [P9.0]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#0284c7;strokeWidth=2.5;fontSize=11;fontColor=#0f172a;align=left;labelBackgroundColor=#f0f9ff;labelBorderColor=#bae6fd;" edge="1" parent="1" source="process0" target="landlord_sink_outer">
-          <mxGeometry x="0.15" y="-35" relative="1" as="geometry">
+        <!-- Inbound: Tenant -> Process 0 -->
+        <mxCell id="flow_in_tenant" value="&lt;b style=&quot;color: #1e293b;&quot;&gt;Tenant Inbound Data Flows:&lt;/b&gt;&lt;br&gt;• Credentials &amp;amp; Profile Updates [P1.0]&lt;br&gt;• Rental Application &amp;amp; KYC Files [P4.0]&lt;br&gt;• Digital Signatures &amp;amp; Renewals [P5.0]&lt;br&gt;• GCash Payment Proofs &amp;amp; Ref IDs [P6.0]&lt;br&gt;• Maintenance Tickets &amp;amp; Photos [P7.0]&lt;br&gt;• Direct Inquiries &amp;amp; Chat Messages [P8.0]&lt;br&gt;• Poll Votes &amp;amp; Amenity Reservations [P9.0]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.65;entryDx=0;entryDy=0;strokeColor=#475569;strokeWidth=1.8;fontSize=10;fontColor=#0f172a;align=left;labelBackgroundColor=#ffffff;labelBorderColor=#cbd5e1;" edge="1" parent="1" source="tenant_outer" target="process0">
+          <mxGeometry x="-0.15" y="-15" relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="450" y="651" />
-              <mxPoint x="450" y="850" />
-              <mxPoint x="370" y="850" />
+              <mxPoint x="540" y="633" />
+              <mxPoint x="540" y="475" />
             </Array>
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
 
-        <!-- Tenant Outbound Flow -->
-        <mxCell id="flow_out_tenant" value="&lt;b style=&quot;color: #0369a1;&quot;&gt;TENANT OUTBOUND DATA FLOWS&lt;/b&gt;&lt;br&gt;• 1. Authenticated Session &amp;amp; Portal Routing [P1.0]&lt;br&gt;• 2. Assigned Room Details &amp;amp; Guidelines [P2.0]&lt;br&gt;• 3. Spatial Floor Map &amp;amp; Building Blueprint [P3.0]&lt;br&gt;• 4. Application Decisions &amp;amp; Account Credentials [P4.0]&lt;br&gt;• 5. Signed Lease PDF &amp;amp; Countersignatures [P5.0]&lt;br&gt;• 6. Itemized Invoices &amp;amp; Official Receipts [P6.0]&lt;br&gt;• 7. Maintenance Ticket Status &amp;amp; Updates [P7.0]&lt;br&gt;• 8. Landlord Replies &amp;amp; Operational Alerts [P8.0]&lt;br&gt;• 9. Bulletins &amp;amp; Amenity Reservation Passes [P9.0]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#0284c7;strokeWidth=2.5;fontSize=11;fontColor=#0f172a;align=left;labelBackgroundColor=#f0f9ff;labelBorderColor=#bae6fd;" edge="1" parent="1" source="process0" target="tenant_sink_outer">
-          <mxGeometry x="0.15" y="35" relative="1" as="geometry">
+        <!-- Outbound: Process 0 -> Tenant -->
+        <mxCell id="flow_out_tenant" value="&lt;b style=&quot;color: #1e293b;&quot;&gt;Tenant Outbound Data Flows:&lt;/b&gt;&lt;br&gt;• Session Token &amp;amp; Portal Routing [P1.0]&lt;br&gt;• Assigned Unit Specs &amp;amp; Rules [P2.0]&lt;br&gt;• Spatial Floor Map &amp;amp; Layout [P3.0]&lt;br&gt;• Application Status &amp;amp; Credentials [P4.0]&lt;br&gt;• Countersigned Lease PDF [P5.0]&lt;br&gt;• Monthly Invoices &amp;amp; Official Receipts [P6.0]&lt;br&gt;• Maintenance Updates &amp;amp; Notes [P7.0]&lt;br&gt;• Replies &amp;amp; Operational Alerts [P8.0]&lt;br&gt;• Bulletins &amp;amp; Booking Passes [P9.0]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;strokeColor=#475569;strokeWidth=1.8;fontSize=10;fontColor=#0f172a;align=left;labelBackgroundColor=#ffffff;labelBorderColor=#cbd5e1;" edge="1" parent="1" source="process0" target="tenant_outer">
+          <mxGeometry x="0.15" y="15" relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="1250" y="651" />
-              <mxPoint x="1250" y="850" />
-              <mxPoint x="1330" y="850" />
+              <mxPoint x="480" y="520" />
+              <mxPoint x="480" y="683" />
             </Array>
             <mxPoint as="offset" />
           </mxGeometry>
