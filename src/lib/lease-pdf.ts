@@ -411,16 +411,35 @@ export async function generateLeasePdf(data: LeasePdfData): Promise<Blob> {
   const sigBoxY = sigAreaY + 4;
   const sigColWidth = 75;
 
-  // Tenant Signature Block
-  if (data.tenantSignature) {
+  const renderSignatureImage = (sigDataUrl: string, startX: number) => {
     try {
-      doc.addImage(data.tenantSignature, "PNG", margin, sigBoxY, 40, 10);
+      const imgProps = doc.getImageProperties(sigDataUrl);
+      const maxW = 50;
+      const maxH = 11;
+      const aspect = imgProps.width / (imgProps.height || 1);
+      let w = maxW;
+      let h = w / aspect;
+      if (h > maxH) {
+        h = maxH;
+        w = h * aspect;
+      }
+      if (w > maxW) {
+        w = maxW;
+        h = w / aspect;
+      }
+      const yPos = sigBoxY + 10.5 - h;
+      doc.addImage(sigDataUrl, "PNG", startX, yPos, w, h);
     } catch {
       doc.setFont("times", "italic");
       doc.setFontSize(8.5);
       doc.setTextColor(140, 140, 140);
-      doc.text("Signed digitally", margin, sigBoxY + 8);
+      doc.text("Signed digitally", startX, sigBoxY + 8);
     }
+  };
+
+  // Tenant Signature Block
+  if (data.tenantSignature) {
+    renderSignatureImage(data.tenantSignature, margin);
   } else {
     doc.setFont("times", "italic");
     doc.setFontSize(8.5);
@@ -445,14 +464,7 @@ export async function generateLeasePdf(data: LeasePdfData): Promise<Blob> {
   // Landlord Signature Block
   const landlordX = margin + colWidth;
   if (data.landlordSignature) {
-    try {
-      doc.addImage(data.landlordSignature, "PNG", landlordX, sigBoxY, 40, 10);
-    } catch {
-      doc.setFont("times", "italic");
-      doc.setFontSize(8.5);
-      doc.setTextColor(140, 140, 140);
-      doc.text("Signed digitally", landlordX, sigBoxY + 8);
-    }
+    renderSignatureImage(data.landlordSignature, landlordX);
   } else {
     doc.setFont("times", "italic");
     doc.setFontSize(8.5);

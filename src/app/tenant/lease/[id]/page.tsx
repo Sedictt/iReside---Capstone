@@ -29,6 +29,10 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
             security_deposit,
             signed_at,
             signed_document_url,
+            tenant_signature,
+            tenant_signed_at,
+            landlord_signature,
+            landlord_signed_at,
             terms,
             unit:units!inner (
                 name,

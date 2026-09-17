@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { logAuditEvent, extractIpAddress, extractUserAgent } from "@/lib/audit-logging";
 import { sendLeaseActivatedNotification } from "@/lib/email";
@@ -14,8 +15,12 @@ import {
 } from "@/lib/services/lease";
 
 type SignLeaseBody = {
-  landlord_signature: string;
+  landlord_signature?: string;
+  landlordSignature?: string;
   signing_token?: string;
+  signingToken?: string;
+  signed_pdf_base64?: string;
+  signedPdfBase64?: string;
 };
 
 /**
@@ -33,6 +38,7 @@ export async function POST(
 ) {
   const { leaseId } = await context.params;
   const supabase = await createClient();
+  const adminClient = createAdminClient();
 
   // Parse request body
   let body: SignLeaseBody;
@@ -45,8 +51,12 @@ export async function POST(
     );
   }
 
+  const signatureInput = body.landlord_signature || body.landlordSignature;
+  const tokenInput = body.signing_token || body.signingToken;
+  const pdfBase64Input = body.signed_pdf_base64 || body.signedPdfBase64;
+
   // Validate required fields
-  if (!body.landlord_signature) {
+  if (!signatureInput) {
     return NextResponse.json(
       { error: "Missing required field: landlord_signature" },
       { status: 400 }
@@ -56,8 +66,8 @@ export async function POST(
   let landlordId: string;
 
   // Handle token-based signing or session-based signing
-  if (body.signing_token) {
-    const tokenResult = verifySigningToken(body.signing_token);
+  if (tokenInput) {
+    const tokenResult = verifySigningToken(tokenInput);
     if (!tokenResult.valid || !tokenResult.payload) {
       return NextResponse.json(
         { error: tokenResult.error || "Invalid signing token" },
@@ -83,11 +93,14 @@ export async function POST(
   let signResult: { signedAt: string; sanitizedSignature: string };
 
   try {
-    signResult = await leaseService.signLeaseAsLandlord({
-      leaseId,
-      landlordId,
-      signature: body.landlord_signature,
-    });
+    signResult = await leaseService.signLeaseAsLandlord(
+      {
+        leaseId,
+        landlordId,
+        signature: signatureInput,
+      },
+      adminClient,
+    );
   } catch (error) {
     if (error instanceof LeaseNotFoundError) {
       return NextResponse.json({ error: error.message }, { status: 404 });
@@ -143,14 +156,13 @@ export async function POST(
     console.error("[landlord-sign-lease] Lease activation audit error:", auditError);
   }
 
-  // Fetch full lease details for notifications and document generation
+  // Fetch full lease details for notifications and document generation using adminClient
   let leaseDetails: any = null;
   let tenantProfile: any = null;
-
   let landlordProfile: any = null;
   
   try {
-    const { data: leaseData } = await supabase
+    const { data: leaseData, error: leaseFetchError } = await adminClient
       .from("leases")
       .select(`
         id,
@@ -172,18 +184,20 @@ export async function POST(
             id,
             name,
             address,
-            house_rules
+            house_rules,
+            contract_template,
+            amenities
           )
         )
       `)
       .eq("id", leaseId)
       .single();
 
-    if (leaseData && !('error' in leaseData)) {
+    if (!leaseFetchError && leaseData) {
       leaseDetails = leaseData;
       
       // Fetch tenant profile
-      const { data: tProfile } = await supabase
+      const { data: tProfile } = await adminClient
         .from("profiles")
         .select("email, full_name")
         .eq("id", leaseData.tenant_id)
@@ -191,12 +205,14 @@ export async function POST(
       if (tProfile) tenantProfile = tProfile;
       
       // Fetch landlord profile
-      const { data: lProfile } = await supabase
+      const { data: lProfile } = await adminClient
         .from("profiles")
         .select("email, full_name")
         .eq("id", leaseData.landlord_id)
         .single();
       if (lProfile) landlordProfile = lProfile;
+    } else if (leaseFetchError) {
+      console.error("[landlord-sign-lease] Lease fetch error:", leaseFetchError);
     }
   } catch (fetchError) {
     console.error("[landlord-sign-lease] Fetch details error:", fetchError);
@@ -228,9 +244,6 @@ export async function POST(
   // Send system notification to landlord about successful activation
   try {
     if (landlordId && leaseDetails) {
-      const { createAdminClient } = await import("@/lib/supabase/admin");
-      const adminClient = createAdminClient();
-      
       const tenantName = tenantProfile?.full_name || "Tenant";
       const propertyName = (leaseDetails as any).units?.properties?.name || "Property";
       const unitName = (leaseDetails as any).units?.name || "Unit";
@@ -248,13 +261,25 @@ export async function POST(
     console.error("[landlord-sign-lease] Landlord notification error:", notificationError);
   }
 
-  // Generate and store signed lease document in vault
+  // Store executed lease document in vault
   try {
-    if (leaseDetails && tenantProfile && landlordProfile) {
-      const { createAdminClient } = await import("@/lib/supabase/admin");
-      const adminClient = createAdminClient();
-      
-      // Generate the signed PDF
+    let arrayBuffer: ArrayBuffer | null = null;
+
+    // 1. If high-fidelity signed PDF base64 is provided from the client, use it directly
+    if (pdfBase64Input) {
+      try {
+        const buffer = Buffer.from(pdfBase64Input, "base64");
+        arrayBuffer = buffer.buffer.slice(
+          buffer.byteOffset,
+          buffer.byteOffset + buffer.byteLength
+        );
+      } catch (b64Err) {
+        console.warn("[landlord-sign-lease] Failed to parse client signed PDF base64:", b64Err);
+      }
+    }
+
+    // 2. Fallback: generate high-fidelity PDF with both signatures programmatically
+    if (!arrayBuffer && leaseDetails) {
       const pdfBlob = await generateLeasePdf({
         id: leaseDetails.id,
         startDate: new Date(leaseDetails.start_date).toLocaleDateString(),
@@ -264,12 +289,12 @@ export async function POST(
         property: (leaseDetails as any).units?.properties,
         unit: (leaseDetails as any).units,
         landlord: { 
-          name: landlordProfile.full_name || "Landlord", 
-          email: landlordProfile.email 
+          name: landlordProfile?.full_name || "Landlord", 
+          email: landlordProfile?.email || ""
         },
         tenant: { 
-          name: tenantProfile.full_name || "Tenant", 
-          email: tenantProfile.email 
+          name: tenantProfile?.full_name || "Tenant", 
+          email: tenantProfile?.email || ""
         },
         terms: leaseDetails.terms,
         tenantSignature: leaseDetails.tenant_signature,
@@ -278,10 +303,10 @@ export async function POST(
         landlordSignedAt: signedAt,
       });
 
-      // Convert blob to array buffer for upload
-      const arrayBuffer = await pdfBlob.arrayBuffer();
-      
-      // Upload to storage bucket
+      arrayBuffer = await pdfBlob.arrayBuffer();
+    }
+
+    if (arrayBuffer) {
       const fileName = `leases/${landlordId}/${leaseId}/signed-lease-${Date.now()}.pdf`;
       const { error: uploadError } = await adminClient
         .storage
@@ -294,13 +319,11 @@ export async function POST(
       if (uploadError) {
         console.error("[landlord-sign-lease] Document upload error:", uploadError);
       } else {
-        // Get public URL
         const { data: { publicUrl } } = adminClient
           .storage
           .from("landlord-documents")
           .getPublicUrl(fileName);
 
-        // Update lease record with signed document URL and path
         await adminClient
           .from("leases")
           .update({
@@ -315,7 +338,6 @@ export async function POST(
     }
   } catch (docError) {
     console.error("[landlord-sign-lease] Document generation/storage error:", docError);
-    // Non-blocking - lease is still activated even if document storage fails
   }
 
   return NextResponse.json({

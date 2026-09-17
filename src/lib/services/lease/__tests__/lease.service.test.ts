@@ -114,6 +114,17 @@ describe("LeaseService", () => {
       expect(result).toEqual(leaseRow);
     });
 
+    it("selects landlord_signature in query columns", async () => {
+      const leaseRow = { id: "lease-1", status: "active", landlord_id: "landlord-1", landlord_signature: "data:image/png;base64,sample" };
+      chain.maybeSingle.mockResolvedValue({ data: leaseRow, error: null });
+
+      await service.getLeaseDetail("lease-1");
+
+      const selectCall = chain.select.mock.calls[chain.select.mock.calls.length - 1][0];
+      expect(selectCall).toContain("landlord_signature");
+      expect(selectCall).toContain("tenant_signature");
+    });
+
     it("throws LeaseNotFoundError when no row exists (no error)", async () => {
       chain.maybeSingle.mockResolvedValue({ data: null, error: null });
 
@@ -302,6 +313,18 @@ describe("LeaseService", () => {
       expect(mockSupabase.from).toHaveBeenCalledWith("leases");
       expect(chain.eq).toHaveBeenCalledWith("tenant_id", "tenant-1");
       expect(result).toEqual({ id: "active-lease", status: "active" });
+    });
+
+    it("selects tenant and landlord signatures in query columns", async () => {
+      chain.order.mockResolvedValue({ data: [], error: null });
+
+      await service.getTenantActiveLease("tenant-1");
+
+      const selectCall = chain.select.mock.calls[chain.select.mock.calls.length - 1][0];
+      expect(selectCall).toContain("tenant_signature");
+      expect(selectCall).toContain("landlord_signature");
+      expect(selectCall).toContain("tenant_signed_at");
+      expect(selectCall).toContain("landlord_signed_at");
     });
 
     it("falls back to the first lease if no active lease exists", async () => {
