@@ -3,6 +3,7 @@ import { expireInPersonIntents } from "@/lib/billing/workflow";
 import { getTenantPaymentOverview } from "@/lib/billing/server";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { resolveLeaseBillingDueDate } from "@/lib/billing/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -47,12 +48,17 @@ export async function GET(request: Request) {
             const existing = existingMap.get(cycleKey);
             const metadata = existing?.metadata as Record<string, unknown> | null;
             const isForecast = metadata?.is_forecast === true;
+
+            const defaultDueDate = resolveLeaseBillingDueDate(
+                { start_date: (overview.lease as any)?.startDate, terms: (overview.lease as any)?.terms },
+                targetDate
+            );
             
             upcomingMonths.push({
                 month: monthKey,
                 monthLabel: targetDate.toLocaleString('default', { month: 'long', year: 'numeric' }),
                 amount: existing ? Number(existing.amount ?? 0) : monthlyRent,
-                dueDate: existing?.due_date ?? `${cycleKey}-05`,
+                dueDate: existing?.due_date ?? defaultDueDate,
                 invoiceId: existing?.id ?? null,
                 isForecast: !existing || isForecast,
                 status: existing?.status ?? null,

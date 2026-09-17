@@ -442,7 +442,13 @@ export default function TenantDashboard() {
                                 </h2>
                                 <p className="text-muted-foreground flex items-center gap-2 font-medium">
                                     <Calendar className="size-4" />
-                                    {isInitialLoading ? "Calculating..." : nextPayment?.dueDate ? `Due ${formatDueDate(nextPayment.dueDate)}` : "No upcoming payments"}
+                                    {isInitialLoading
+                                        ? "Calculating..."
+                                        : nextPayment?.dueDate
+                                            ? `Due ${formatDueDate(nextPayment.dueDate)}`
+                                            : upcomingMonths[0]?.dueDate
+                                                ? `Next rent due: ${formatDueDate(upcomingMonths[0].dueDate)}`
+                                                : "No upcoming payments"}
                                 </p>
                             </div>
 
@@ -512,11 +518,16 @@ export default function TenantDashboard() {
                                 <p className="text-lg font-black text-foreground mt-1">
                                     ₱{formatCurrency(monthForecast.amount)}
                                 </p>
-                                <div className="flex items-center gap-1 mt-2">
+                                <div className="flex items-center justify-between gap-1 mt-2">
                                     {monthForecast.isForecast ? (
                                         <span className="text-[9px] font-medium text-muted-foreground">Estimated</span>
                                     ) : (
                                         <span className="text-[9px] font-medium text-primary">Ready to Pay</span>
+                                    )}
+                                    {monthForecast.dueDate && (
+                                        <span className="text-[9px] text-muted-foreground">
+                                            Due {new Date(monthForecast.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                                        </span>
                                     )}
                                 </div>
                             </div>

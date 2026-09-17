@@ -228,7 +228,7 @@ export const parseLeaseBillingTerms = (terms: Json | null): LeaseBillingTerms =>
     }
 
     const record = terms as Record<string, Json | undefined>;
-    const dueDayRaw = record.dueDay ?? record.due_day;
+    const dueDayRaw = record.dueDay ?? record.due_day ?? record.rent_due_day ?? record.rentDueDay;
     const lateFeeRaw = record.lateFeeAmount ?? record.late_fee ?? record.late_fee_amount;
     const allowPartialRaw = record.allowPartialPayments ?? record.allow_partial_payments;
     const utilitiesDescription = typeof record.utilitiesDescription === "string"
@@ -249,6 +249,39 @@ export const parseLeaseBillingTerms = (terms: Json | null): LeaseBillingTerms =>
         allowPartialPayments,
         utilitiesDescription,
     };
+};
+
+/**
+ * Resolves the effective due date for a target billing month.
+ * Respects explicit lease terms (dueDay/due_day/rent_due_day) or falls back
+ * to the day of month from the lease start_date. Safely clamps to days in month.
+ */
+export const resolveLeaseBillingDueDate = (
+    lease: { start_date?: string | null; terms?: Json | null } | null | undefined,
+    targetDate: Date
+): string => {
+    const terms = parseLeaseBillingTerms(lease?.terms ?? null);
+    const hasExplicitDueDay =
+        typeof (lease?.terms as any)?.dueDay === "number" ||
+        typeof (lease?.terms as any)?.due_day === "number" ||
+        typeof (lease?.terms as any)?.rent_due_day === "number" ||
+        typeof (lease?.terms as any)?.rentDueDay === "number";
+
+    let startDay = DEFAULT_TERMS.dueDay;
+    if (lease?.start_date) {
+        const parsed = new Date(lease.start_date);
+        if (!Number.isNaN(parsed.getTime())) {
+            startDay = parsed.getDate();
+        }
+    }
+
+    const targetDay = hasExplicitDueDay ? terms.dueDay : (startDay || DEFAULT_TERMS.dueDay);
+    const daysInMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0).getDate();
+    const safeDay = Math.max(1, Math.min(targetDay, daysInMonth));
+    const year = targetDate.getFullYear();
+    const month = String(targetDate.getMonth() + 1).padStart(2, "0");
+    const day = String(safeDay).padStart(2, "0");
+    return `${year}-${month}-${day}`;
 };
 
 export const getUtilityUnitLabel = (utilityType: UtilityType) =>

@@ -375,11 +375,16 @@ export default function FinanceHubPage() {
                             <p className="text-lg font-black text-foreground mt-1">
                                 {formatPhpCurrency(month.amount)}
                             </p>
-                            <div className="flex items-center gap-1 mt-2">
+                            <div className="flex items-center justify-between gap-1 mt-2">
                                 {month.isForecast ? (
                                     <span className="text-[9px] font-medium text-muted-foreground">Estimated</span>
                                 ) : (
                                     <span className="text-[9px] font-medium text-primary">Ready to Pay</span>
+                                )}
+                                {month.dueDate && (
+                                    <span className="text-[9px] text-muted-foreground">
+                                        Due {new Date(month.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                                    </span>
                                 )}
                             </div>
                         </div>
@@ -445,7 +450,11 @@ export default function FinanceHubPage() {
                                     <div className="text-right">
                                         <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">Estimated Due</p>
                                         <p className="text-base font-black text-foreground">
-                                            {nextPayment ? nextPayment.dueDate : "1st of the Month"}
+                                            {nextPayment?.dueDate 
+                                                ? nextPayment.dueDate 
+                                                : payload?.upcomingMonths?.[0]?.dueDate
+                                                    ? new Date(payload.upcomingMonths[0].dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                                                    : "Next Cycle"}
                                         </p>
                                     </div>
                                 </div>

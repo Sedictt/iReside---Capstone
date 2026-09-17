@@ -12,6 +12,7 @@ import {
     makeInvoiceNumber,
     makeReceiptNumber,
     parseLeaseBillingTerms,
+    resolveLeaseBillingDueDate,
     toIsoDate,
 } from "@/lib/billing/utils";
 import type {
@@ -599,6 +600,8 @@ export async function getTenantPaymentOverview(supabase: AppSupabaseClient, tena
             id,
             monthly_rent,
             status,
+            start_date,
+            terms,
             unit:units (name, property:properties (name))
         `)
         .eq("tenant_id", tenantId)
@@ -611,6 +614,8 @@ export async function getTenantPaymentOverview(supabase: AppSupabaseClient, tena
         lease: leaseData ? {
             id: leaseData.id,
             monthlyRent: leaseData.monthly_rent,
+            startDate: leaseData.start_date,
+            terms: leaseData.terms,
             propertyName: (leaseData.unit as any)?.property?.name,
             unitName: (leaseData.unit as any)?.name
         } : null,
@@ -1505,6 +1510,7 @@ export async function generateNextMonthInvoice(
             tenant_id,
             landlord_id,
             monthly_rent,
+            start_date,
             terms,
             status,
             unit:units (
@@ -1549,7 +1555,8 @@ export async function generateNextMonthInvoice(
 
     // 4. Build invoice items
     const terms = parseLeaseBillingTerms(lease.terms ?? null);
-    const dueDate = new Date(nextCycle.getFullYear(), nextCycle.getMonth(), Math.max(1, Math.min(terms.dueDay, 28)));
+    const dueDateStr = resolveLeaseBillingDueDate(lease, nextCycle);
+    const dueDate = new Date(dueDateStr);
     const itemRows: Omit<PaymentItem, "id" | "created_at">[] = [];
 
     // Base rent
@@ -1605,12 +1612,12 @@ export async function generateNextMonthInvoice(
             balance_remaining: subtotal,
             status: "pending",
             description: `${formatDateLong(cycleKey)} monthly invoice`,
-            due_date: toIsoDate(dueDate),
+            due_date: dueDateStr,
             billing_cycle: cycleKey,
             invoice_period_start: toIsoDate(nextCycle),
             invoice_period_end: toIsoDate(cycleEnd),
             allow_partial_payments: terms.allowPartialPayments,
-            due_day_snapshot: terms.dueDay,
+            due_day_snapshot: Number(dueDateStr.split("-")[2]),
             late_fee_amount: terms.lateFeeAmount,
             invoice_number: makeInvoiceNumber(crypto.randomUUID(), cycleKey),
             metadata: { 
