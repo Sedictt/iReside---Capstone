@@ -52,36 +52,36 @@ function getStatusBadge(statusTone: PaymentHistoryEntry["statusTone"], statusLab
     switch (statusTone) {
         case "paid":
             return (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                    <CheckCircle2 className="size-3" />
-                    {statusLabel || "Paid"}
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 whitespace-nowrap shrink-0">
+                    <CheckCircle2 className="size-3 shrink-0" />
+                    <span>{statusLabel || "Paid"}</span>
                 </span>
             );
         case "pending":
             return (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                    <Clock className="size-3" />
-                    {statusLabel || "Pending"}
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20 whitespace-nowrap shrink-0">
+                    <Clock className="size-3 shrink-0" />
+                    <span>{statusLabel || "Pending"}</span>
                 </span>
             );
         case "failed":
             return (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20">
-                    <AlertCircle className="size-3" />
-                    {statusLabel || "Failed"}
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20 whitespace-nowrap shrink-0">
+                    <AlertCircle className="size-3 shrink-0" />
+                    <span>{statusLabel || "Failed"}</span>
                 </span>
             );
         case "refunded":
             return (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                    <RotateCcw className="size-3" />
-                    {statusLabel || "Refunded"}
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20 whitespace-nowrap shrink-0">
+                    <RotateCcw className="size-3 shrink-0" />
+                    <span>{statusLabel || "Refunded"}</span>
                 </span>
             );
         default:
             return (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-surface-3 text-medium border border-divider">
-                    {statusLabel || "Status"}
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-surface-3 text-medium border border-divider whitespace-nowrap shrink-0">
+                    <span>{statusLabel || "Status"}</span>
                 </span>
             );
     }
@@ -127,7 +127,7 @@ export function PaymentHistoryModal({
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-4">
                 {/* Backdrop */}
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -144,26 +144,26 @@ export function PaymentHistoryModal({
                     exit={{ opacity: 0, scale: 0.95, y: 15 }}
                     transition={{ type: "spring", duration: 0.4, bounce: 0.1 }}
                     className={cn(
-                        "relative z-10 w-full max-w-2xl max-h-[85vh] flex flex-col",
-                        "rounded-[2.5rem] border border-border bg-card shadow-2xl overflow-hidden"
+                        "relative z-10 w-full max-w-xl max-h-[90vh] flex flex-col",
+                        "rounded-3xl sm:rounded-[2.5rem] border border-border bg-card shadow-2xl overflow-hidden"
                     )}
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between p-6 border-b border-divider/60 bg-surface-1/40">
-                        <div className="flex items-center gap-3.5">
-                            <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shadow-inner">
-                                <Receipt className="size-6" />
+                    <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-5 border-b border-divider/60 bg-surface-1/40">
+                        <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+                            <div className="p-2.5 sm:p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shadow-inner shrink-0">
+                                <Receipt className="size-5 sm:size-6" />
                             </div>
-                            <div>
+                            <div className="min-w-0">
                                 <div className="flex items-center gap-2">
-                                    <h3 className="text-xl font-black tracking-tight text-high">
+                                    <h3 className="text-base sm:text-xl font-black tracking-tight text-high truncate">
                                         Payment History
                                     </h3>
-                                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                                    <span className="text-[9px] sm:text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
                                         Ledger
                                     </span>
                                 </div>
-                                <p className="text-xs font-medium text-medium mt-0.5">
+                                <p className="text-[11px] sm:text-xs font-medium text-medium mt-0.5 truncate">
                                     {contact?.name ? `Transactions with ${contact.name}` : "Conversation Payment Records"}
                                     {contact?.unit ? ` • ${contact.unit}` : ""}
                                 </p>
@@ -173,7 +173,7 @@ export function PaymentHistoryModal({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="rounded-2xl p-2.5 text-medium hover:text-high hover:bg-surface-2 transition-all active:scale-95"
+                            className="rounded-2xl p-2 sm:p-2.5 text-medium hover:text-high hover:bg-surface-2 transition-all active:scale-95 shrink-0 ml-2"
                             aria-label="Close modal"
                         >
                             <X className="size-5" />
@@ -181,55 +181,55 @@ export function PaymentHistoryModal({
                     </div>
 
                     {/* Quick Stats Grid */}
-                    <div className="grid grid-cols-3 gap-3 p-6 pb-2">
-                        <div className="p-4 rounded-2xl neumorphic-inset-card border border-divider/40 flex flex-col justify-between">
-                            <div className="flex items-center gap-1.5 text-disabled text-[10px] font-black uppercase tracking-wider">
-                                <TrendingUp className="size-3.5 text-emerald-500" />
-                                <span>Total Paid</span>
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3 px-4 sm:px-6 pt-3.5 sm:pt-5 pb-2">
+                        <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl neumorphic-inset-card border border-divider/40 flex flex-col justify-between overflow-hidden">
+                            <div className="flex items-center gap-1 sm:gap-1.5 text-disabled text-[8.5px] sm:text-[10px] font-black uppercase tracking-tight sm:tracking-wider truncate">
+                                <TrendingUp className="size-3 sm:size-3.5 text-emerald-500 shrink-0" />
+                                <span className="truncate">Total Paid</span>
                             </div>
-                            <div className="text-lg font-black text-emerald-500 mt-2">
+                            <div className="text-xs sm:text-lg font-black text-emerald-500 mt-1.5 sm:mt-2 truncate">
                                 ₱{totalPaid.toLocaleString()}
                             </div>
                         </div>
 
-                        <div className="p-4 rounded-2xl neumorphic-inset-card border border-divider/40 flex flex-col justify-between">
-                            <div className="flex items-center gap-1.5 text-disabled text-[10px] font-black uppercase tracking-wider">
-                                <Receipt className="size-3.5 text-primary" />
-                                <span>Transactions</span>
+                        <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl neumorphic-inset-card border border-divider/40 flex flex-col justify-between overflow-hidden">
+                            <div className="flex items-center gap-1 sm:gap-1.5 text-disabled text-[8.5px] sm:text-[10px] font-black uppercase tracking-tight sm:tracking-wider truncate">
+                                <Receipt className="size-3 sm:size-3.5 text-primary shrink-0" />
+                                <span className="truncate">Records</span>
                             </div>
-                            <div className="text-lg font-black text-high mt-2">
+                            <div className="text-xs sm:text-lg font-black text-high mt-1.5 sm:mt-2">
                                 {payments.length}
                             </div>
                         </div>
 
-                        <div className="p-4 rounded-2xl neumorphic-inset-card border border-divider/40 flex flex-col justify-between">
-                            <div className="flex items-center gap-1.5 text-disabled text-[10px] font-black uppercase tracking-wider">
-                                <Calendar className="size-3.5 text-blue-400" />
-                                <span>Latest Payment</span>
+                        <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl neumorphic-inset-card border border-divider/40 flex flex-col justify-between overflow-hidden">
+                            <div className="flex items-center gap-1 sm:gap-1.5 text-disabled text-[8.5px] sm:text-[10px] font-black uppercase tracking-tight sm:tracking-wider truncate">
+                                <Calendar className="size-3 sm:size-3.5 text-blue-400 shrink-0" />
+                                <span className="truncate">Latest</span>
                             </div>
-                            <div className="text-xs font-black text-medium mt-2 truncate">
+                            <div className="text-[10px] sm:text-xs font-black text-medium mt-1.5 sm:mt-2 truncate" title={latestDate || undefined}>
                                 {latestDate || "None"}
                             </div>
                         </div>
                     </div>
 
                     {/* Search & Filter Bar */}
-                    <div className="px-6 py-3 flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between border-b border-divider/40">
+                    <div className="px-4 sm:px-6 py-2.5 sm:py-3 flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between border-b border-divider/40">
                         {/* Search Input */}
                         <div className="relative flex-1">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-3.5 text-disabled" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-disabled" />
                             <input
                                 type="text"
                                 placeholder="Search by type, date, or amount..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2 text-xs rounded-xl neumorphic-inset-card border border-divider/60 bg-surface-2/60 text-high placeholder:text-disabled focus:outline-none focus:border-primary/50 transition-all"
+                                className="w-full pl-8 sm:pl-9 pr-7 sm:pr-8 py-1.5 sm:py-2 text-xs rounded-xl neumorphic-inset-card border border-divider/60 bg-surface-2/60 text-high placeholder:text-disabled focus:outline-none focus:border-primary/50 transition-all"
                             />
                             {searchQuery && (
                                 <button
                                     type="button"
                                     onClick={() => setSearchQuery("")}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-disabled hover:text-high text-xs"
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-disabled hover:text-high text-xs"
                                 >
                                     <X className="size-3.5" />
                                 </button>
@@ -237,14 +237,14 @@ export function PaymentHistoryModal({
                         </div>
 
                         {/* Status Filter Chips */}
-                        <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar-premium py-0.5">
+                        <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar-premium py-0.5 no-scrollbar">
                             {(["all", "paid", "pending", "failed", "refunded"] as StatusFilter[]).map((tab) => (
                                 <button
                                     key={tab}
                                     type="button"
                                     onClick={() => setStatusFilter(tab)}
                                     className={cn(
-                                        "px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap",
+                                        "px-2.5 py-1 sm:py-1.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap",
                                         statusFilter === tab
                                             ? "bg-primary text-white shadow-md shadow-primary/20 scale-100"
                                             : "bg-surface-2 text-medium hover:text-high hover:bg-surface-3"
@@ -257,7 +257,7 @@ export function PaymentHistoryModal({
                     </div>
 
                     {/* Scrollable Transaction List */}
-                    <div className="flex-1 overflow-y-auto p-6 space-y-2.5 custom-scrollbar-premium min-h-[220px]">
+                    <div className="flex-1 overflow-y-auto px-3.5 sm:px-6 py-3 sm:py-4 space-y-2.5 custom-scrollbar-premium min-h-[220px]">
                         {isLoading ? (
                             <div className="space-y-3 py-4">
                                 {[1, 2, 3, 4].map((i) => (
@@ -280,42 +280,50 @@ export function PaymentHistoryModal({
                             filteredPayments.map((payment, idx) => (
                                 <div
                                     key={payment.id || `full-pay-${payment.dateLabel || idx}-${idx}`}
-                                    className="flex items-center justify-between p-3.5 rounded-2xl neumorphic-inset-card border border-divider/50 hover:border-primary/30 transition-all group"
+                                    className="p-3 sm:p-3.5 rounded-2xl neumorphic-inset-card border border-divider/50 hover:border-primary/30 transition-all flex flex-col gap-2 group"
                                 >
-                                    <div className="flex items-center gap-3.5 min-w-0">
-                                        <div className="p-2.5 rounded-xl bg-surface-2 border border-divider/60 shrink-0 group-hover:scale-105 transition-transform">
-                                            {getMethodIcon(payment.methodLabel)}
+                                    {/* Top Line: Icon + Title + Amount */}
+                                    <div className="flex items-center justify-between gap-2.5">
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className="p-2 sm:p-2.5 rounded-xl bg-surface-2 border border-divider/60 shrink-0 group-hover:scale-105 transition-transform">
+                                                {getMethodIcon(payment.methodLabel)}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                    <h4 className="text-xs sm:text-sm font-black text-high truncate">
+                                                        {payment.typeLabel || "Payment"}
+                                                    </h4>
+                                                    {payment.monthLabel && (
+                                                        <span className="text-[10px] font-medium text-disabled truncate">
+                                                            • {payment.monthLabel}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="flex flex-col min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs font-black text-high truncate">
-                                                    {payment.typeLabel || "Payment"}
-                                                </span>
-                                                {payment.monthLabel && (
-                                                    <span className="text-[10px] font-medium text-disabled hidden sm:inline-block">
-                                                        • {payment.monthLabel}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="flex items-center gap-2 mt-0.5">
-                                                <span className="text-[10px] font-medium text-disabled">
-                                                    {payment.dateLabel}
-                                                </span>
-                                                {payment.methodLabel && (
-                                                    <span className="text-[10px] font-medium text-medium px-1.5 py-0.2 rounded bg-surface-2">
-                                                        {payment.methodLabel}
-                                                    </span>
-                                                )}
-                                            </div>
+
+                                        <div className="text-right shrink-0">
+                                            <span className="text-xs sm:text-sm font-black text-emerald-500">
+                                                ₱{payment.amount.toLocaleString()}
+                                            </span>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-3 shrink-0">
-                                        {getStatusBadge(payment.statusTone, payment.statusLabel)}
-                                        <div className="text-right">
-                                            <span className="text-sm font-black text-emerald-500">
-                                                ₱{payment.amount.toLocaleString()}
+                                    {/* Bottom Line: Date + Method Badge + Status Badge */}
+                                    <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-divider/30 text-[10px]">
+                                        <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+                                            <span className="font-semibold text-disabled whitespace-nowrap">
+                                                {payment.dateLabel}
                                             </span>
+                                            {payment.methodLabel && (
+                                                <span className="font-medium text-medium px-1.5 py-0.5 rounded-md bg-surface-2 border border-divider/40 whitespace-nowrap">
+                                                    {payment.methodLabel}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div className="shrink-0">
+                                            {getStatusBadge(payment.statusTone, payment.statusLabel)}
                                         </div>
                                     </div>
                                 </div>
@@ -324,14 +332,14 @@ export function PaymentHistoryModal({
                     </div>
 
                     {/* Footer */}
-                    <div className="p-4 border-t border-divider/60 bg-surface-1/40 flex items-center justify-between">
+                    <div className="px-4 py-3 sm:px-6 sm:py-4 border-t border-divider/60 bg-surface-1/40 flex items-center justify-between">
                         <span className="text-[10px] font-medium text-disabled">
                             Showing {filteredPayments.length} of {payments.length} transactions
                         </span>
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-5 py-2 rounded-xl bg-surface-2 hover:bg-surface-3 text-xs font-black text-high transition-all active:scale-95"
+                            className="px-4 sm:px-5 py-1.5 sm:py-2 rounded-xl bg-surface-2 hover:bg-surface-3 text-xs font-black text-high transition-all active:scale-95"
                         >
                             Close
                         </button>

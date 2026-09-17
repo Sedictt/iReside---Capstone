@@ -10,7 +10,7 @@ import { m as motion } from "framer-motion";
 import { UiMessage } from "../landlord/messages/types";
 import { formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export interface PaymentIssueResolverProps {
     message: UiMessage | null;
@@ -20,6 +20,8 @@ export interface PaymentIssueResolverProps {
 
 export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIssueResolverProps) {
     const router = useRouter();
+    const pathname = usePathname();
+    const isMobile = pathname?.startsWith("/mobile");
     const [excessAction, setExcessAction] = useState<"credit" | "refund">("credit");
     const [gcashNumber, setGcashNumber] = useState("");
     const [qrFile, setQrFile] = useState<File | null>(null);
@@ -139,7 +141,7 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                                 </div>
                                 
                                 <button 
-                                    onClick={() => router.push(`/tenant/payments/${message.invoiceId}/checkout`)}
+                                    onClick={() => router.push(isMobile ? '/mobile/tenant/pay' : `/tenant/payments/${message.invoiceId}/checkout`)}
                                     className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-2xl shadow-primary/20 hover:-translate-y-1 transition-all active:scale-95"
                                 >
                                     Pay Remaining Balance <ArrowUpRight className="size-5" />
@@ -237,11 +239,11 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                                 </div>
                                 
                                 <button 
-                                    onClick={() => router.push(`/tenant/payments/${message.invoiceId}/checkout`)}
+                                    onClick={() => router.push(isMobile ? '/mobile/tenant/pay' : `/tenant/payments/${message.invoiceId}/checkout`)}
                                     className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-2xl shadow-primary/20 hover:-translate-y-1 transition-all active:scale-95"
                                 >
                                     Resubmit Payment Proof <Receipt className="size-5" />
-                                </button>
+                                 </button>
                             </div>
                         )}
 
@@ -254,7 +256,7 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                                 </div>
                                 
                                 <button 
-                                    onClick={() => router.push(`/tenant/payments/${message.invoiceId}/checkout`)}
+                                    onClick={() => router.push(isMobile ? '/mobile/tenant/pay' : `/tenant/payments/${message.invoiceId}/checkout`)}
                                     className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-2xl shadow-primary/20 hover:-translate-y-1 transition-all active:scale-95"
                                 >
                                     Proceed to Checkout <ArrowUpRight className="size-5" />

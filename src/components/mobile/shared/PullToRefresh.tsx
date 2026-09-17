@@ -162,8 +162,8 @@ export function PullToRefresh({
             <div
                 className={cn('w-full', className?.includes('h-full') ? 'h-full flex flex-col' : '')}
                 style={{
-                    transform: `translateY(${pullDistance > 0 ? pullDistance * 0.15 : 0}px)`,
-                    transition: isPulling ? 'none' : 'transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                    transform: pullDistance > 0 ? `translateY(${pullDistance * 0.15}px)` : undefined,
+                    transition: isPulling ? 'none' : (pullDistance > 0 ? 'transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1)' : undefined),
                 }}
             >
                 {children}

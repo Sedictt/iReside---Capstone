@@ -47,6 +47,8 @@ export interface Database {
                     id: string
                     email: string
                     full_name: string
+                    first_name?: string | null
+                    last_name?: string | null
                     role: UserRole
                     avatar_url: string | null
                     avatar_bg_color: string | null
@@ -75,6 +77,8 @@ export interface Database {
                     id: string
                     email: string
                     full_name: string
+                    first_name?: string | null
+                    last_name?: string | null
                     role: UserRole
                     avatar_url?: string | null
                     avatar_bg_color?: string | null
@@ -103,6 +107,8 @@ export interface Database {
                     id?: string
                     email?: string
                     full_name?: string
+                    first_name?: string | null
+                    last_name?: string | null
                     role?: UserRole
                     avatar_url?: string | null
                     avatar_bg_color?: string | null
@@ -1911,7 +1917,12 @@ export interface Database {
 }
 
 // ---------- Convenience row types ----------
-export type Profile = Database['public']['Tables']['profiles']['Row']
+export type Profile = Database['public']['Tables']['profiles']['Row'] & {
+    emergency_contact_name?: string | null
+    emergency_contact_phone?: string | null
+    first_name?: string | null
+    last_name?: string | null
+}
 export type Property = Database['public']['Tables']['properties']['Row']
 export type Unit = Database['public']['Tables']['units']['Row']
 export type Lease = Database['public']['Tables']['leases']['Row']

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { useProperty } from '@/context/PropertyContext';
 import Image from 'next/image';
@@ -19,6 +20,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
+import { MobileConfirmModal } from '@/components/mobile/shared/MobileConfirmModal';
+import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropertySelector';
 
 interface MaintenanceRequest {
     id: string;
@@ -46,6 +49,7 @@ function normalizeStatus(status?: string | null): 'pending' | 'in_progress' | 'r
 
 export function LandlordTicketsView() {
     const { selectedPropertyId } = useProperty();
+    const searchParams = useSearchParams();
     const [tickets, setTickets] = useState<MaintenanceRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -53,7 +57,16 @@ export function LandlordTicketsView() {
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [lightboxImage, setLightboxImage] = useState<string | null>(null);
     const [updatingId, setUpdatingId] = useState<string | null>(null);
+    const [pendingResolveTicket, setPendingResolveTicket] = useState<MaintenanceRequest | null>(null);
     const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+    useEffect(() => {
+        const tid = searchParams?.get('id') || searchParams?.get('ticketId') || searchParams?.get('search');
+        if (tid) {
+            setSearchQuery(tid);
+            setExpandedId(tid);
+        }
+    }, [searchParams]);
 
     const fetchTickets = async () => {
         try {
@@ -100,12 +113,14 @@ export function LandlordTicketsView() {
                 type: 'success',
                 message: nextStatus === 'resolved' ? 'Ticket marked as resolved!' : 'Ticket marked in progress.',
             });
+            setPendingResolveTicket(null);
             fetchTickets();
         } catch (err: any) {
             setToast({
                 type: 'error',
                 message: err?.message || 'Update failed.',
             });
+            setPendingResolveTicket(null);
         } finally {
             setUpdatingId(null);
         }
@@ -131,6 +146,7 @@ export function LandlordTicketsView() {
 
             if (q) {
                 const matchesSearch = 
+                    (t.id || '').toLowerCase().includes(q) ||
                     title.includes(q) ||
                     desc.includes(q) ||
                     tenantName.includes(q) ||
@@ -174,24 +190,29 @@ export function LandlordTicketsView() {
     return (
         <PullToRefresh onRefresh={fetchTickets}>
             <div className="flex flex-col gap-3 pb-3">
-                {/* Sticky Search & Category Tabs Bar */}
-                <div className="sticky top-[56px] z-30 bg-background/95 backdrop-blur-md pb-2.5 pt-1 flex flex-col gap-2.5 border-b border-slate-200/80 dark:border-white/10 -mt-1 shadow-xs">
-                    {/* Search Bar */}
+                {/* Property Selector */}
+                <div className="px-4 pt-2.5">
+                    <MobilePropertySelector />
+                </div>
+
+                {/* Sticky Search & Category Tabs Bar (Matching Payments Page Design) */}
+                <div className="sticky top-[calc(var(--mobile-header-height,56px)+env(safe-area-inset-top,0px))] z-30 bg-background/95 backdrop-blur-md pb-2.5 pt-1 flex flex-col gap-2.5 border-b border-slate-200/80 dark:border-white/10 shadow-xs">
+                    {/* Search Bar with Neumorphic Inset */}
                     <div className="px-4 flex items-center">
                         <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/40 pointer-events-none" />
                             <input
                                 type="text"
-                                placeholder="Search maintenance, units…"
+                                placeholder="SEARCH MAINTENANCE, UNITS, ISSUES…"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 rounded-xl pl-9 pr-8 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
+                                className="h-11 w-full rounded-2xl border-none text-[11px] font-black uppercase tracking-wider pl-11 pr-8 focus:outline-none neumorphic-inset placeholder:text-muted-foreground/40 text-foreground"
                             />
                             {searchQuery && (
                                 <button
                                     type="button"
                                     onClick={() => setSearchQuery('')}
-                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground/50 hover:text-foreground"
                                     aria-label="Clear search"
                                 >
                                     <X className="size-3.5" />
@@ -202,100 +223,68 @@ export function LandlordTicketsView() {
 
                     {/* Notification Banner */}
                     {toast && (
-                        <div className={cn(
-                            "mx-4 p-3 rounded-xl text-xs font-bold flex items-center justify-between animate-in fade-in duration-200",
-                            toast.type === 'success' 
-                                ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400" 
-                                : "bg-red-500/15 border border-red-500/30 text-red-400"
-                        )}>
-                            <span>{toast.message}</span>
-                            <button onClick={() => setToast(null)} className="p-1">
-                                <X className="size-3.5" />
-                            </button>
+                        <div className="px-4">
+                            <div className={cn(
+                                "p-3 px-4 rounded-2xl text-xs font-bold flex items-center justify-between neumorphic-inset animate-in fade-in duration-200",
+                                toast.type === 'success' 
+                                    ? "text-emerald-500" 
+                                    : "text-red-500"
+                            )}>
+                                <span>{toast.message}</span>
+                                <button onClick={() => setToast(null)} className="p-1 text-muted-foreground hover:text-foreground">
+                                    <X className="size-3.5" />
+                                </button>
+                            </div>
                         </div>
                     )}
 
-                    {/* Status Filter Tabs */}
-                    <div className="px-4 flex gap-1.5 overflow-x-auto scrollbar-none">
-                        <button
-                            onClick={() => setStatusFilter('all')}
-                            className={cn(
-                                "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
-                                statusFilter === 'all'
-                                    ? "bg-primary text-primary-foreground shadow-sm"
-                                    : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
-                            )}
-                        >
-                            All
-                        </button>
-
-                        <button
-                            onClick={() => setStatusFilter('open')}
-                            className={cn(
-                                "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5",
-                                statusFilter === 'open'
-                                    ? "bg-primary text-primary-foreground shadow-sm"
-                                    : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
-                            )}
-                        >
-                            <span>Open</span>
-                            {openTicketsCount > 0 && (
-                                <span className={cn(
-                                    "px-1.5 py-0.2 rounded-full text-[10px] font-black",
-                                    statusFilter === 'open' ? "bg-white text-primary" : "bg-primary/20 text-primary"
-                                )}>
-                                    {openTicketsCount}
-                                </span>
-                            )}
-                        </button>
-
-                        <button
-                            onClick={() => setStatusFilter('in_progress')}
-                            className={cn(
-                                "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5",
-                                statusFilter === 'in_progress'
-                                    ? "bg-primary text-primary-foreground shadow-sm"
-                                    : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
-                            )}
-                        >
-                            <span>In Progress</span>
-                            {inProgressTicketsCount > 0 && (
-                                <span className={cn(
-                                    "px-1.5 py-0.2 rounded-full text-[10px] font-black",
-                                    statusFilter === 'in_progress' ? "bg-white text-primary" : "bg-primary/20 text-primary"
-                                )}>
-                                    {inProgressTicketsCount}
-                                </span>
-                            )}
-                        </button>
-
-                        <button
-                            onClick={() => setStatusFilter('resolved')}
-                            className={cn(
-                                "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
-                                statusFilter === 'resolved'
-                                    ? "bg-primary text-primary-foreground shadow-sm"
-                                    : "bg-slate-100/90 dark:bg-card/70 border border-slate-300/80 dark:border-white/15 text-muted-foreground"
-                            )}
-                        >
-                            Resolved
-                        </button>
+                    {/* Status Filter Tabs (Neumorphic Buttons matching Payments tabs) */}
+                    <div className="px-4 flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1">
+                        {(['all', 'open', 'in_progress', 'resolved'] as const).map((tab) => {
+                            const isActive = statusFilter === tab;
+                            const label = tab === 'all' ? 'All' : tab === 'open' ? 'Open' : tab === 'in_progress' ? 'In Progress' : 'Resolved';
+                            const count = tab === 'open' ? openTicketsCount : tab === 'in_progress' ? inProgressTicketsCount : 0;
+                            return (
+                                <button
+                                    key={tab}
+                                    onClick={() => setStatusFilter(tab)}
+                                    className={cn(
+                                        "shrink-0 flex-1 min-w-fit py-2 px-2 sm:px-2.5 rounded-xl text-[10px] sm:text-[11px] font-black uppercase tracking-tight transition-all flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-95 cursor-pointer",
+                                        isActive
+                                            ? "neumorphic-primary text-white shadow-xs"
+                                            : "neumorphic-extruded text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    <span>{label}</span>
+                                    {count > 0 && (
+                                        <span className={cn(
+                                            "px-1.5 py-0.5 rounded-full text-[9px] font-black leading-none flex items-center justify-center",
+                                            isActive ? "bg-white text-primary" : "bg-primary/15 text-primary"
+                                        )}>
+                                            {count}
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 
-            {/* Tickets List */}
-            <div className="px-4 flex flex-col gap-2.5">
+            {/* Tickets List (Desktop Neumorphic Extruded Cards) */}
+            <div className="px-4 flex flex-col gap-3">
                 {loading ? (
                     <div className="py-12 flex flex-col items-center justify-center gap-2">
                         <div className="w-8 h-8 rounded-full border-2 border-muted border-t-primary animate-spin" />
-                        <span className="text-xs text-muted-foreground">Loading maintenance tickets…</span>
+                        <span className="text-xs text-muted-foreground font-medium">Loading maintenance tickets…</span>
                     </div>
                 ) : filteredTickets.length === 0 ? (
-                    <div className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/50 p-6 text-center flex flex-col items-center justify-center shadow-xs">
-                        <Wrench className="size-8 text-muted-foreground/50 mb-2" />
-                        <h4 className="text-xs font-bold text-foreground">No tickets found</h4>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {statusFilter === 'open' ? 'All maintenance requests are resolved or in progress.' : 'No maintenance requests match filter.'}
+                    <div className="rounded-[2rem] neumorphic-panel p-8 text-center flex flex-col items-center justify-center shadow-sm my-2">
+                        <div className="neumorphic-inset-card flex size-12 items-center justify-center rounded-2xl text-muted-foreground/50 mb-3">
+                            <Wrench className="size-6" />
+                        </div>
+                        <h4 className="text-xs font-black uppercase tracking-wider text-foreground">No tickets found</h4>
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                            {statusFilter === 'open' ? 'All maintenance requests are resolved or in progress.' : 'No maintenance requests match the selected filter.'}
                         </p>
                     </div>
                 ) : (
@@ -303,75 +292,128 @@ export function LandlordTicketsView() {
                         const isExpanded = expandedId === ticket.id;
                         const hasImages = Boolean(ticket.images && ticket.images.length > 0);
                         const priority = ticket.priority?.toLowerCase() || 'medium';
-                        const isUrgent = priority === 'urgent' || priority === 'high';
                         const normStatus = normalizeStatus(ticket.status);
 
                         return (
                             <div
                                 key={ticket.id}
-                                className="rounded-2xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/80 p-3.5 shadow-xs flex flex-col gap-2.5 transition-all"
+                                className="neumorphic-extruded rounded-[1.75rem] p-4 flex flex-col gap-3 transition-all hover:scale-[1.01]"
                             >
-                                {/* Header: Priority Badge & Date */}
+                                {/* Header: Title, Unit, Priority & Status */}
                                 <div className="flex items-start justify-between gap-2">
-                                    <div className="flex items-center gap-1.5">
-                                        <span className={cn(
-                                            "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider",
-                                            priority === 'urgent' && "bg-red-500/15 text-red-400 border border-red-500/30",
-                                            priority === 'high' && "bg-amber-500/15 text-amber-400 border border-amber-500/30",
-                                            priority === 'medium' && "bg-blue-500/15 text-blue-400 border border-blue-500/30",
-                                            priority === 'low' && "bg-muted text-muted-foreground"
-                                        )}>
-                                            {priority} Priority
+                                    <div className="min-w-0">
+                                        <h4 className="text-sm font-black text-foreground tracking-tight truncate">
+                                            {ticket.title}
+                                        </h4>
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/80 mt-0.5 block">
+                                            {ticket.unit?.name ? (ticket.unit.name.toLowerCase().startsWith('unit') ? ticket.unit.name : `Unit ${ticket.unit.name}`) : 'Unit N/A'}
+                                            {ticket.tenant?.full_name ? ` • ${ticket.tenant.full_name}` : ''}
                                         </span>
+                                    </div>
 
+                                    <div className="flex flex-col items-end gap-1 shrink-0">
                                         <span className={cn(
-                                            "px-2 py-0.5 rounded-full text-[9px] font-bold",
-                                            normStatus === 'resolved' && "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-                                            normStatus === 'in_progress' && "bg-blue-500/10 text-blue-400 border border-blue-500/20",
-                                            normStatus === 'pending' && "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                            "inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border",
+                                            normStatus === 'resolved' && "border-emerald-500/30 bg-emerald-500/10 text-emerald-500",
+                                            normStatus === 'in_progress' && "border-blue-500/30 bg-blue-500/10 text-blue-500",
+                                            normStatus === 'pending' && "border-amber-500/30 bg-amber-500/10 text-amber-500"
                                         )}>
                                             {normStatus === 'in_progress' ? 'In Progress' : normStatus === 'resolved' ? 'Resolved' : 'Pending'}
                                         </span>
+
+                                        <span className={cn(
+                                            "inline-block px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border",
+                                            priority === 'urgent' && "border-red-500/30 bg-red-500/10 text-red-500",
+                                            priority === 'high' && "border-amber-500/30 bg-amber-500/10 text-amber-500",
+                                            priority === 'medium' && "border-blue-500/30 bg-blue-500/10 text-blue-500",
+                                            priority === 'low' && "border-border bg-muted/30 text-muted-foreground"
+                                        )}>
+                                            {priority} Priority
+                                        </span>
                                     </div>
-
-                                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                                        {ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
-                                    </span>
-                                </div>
-
-                                {/* Title & Unit Info */}
-                                <div>
-                                    <h4 className="text-xs font-bold text-foreground leading-snug">{ticket.title}</h4>
-                                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                                        {ticket.unit?.name ? `Unit ${ticket.unit.name}` : 'Unit N/A'}
-                                        {ticket.tenant?.full_name ? ` • ${ticket.tenant.full_name}` : ''}
-                                    </p>
                                 </div>
 
                                 {/* Collapsible Description */}
-                                <p className={cn(
-                                    "text-xs text-muted-foreground/90 leading-relaxed",
-                                    !isExpanded && "line-clamp-2"
-                                )}>
-                                    {ticket.description}
-                                </p>
+                                {!isExpanded && (
+                                    <p className="text-xs text-muted-foreground leading-relaxed font-normal line-clamp-2">
+                                        {ticket.description}
+                                    </p>
+                                )}
 
-                                {/* AI Triage Note (if present) */}
-                                {ticket.ai_triage_notes && isExpanded && (
-                                    <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-[11px] text-primary flex items-start gap-2">
-                                        <Sparkles className="size-3.5 shrink-0 mt-0.5" />
-                                        <p className="leading-snug">{ticket.ai_triage_notes}</p>
+                                {/* Expanded In-Card Neumorphic Details Drawer */}
+                                {isExpanded && (
+                                    <div className="rounded-2xl neumorphic-inset p-3.5 flex flex-col gap-2.5 animate-in fade-in zoom-in-98 duration-200">
+                                        {/* Details Grid */}
+                                        <div className="grid grid-cols-2 gap-2 text-[11px]">
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70">
+                                                    Category
+                                                </span>
+                                                <span className="font-bold text-foreground capitalize truncate">
+                                                    {ticket.category ? ticket.category.replace(/\|/g, ', ') : 'General Maintenance'}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70">
+                                                    Resident
+                                                </span>
+                                                <span className="font-bold text-foreground truncate">
+                                                    {typeof ticket.tenant === 'object' ? (ticket.tenant?.full_name || 'Resident') : (ticket.tenant || 'Resident')}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70">
+                                                    Location
+                                                </span>
+                                                <span className="font-bold text-foreground truncate">
+                                                    {ticket.unit?.name ? `Unit ${ticket.unit.name}` : 'Unit N/A'}
+                                                    {(ticket as any).property ? ` • ${(ticket as any).property}` : ''}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70">
+                                                    Submitted
+                                                </span>
+                                                <span className="font-bold text-foreground truncate">
+                                                    {ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Recently'}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Full Description */}
+                                        <div className="pt-2 border-t border-border/40 flex flex-col gap-1">
+                                            <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70">
+                                                Full Issue Details
+                                            </span>
+                                            <p className="text-[11px] text-foreground/90 leading-relaxed font-normal whitespace-pre-wrap">
+                                                {ticket.description || 'No additional description provided.'}
+                                            </p>
+                                        </div>
+
+                                        {/* AI Triage Note (if present) */}
+                                        {(ticket.ai_triage_notes || (ticket as any).triageReason) && (
+                                            <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-[11px] text-primary flex items-start gap-2">
+                                                <Sparkles className="size-3.5 shrink-0 mt-0.5" />
+                                                <div>
+                                                    <span className="text-[9px] font-black uppercase tracking-wider block">AI Triage Note</span>
+                                                    <p className="leading-snug mt-0.5">{ticket.ai_triage_notes || (ticket as any).triageReason}</p>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
-                                {/* Photo thumbnails */}
+                                {/* Photo Thumbnails */}
                                 {hasImages && ticket.images && (
                                     <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none">
                                         {ticket.images.map((imgUrl, i) => (
                                             <button
                                                 key={i}
                                                 onClick={() => setLightboxImage(imgUrl)}
-                                                className="relative size-14 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 bg-black/40 shrink-0 hover:opacity-80 active:scale-95 transition-all"
+                                                className="relative size-14 rounded-2xl overflow-hidden border border-border/40 shadow-xs shrink-0 hover:opacity-80 active:scale-95 transition-all"
                                                 aria-label="Inspect issue photo"
                                             >
                                                 <Image src={imgUrl} alt="Issue photo" fill sizes="56px" className="object-cover" />
@@ -380,23 +422,33 @@ export function LandlordTicketsView() {
                                     </div>
                                 )}
 
-                                {/* Bottom Expand & Action Bar */}
-                                <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-white/5 gap-2">
-                                    <button
-                                        onClick={() => setExpandedId(isExpanded ? null : ticket.id)}
-                                        className="text-[10px] font-bold text-primary flex items-center gap-0.5"
-                                    >
-                                        <span>{isExpanded ? 'Less' : 'Details'}</span>
-                                        {isExpanded ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
-                                    </button>
+                                {/* Bottom Row with Inset Date Icon and Action Buttons */}
+                                <div className="flex items-center justify-between pt-2 border-t border-border/40 gap-2">
+                                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                                        <div className="neumorphic-inset-card flex size-5 items-center justify-center rounded-md text-muted-foreground shrink-0">
+                                            <Clock className="size-3" />
+                                        </div>
+                                        <span className="font-semibold text-[11px]">
+                                            {ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                                        </span>
+                                    </div>
 
-                                    {/* Action Buttons */}
-                                    <div className="flex items-center gap-1.5">
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setExpandedId(isExpanded ? null : ticket.id)}
+                                            className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-0.5 px-2 py-1 rounded-lg hover:bg-primary/10 transition-colors cursor-pointer"
+                                        >
+                                            <span>{isExpanded ? 'Less' : 'Details'}</span>
+                                            {isExpanded ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+                                        </button>
+
                                         {normStatus === 'pending' && (
                                             <button
+                                                type="button"
                                                 onClick={() => handleUpdateStatus(ticket.id, 'in_progress')}
                                                 disabled={updatingId === ticket.id}
-                                                className="px-2.5 py-1.5 rounded-lg bg-blue-500/15 border border-blue-500/25 text-blue-400 text-[10px] font-black uppercase tracking-tight flex items-center gap-1 active:scale-95 transition-all disabled:opacity-50"
+                                                className="px-3 py-1.5 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-500 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 active:scale-95 transition-all disabled:opacity-50 cursor-pointer shadow-xs"
                                             >
                                                 <Wrench className="size-3" />
                                                 <span>Start Work</span>
@@ -405,9 +457,10 @@ export function LandlordTicketsView() {
 
                                         {normStatus !== 'resolved' && (
                                             <button
-                                                onClick={() => handleUpdateStatus(ticket.id, 'resolved')}
+                                                type="button"
+                                                onClick={() => setPendingResolveTicket(ticket)}
                                                 disabled={updatingId === ticket.id}
-                                                className="px-2.5 py-1.5 rounded-lg bg-emerald-500 text-white text-[10px] font-black uppercase tracking-tight flex items-center gap-1 shadow-xs hover:brightness-105 active:scale-95 transition-all disabled:opacity-50"
+                                                className="px-3 py-1.5 rounded-xl neumorphic-primary text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs hover:brightness-105 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
                                             >
                                                 <CheckCircle2 className="size-3" />
                                                 <span>Resolve</span>
@@ -438,6 +491,26 @@ export function LandlordTicketsView() {
                     </div>
                 </div>,
                 document.body
+            )}
+
+            {/* Resolve Ticket Confirmation Modal */}
+            {pendingResolveTicket && (
+                <MobileConfirmModal
+                    isOpen={Boolean(pendingResolveTicket)}
+                    title="Resolve Maintenance Request?"
+                    description={
+                        <span>
+                            Are you sure you want to mark <strong className="text-foreground font-bold">&quot;{pendingResolveTicket.title}&quot;</strong> for <strong className="text-foreground font-bold">{pendingResolveTicket.tenant?.full_name || 'Resident'}</strong> ({pendingResolveTicket.unit?.name ? `Unit ${pendingResolveTicket.unit.name}` : 'Unit'}) as resolved?
+                        </span>
+                    }
+                    confirmLabel="Resolve Ticket"
+                    cancelLabel="Cancel"
+                    variant="success"
+                    isLoading={updatingId === pendingResolveTicket.id}
+                    icon={<CheckCircle2 className="size-5" />}
+                    onConfirm={() => handleUpdateStatus(pendingResolveTicket.id, 'resolved')}
+                    onCancel={() => !updatingId && setPendingResolveTicket(null)}
+                />
             )}
             </div>
         </PullToRefresh>

@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { MobileHeader } from '@/components/mobile/layout/MobileHeader'
 import { LandlordTicketsView } from '@/components/mobile/landlord/LandlordTicketsView'
 
@@ -10,7 +11,9 @@ export default function LandlordTicketsPage() {
     return (
         <>
             <MobileHeader title="Maintenance" />
-            <LandlordTicketsView />
+            <Suspense fallback={null}>
+                <LandlordTicketsView />
+            </Suspense>
         </>
     )
 }

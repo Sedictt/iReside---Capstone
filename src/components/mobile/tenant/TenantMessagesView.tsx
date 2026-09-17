@@ -240,7 +240,7 @@ export function TenantMessagesView() {
     return (
         <div className="flex flex-col gap-3 pb-3">
             {/* View Mode Switcher */}
-            <div className="px-4 flex gap-2 shrink-0">
+            <div className="px-4 pt-2.5 flex gap-2 shrink-0">
                 <button
                     onClick={() => setViewMode('chat')}
                     className={cn(
