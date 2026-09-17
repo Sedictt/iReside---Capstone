@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iReside — DFD Level 0 (System Context Diagram)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #0f172a;
+      --border: #1e293b;
+      --accent: #38bdf8;
+      --accent-subtle: rgba(56, 189, 248, 0.12);
+      --process-border: #818cf8;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --entity-border: #38bdf8;
+      --inbound: #34d399;
+      --outbound: #38bdf8;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      padding: 24px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .title-group h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--accent-subtle);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .rule-strip {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .rule-chip {
+      font-size: 12px;
+      padding: 6px 12px;
+      background: #131d31;
+      border: 1px solid #1e2e48;
+      border-radius: 6px;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .rule-chip strong {
+      color: #38bdf8;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      background: #0c1322;
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      width: fit-content;
+    }
+
+    .tab-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: #ffffff;
+    }
+
+    .tab-btn.active {
+      background: #1e293b;
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    .diagram-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      overflow-x: auto;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+      position: relative;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      min-width: 1100px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .card h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    th {
+      background: #131d31;
+      color: #94a3b8;
+      font-weight: 600;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #1e293b;
+      color: #e2e8f0;
+      vertical-align: top;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .code-pill {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: #1e293b;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #38bdf8;
+      border: 1px solid #334155;
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .badge-in {
+      color: #34d399;
+      background: rgba(52, 211, 153, 0.1);
+      border: 1px solid rgba(52, 211, 153, 0.2);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .badge-out {
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title-group">
+        <h1>
+          iReside — DFD Level 0 (Context Diagram)
+          <span class="badge">Gane & Sarson Model</span>
+        </h1>
+        <p class="subtitle">Authoritative System Boundary • Hierarchical Downward Flow • Strictly Landlord & Tenant (No Admin) • Balanced with Processes P1.0 – P9.0</p>
+      </div>
+      <div class="rule-strip">
+        <div class="rule-chip"><strong>Standard:</strong> Gane-Sarson</div>
+        <div class="rule-chip"><strong>Orientation:</strong> Downward Flow</div>
+        <div class="rule-chip"><strong>Entities:</strong> Landlord & Tenant Only</div>
+        <div class="rule-chip"><strong>Modules:</strong> 9 Primary Processes</div>
+      </div>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('diagram')">Hierarchical DFD Level 0</button>
+      <button class="tab-btn" onclick="switchTab('dictionary')">Data Dictionary</button>
+      <button class="tab-btn" onclick="switchTab('audit')">Balancing Matrix (Level 0 ↔ Level 1)</button>
+    </div>
+
+    <!-- TAB 1: DIAGRAM -->
+    <div id="tab-diagram" class="tab-pane active">
+      <div class="diagram-card">
+        <svg viewBox="0 0 1200 960" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrow-in" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#34d399" />
+            </marker>
+            <marker id="arrow-out" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+            </marker>
+            <filter id="box-shadow" x="-5%" y="-5%" width="110%" height="110%">
+              <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.4"/>
+            </filter>
+          </defs>
+
+          <!-- Canvas Background -->
+          <rect width="100%" height="100%" fill="#0a0f1d" rx="8" />
+
+          <!-- TIER 1: SOURCES -->
+          <text x="600" y="45" fill="#64748b" font-size="11" font-weight="700" letter-spacing="2" text-anchor="middle">TIER 1: EXTERNAL DATA SOURCES (INITIATING ENTITIES)</text>
+
+          <!-- Landlord Source (Double Square) -->
+          <g filter="url(#box-shadow)">
+            <rect x="80" y="70" width="280" height="90" fill="#0f172a" stroke="#38bdf8" stroke-width="2" rx="0" />
+            <rect x="88" y="78" width="264" height="74" fill="#131d31" stroke="#38bdf8" stroke-width="1" rx="0" />
+            <text x="220" y="112" fill="#ffffff" font-size="16" font-weight="700" text-anchor="middle">LANDLORD</text>
+            <text x="220" y="130" fill="#94a3b8" font-size="11" text-anchor="middle">Property Owner / Manager</text>
+            <text x="220" y="144" fill="#38bdf8" font-size="10" font-weight="600" text-anchor="middle">[External Data Source]</text>
+          </g>
+
+          <!-- Tenant Source (Double Square) -->
+          <g filter="url(#box-shadow)">
+            <rect x="840" y="70" width="280" height="90" fill="#0f172a" stroke="#38bdf8" stroke-width="2" rx="0" />
+            <rect x="848" y="78" width="264" height="74" fill="#131d31" stroke="#38bdf8" stroke-width="1" rx="0" />
+            <text x="980" y="112" fill="#ffffff" font-size="16" font-weight="700" text-anchor="middle">TENANT</text>
+            <text x="980" y="130" fill="#94a3b8" font-size="11" text-anchor="middle">Resident / Prospective Applicant</text>
+            <text x="980" y="144" fill="#38bdf8" font-size="10" font-weight="600" text-anchor="middle">[External Data Source]</text>
+          </g>
+
+          <!-- TIER 2: SYSTEM PROCESS 0 -->
+          <text x="600" y="440" fill="#64748b" font-size="11" font-weight="700" letter-spacing="2" text-anchor="middle">TIER 2: SYSTEM BOUNDARY &amp; CENTRAL PROCESS</text>
+
+          <g filter="url(#box-shadow)">
+            <!-- Process 0 Outer Rounded Box -->
+            <rect x="360" y="465" width="480" height="175" fill="#0f172a" stroke="#818cf8" stroke-width="2.5" rx="16" />
+            <!-- ID Strip -->
+            <rect x="360" y="465" width="480" height="38" fill="#1e293b" rx="16" />
+            <rect x="360" y="485" width="480" height="18" fill="#1e293b" />
+            <line x1="360" y1="503" x2="840" y2="503" stroke="#818cf8" stroke-width="1.5" />
+            <text x="600" y="490" fill="#a5b4fc" font-size="15" font-weight="800" text-anchor="middle">0 — iReside Property Management System</text>
+            <!-- Process Label & Encapsulation Subtitle -->
+            <text x="600" y="530" fill="#ffffff" font-size="15" font-weight="700" text-anchor="middle">Turnkey Residential Operations Platform</text>
+            <text x="600" y="555" fill="#94a3b8" font-size="11" text-anchor="middle">Encapsulates 9 Core Modules: P1.0 Auth • P2.0 Properties • P3.0 Unit Map</text>
+            <text x="600" y="575" fill="#94a3b8" font-size="11" text-anchor="middle">P4.0 Intake • P5.0 Leases • P6.0 Billing &amp; Payments</text>
+            <text x="600" y="595" fill="#94a3b8" font-size="11" text-anchor="middle">P7.0 Maintenance • P8.0 Messaging • P9.0 Community &amp; Amenities</text>
+            <text x="600" y="622" fill="#38bdf8" font-size="10" font-weight="600" text-anchor="middle">(All 32 relational data stores encapsulated at Level 0)</text>
+          </g>
+
+          <!-- TIER 3: SINKS -->
+          <text x="600" y="805" fill="#64748b" font-size="11" font-weight="700" letter-spacing="2" text-anchor="middle">TIER 3: EXTERNAL DATA SINKS (RECIPIENT ENTITIES)</text>
+
+          <!-- Landlord Sink (Double Square) -->
+          <g filter="url(#box-shadow)">
+            <rect x="80" y="830" width="280" height="90" fill="#0f172a" stroke="#38bdf8" stroke-width="2" rx="0" />
+            <rect x="88" y="838" width="264" height="74" fill="#131d31" stroke="#38bdf8" stroke-width="1" rx="0" />
+            <text x="220" y="872" fill="#ffffff" font-size="16" font-weight="700" text-anchor="middle">LANDLORD</text>
+            <text x="220" y="890" fill="#94a3b8" font-size="11" text-anchor="middle">Property Owner / Manager</text>
+            <text x="220" y="904" fill="#38bdf8" font-size="10" font-weight="600" text-anchor="middle">[External Data Sink]</text>
+          </g>
+
+          <!-- Tenant Sink (Double Square) -->
+          <g filter="url(#box-shadow)">
+            <rect x="840" y="830" width="280" height="90" fill="#0f172a" stroke="#38bdf8" stroke-width="2" rx="0" />
+            <rect x="88" y="838" width="264" height="74" fill="#131d31" stroke="#38bdf8" stroke-width="1" rx="0" />
+            <text x="980" y="872" fill="#ffffff" font-size="16" font-weight="700" text-anchor="middle">TENANT</text>
+            <text x="980" y="890" fill="#94a3b8" font-size="11" text-anchor="middle">Resident / Prospective Applicant</text>
+            <text x="980" y="904" fill="#38bdf8" font-size="10" font-weight="600" text-anchor="middle">[External Data Sink]</text>
+          </g>
+
+          <!-- INBOUND FLOWS (DOWNWARD) -->
+          <!-- Landlord Source to Process 0 -->
+          <path d="M 220 160 L 220 310 L 320 310 L 320 520 L 360 520" fill="none" stroke="#34d399" stroke-width="2.5" marker-end="url(#arrow-in)" />
+          <!-- Flow Card: Landlord Inbound -->
+          <rect x="110" y="215" width="220" height="150" fill="#0a1a1e" stroke="#059669" stroke-width="1.5" rx="6" />
+          <text x="120" y="235" fill="#34d399" font-size="11" font-weight="700">LANDLORD INBOUND DATA FLOWS</text>
+          <text x="120" y="252" fill="#cbd5e1" font-size="10">• 1. Auth &amp; 2FA Credentials [P1.0]</text>
+          <text x="120" y="267" fill="#cbd5e1" font-size="10">• 2. Property &amp; Unit Specs [P2.0]</text>
+          <text x="120" y="282" fill="#cbd5e1" font-size="10">• 3. Floor Plan Grid Coords [P3.0]</text>
+          <text x="120" y="297" fill="#cbd5e1" font-size="10">• 4. Intake Invites &amp; Reviews [P4.0]</text>
+          <text x="120" y="312" fill="#cbd5e1" font-size="10">• 5. Lease Terms &amp; Pad Sign [P5.0]</text>
+          <text x="120" y="327" fill="#cbd5e1" font-size="10">• 6. Meter Readings &amp; Tariffs [P6.0]</text>
+          <text x="120" y="342" fill="#cbd5e1" font-size="10">• 7. Work Orders &amp; Expense Logs [P7.0]</text>
+          <text x="120" y="357" fill="#cbd5e1" font-size="10">• 8. Direct Chat &amp; Bulletins [P8-9.0]</text>
+
+          <!-- Tenant Source to Process 0 -->
+          <path d="M 980 160 L 980 310 L 880 310 L 880 520 L 840 520" fill="none" stroke="#34d399" stroke-width="2.5" marker-end="url(#arrow-in)" />
+          <!-- Flow Card: Tenant Inbound -->
+          <rect x="870" y="215" width="220" height="150" fill="#0a1a1e" stroke="#059669" stroke-width="1.5" rx="6" />
+          <text x="880" y="235" fill="#34d399" font-size="11" font-weight="700">TENANT INBOUND DATA FLOWS</text>
+          <text x="880" y="252" fill="#cbd5e1" font-size="10">• 1. Credentials &amp; Profile Info [P1.0]</text>
+          <text x="880" y="267" fill="#cbd5e1" font-size="10">• 2. Rental Application &amp; KYC [P4.0]</text>
+          <text x="880" y="282" fill="#cbd5e1" font-size="10">• 3. Digital Signatures &amp; Renewal [P5.0]</text>
+          <text x="880" y="297" fill="#cbd5e1" font-size="10">• 4. GCash Payment Proofs [P6.0]</text>
+          <text x="880" y="312" fill="#cbd5e1" font-size="10">• 5. Maintenance Tickets &amp; Photos [P7.0]</text>
+          <text x="880" y="327" fill="#cbd5e1" font-size="10">• 6. Direct Inquiries &amp; Chat [P8.0]</text>
+          <text x="880" y="342" fill="#cbd5e1" font-size="10">• 7. Poll Votes &amp; Amenity Bookings [P9.0]</text>
+
+          <!-- OUTBOUND FLOWS (DOWNWARD) -->
+          <!-- Process 0 to Landlord Sink -->
+          <path d="M 360 580 L 320 580 L 320 730 L 220 730 L 220 830" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow-out)" />
+          <!-- Flow Card: Landlord Outbound -->
+          <rect x="110" y="650" width="220" height="150" fill="#0c1a2e" stroke="#0284c7" stroke-width="1.5" rx="6" />
+          <text x="120" y="670" fill="#38bdf8" font-size="11" font-weight="700">LANDLORD OUTBOUND DATA FLOWS</text>
+          <text x="120" y="687" fill="#cbd5e1" font-size="10">• 1. Session Auth &amp; Role Access [P1.0]</text>
+          <text x="120" y="702" fill="#cbd5e1" font-size="10">• 2. Properties &amp; Unit Roster [P2.0]</text>
+          <text x="120" y="717" fill="#cbd5e1" font-size="10">• 3. Rendered 2D Unit Map [P3.0]</text>
+          <text x="120" y="732" fill="#cbd5e1" font-size="10">• 4. Tenant KYC Applications [P4.0]</text>
+          <text x="120" y="747" fill="#cbd5e1" font-size="10">• 5. Executed Contracts &amp; Renewals [P5.0]</text>
+          <text x="120" y="762" fill="#cbd5e1" font-size="10">• 6. GCash Proofs &amp; ORs [P6.0]</text>
+          <text x="120" y="777" fill="#cbd5e1" font-size="10">• 7. Defect Claims &amp; Photos [P7.0]</text>
+          <text x="120" y="792" fill="#cbd5e1" font-size="10">• 8. Resident Messages &amp; Feeds [P8-9.0]</text>
+
+          <!-- Process 0 to Tenant Sink -->
+          <path d="M 840 580 L 880 580 L 880 730 L 980 730 L 980 830" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow-out)" />
+          <!-- Flow Card: Tenant Outbound -->
+          <rect x="870" y="650" width="220" height="150" fill="#0c1a2e" stroke="#0284c7" stroke-width="1.5" rx="6" />
+          <text x="880" y="670" fill="#38bdf8" font-size="11" font-weight="700">TENANT OUTBOUND DATA FLOWS</text>
+          <text x="880" y="687" fill="#cbd5e1" font-size="10">• 1. Authenticated Session [P1.0]</text>
+          <text x="880" y="702" fill="#cbd5e1" font-size="10">• 2. Assigned Unit Specs &amp; Rules [P2.0]</text>
+          <text x="880" y="717" fill="#cbd5e1" font-size="10">• 3. Architectural Floor Map [P3.0]</text>
+          <text x="880" y="732" fill="#cbd5e1" font-size="10">• 4. Review Decisions &amp; Login [P4.0]</text>
+          <text x="880" y="747" fill="#cbd5e1" font-size="10">• 5. Countersigned Lease PDF [P5.0]</text>
+          <text x="880" y="762" fill="#cbd5e1" font-size="10">• 6. Itemized Invoices &amp; ORs [P6.0]</text>
+          <text x="880" y="777" fill="#cbd5e1" font-size="10">• 7. Maintenance Updates &amp; Notes [P7.0]</text>
+          <text x="880" y="792" fill="#cbd5e1" font-size="10">• 8. Replies &amp; Booking Passes [P8-9.0]</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- TAB 2: DATA DICTIONARY -->
+    <div id="tab-dictionary" class="tab-pane">
+      <div class="card">
+        <h2>Landlord Data Flows (Process 0 Boundary)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Flow ID</th>
+              <th>Direction</th>
+              <th>Data Flow Name</th>
+              <th>Payload / Carried Data Elements</th>
+              <th>Level 1 Target Process</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="code-pill">DF-IN-L01</span></td>
+              <td><span class="badge-in">Inbound</span></td>
+              <td><strong>Authentication &amp; 2FA Credentials</strong></td>
+              <td>Landlord email, encrypted password, 2FA challenge OTP, session restore token.</td>
+              <td><span class="code-pill">P1.0 Authenticate &amp; Authorize</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-IN-L02</span></td>
+              <td><span class="badge-in">Inbound</span></td>
+              <td><strong>Property Setup &amp; Unit Configs</strong></td>
+              <td>Building name, address, property rules, unit numbers, pricing, capacity, unit amenities.</td>
+              <td><span class="code-pill">P2.0 Manage Properties &amp; Units</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-IN-L03</span></td>
+              <td><span class="badge-in">Inbound</span></td>
+              <td><strong>Floor Blueprint Grid Coordinates</strong></td>
+              <td>Floor canvas boundary dimensions, grid snap parameters, unit vector coordinates (X, Y), width, height.</td>
+              <td><span class="code-pill">P3.0 Map Space &amp; Blueprint</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-IN-L04</span></td>
+              <td><span class="badge-in">Inbound</span></td>
+              <td><strong>Intake Invites &amp; Screening Decisions</strong></td>
+              <td>Tokenized invite links, application review decisions (approved/rejected), tenant account provisioning directives.</td>
+              <td><span class="code-pill">P4.0 Process Tenant Intake</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-IN-L05</span></td>
+              <td><span class="badge-in">Inbound</span></td>
+              <td><strong>Lease Terms &amp; Digital Countersignatures</strong></td>
+              <td>Lease clauses, deposit schedule, landlord touchpad/canvas e-signature, renewal approvals, move-out checklist.</td>
+              <td><span class="code-pill">P5.0 Manage Leases &amp; Contracts</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-IN-L06</span></td>
+              <td><span class="badge-in">Inbound</span></td>
+              <td><strong>Meter Readings, Tariffs &amp; Cash Records</strong></td>
+              <td>Electric kWh readings, water m³ readings, per-unit tariff rates, manual in-person cash receipts, GCash audit confirmations.</td>
+              <td><span class="code-pill">P6.0 Process Billing &amp; Payments</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-IN-L07</span></td>
+              <td><span class="badge-in">Inbound</span></td>
+              <td><strong>Maintenance Work Orders &amp; Expense Logs</strong></td>
+              <td>Severity triaging, contractor assignments, status transitions (in_progress, resolved), repair expense logs.</td>
+              <td><span class="code-pill">P7.0 Triage &amp; Resolve Maintenance</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-IN-L08</span></td>
+              <td><span class="badge-in">Inbound</span></td>
+              <td><strong>Direct Messages &amp; Broadcast Alerts</strong></td>
+              <td>Direct 1-on-1 messages to tenants, file/image attachments, urgent building operational notices.</td>
+              <td><span class="code-pill">P8.0 Facilitate Realtime Messaging</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-IN-L09</span></td>
+              <td><span class="badge-in">Inbound</span></td>
+              <td><strong>Community Bulletins &amp; Amenity Approvals</strong></td>
+              <td>Building announcements, moderation flags, poll options, amenity reservation approval/rejection decisions.</td>
+              <td><span class="code-pill">P9.0 Manage Community &amp; Amenities</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-L01</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>Session Authorization &amp; Role Scope</strong></td>
+              <td>Verified JWT session, landlord authorization role, dashboard initialization state.</td>
+              <td><span class="code-pill">P1.0 Authenticate &amp; Authorize</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-L02</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>Property Inventory &amp; Unit Summaries</strong></td>
+              <td>Registered property records, unit catalog lists, real-time vacancy &amp; occupancy count summaries.</td>
+              <td><span class="code-pill">P2.0 Manage Properties &amp; Units</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-L03</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>Rendered 2D Map &amp; Occupancy Blueprint</strong></td>
+              <td>Interactive architectural layout grid, dynamic color-coded room status overlays (vacant, occupied, overdue, maintenance).</td>
+              <td><span class="code-pill">P3.0 Map Space &amp; Blueprint</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-L04</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>Submitted Applications &amp; KYC Files</strong></td>
+              <td>Applicant profiles, employment verification, emergency contacts, uploaded government ID image files, income proofs.</td>
+              <td><span class="code-pill">P4.0 Process Tenant Intake</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-L05</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>Executed Contracts &amp; Tenancy Requests</strong></td>
+              <td>Signed digital lease contracts, cryptographic signature audit timestamps, lease renewal requests, move-out inspection notices.</td>
+              <td><span class="code-pill">P5.0 Manage Leases &amp; Contracts</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-L06</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>GCash Proofs, Ledgers &amp; Official Receipts</strong></td>
+              <td>Uploaded GCash screenshot files, transaction reference numbers, itemized billing ledgers, generated Official Receipts.</td>
+              <td><span class="code-pill">P6.0 Process Billing &amp; Payments</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-L07</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>Maintenance Tickets &amp; Photographic Proof</strong></td>
+              <td>Tenant service claims, defect categories, issue descriptions, high-resolution damage photos, unit room locations.</td>
+              <td><span class="code-pill">P7.0 Triage &amp; Resolve Maintenance</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-L08</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>Resident Messages &amp; Delivery Receipts</strong></td>
+              <td>Incoming tenant chat messages, image attachments, message read receipts, unread message counters.</td>
+              <td><span class="code-pill">P8.0 Facilitate Realtime Messaging</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-L09</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>Community Activity &amp; Amenity Requests</strong></td>
+              <td>Tenant posts, comments, poll vote tallies, pending amenity reservation time-slot requests.</td>
+              <td><span class="code-pill">P9.0 Manage Community &amp; Amenities</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>Tenant Data Flows (Process 0 Boundary)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Flow ID</th>
+              <th>Direction</th>
+              <th>Data Flow Name</th>
+              <th>Payload / Carried Data Elements</th>
+              <th>Level 1 Target Process</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="code-pill">DF-IN-T01</span></td>
+              <td><span class="badge-in">Inbound</span></td>
+              <td><strong>Credentials &amp; Profile Updates</strong></td>
+              <td>Tenant email, password, personal profile information, emergency contact updates.</td>
+              <td><span class="code-pill">P1.0 Authenticate &amp; Authorize</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-IN-T02</span></td>
+              <td><span class="badge-in">Inbound</span></td>
+              <td><strong>Rental Intake Form &amp; KYC Proofs</strong></td>
+              <td>Personal data, employment info, emergency contacts, uploaded identity proofs, monthly income verification.</td>
+              <td><span class="code-pill">P4.0 Process Tenant Intake</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-IN-T03</span></td>
+              <td><span class="badge-in">Inbound</span></td>
+              <td><strong>Digital Signatures &amp; Tenancy Requests</strong></td>
+              <td>Biometric/touchpad signature vector, remote signed confirmation, lease renewal requests, move-out requests, unit transfer notices.</td>
+              <td><span class="code-pill">P5.0 Manage Leases &amp; Contracts</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-IN-T04</span></td>
+              <td><span class="badge-in">Inbound</span></td>
+              <td><strong>GCash Payment Proofs &amp; Ref IDs</strong></td>
+              <td>Uploaded GCash transfer screenshot files, 13-digit reference numbers, payment allocation selection (rent, electric, water).</td>
+              <td><span class="code-pill">P6.0 Process Billing &amp; Payments</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-IN-T05</span></td>
+              <td><span class="badge-in">Inbound</span></td>
+              <td><strong>Maintenance Service Claims &amp; Photos</strong></td>
+              <td>Issue description, category tag (electrical, plumbing, appliance), damage photo attachments, preferred repair entry window.</td>
+              <td><span class="code-pill">P7.0 Triage &amp; Resolve Maintenance</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-IN-T06</span></td>
+              <td><span class="badge-in">Inbound</span></td>
+              <td><strong>Direct Inquiries &amp; Chat Messages</strong></td>
+              <td>Resident direct messages to landlord, image attachments, read acknowledgments.</td>
+              <td><span class="code-pill">P8.0 Facilitate Realtime Messaging</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-IN-T07</span></td>
+              <td><span class="badge-in">Inbound</span></td>
+              <td><strong>Poll Votes &amp; Amenity Reservations</strong></td>
+              <td>Resident comments on bulletins, poll option selections, requested amenity reservation parameters (amenity ID, target time slot).</td>
+              <td><span class="code-pill">P9.0 Manage Community &amp; Amenities</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-T01</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>Authenticated Session &amp; Routing</strong></td>
+              <td>Validated JWT session, tenant authorization role, portal redirect to /tenant/dashboard.</td>
+              <td><span class="code-pill">P1.0 Authenticate &amp; Authorize</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-T02</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>Assigned Unit Details &amp; Guidelines</strong></td>
+              <td>Assigned room number, unit capacity, included amenities, property rules and curfew terms.</td>
+              <td><span class="code-pill">P2.0 Manage Properties &amp; Units</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-T03</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>Spatial Floor Map &amp; Blueprint View</strong></td>
+              <td>Architectural floor blueprint view, spatial location of assigned room, facility and exit markers.</td>
+              <td><span class="code-pill">P3.0 Map Space &amp; Blueprint</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-T04</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>Application Decisions &amp; Credentials</strong></td>
+              <td>Application approval/rejection notification, auto-provisioned account credentials, initial onboarding link.</td>
+              <td><span class="code-pill">P4.0 Process Tenant Intake</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-T05</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>Countersigned Digital Lease PDF</strong></td>
+              <td>Draft digital agreement for signing, countersigned PDF contract with audit stamp, renewal status notifications, checkout clearance.</td>
+              <td><span class="code-pill">P5.0 Manage Leases &amp; Contracts</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-T06</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>Monthly Invoices &amp; Official Receipts</strong></td>
+              <td>Itemized billing statement (rent + electric kWh breakdown + water m³ breakdown), Official Receipt (OR) download.</td>
+              <td><span class="code-pill">P6.0 Process Billing &amp; Payments</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-T07</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>Maintenance Updates &amp; Notes</strong></td>
+              <td>Live ticket lifecycle transitions (reviewing, assigned, in_progress, resolved), landlord resolution notes.</td>
+              <td><span class="code-pill">P7.0 Triage &amp; Resolve Maintenance</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-T08</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>Replies &amp; Urgent Operational Alerts</strong></td>
+              <td>Landlord direct responses, urgent property alerts, payment reminder notifications.</td>
+              <td><span class="code-pill">P8.0 Facilitate Realtime Messaging</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">DF-OUT-T09</span></td>
+              <td><span class="badge-out">Outbound</span></td>
+              <td><strong>Property Bulletins &amp; Booking Passes</strong></td>
+              <td>Landlord announcements, community feed updates, approved amenity booking passes with reservation QR/reference.</td>
+              <td><span class="code-pill">P9.0 Manage Community &amp; Amenities</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: BALANCING MATRIX -->
+    <div id="tab-audit" class="tab-pane">
+      <div class="card">
+        <h2>DFD Balancing Audit: Level 0 ↔ Level 1 Verification Matrix</h2>
+        <p style="color: #94a3b8; font-size: 13px; margin-bottom: 16px;">
+          This matrix proves that 100% of the boundary flows crossing between external entities and Process 0 map 1:1 with the internal inputs and outputs of the 9 decomposed Level 1 processes.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Process ID</th>
+              <th>Level 1 System Process Name</th>
+              <th>Balanced Inbound Flows (Level 0)</th>
+              <th>Balanced Outbound Flows (Level 0)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="code-pill">P1.0</span></td>
+              <td><strong>Authentication &amp; Account Management</strong></td>
+              <td><code>DF-IN-L01</code>, <code>DF-IN-T01</code></td>
+              <td><code>DF-OUT-L01</code>, <code>DF-OUT-T01</code></td>
+              <td><span class="badge-in">100% Balanced</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">P2.0</span></td>
+              <td><strong>Property &amp; Unit Management</strong></td>
+              <td><code>DF-IN-L02</code></td>
+              <td><code>DF-OUT-L02</code>, <code>DF-OUT-T02</code></td>
+              <td><span class="badge-in">100% Balanced</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">P3.0</span></td>
+              <td><strong>Interactive Unit Map &amp; Floor Planner</strong></td>
+              <td><code>DF-IN-L03</code></td>
+              <td><code>DF-OUT-L03</code>, <code>DF-OUT-T03</code></td>
+              <td><span class="badge-in">100% Balanced</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">P4.0</span></td>
+              <td><strong>Tenant Application &amp; Intake Management</strong></td>
+              <td><code>DF-IN-L04</code>, <code>DF-IN-T02</code></td>
+              <td><code>DF-OUT-L04</code>, <code>DF-OUT-T04</code></td>
+              <td><span class="badge-in">100% Balanced</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">P5.0</span></td>
+              <td><strong>Lease Contract Management</strong></td>
+              <td><code>DF-IN-L05</code>, <code>DF-IN-T03</code></td>
+              <td><code>DF-OUT-L05</code>, <code>DF-OUT-T05</code></td>
+              <td><span class="badge-in">100% Balanced</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">P6.0</span></td>
+              <td><strong>Billing &amp; Payment Management</strong></td>
+              <td><code>DF-IN-L06</code>, <code>DF-IN-T04</code></td>
+              <td><code>DF-OUT-L06</code>, <code>DF-OUT-T06</code></td>
+              <td><span class="badge-in">100% Balanced</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">P7.0</span></td>
+              <td><strong>Maintenance &amp; Incident Management</strong></td>
+              <td><code>DF-IN-L07</code>, <code>DF-IN-T05</code></td>
+              <td><code>DF-OUT-L07</code>, <code>DF-OUT-T07</code></td>
+              <td><span class="badge-in">100% Balanced</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">P8.0</span></td>
+              <td><strong>Communication &amp; Real-Time Messaging</strong></td>
+              <td><code>DF-IN-L08</code>, <code>DF-IN-T06</code></td>
+              <td><code>DF-OUT-L08</code>, <code>DF-OUT-T08</code></td>
+              <td><span class="badge-in">100% Balanced</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-pill">P9.0</span></td>
+              <td><strong>Community Hub &amp; Amenity Management</strong></td>
+              <td><code>DF-IN-L09</code>, <code>DF-IN-T07</code></td>
+              <td><code>DF-OUT-L09</code>, <code>DF-OUT-T09</code></td>
+              <td><span class="badge-in">100% Balanced</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+      const targetPane = document.getElementById('tab-' + tabId);
+      if (targetPane) targetPane.classList.add('active');
+
+      const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+      if (activeBtn) activeBtn.classList.add('active');
+    }
+  </script>
+</body>
+</html>
