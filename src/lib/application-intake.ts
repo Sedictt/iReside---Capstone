@@ -6,6 +6,55 @@ export interface WalkInUnit {
     property_name: string;
     property_contract_template?: Record<string, unknown> | null;
     status?: string;
+    has_ongoing_application?: boolean;
+    ongoing_application_count?: number;
+    ongoing_application_status?: string | null;
+    application_status?: string | null;
+}
+
+export function isUnitOccupied(unit: Pick<WalkInUnit, "status">): boolean {
+    return (unit.status ?? "").toLowerCase() === "occupied";
+}
+
+export function isUnitOngoing(unit: Pick<WalkInUnit, "status" | "has_ongoing_application" | "application_status">): boolean {
+    if (Boolean(unit.has_ongoing_application)) return true;
+    const status = (unit.status ?? "").toLowerCase();
+    const isOngoingStatus = [
+        "under_negotiation",
+        "under negotiation",
+        "negotiating",
+        "processing",
+        "ongoing",
+        "on-going",
+        "reserved",
+    ].includes(status);
+    if (isOngoingStatus) return true;
+
+    if (unit.application_status) {
+        const appStatus = unit.application_status.toLowerCase();
+        if (["pending", "reviewing", "payment_pending", "approved"].includes(appStatus)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+export function isUnitAvailable(unit: Pick<WalkInUnit, "status" | "has_ongoing_application" | "application_status">): boolean {
+    return !isUnitOccupied(unit) && !isUnitOngoing(unit);
+}
+
+export function getUnitOptionLabel(unit: WalkInUnit, includePropertyName = false): string {
+    const isOccupied = isUnitOccupied(unit);
+    const isOngoing = isUnitOngoing(unit);
+    const prefix = includePropertyName ? `${unit.name} — ${unit.property_name}` : unit.name;
+
+    if (isOccupied) {
+        return `${prefix} • (Occupied — Unavailable)`;
+    }
+    if (isOngoing) {
+        return `${prefix} • (On-going — Unavailable)`;
+    }
+    return `${prefix} — ₱${unit.rent_amount.toLocaleString()}/mo`;
 }
 
 export interface RequirementsChecklist {

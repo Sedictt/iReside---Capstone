@@ -135,6 +135,8 @@ export default function LandlordDashboard() {
         property_address?: string;
         property_image?: string | null;
         status?: string;
+        has_ongoing_application?: boolean;
+        ongoing_application_status?: string | null;
     }>>([]);
     const [tenantInvites, setTenantInvites] = useState<Array<{
         id: string;
@@ -259,6 +261,8 @@ export default function LandlordDashboard() {
                                 name: string;
                                 status?: string;
                                 rentAmount?: number;
+                                hasOngoingApplication?: boolean;
+                                ongoingApplicationStatus?: string | null;
                             }>;
                         }>;
                     }>;
@@ -304,6 +308,8 @@ export default function LandlordDashboard() {
                         property_address: property.address,
                         property_image: property.image ?? null,
                         status: unit.status,
+                        has_ongoing_application: Boolean(unit.hasOngoingApplication),
+                        ongoing_application_status: unit.ongoingApplicationStatus ?? null,
                     }));
                 });
                 setAvailableUnits(unitsList);

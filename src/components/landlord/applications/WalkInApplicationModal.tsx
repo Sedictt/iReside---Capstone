@@ -46,6 +46,10 @@ import {
     DEFAULT_CHECKLIST,
     DEFAULT_EMPLOYMENT,
     applyLiveFieldValidation,
+    isUnitOccupied,
+    isUnitOngoing,
+    isUnitAvailable,
+    getUnitOptionLabel,
     type EmploymentInfo,
     type FormErrorKey,
     type RequirementsChecklist,
@@ -324,7 +328,7 @@ export function WalkInApplicationModal({
     const [selectedUnit, setSelectedUnit] = useState(selectedUnitId || "");
     const [unitSearchQuery, setUnitSearchQuery] = useState("");
     const [selectedPropertyFilter, setSelectedPropertyFilter] = useState("all");
-    const [availabilityFilter, setAvailabilityFilter] = useState<"available" | "all">("available");
+    const [availabilityFilter, setAvailabilityFilter] = useState<"available" | "ongoing" | "all">("available");
 
     const propertyOptions = useMemo(() => {
         const map = new Map<string, { id: string; name: string; count: number }>();
@@ -342,7 +346,11 @@ export function WalkInApplicationModal({
     }, [units]);
 
     const availableCount = useMemo(() => {
-        return units.filter((u) => (u.status ?? "").toLowerCase() !== "occupied").length;
+        return units.filter(isUnitAvailable).length;
+    }, [units]);
+
+    const ongoingCount = useMemo(() => {
+        return units.filter(isUnitOngoing).length;
     }, [units]);
 
     const filteredUnits = useMemo(() => {
@@ -355,8 +363,11 @@ export function WalkInApplicationModal({
             }
 
             // 2. Availability filter
-            const isOccupied = (u.status ?? "").toLowerCase() === "occupied";
-            if (availabilityFilter === "available" && isOccupied && !isCurrentSelected) {
+            if (availabilityFilter === "available" && !isUnitAvailable(u) && !isCurrentSelected) {
+                return false;
+            }
+
+            if (availabilityFilter === "ongoing" && !isUnitOngoing(u) && !isCurrentSelected) {
                 return false;
             }
 
@@ -374,6 +385,15 @@ export function WalkInApplicationModal({
         });
     }, [units, selectedPropertyFilter, availabilityFilter, unitSearchQuery, selectedUnit]);
 
+    const sortUnitsByAvailability = useCallback((unitList: WalkInUnit[]) => {
+        return [...unitList].sort((a, b) => {
+            const orderA = isUnitAvailable(a) ? 0 : isUnitOngoing(a) ? 1 : 2;
+            const orderB = isUnitAvailable(b) ? 0 : isUnitOngoing(b) ? 1 : 2;
+            if (orderA !== orderB) return orderA - orderB;
+            return a.name.localeCompare(b.name, undefined, { numeric: true });
+        });
+    }, []);
+
     const groupedFilteredUnits = useMemo(() => {
         const groups = new Map<string, WalkInUnit[]>();
         filteredUnits.forEach((u) => {
@@ -382,8 +402,12 @@ export function WalkInApplicationModal({
             list.push(u);
             groups.set(propName, list);
         });
-        return Array.from(groups.entries());
-    }, [filteredUnits]);
+        return Array.from(groups.entries()).map(([propName, list]) => [propName, sortUnitsByAvailability(list)] as const);
+    }, [filteredUnits, sortUnitsByAvailability]);
+
+    const sortedFilteredUnits = useMemo(() => {
+        return sortUnitsByAvailability(filteredUnits);
+    }, [filteredUnits, sortUnitsByAvailability]);
 
     const [submitting, setSubmitting] = useState(false);
     const [confirmApproval, setConfirmApproval] = useState(false);
@@ -679,11 +703,18 @@ export function WalkInApplicationModal({
                 setError("Selected unit is no longer valid. Please re-select a unit.");
                 return;
             }
-            if ((chosenUnit.status ?? "").toLowerCase() === "occupied") {
+            if (isUnitOccupied(chosenUnit)) {
                 setFormErrors((prev) => ({ ...prev, unit: "Selected unit is currently occupied and unavailable." }));
                 setTouchedFields((prev) => ({ ...prev, unit: true }));
                 setStep(0);
-                setError("Selected unit is currently occupied. Please select a vacant unit.");
+                setError("Selected unit is currently occupied. Please select an available unit.");
+                return;
+            }
+            if (isUnitOngoing(chosenUnit)) {
+                setFormErrors((prev) => ({ ...prev, unit: "Selected unit currently has an ongoing application." }));
+                setTouchedFields((prev) => ({ ...prev, unit: true }));
+                setStep(0);
+                setError("Selected unit currently has an ongoing application under processing. Please select an available unit.");
                 return;
             }
         }
@@ -950,7 +981,7 @@ export function WalkInApplicationModal({
                                                     </div>
 
                                                     {!existingApplication && units.length > 1 && (
-                                                        <div className="inline-flex items-center rounded-xl bg-muted/60 p-1 dark:bg-zinc-900 border border-border/50 text-xs">
+                                                        <div className="inline-flex flex-wrap items-center gap-1 rounded-xl bg-muted/60 p-1 dark:bg-zinc-900 border border-border/50 text-xs">
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setAvailabilityFilter("available")}
@@ -962,6 +993,18 @@ export function WalkInApplicationModal({
                                                                 )}
                                                             >
                                                                 Available ({availableCount})
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setAvailabilityFilter("ongoing")}
+                                                                className={cn(
+                                                                    "rounded-lg px-3 py-1.5 font-bold transition-all",
+                                                                    availabilityFilter === "ongoing"
+                                                                        ? "bg-card text-amber-500 shadow-sm dark:bg-zinc-800"
+                                                                        : "text-muted-foreground hover:text-foreground"
+                                                                )}
+                                                            >
+                                                                On-going ({ongoingCount})
                                                             </button>
                                                             <button
                                                                 type="button"
@@ -1040,8 +1083,10 @@ export function WalkInApplicationModal({
                                                                  setTouchedFields((prev) => ({ ...prev, unit: true }));
                                                                  const liveErrors = validateFormStep(step, nextUnit, formData, { requireUnit: !existingApplication });
                                                                  const chosen = units.find((u) => u.id === nextUnit);
-                                                                 if ((chosen?.status ?? "").toLowerCase() === "occupied") {
+                                                                 if (chosen && isUnitOccupied(chosen)) {
                                                                      liveErrors.unit = "Selected unit is currently occupied and unavailable.";
+                                                                 } else if (chosen && isUnitOngoing(chosen)) {
+                                                                     liveErrors.unit = "Selected unit currently has an ongoing application.";
                                                                  }
                                                                  setFormErrors((prev) => ({ ...prev, unit: liveErrors.unit }));
                                                              }}
@@ -1063,37 +1108,43 @@ export function WalkInApplicationModal({
                                                                          className="bg-muted/80 dark:bg-zinc-950 font-black text-xs text-muted-foreground py-2"
                                                                      >
                                                                          {groupUnits.map((u) => {
-                                                                             const isOccupied = (u.status ?? "").toLowerCase() === "occupied";
+                                                                             const isOccupied = isUnitOccupied(u);
+                                                                             const isOngoing = isUnitOngoing(u);
+                                                                             const isUnavailable = isOccupied || isOngoing;
                                                                              return (
                                                                                  <option 
                                                                                      key={u.id} 
                                                                                      value={u.id} 
-                                                                                     disabled={isOccupied}
+                                                                                     disabled={isUnavailable}
+                                                                                     style={isUnavailable ? { textDecoration: "line-through" } : undefined}
                                                                                      className={cn(
                                                                                          "bg-card py-3 text-sm font-semibold text-foreground dark:bg-zinc-900 dark:text-zinc-100",
-                                                                                         isOccupied && "text-muted-foreground/50 dark:text-zinc-500 bg-muted/40 dark:bg-zinc-950 font-normal"
+                                                                                         isUnavailable && "line-through text-muted-foreground/50 dark:text-zinc-500 bg-muted/40 dark:bg-zinc-950 font-normal"
                                                                                      )}
                                                                                  >
-                                                                                     {u.name} {isOccupied ? "• (Occupied — Unavailable)" : `— ₱${u.rent_amount.toLocaleString()}/mo`}
+                                                                                     {getUnitOptionLabel(u, false)}
                                                                                  </option>
                                                                              );
                                                                          })}
                                                                      </optgroup>
                                                                  ))
                                                              ) : (
-                                                                 filteredUnits.map((u) => {
-                                                                     const isOccupied = (u.status ?? "").toLowerCase() === "occupied";
+                                                                 sortedFilteredUnits.map((u) => {
+                                                                     const isOccupied = isUnitOccupied(u);
+                                                                     const isOngoing = isUnitOngoing(u);
+                                                                     const isUnavailable = isOccupied || isOngoing;
                                                                      return (
                                                                          <option 
                                                                              key={u.id} 
                                                                              value={u.id} 
-                                                                             disabled={isOccupied}
+                                                                             disabled={isUnavailable}
+                                                                             style={isUnavailable ? { textDecoration: "line-through" } : undefined}
                                                                              className={cn(
                                                                                  "bg-card py-3 text-sm font-semibold text-foreground dark:bg-zinc-900 dark:text-zinc-100",
-                                                                                 isOccupied && "text-muted-foreground/50 dark:text-zinc-500 bg-muted/40 dark:bg-zinc-950 font-normal"
+                                                                                 isUnavailable && "line-through text-muted-foreground/50 dark:text-zinc-500 bg-muted/40 dark:bg-zinc-950 font-normal"
                                                                              )}
                                                                          >
-                                                                             {u.name} — {u.property_name} {isOccupied ? "• (Occupied — Unavailable)" : `— ₱${u.rent_amount.toLocaleString()}/mo`}
+                                                                             {getUnitOptionLabel(u, true)}
                                                                          </option>
                                                                      );
                                                                  })
@@ -1127,10 +1178,16 @@ export function WalkInApplicationModal({
                                                              <span className="text-[10px] font-black uppercase text-primary tracking-widest">Monthly Rent</span>
                                                             <span className="text-lg font-black italic text-foreground">₱{currentUnit.rent_amount.toLocaleString()}</span>
                                                         </motion.div>
-                                                        {(currentUnit.status ?? "").toLowerCase() === "occupied" && (
+                                                        {isUnitOccupied(currentUnit) && (
                                                             <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs font-bold text-amber-600 dark:text-amber-400">
                                                                 <AlertCircle size={16} className="shrink-0" />
                                                                 <span>This unit is currently occupied and unavailable for new tenant applications.</span>
+                                                            </motion.div>
+                                                        )}
+                                                        {isUnitOngoing(currentUnit) && (
+                                                            <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs font-bold text-amber-600 dark:text-amber-400">
+                                                                <AlertCircle size={16} className="shrink-0" />
+                                                                <span>This unit currently has an ongoing application under processing and is unavailable for new applications.</span>
                                                             </motion.div>
                                                         )}
                                                     </div>
