@@ -87,7 +87,7 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
                         className="object-cover opacity-60 group-hover:scale-105 transition-transform duration-[10s]"
                     />
                 ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900" />
+                    <div className="w-full h-full bg-gradient-to-br from-muted via-surface-2 to-surface-3 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950" />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-black/20" />
             </div>
@@ -107,7 +107,7 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
                     type="button"
                     onClick={handlePickFile}
                     disabled={isUploading}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white text-white hover:text-black border border-white/20 backdrop-blur-md text-[10px] font-black tracking-widest uppercase transition-all duration-300 shadow-xl disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-background/80 hover:bg-background text-foreground border border-border/80 backdrop-blur-md text-[10px] font-black tracking-widest uppercase transition-all duration-300 shadow-xl disabled:opacity-50 cursor-pointer"
                 >
                     <Camera className="size-3.5" />
                     {isUploading ? "Uploading..." : "Change Cover"}
@@ -116,9 +116,9 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
 
             {!coverUrl && !isUploading && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="flex flex-col items-center gap-2 opacity-40">
-                        <UploadCloud className="size-8 text-white" />
-                        <span className="text-[10px] font-black tracking-widest uppercase text-white">Upload Cover Photo</span>
+                    <div className="flex flex-col items-center gap-2 opacity-50">
+                        <UploadCloud className="size-8 text-muted-foreground" />
+                        <span className="text-[10px] font-black tracking-widest uppercase text-muted-foreground">Upload Cover Photo</span>
                     </div>
                 </div>
             )}

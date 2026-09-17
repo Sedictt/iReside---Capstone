@@ -56,7 +56,7 @@ export function SocialsHeader({ userId, initialSocials }: SocialsHeaderProps) {
 
     return (
         <>
-            <div className="flex flex-wrap items-center justify-center gap-6 mt-10 pt-8 border-t border-white/5 w-full max-w-2xl">
+            <div className="flex flex-wrap items-center justify-center gap-6 mt-10 pt-8 border-t border-black/10 dark:border-white/5 w-full max-w-2xl">
                 {socialIcons.map((social) => {
                     const url = socials[social.key];
                     if (!url) return null;
@@ -67,7 +67,7 @@ export function SocialsHeader({ userId, initialSocials }: SocialsHeaderProps) {
                             href={url.startsWith('http') ? url : `https://${url}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="size-12 rounded-2xl bg-white/5 hover:bg-[#c4b0ff]/20 border border-white/10 hover:border-[#c4b0ff]/40 flex items-center justify-center text-neutral-400 hover:text-[#c4b0ff] transition-all duration-300 group/social shadow-lg hover:shadow-[#c4b0ff]/10 hover:-translate-y-1"
+                            className="size-12 rounded-2xl neumorphic-inset-card hover:neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all duration-300 group/social shadow-sm hover:-translate-y-1"
                             title={social.label}
                         >
                             <social.icon size={20} className="group-hover/social:scale-110 transition-transform" />
@@ -78,7 +78,7 @@ export function SocialsHeader({ userId, initialSocials }: SocialsHeaderProps) {
                 {/* Manage Socials Trigger */}
                 <button 
                     onClick={() => setIsModalOpen(true)}
-                    className="flex items-center gap-3 px-6 h-12 rounded-2xl bg-white/5 hover:bg-white/10 border border-dashed border-white/10 text-neutral-500 hover:text-white transition-all duration-300 group"
+                    className="flex items-center gap-3 px-6 h-12 rounded-2xl neumorphic-extruded border border-dashed border-border text-muted-foreground hover:text-foreground transition-all duration-300 group cursor-pointer"
                     title="Manage Social Links"
                 >
                     {hasAnySocial ? (
@@ -99,27 +99,27 @@ export function SocialsHeader({ userId, initialSocials }: SocialsHeaderProps) {
             {isModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     <div 
-                        className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300"
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
                         onClick={() => setIsModalOpen(false)}
                     />
                     <div className="relative w-full max-w-md animate-in zoom-in fade-in duration-300">
-                        <div className="bg-[#171717] border border-neutral-800 rounded-[2.5rem] p-8 shadow-2xl">
+                        <div className="neumorphic-panel bg-card text-card-foreground border border-border rounded-[2.5rem] p-8 shadow-2xl">
                             <div className="flex items-center justify-between mb-8">
                                 <div className="flex items-center gap-4">
-                                    <div className="size-10 rounded-xl bg-[#c4b0ff]/10 flex items-center justify-center border border-[#c4b0ff]/20">
-                                        <Share2 size={20} className="text-[#c4b0ff]" />
+                                    <div className="size-10 rounded-xl neumorphic-inset-card flex items-center justify-center text-primary">
+                                        <Share2 size={20} className="text-primary" />
                                     </div>
-                                    <h3 className="text-xl font-display font-black text-white tracking-tight">Social Connectivity</h3>
+                                    <h3 className="text-xl font-display font-black tracking-tight text-foreground">Social Connectivity</h3>
                                 </div>
                                 <button 
                                     onClick={() => setIsModalOpen(false)}
-                                    className="size-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-neutral-500 transition-colors"
+                                    className="size-10 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                                 >
                                     <X size={18} />
                                 </button>
                             </div>
 
-                            <p className="text-sm text-neutral-400 mb-8 leading-relaxed">
+                            <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
                                 Connect your professional social channels to build trust and allow tenants to verify your business presence.
                             </p>
 

@@ -50,7 +50,7 @@ export default function EditableBio({
                 <textarea
                     value={tempBio}
                     onChange={(e) => setTempBio(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] p-4 text-sm text-white focus:outline-none focus:border-[#8B5CF6]/50 transition-colors resize-none"
+                    className="w-full bg-background border border-border rounded-[1.5rem] p-4 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors resize-none neumorphic-inset"
                     rows={4}
                     placeholder="Tell potential tenants about yourself and your property management style..."
                 />
@@ -58,7 +58,7 @@ export default function EditableBio({
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="flex items-center gap-2 bg-[#c4b0ff] hover:bg-[#9b77ff] text-[#1e1b4b] px-5 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase transition shadow-lg shadow-[#c4b0ff]/20 disabled:opacity-50"
+                        className="flex items-center gap-2 neumorphic-primary px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase transition disabled:opacity-50"
                     >
                         {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                         Save Bio
@@ -69,7 +69,7 @@ export default function EditableBio({
                             setIsEditing(false);
                         }}
                         disabled={saving}
-                        className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-5 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase transition"
+                        className="flex items-center gap-2 neumorphic-extruded text-muted-foreground hover:text-foreground px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase transition"
                     >
                         <X size={14} />
                         Cancel
@@ -85,7 +85,7 @@ export default function EditableBio({
         return (
             <button
                 onClick={() => setIsEditing(true)}
-                className="mt-2 flex items-center gap-3 text-[10px] font-black text-white/40 hover:text-white transition-all uppercase tracking-widest border border-dashed border-white/10 rounded-2xl px-6 py-4 hover:bg-white/5 w-full justify-center"
+                className="mt-2 flex items-center gap-3 text-[10px] font-black text-muted-foreground hover:text-foreground transition-all uppercase tracking-widest border border-dashed border-border rounded-2xl px-6 py-4 hover:bg-muted/40 w-full justify-center"
             >
                 <Plus size={16} />
                 Introduce yourself (Add Bio)
@@ -95,13 +95,13 @@ export default function EditableBio({
 
     return (
         <div className="mt-2 relative group">
-            <p className="text-sm text-white/70 leading-relaxed max-w-2xl pr-8">
+            <p className="text-sm text-foreground/80 leading-relaxed max-w-2xl pr-8">
                 {bio}
             </p>
             {isOwner && (
                 <button
                     onClick={() => setIsEditing(true)}
-                    className="absolute -top-1 -right-1 p-2 rounded-full bg-white/5 text-white/20 hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100"
+                    className="absolute -top-1 -right-1 p-2 rounded-full neumorphic-extruded text-muted-foreground hover:text-foreground transition-all opacity-0 group-hover:opacity-100"
                     aria-label="Edit Bio"
                 >
                     <Edit3 size={14} />

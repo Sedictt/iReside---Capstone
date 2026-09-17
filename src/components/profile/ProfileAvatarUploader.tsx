@@ -51,10 +51,10 @@ export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullNam
 
     return (
         <div className={className}>
-            <div className="absolute inset-0 rounded-full border border-white/20 animate-pulse-slow"></div>
+            <div className="absolute inset-0 rounded-full border border-border/40 animate-pulse-slow"></div>
             <div 
-                className="absolute inset-1 rounded-full overflow-hidden border-2 border-white/50 shadow-2xl transition-all duration-500 flex items-center justify-center"
-                style={{ backgroundColor: currentBgColor || '#171717' }}
+                className="absolute inset-1 rounded-full overflow-hidden border-2 border-background shadow-2xl transition-all duration-500 flex items-center justify-center"
+                style={{ backgroundColor: currentBgColor || '#8B5CF6' }}
             >
                 {currentAvatarUrl ? (
                     <Image
@@ -74,11 +74,11 @@ export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullNam
             <button
                 type="button"
                 onClick={() => setIsPickerOpen(true)}
-                className="absolute bottom-1 right-1 size-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-black transition-all shadow-lg z-20"
+                className="absolute bottom-1 right-1 size-10 neumorphic-extruded rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-lg z-20 cursor-pointer"
                 aria-label="Change profile appearance"
                 title="Change profile appearance"
             >
-                <Camera size={20} />
+                <Camera size={18} />
             </button>
 
             {/* Avatar Picker Modal */}
@@ -87,7 +87,7 @@ export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullNam
                     isOpen={isPickerOpen}
                     onClose={() => setIsPickerOpen(false)}
                     currentAvatarUrl={currentAvatarUrl}
-                    currentBgColor={currentBgColor || '#171717'}
+                    currentBgColor={currentBgColor || '#8B5CF6'}
                     onProfileUpdate={handleProfileUpdate}
                 />
             )}

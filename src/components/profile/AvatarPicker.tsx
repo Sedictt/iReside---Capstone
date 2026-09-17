@@ -237,24 +237,24 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={onClose}
-                    className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                    className="absolute inset-0 bg-black/60 backdrop-blur-md"
                 />
                 
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                    className="relative w-full max-w-5xl h-[600px] flex flex-col md:flex-row overflow-hidden rounded-[2.5rem] border border-white/10 bg-[#0a0a0a]/90 shadow-[0_40px_100px_rgba(0,0,0,0.8)] backdrop-blur-2xl"
+                    className="relative w-full max-w-5xl h-[600px] flex flex-col md:flex-row overflow-hidden rounded-[2.5rem] border border-border bg-card text-card-foreground shadow-2xl backdrop-blur-2xl"
                 >
                     {/* Visual Preview Pane */}
-                    <div className="w-full md:w-[300px] shrink-0 bg-gradient-to-b from-white/[0.03] to-transparent p-10 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/5 relative group">
+                    <div className="w-full md:w-[300px] shrink-0 bg-muted/30 p-10 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-border/40 relative group">
                         <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
                              <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,var(--primary)_0%,transparent_70%)] transition-colors duration-700" style={{ "--primary": state.selectedColor } as any} />
                         </div>
                         
                         <div className="relative z-10 mb-8">
                             <div 
-                                className="size-40 rounded-[2.5rem] p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ring-1 ring-white/10 overflow-hidden relative transition-all duration-700 ease-out group-hover:scale-105"
+                                className="size-40 rounded-[2.5rem] p-1.5 shadow-xl ring-1 ring-border/40 overflow-hidden relative transition-all duration-700 ease-out group-hover:scale-105"
                                 style={{ backgroundColor: state.selectedColor }}
                             >
                                 {state.selectedAvatar ? (
@@ -267,7 +267,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                         className="h-full w-full object-cover relative z-10" 
                                     />
                                 ) : (
-                                    <div className="h-full w-full bg-white/5 animate-pulse" />
+                                    <div className="h-full w-full bg-muted animate-pulse" />
                                 )}
                                 <div className="absolute inset-0 z-20 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none" />
                             </div>
@@ -275,10 +275,10 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                             <motion.div 
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-xl border border-white/20 px-3.5 py-1 rounded-full shadow-xl flex items-center gap-2"
+                                className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-xl border border-border px-3.5 py-1 rounded-full shadow-xl flex items-center gap-2"
                             >
-                                <div className="size-2 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.3)]" style={{ backgroundColor: state.selectedColor }} />
-                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/90 font-mono">{state.selectedColor.toUpperCase()}</span>
+                                <div className="size-2 rounded-full shadow-sm" style={{ backgroundColor: state.selectedColor }} />
+                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-foreground font-mono">{state.selectedColor.toUpperCase()}</span>
                             </motion.div>
                         </div>
 
@@ -286,14 +286,14 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                             <button
                                 onClick={handleSave}
                                 disabled={state.isUpdating || !state.selectedAvatar || loading}
-                                className="group relative w-full flex items-center justify-center gap-3 rounded-2xl bg-primary px-6 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-primary-foreground shadow-[0_15px_30px_-5px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_20px_40px_-5px_rgba(var(--primary-rgb),0.4)] active:scale-95 disabled:opacity-50 overflow-hidden"
+                                className="group relative w-full flex items-center justify-center gap-3 rounded-2xl bg-primary px-6 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-primary-foreground shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 overflow-hidden cursor-pointer"
                             >
                                 {state.isUpdating || (loading && !profile) ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                                 <span>{state.isUpdating ? "Saving..." : (loading && !profile ? "Loading..." : "Save Profile")}</span>
                             </button>
                             <button
                                 onClick={onClose}
-                                className="w-full py-1 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 hover:text-white transition-colors"
+                                className="w-full py-1 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                             >
                                 Cancel
                             </button>
@@ -301,7 +301,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                     </div>
 
                     {/* Controls Pane */}
-                    <div className="flex-1 flex flex-col bg-black/40 min-h-0 p-8 space-y-12">
+                    <div className="flex-1 flex flex-col bg-background/40 min-h-0 p-8 space-y-12">
                         {state.error && (
                             <div className="mb-4 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-[10px] font-black text-red-400">
                                 {state.error}
@@ -310,16 +310,16 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
 
                         {/* Avatar Section */}
                         <section className="space-y-4">
-                            <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500">Profile Photo</h3>
+                            <div className="flex items-center justify-between border-b border-border/40 pb-2">
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">Profile Photo</h3>
                                 <div className="flex gap-1">
                                     {Array.from({ length: totalPages }).map((_, i) => (
                                         <button
                                             key={`avatar-page-${i}`}
                                             onClick={() => dispatch({ type: "SET_PAGE", payload: i })}
                                             className={cn(
-                                                "h-1 w-2.5 rounded-full transition-all",
-                                                state.currentPage === i ? "bg-primary w-5" : "bg-white/10 hover:bg-white/20"
+                                                "h-1 w-2.5 rounded-full transition-all cursor-pointer",
+                                                state.currentPage === i ? "bg-primary w-5" : "bg-muted-foreground/20 hover:bg-muted-foreground/40"
                                             )}
                                         />
                                     ))}
@@ -337,9 +337,9 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                             className="grid grid-cols-4 gap-4"
                                         >
                                             {state.currentPage === 0 && (
-                                                <label className="group relative aspect-square flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/[0.02] transition-all hover:border-primary/40 hover:bg-primary/5 active:scale-95">
+                                                <label className="group relative aspect-square flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 transition-all hover:border-primary/40 hover:bg-primary/5 active:scale-95">
                                                     <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={state.isUploading} />
-                                                    {state.isUploading ? <Loader2 className="size-5 animate-spin text-primary" /> : <Upload className="size-4 text-zinc-500 group-hover:text-primary transition-colors" />}
+                                                    {state.isUploading ? <Loader2 className="size-5 animate-spin text-primary" /> : <Upload className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />}
                                                 </label>
                                             )}
 
@@ -350,8 +350,8 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                                         key={url}
                                                         onClick={() => dispatch({ type: "SET_AVATAR", payload: url })}
                                                         className={cn(
-                                                            "group relative aspect-square overflow-hidden rounded-2xl bg-white/[0.03] transition-all hover:scale-[1.05] active:scale-95",
-                                                            isSelected ? "ring-2 ring-primary bg-primary/10 shadow-xl" : "hover:bg-white/5"
+                                                            "group relative aspect-square overflow-hidden rounded-2xl bg-muted/30 border border-border/40 transition-all hover:scale-[1.05] active:scale-95 cursor-pointer",
+                                                            isSelected ? "ring-2 ring-primary bg-primary/10 shadow-xl" : "hover:bg-muted/60"
                                                         )}
                                                     >
                                                         <Image src={url} alt="Avatar" sizes="100px" className={cn("object-cover transition-transform duration-500", isSelected ? "scale-110" : "group-hover:scale-110")} fill />
@@ -373,7 +373,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                     <button 
                                         onClick={() => dispatch({ type: "SET_PAGE", payload: Math.max(0, state.currentPage - 1) })}
                                         disabled={state.currentPage === 0}
-                                        className="p-1.5 rounded-full bg-[#171717] border border-white/10 hover:bg-white/5 disabled:opacity-0 transition-all shadow-xl"
+                                        className="p-1.5 rounded-full bg-card border border-border hover:bg-muted disabled:opacity-0 transition-all shadow-md text-foreground cursor-pointer"
                                     >
                                         <ChevronLeft className="size-4" />
                                     </button>
@@ -382,7 +382,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                     <button 
                                         onClick={() => dispatch({ type: "SET_PAGE", payload: Math.min(totalPages - 1, state.currentPage + 1) })}
                                         disabled={state.currentPage === totalPages - 1}
-                                        className="p-1.5 rounded-full bg-[#171717] border border-white/10 hover:bg-white/5 disabled:opacity-0 transition-all shadow-xl"
+                                        className="p-1.5 rounded-full bg-card border border-border hover:bg-muted disabled:opacity-0 transition-all shadow-md text-foreground cursor-pointer"
                                     >
                                         <ChevronRight className="size-4" />
                                     </button>
@@ -392,11 +392,11 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
 
                         {/* Color Section */}
                         <section className="space-y-4">
-                            <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500">Background Color</h3>
+                            <div className="flex items-center justify-between border-b border-border/40 pb-2">
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">Background Color</h3>
                                 <button 
-                                    onClick={() => dispatch({ type: "SET_COLOR", payload: "#171717" })}
-                                    className="text-[9px] font-black uppercase tracking-widest text-primary hover:opacity-80 transition-opacity flex items-center gap-1.5"
+                                    onClick={() => dispatch({ type: "SET_COLOR", payload: "#8B5CF6" })}
+                                    className="text-[9px] font-black uppercase tracking-widest text-primary hover:opacity-80 transition-opacity flex items-center gap-1.5 cursor-pointer"
                                 >
                                     <RefreshCcw className="size-2.5" />
                                     Reset
@@ -405,15 +405,15 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                             
                             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
                                 <div className="lg:col-span-2 space-y-4">
-                                    <div className="custom-color-picker-container rounded-2xl overflow-hidden border border-white/10 p-3 bg-white/[0.02] shadow-xl">
+                                    <div className="custom-color-picker-container rounded-2xl overflow-hidden border border-border p-3 bg-card shadow-md">
                                         <HexColorPicker 
                                             color={state.selectedColor} 
                                             onChange={(color) => dispatch({ type: "SET_COLOR", payload: color })} 
                                             className="!w-full !h-36"
                                         />
                                     </div>
-                                    <div className="h-10 w-full rounded-xl bg-white/5 border border-white/10 flex items-center px-3 gap-2 focus-within:border-primary/40 transition-colors">
-                                        <span className="text-[9px] font-black text-zinc-500 uppercase font-mono">HEX</span>
+                                    <div className="h-10 w-full rounded-xl bg-background border border-border flex items-center px-3 gap-2 focus-within:border-primary/40 transition-colors">
+                                        <span className="text-[9px] font-black text-muted-foreground uppercase font-mono">HEX</span>
                                         <input 
                                             type="text" 
                                             value={state.selectedColor.toUpperCase()}
@@ -423,7 +423,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                                     dispatch({ type: "SET_COLOR", payload: val });
                                                 }
                                             }}
-                                            className="bg-transparent border-none outline-none text-[10px] font-mono font-black text-white w-full uppercase"
+                                            className="bg-transparent border-none outline-none text-[10px] font-mono font-black text-foreground w-full uppercase"
                                         />
                                     </div>
                                 </div>
@@ -435,8 +435,8 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                                 key={color}
                                                 onClick={() => dispatch({ type: "SET_COLOR", payload: color })}
                                                 className={cn(
-                                                    "aspect-square rounded-xl border transition-all hover:scale-110 relative",
-                                                    state.selectedColor === color ? "border-primary scale-110 shadow-lg" : "border-white/5 hover:border-white/20"
+                                                    "aspect-square rounded-xl border transition-all hover:scale-110 relative cursor-pointer",
+                                                    state.selectedColor === color ? "border-primary scale-110 shadow-lg" : "border-border/40 hover:border-border"
                                                 )}
                                                 style={{ backgroundColor: color }}
                                             >
