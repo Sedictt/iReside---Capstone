@@ -15,7 +15,6 @@ import {
  RefreshCw,
  Search,
  Filter,
- Plus,
  Building2,
  ArrowUp01,
  ArrowDown10,
@@ -53,7 +52,7 @@ import ArchiveTab from "@/components/landlord/leases/ArchiveTab";
 
 function LeasesContent() {
  const searchParams = useSearchParams();
- const { back, push } = useRouter();
+ const { back } = useRouter();
  const leaseId = searchParams.get("id");
  const unitId = searchParams.get("unitId");
  const { selectedPropertyId, setSelectedPropertyId, properties } = useProperty();
@@ -1004,14 +1003,6 @@ function LeasesContent() {
           >
             <RefreshCw className="size-4 transition-transform group-hover:rotate-180 duration-500" />
             Refresh
-          </button>
-          
-          <button 
-            onClick={() => push("/landlord/applications?action=walk-in")}
-            className="flex h-11 items-center gap-2 rounded-2xl bg-primary px-6 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 cursor-pointer"
-          >
-            <Plus className="size-4" />
-            New Lease
           </button>
         </div>
       </div>
