@@ -131,7 +131,7 @@ export async function POST(request: Request) {
     // Verify landlord owns this unit.
     const { data: unit, error: unitError } = await adminClient
         .from("units")
-        .select("id, property_id")
+        .select("id, property_id, status")
         .eq("id", unit_id)
         .maybeSingle();
 
@@ -142,6 +142,36 @@ export async function POST(request: Request) {
 
     if (!unit) {
         return NextResponse.json({ error: "Unit not found." }, { status: 404 });
+    }
+
+    if ((unit.status ?? "").toLowerCase() === "occupied") {
+        return NextResponse.json({ error: "Selected unit is currently occupied and unavailable." }, { status: 400 });
+    }
+
+    const isOngoingStatus = [
+        "under_negotiation",
+        "under negotiation",
+        "negotiating",
+        "processing",
+        "ongoing",
+        "on-going",
+        "reserved"
+    ].includes((unit.status ?? "").toLowerCase());
+
+    if (isOngoingStatus) {
+        return NextResponse.json({ error: "Selected unit currently has an ongoing application or is under negotiation." }, { status: 400 });
+    }
+
+    const { data: ongoingApp } = await adminClient
+        .from("applications")
+        .select("id")
+        .eq("unit_id", unit_id)
+        .in("status", ["pending", "reviewing", "payment_pending", "approved"])
+        .limit(1)
+        .maybeSingle();
+
+    if (ongoingApp) {
+        return NextResponse.json({ error: "Selected unit currently has an ongoing application under processing and is unavailable." }, { status: 400 });
     }
 
     const { data: property, error: propertyError } = await adminClient

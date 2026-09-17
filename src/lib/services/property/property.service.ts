@@ -187,15 +187,43 @@ export class PropertyService {
       throw new Error(`Failed to load units: ${unitsError.message}`);
     }
 
+    const unitList = units ?? [];
+    const unitIds = unitList.map((u) => u.id);
+    const activeApplicationsByUnit = new Map<string, { count: number; status: string }>();
+
+    if (unitIds.length > 0) {
+      const { data: activeApps } = await this.supabase
+        .from("applications")
+        .select("id, unit_id, status")
+        .in("unit_id", unitIds)
+        .in("status", ["pending", "reviewing", "payment_pending", "approved"]);
+
+      if (activeApps) {
+        for (const app of activeApps) {
+          if (app.unit_id) {
+            const current = activeApplicationsByUnit.get(app.unit_id);
+            if (!current) {
+              activeApplicationsByUnit.set(app.unit_id, { count: 1, status: app.status });
+            } else {
+              current.count += 1;
+            }
+          }
+        }
+      }
+    }
+
     const unitsByPropertyId = new Map<string, UnitSummary[]>();
-    for (const unit of units ?? []) {
+    for (const unit of unitList) {
       const existing = unitsByPropertyId.get(unit.property_id) ?? [];
+      const appInfo = activeApplicationsByUnit.get(unit.id);
       existing.push({
         id: unit.id,
         propertyId: unit.property_id,
         name: unit.name,
         status: unit.status,
         rentAmount: Number(unit.rent_amount ?? 0),
+        hasOngoingApplication: Boolean(appInfo && appInfo.count > 0),
+        ongoingApplicationStatus: appInfo?.status ?? null,
       });
       unitsByPropertyId.set(unit.property_id, existing);
     }
