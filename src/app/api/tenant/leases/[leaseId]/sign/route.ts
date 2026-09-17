@@ -12,8 +12,10 @@ import { isValidLeaseStatusTransition, getTransitionErrorMessage } from "@/lib/l
 import { generateLeasePdf } from "@/lib/lease-pdf";
 
 type SignLeaseBody = {
-  tenant_signature: string;
-  signing_token: string;
+  tenant_signature?: string;
+  tenantSignature?: string;
+  signing_token?: string;
+  signingToken?: string;
 };
 
 /**
@@ -43,8 +45,11 @@ export async function POST(
     );
   }
 
+  const signatureInput = body.tenant_signature || body.tenantSignature;
+  const tokenInput = body.signing_token || body.signingToken;
+
   // Validate required fields
-  if (!body.tenant_signature || !body.signing_token) {
+  if (!signatureInput || !tokenInput) {
     return NextResponse.json(
       { error: "Missing required fields: tenant_signature and signing_token" },
       { status: 400 }
@@ -52,7 +57,7 @@ export async function POST(
   }
 
   // Verify signing token
-  const tokenResult = verifySigningToken(body.signing_token);
+  const tokenResult = verifySigningToken(tokenInput);
   
   if (!tokenResult.valid || !tokenResult.payload) {
     return NextResponse.json(
@@ -135,7 +140,7 @@ export async function POST(
   }
 
   // Validate signature format and content
-  const validation = await validateSignature(body.tenant_signature);
+  const validation = await validateSignature(signatureInput);
   if (!validation.valid) {
     return NextResponse.json(
       { error: validation.error },
@@ -146,7 +151,7 @@ export async function POST(
   // Sanitize signature data URL
   let sanitizedSignature: string;
   try {
-    sanitizedSignature = sanitizeSignatureDataURL(body.tenant_signature);
+    sanitizedSignature = sanitizeSignatureDataURL(signatureInput);
   } catch (error) {
     return NextResponse.json(
       { error: "Invalid signature data URL format" },
@@ -366,21 +371,7 @@ export async function POST(
         if (uploadError) {
           console.error("[sign-lease] Document upload error:", uploadError);
         } else {
-          const { data: { publicUrl } } = adminClient
-            .storage
-            .from("landlord-documents")
-            .getPublicUrl(fileName);
-
-          await adminClient
-            .from("leases")
-            .update({
-              signed_document_url: publicUrl,
-              signed_document_path: fileName,
-              updated_at: signedAt,
-            })
-            .eq("id", leaseId);
-
-          console.log("[sign-lease] Tenant-signed document stored in vault:", publicUrl);
+          console.log("[sign-lease] Tenant-signed preliminary document stored in vault:", fileName);
         }
       }
     }

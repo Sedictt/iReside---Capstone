@@ -84,6 +84,7 @@ const LEASE_DETAIL_QUERY = `
   tenant_signed_at,
   signed_document_url,
   signed_at,
+  landlord_signature,
   landlord_signed_at,
   unit:units!inner (
     name,
@@ -181,6 +182,10 @@ const TENANT_RICH_LEASE_QUERY = `
   monthly_rent,
   security_deposit,
   terms,
+  tenant_signature,
+  tenant_signed_at,
+  landlord_signature,
+  landlord_signed_at,
   signed_at,
   signed_document_url,
   unit:units!inner (

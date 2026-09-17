@@ -62,6 +62,10 @@ export const LeasePreviewModal = ({
                             security_deposit: Number(matchedLease.security_deposit || leaseRent),
                             signed_at: matchedLease.signed_at || matchedLease.landlord_signed_at || null,
                             signed_document_url: matchedLease.signed_document_url || null,
+                            tenant_signature: matchedLease.tenant_signature || null,
+                            tenant_signed_at: matchedLease.tenant_signed_at || null,
+                            landlord_signature: matchedLease.landlord_signature || null,
+                            landlord_signed_at: matchedLease.landlord_signed_at || null,
                             terms: {
                                 rent_due_day: matchedLease.terms?.rent_due_day || 1,
                                 late_fee_day: matchedLease.terms?.late_fee_day || 5,
