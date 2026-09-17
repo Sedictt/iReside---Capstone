@@ -29,8 +29,8 @@ export function SocialConnectivity({ userId, initialSocials }: SocialConnectivit
     };
 
     return (
-        <div className="mt-10 pt-10 border-t border-white/10">
-            <p className="text-[9px] font-black tracking-widest text-neutral-500 uppercase mb-4 text-center">Social Connectivity</p>
+        <div className="mt-10 pt-10 border-t border-black/10 dark:border-white/5">
+            <p className="text-[9px] font-black tracking-widest text-muted-foreground uppercase mb-4 text-center">Social Connectivity</p>
             <SocialLinksEditor initialSocials={initialSocials} onSave={handleSave} />
         </div>
     );

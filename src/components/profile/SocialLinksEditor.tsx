@@ -46,32 +46,32 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
             <div className="flex flex-col items-center gap-4">
                 <div className="flex justify-center gap-4">
                     {socials.facebook && (
-                        <a href={socials.facebook} target="_blank" rel="noopener noreferrer" className="size-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#1877F2] hover:text-white transition-all duration-300 hover:-translate-y-1">
+                        <a href={socials.facebook} target="_blank" rel="noopener noreferrer" className="size-12 rounded-2xl neumorphic-inset-card flex items-center justify-center hover:bg-[#1877F2] hover:text-white transition-all duration-300 hover:-translate-y-1">
                             <Facebook size={20} />
                         </a>
                     )}
                     {socials.twitter && (
-                        <a href={socials.twitter} target="_blank" rel="noopener noreferrer" className="size-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#1DA1F2] hover:text-white transition-all duration-300 hover:-translate-y-1">
+                        <a href={socials.twitter} target="_blank" rel="noopener noreferrer" className="size-12 rounded-2xl neumorphic-inset-card flex items-center justify-center hover:bg-[#1DA1F2] hover:text-white transition-all duration-300 hover:-translate-y-1">
                             <Twitter size={20} />
                         </a>
                     )}
                     {socials.linkedin && (
-                        <a href={socials.linkedin} target="_blank" rel="noopener noreferrer" className="size-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#0A66C2] hover:text-white transition-all duration-300 hover:-translate-y-1">
+                        <a href={socials.linkedin} target="_blank" rel="noopener noreferrer" className="size-12 rounded-2xl neumorphic-inset-card flex items-center justify-center hover:bg-[#0A66C2] hover:text-white transition-all duration-300 hover:-translate-y-1">
                             <Linkedin size={20} />
                         </a>
                     )}
                     {socials.instagram && (
-                        <a href={socials.instagram} target="_blank" rel="noopener noreferrer" className="size-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#E4405F] hover:text-white transition-all duration-300 hover:-translate-y-1">
+                        <a href={socials.instagram} target="_blank" rel="noopener noreferrer" className="size-12 rounded-2xl neumorphic-inset-card flex items-center justify-center hover:bg-[#E4405F] hover:text-white transition-all duration-300 hover:-translate-y-1">
                             <Instagram size={20} />
                         </a>
                     )}
                     {!socials.facebook && !socials.twitter && !socials.linkedin && !socials.instagram && (
-                        <p className="text-xs text-neutral-500 italic">No social links added yet</p>
+                        <p className="text-xs text-muted-foreground italic">No social links added yet</p>
                     )}
                 </div>
                 <button 
                     onClick={() => setIsEditing(true)}
-                    className="text-[10px] font-black tracking-widest uppercase px-4 py-1.5 rounded-full border border-white/10 hover:bg-white/5 transition-all opacity-40 hover:opacity-100"
+                    className="text-[10px] font-black tracking-widest uppercase px-4 py-2 rounded-full neumorphic-extruded text-muted-foreground hover:text-foreground transition-all cursor-pointer"
                 >
                     Edit Socials
                 </button>
@@ -80,17 +80,17 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
     }
 
     return (
-        <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 w-full max-w-sm animate-in fade-in zoom-in duration-300">
+        <div className="neumorphic-inset border border-border/50 rounded-3xl p-6 w-full max-w-sm animate-in fade-in zoom-in duration-300 bg-background/50">
             <div className="flex items-center justify-between mb-6">
-                <h4 className="text-xs font-black tracking-widest uppercase text-white">Edit Social Links</h4>
-                <button onClick={() => setIsEditing(false)} className="text-neutral-500 hover:text-white transition-colors">
+                <h4 className="text-xs font-black tracking-widest uppercase text-foreground">Edit Social Links</h4>
+                <button onClick={() => setIsEditing(false)} className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                     <X size={18} />
                 </button>
             </div>
 
             <div className="space-y-4 mb-6">
                 <div className="space-y-1.5">
-                    <label htmlFor="facebook-url" className="text-[9px] font-black tracking-widest text-neutral-500 uppercase flex items-center gap-2">
+                    <label htmlFor="facebook-url" className="text-[9px] font-black tracking-widest text-muted-foreground uppercase flex items-center gap-2">
                         <Facebook size={12} className="text-[#1877F2]" /> Facebook URL
                     </label>
                     <input 
@@ -99,11 +99,11 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                         value={socials.facebook || ""} 
                         onChange={(e) => updateSocial("facebook", e.target.value)}
                         placeholder="https://facebook.com/..."
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#8B5CF6]/50 transition-colors"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors"
                     />
                 </div>
                 <div className="space-y-1.5">
-                    <label htmlFor="twitter-url" className="text-[9px] font-black tracking-widest text-neutral-500 uppercase flex items-center gap-2">
+                    <label htmlFor="twitter-url" className="text-[9px] font-black tracking-widest text-muted-foreground uppercase flex items-center gap-2">
                         <Twitter size={12} className="text-[#1DA1F2]" /> Twitter URL
                     </label>
                     <input 
@@ -112,11 +112,11 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                         value={socials.twitter || ""} 
                         onChange={(e) => updateSocial("twitter", e.target.value)}
                         placeholder="https://twitter.com/..."
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#8B5CF6]/50 transition-colors"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors"
                     />
                 </div>
                 <div className="space-y-1.5">
-                    <label htmlFor="linkedin-url" className="text-[9px] font-black tracking-widest text-neutral-500 uppercase flex items-center gap-2">
+                    <label htmlFor="linkedin-url" className="text-[9px] font-black tracking-widest text-muted-foreground uppercase flex items-center gap-2">
                         <Linkedin size={12} className="text-[#0A66C2]" /> LinkedIn URL
                     </label>
                     <input 
@@ -125,11 +125,11 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                         value={socials.linkedin || ""} 
                         onChange={(e) => updateSocial("linkedin", e.target.value)}
                         placeholder="https://linkedin.com/in/..."
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#8B5CF6]/50 transition-colors"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors"
                     />
                 </div>
                 <div className="space-y-1.5">
-                    <label htmlFor="instagram-url" className="text-[9px] font-black tracking-widest text-neutral-500 uppercase flex items-center gap-2">
+                    <label htmlFor="instagram-url" className="text-[9px] font-black tracking-widest text-muted-foreground uppercase flex items-center gap-2">
                         <Instagram size={12} className="text-[#E4405F]" /> Instagram URL
                     </label>
                     <input 
@@ -138,7 +138,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                         value={socials.instagram || ""} 
                         onChange={(e) => updateSocial("instagram", e.target.value)}
                         placeholder="https://instagram.com/..."
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#8B5CF6]/50 transition-colors"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors"
                     />
                 </div>
             </div>
@@ -146,7 +146,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
             <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full flex items-center justify-center gap-2 bg-[#c4b0ff] hover:bg-[#9b77ff] text-[#1e1b4b] py-3 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-lg shadow-[#c4b0ff]/20 disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 neumorphic-primary py-3 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all disabled:opacity-50 cursor-pointer"
             >
                 {isSaving ? "Saving..." : <><Save size={14} /> Save Social Links</>}
             </button>
