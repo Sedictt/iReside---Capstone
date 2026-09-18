@@ -54,6 +54,7 @@ import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { useHighContrast } from "@/hooks/useHighContrast";
 import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
 import { TimeFormatToggle } from "@/components/ui/TimeFormatToggle";
+import { MobileSettingsCategoryDropdown } from "@/components/mobile/shared/MobileSettingsCategoryDropdown";
 
 // --- Types ---
 type SettingsCategory = "Identity" | "Accessibility" | "Security" | "Notifications" | "Billing" | "Data";
@@ -1453,106 +1454,17 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
             </div>
 
             <div className="min-h-[80vh] flex flex-col lg:flex-row gap-6 lg:gap-12">
-                {/* Mobile / Tablet Horizontal Navigation (< lg) */}
-                <div className="block lg:hidden space-y-3">
-                    <div className="flex items-center justify-between px-1">
-                        <div className="flex items-center gap-2.5">
-                            <div className="flex size-9 items-center justify-center rounded-xl bg-primary/20 text-primary border border-primary/20">
-                                <Layout className="size-4.5" />
-                            </div>
-                            <div>
-                                <h1 className="text-base font-black text-foreground leading-tight">Settings</h1>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                    {SIDEBAR_ITEMS.find(i => i.id === activeTab)?.label}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Swipe / Slide affordance hint */}
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-full border border-border/40 select-none">
-                            <SlidersHorizontal className="size-3 text-primary/70" />
-                            <span>Swipe to reveal</span>
-                            <ChevronRight className="size-3 text-primary animate-pulse" />
-                        </div>
-                    </div>
-
-                    <div className="relative group/rail">
-                        {/* Left Fade Gradient & Scroll Arrow */}
-                        <AnimatePresence>
-                            {canScrollLeft && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="absolute left-0 top-0 bottom-0 z-10 flex items-center pr-3 pl-0.5 bg-gradient-to-r from-background via-background/95 to-transparent pointer-events-none"
-                                >
-                                    <button
-                                        type="button"
-                                        onClick={() => scrollMobileTabs("left")}
-                                        aria-label="Scroll tabs left"
-                                        className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto"
-                                    >
-                                        <ChevronLeft className="size-3.5" />
-                                    </button>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
-                        {/* Scrollable Pills Container */}
-                        <div 
-                            ref={mobileTabRailRef}
-                            className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-1 scrollbar-hide -mx-1 px-1 scroll-smooth"
-                        >
-                            {SIDEBAR_ITEMS.map((item) => {
-                                const Icon = item.icon;
-                                const isActive = activeTab === item.id;
-                                return (
-                                    <button
-                                        key={item.id}
-                                        data-tab-id={item.id}
-                                        type="button"
-                                        onClick={() => handleMobileTabClick(item.id)}
-                                        className={cn(
-                                            "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black whitespace-nowrap transition-all duration-300 cursor-pointer shrink-0",
-                                            isActive
-                                                ? "neumorphic-panel text-primary font-black shadow-sm border-primary/30 ring-1 ring-primary/20"
-                                                : "neumorphic-extruded text-muted-foreground hover:text-foreground font-bold"
-                                        )}
-                                    >
-                                        <Icon className={cn("size-4 transition-transform", isActive ? "scale-110 text-primary" : "text-muted-foreground")} />
-                                        <span>{item.label}</span>
-                                        {isActive && (
-                                            <span className="size-1.5 rounded-full bg-primary" />
-                                        )}
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        {/* Right Fade Gradient & Scroll Arrow */}
-                        <AnimatePresence>
-                            {canScrollRight && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="absolute right-0 top-0 bottom-0 z-10 flex items-center pl-3 pr-0.5 bg-gradient-to-l from-background via-background/95 to-transparent pointer-events-none"
-                                >
-                                    <button
-                                        type="button"
-                                        onClick={() => scrollMobileTabs("right")}
-                                        aria-label="Scroll tabs right"
-                                        title="Slide to view more tabs"
-                                        className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto animate-pulse hover:animate-none"
-                                    >
-                                        <ChevronRight className="size-3.5" />
-                                    </button>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
+                {/* Mobile / Tablet Category Dropdown (< lg) */}
+                <div className="block lg:hidden mb-2">
+                    <MobileSettingsCategoryDropdown
+                        items={SIDEBAR_ITEMS}
+                        activeTab={activeTab}
+                        onSelectTab={(id) => {
+                            setActiveTab(id as SettingsCategory);
+                            const firstSubTab = SUB_TABS[id as SettingsCategory]?.[0];
+                            if (firstSubTab) setActiveSubTab(firstSubTab);
+                        }}
+                    />
                 </div>
 
                 {/* Desktop Collapsible Sidebar (lg+) */}
