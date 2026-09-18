@@ -200,6 +200,44 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
         expect(payload.error.toLowerCase()).toContain("profanity");
     });
 
+    it("blocks image messages with profane captions before insert", async () => {
+        ensureUserInConversationMock.mockResolvedValue(true);
+        redactWithAiOrFallbackMock.mockResolvedValue({
+            isSensitive: true,
+            redactedMessage: "*****",
+            isPhishing: false,
+            containsCredentials: false,
+            containsProfanity: true,
+            containsSpam: false,
+            redactionCategory: "profanity",
+            disclosureAllowed: false,
+            source: "local_dataset",
+        });
+
+        const insertMock = vi.fn();
+        const fromMock = vi.fn().mockReturnValue({ insert: insertMock });
+        createServiceRoleSupabaseClientMock.mockReturnValue({ from: fromMock });
+
+        const { POST } = await import("./route");
+        const response = await POST(
+            new Request("http://localhost/api/messages/conversations/conv-1", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    content: "fuck this",
+                    type: "image",
+                    metadata: { filePath: "photos/sample.jpg" },
+                }),
+            }),
+            { params: Promise.resolve({ conversationId: "conv-1" }) }
+        );
+
+        expect(response.status).toBe(422);
+        expect(insertMock).not.toHaveBeenCalled();
+        const payload = (await response.json()) as { error: string };
+        expect(payload.error.toLowerCase()).toContain("profanity");
+    });
+
     it("blocks phishing messages before insert", async () => {
         ensureUserInConversationMock.mockResolvedValue(true);
         redactWithAiOrFallbackMock.mockResolvedValue({

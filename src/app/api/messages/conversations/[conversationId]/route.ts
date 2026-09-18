@@ -261,7 +261,7 @@ export async function POST(
         const baseMetadata = isJsonObject(body.metadata) ? { ...body.metadata } : {};
         let resolvedMetadata: Json | null = body.metadata ?? null;
 
-        if (messageType === "text") {
+        if (content) {
             const moderation = await redactWithAiOrFallback(content);
             if (moderation.redactionCategory === "profanity") {
                 throw new Error("Message blocked due to profanity policy violation.");

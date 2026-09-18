@@ -88,6 +88,17 @@ describe("MessageService", () => {
         }),
       ).rejects.toBeInstanceOf(MessagingValidationError);
     });
+
+    it("throws MessagingValidationError on profanity in message content", async () => {
+      await expect(
+        service.sendMessage({
+          conversationId: "conv-1",
+          senderId: "user-1",
+          content: "fuck you bobo ka",
+          type: "text",
+        }),
+      ).rejects.toThrow("profanity policy violation");
+    });
   });
 
   describe("markMessagesAsRead", () => {
