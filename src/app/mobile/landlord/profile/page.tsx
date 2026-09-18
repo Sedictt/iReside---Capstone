@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { MobileHeader } from '@/components/mobile/layout/MobileHeader'
 import { LandlordProfileView } from '@/components/mobile/landlord/LandlordProfileView'
 
@@ -10,7 +11,9 @@ export default function LandlordProfilePage() {
     return (
         <>
             <MobileHeader title="Profile" />
-            <LandlordProfileView />
+            <Suspense fallback={null}>
+                <LandlordProfileView />
+            </Suspense>
         </>
     )
 }

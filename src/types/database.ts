@@ -47,6 +47,8 @@ export interface Database {
                     id: string
                     email: string
                     full_name: string
+                    first_name?: string | null
+                    last_name?: string | null
                     role: UserRole
                     avatar_url: string | null
                     avatar_bg_color: string | null
@@ -75,6 +77,8 @@ export interface Database {
                     id: string
                     email: string
                     full_name: string
+                    first_name?: string | null
+                    last_name?: string | null
                     role: UserRole
                     avatar_url?: string | null
                     avatar_bg_color?: string | null
@@ -103,6 +107,8 @@ export interface Database {
                     id?: string
                     email?: string
                     full_name?: string
+                    first_name?: string | null
+                    last_name?: string | null
                     role?: UserRole
                     avatar_url?: string | null
                     avatar_bg_color?: string | null

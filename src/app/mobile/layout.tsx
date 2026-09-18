@@ -64,8 +64,8 @@ function MobileLayoutInner({ children }: { children: React.ReactNode }) {
     return (
         <div
             className={cn(
-                'mobile-app-root relative h-[100dvh] max-h-[100dvh] min-h-[100dvh] w-full max-w-md mx-auto bg-background text-foreground',
-                'flex flex-col overflow-hidden select-none'
+                'mobile-app-root relative h-[100dvh] max-h-[100dvh] min-h-[100dvh] w-full max-w-full sm:max-w-xl md:max-w-2xl mx-auto bg-background text-foreground',
+                'flex flex-col overflow-x-hidden overflow-y-hidden select-none border-x-0 sm:border-x border-slate-200 dark:border-white/10 sm:shadow-2xl'
             )}
         >
             {/* Page content — scrollable only when content exceeds screen */}

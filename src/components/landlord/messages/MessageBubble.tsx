@@ -518,14 +518,14 @@ function SystemMessage({
                     message.metadata?.isResolved 
                         ? undefined 
                         : (isLandlord 
-                            ? (message.metadata?.hasRefundDetails ? "View Refund Info" : "Reconcile")
+                            ? (isOverpayment && message.metadata?.hasRefundDetails ? "View Refund Info" : undefined)
                             : ((isRejected || (isOverpayment && !message.metadata?.hasRefundDetails)) ? "Resolve Issue" : undefined))
                 }
                 onAction={
                     message.metadata?.isResolved
                         ? undefined
                         : (isLandlord 
-                            ? (message.metadata?.hasRefundDetails ? () => onOpenF2F?.(message) : undefined)
+                            ? (isOverpayment && message.metadata?.hasRefundDetails ? () => onOpenF2F?.(message) : undefined)
                             : ((isRejected || isOverpayment) ? () => onResolveIssue?.(message) : undefined))
                 }
             />

@@ -61,7 +61,7 @@ export function MobileHeader({
             </div>
 
             {/* Center: page title */}
-            <h1 className="text-[15px] font-semibold text-foreground tracking-tight truncate max-w-[180px]">
+            <h1 className="text-[15px] font-semibold text-foreground tracking-tight truncate flex-1 text-center px-2 min-w-0">
                 {title}
             </h1>
 

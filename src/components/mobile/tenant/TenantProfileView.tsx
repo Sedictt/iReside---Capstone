@@ -28,6 +28,7 @@ import {
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
+import { MobileConfirmModal } from '@/components/mobile/shared/MobileConfirmModal';
 
 const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80";
 
@@ -48,7 +49,7 @@ interface LeaseDetails {
 }
 
 export function TenantProfileView() {
-    const { profile } = useAuth();
+    const { profile, user } = useAuth();
     const { theme, setTheme } = useTheme();
     const router = useRouter();
 
@@ -75,16 +76,27 @@ export function TenantProfileView() {
         fetchProfileData();
     }, []);
 
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [loggingOut, setLoggingOut] = useState(false);
+
     const handleLogout = async () => {
+        setLoggingOut(true);
         try {
             await signOut();
             router.replace('/login');
         } catch (err) {
             console.error('Logout error:', err);
+            setLoggingOut(false);
+            setShowLogoutConfirm(false);
         }
     };
 
-    const fullName = `${profile?.first_name || 'Resident'} ${profile?.last_name || ''}`.trim();
+    const fullName = 
+        profile?.full_name || 
+        `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 
+        user?.user_metadata?.full_name || 
+        user?.user_metadata?.name || 
+        'Resident';
     const avatarUrl = profile?.avatar_url || FALLBACK_AVATAR;
     const formatCurrency = (amt: number) => `₱${amt.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
 
@@ -92,29 +104,31 @@ export function TenantProfileView() {
         <PullToRefresh onRefresh={fetchProfileData}>
             <div className="flex flex-col gap-3 pb-3">
                 {/* Resident Profile Identity Card */}
-                <div className="mx-4 p-4 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex items-center gap-3.5">
-                    <div className="relative size-14 rounded-full overflow-hidden border-2 border-primary/30 bg-muted shrink-0 shadow-xs">
-                        <Image src={avatarUrl} alt={fullName} fill sizes="56px" className="object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                            <h3 className="text-sm font-black text-foreground truncate">{fullName}</h3>
-                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                                Resident
-                            </span>
+                <div className="px-4 pt-2.5">
+                    <div className="p-4 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex items-center gap-3.5">
+                        <div className="relative size-14 rounded-full overflow-hidden border-2 border-primary/30 bg-muted shrink-0 shadow-xs">
+                            <Image src={avatarUrl} alt={fullName} fill sizes="56px" className="object-cover" />
                         </div>
-                        <p className="text-xs text-muted-foreground truncate mt-0.5">{profile?.email || 'tenant@ireside.ph'}</p>
-                        {lease?.unitName && (
-                            <div className="flex items-center gap-1 mt-1 text-[11px] font-semibold text-primary">
-                                <Building2 className="size-3 shrink-0" />
-                                <span className="truncate">{lease.propertyName || 'Property'} • Unit {lease.unitName}</span>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                                <h3 className="text-sm font-black text-foreground truncate">{fullName}</h3>
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                                    Resident
+                                </span>
                             </div>
-                        )}
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">{profile?.email || 'tenant@ireside.ph'}</p>
+                            {lease?.unitName && (
+                                <div className="flex items-center gap-1 mt-1 text-[11px] font-semibold text-primary">
+                                    <Building2 className="size-3 shrink-0" />
+                                    <span className="truncate">{lease.propertyName || 'Property'} • Unit {lease.unitName}</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
                 {/* Quick Action Preferences: Theme & Sign Out */}
-                <div className="mx-4 grid grid-cols-2 gap-2.5">
+                <div className="px-4 grid grid-cols-2 gap-2.5">
                     <button
                         type="button"
                         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -129,7 +143,7 @@ export function TenantProfileView() {
 
                     <button
                         type="button"
-                        onClick={handleLogout}
+                        onClick={() => setShowLogoutConfirm(true)}
                         className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-between text-red-500 dark:text-red-400 active:scale-[0.98] transition-all shadow-2xs cursor-pointer"
                     >
                         <div className="flex items-center gap-2">
@@ -270,6 +284,20 @@ export function TenantProfileView() {
                     </div>
                 </div>
             </div>
+
+            {/* Sign Out Confirmation Modal */}
+            <MobileConfirmModal
+                isOpen={showLogoutConfirm}
+                title="Sign Out of iReside?"
+                description="Are you sure you want to sign out? You will need to log back in to view your lease, pay rent, or request maintenance."
+                confirmLabel="Sign Out"
+                cancelLabel="Cancel"
+                variant="danger"
+                isLoading={loggingOut}
+                icon={<LogOut className="size-5" />}
+                onConfirm={handleLogout}
+                onCancel={() => setShowLogoutConfirm(false)}
+            />
         </PullToRefresh>
     );
 }

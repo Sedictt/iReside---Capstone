@@ -168,7 +168,7 @@ export function TenantPayView() {
         <PullToRefresh onRefresh={fetchPayments}>
             <div className="flex flex-col gap-3 pb-3">
                 {/* Balance & Overview Card */}
-                <div className="px-4">
+                <div className="px-4 pt-2.5">
                     <div className="rounded-2xl p-4 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border border-primary/25 shadow-xs flex flex-col gap-2">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5 text-primary text-[10px] font-black uppercase tracking-wider">

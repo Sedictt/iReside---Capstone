@@ -152,7 +152,7 @@ export function TenantMaintenanceView() {
         <PullToRefresh onRefresh={fetchRequests}>
             <div className="flex flex-col gap-3 pb-3">
                 {/* Header Action Strip */}
-                <div className="px-4 flex items-center justify-between">
+                <div className="px-4 pt-2.5 flex items-center justify-between">
                     <div>
                         <h3 className="text-xs font-black uppercase tracking-wider text-muted-foreground">
                             Service Requests

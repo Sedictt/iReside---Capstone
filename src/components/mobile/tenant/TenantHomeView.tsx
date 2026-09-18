@@ -59,9 +59,21 @@ interface DashboardData {
 }
 
 export function TenantHomeView() {
-    const { profile } = useAuth();
+    const { profile, user } = useAuth();
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
+
+    const rawName = 
+        (data as any)?.userName ||
+        profile?.first_name ||
+        profile?.full_name ||
+        user?.user_metadata?.first_name ||
+        user?.user_metadata?.full_name ||
+        user?.user_metadata?.name ||
+        user?.email?.split('@')[0] ||
+        '';
+    const username = rawName.trim() ? (rawName.trim().split(' ')[0]) : 'Resident';
+    const formattedUsername = username.charAt(0).toUpperCase() + username.slice(1);
 
     const fetchDashboard = async () => {
         try {
@@ -93,22 +105,24 @@ export function TenantHomeView() {
         <PullToRefresh onRefresh={fetchDashboard}>
             <div className="flex flex-col gap-3 pb-3">
                 {/* Hero / Property & Unit Banner */}
-                <div className="mx-4 rounded-2xl p-3.5 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border border-primary/20 shadow-xs relative overflow-hidden">
-                    <div className="flex items-start justify-between relative z-10">
-                        <div>
-                            <div className="flex items-center gap-1.5 text-primary text-[10px] font-black uppercase tracking-wider mb-0.5">
-                                <Building2 className="size-3.5" />
-                                <span>{lease?.propertyName || 'My Residence'}</span>
+                <div className="px-4 pt-2.5">
+                    <div className="rounded-2xl p-3.5 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border border-primary/20 shadow-xs relative overflow-hidden">
+                        <div className="flex items-start justify-between relative z-10">
+                            <div>
+                                <div className="flex items-center gap-1.5 text-primary text-[10px] font-black uppercase tracking-wider mb-0.5">
+                                    <Building2 className="size-3.5" />
+                                    <span>{lease?.propertyName || 'My Residence'}</span>
+                                </div>
+                                <h2 className="text-base font-black tracking-tight text-foreground">
+                                    Welcome, {formattedUsername}
+                                </h2>
+                                <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                                    <span className="font-semibold text-foreground">
+                                        {lease?.unitName ? `Unit ${lease.unitName}` : 'Assigned Unit'}
+                                    </span>
+                                    {lease?.propertyAddress ? `• ${lease.propertyAddress}` : ''}
+                                </p>
                             </div>
-                            <h2 className="text-base font-black tracking-tight text-foreground">
-                                Welcome, {profile?.first_name || 'Resident'}
-                            </h2>
-                            <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
-                                <span className="font-semibold text-foreground">
-                                    {lease?.unitName ? `Unit ${lease.unitName}` : 'Assigned Unit'}
-                                </span>
-                                {lease?.propertyAddress ? `• ${lease.propertyAddress}` : ''}
-                            </p>
                         </div>
                     </div>
                 </div>
