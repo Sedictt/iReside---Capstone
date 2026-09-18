@@ -25,6 +25,7 @@ import { POST as setupLaunchPost } from "../../app/api/setup/launch/route";
 describe("POST /api/setup/launch (Turnkey Setup Claiming & Locking)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUpdateUserById.mockResolvedValue({ data: { user: {} }, error: null });
   });
 
   it("rejects unauthorized or tenant callers with 403 Forbidden", async () => {

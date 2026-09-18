@@ -68,25 +68,21 @@ type TabId = "bill" | "consumption" | "history";
 
 export default function FinanceHubPage() {
     const { push } = useRouter();
-    const [payload, setPayload] = useState<PaymentsPayload | null>(() => {
-        if (typeof window !== "undefined") {
-            const cached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
-            return cached?.data || null;
-        }
-        return null;
-    });
-    const [loading, setLoading] = useState(() => {
-        if (typeof window !== "undefined") {
-            const cached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
-            return !cached?.data;
-        }
-        return true;
-    });
+    const [payload, setPayload] = useState<PaymentsPayload | null>(null);
+    const [loading, setLoading] = useState(true);
     const [creatingAdvance, setCreatingAdvance] = useState(false);
     const [activeTab, setActiveTab] = useState<TabId>("bill");
 
     useEffect(() => {
         let alive = true;
+        
+        // Immediate cache hydration on client mount without SSR mismatch
+        const cached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
+        if (cached?.data && alive) {
+            setPayload(cached.data);
+            setLoading(false);
+        }
+
         const load = async () => {
             try {
                 if (typeof navigator !== "undefined" && navigator.onLine) {
@@ -102,17 +98,21 @@ export default function FinanceHubPage() {
                 }
 
                 // Offline fallback
-                const cached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
-                if (cached?.data && alive) {
-                    setPayload(cached.data);
-                    toast.info("Offline Mode: Loaded billing ledger and invoices from local cache.");
+                if (!cached?.data) {
+                    const fallbackCached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
+                    if (fallbackCached?.data && alive) {
+                        setPayload(fallbackCached.data);
+                        toast.info("Offline Mode: Loaded billing ledger and invoices from local cache.");
+                    }
                 }
             } catch (error) {
                 console.warn("[FinanceHub] Online fetch failed, checking offline cache:", error);
-                const cached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
-                if (cached?.data && alive) {
-                    setPayload(cached.data);
-                    toast.info("Loaded cached billing ledger offline.");
+                if (!cached?.data) {
+                    const fallbackCached = OfflineStorage.get<PaymentsPayload>("tenant_payments_payload");
+                    if (fallbackCached?.data && alive) {
+                        setPayload(fallbackCached.data);
+                        toast.info("Loaded cached billing ledger offline.");
+                    }
                 }
             } finally {
                 if (alive) setLoading(false);
@@ -375,11 +375,16 @@ export default function FinanceHubPage() {
                             <p className="text-lg font-black text-foreground mt-1">
                                 {formatPhpCurrency(month.amount)}
                             </p>
-                            <div className="flex items-center gap-1 mt-2">
+                            <div className="flex items-center justify-between gap-1 mt-2">
                                 {month.isForecast ? (
                                     <span className="text-[9px] font-medium text-muted-foreground">Estimated</span>
                                 ) : (
                                     <span className="text-[9px] font-medium text-primary">Ready to Pay</span>
+                                )}
+                                {month.dueDate && (
+                                    <span className="text-[9px] text-muted-foreground">
+                                        Due {new Date(month.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                                    </span>
                                 )}
                             </div>
                         </div>
@@ -445,7 +450,11 @@ export default function FinanceHubPage() {
                                     <div className="text-right">
                                         <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">Estimated Due</p>
                                         <p className="text-base font-black text-foreground">
-                                            {nextPayment ? nextPayment.dueDate : "1st of the Month"}
+                                            {nextPayment?.dueDate 
+                                                ? nextPayment.dueDate 
+                                                : payload?.upcomingMonths?.[0]?.dueDate
+                                                    ? new Date(payload.upcomingMonths[0].dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                                                    : "Next Cycle"}
                                         </p>
                                     </div>
                                 </div>

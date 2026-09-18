@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { ArrowLeft, CheckCircle2, CreditCard, Loader2, QrCode, ShieldCheck, Upload, Wallet, Receipt, TrendingUp, Info, HelpCircle, HandCoins, ChevronRight } from "lucide-react";
+import { useEffect, useMemo, useState, Suspense, type ReactNode } from "react";
+import { ArrowLeft, CheckCircle2, CreditCard, Loader2, QrCode, ShieldCheck, Upload, Wallet, Receipt, TrendingUp, Info, HelpCircle, HandCoins, ChevronRight, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -422,10 +422,11 @@ function buildSelectivePreviewInvoice(invoiceId: string): InvoiceDetail {
     };
 }
 
-export default function CheckoutPage() {
-    const params = useParams<{ id: string }>();
+function CheckoutPageContent() {
+    const params = useParams();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const paymentId = typeof params?.id === "string" ? params.id : Array.isArray(params?.id) ? params.id[0] : "";
     const [invoice, setInvoice] = useState<InvoiceDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -448,8 +449,8 @@ export default function CheckoutPage() {
             if (isFaceToFacePreview || isSelectivePreview) {
                 if (alive) {
                     const previewData = isSelectivePreview 
-                        ? buildSelectivePreviewInvoice(params.id)
-                        : buildFaceToFacePreviewInvoice(params.id);
+                        ? buildSelectivePreviewInvoice(paymentId || "preview")
+                        : buildFaceToFacePreviewInvoice(paymentId || "preview");
                     setInvoice(previewData);
                     setSelectedItemIds(previewData.lineItems.map(i => i.id));
                     setSelectedReadingIds(previewData.readings.map(r => r.id));
@@ -458,15 +459,25 @@ export default function CheckoutPage() {
                 return;
             }
 
+            if (!paymentId) {
+                if (alive) setLoading(false);
+                return;
+            }
+
             try {
-                const response = await fetch(`/api/tenant/payments/${params.id}`, { cache: "no-store" });
-                if (!response.ok) throw new Error();
+                const response = await fetch(`/api/tenant/payments/${paymentId}`, { cache: "no-store" });
+                if (!response.ok) {
+                    if (alive) setLoading(false);
+                    return;
+                }
                 const payload = await response.json();
                 if (alive && payload.invoice) {
                     setInvoice(payload.invoice);
-                    setSelectedItemIds(payload.invoice.lineItems.map((item: any) => item.id));
-                    setSelectedReadingIds(payload.invoice.readings.map((r: any) => r.id));
+                    setSelectedItemIds(payload.invoice.lineItems?.map((item: any) => item.id) || []);
+                    setSelectedReadingIds(payload.invoice.readings?.map((r: any) => r.id) || []);
                 }
+            } catch (err) {
+                console.error("[Checkout] Failed to load invoice:", err);
             } finally {
                 if (alive) setLoading(false);
             }
@@ -475,7 +486,7 @@ export default function CheckoutPage() {
         return () => {
             alive = false;
         };
-    }, [isFaceToFacePreview, params.id]);
+    }, [isFaceToFacePreview, isSelectivePreview, paymentId]);
 
     useEffect(() => {
         if (isFaceToFacePreview && invoice) {
@@ -652,7 +663,31 @@ export default function CheckoutPage() {
     }
 
     if (!invoice) {
-        return <div className="neumorphic-panel rounded-3xl p-8 text-center text-muted-foreground">Invoice unavailable.</div>;
+        return (
+            <div className="mx-auto max-w-xl rounded-[2.5rem] border border-border/60 neumorphic-panel p-8 sm:p-10 text-center relative overflow-hidden mt-8">
+                <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
+                    <AlertCircle className="size-7" />
+                </div>
+                <h2 className="text-xl font-black text-foreground">Invoice Unavailable</h2>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    This billing record could not be loaded or may have already been settled. You can check your active balance and payment history in the Finance Hub.
+                </p>
+                <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <Link
+                        href="/tenant/payments"
+                        className="w-full sm:w-auto rounded-2xl px-6 py-3 text-xs font-black uppercase tracking-wider neumorphic-primary"
+                    >
+                        Go to Finance Hub
+                    </Link>
+                    <Link
+                        href="/tenant/dashboard"
+                        className="w-full sm:w-auto rounded-2xl border border-border/70 px-6 py-3 text-xs font-black uppercase tracking-wider text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                    >
+                        Back to Dashboard
+                    </Link>
+                </div>
+            </div>
+        );
     }
 
     if (submitted || ["paid", "under_review", "awaiting_in_person", "confirmed", "receipted"].includes(invoice.status)) {
@@ -1131,4 +1166,17 @@ export default function CheckoutPage() {
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
     return <label className="block space-y-2.5"><span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{label}</span>{children}</label>;
+}
+
+export default function CheckoutPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-foreground">
+                <Loader2 className="size-6 animate-spin text-primary" />
+                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Loading invoice checkout...</p>
+            </div>
+        }>
+            <CheckoutPageContent />
+        </Suspense>
+    );
 }

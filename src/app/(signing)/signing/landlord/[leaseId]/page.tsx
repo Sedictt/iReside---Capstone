@@ -131,8 +131,8 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
 
     const generateDoc = async () => {
       try {
-        // If stored document exists and valid, try to fetch it first
-        if (lease.signed_document_url) {
+        // If lease is already active and stored document exists, load it
+        if (lease.status === "active" && lease.signed_document_url) {
           try {
             const pdfResponse = await fetch(lease.signed_document_url);
             if (pdfResponse.ok) {
@@ -206,6 +206,26 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
     }
 
     try {
+      let signedPdfBase64: string | undefined;
+      if (signedBlob) {
+        try {
+          const arrayBuffer = await signedBlob.arrayBuffer();
+          const bytes = new Uint8Array(arrayBuffer);
+          let binary = "";
+          const len = bytes.byteLength;
+          const chunkSize = 8192;
+          for (let i = 0; i < len; i += chunkSize) {
+            binary += String.fromCharCode.apply(
+              null,
+              bytes.subarray(i, Math.min(i + chunkSize, len)) as unknown as number[]
+            );
+          }
+          signedPdfBase64 = btoa(binary);
+        } catch (b64Err) {
+          console.warn("[landlord-sign] Failed to encode signed PDF blob:", b64Err);
+        }
+      }
+
       const response = await fetch(`/api/landlord/leases/${leaseId}/sign`, {
         method: "POST",
         headers: {
@@ -214,6 +234,7 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
         body: JSON.stringify({
           landlord_signature: signatureDataUrl,
           signing_token: token,
+          signed_pdf_base64: signedPdfBase64,
         }),
       });
 

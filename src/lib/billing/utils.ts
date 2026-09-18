@@ -99,27 +99,125 @@ export const getInvoiceStatus = ({
     if (status === "failed") return "failed";
     if (status === "refunded") return "refunded";
 
-    // 2. Workflow states should take priority over balance checks
-    // This ensures that "under_review" doesn't become "paid" just because balance is 0
-    if (workflowStatus === "reminder_sent") return "reminder_sent";
-    if (workflowStatus === "intent_submitted") return "intent_submitted";
+    // 2. Under review takes priority over balance checks (so provisional balance deduction during proof submit doesn't mark as paid)
     if (workflowStatus === "under_review") return "under_review";
-    if (workflowStatus === "awaiting_in_person") return "awaiting_in_person";
-    if (workflowStatus === "confirmed") return "confirmed";
     if (workflowStatus === "rejected") return "rejected";
     if (workflowStatus === "receipted") return "paid";
 
     // 3. Balance-based "paid" status
     if ((balanceRemaining ?? 0) <= 0) return "paid";
 
-    // 4. Processing state
+    // 4. In-flight workflow states when balance is still owed
+    if (workflowStatus === "reminder_sent") return "reminder_sent";
+    if (workflowStatus === "intent_submitted") return "intent_submitted";
+    if (workflowStatus === "awaiting_in_person") return "awaiting_in_person";
+
+    // 5. Processing state
     if (status === "processing") return "processing";
 
-    // 5. Overdue check
+    // 6. Overdue check
     const due = new Date(dueDate);
     if (!Number.isNaN(due.getTime()) && due.getTime() < Date.now()) {
         return "overdue";
     }
+
+    return "pending";
+};
+
+export type InvoiceFilterCategory = "overdue" | "under_review" | "pending" | "paid";
+
+export const getInvoiceFilterCategory = (invoice: {
+    status: string;
+    workflowStatus?: string | null;
+    proofStatus?: string | null;
+    balanceRemaining: number;
+    dueDate?: string | null;
+}): InvoiceFilterCategory => {
+    // 1. Awaiting verification of submitted payment proof
+    const isAwaitingVerification =
+        (invoice.workflowStatus === "under_review" ||
+            invoice.status === "under_review" ||
+            invoice.proofStatus === "submitted") &&
+        invoice.workflowStatus !== "confirmed" &&
+        invoice.status !== "completed";
+
+    if (isAwaitingVerification) {
+        return "under_review";
+    }
+
+    // 2. Settled / paid in full
+    const isSettled =
+        invoice.balanceRemaining <= 0 ||
+        invoice.status === "completed" ||
+        invoice.status === "paid" ||
+        invoice.workflowStatus === "receipted";
+
+    if (isSettled) {
+        return "paid";
+    }
+
+    // 3. Past due date with balance remaining
+    const isOverdue =
+        invoice.status === "overdue" ||
+        invoice.workflowStatus === "overdue" ||
+        (invoice.dueDate
+            ? !Number.isNaN(new Date(invoice.dueDate).getTime()) &&
+              new Date(invoice.dueDate).getTime() < Date.now()
+            : false);
+
+    if (isOverdue) {
+        return "overdue";
+    }
+
+    // 4. Pending payment (awaiting payment, cash collection scheduled, reminder sent, partial balance)
+    return "pending";
+};
+
+export const getInvoiceDisplayStatus = (invoice: {
+    status: string;
+    workflowStatus?: string | null;
+    proofStatus?: string | null;
+    balanceRemaining: number;
+    dueDate?: string | null;
+    hasReceipt?: boolean;
+}): string => {
+    // 1. Under verification
+    if (
+        (invoice.workflowStatus === "under_review" ||
+            invoice.status === "under_review" ||
+            invoice.proofStatus === "submitted") &&
+        invoice.workflowStatus !== "confirmed" &&
+        invoice.status !== "completed"
+    ) {
+        return "under_review";
+    }
+
+    // 2. Settled: strictly display Settled or Finalized (never Awaiting Payment)
+    if (
+        invoice.balanceRemaining <= 0 ||
+        invoice.status === "completed" ||
+        invoice.status === "paid" ||
+        invoice.workflowStatus === "receipted"
+    ) {
+        return invoice.hasReceipt || invoice.workflowStatus === "receipted" ? "receipted" : "paid";
+    }
+
+    // 3. Overdue check when balance is owed
+    if (
+        invoice.status === "overdue" ||
+        invoice.workflowStatus === "overdue" ||
+        (invoice.dueDate &&
+            !Number.isNaN(new Date(invoice.dueDate).getTime()) &&
+            new Date(invoice.dueDate).getTime() < Date.now())
+    ) {
+        return "overdue";
+    }
+
+    // 4. Active pending workflow states
+    if (invoice.workflowStatus === "awaiting_in_person") return "awaiting_in_person";
+    if (invoice.workflowStatus === "intent_submitted") return "intent_submitted";
+    if (invoice.workflowStatus === "rejected") return "rejected";
+    if (invoice.workflowStatus === "reminder_sent") return "reminder_sent";
 
     return "pending";
 };
@@ -130,7 +228,7 @@ export const parseLeaseBillingTerms = (terms: Json | null): LeaseBillingTerms =>
     }
 
     const record = terms as Record<string, Json | undefined>;
-    const dueDayRaw = record.dueDay ?? record.due_day;
+    const dueDayRaw = record.dueDay ?? record.due_day ?? record.rent_due_day ?? record.rentDueDay;
     const lateFeeRaw = record.lateFeeAmount ?? record.late_fee ?? record.late_fee_amount;
     const allowPartialRaw = record.allowPartialPayments ?? record.allow_partial_payments;
     const utilitiesDescription = typeof record.utilitiesDescription === "string"
@@ -151,6 +249,39 @@ export const parseLeaseBillingTerms = (terms: Json | null): LeaseBillingTerms =>
         allowPartialPayments,
         utilitiesDescription,
     };
+};
+
+/**
+ * Resolves the effective due date for a target billing month.
+ * Respects explicit lease terms (dueDay/due_day/rent_due_day) or falls back
+ * to the day of month from the lease start_date. Safely clamps to days in month.
+ */
+export const resolveLeaseBillingDueDate = (
+    lease: { start_date?: string | null; terms?: Json | null } | null | undefined,
+    targetDate: Date
+): string => {
+    const terms = parseLeaseBillingTerms(lease?.terms ?? null);
+    const hasExplicitDueDay =
+        typeof (lease?.terms as any)?.dueDay === "number" ||
+        typeof (lease?.terms as any)?.due_day === "number" ||
+        typeof (lease?.terms as any)?.rent_due_day === "number" ||
+        typeof (lease?.terms as any)?.rentDueDay === "number";
+
+    let startDay = DEFAULT_TERMS.dueDay;
+    if (lease?.start_date) {
+        const parsed = new Date(lease.start_date);
+        if (!Number.isNaN(parsed.getTime())) {
+            startDay = parsed.getDate();
+        }
+    }
+
+    const targetDay = hasExplicitDueDay ? terms.dueDay : (startDay || DEFAULT_TERMS.dueDay);
+    const daysInMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0).getDate();
+    const safeDay = Math.max(1, Math.min(targetDay, daysInMonth));
+    const year = targetDate.getFullYear();
+    const month = String(targetDate.getMonth() + 1).padStart(2, "0");
+    const day = String(safeDay).padStart(2, "0");
+    return `${year}-${month}-${day}`;
 };
 
 export const getUtilityUnitLabel = (utilityType: UtilityType) =>

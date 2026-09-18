@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iReside — DFD Level 0 (System Context Diagram)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --card-bg: #f8fafc;
+      --border: #cbd5e1;
+      --process-blue: #2563eb;
+      --process-header: #eff6ff;
+      --store-green: #059669;
+      --store-header: #ecfdf5;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #f1f5f9;
+      color: var(--text);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      padding: 32px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .title-group h1 {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1px solid #bfdbfe;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .diagram-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 32px;
+      overflow-x: auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      margin-bottom: 32px;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      min-width: 1100px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    .card h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 700;
+      padding: 10px 14px;
+      border-bottom: 2px solid #e2e8f0;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #1e293b;
+      vertical-align: top;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .code-pill {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #2563eb;
+      border: 1px solid #cbd5e1;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title-group">
+        <h1>
+          iReside — DFD Level 0 (Context Diagram)
+          <span class="badge">Gane &amp; Sarson Model</span>
+        </h1>
+        <p class="subtitle">3-Column Layout: External Entities (Far Left) • Central Process 0 (Middle) • Encapsulated Data Stores (Right in Level 1)</p>
+      </div>
+    </header>
+
+    <div class="diagram-card">
+      <svg viewBox="0 0 1200 700" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#475569" />
+          </marker>
+        </defs>
+
+        <!-- CANVAS BACKGROUND -->
+        <rect width="100%" height="100%" fill="#ffffff" rx="8" />
+
+        <!-- ============================================== -->
+        <!-- COLUMN 1: EXTERNAL ENTITIES (FAR LEFT)         -->
+        <!-- ============================================== -->
+
+        <!-- LANDLORD ENTITY (GANE & SARSON DOUBLE SQUARE) -->
+        <g id="entity-landlord">
+          <rect x="60" y="80" width="220" height="100" fill="#ffffff" stroke="#1e293b" stroke-width="2" rx="0" />
+          <rect x="68" y="88" width="204" height="84" fill="#f8fafc" stroke="#1e293b" stroke-width="1" rx="0" />
+          <text x="170" y="126" fill="#0f172a" font-size="16" font-weight="800" text-anchor="middle">LANDLORD</text>
+          <text x="170" y="146" fill="#64748b" font-size="11" text-anchor="middle">Property Owner / Manager</text>
+          <text x="170" y="159" fill="#0284c7" font-size="9" font-weight="700" text-anchor="middle">[External Entity]</text>
+        </g>
+
+        <!-- TENANT ENTITY (GANE & SARSON DOUBLE SQUARE) -->
+        <g id="entity-tenant">
+          <rect x="60" y="460" width="220" height="100" fill="#ffffff" stroke="#1e293b" stroke-width="2" rx="0" />
+          <rect x="68" y="468" width="204" height="84" fill="#f8fafc" stroke="#1e293b" stroke-width="1" rx="0" />
+          <text x="170" y="506" fill="#0f172a" font-size="16" font-weight="800" text-anchor="middle">TENANT</text>
+          <text x="170" y="526" fill="#64748b" font-size="11" text-anchor="middle">Resident / Applicant</text>
+          <text x="170" y="539" fill="#0284c7" font-size="9" font-weight="700" text-anchor="middle">[External Entity]</text>
+        </g>
+
+        <!-- ============================================== -->
+        <!-- COLUMN 2: PROCESS 0 (MIDDLE)                   -->
+        <!-- ============================================== -->
+        <g id="process-0">
+          <!-- Main Process Rounded Rectangle -->
+          <rect x="680" y="180" width="460" height="280" fill="#ffffff" stroke="#2563eb" stroke-width="2.5" rx="14" />
+          <!-- Top ID Header Partition -->
+          <path d="M 680 226 L 1140 226" stroke="#2563eb" stroke-width="2" />
+          <path d="M 680 194 Q 680 180 694 180 L 1126 180 Q 1140 180 1140 194 L 1140 226 L 680 226 Z" fill="#eff6ff" />
+          <text x="910" y="210" fill="#1d4ed8" font-size="17" font-weight="800" text-anchor="middle">0</text>
+          
+          <!-- Process Name and Details -->
+          <text x="910" y="260" fill="#0f172a" font-size="17" font-weight="800" text-anchor="middle">iReside Property Management System</text>
+          <text x="910" y="285" fill="#64748b" font-size="12" text-anchor="middle">Central System Boundary (Turnkey Residential Operations)</text>
+          
+          <line x1="720" y1="305" x2="1100" y2="305" stroke="#e2e8f0" stroke-width="1" />
+          
+          <text x="910" y="330" fill="#334155" font-size="11" font-weight="600" text-anchor="middle">Encapsulates Processes 1.0 to 9.0 in Level 1:</text>
+          <text x="910" y="350" fill="#64748b" font-size="10.5" text-anchor="middle">1.0 Auth • 2.0 Properties • 3.0 Unit Map • 4.0 Tenant Intake</text>
+          <text x="910" y="370" fill="#64748b" font-size="10.5" text-anchor="middle">5.0 Leases • 6.0 Billing &amp; Payments • 7.0 Maintenance</text>
+          <text x="910" y="390" fill="#64748b" font-size="10.5" text-anchor="middle">8.0 Realtime Messaging • 9.0 Community &amp; Amenities</text>
+          <text x="910" y="425" fill="#059669" font-size="10" font-weight="700" text-anchor="middle">(All 9 Data Stores D1–D9 are Encapsulated at Level 0)</text>
+        </g>
+
+        <!-- ============================================== -->
+        <!-- CONNECTING ARROWS (ORTHOGONAL)                 -->
+        <!-- ============================================== -->
+
+        <!-- Landlord Inbound: Landlord -> Process 0 -->
+        <path d="M 280 115 L 450 115 L 450 250 L 680 250" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#arrow)" />
+        <rect x="300" y="85" width="220" height="52" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" rx="4" />
+        <text x="310" y="102" fill="#0f172a" font-size="10" font-weight="700">Landlord Inbound Operational Data:</text>
+        <text x="310" y="117" fill="#475569" font-size="9">• Property Specs, Blueprint &amp; Unit Coords [P2-3]</text>
+        <text x="310" y="129" fill="#475569" font-size="9">• Leases, Meter Readings &amp; Work Orders [P5-7]</text>
+
+        <!-- Landlord Outbound: Process 0 -> Landlord -->
+        <path d="M 680 290 L 510 290 L 510 155 L 280 155" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#arrow)" />
+        <rect x="300" y="165" width="220" height="52" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" rx="4" />
+        <text x="310" y="182" fill="#0f172a" font-size="10" font-weight="700">Landlord Outbound Operational Data:</text>
+        <text x="310" y="197" fill="#475569" font-size="9">• Rendered 2D Unit Map &amp; Occupancy [P3.0]</text>
+        <text x="310" y="209" fill="#475569" font-size="9">• Applications, GCash Proofs &amp; Tickets [P4-7]</text>
+
+        <!-- Tenant Inbound: Tenant -> Process 0 -->
+        <path d="M 280 490 L 510 490 L 510 380 L 680 380" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#arrow)" />
+        <rect x="300" y="445" width="220" height="52" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" rx="4" />
+        <text x="310" y="462" fill="#0f172a" font-size="10" font-weight="700">Tenant Inbound Submissions:</text>
+        <text x="310" y="477" fill="#475569" font-size="9">• Application Form, KYC &amp; Signatures [P4-5]</text>
+        <text x="310" y="489" fill="#475569" font-size="9">• GCash Proofs, Tickets &amp; Inquiries [P6-8]</text>
+
+        <!-- Tenant Outbound: Process 0 -> Tenant -->
+        <path d="M 680 420 L 450 420 L 450 535 L 280 535" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#arrow)" />
+        <rect x="300" y="525" width="220" height="52" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" rx="4" />
+        <text x="310" y="542" fill="#0f172a" font-size="10" font-weight="700">Tenant Outbound Confirmations:</text>
+        <text x="310" y="557" fill="#475569" font-size="9">• Assigned Unit Specs &amp; Blueprint Map [P2-3]</text>
+        <text x="310" y="569" fill="#475569" font-size="9">• Signed Leases, Receipts &amp; Status Updates [P5-7]</text>
+      </svg>
+    </div>
+
+    <div class="card">
+      <h2>Architectural Alignment Summary</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Column</th>
+            <th>Gane &amp; Sarson Visual Convention</th>
+            <th>Components in Level 0</th>
+            <th>Decomposition in Level 1</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Column 1 (Far Left)</strong></td>
+            <td>Double Square (Black / Slate outer &amp; inner borders)</td>
+            <td><code>LANDLORD</code> and <code>TENANT</code> external entities.</td>
+            <td>Identical: <code>LANDLORD</code> and <code>TENANT</code> on far left.</td>
+          </tr>
+          <tr>
+            <td><strong>Column 2 (Middle)</strong></td>
+            <td>Rounded Rectangle with top ID band (Royal Blue border)</td>
+            <td>Single central system <code>0: iReside Property Management System</code>.</td>
+            <td>Vertically stacked processes <code>1.0</code> through <code>9.0</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Column 3 (Far Right)</strong></td>
+            <td>Open-Ended Rectangle (Emerald Green, closed left, open right)</td>
+            <td><em>Encapsulated inside Process 0</em></td>
+            <td>Data Stores <code>D1</code> through <code>D9</code> stacked on far right.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

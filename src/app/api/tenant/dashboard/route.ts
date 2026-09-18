@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/supabase/auth";
 import type { NotificationType, PaymentStatus } from "@/types/database";
+import { resolveLeaseBillingDueDate } from "@/lib/billing/utils";
+
+export const dynamic = "force-dynamic";
 
 type LeaseSummary = {
     id: string;
@@ -197,7 +200,7 @@ export async function GET() {
         supabase
             .from("leases")
             .select(`
-                id, status, start_date, end_date, monthly_rent, security_deposit,
+                id, status, start_date, end_date, monthly_rent, security_deposit, terms,
                 unit:units(id, name, property:properties(id, name, address, city)),
                 landlord:profiles!leases_landlord_id_fkey(full_name, email, phone, avatar_url, avatar_bg_color)
             `)
@@ -389,11 +392,13 @@ export async function GET() {
         const metadata = existing?.metadata as Record<string, unknown> | null;
         const isForecast = metadata?.is_forecast === true;
 
+        const defaultDueDate = resolveLeaseBillingDueDate(activeLease, targetDate);
+
         upcomingMonths.push({
             month: monthKey,
             monthLabel: targetDate.toLocaleString('default', { month: 'long', year: 'numeric' }),
             amount: existing ? Number(existing.amount ?? 0) : monthlyRent,
-            dueDate: existing?.due_date ?? `${cycleKey}-05`,
+            dueDate: existing?.due_date ?? defaultDueDate,
             invoiceId: existing?.id ?? null,
             isForecast: !existing || isForecast,
             status: existing ? (existing.status as PaymentStatus) : null,

@@ -43,6 +43,8 @@ export interface UnitSummary {
   name: string;
   status: UnitStatus;
   rentAmount: number;
+  hasOngoingApplication?: boolean;
+  ongoingApplicationStatus?: string | null;
 }
 
 export interface PropertyOverviewItem {

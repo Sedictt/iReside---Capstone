@@ -348,6 +348,8 @@ export function RentApplications() {
  property_name: string;
  property_contract_template?: Record<string, unknown> | null;
  status?: string;
+ has_ongoing_application?: boolean;
+ ongoing_application_status?: string | null;
  }[]>([]);
  const [tenantInvites, setTenantInvites] = useState<Array<{
  id: string;
@@ -652,6 +654,8 @@ export function RentApplications() {
  property_name: property.name,
  property_contract_template: property.contractTemplate ?? null,
  status: unit.status,
+ has_ongoing_application: Boolean(unit.hasOngoingApplication),
+ ongoing_application_status: unit.ongoingApplicationStatus ?? null,
  }));
  });
  setAvailableUnits(unitsList);
@@ -941,7 +945,20 @@ export function RentApplications() {
  };
 
  const scopedApplications = useMemo(() => selectedPropertyId === "all" ? applications : applications.filter(a => a.propertyId === selectedPropertyId), [applications, selectedPropertyId]);
- const scopedAvailableUnits = useMemo(() => selectedPropertyId === "all" ? availableUnits : availableUnits.filter(u => u.property_id === selectedPropertyId), [availableUnits, selectedPropertyId]);
+ const scopedAvailableUnits = useMemo(() => {
+   const baseUnits = selectedPropertyId === "all" ? availableUnits : availableUnits.filter(u => u.property_id === selectedPropertyId);
+   return baseUnits.map(unit => {
+     const hasLiveActiveApp = applications.some(a => 
+       (a.unitNumber === unit.name || (a as any).unit_id === unit.id) &&
+       ["pending", "reviewing", "payment_pending", "approved"].includes(a.status)
+     );
+     const isUnderNegStatus = ["under_negotiation", "under negotiation", "negotiating", "processing", "ongoing", "on-going"].includes((unit.status ?? "").toLowerCase());
+     return {
+       ...unit,
+       has_ongoing_application: Boolean(unit.has_ongoing_application || hasLiveActiveApp || isUnderNegStatus),
+     };
+   });
+ }, [availableUnits, applications, selectedPropertyId]);
  const scopedTenantInvites = useMemo(() => selectedPropertyId === "all" ? tenantInvites : tenantInvites.filter(i => i.propertyId === selectedPropertyId), [tenantInvites, selectedPropertyId]);
 
  const filteredApplications = scopedApplications.filter(app => {

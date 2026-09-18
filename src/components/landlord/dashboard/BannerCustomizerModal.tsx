@@ -9,12 +9,13 @@ import {
   Check,
   RotateCcw,
   X,
-  Sparkles,
+  Building2,
   Link2,
 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useBrand } from "@/context/BrandContext";
 
 export const CURATED_BANNER_PRESETS = [
   {
@@ -70,10 +71,12 @@ export function BannerCustomizerModal({
   currentBanner,
   onBannerChange,
 }: BannerCustomizerModalProps) {
+  const brand = useBrand();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedBanner, setSelectedBanner] = useState(currentBanner);
   const [customUrlInput, setCustomUrlInput] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Sync with currentBanner when opened
   React.useEffect(() => {
@@ -82,56 +85,113 @@ export function BannerCustomizerModal({
     }
   }, [isOpen, currentBanner]);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 8 * 1024 * 1024) {
-      toast.error("Image too large. Maximum size is 8MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image too large. Maximum size is 10MB.");
+      return;
+    }
+
+    if (!file.type || !file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file (PNG, JPG, WEBP).");
       return;
     }
 
     setIsUploading(true);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      setSelectedBanner(dataUrl);
+    const toastId = toast.loading("Uploading property banner photo...");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/branding/banner", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to upload banner photo.");
+      }
+
+      setSelectedBanner(data.bannerUrl);
+      toast.success("Banner photo uploaded! Click 'Apply Banner Photo' to save.", { id: toastId });
+    } catch (err: any) {
+      console.error("[BannerCustomizerModal] Upload error:", err);
+      toast.error(err.message || "Failed to upload image. Please try again.", { id: toastId });
+    } finally {
       setIsUploading(false);
-      toast.success("Custom banner photo loaded!");
-    };
-    reader.readAsDataURL(file);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
   };
 
   const handleApplyCustomUrl = () => {
-    if (!customUrlInput.trim()) return;
-    setSelectedBanner(customUrlInput.trim());
-    toast.success("Image URL applied!");
+    const trimmed = customUrlInput.trim();
+    if (!trimmed) return;
+
+    try {
+      new URL(trimmed);
+    } catch {
+      toast.error("Please enter a valid URL starting with http:// or https://");
+      return;
+    }
+
+    setSelectedBanner(trimmed);
+    toast.success("Image URL applied! Click 'Apply Banner Photo' to save.");
     setCustomUrlInput("");
   };
 
-  const handleSave = () => {
-    onBannerChange(selectedBanner);
+  const handleSave = async () => {
+    setIsSaving(true);
     try {
-      localStorage.setItem("ireside_landlord_custom_banner_url", selectedBanner);
-      window.dispatchEvent(new CustomEvent("banner-updated", { detail: selectedBanner }));
-    } catch {
-      // Ignore storage errors
+      onBannerChange(selectedBanner);
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("ireside_landlord_custom_banner_url", selectedBanner);
+          window.dispatchEvent(new CustomEvent("banner-updated", { detail: selectedBanner }));
+        } catch (storageErr) {
+          console.warn("[BannerCustomizerModal] Local storage warning:", storageErr);
+        }
+      }
+
+      await brand.updateBranding({ bannerUrl: selectedBanner }, true);
+      toast.success("Dashboard banner updated successfully!");
+      onClose();
+    } catch (err) {
+      console.error("[BannerCustomizerModal] Save error:", err);
+      toast.error("Failed to save banner customization.");
+    } finally {
+      setIsSaving(false);
     }
-    toast.success("Dashboard banner updated successfully!");
-    onClose();
   };
 
-  const handleReset = () => {
-    setSelectedBanner(DEFAULT_BANNER_URL);
-    onBannerChange(DEFAULT_BANNER_URL);
+  const handleReset = async () => {
+    setIsSaving(true);
     try {
-      localStorage.removeItem("ireside_landlord_custom_banner_url");
-      window.dispatchEvent(new CustomEvent("banner-updated", { detail: DEFAULT_BANNER_URL }));
-    } catch {
-      // Ignore storage errors
+      setSelectedBanner(DEFAULT_BANNER_URL);
+      onBannerChange(DEFAULT_BANNER_URL);
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.removeItem("ireside_landlord_custom_banner_url");
+          window.dispatchEvent(new CustomEvent("banner-updated", { detail: DEFAULT_BANNER_URL }));
+        } catch (storageErr) {
+          console.warn("[BannerCustomizerModal] Local storage warning:", storageErr);
+        }
+      }
+
+      await brand.updateBranding({ bannerUrl: null }, true);
+      toast.info("Banner restored to default glass high-rise.");
+      onClose();
+    } catch (err) {
+      console.error("[BannerCustomizerModal] Reset error:", err);
+      toast.error("Failed to reset banner.");
+    } finally {
+      setIsSaving(false);
     }
-    toast.info("Banner restored to default glass high-rise.");
-    onClose();
   };
 
   if (!isOpen) return null;
@@ -211,11 +271,15 @@ export function BannerCustomizerModal({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="flex-1 py-3 px-4 rounded-2xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-dashed border-zinc-300 dark:border-zinc-700 text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center justify-center gap-2 transition-all active:scale-95 shadow-xs"
+            disabled={isUploading || isSaving}
+            className="flex-1 py-3 px-4 rounded-2xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-dashed border-zinc-300 dark:border-zinc-700 text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center justify-center gap-2 transition-all active:scale-95 shadow-xs disabled:opacity-50"
           >
-            <Upload className="size-4 text-primary" />
-            <span>{isUploading ? "Loading photo..." : "Upload Property Photo (PNG / JPG)"}</span>
+            {isUploading ? (
+              <span className="inline-block size-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            ) : (
+              <Upload className="size-4 text-primary" />
+            )}
+            <span>{isUploading ? "Uploading photo..." : "Upload Property Photo (PNG / JPG)"}</span>
           </button>
 
           <div className="flex-1 flex gap-2">
@@ -244,7 +308,7 @@ export function BannerCustomizerModal({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-[11px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
-              <Sparkles className="size-3.5 text-primary" />
+              <Building2 className="size-3.5 text-primary" />
               <span>Curated Property Architecture Presets</span>
             </label>
             <span className="text-[10px] text-zinc-400">High Definition</span>
@@ -296,7 +360,8 @@ export function BannerCustomizerModal({
           <button
             type="button"
             onClick={handleReset}
-            className="px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors flex items-center gap-1.5"
+            disabled={isSaving || isUploading}
+            className="px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors flex items-center gap-1.5 disabled:opacity-50"
           >
             <RotateCcw className="size-3.5" />
             <span>Reset to Default</span>
@@ -306,7 +371,8 @@ export function BannerCustomizerModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-bold uppercase tracking-wider transition-all active:scale-95"
+              disabled={isSaving || isUploading}
+              className="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50"
             >
               Cancel
             </button>
@@ -314,10 +380,15 @@ export function BannerCustomizerModal({
             <button
               type="button"
               onClick={handleSave}
-              className="px-6 py-2 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-xs flex items-center gap-1.5"
+              disabled={isSaving || isUploading}
+              className="px-6 py-2 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-xs flex items-center gap-1.5 disabled:opacity-50"
             >
-              <Check className="size-3.5 stroke-[3]" />
-              <span>Apply Banner Photo</span>
+              {isSaving ? (
+                <span className="inline-block size-3.5 border-2 border-white/30 border-t-white dark:border-zinc-900/30 dark:border-t-zinc-900 rounded-full animate-spin" />
+              ) : (
+                <Check className="size-3.5 stroke-[3]" />
+              )}
+              <span>{isSaving ? "Applying..." : "Apply Banner Photo"}</span>
             </button>
           </div>
         </div>

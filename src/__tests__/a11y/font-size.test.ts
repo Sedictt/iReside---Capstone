@@ -6,7 +6,7 @@ import {
   DEFAULT_FONT_SCALE,
   MIN_FONT_SCALE,
   MAX_FONT_SCALE,
-} from "@/hooks/useFontSize";
+} from "../../hooks/useFontSize";
 
 describe("Accessibility: useFontSize slider & scale hook", () => {
   beforeEach(() => {

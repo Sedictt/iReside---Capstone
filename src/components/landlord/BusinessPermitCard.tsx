@@ -63,7 +63,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
 
     if (!businessName && !permitUrl) {
         return (
-            <div className={cn("bg-black/40 border border-dashed border-white/10 rounded-3xl p-12 text-center", className)}>
+            <div className={cn("neumorphic-panel border-2 border-dashed border-border rounded-3xl p-12 text-center", className)}>
                 <input 
                     type="file" 
                     ref={fileInputRef} 
@@ -71,15 +71,15 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                     className="hidden" 
                     accept="image/*"
                 />
-                <div className="size-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/10">
-                    <Building2 className="text-[#c4b0ff]" size={32} />
+                <div className="size-16 neumorphic-inset rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Building2 className="text-primary" size={32} />
                 </div>
-                <h4 className="text-2xl font-display font-black text-white mb-2 tracking-tight">Business Verification</h4>
-                <p className="text-sm text-neutral-500 mb-8 max-w-sm mx-auto">Complete your professional profile by uploading your business permit to build trust with potential tenants.</p>
+                <h4 className="text-2xl font-display font-black text-foreground mb-2 tracking-tight">Business Verification</h4>
+                <p className="text-sm text-muted-foreground mb-8 max-w-sm mx-auto">Complete your professional profile by uploading your business permit to build trust with potential tenants.</p>
                 <button 
                     onClick={handleUploadClick}
                     disabled={uploading}
-                    className="text-[11px] font-black tracking-widest uppercase px-10 py-3.5 rounded-xl bg-[#c4b0ff] text-[#1e1b4b] hover:bg-[#9b77ff] transition-all shadow-xl shadow-[#c4b0ff]/20 disabled:opacity-50"
+                    className="text-[11px] font-black tracking-widest uppercase px-10 py-3.5 rounded-xl neumorphic-primary transition-all disabled:opacity-50 cursor-pointer"
                 >
                     {uploading ? <Loader2 size={18} className="animate-spin mx-auto" /> : "Start Verification"}
                 </button>
@@ -90,18 +90,18 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
     return (
         <div className={cn("relative overflow-hidden group", className)}>
             {/* Background Glow */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-[#c4b0ff]/20 to-[#9b77ff]/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-primary/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             
-            <div className="relative bg-[#171717]/80 border border-neutral-800 rounded-3xl p-8 md:p-12 backdrop-blur-xl h-full">
+            <div className="relative neumorphic-panel rounded-3xl p-8 md:p-12 h-full">
                 {/* Header & Action Row */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
                     <div className="flex items-center gap-6">
-                        <div className="size-16 bg-[#c4b0ff]/10 rounded-2xl flex items-center justify-center flex-shrink-0 border border-[#c4b0ff]/20 shadow-inner">
-                            <Building2 size={32} className="text-[#c4b0ff]" />
+                        <div className="size-16 neumorphic-inset-card rounded-2xl flex items-center justify-center flex-shrink-0">
+                            <Building2 size={32} className="text-primary" />
                         </div>
                         <div>
-                            <h3 className="text-3xl font-display font-black text-white mb-1 tracking-tight">{businessName || "Registered Business"}</h3>
-                            <p className="text-[11px] font-black tracking-[0.2em] uppercase text-neutral-500">Official Business Identification</p>
+                            <h3 className="text-3xl font-display font-black text-foreground mb-1 tracking-tight">{businessName || "Registered Business"}</h3>
+                            <p className="text-[11px] font-black tracking-[0.2em] uppercase text-muted-foreground">Official Business Identification</p>
                         </div>
                     </div>
                     
@@ -116,7 +116,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                         <button 
                             onClick={handleUploadClick}
                             disabled={uploading}
-                            className="w-full md:w-auto flex items-center justify-center gap-3 px-10 py-4 rounded-2xl bg-[#c4b0ff] hover:bg-[#9b77ff] text-[#1e1b4b] text-[11px] font-black tracking-widest uppercase transition-all shadow-xl shadow-[#c4b0ff]/20 disabled:opacity-50 disabled:cursor-not-allowed group/btn"
+                            className="w-full md:w-auto flex items-center justify-center gap-3 px-10 py-4 rounded-2xl neumorphic-primary text-[11px] font-black tracking-widest uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed group/btn cursor-pointer"
                         >
                             {uploading ? <Loader2 size={18} className="animate-spin" /> : (
                                 <>
@@ -133,7 +133,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                     {permitUrl ? (
                         <div 
                             onClick={() => setShowLightbox(true)}
-                            className="relative rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl transition-all duration-700 group-hover/permit:scale-[1.01] group-hover/permit:border-[#c4b0ff]/30 cursor-zoom-in"
+                            className="relative rounded-[2rem] overflow-hidden border border-border shadow-2xl transition-all duration-700 group-hover/permit:scale-[1.01] group-hover/permit:border-primary/30 cursor-zoom-in"
                         >
                             <img 
                                 src={permitUrl} 
@@ -150,26 +150,26 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                             </div>
                         </div>
                     ) : (
-                        <div className="relative aspect-[21/9] bg-white/5 border-2 border-dashed border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center p-12 text-center gap-6 group-hover:border-[#c4b0ff]/30 transition-colors">
-                            <div className="size-20 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-                                <Award size={40} className="text-neutral-700" />
+                        <div className="relative aspect-[21/9] neumorphic-inset border-2 border-dashed border-border rounded-[2.5rem] flex flex-col items-center justify-center p-12 text-center gap-6 group-hover:border-primary/30 transition-colors">
+                            <div className="size-20 rounded-full neumorphic-inset-card flex items-center justify-center">
+                                <Award size={40} className="text-muted-foreground" />
                             </div>
                             <div>
-                                <p className="text-lg font-black text-neutral-400">No Permit Photo Uploaded</p>
-                                <p className="text-[11px] text-neutral-600 uppercase tracking-[0.2em] mt-2">Upload a high-resolution copy for verification</p>
+                                <p className="text-lg font-black text-foreground">No Permit Photo Uploaded</p>
+                                <p className="text-[11px] text-muted-foreground uppercase tracking-[0.2em] mt-2">Upload a high-resolution copy for verification</p>
                             </div>
                         </div>
                     )}
                     
                     {/* Floating Decoration */}
-                    <div className="absolute -bottom-6 -right-6 size-24 bg-black border border-neutral-800 rounded-full flex items-center justify-center shadow-2xl z-10 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
-                        <Award size={32} className="text-[#c4b0ff]" />
+                    <div className="absolute -bottom-6 -right-6 size-24 neumorphic-extruded border border-border rounded-full flex items-center justify-center shadow-2xl z-10 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
+                        <Award size={32} className="text-primary" />
                     </div>
                 </div>
 
                 {/* Aesthetic Detail */}
                 <div className="absolute -bottom-10 -left-10 opacity-[0.03] pointer-events-none">
-                    <Building2 size={320} className="text-white" />
+                    <Building2 size={320} className="text-foreground" />
                 </div>
             </div>
 

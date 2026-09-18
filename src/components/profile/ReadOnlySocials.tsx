@@ -35,7 +35,7 @@ export function ReadOnlySocials({ socials, className = "" }: ReadOnlySocialsProp
     if (!hasAnySocial) return null;
 
     return (
-        <div className={`flex flex-wrap items-center justify-center gap-6 pt-8 border-t border-white/5 w-full max-w-2xl ${className}`}>
+        <div className={`flex flex-wrap items-center justify-center gap-6 pt-8 border-t border-black/10 dark:border-white/5 w-full max-w-2xl ${className}`}>
             {socialIcons.map((social) => {
                 const url = socials[social.key];
                 if (!url) return null;
@@ -46,7 +46,7 @@ export function ReadOnlySocials({ socials, className = "" }: ReadOnlySocialsProp
                         href={url.startsWith('http') ? url : `https://${url}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="size-12 rounded-2xl bg-white/5 hover:bg-[#8B5CF6]/20 border border-white/10 hover:border-[#8B5CF6]/40 flex items-center justify-center text-neutral-400 hover:text-[#8B5CF6] transition-all duration-300 group/social shadow-lg hover:shadow-[#8B5CF6]/10 hover:-translate-y-1"
+                        className="size-12 rounded-2xl neumorphic-inset-card hover:neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all duration-300 group/social shadow-sm hover:-translate-y-1"
                         title={social.label}
                     >
                         <social.icon size={20} className="group-hover/social:scale-110 transition-transform" />

@@ -4,8 +4,11 @@ import { BILLING_BUCKETS, uploadBillingFile } from "@/lib/billing/storage";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { BillingService } from "@/lib/services/payment";
 
+export const dynamic = "force-dynamic";
+
 const readingSchema = z.object({
-  leaseId: z.string().uuid(),
+  leaseId: z.string().trim().min(1, "Lease or unit identifier is required"),
+  unitId: z.string().trim().optional().nullable(),
   utilityType: z.enum(["water", "electricity"]),
   billingPeriodStart: z.string(),
   billingPeriodEnd: z.string(),
@@ -53,7 +56,7 @@ export async function POST(request: Request) {
         if (shouldPostInvoices) {
           const { generateMonthlyInvoices } = await import("@/lib/billing/server");
           const month = specifiedMonth || payload.billingPeriodStart.slice(0, 7);
-          invoiceResult = await generateMonthlyInvoices(supabase, userId, month, [payload.leaseId]);
+          invoiceResult = await generateMonthlyInvoices(supabase, userId, month, [reading.lease_id || payload.leaseId]);
         }
 
         return NextResponse.json({ reading, invoiceResult });
@@ -71,7 +74,11 @@ export async function POST(request: Request) {
       if (shouldPostInvoices && results.length > 0) {
         const { generateMonthlyInvoices } = await import("@/lib/billing/server");
         const month = specifiedMonth || readings[0]?.billingPeriodStart?.slice(0, 7);
-        const leaseIds = Array.from(new Set(readings.map((r) => r.leaseId)));
+        const leaseIds = Array.from(
+          new Set(
+            results.map((r) => r.lease_id || readings.find((rd) => rd.leaseId)?.leaseId).filter(Boolean)
+          )
+        ) as string[];
         invoiceResult = await generateMonthlyInvoices(supabase, userId, month, leaseIds);
       }
 
@@ -82,6 +89,7 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const payload = readingSchema.parse({
       leaseId: formData.get("leaseId"),
+      unitId: formData.get("unitId"),
       utilityType: formData.get("utilityType"),
       billingPeriodStart: formData.get("billingPeriodStart"),
       billingPeriodEnd: formData.get("billingPeriodEnd"),
@@ -110,6 +118,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ reading });
   } catch (error: any) {
     console.error("Failed to record utility reading:", error);
+    if (error instanceof z.ZodError) {
+      const msg = error.issues.map((i) => `${i.path.join(".") || "field"}: ${i.message}`).join("; ");
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
     return NextResponse.json(
       { error: error?.message || "Failed to record utility reading." },
       { status: 500 },
@@ -140,11 +152,13 @@ export async function GET(request: Request) {
       query = query.eq("lease_id", leaseId);
     }
     if (month && /^\d{4}-\d{2}$/.test(month)) {
-      const [year, monthNum] = month.split("-").map(Number);
-      const startDate = `${month}-01`;
-      const lastDay = new Date(Date.UTC(year, monthNum, 0)).getUTCDate();
-      const endDate = `${month}-${String(lastDay).padStart(2, "0")}`;
-      query = query.gte("billing_period_start", startDate).lte("billing_period_end", endDate);
+      const [yearStr, monthStr] = month.split("-");
+      const y = parseInt(yearStr, 10);
+      const m = parseInt(monthStr, 10);
+      const lastDay = new Date(y, m, 0).getDate();
+      query = query
+        .gte("billing_period_start", `${month}-01`)
+        .lte("billing_period_start", `${month}-${String(lastDay).padStart(2, "0")}`);
     }
 
     const { data, error } = await query.order("created_at", { ascending: false });

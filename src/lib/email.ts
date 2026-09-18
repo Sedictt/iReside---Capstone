@@ -26,76 +26,85 @@ export async function sendTenantCredentials({
 
     const html = `
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
-  <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#c4b0ff;padding:24px 32px;">
-      <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-      <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:2px;">Tenant Portal Access</p>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Welcome to iReside — Your Account is Ready</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+    <div style="background-color:#c4b0ff;padding:24px 32px;">
+      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
+      <p style="margin:4px 0 0;color:#1e1b4b;font-size:12px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:2px;">Tenant Portal Access</p>
     </div>
     <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:16px;">Hi <strong>${tenantName}</strong>,</p>
-      <p style="margin:0 0 24px;color:#a3a3a3;font-size:14px;line-height:1.6;">
+      <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi <strong>${tenantName}</strong>,</p>
+      <p style="margin:0 0 24px;color:#52525b;font-size:14px;line-height:1.6;">
         Your application has been approved. Your iReside tenant account is ready — use the credentials below to sign in.
       </p>
 
       ${leaseDetails ? `
-      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 16px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#c4b0ff;">Your Lease Details</p>
+      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <p style="margin:0 0 16px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#7c3aed;">Your Lease Details</p>
         <div style="margin-bottom:12px;">
-          <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Property</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">${leaseDetails.property_name}</p>
+          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Property</p>
+          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${leaseDetails.property_name}</p>
         </div>
         <div style="margin-bottom:12px;">
-          <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Unit</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">${leaseDetails.unit_name}</p>
+          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Unit</p>
+          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${leaseDetails.unit_name}</p>
         </div>
         <div style="margin-bottom:12px;">
-          <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Move-in Date</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">${new Date(leaseDetails.move_in_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Move-in Date</p>
+          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${new Date(leaseDetails.move_in_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
         <div>
-          <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Monthly Rent</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">₱${leaseDetails.monthly_rent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Monthly Rent</p>
+          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">₱${leaseDetails.monthly_rent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
       </div>
       ` : ""}
 
       ${signingLink ? `
-      <div style="background:#1a1a1a;border:1px solid #c4b0ff;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
-        <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#fff;">📝 Sign Your Lease Agreement</p>
-        <p style="margin:0 0 20px;font-size:13px;color:#a3a3a3;line-height:1.5;">
+      <div style="background-color:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
+        <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1e1b4b;">📝 Sign Your Lease Agreement</p>
+        <p style="margin:0 0 20px;font-size:13px;color:#475569;line-height:1.5;">
           Your lease is ready for your signature. Please review and sign the agreement to complete your onboarding.
         </p>
-        <a href="${signingLink}" style="display:inline-block;background:#c4b0ff;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
-          Sign Lease Agreement →
+        <a href="${signingLink}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
+          Sign Lease Agreement &rarr;
         </a>
       </div>
       ` : ""}
 
-      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">Email</p>
-        <p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#fff;font-family:monospace;">${to}</p>
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">Temporary Password</p>
-        <p style="margin:0;font-size:18px;font-weight:900;color:#fff;font-family:monospace;letter-spacing:2px;">${tempPassword}</p>
+      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">Email</p>
+        <p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#0f172a;font-family:Consolas,'Liberation Mono',Menlo,monospace;">${to}</p>
+        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">Temporary Password</p>
+        <p style="margin:0;font-size:18px;font-weight:900;color:#0f172a;font-family:Consolas,'Liberation Mono',Menlo,monospace;letter-spacing:2px;">${tempPassword}</p>
       </div>
 
       ${inviteUrl ? `
       <div style="margin-bottom:24px;">
-        <a href="${inviteUrl}" style="display:inline-block;background:#2a2a2a;color:#fff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;border:1px solid #3a3a3a;">
-          Set Your Password →
+        <a href="${inviteUrl}" style="display:inline-block;background-color:#09090b;color:#ffffff;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;letter-spacing:-0.2px;">
+          Set Your Password &rarr;
         </a>
       </div>
-      <p style="margin:0 0 24px;color:#737373;font-size:12px;">Or copy this link: <a href="${inviteUrl}" style="color:#c4b0ff;word-break:break-all;">${inviteUrl}</a></p>
+      <p style="margin:0 0 24px;color:#71717a;font-size:12px;">Or copy this link: <a href="${inviteUrl}" style="color:#7c3aed;word-break:break-all;">${inviteUrl}</a></p>
       ` : ""}
 
-      <p style="margin:0;color:#525252;font-size:12px;line-height:1.6;">
+      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
         Please change your password after your first login. If you did not expect this email, you can safely ignore it.
       </p>
     </div>
-    <div style="padding:16px 32px;border-top:1px solid #1a1a1a;text-align:center;">
-      <p style="margin:0;color:#404040;font-size:11px;">© iReside Property Management</p>
+    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
+      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
     </div>
   </div>
 </body>
@@ -125,29 +134,41 @@ export async function sendLandlordCredentialsCopy({
 
     const html = `
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
-  <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#1a1a1a;padding:24px 32px;border-bottom:1px solid #2a2a2a;">
-      <h1 style="margin:0;color:#fff;font-size:18px;font-weight:900;">iReside — Landlord Copy</h1>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Tenant Account Created — ${tenantName}</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+    <div style="background-color:#f8fafc;padding:20px 32px;border-bottom:1px solid #e4e4e7;">
+      <h1 style="margin:0;color:#09090b;font-size:18px;font-weight:800;">iReside — Landlord Copy</h1>
     </div>
     <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:15px;">Hi <strong>${landlordName}</strong>,</p>
-      <p style="margin:0 0 24px;color:#a3a3a3;font-size:14px;line-height:1.6;">
-        A tenant account has been created for <strong style="color:#fff;">${tenantName}</strong>. Keep these credentials as a backup in case the tenant did not receive their email.
+      <p style="margin:0 0 16px;font-size:15px;color:#18181b;">Hi <strong>${landlordName}</strong>,</p>
+      <p style="margin:0 0 24px;color:#52525b;font-size:14px;line-height:1.6;">
+        A tenant account has been created for <strong style="color:#0f172a;">${tenantName}</strong>. Keep these credentials as a backup in case the tenant did not receive their email.
       </p>
 
-      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">Tenant Email</p>
-        <p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#fff;font-family:monospace;">${tenantEmail}</p>
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">Temporary Password</p>
-        <p style="margin:0;font-size:18px;font-weight:900;color:#fff;font-family:monospace;letter-spacing:2px;">${tempPassword}</p>
+      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">Tenant Email</p>
+        <p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#0f172a;font-family:Consolas,'Liberation Mono',Menlo,monospace;">${tenantEmail}</p>
+        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">Temporary Password</p>
+        <p style="margin:0;font-size:18px;font-weight:900;color:#0f172a;font-family:Consolas,'Liberation Mono',Menlo,monospace;letter-spacing:2px;">${tempPassword}</p>
       </div>
 
-      ${inviteUrl ? `<p style="margin:0 0 24px;color:#737373;font-size:12px;">Password reset link: <a href="${inviteUrl}" style="color:#c4b0ff;word-break:break-all;">${inviteUrl}</a></p>` : ""}
+      ${inviteUrl ? `<p style="margin:0 0 24px;color:#71717a;font-size:12px;">Password reset link: <a href="${inviteUrl}" style="color:#7c3aed;word-break:break-all;">${inviteUrl}</a></p>` : ""}
 
-      <p style="margin:0;color:#525252;font-size:12px;">Share these credentials with the tenant only if they did not receive their welcome email.</p>
+      <p style="margin:0;color:#71717a;font-size:12px;">Share these credentials with the tenant only if they did not receive their welcome email.</p>
+    </div>
+    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
+      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
     </div>
   </div>
 </body>
@@ -185,68 +206,77 @@ export async function sendSigningLinkEmail({
 
     const html = `
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
-  <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#c4b0ff;padding:24px 32px;">
-      <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-      <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:2px;">Lease Agreement</p>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Your Lease Agreement is Ready for Signature</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+    <div style="background-color:#c4b0ff;padding:24px 32px;">
+      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
+      <p style="margin:4px 0 0;color:#1e1b4b;font-size:12px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:2px;">Lease Agreement</p>
     </div>
     <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:16px;">Hi <strong>${tenantName}</strong>,</p>
-      <p style="margin:0 0 24px;color:#a3a3a3;font-size:14px;line-height:1.6;">
+      <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi <strong>${tenantName}</strong>,</p>
+      <p style="margin:0 0 24px;color:#52525b;font-size:14px;line-height:1.6;">
         Congratulations! Your lease application has been approved. Your lease agreement is ready for your signature. Please review and sign to complete your rental agreement.
       </p>
 
-      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 16px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#c4b0ff;">Property Details</p>
+      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <p style="margin:0 0 16px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#7c3aed;">Property Details</p>
         <div style="margin-bottom:12px;">
-          <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Property</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">${propertyName}</p>
+          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Property</p>
+          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${propertyName}</p>
         </div>
         <div style="margin-bottom:12px;">
-          <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Unit</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">${unitName}</p>
+          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Unit</p>
+          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${unitName}</p>
         </div>
         <div style="margin-bottom:12px;">
-          <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Monthly Rent</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">₱${rentAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Monthly Rent</p>
+          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">₱${rentAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
         <div>
-          <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Security Deposit</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">₱${depositAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Security Deposit</p>
+          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">₱${depositAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
       </div>
 
-      <div style="background:#1a1a1a;border:1px solid #c4b0ff;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
-        <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#fff;">📝 Review and Sign Your Lease</p>
-        <p style="margin:0 0 20px;font-size:13px;color:#a3a3a3;line-height:1.5;">
+      <div style="background-color:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
+        <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1e1b4b;">📝 Review and Sign Your Lease</p>
+        <p style="margin:0 0 20px;font-size:13px;color:#475569;line-height:1.5;">
           Please review the full lease agreement and provide your electronic signature to complete the rental process.
         </p>
-        <a href="${signingUrl}" style="display:inline-block;background:#c4b0ff;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
-          Sign Lease Agreement →
+        <a href="${signingUrl}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
+          Sign Lease Agreement &rarr;
         </a>
       </div>
 
-      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">⏰ Link Expires</p>
-        <p style="margin:0;font-size:14px;color:#fff;">${expiresAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        <p style="margin:4px 0 0;font-size:12px;color:#737373;">Please sign before this date to avoid expiration.</p>
+      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">⏰ Link Expires</p>
+        <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a;">${expiresAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        <p style="margin:4px 0 0;font-size:12px;color:#71717a;">Please sign before this date to avoid expiration.</p>
       </div>
 
-      <div style="padding:20px;background:#1a1a1a;border-radius:12px;margin-bottom:24px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">Landlord Contact</p>
-        <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#fff;">${landlordName}</p>
-        <p style="margin:0;font-size:13px;color:#a3a3a3;">${landlordEmail}</p>
+      <div style="padding:20px;background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:24px;">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">Landlord Contact</p>
+        <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#0f172a;">${landlordName}</p>
+        <p style="margin:0;font-size:13px;color:#52525b;">${landlordEmail}</p>
       </div>
 
-      <p style="margin:0;color:#525252;font-size:12px;line-height:1.6;">
+      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
         If you have any questions about the lease terms, please contact your landlord directly. This signing link is unique to you and should not be shared.
       </p>
     </div>
-    <div style="padding:16px 32px;border-top:1px solid #1a1a1a;text-align:center;">
-      <p style="margin:0;color:#404040;font-size:11px;">© iReside Property Management</p>
+    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
+      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
     </div>
   </div>
 </body>
@@ -274,37 +304,49 @@ export async function sendTenantSignedNotification({
 
     const html = `
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
-  <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#1a1a1a;padding:24px 32px;border-bottom:1px solid #2a2a2a;">
-      <h1 style="margin:0;color:#fff;font-size:18px;font-weight:900;">iReside — Lease Update</h1>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Tenant Signed Lease — ${tenantName}</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+    <div style="background-color:#f8fafc;padding:20px 32px;border-bottom:1px solid #e4e4e7;">
+      <h1 style="margin:0;color:#09090b;font-size:18px;font-weight:800;">iReside — Lease Update</h1>
     </div>
     <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:15px;">Hi <strong>${landlordName}</strong>,</p>
-      <p style="margin:0 0 24px;color:#a3a3a3;font-size:14px;line-height:1.6;">
-        <strong style="color:#fff;">${tenantName}</strong> has signed their lease agreement. Please review and countersign to activate the lease.
+      <p style="margin:0 0 16px;font-size:15px;color:#18181b;">Hi <strong>${landlordName}</strong>,</p>
+      <p style="margin:0 0 24px;color:#52525b;font-size:14px;line-height:1.6;">
+        <strong style="color:#0f172a;">${tenantName}</strong> has signed their lease agreement. Please review and countersign to activate the lease.
       </p>
 
-      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">Lease ID</p>
-        <p style="margin:0;font-size:15px;font-weight:700;color:#fff;font-family:monospace;">${leaseId}</p>
+      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">Lease ID</p>
+        <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;font-family:Consolas,'Liberation Mono',Menlo,monospace;">${leaseId}</p>
       </div>
 
       ${signingUrl ? `
-      <div style="background:#1a1a1a;border:1px solid #c4b0ff;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
-        <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#fff;">📝 Countersign the Lease</p>
-        <p style="margin:0 0 20px;font-size:13px;color:#a3a3a3;line-height:1.5;">
+      <div style="background-color:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
+        <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1e1b4b;">📝 Countersign the Lease</p>
+        <p style="margin:0 0 20px;font-size:13px;color:#475569;line-height:1.5;">
           The tenant has completed their portion. Use the button below to review and provide your signature.
         </p>
-        <a href="${signingUrl}" style="display:inline-block;background:#c4b0ff;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
-          Countersign Lease →
+        <a href="${signingUrl}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
+          Countersign Lease &rarr;
         </a>
       </div>
       ` : `
-      <p style="margin:0;color:#525252;font-size:12px;">Log in to your landlord dashboard to countersign the lease.</p>
+      <p style="margin:0;color:#71717a;font-size:12px;">Log in to your landlord dashboard to countersign the lease.</p>
       `}
+    </div>
+    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
+      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
     </div>
   </div>
 </body>
@@ -332,42 +374,51 @@ export async function sendLeaseActivatedNotification({
 
     const html = `
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
-  <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#c4b0ff;padding:24px 32px;">
-      <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-      <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:2px;">Lease Activated</p>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Your Lease is Now Active</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+    <div style="background-color:#c4b0ff;padding:24px 32px;">
+      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
+      <p style="margin:4px 0 0;color:#1e1b4b;font-size:12px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:2px;">Lease Activated</p>
     </div>
     <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:16px;">Hi <strong>${tenantName}</strong>,</p>
-      <p style="margin:0 0 24px;color:#a3a3a3;font-size:14px;line-height:1.6;">
+      <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi <strong>${tenantName}</strong>,</p>
+      <p style="margin:0 0 24px;color:#52525b;font-size:14px;line-height:1.6;">
         Great news! Your lease agreement has been fully signed and is now active. Welcome to your new home!
       </p>
 
-      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 16px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#c4b0ff;">Your Lease Details</p>
+      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <p style="margin:0 0 16px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#7c3aed;">Your Lease Details</p>
         <div style="margin-bottom:12px;">
-          <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Property</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">${propertyName}</p>
+          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Property</p>
+          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${propertyName}</p>
         </div>
         <div style="margin-bottom:12px;">
-          <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Unit</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">${unitName}</p>
+          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Unit</p>
+          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${unitName}</p>
         </div>
         <div>
-          <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Move-in Date</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">${new Date(moveInDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Move-in Date</p>
+          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${new Date(moveInDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
       </div>
 
-      <p style="margin:0;color:#525252;font-size:12px;line-height:1.6;">
+      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
         You can now access your tenant portal to view payments, submit maintenance requests, and communicate with your landlord.
       </p>
     </div>
-    <div style="padding:16px 32px;border-top:1px solid #1a1a1a;text-align:center;">
-      <p style="margin:0;color:#404040;font-size:11px;">© iReside Property Management</p>
+    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
+      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
     </div>
   </div>
 </body>
@@ -395,46 +446,58 @@ export async function sendTenantOnboardingReminder({
 
     const credentialBlock = tempPassword
         ? `
-      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:20px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">Temporary Password</p>
-        <p style="margin:0;font-size:17px;font-weight:900;color:#fff;font-family:monospace;letter-spacing:2px;">${tempPassword}</p>
+      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px;">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">Temporary Password</p>
+        <p style="margin:0;font-size:18px;font-weight:900;color:#0f172a;font-family:Consolas,'Liberation Mono',Menlo,monospace;letter-spacing:2px;">${tempPassword}</p>
       </div>
       `
         : "";
 
     const inviteBlock = inviteUrl
         ? `
-      <p style="margin:12px 0 0;color:#9ca3af;font-size:12px;">
+      <p style="margin:16px 0 0;color:#71717a;font-size:12px;">
         Set or reset your password:
-        <a href="${inviteUrl}" style="color:#c4b0ff;word-break:break-all;">${inviteUrl}</a>
+        <a href="${inviteUrl}" style="color:#7c3aed;word-break:break-all;">${inviteUrl}</a>
       </p>
       `
         : "";
 
     const html = `
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
-  <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#c4b0ff;padding:24px 32px;">
-      <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-      <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.75;text-transform:uppercase;letter-spacing:2px;">Onboarding Reminder</p>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Continue your iReside onboarding</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+    <div style="background-color:#c4b0ff;padding:24px 32px;">
+      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
+      <p style="margin:4px 0 0;color:#1e1b4b;font-size:12px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:2px;">Onboarding Reminder</p>
     </div>
     <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:16px;">Hi <strong>${tenantName}</strong>,</p>
-      <p style="margin:0 0 20px;color:#a3a3a3;font-size:14px;line-height:1.6;">
+      <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi <strong>${tenantName}</strong>,</p>
+      <p style="margin:0 0 20px;color:#52525b;font-size:14px;line-height:1.6;">
         Your tenant account is ready, but onboarding is still incomplete. Please continue onboarding to unlock your full tenant portal access.
       </p>
 
       ${credentialBlock}
 
-      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:24px;text-align:center;">
-        <a href="${onboardingUrl}" style="display:inline-block;background:#c4b0ff;color:#000;font-weight:900;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
+      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:24px;text-align:center;">
+        <a href="${onboardingUrl}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
           Continue Onboarding
         </a>
         ${inviteBlock}
       </div>
+    </div>
+    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
+      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
     </div>
   </div>
 </body>
@@ -480,38 +543,50 @@ export async function sendProspectPaymentRequestEmail({
 
     const html = `
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
-  <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#c4b0ff;padding:24px 32px;">
-      <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;">iReside</h1>
-      <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.75;text-transform:uppercase;letter-spacing:2px;">Payment Confirmation Step</p>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Action Required: Submit Move-in Payment</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+    <div style="background-color:#c4b0ff;padding:24px 32px;">
+      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;">iReside</h1>
+      <p style="margin:4px 0 0;color:#1e1b4b;font-size:12px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:2px;">Payment Confirmation Step</p>
     </div>
     <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:16px;">Hi <strong>${applicantName}</strong>,</p>
-      <p style="margin:0 0 18px;color:#a3a3a3;font-size:14px;line-height:1.6;">
-        Your application for <strong style="color:#fff;">${propertyName} - ${unitName}</strong> has passed review.
+      <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi <strong>${applicantName}</strong>,</p>
+      <p style="margin:0 0 18px;color:#52525b;font-size:14px;line-height:1.6;">
+        Your application for <strong style="color:#0f172a;">${propertyName} - ${unitName}</strong> has passed review.
         To continue, please submit move-in payment details for verification.
       </p>
-      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:18px;margin-bottom:20px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#c4b0ff;">Required Amounts</p>
-        <p style="margin:0 0 6px;color:#fff;font-size:14px;">Advance Rent: <strong>PHP ${advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></p>
-        <p style="margin:0;color:#fff;font-size:14px;">Security Deposit: <strong>PHP ${securityAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></p>
+      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:20px;">
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#7c3aed;">Required Amounts</p>
+        <p style="margin:0 0 6px;color:#0f172a;font-size:14px;">Advance Rent: <strong>PHP ${advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></p>
+        <p style="margin:0;color:#0f172a;font-size:14px;">Security Deposit: <strong>PHP ${securityAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></p>
       </div>
       <div style="text-align:center;margin-bottom:16px;">
-        <a href="${paymentPortalUrl}" style="display:inline-block;background:#c4b0ff;color:#000;font-weight:900;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;">
-          Open Payment Portal
+        <a href="${paymentPortalUrl}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
+          Open Payment Portal &rarr;
         </a>
       </div>
-      <p style="margin:0 0 20px;color:#a3a3a3;font-size:12px;word-break:break-all;text-align:center;">
+      <p style="margin:0 0 20px;color:#71717a;font-size:12px;word-break:break-all;text-align:center;">
         Or click or copy this direct link:<br />
-        <a href="${paymentPortalUrl}" style="color:#c4b0ff;text-decoration:underline;">${paymentPortalUrl}</a>
+        <a href="${paymentPortalUrl}" style="color:#7c3aed;text-decoration:underline;">${paymentPortalUrl}</a>
       </p>
-      <p style="margin:0 0 10px;color:#737373;font-size:12px;">This secure link expires on <strong style="color:#fff;">${expiresLabel}</strong>.</p>
-      <p style="margin:0;color:#525252;font-size:12px;line-height:1.6;">
+      <p style="margin:0 0 10px;color:#71717a;font-size:12px;">This secure link expires on <strong style="color:#0f172a;">${expiresLabel}</strong>.</p>
+      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
         We will only finalize approval after both required payments are landlord-confirmed.
       </p>
+    </div>
+    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
+      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
     </div>
   </div>
 </body>
@@ -547,29 +622,38 @@ export async function sendRegistrationOTP({
 
     const html = `
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
-  <div style="max-width:480px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#c4b0ff;padding:24px 32px;text-align:center;">
-      <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Verify your email</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <div style="max-width:480px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+    <div style="background-color:#c4b0ff;padding:24px 32px;text-align:center;">
+      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
     </div>
     <div style="padding:32px;text-align:center;">
-      <h2 style="margin:0 0 8px;font-size:18px;font-weight:700;color:#fff;">Verify your email</h2>
-      <p style="margin:0 0 32px;color:#a3a3a3;font-size:14px;line-height:1.6;">
+      <h2 style="margin:0 0 8px;font-size:18px;font-weight:700;color:#09090b;">Verify your email</h2>
+      <p style="margin:0 0 28px;color:#52525b;font-size:14px;line-height:1.6;">
         Use the verification code below to continue your landlord registration.
       </p>
 
-      <div style="background:#1a1a1a;border:2px dashed #2a2a2a;border-radius:12px;padding:24px;margin-bottom:32px;">
-        <span style="font-size:32px;font-weight:900;color:#fff;font-family:monospace;letter-spacing:8px;margin-left:8px;">${otp}</span>
+      <div style="background-color:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:24px;margin-bottom:28px;">
+        <span style="font-size:32px;font-weight:900;color:#09090b;font-family:Consolas,'Liberation Mono',Menlo,monospace;letter-spacing:8px;margin-left:8px;">${otp}</span>
       </div>
 
-      <p style="margin:0;color:#525252;font-size:12px;line-height:1.6;">
+      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
         This code will expire in 10 minutes. If you did not request this code, please ignore this email.
       </p>
     </div>
-    <div style="padding:16px;background:#0d0d0d;text-align:center;border-top:1px solid #2a2a2a;">
-      <p style="margin:0;color:#404040;font-size:11px;">© iReside Property Management</p>
+    <div style="padding:16px;background-color:#fafafa;text-align:center;border-top:1px solid #f4f4f5;">
+      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
     </div>
   </div>
 </body>
@@ -593,30 +677,39 @@ export async function sendLandlordRegistrationApproved({
 
     const html = `
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
-  <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#c4b0ff;padding:24px 32px;">
-      <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-      <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:2px;">Landlord Access Approved</p>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Landlord Access Approved</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+    <div style="background-color:#c4b0ff;padding:24px 32px;">
+      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
+      <p style="margin:4px 0 0;color:#1e1b4b;font-size:12px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:2px;">Landlord Access Approved</p>
     </div>
     <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:16px;">Hi <strong>${landlordName}</strong>,</p>
-      <p style="margin:0 0 24px;color:#a3a3a3;font-size:14px;line-height:1.6;">
+      <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi <strong>${landlordName}</strong>,</p>
+      <p style="margin:0 0 24px;color:#52525b;font-size:14px;line-height:1.6;">
         Great news! Your landlord registration has been approved. You now have full access to the iReside landlord portal.
       </p>
 
-      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
-        <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#fff;">Start Managing Your Properties</p>
-        <a href="${loginUrl}" style="display:inline-block;background:#c4b0ff;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
-          Go to Landlord Dashboard →
+      <div style="background-color:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
+        <p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#1e1b4b;">Start Managing Your Properties</p>
+        <a href="${loginUrl}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
+          Go to Landlord Dashboard &rarr;
         </a>
       </div>
 
-      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">What you can do now</p>
-        <ul style="margin:0;padding-left:20px;color:#a3a3a3;font-size:13px;line-height:1.8;">
+      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <p style="margin:0 0 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#7c3aed;">What you can do now</p>
+        <ul style="margin:0;padding-left:20px;color:#475569;font-size:13px;line-height:1.8;">
           <li>Add and manage your properties</li>
           <li>Create units and list them for rent</li>
           <li>Invite tenants and process applications</li>
@@ -625,12 +718,12 @@ export async function sendLandlordRegistrationApproved({
         </ul>
       </div>
 
-      <p style="margin:0;color:#525252;font-size:12px;line-height:1.6;">
+      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
         Log in with the credentials you created during registration. If you need help getting started, check out our landlord guide in the dashboard.
       </p>
     </div>
-    <div style="padding:16px 32px;border-top:1px solid #1a1a1a;text-align:center;">
-      <p style="margin:0;color:#404040;font-size:11px;">© iReside Property Management</p>
+    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
+      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
     </div>
   </div>
 </body>
@@ -672,36 +765,45 @@ export async function sendLandlordOnboardingMagicLink({
 
     const html = `
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
-  <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
-    <div style="background:#c4b0ff;padding:24px 32px;">
-      <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-      <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:2px;">Complete Your Setup</p>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Complete Your Landlord Setup</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+    <div style="background-color:#c4b0ff;padding:24px 32px;">
+      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
+      <p style="margin:4px 0 0;color:#1e1b4b;font-size:12px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:2px;">Complete Your Setup</p>
     </div>
     <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:16px;">Hi <strong>${landlordName}</strong>,</p>
-      <p style="margin:0 0 24px;color:#a3a3a3;font-size:14px;line-height:1.6;">
+      <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi <strong>${landlordName}</strong>,</p>
+      <p style="margin:0 0 24px;color:#52525b;font-size:14px;line-height:1.6;">
         Great news! Your landlord registration has been approved. To access your landlord dashboard, you need to complete a quick setup process.
       </p>
 
-      <div style="background:#1a1a1a;border:1px solid #c4b0ff;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
-        <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#fff;">Set Up Your Account</p>
-        <a href="${onboardingUrl}" style="display:inline-block;background:#c4b0ff;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
-          Complete Setup →
+      <div style="background-color:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
+        <p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#1e1b4b;">Set Up Your Account</p>
+        <a href="${onboardingUrl}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
+          Complete Setup &rarr;
         </a>
       </div>
 
-      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">⏰ Link Expires</p>
-        <p style="margin:0;font-size:14px;color:#fff;">${expiresAt}</p>
-        <p style="margin:4px 0 0;font-size:12px;color:#737373;">Please complete your setup before the link expires.</p>
+      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">⏰ Link Expires</p>
+        <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a;">${expiresAt}</p>
+        <p style="margin:4px 0 0;font-size:12px;color:#71717a;">Please complete your setup before the link expires.</p>
       </div>
 
-      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#c4b0ff;">What you'll do</p>
-        <ul style="margin:0;padding-left:20px;color:#a3a3a3;font-size:13px;line-height:1.8;">
+      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <p style="margin:0 0 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#7c3aed;">What you'll do</p>
+        <ul style="margin:0;padding-left:20px;color:#475569;font-size:13px;line-height:1.8;">
           <li>Create your account password</li>
           <li>Verify your property details</li>
           <li>Configure billing settings</li>
@@ -709,12 +811,12 @@ export async function sendLandlordOnboardingMagicLink({
         </ul>
       </div>
 
-      <p style="margin:0;color:#525252;font-size:12px;line-height:1.6;">
+      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
         If you didn't expect this email or have questions, please contact support.
       </p>
     </div>
-    <div style="padding:16px 32px;border-top:1px solid #1a1a1a;text-align:center;">
-      <p style="margin:0;color:#404040;font-size:11px;">© iReside Property Management</p>
+    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
+      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
     </div>
   </div>
 </body>
@@ -760,7 +862,12 @@ export async function sendPasswordResetEmail({
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
   <title>Reset your iReside password</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
 </head>
 <body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:520px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:12px;overflow:hidden;">
@@ -842,7 +949,12 @@ export async function sendPasswordResetOtpEmail({
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
   <title>Your iReside verification code</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
 </head>
 <body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:480px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:12px;overflow:hidden;">
@@ -926,7 +1038,12 @@ export async function sendPasswordResetConfirmationEmail({
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
   <title>Your password was changed</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
 </head>
 <body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:480px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:12px;overflow:hidden;">
@@ -1009,10 +1126,15 @@ export async function sendApplicationRejectedEmail({
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
   <title>Application Status Update</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
 </head>
-<body style="margin:0;padding:40px 16px;background-color:#090a0f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#e5e7eb;">
-  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:520px;margin:0 auto;background-color:#141721;border:1px solid rgba(255,255,255,0.1);border-radius:16px;overflow:hidden;">
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:520px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
     <tr>
       <td style="background-color:#ef4444;padding:20px 24px;">
         <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
@@ -1021,35 +1143,35 @@ export async function sendApplicationRejectedEmail({
     </tr>
     <tr>
       <td style="padding:28px 24px;">
-        <p style="margin:0 0 14px;font-size:15px;line-height:1.5;color:#f3f4f6;">Hi <strong>${applicantName}</strong>,</p>
-        <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#9ca3af;">
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.5;color:#18181b;">Hi <strong>${applicantName}</strong>,</p>
+        <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#52525b;">
           Thank you for your interest in leasing at <strong>${propertyName}${cleanUnit}</strong>. The property manager has reviewed your application and regrettably was unable to approve it at this time.
         </p>
 
         <!-- Rejection Reason Card -->
-        <div style="background-color:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:12px;padding:16px;margin-bottom:24px;">
-          <p style="margin:0 0 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#f87171;">Reason from Landlord</p>
-          <p style="margin:0;font-size:14px;line-height:1.5;color:#ffffff;font-weight:500;">${rejectionReason}</p>
+        <div style="background-color:#fef2f2;border:1px solid #fee2e2;border-radius:12px;padding:16px;margin-bottom:24px;">
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#b91c1c;">Reason from Landlord</p>
+          <p style="margin:0;font-size:14px;line-height:1.5;color:#7f1d1d;font-weight:600;">${rejectionReason}</p>
         </div>
 
         ${resubmitUrl ? `
-        <div style="background-color:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;text-align:center;margin-bottom:24px;">
-          <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#ffffff;">Would you like to re-submit or apply again?</p>
-          <p style="margin:0 0 16px;font-size:12px;color:#9ca3af;line-height:1.5;">You may update your details or apply for another available unit using the link below.</p>
-          <a href="${resubmitUrl}" style="display:inline-block;background-color:#c4b0ff;color:#000000;font-weight:900;font-size:14px;padding:12px 24px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
+        <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;text-align:center;margin-bottom:24px;">
+          <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#0f172a;">Would you like to re-submit or apply again?</p>
+          <p style="margin:0 0 16px;font-size:12px;color:#475569;line-height:1.5;">You may update your details or apply for another available unit using the link below.</p>
+          <a href="${resubmitUrl}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:14px;padding:12px 24px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
             Submit New Application &rarr;
           </a>
         </div>
         ` : ""}
 
-        <p style="margin:0;font-size:12px;line-height:1.6;color:#6b7280;">
+        <p style="margin:0;font-size:12px;line-height:1.6;color:#71717a;">
           If you have questions regarding this decision, please reach out directly to the landlord or property management office.
         </p>
       </td>
     </tr>
     <tr>
-      <td style="padding:16px 24px;background-color:rgba(255,255,255,0.02);border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-        <p style="margin:0;font-size:11px;color:#6b7280;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
+      <td style="padding:16px 24px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
+        <p style="margin:0;font-size:11px;color:#a1a1aa;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
       </td>
     </tr>
   </table>
@@ -1123,10 +1245,15 @@ export async function sendPaymentReviewResolutionEmail({
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
   <title>${title}</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
 </head>
-<body style="margin:0;padding:40px 16px;background-color:#090a0f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#e5e7eb;">
-  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:520px;margin:0 auto;background-color:#141721;border:1px solid rgba(255,255,255,0.1);border-radius:16px;overflow:hidden;">
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:520px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
     <tr>
       <td style="background-color:${headerColor};padding:20px 24px;">
         <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
@@ -1135,33 +1262,33 @@ export async function sendPaymentReviewResolutionEmail({
     </tr>
     <tr>
       <td style="padding:28px 24px;">
-        <p style="margin:0 0 14px;font-size:15px;line-height:1.5;color:#f3f4f6;">Hi <strong>${applicantName}</strong>,</p>
-        <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#9ca3af;">${message}</p>
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.5;color:#18181b;">Hi <strong>${applicantName}</strong>,</p>
+        <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#52525b;">${message}</p>
 
         <!-- Transaction Details Card -->
-        <div style="background-color:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px;margin-bottom:20px;">
+        <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:20px;">
           <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-            <span style="font-size:12px;color:#9ca3af;text-transform:uppercase;">System Reference</span>
-            <span style="font-size:12px;font-weight:700;color:#c4b0ff;font-family:monospace;">${transactionReference}</span>
+            <span style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">System Reference</span>
+            <span style="font-size:12px;font-weight:700;color:#7c3aed;font-family:Consolas,'Liberation Mono',Menlo,monospace;">${transactionReference}</span>
           </div>
           ${formattedAmount ? `
           <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-            <span style="font-size:12px;color:#9ca3af;text-transform:uppercase;">Amount</span>
-            <span style="font-size:14px;font-weight:900;color:#ffffff;">${formattedAmount}</span>
+            <span style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Amount</span>
+            <span style="font-size:15px;font-weight:900;color:#0f172a;">${formattedAmount}</span>
           </div>
           ` : ""}
           ${note ? `
-          <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;margin-top:10px;">
-            <span style="font-size:11px;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:4px;">Landlord Note</span>
-            <span style="font-size:13px;color:#ffffff;line-height:1.5;">${note}</span>
+          <div style="border-top:1px solid #e2e8f0;padding-top:10px;margin-top:10px;">
+            <span style="font-size:11px;color:#64748b;text-transform:uppercase;display:block;margin-bottom:4px;font-weight:600;">Landlord Note</span>
+            <span style="font-size:13px;color:#334155;line-height:1.5;">${note}</span>
           </div>
           ` : ""}
         </div>
 
         ${proofUrl ? `
-        <div style="background-color:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;margin-bottom:24px;text-align:center;">
-          <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#ffffff;">Attached Refund / Return Receipt</p>
-          <a href="${proofUrl}" target="_blank" style="display:inline-block;background-color:rgba(255,255,255,0.1);color:#ffffff;font-size:12px;font-weight:700;padding:10px 18px;border-radius:8px;text-decoration:none;border:1px solid rgba(255,255,255,0.15);">
+        <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:24px;text-align:center;">
+          <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#0f172a;">Attached Refund / Return Receipt</p>
+          <a href="${proofUrl}" target="_blank" style="display:inline-block;background-color:#ffffff;color:#0f172a;font-size:12px;font-weight:700;padding:10px 18px;border-radius:8px;text-decoration:none;border:1px solid #cbd5e1;">
             View Receipt Proof &rarr;
           </a>
         </div>
@@ -1169,20 +1296,20 @@ export async function sendPaymentReviewResolutionEmail({
 
         ${paymentPortalUrl ? `
         <div style="text-align:center;margin-bottom:24px;">
-          <a href="${paymentPortalUrl}" style="display:inline-block;background-color:#c4b0ff;color:#000000;font-weight:900;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;">
+          <a href="${paymentPortalUrl}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
             Open Payment Portal &rarr;
           </a>
         </div>
         ` : ""}
 
-        <p style="margin:0;font-size:12px;line-height:1.6;color:#6b7280;">
+        <p style="margin:0;font-size:12px;line-height:1.6;color:#71717a;">
           If you have any questions, please contact your landlord or property administrator.
         </p>
       </td>
     </tr>
     <tr>
-      <td style="padding:16px 24px;background-color:rgba(255,255,255,0.02);border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-        <p style="margin:0;font-size:11px;color:#6b7280;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
+      <td style="padding:16px 24px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
+        <p style="margin:0;font-size:11px;color:#a1a1aa;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
       </td>
     </tr>
   </table>
@@ -1229,67 +1356,72 @@ export async function sendNewApplicationReceivedEmail({
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
   <title>New Tenant Application</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
 </head>
-<body style="margin:0;padding:40px 16px;background-color:#090a0f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#e5e7eb;">
-  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:520px;margin:0 auto;background-color:#141721;border:1px solid rgba(255,255,255,0.1);border-radius:16px;overflow:hidden;">
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:520px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
     <tr>
       <td style="background-color:#c4b0ff;padding:24px 28px;">
         <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-        <p style="margin:4px 0 0;color:#000000;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;opacity:0.8;">New Tenant Application</p>
+        <p style="margin:4px 0 0;color:#1e1b4b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;opacity:0.85;">New Tenant Application</p>
       </td>
     </tr>
     <tr>
       <td style="padding:28px 24px;">
-        <p style="margin:0 0 14px;font-size:15px;line-height:1.5;color:#f3f4f6;">Hi <strong>${landlordName}</strong>,</p>
-        <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#9ca3af;">
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.5;color:#18181b;">Hi <strong>${landlordName}</strong>,</p>
+        <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#52525b;">
           You have received a new rental application for <strong>${propertyName}${cleanUnit}</strong>.
         </p>
 
         <!-- Applicant Summary Card -->
-        <div style="background-color:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;margin-bottom:24px;">
+        <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
           <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
             <tr>
-              <td style="padding-bottom:10px;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">Applicant Name</td>
-              <td style="padding-bottom:10px;font-size:13px;font-weight:700;color:#ffffff;text-align:right;">${applicantName}</td>
+              <td style="padding-bottom:10px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Applicant Name</td>
+              <td style="padding-bottom:10px;font-size:13px;font-weight:700;color:#0f172a;text-align:right;">${applicantName}</td>
             </tr>
             <tr>
-              <td style="padding-bottom:10px;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">Email</td>
-              <td style="padding-bottom:10px;font-size:13px;color:#c4b0ff;text-align:right;">${applicantEmail}</td>
+              <td style="padding-bottom:10px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Email</td>
+              <td style="padding-bottom:10px;font-size:13px;font-weight:600;color:#7c3aed;text-align:right;">${applicantEmail}</td>
             </tr>
             ${applicantPhone ? `
             <tr>
-              <td style="padding-bottom:10px;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">Phone</td>
-              <td style="padding-bottom:10px;font-size:13px;color:#ffffff;text-align:right;">${applicantPhone}</td>
+              <td style="padding-bottom:10px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Phone</td>
+              <td style="padding-bottom:10px;font-size:13px;color:#0f172a;text-align:right;">${applicantPhone}</td>
             </tr>
             ` : ""}
             ${moveInDate ? `
             <tr>
-              <td style="padding-bottom:10px;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">Target Move-In</td>
-              <td style="padding-bottom:10px;font-size:13px;color:#ffffff;text-align:right;">${moveInDate}</td>
+              <td style="padding-bottom:10px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Target Move-In</td>
+              <td style="padding-bottom:10px;font-size:13px;color:#0f172a;text-align:right;">${moveInDate}</td>
             </tr>
             ` : ""}
             <tr>
-              <td style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">Property / Unit</td>
-              <td style="font-size:13px;font-weight:700;color:#ffffff;text-align:right;">${propertyName}${cleanUnit}</td>
+              <td style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Property / Unit</td>
+              <td style="font-size:13px;font-weight:700;color:#0f172a;text-align:right;">${propertyName}${cleanUnit}</td>
             </tr>
           </table>
         </div>
 
         <div style="text-align:center;margin-bottom:24px;">
-          <a href="${dossierUrl}" style="display:inline-block;background-color:#c4b0ff;color:#000000;font-weight:900;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
+          <a href="${dossierUrl}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
             Review Application Dossier &rarr;
           </a>
         </div>
 
-        <p style="margin:0;font-size:12px;line-height:1.6;color:#6b7280;">
+        <p style="margin:0;font-size:12px;line-height:1.6;color:#71717a;">
           You can approve, request payment, or decline this application with feedback directly from your landlord command center.
         </p>
       </td>
     </tr>
     <tr>
-      <td style="padding:16px 24px;background-color:rgba(255,255,255,0.02);border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-        <p style="margin:0;font-size:11px;color:#6b7280;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
+      <td style="padding:16px 24px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
+        <p style="margin:0;font-size:11px;color:#a1a1aa;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
       </td>
     </tr>
   </table>

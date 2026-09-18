@@ -42,14 +42,13 @@ import {
     Sun,
     Moon,
     Contrast,
-    Sparkles,
     Upload,
     Check,
     ExternalLink,
     Lock,
     RefreshCw,
     SlidersHorizontal,
-    Wand2,
+    X,
     Pipette,
     ChevronLeft,
     ShieldCheck,
@@ -85,6 +84,25 @@ import { UnsavedChangesModal } from "@/components/ui/UnsavedChangesModal";
 import { useBrand, DEFAULT_BRANDING } from "@/context/BrandContext";
 import { applyBrandCssVariables } from "@/lib/branding/colors";
 import Link from "next/link";
+import {
+    validateFullName,
+    validateBusinessName,
+    validateEmail,
+    validatePhoneNumber,
+    validateWebsiteUrl,
+    validateAddress,
+    validateBio,
+    validateBusinessPermitNumber,
+    validateSocialHandleOrUrl,
+    validateHexColor,
+    validatePropertyTradeName,
+    validatePropertyTagline,
+    validateBannerImageUrl,
+    evaluatePasswordStrength,
+    validatePasswordPair,
+    validateAllLandlordSettings,
+    REGEX_NAME,
+} from "@/lib/validation/landlord-settings";
 
 export function normalizeRentalArchetype(val?: string | null): "apartment" | "dormitory" | "boarding_house" {
     if (!val) return "apartment";
@@ -185,15 +203,51 @@ function GlassCard({ children, className, title, description, headerExtra }: { c
     );
 }
 
-function SettingField({ label, children, description, icon: Icon }: { label: string; children: React.ReactNode; description?: string; icon?: any }) {
+function SettingField({ 
+    label, 
+    children, 
+    description, 
+    icon: Icon,
+    error,
+    required,
+    counter,
+}: { 
+    label: string; 
+    children: React.ReactNode; 
+    description?: string; 
+    icon?: any;
+    error?: string;
+    required?: boolean;
+    counter?: { current: number; max: number };
+}) {
     return (
-        <div className="space-y-2">
-            <div className="flex items-center gap-2 px-1">
-                {Icon && <Icon className="size-3.5 text-primary" />}
-                <label className="text-xs font-black uppercase tracking-wider text-foreground/80">{label}</label>
+        <div className="space-y-1.5">
+            <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-2">
+                    {Icon && <Icon className="size-3.5 text-primary shrink-0" />}
+                    <label className="text-xs font-black uppercase tracking-wider text-foreground/80">
+                        {label}
+                        {required && <span className="ml-1 text-rose-500 font-bold" title="Required field">*</span>}
+                    </label>
+                </div>
+                {counter && (
+                    <span className={cn(
+                        "text-[10px] font-mono font-bold tracking-tight",
+                        counter.current > counter.max ? "text-rose-500 font-black" : "text-muted-foreground/70"
+                    )}>
+                        {counter.current} / {counter.max}
+                    </span>
+                )}
             </div>
             {children}
-            {description && <p className="px-1 text-xs text-muted-foreground">{description}</p>}
+            {error ? (
+                <p className="px-1 text-[11px] font-bold text-rose-500 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <AlertCircle className="size-3 shrink-0" />
+                    <span>{error}</span>
+                </p>
+            ) : (
+                description && <p className="px-1 text-xs text-muted-foreground">{description}</p>
+            )}
         </div>
     );
 }
@@ -502,6 +556,13 @@ export function LandlordSettings() {
         }
     };
 
+    const handleDeleteAccount = async () => {
+        if (deleteConfirmText !== "DELETE") return;
+        toast.error("Account deletion requires administrative verification to protect active tenant leases and financial ledgers. Please contact support to submit an account closure request.");
+        setShowDeleteConfirm(false);
+        setDeleteConfirmText("");
+    };
+
     // Theme & High Contrast
     const { theme, setTheme, resolvedTheme } = useTheme();
     const { isHighContrast, toggleHighContrast } = useHighContrast();
@@ -579,13 +640,13 @@ export function LandlordSettings() {
 
     const handleApplyCustomBannerUrl = (e: React.FormEvent) => {
         e.preventDefault();
-        const trimmed = customBannerInput.trim();
-        if (!trimmed) {
-            toast.error("Please enter an image URL");
+        const check = validateBannerImageUrl(customBannerInput);
+        if (!check.isValid) {
+            toast.error(check.error || "Please enter a valid image URL");
             return;
         }
         setHasUserEdited(true);
-        setBannerUrl(trimmed);
+        setBannerUrl(customBannerInput.trim());
         setCustomBannerInput("");
         toast.info("Custom banner preview applied. Save all changes to apply permanently.");
     };
@@ -749,7 +810,10 @@ export function LandlordSettings() {
     const [newPassword, setNewPassword] = useState("");
     const [confirmNewPassword, setConfirmNewPassword] = useState("");
     const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
     // 2FA States
     const [twoFAStatus, setTwoFAStatus] = useState<'loading' | 'disabled' | 'gmail_connected' | 'pending_otp' | 'enabled'>(() => {
@@ -778,6 +842,23 @@ export function LandlordSettings() {
         }
         return DEFAULT_NOTIFICATION_PREFERENCES;
     });
+
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+
+    const setFieldError = useCallback((field: string, error?: string) => {
+        setFieldErrors((prev) => {
+            if (!error && !prev[field]) return prev;
+            const next = { ...prev };
+            if (error) next[field] = error;
+            else delete next[field];
+            return next;
+        });
+    }, []);
+
+    const markFieldTouched = useCallback((field: string) => {
+        setTouchedFields((prev) => ({ ...prev, [field]: true }));
+    }, []);
 
     const updateFormData = useCallback((patch: Partial<typeof formData>) => {
         setHasUserEdited(true);
@@ -1274,16 +1355,14 @@ export function LandlordSettings() {
 
     const handleUpdatePassword = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newPassword) {
-            toast.error("Please enter a new password");
-            return;
-        }
-        if (newPassword.length < 6) {
-            toast.error("New password must be at least 6 characters long");
-            return;
-        }
-        if (confirmNewPassword && newPassword !== confirmNewPassword) {
-            toast.error("New passwords do not match");
+        markFieldTouched("newPassword");
+        markFieldTouched("confirmNewPassword");
+        const pairCheck = validatePasswordPair(newPassword, confirmNewPassword);
+        if (!pairCheck.isValid) {
+            setFieldError("newPassword", pairCheck.newPasswordError);
+            setFieldError("confirmNewPassword", pairCheck.confirmPasswordError);
+            if (pairCheck.newPasswordError) toast.error(pairCheck.newPasswordError);
+            else if (pairCheck.confirmPasswordError) toast.error(pairCheck.confirmPasswordError);
             return;
         }
 
@@ -1334,6 +1413,8 @@ export function LandlordSettings() {
             setHasChangedPassword(true);
             setNewPassword("");
             setConfirmNewPassword("");
+            setFieldError("newPassword", undefined);
+            setFieldError("confirmNewPassword", undefined);
             toast.success("Password updated successfully!", { id: loadingToast });
         } catch (err: any) {
             console.error("[Settings] Password update error:", err);
@@ -1406,6 +1487,33 @@ export function LandlordSettings() {
             toast.error("Please wait for your account session to load before saving.");
             return false;
         }
+
+        // 0. Comprehensive Client-side Input Validation
+        const validation = validateAllLandlordSettings(formData, {
+            propertyTradeName,
+            propertyTagline,
+            brandPrimaryHex,
+            brandSecondaryHex,
+        });
+
+        if (!validation.isValid) {
+            setFieldErrors(validation.errors);
+            const touchedUpdates = Object.keys(validation.errors).reduce((acc, key) => {
+                acc[key] = true;
+                return acc;
+            }, {} as Record<string, boolean>);
+            setTouchedFields((prev) => ({ ...prev, ...touchedUpdates }));
+
+            if (validation.firstErrorTab) {
+                setActiveTab(validation.firstErrorTab.category);
+                setActiveSubTab(validation.firstErrorTab.subtab);
+                toast.error(`Please fix the errors in ${validation.firstErrorTab.category} (${validation.firstErrorTab.subtab}) before saving.`);
+            } else {
+                toast.error("Please correct the highlighted errors before saving.");
+            }
+            return false;
+        }
+
         setIsSaving(true);
         const loadingToast = toast.loading("Saving all changes across settings…");
 
@@ -1651,66 +1759,239 @@ export function LandlordSettings() {
                     return (
                         <GlassCard title="Profile Information" description="Basic details about you and your business.">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <SettingField label="Full Name" icon={User} description="Your legal or preferred display name.">
+                                <SettingField 
+                                    label="Full Name" 
+                                    icon={User} 
+                                    description="Your legal or preferred display name."
+                                    required
+                                    error={touchedFields.full_name ? fieldErrors.full_name : undefined}
+                                >
                                     <input
                                         type="text"
                                         value={formData.full_name}
-                                        onChange={(e) => updateFormData({ full_name: e.target.value })}
+                                        maxLength={70}
+                                        onBlur={() => {
+                                            markFieldTouched("full_name");
+                                            const check = validateFullName(formData.full_name);
+                                            setFieldError("full_name", check.error);
+                                        }}
+                                        onChange={(e) => {
+                                            updateFormData({ full_name: e.target.value });
+                                            if (touchedFields.full_name) {
+                                                const check = validateFullName(e.target.value);
+                                                setFieldError("full_name", check.error);
+                                            }
+                                        }}
                                         placeholder="e.g. John Doe"
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                            touchedFields.full_name && fieldErrors.full_name 
+                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
+                                                : "focus:ring-primary/20"
+                                        )}
+                                        aria-invalid={!!(touchedFields.full_name && fieldErrors.full_name)}
                                     />
                                 </SettingField>
-                                <SettingField label="Business Name" icon={Building2} description="Registered entity or enterprise business name.">
+
+                                <SettingField 
+                                    label="Business Name" 
+                                    icon={Building2} 
+                                    description="Registered entity or enterprise business name."
+                                    error={touchedFields.business_name ? fieldErrors.business_name : undefined}
+                                >
                                     <input
                                         type="text"
                                         value={formData.business_name}
-                                        onChange={(e) => updateFormData({ business_name: e.target.value })}
+                                        maxLength={100}
+                                        onBlur={() => {
+                                            markFieldTouched("business_name");
+                                            const check = validateBusinessName(formData.business_name);
+                                            setFieldError("business_name", check.error);
+                                        }}
+                                        onChange={(e) => {
+                                            updateFormData({ business_name: e.target.value });
+                                            if (touchedFields.business_name) {
+                                                const check = validateBusinessName(e.target.value);
+                                                setFieldError("business_name", check.error);
+                                            }
+                                        }}
                                         placeholder="e.g. Acme Residences LLC"
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                            touchedFields.business_name && fieldErrors.business_name 
+                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
+                                                : "focus:ring-primary/20"
+                                        )}
+                                        aria-invalid={!!(touchedFields.business_name && fieldErrors.business_name)}
                                     />
                                 </SettingField>
-                                <SettingField label="Contact Email" icon={Mail} description="Primary contact email used for inquiries and notifications.">
+
+                                <SettingField 
+                                    label="Contact Email" 
+                                    icon={Mail} 
+                                    description="Primary contact email used for inquiries and notifications."
+                                    required
+                                    error={touchedFields.email ? fieldErrors.email : undefined}
+                                >
                                     <input
                                         type="email"
                                         value={formData.email}
-                                        onChange={(e) => updateFormData({ email: e.target.value })}
+                                        maxLength={254}
+                                        onBlur={() => {
+                                            markFieldTouched("email");
+                                            const check = validateEmail(formData.email);
+                                            setFieldError("email", check.error);
+                                        }}
+                                        onChange={(e) => {
+                                            updateFormData({ email: e.target.value });
+                                            if (touchedFields.email) {
+                                                const check = validateEmail(e.target.value);
+                                                setFieldError("email", check.error);
+                                            }
+                                        }}
                                         placeholder="name@example.com"
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                            touchedFields.email && fieldErrors.email 
+                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
+                                                : "focus:ring-primary/20"
+                                        )}
+                                        aria-invalid={!!(touchedFields.email && fieldErrors.email)}
                                     />
                                 </SettingField>
-                                <SettingField label="Phone Number" icon={Phone}>
+
+                                <SettingField 
+                                    label="Phone Number" 
+                                    icon={Phone}
+                                    description="Philippine mobile (09XXXXXXXXX) or international format."
+                                    error={touchedFields.phone ? fieldErrors.phone : undefined}
+                                >
                                     <input
                                         type="tel"
                                         value={formData.phone}
-                                        onChange={(e) => updateFormData({ phone: e.target.value })}
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                        maxLength={25}
+                                        onBlur={() => {
+                                            markFieldTouched("phone");
+                                            const check = validatePhoneNumber(formData.phone);
+                                            setFieldError("phone", check.error);
+                                        }}
+                                        onChange={(e) => {
+                                            updateFormData({ phone: e.target.value });
+                                            if (touchedFields.phone) {
+                                                const check = validatePhoneNumber(e.target.value);
+                                                setFieldError("phone", check.error);
+                                            }
+                                        }}
+                                        placeholder="e.g. 0917 123 4567 or +63 917 123 4567"
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                            touchedFields.phone && fieldErrors.phone 
+                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
+                                                : "focus:ring-primary/20"
+                                        )}
+                                        aria-invalid={!!(touchedFields.phone && fieldErrors.phone)}
                                     />
                                 </SettingField>
-                                <SettingField label="Website" icon={Globe}>
+
+                                <SettingField 
+                                    label="Website" 
+                                    icon={Globe}
+                                    description="Official property or business website."
+                                    error={touchedFields.website ? fieldErrors.website : undefined}
+                                >
                                     <input
                                         type="url"
                                         value={formData.website}
-                                        onChange={(e) => updateFormData({ website: e.target.value })}
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                        maxLength={255}
+                                        onBlur={() => {
+                                            markFieldTouched("website");
+                                            const check = validateWebsiteUrl(formData.website);
+                                            setFieldError("website", check.error);
+                                        }}
+                                        onChange={(e) => {
+                                            updateFormData({ website: e.target.value });
+                                            if (touchedFields.website) {
+                                                const check = validateWebsiteUrl(e.target.value);
+                                                setFieldError("website", check.error);
+                                            }
+                                        }}
+                                        placeholder="https://myresidence.ph"
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                            touchedFields.website && fieldErrors.website 
+                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
+                                                : "focus:ring-primary/20"
+                                        )}
+                                        aria-invalid={!!(touchedFields.website && fieldErrors.website)}
                                     />
                                 </SettingField>
+
                                 <div className="md:col-span-2">
-                                    <SettingField label="Office Address" icon={MapPin}>
+                                    <SettingField 
+                                        label="Office Address" 
+                                        icon={MapPin}
+                                        error={touchedFields.address ? fieldErrors.address : undefined}
+                                    >
                                         <input
                                             type="text"
                                             value={formData.address}
-                                            onChange={(e) => updateFormData({ address: e.target.value })}
-                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                            maxLength={250}
+                                            onBlur={() => {
+                                                markFieldTouched("address");
+                                                const check = validateAddress(formData.address);
+                                                setFieldError("address", check.error);
+                                            }}
+                                            onChange={(e) => {
+                                                updateFormData({ address: e.target.value });
+                                                if (touchedFields.address) {
+                                                    const check = validateAddress(e.target.value);
+                                                    setFieldError("address", check.error);
+                                                }
+                                            }}
+                                            placeholder="e.g. Unit 101, Taft Tower, Manila"
+                                            className={cn(
+                                                "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                                touchedFields.address && fieldErrors.address 
+                                                    ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
+                                                    : "focus:ring-primary/20"
+                                            )}
+                                            aria-invalid={!!(touchedFields.address && fieldErrors.address)}
                                         />
                                     </SettingField>
                                 </div>
+
                                 <div className="md:col-span-2">
-                                    <SettingField label="Short Bio" icon={FileText} description="Briefly describe your property management style.">
+                                    <SettingField 
+                                        label="Short Bio" 
+                                        icon={FileText} 
+                                        description="Briefly describe your property management style."
+                                        counter={{ current: formData.bio?.length || 0, max: 500 }}
+                                        error={touchedFields.bio ? fieldErrors.bio : undefined}
+                                    >
                                         <textarea
                                             rows={4}
+                                            maxLength={500}
                                             value={formData.bio}
-                                            onChange={(e) => updateFormData({ bio: e.target.value })}
-                                            className="w-full resize-none rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                            onBlur={() => {
+                                                markFieldTouched("bio");
+                                                const check = validateBio(formData.bio);
+                                                setFieldError("bio", check.error);
+                                            }}
+                                            onChange={(e) => {
+                                                updateFormData({ bio: e.target.value });
+                                                if (touchedFields.bio) {
+                                                    const check = validateBio(e.target.value);
+                                                    setFieldError("bio", check.error);
+                                                }
+                                            }}
+                                            placeholder="Tell prospective tenants about your rental community, values, and policies..."
+                                            className={cn(
+                                                "w-full resize-none rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                                touchedFields.bio && fieldErrors.bio 
+                                                    ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
+                                                    : "focus:ring-primary/20"
+                                            )}
+                                            aria-invalid={!!(touchedFields.bio && fieldErrors.bio)}
                                         />
                                     </SettingField>
                                 </div>
@@ -1721,22 +2002,82 @@ export function LandlordSettings() {
                     return (
                         <GlassCard title="Emergency Contact" description="Designated emergency contact person and 24/7 phone number for urgent property escalations and tenant emergencies.">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <SettingField label="Emergency Contact Name" icon={User} description="Designated manager, partner, or emergency kin.">
+                                <SettingField 
+                                    label="Emergency Contact Name" 
+                                    icon={User} 
+                                    description="Designated manager, partner, or emergency kin."
+                                    error={touchedFields.emergency_contact_name ? fieldErrors.emergency_contact_name : undefined}
+                                >
                                     <input
                                         type="text"
                                         value={formData.emergency_contact_name}
-                                        onChange={(e) => updateFormData({ emergency_contact_name: e.target.value })}
+                                        maxLength={70}
+                                        onBlur={() => {
+                                            markFieldTouched("emergency_contact_name");
+                                            if (formData.emergency_contact_name && formData.emergency_contact_name.trim().length < 2) {
+                                                setFieldError("emergency_contact_name", "Emergency contact name must be at least 2 characters.");
+                                            } else if (formData.emergency_contact_name && !REGEX_NAME.test(formData.emergency_contact_name.trim())) {
+                                                setFieldError("emergency_contact_name", "Name can only contain letters, spaces, hyphens, and periods.");
+                                            } else {
+                                                setFieldError("emergency_contact_name", undefined);
+                                            }
+                                        }}
+                                        onChange={(e) => {
+                                            updateFormData({ emergency_contact_name: e.target.value });
+                                            if (touchedFields.emergency_contact_name) {
+                                                if (e.target.value && e.target.value.trim().length < 2) {
+                                                    setFieldError("emergency_contact_name", "Emergency contact name must be at least 2 characters.");
+                                                } else {
+                                                    setFieldError("emergency_contact_name", undefined);
+                                                }
+                                            }
+                                        }}
                                         placeholder="e.g. Jane Doe (Property Manager)"
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                            touchedFields.emergency_contact_name && fieldErrors.emergency_contact_name 
+                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
+                                                : "focus:ring-primary/20"
+                                        )}
+                                        aria-invalid={!!(touchedFields.emergency_contact_name && fieldErrors.emergency_contact_name)}
                                     />
                                 </SettingField>
-                                <SettingField label="Emergency Contact Phone" icon={Phone} description="Direct phone line reachable 24/7.">
+                                <SettingField 
+                                    label="Emergency Contact Phone" 
+                                    icon={Phone} 
+                                    description="Direct phone line reachable 24/7."
+                                    error={touchedFields.emergency_contact_phone ? fieldErrors.emergency_contact_phone : undefined}
+                                >
                                     <input
                                         type="tel"
                                         value={formData.emergency_contact_phone}
-                                        onChange={(e) => updateFormData({ emergency_contact_phone: e.target.value })}
+                                        maxLength={25}
+                                        onBlur={() => {
+                                            markFieldTouched("emergency_contact_phone");
+                                            const check = validatePhoneNumber(formData.emergency_contact_phone);
+                                            if (!check.isValid) {
+                                                setFieldError("emergency_contact_phone", check.error);
+                                            } else if (formData.emergency_contact_name.trim() && !formData.emergency_contact_phone.trim()) {
+                                                setFieldError("emergency_contact_phone", "Emergency phone number is required when a contact name is provided.");
+                                            } else {
+                                                setFieldError("emergency_contact_phone", undefined);
+                                            }
+                                        }}
+                                        onChange={(e) => {
+                                            updateFormData({ emergency_contact_phone: e.target.value });
+                                            if (touchedFields.emergency_contact_phone) {
+                                                const check = validatePhoneNumber(e.target.value);
+                                                setFieldError("emergency_contact_phone", check.error);
+                                            }
+                                        }}
                                         placeholder="e.g. +63 917 123 4567"
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                            touchedFields.emergency_contact_phone && fieldErrors.emergency_contact_phone 
+                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
+                                                : "focus:ring-primary/20"
+                                        )}
+                                        aria-invalid={!!(touchedFields.emergency_contact_phone && fieldErrors.emergency_contact_phone)}
                                     />
                                 </SettingField>
                             </div>
@@ -1783,52 +2124,128 @@ export function LandlordSettings() {
                     return (
                         <GlassCard title="Social Media Links" description="Connect your social profiles to build more trust.">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <SettingField label="Facebook" icon={Facebook}>
+                                <SettingField 
+                                    label="Facebook" 
+                                    icon={Facebook}
+                                    error={touchedFields.socials_facebook ? fieldErrors.socials_facebook : undefined}
+                                >
                                     <input
-                                        type="url"
-                                        placeholder="https://facebook.com/your-page"
+                                        type="text"
+                                        placeholder="https://facebook.com/your-page or page-handle"
                                         value={formData.socials.facebook}
+                                        onBlur={() => {
+                                            markFieldTouched("socials_facebook");
+                                            const check = validateSocialHandleOrUrl("facebook", formData.socials.facebook);
+                                            setFieldError("socials_facebook", check.error);
+                                        }}
                                         onChange={(e) => {
                                             setHasUserEdited(true);
                                             setFormData((prev) => ({ ...prev, socials: { ...prev.socials, facebook: e.target.value } }));
+                                            if (touchedFields.socials_facebook) {
+                                                const check = validateSocialHandleOrUrl("facebook", e.target.value);
+                                                setFieldError("socials_facebook", check.error);
+                                            }
                                         }}
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                            touchedFields.socials_facebook && fieldErrors.socials_facebook 
+                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
+                                                : "focus:ring-primary/20"
+                                        )}
+                                        aria-invalid={!!(touchedFields.socials_facebook && fieldErrors.socials_facebook)}
                                     />
                                 </SettingField>
-                                <SettingField label="Instagram" icon={Instagram}>
+                                <SettingField 
+                                    label="Instagram" 
+                                    icon={Instagram}
+                                    error={touchedFields.socials_instagram ? fieldErrors.socials_instagram : undefined}
+                                >
                                     <input
-                                        type="url"
-                                        placeholder="https://instagram.com/your-profile"
+                                        type="text"
+                                        placeholder="https://instagram.com/your-profile or @handle"
                                         value={formData.socials.instagram}
+                                        onBlur={() => {
+                                            markFieldTouched("socials_instagram");
+                                            const check = validateSocialHandleOrUrl("instagram", formData.socials.instagram);
+                                            setFieldError("socials_instagram", check.error);
+                                        }}
                                         onChange={(e) => {
                                             setHasUserEdited(true);
                                             setFormData((prev) => ({ ...prev, socials: { ...prev.socials, instagram: e.target.value } }));
+                                            if (touchedFields.socials_instagram) {
+                                                const check = validateSocialHandleOrUrl("instagram", e.target.value);
+                                                setFieldError("socials_instagram", check.error);
+                                            }
                                         }}
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                            touchedFields.socials_instagram && fieldErrors.socials_instagram 
+                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
+                                                : "focus:ring-primary/20"
+                                        )}
+                                        aria-invalid={!!(touchedFields.socials_instagram && fieldErrors.socials_instagram)}
                                     />
                                 </SettingField>
-                                <SettingField label="Twitter / X" icon={Twitter}>
+                                <SettingField 
+                                    label="Twitter / X" 
+                                    icon={Twitter}
+                                    error={touchedFields.socials_twitter ? fieldErrors.socials_twitter : undefined}
+                                >
                                     <input
-                                        type="url"
-                                        placeholder="https://twitter.com/your-handle"
+                                        type="text"
+                                        placeholder="https://x.com/your-handle or @handle"
                                         value={formData.socials.twitter}
+                                        onBlur={() => {
+                                            markFieldTouched("socials_twitter");
+                                            const check = validateSocialHandleOrUrl("twitter", formData.socials.twitter);
+                                            setFieldError("socials_twitter", check.error);
+                                        }}
                                         onChange={(e) => {
                                             setHasUserEdited(true);
                                             setFormData((prev) => ({ ...prev, socials: { ...prev.socials, twitter: e.target.value } }));
+                                            if (touchedFields.socials_twitter) {
+                                                const check = validateSocialHandleOrUrl("twitter", e.target.value);
+                                                setFieldError("socials_twitter", check.error);
+                                            }
                                         }}
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                            touchedFields.socials_twitter && fieldErrors.socials_twitter 
+                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
+                                                : "focus:ring-primary/20"
+                                        )}
+                                        aria-invalid={!!(touchedFields.socials_twitter && fieldErrors.socials_twitter)}
                                     />
                                 </SettingField>
-                                <SettingField label="LinkedIn" icon={Linkedin}>
+                                <SettingField 
+                                    label="LinkedIn" 
+                                    icon={Linkedin}
+                                    error={touchedFields.socials_linkedin ? fieldErrors.socials_linkedin : undefined}
+                                >
                                     <input
-                                        type="url"
-                                        placeholder="https://linkedin.com/in/your-profile"
+                                        type="text"
+                                        placeholder="https://linkedin.com/in/your-profile or username"
                                         value={formData.socials.linkedin}
+                                        onBlur={() => {
+                                            markFieldTouched("socials_linkedin");
+                                            const check = validateSocialHandleOrUrl("linkedin", formData.socials.linkedin);
+                                            setFieldError("socials_linkedin", check.error);
+                                        }}
                                         onChange={(e) => {
                                             setHasUserEdited(true);
                                             setFormData((prev) => ({ ...prev, socials: { ...prev.socials, linkedin: e.target.value } }));
+                                            if (touchedFields.socials_linkedin) {
+                                                const check = validateSocialHandleOrUrl("linkedin", e.target.value);
+                                                setFieldError("socials_linkedin", check.error);
+                                            }
                                         }}
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                            touchedFields.socials_linkedin && fieldErrors.socials_linkedin 
+                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
+                                                : "focus:ring-primary/20"
+                                        )}
+                                        aria-invalid={!!(touchedFields.socials_linkedin && fieldErrors.socials_linkedin)}
                                     />
                                 </SettingField>
                             </div>
@@ -1838,12 +2255,35 @@ export function LandlordSettings() {
                     return (
                         <GlassCard title="Business Verification" description="Upload your business permit to receive a 'Verified' badge.">
                             <div className="space-y-6">
-                                <SettingField label="Business Permit Number" icon={FileText}>
+                                <SettingField 
+                                    label="Business Permit Number" 
+                                    icon={FileText}
+                                    error={touchedFields.business_permit_number ? fieldErrors.business_permit_number : undefined}
+                                >
                                     <input
                                         type="text"
                                         value={formData.business_permit_number}
-                                        onChange={(e) => updateFormData({ business_permit_number: e.target.value })}
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                        maxLength={50}
+                                        onBlur={() => {
+                                            markFieldTouched("business_permit_number");
+                                            const check = validateBusinessPermitNumber(formData.business_permit_number);
+                                            setFieldError("business_permit_number", check.error);
+                                        }}
+                                        onChange={(e) => {
+                                            updateFormData({ business_permit_number: e.target.value });
+                                            if (touchedFields.business_permit_number) {
+                                                const check = validateBusinessPermitNumber(e.target.value);
+                                                setFieldError("business_permit_number", check.error);
+                                            }
+                                        }}
+                                        placeholder="e.g. BP-2026-VAL-09124"
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                            touchedFields.business_permit_number && fieldErrors.business_permit_number 
+                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
+                                                : "focus:ring-primary/20"
+                                        )}
+                                        aria-invalid={!!(touchedFields.business_permit_number && fieldErrors.business_permit_number)}
                                     />
                                 </SettingField>
                                 
@@ -2018,7 +2458,12 @@ export function LandlordSettings() {
                                 description="Tune the primary and secondary signature tones used in buttons, active states & metrics."
                             >
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <SettingField label="Primary Brand Accent" icon={Palette} description="Used for primary buttons, active tabs, and key badges.">
+                                    <SettingField 
+                                        label="Primary Brand Accent" 
+                                        icon={Palette} 
+                                        description="Used for primary buttons, active tabs, and key badges."
+                                        error={touchedFields.brandPrimaryHex ? fieldErrors.brandPrimaryHex : undefined}
+                                    >
                                         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-3">
                                             <button
                                                 type="button"
@@ -2038,12 +2483,35 @@ export function LandlordSettings() {
                                             <input
                                                 type="text"
                                                 value={brandPrimaryHex}
+                                                maxLength={7}
+                                                onBlur={() => {
+                                                    markFieldTouched("brandPrimaryHex");
+                                                    const check = validateHexColor(brandPrimaryHex);
+                                                    if (!check.isValid) {
+                                                        setFieldError("brandPrimaryHex", check.error);
+                                                    } else {
+                                                        setBrandPrimaryHex(check.formatted);
+                                                        setFieldError("brandPrimaryHex", undefined);
+                                                        applyBrandCssVariables(check.formatted, brandSecondaryHex);
+                                                    }
+                                                }}
                                                 onChange={(e) => {
                                                     setHasUserEdited(true);
                                                     setBrandPrimaryHex(e.target.value);
+                                                    if (touchedFields.brandPrimaryHex) {
+                                                        const check = validateHexColor(e.target.value);
+                                                        setFieldError("brandPrimaryHex", check.error);
+                                                        if (check.isValid) {
+                                                            applyBrandCssVariables(check.formatted, brandSecondaryHex);
+                                                        }
+                                                    }
                                                 }}
                                                 placeholder="#C4B0FF"
-                                                className="w-24 sm:w-28 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-2.5 sm:py-3 text-foreground"
+                                                className={cn(
+                                                    "w-24 sm:w-28 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-2.5 sm:py-3 text-foreground transition-all",
+                                                    touchedFields.brandPrimaryHex && fieldErrors.brandPrimaryHex ? "ring-1 ring-rose-500/50" : ""
+                                                )}
+                                                aria-invalid={!!(touchedFields.brandPrimaryHex && fieldErrors.brandPrimaryHex)}
                                             />
                                             <div 
                                                 className="size-9 sm:size-10 rounded-xl border border-white/20 shadow-md flex items-center justify-center text-xs font-black shrink-0"
@@ -2054,7 +2522,12 @@ export function LandlordSettings() {
                                         </div>
                                     </SettingField>
 
-                                    <SettingField label="Secondary Ambient Accent" icon={SlidersHorizontal} description="Used for gradients, glowing highlights, and secondary tags.">
+                                    <SettingField 
+                                        label="Secondary Ambient Accent" 
+                                        icon={SlidersHorizontal} 
+                                        description="Used for gradients, glowing highlights, and secondary tags."
+                                        error={touchedFields.brandSecondaryHex ? fieldErrors.brandSecondaryHex : undefined}
+                                    >
                                         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-3">
                                             <button
                                                 type="button"
@@ -2074,12 +2547,35 @@ export function LandlordSettings() {
                                             <input
                                                 type="text"
                                                 value={brandSecondaryHex}
+                                                maxLength={7}
+                                                onBlur={() => {
+                                                    markFieldTouched("brandSecondaryHex");
+                                                    const check = validateHexColor(brandSecondaryHex);
+                                                    if (!check.isValid) {
+                                                        setFieldError("brandSecondaryHex", check.error);
+                                                    } else {
+                                                        setBrandSecondaryHex(check.formatted);
+                                                        setFieldError("brandSecondaryHex", undefined);
+                                                        applyBrandCssVariables(brandPrimaryHex, check.formatted);
+                                                    }
+                                                }}
                                                 onChange={(e) => {
                                                     setHasUserEdited(true);
                                                     setBrandSecondaryHex(e.target.value);
+                                                    if (touchedFields.brandSecondaryHex) {
+                                                        const check = validateHexColor(e.target.value);
+                                                        setFieldError("brandSecondaryHex", check.error);
+                                                        if (check.isValid) {
+                                                            applyBrandCssVariables(brandPrimaryHex, check.formatted);
+                                                        }
+                                                    }
                                                 }}
                                                 placeholder="#8B5CF6"
-                                                className="w-24 sm:w-28 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-2.5 sm:py-3 text-foreground"
+                                                className={cn(
+                                                    "w-24 sm:w-28 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-2.5 sm:py-3 text-foreground transition-all",
+                                                    touchedFields.brandSecondaryHex && fieldErrors.brandSecondaryHex ? "ring-1 ring-rose-500/50" : ""
+                                                )}
+                                                aria-invalid={!!(touchedFields.brandSecondaryHex && fieldErrors.brandSecondaryHex)}
                                             />
                                             <div 
                                                 className="size-9 sm:size-10 rounded-xl border border-white/20 shadow-md flex items-center justify-center text-xs font-black text-white shrink-0"
@@ -2107,6 +2603,8 @@ export function LandlordSettings() {
                                                 setHasUserEdited(true);
                                                 setBrandPrimaryHex(preset.primary);
                                                 setBrandSecondaryHex(preset.secondary);
+                                                setFieldError("brandPrimaryHex", undefined);
+                                                setFieldError("brandSecondaryHex", undefined);
                                                 applyBrandCssVariables(preset.primary, preset.secondary);
                                                 toast.success(`Applied ${preset.name} palette`);
                                             }}
@@ -2126,29 +2624,68 @@ export function LandlordSettings() {
                         <div className="space-y-8">
                             <GlassCard title="Property Identity" description="Configure how your business is branded on leases, receipts & the tenant portal.">
                                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                    <SettingField label="Property Trade Name" icon={Building2} description="Appears on dashboard banner, top navbars, and invoice headers.">
+                                    <SettingField 
+                                        label="Property Trade Name" 
+                                        icon={Building2} 
+                                        description="Appears on dashboard banner, top navbars, and invoice headers."
+                                        error={touchedFields.propertyTradeName ? fieldErrors.propertyTradeName : undefined}
+                                    >
                                         <input
                                             type="text"
                                             value={propertyTradeName}
+                                            maxLength={80}
+                                            onBlur={() => {
+                                                markFieldTouched("propertyTradeName");
+                                                const check = validatePropertyTradeName(propertyTradeName);
+                                                setFieldError("propertyTradeName", check.error);
+                                            }}
                                             onChange={(e) => {
                                                 setHasUserEdited(true);
                                                 setPropertyTradeName(e.target.value);
+                                                if (touchedFields.propertyTradeName) {
+                                                    const check = validatePropertyTradeName(e.target.value);
+                                                    setFieldError("propertyTradeName", check.error);
+                                                }
                                             }}
                                             placeholder="e.g., Skyline Lofts"
-                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none font-bold"
+                                            className={cn(
+                                                "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none font-bold transition-all",
+                                                touchedFields.propertyTradeName && fieldErrors.propertyTradeName ? "ring-1 ring-rose-500/50" : ""
+                                            )}
+                                            aria-invalid={!!(touchedFields.propertyTradeName && fieldErrors.propertyTradeName)}
                                         />
                                     </SettingField>
 
-                                    <SettingField label="Property Tagline / Subtitle" icon={FileText} description="Displayed below your property name.">
+                                    <SettingField 
+                                        label="Property Tagline / Subtitle" 
+                                        icon={FileText} 
+                                        description="Displayed below your property name."
+                                        counter={{ current: propertyTagline?.length || 0, max: 120 }}
+                                        error={touchedFields.propertyTagline ? fieldErrors.propertyTagline : undefined}
+                                    >
                                         <input
                                             type="text"
                                             value={propertyTagline}
+                                            maxLength={120}
+                                            onBlur={() => {
+                                                markFieldTouched("propertyTagline");
+                                                const check = validatePropertyTagline(propertyTagline);
+                                                setFieldError("propertyTagline", check.error);
+                                            }}
                                             onChange={(e) => {
                                                 setHasUserEdited(true);
                                                 setPropertyTagline(e.target.value);
+                                                if (touchedFields.propertyTagline) {
+                                                    const check = validatePropertyTagline(e.target.value);
+                                                    setFieldError("propertyTagline", check.error);
+                                                }
                                             }}
                                             placeholder="e.g., Modern Urban Residences & Studios"
-                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                            className={cn(
+                                                "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                                touchedFields.propertyTagline && fieldErrors.propertyTagline ? "ring-1 ring-rose-500/50" : ""
+                                            )}
+                                            aria-invalid={!!(touchedFields.propertyTagline && fieldErrors.propertyTagline)}
                                         />
                                     </SettingField>
                                 </div>
@@ -2599,16 +3136,40 @@ export function LandlordSettings() {
                                     </div>
                                 )}
 
-                                <SettingField label="New Password" icon={Key}>
+                                <SettingField 
+                                    label="New Password" 
+                                    icon={Key}
+                                    required
+                                    error={fieldErrors["newPassword"]}
+                                >
                                     <div className="relative">
                                         <input 
                                             type={showNewPassword ? "text" : "password"} 
                                             value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setNewPassword(val);
+                                                if (fieldErrors["newPassword"]) {
+                                                    const pair = validatePasswordPair(val, confirmNewPassword);
+                                                    setFieldError("newPassword", pair.newPasswordError);
+                                                }
+                                                if (confirmNewPassword && fieldErrors["confirmNewPassword"]) {
+                                                    const pair = validatePasswordPair(val, confirmNewPassword);
+                                                    setFieldError("confirmNewPassword", pair.confirmPasswordError);
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                markFieldTouched("newPassword");
+                                                const pair = validatePasswordPair(newPassword, confirmNewPassword);
+                                                setFieldError("newPassword", pair.newPasswordError);
+                                            }}
                                             placeholder="••••••••" 
                                             required
                                             minLength={6}
-                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 pr-11 text-sm focus:outline-none" 
+                                            className={cn(
+                                                "w-full rounded-xl neumorphic-inset px-4 py-3 pr-11 text-sm focus:outline-none transition-colors",
+                                                fieldErrors["newPassword"] && "ring-1 ring-rose-500/50"
+                                            )}
                                         />
                                         <button
                                             type="button"
@@ -2621,21 +3182,102 @@ export function LandlordSettings() {
                                     </div>
                                 </SettingField>
 
-                                <SettingField label="Confirm New Password" icon={Key}>
+                                {/* Password Strength Meter & Live Checklist */}
+                                {newPassword.length > 0 && (() => {
+                                    const strength = evaluatePasswordStrength(newPassword);
+                                    return (
+                                        <div className="space-y-2.5 rounded-xl neumorphic-panel p-3.5 animate-in fade-in duration-200">
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="font-bold text-muted-foreground">Password Strength:</span>
+                                                <span className={cn("font-black", strength.color)}>{strength.label}</span>
+                                            </div>
+                                            <div className="grid grid-cols-4 gap-1.5">
+                                                {[1, 2, 3, 4].map((step) => (
+                                                    <div 
+                                                        key={step}
+                                                        className={cn(
+                                                            "h-1.5 rounded-full transition-all duration-300",
+                                                            step <= strength.score
+                                                                ? strength.score === 1 ? "bg-rose-500"
+                                                                : strength.score === 2 ? "bg-amber-500"
+                                                                : strength.score === 3 ? "bg-sky-500"
+                                                                : "bg-emerald-500"
+                                                                : "bg-muted"
+                                                        )}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-1.5 pt-1 text-[11px]">
+                                                <div className={cn("flex items-center gap-1.5 font-medium", strength.checks.hasMinLength ? "text-emerald-500" : "text-muted-foreground")}>
+                                                    <CheckCircle2 className={cn("size-3 shrink-0", strength.checks.hasMinLength ? "text-emerald-500" : "opacity-40")} />
+                                                    <span>At least 8 characters</span>
+                                                </div>
+                                                <div className={cn("flex items-center gap-1.5 font-medium", strength.checks.hasUppercase ? "text-emerald-500" : "text-muted-foreground")}>
+                                                    <CheckCircle2 className={cn("size-3 shrink-0", strength.checks.hasUppercase ? "text-emerald-500" : "opacity-40")} />
+                                                    <span>Uppercase letter</span>
+                                                </div>
+                                                <div className={cn("flex items-center gap-1.5 font-medium", strength.checks.hasLetter ? "text-emerald-500" : "text-muted-foreground")}>
+                                                    <CheckCircle2 className={cn("size-3 shrink-0", strength.checks.hasLetter ? "text-emerald-500" : "opacity-40")} />
+                                                    <span>Letters</span>
+                                                </div>
+                                                <div className={cn("flex items-center gap-1.5 font-medium", strength.checks.hasNumberOrSymbol ? "text-emerald-500" : "text-muted-foreground")}>
+                                                    <CheckCircle2 className={cn("size-3 shrink-0", strength.checks.hasNumberOrSymbol ? "text-emerald-500" : "opacity-40")} />
+                                                    <span>Number or symbol</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                <SettingField 
+                                    label="Confirm New Password" 
+                                    icon={Key}
+                                    required
+                                    error={fieldErrors["confirmNewPassword"]}
+                                >
                                     <div className="relative">
                                         <input 
-                                            type={showNewPassword ? "text" : "password"} 
+                                            type={showConfirmPassword ? "text" : "password"} 
                                             value={confirmNewPassword}
-                                            onChange={(e) => setConfirmNewPassword(e.target.value)}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setConfirmNewPassword(val);
+                                                if (fieldErrors["confirmNewPassword"]) {
+                                                    const pair = validatePasswordPair(newPassword, val);
+                                                    setFieldError("confirmNewPassword", pair.confirmPasswordError);
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                markFieldTouched("confirmNewPassword");
+                                                const pair = validatePasswordPair(newPassword, confirmNewPassword);
+                                                setFieldError("confirmNewPassword", pair.confirmPasswordError);
+                                            }}
                                             placeholder="••••••••" 
-                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 pr-11 text-sm focus:outline-none" 
+                                            className={cn(
+                                                "w-full rounded-xl neumorphic-inset px-4 py-3 pr-11 text-sm focus:outline-none transition-colors",
+                                                fieldErrors["confirmNewPassword"] && "ring-1 ring-rose-500/50"
+                                            )}
                                         />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 transition-colors cursor-pointer"
+                                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                        >
+                                            {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                                        </button>
                                     </div>
+                                    {confirmNewPassword && !fieldErrors["confirmNewPassword"] && newPassword === confirmNewPassword && (
+                                        <p className="px-1 text-[11px] font-bold text-emerald-500 flex items-center gap-1.5 animate-in fade-in">
+                                            <CheckCircle2 className="size-3 shrink-0" />
+                                            <span>Passwords match</span>
+                                        </p>
+                                    )}
                                 </SettingField>
 
                                 <button 
                                     type="submit"
-                                    disabled={isUpdatingPassword || !newPassword}
+                                    disabled={isUpdatingPassword || !newPassword || !confirmNewPassword}
                                     className="w-full rounded-2xl neumorphic-extruded py-3 text-sm font-black transition-all hover:text-primary disabled:opacity-50 cursor-pointer"
                                 >
                                     {isUpdatingPassword ? "Updating Password..." : "Update Password"}
@@ -3247,11 +3889,83 @@ export function LandlordSettings() {
                 case "Danger":
                     return (
                         <GlassCard className="border-red-500/20 bg-red-500/5 hover:bg-red-500/10" title="Danger Zone" description="Irreversible account actions.">
-                            <div className="space-y-4 max-w-lg">
-                                <p className="text-xs text-red-400/80">Permanently delete your account and all associated data. This cannot be undone.</p>
-                                <button className="flex items-center gap-2 rounded-2xl bg-red-500 px-6 py-3 text-sm font-black text-white shadow-xl shadow-red-500/20 transition-all hover:scale-[1.02] active:scale-95">
-                                    <Trash2 className="size-4" /> Delete Account
-                                </button>
+                            <div className="space-y-6 max-w-lg">
+                                <div className="flex items-start gap-4">
+                                    <div className="size-10 rounded-2xl bg-rose-500/20 text-rose-500 flex items-center justify-center shrink-0">
+                                        <AlertTriangle className="size-5" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-base font-black text-rose-600 dark:text-rose-400">Delete Account</h4>
+                                        <p className="text-sm text-muted-foreground mt-1">Permanently delete your account and all associated data. This action cannot be undone.</p>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-2xl neumorphic-inset p-4">
+                                    <h5 className="text-xs font-black uppercase tracking-wider text-foreground mb-3">What will be deleted:</h5>
+                                    <ul className="space-y-2">
+                                        {[
+                                            "Your landlord profile and business credentials",
+                                            "Property portfolios, buildings, and unit inventory",
+                                            "Tenant lease contracts and rental agreements",
+                                            "Invoices, payment logs, and financial records",
+                                            "Custom brand settings and system preferences",
+                                        ].map((text) => (
+                                            <li key={text} className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                <X className="size-3 text-rose-500 flex-shrink-0" />
+                                                <span>{text}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                {!showDeleteConfirm ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowDeleteConfirm(true)}
+                                        className="px-6 py-3 rounded-xl sm:rounded-2xl bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-black transition-all shadow-md cursor-pointer"
+                                    >
+                                        I understand, delete my account
+                                    </button>
+                                ) : (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: "auto" }}
+                                        className="space-y-4 border-t border-rose-500/20 pt-4"
+                                    >
+                                        <p className="text-xs text-muted-foreground">
+                                            Please type <span className="text-rose-600 dark:text-rose-400 font-mono font-black">DELETE</span> to confirm:
+                                        </p>
+                                        <input
+                                            type="text"
+                                            value={deleteConfirmText}
+                                            onChange={(e) => setDeleteConfirmText(e.target.value)}
+                                            placeholder="Type DELETE"
+                                            className="w-full max-w-xs rounded-xl neumorphic-inset border border-rose-500/30 px-4 py-3 text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-rose-500 transition-colors"
+                                        />
+                                        <div className="flex gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={handleDeleteAccount}
+                                                disabled={deleteConfirmText !== "DELETE"}
+                                                className={cn(
+                                                    "px-6 py-3 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black transition-all cursor-pointer",
+                                                    deleteConfirmText === "DELETE"
+                                                        ? "bg-rose-600 hover:bg-rose-500 text-white shadow-md"
+                                                        : "bg-muted text-muted-foreground cursor-not-allowed"
+                                                )}
+                                            >
+                                                Permanently Delete
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(""); }}
+                                                className="px-4 py-3 rounded-xl sm:rounded-2xl border border-border text-xs sm:text-sm font-black text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
                             </div>
                         </GlassCard>
                     );

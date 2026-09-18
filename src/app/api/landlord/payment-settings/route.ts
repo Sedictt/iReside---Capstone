@@ -112,6 +112,26 @@ export async function POST(request: Request) {
         }
 
         if (shouldSaveUtilities) {
+            const deletedConfigIdsRaw = formData.get("deletedConfigIds");
+            if (typeof deletedConfigIdsRaw === "string" && deletedConfigIdsRaw.trim().length > 0) {
+                try {
+                    const deletedConfigIds = JSON.parse(deletedConfigIdsRaw) as string[];
+                    if (Array.isArray(deletedConfigIds) && deletedConfigIds.length > 0) {
+                        const { error: deleteError } = await admin
+                            .from("utility_configs")
+                            .delete()
+                            .in("id", deletedConfigIds)
+                            .eq("landlord_id", userId);
+                        if (deleteError) {
+                            console.error("Failed to delete utility configs:", deleteError);
+                            throw deleteError;
+                        }
+                    }
+                } catch (parseErr) {
+                    console.error("Failed to parse deletedConfigIds:", parseErr);
+                }
+            }
+
             const utilityPayloadRaw = formData.get("utilityConfigs");
             if (typeof utilityPayloadRaw === "string" && utilityPayloadRaw.trim().length > 0) {
                 const utilityConfigs = JSON.parse(utilityPayloadRaw) as Array<{

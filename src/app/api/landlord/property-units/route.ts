@@ -28,6 +28,8 @@ export async function GET(request: Request) {
                 name: unit.name,
                 status: unit.status,
                 rentAmount: unit.rentAmount,
+                hasOngoingApplication: unit.hasOngoingApplication ?? false,
+                ongoingApplicationStatus: unit.ongoingApplicationStatus ?? null,
             })),
         }));
 

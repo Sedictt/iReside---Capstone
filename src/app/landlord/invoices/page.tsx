@@ -11,7 +11,7 @@ import { IssueInvoiceModal } from "@/components/landlord/invoices/IssueInvoiceMo
 import { RecordExpenseModal } from "@/components/landlord/invoices/RecordExpenseModal";
 import { Tooltip } from "@/components/ui/tooltip";
 import type { InvoiceListItem } from "@/lib/billing/server";
-import { formatPhpCurrency } from "@/lib/billing/utils";
+import { formatPhpCurrency, getInvoiceFilterCategory, getInvoiceDisplayStatus } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
 import { useProperty } from "@/context/PropertyContext";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
@@ -89,7 +89,7 @@ export default function InvoicesPage() {
         amount: -expense.amount
       })),
       ...invoices
-        .filter(invoice => ['paid', 'receipted', 'confirmed'].includes(invoice.status))
+        .filter(invoice => getInvoiceFilterCategory(invoice) === "paid")
         .map(invoice => ({
           date: invoice.issuedDate,
           type: 'Income',
@@ -153,14 +153,22 @@ export default function InvoicesPage() {
     }
   }, [searchParams]);
 
-  // Compute status summary counts for one-click pill filters
+  // Compute status summary counts for one-click pill filters (mutually exclusive & collectively exhaustive)
   const invoiceCounts = useMemo(() => {
-    const overdue = invoices.filter((i) => i.status === "overdue" || (i.workflowStatus as string) === "overdue").length;
-    const underReview = invoices.filter((i) => i.status === "under_review" || (i.workflowStatus as string) === "under_review" || i.proofStatus === "submitted").length;
-    const pending = invoices.filter((i) => ["pending", "intent_submitted", "awaiting_in_person"].includes(i.status) || ["pending", "intent_submitted", "awaiting_in_person"].includes(i.workflowStatus || "")).length;
-    const paid = invoices.filter((i) => ["paid", "receipted", "confirmed"].includes(i.status) || ["paid", "receipted", "confirmed"].includes(i.workflowStatus || "")).length;
-    const total = invoices.length;
-    return { total, overdue, underReview, pending, paid };
+    let overdue = 0;
+    let underReview = 0;
+    let pending = 0;
+    let paid = 0;
+
+    for (const invoice of invoices) {
+      const category = getInvoiceFilterCategory(invoice);
+      if (category === "overdue") overdue++;
+      else if (category === "under_review") underReview++;
+      else if (category === "pending") pending++;
+      else if (category === "paid") paid++;
+    }
+
+    return { total: invoices.length, overdue, underReview, pending, paid };
   }, [invoices]);
 
   const processedInvoices = useMemo(() => {
@@ -179,19 +187,12 @@ export default function InvoicesPage() {
     if (filterStatus !== "all") {
       filteredInvoices = filteredInvoices.filter((i) => {
         if (filterStatus === "refund_pending") return i.hasRefundRequest;
-        if (filterStatus === "unpaid_all") {
-          return !["paid", "receipted", "confirmed"].includes(i.status) && !["paid", "receipted", "confirmed"].includes(i.workflowStatus || "");
-        }
-        if (filterStatus === "paid_all" || filterStatus === "paid") {
-          return ["paid", "receipted", "confirmed"].includes(i.status) || ["paid", "receipted", "confirmed"].includes(i.workflowStatus || "");
-        }
-        if (filterStatus === "under_review") {
-          return i.status === "under_review" || i.workflowStatus === "under_review" || i.proofStatus === "submitted";
-        }
-        if (filterStatus === "pending") {
-          return ["pending", "intent_submitted", "awaiting_in_person"].includes(i.status) || ["pending", "intent_submitted", "awaiting_in_person"].includes(i.workflowStatus || "");
-        }
-        return i.status === filterStatus || i.workflowStatus === filterStatus;
+        if (filterStatus === "unpaid_all") return getInvoiceFilterCategory(i) !== "paid";
+        if (filterStatus === "paid_all" || filterStatus === "paid") return getInvoiceFilterCategory(i) === "paid";
+        if (filterStatus === "under_review") return getInvoiceFilterCategory(i) === "under_review";
+        if (filterStatus === "overdue") return getInvoiceFilterCategory(i) === "overdue";
+        if (filterStatus === "pending") return getInvoiceFilterCategory(i) === "pending";
+        return getInvoiceFilterCategory(i) === filterStatus || i.status === filterStatus || i.workflowStatus === filterStatus;
       });
     }
 
@@ -500,7 +501,7 @@ export default function InvoicesPage() {
                       <p className="text-lg font-black tracking-tight text-foreground">{invoice.invoiceNumber}</p>
                       <div className="flex items-center gap-2">
                         {(() => {
-                          const config = getStatusConfig(invoice.workflowStatus ?? invoice.status);
+                          const config = getStatusConfig(getInvoiceDisplayStatus(invoice));
                           return (
                             <span className={cn("inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] shadow-sm", config.classes)}>
                               <div className="mr-1.5 size-1 rounded-full bg-current animate-pulse" />

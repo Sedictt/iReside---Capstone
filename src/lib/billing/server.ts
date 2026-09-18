@@ -12,6 +12,7 @@ import {
     makeInvoiceNumber,
     makeReceiptNumber,
     parseLeaseBillingTerms,
+    resolveLeaseBillingDueDate,
     toIsoDate,
 } from "@/lib/billing/utils";
 import type {
@@ -26,6 +27,7 @@ import type {
     Unit,
     UtilityConfig,
     UtilityReading,
+    UtilityBillingMode,
 } from "@/types/database";
 
 type AppSupabaseClient = SupabaseClient<Database>;
@@ -598,6 +600,8 @@ export async function getTenantPaymentOverview(supabase: AppSupabaseClient, tena
             id,
             monthly_rent,
             status,
+            start_date,
+            terms,
             unit:units (name, property:properties (name))
         `)
         .eq("tenant_id", tenantId)
@@ -610,6 +614,8 @@ export async function getTenantPaymentOverview(supabase: AppSupabaseClient, tena
         lease: leaseData ? {
             id: leaseData.id,
             monthlyRent: leaseData.monthly_rent,
+            startDate: leaseData.start_date,
+            terms: leaseData.terms,
             propertyName: (leaseData.unit as any)?.property?.name,
             unitName: (leaseData.unit as any)?.name
         } : null,
@@ -859,13 +865,14 @@ export async function generateMonthlyInvoices(
                 configMap.get(`${lease.unit?.property_id}:${lease.unit_id}:${utilityType}`) ??
                 configMap.get(`${lease.unit?.property_id}:property:${utilityType}`);
 
-            if (!config) continue;
-
             const reading = leaseReadings.find((row) => row.utility_type === utilityType);
-            const billedRate = Number(reading?.billed_rate ?? config.rate_per_unit ?? 0);
+            if (!config && !reading) continue;
+
+            const billingMode: UtilityBillingMode = (reading?.billing_mode as UtilityBillingMode) ?? (config?.billing_mode as UtilityBillingMode) ?? "tenant_paid";
+            const billedRate = Number(reading?.billed_rate ?? config?.rate_per_unit ?? 0);
             const usage = Number(reading?.usage ?? 0);
             const charge = Number(reading?.computed_charge ?? computeUtilityCharge({
-                mode: config.billing_mode,
+                mode: billingMode,
                 ratePerUnit: billedRate,
                 usage,
             }));
@@ -877,10 +884,10 @@ export async function generateMonthlyInvoices(
                 category: utilityType,
                 sort_order: utilityType === "water" ? 10 : 20,
                 utility_type: utilityType,
-                billing_mode: config.billing_mode,
+                billing_mode: billingMode,
                 reading_id: reading?.id ?? null,
                 metadata: {
-                    included: config.billing_mode === "included_in_rent",
+                    included: billingMode === "included_in_rent",
                     usage,
                     rate: billedRate,
                 },
@@ -1043,14 +1050,88 @@ export async function recordUtilityReading(
         throw new Error("Current reading cannot be lower than the previous reading.");
     }
 
-    const { data: lease, error: leaseError } = await supabase
-        .from("leases")
-        .select("id, unit_id, landlord_id")
-        .eq("id", payload.leaseId)
-        .eq("landlord_id", landlordId)
-        .single();
+    let lease: { id: string; unit_id: string; landlord_id: string } | null = null;
+    try {
+        const { data: directLease, error: directError } = await supabase
+            .from("leases")
+            .select("id, unit_id, landlord_id")
+            .eq("id", payload.leaseId)
+            .eq("landlord_id", landlordId)
+            .maybeSingle();
 
-    if (leaseError) throw leaseError;
+        if (!directError && directLease) {
+            lease = directLease;
+        }
+    } catch {
+        // Postgres error on UUID casting or similar; fallback below
+    }
+
+    if (!lease) {
+        const { data: activeLeases, error: activeError } = await supabase
+            .from("leases")
+            .select("id, unit_id, landlord_id")
+            .eq("landlord_id", landlordId)
+            .eq("status", "active");
+
+        if (!activeError && activeLeases) {
+            lease = activeLeases.find((l) => l.id === payload.leaseId || l.unit_id === payload.leaseId || ((payload as any).unitId && l.unit_id === (payload as any).unitId)) ?? null;
+            if (!lease && activeLeases.length === 1 && !(payload as any).unitId) {
+                lease = activeLeases[0];
+            }
+        }
+    }
+
+    // Fallback: if unit is vacant (no active lease), look up unit directly and use/create baseline draft lease
+    if (!lease) {
+        const candidateUnitId = (payload as any).unitId || payload.leaseId;
+        try {
+            const { data: unitRecord } = await supabase
+                .from("units")
+                .select("id, property_id, rent_amount, properties!inner(id, landlord_id)")
+                .eq("id", candidateUnitId)
+                .eq("properties.landlord_id", landlordId)
+                .maybeSingle();
+
+            if (unitRecord) {
+                const { data: existingUnitLease } = await supabase
+                    .from("leases")
+                    .select("id, unit_id, landlord_id")
+                    .eq("unit_id", unitRecord.id)
+                    .eq("landlord_id", landlordId)
+                    .order("created_at", { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (existingUnitLease) {
+                    lease = existingUnitLease;
+                } else {
+                    const { data: newDraftLease } = await supabase
+                        .from("leases")
+                        .insert({
+                            landlord_id: landlordId,
+                            tenant_id: landlordId,
+                            unit_id: unitRecord.id,
+                            monthly_rent: unitRecord.rent_amount || 0,
+                            status: "draft",
+                            start_date: payload.billingPeriodStart || new Date().toISOString().slice(0, 10),
+                            end_date: "2099-12-31"
+                        })
+                        .select("id, unit_id, landlord_id")
+                        .single();
+
+                    if (newDraftLease) {
+                        lease = newDraftLease;
+                    }
+                }
+            }
+        } catch {
+            // Fall through
+        }
+    }
+
+    if (!lease) {
+        throw new Error("Unauthorized or lease not found for this landlord.");
+    }
 
     const { data: unit, error: unitError } = await supabase
         .from("units")
@@ -1071,40 +1152,97 @@ export async function recordUtilityReading(
 
     if (configError) throw configError;
 
-    const config =
+    let config =
         (configs ?? []).find((item) => item.unit_id === lease.unit_id) ??
         (configs ?? []).find((item) => item.unit_id === null);
 
     if (!config) {
-        throw new Error("No utility configuration found for this lease.");
+        const { data: newConfig } = await supabase
+            .from("utility_configs")
+            .insert({
+                landlord_id: landlordId,
+                property_id: unit.property_id,
+                unit_id: null,
+                utility_type: payload.utilityType,
+                billing_mode: "tenant_paid",
+                rate_per_unit: 0,
+                unit_label: payload.utilityType === "electricity" ? "kWh" : "m³",
+                is_active: true,
+            })
+            .select()
+            .single();
+
+        if (newConfig) {
+            config = newConfig;
+        }
     }
+
+    const billingMode: UtilityBillingMode = (config?.billing_mode as UtilityBillingMode) ?? "tenant_paid";
+    const billedRate = Number(config?.rate_per_unit ?? 0);
 
     const usage = computeUsage(payload.previousReading, payload.currentReading);
     const computedCharge = computeUtilityCharge({
-        mode: config.billing_mode,
-        ratePerUnit: Number(config.rate_per_unit ?? 0),
+        mode: billingMode,
+        ratePerUnit: billedRate,
         usage,
     });
+
+    const currentTimestamp = new Date().toISOString();
+
+    const { data: existingReading } = await supabase
+        .from("utility_readings")
+        .select("id")
+        .eq("unit_id", lease.unit_id)
+        .eq("utility_type", payload.utilityType)
+        .eq("billing_period_start", payload.billingPeriodStart)
+        .eq("billing_period_end", payload.billingPeriodEnd)
+        .maybeSingle();
+
+    if (existingReading) {
+        const { data: updated, error: updateErr } = await supabase
+            .from("utility_readings")
+            .update({
+                lease_id: lease.id,
+                previous_reading: payload.previousReading,
+                current_reading: payload.currentReading,
+                usage,
+                billed_rate: billedRate,
+                computed_charge: computedCharge,
+                note: payload.note ?? null,
+                proof_image_path: payload.proofImagePath ?? null,
+                proof_image_url: payload.proofImageUrl ?? null,
+                updated_at: currentTimestamp,
+            })
+            .eq("id", existingReading.id)
+            .select("*")
+            .single();
+
+        if (updateErr) throw updateErr;
+        return updated;
+    }
 
     const { data, error } = await supabase
         .from("utility_readings")
         .insert({
             landlord_id: landlordId,
-            lease_id: payload.leaseId,
+            lease_id: lease.id,
             property_id: unit.property_id,
             unit_id: lease.unit_id,
             utility_type: payload.utilityType,
-            billing_mode: config.billing_mode,
+            billing_mode: billingMode,
             billing_period_start: payload.billingPeriodStart,
             billing_period_end: payload.billingPeriodEnd,
             previous_reading: payload.previousReading,
             current_reading: payload.currentReading,
             usage,
-            billed_rate: Number(config.rate_per_unit ?? 0),
+            billed_rate: billedRate,
             computed_charge: computedCharge,
             note: payload.note ?? null,
             proof_image_path: payload.proofImagePath ?? null,
             proof_image_url: payload.proofImageUrl ?? null,
+            entered_at: currentTimestamp,
+            created_at: currentTimestamp,
+            updated_at: currentTimestamp,
         })
         .select("*")
         .single();
@@ -1372,6 +1510,7 @@ export async function generateNextMonthInvoice(
             tenant_id,
             landlord_id,
             monthly_rent,
+            start_date,
             terms,
             status,
             unit:units (
@@ -1416,7 +1555,8 @@ export async function generateNextMonthInvoice(
 
     // 4. Build invoice items
     const terms = parseLeaseBillingTerms(lease.terms ?? null);
-    const dueDate = new Date(nextCycle.getFullYear(), nextCycle.getMonth(), Math.max(1, Math.min(terms.dueDay, 28)));
+    const dueDateStr = resolveLeaseBillingDueDate(lease, nextCycle);
+    const dueDate = new Date(dueDateStr);
     const itemRows: Omit<PaymentItem, "id" | "created_at">[] = [];
 
     // Base rent
@@ -1472,12 +1612,12 @@ export async function generateNextMonthInvoice(
             balance_remaining: subtotal,
             status: "pending",
             description: `${formatDateLong(cycleKey)} monthly invoice`,
-            due_date: toIsoDate(dueDate),
+            due_date: dueDateStr,
             billing_cycle: cycleKey,
             invoice_period_start: toIsoDate(nextCycle),
             invoice_period_end: toIsoDate(cycleEnd),
             allow_partial_payments: terms.allowPartialPayments,
-            due_day_snapshot: terms.dueDay,
+            due_day_snapshot: Number(dueDateStr.split("-")[2]),
             late_fee_amount: terms.lateFeeAmount,
             invoice_number: makeInvoiceNumber(crypto.randomUUID(), cycleKey),
             metadata: { 
