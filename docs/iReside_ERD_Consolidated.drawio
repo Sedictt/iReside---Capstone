@@ -1,0 +1,456 @@
+<mxfile host="app.diagrams.net" modified="2026-09-17T14:34:55.162Z" agent="Antigravity" version="24.7.17" type="device">
+  <diagram id="iReside-ERD-Manuscript" name="iReside Core ERD (Exact DFD Match)">
+    <mxGraphModel dx="1400" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1500" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <!-- Table: profiles (D1: Auth & Accounts) -->
+        <mxCell id="tbl_profiles" value="&lt;b&gt;profiles&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D1: Auth & Accounts]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#1d4ed8;strokeColor=#1d4ed8;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="220" height="154" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_profiles_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_profiles">
+          <mxGeometry y="32" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_profiles_1" value="email: text" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_profiles">
+          <mxGeometry y="56" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_profiles_2" value="role: user_role" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_profiles">
+          <mxGeometry y="80" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_profiles_3" value="full_name: text" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_profiles">
+          <mxGeometry y="104" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_profiles_4" value="phone: text" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_profiles">
+          <mxGeometry y="128" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: user_security_settings (D1: Auth & Accounts) -->
+        <mxCell id="tbl_user_security_settings" value="&lt;b&gt;user_security_settings&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D1: Auth & Accounts]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#1d4ed8;strokeColor=#1d4ed8;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="260" width="220" height="154" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_user_security_settings_0" value="[PK, FK] profile_id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_user_security_settings">
+          <mxGeometry y="32" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_user_security_settings_1" value="two_factor_enabled: boolean" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_user_security_settings">
+          <mxGeometry y="56" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_user_security_settings_2" value="two_factor_email: text" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_user_security_settings">
+          <mxGeometry y="80" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_user_security_settings_3" value="otp_code: text" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_user_security_settings">
+          <mxGeometry y="104" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_user_security_settings_4" value="has_changed_password: boolean" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_user_security_settings">
+          <mxGeometry y="128" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: notifications (D8: Messaging & Alerts) -->
+        <mxCell id="tbl_notifications" value="&lt;b&gt;notifications&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D8: Messaging & Alerts]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#4f46e5;strokeColor=#4f46e5;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="460" width="220" height="154" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_notifications_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_notifications">
+          <mxGeometry y="32" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_notifications_1" value="[FK] user_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_notifications">
+          <mxGeometry y="56" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_notifications_2" value="title: text" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_notifications">
+          <mxGeometry y="80" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_notifications_3" value="type: notification_type" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_notifications">
+          <mxGeometry y="104" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_notifications_4" value="read: boolean" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_notifications">
+          <mxGeometry y="128" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: conversations (D8: Messaging & Alerts) -->
+        <mxCell id="tbl_conversations" value="&lt;b&gt;conversations&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D8: Messaging & Alerts]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#4f46e5;strokeColor=#4f46e5;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="660" width="220" height="106" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_conversations_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_conversations">
+          <mxGeometry y="32" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_conversations_1" value="created_at: timestamptz" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_conversations">
+          <mxGeometry y="56" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_conversations_2" value="updated_at: timestamptz" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_conversations">
+          <mxGeometry y="80" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: messages (D8: Messaging & Alerts) -->
+        <mxCell id="tbl_messages" value="&lt;b&gt;messages&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D8: Messaging & Alerts]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#4f46e5;strokeColor=#4f46e5;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="810" width="220" height="154" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_messages_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_messages">
+          <mxGeometry y="32" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_messages_1" value="[FK] conversation_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_messages">
+          <mxGeometry y="56" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_messages_2" value="[FK] sender_id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_messages">
+          <mxGeometry y="80" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_messages_3" value="content: text" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_messages">
+          <mxGeometry y="104" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_messages_4" value="created_at: timestamptz" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_messages">
+          <mxGeometry y="128" width="220" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: properties (D2: Property & Units) -->
+        <mxCell id="tbl_properties" value="&lt;b&gt;properties&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D2: Property & Units]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#059669;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="310" y="60" width="230" height="154" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_properties_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_properties">
+          <mxGeometry y="32" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_properties_1" value="[FK] landlord_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_properties">
+          <mxGeometry y="56" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_properties_2" value="name: text" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_properties">
+          <mxGeometry y="80" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_properties_3" value="address: text" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_properties">
+          <mxGeometry y="104" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_properties_4" value="base_rent_amount: numeric" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_properties">
+          <mxGeometry y="128" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: units (D2: Property & Units) -->
+        <mxCell id="tbl_units" value="&lt;b&gt;units&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D2: Property & Units]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#059669;strokeColor=#059669;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="310" y="260" width="230" height="178" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_units_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_units">
+          <mxGeometry y="32" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_units_1" value="[FK] property_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_units">
+          <mxGeometry y="56" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_units_2" value="name: text" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_units">
+          <mxGeometry y="80" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_units_3" value="floor: integer" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_units">
+          <mxGeometry y="104" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_units_4" value="rent_amount: numeric" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_units">
+          <mxGeometry y="128" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_units_5" value="status: unit_status" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_units">
+          <mxGeometry y="152" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: property_floor_configs (D3: Floor & Blueprints) -->
+        <mxCell id="tbl_property_floor_configs" value="&lt;b&gt;property_floor_configs&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D3: Floor & Blueprints]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#0d9488;strokeColor=#0d9488;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="310" y="480" width="230" height="154" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_property_floor_configs_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_property_floor_configs">
+          <mxGeometry y="32" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_property_floor_configs_1" value="[FK] property_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_property_floor_configs">
+          <mxGeometry y="56" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_property_floor_configs_2" value="floor_number: integer" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_property_floor_configs">
+          <mxGeometry y="80" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_property_floor_configs_3" value="floor_key: text" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_property_floor_configs">
+          <mxGeometry y="104" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_property_floor_configs_4" value="display_name: text" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_property_floor_configs">
+          <mxGeometry y="128" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: unit_map_positions (D3: Floor & Blueprints) -->
+        <mxCell id="tbl_unit_map_positions" value="&lt;b&gt;unit_map_positions&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D3: Floor & Blueprints]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#0d9488;strokeColor=#0d9488;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="310" y="680" width="230" height="178" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_unit_map_positions_0" value="[PK, FK] unit_id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_unit_map_positions">
+          <mxGeometry y="32" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_unit_map_positions_1" value="floor_key: text" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_unit_map_positions">
+          <mxGeometry y="56" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_unit_map_positions_2" value="x: numeric" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_unit_map_positions">
+          <mxGeometry y="80" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_unit_map_positions_3" value="y: numeric" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_unit_map_positions">
+          <mxGeometry y="104" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_unit_map_positions_4" value="w: numeric" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_unit_map_positions">
+          <mxGeometry y="128" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_unit_map_positions_5" value="h: numeric" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_unit_map_positions">
+          <mxGeometry y="152" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: applications (D4: Applications & Intake) -->
+        <mxCell id="tbl_applications" value="&lt;b&gt;applications&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D4: Applications & Intake]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d97706;strokeColor=#d97706;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="590" y="60" width="230" height="154" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_applications_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_applications">
+          <mxGeometry y="32" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_applications_1" value="[FK] unit_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_applications">
+          <mxGeometry y="56" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_applications_2" value="[FK] applicant_id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_applications">
+          <mxGeometry y="80" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_applications_3" value="[FK] landlord_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_applications">
+          <mxGeometry y="104" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_applications_4" value="status: application_status" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_applications">
+          <mxGeometry y="128" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: tenant_intake_invites (D4: Applications & Intake) -->
+        <mxCell id="tbl_tenant_intake_invites" value="&lt;b&gt;tenant_intake_invites&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D4: Applications & Intake]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d97706;strokeColor=#d97706;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="590" y="260" width="230" height="154" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_tenant_intake_invites_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_tenant_intake_invites">
+          <mxGeometry y="32" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_tenant_intake_invites_1" value="[FK] property_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_tenant_intake_invites">
+          <mxGeometry y="56" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_tenant_intake_invites_2" value="[FK] unit_id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_tenant_intake_invites">
+          <mxGeometry y="80" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_tenant_intake_invites_3" value="token: text" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_tenant_intake_invites">
+          <mxGeometry y="104" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_tenant_intake_invites_4" value="status: invite_status" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_tenant_intake_invites">
+          <mxGeometry y="128" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: leases (D5: Leases & Contracts) -->
+        <mxCell id="tbl_leases" value="&lt;b&gt;leases&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D5: Leases & Contracts]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#ea580c;strokeColor=#ea580c;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="590" y="460" width="230" height="178" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_leases_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_leases">
+          <mxGeometry y="32" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_leases_1" value="[FK] unit_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_leases">
+          <mxGeometry y="56" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_leases_2" value="[FK] tenant_id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_leases">
+          <mxGeometry y="80" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_leases_3" value="[FK] landlord_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_leases">
+          <mxGeometry y="104" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_leases_4" value="monthly_rent: numeric" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_leases">
+          <mxGeometry y="128" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_leases_5" value="status: lease_status" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_leases">
+          <mxGeometry y="152" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: lease_signing_audit (D5: Leases & Contracts) -->
+        <mxCell id="tbl_lease_signing_audit" value="&lt;b&gt;lease_signing_audit&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D5: Leases & Contracts]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#ea580c;strokeColor=#ea580c;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="590" y="680" width="230" height="154" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_lease_signing_audit_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_lease_signing_audit">
+          <mxGeometry y="32" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_lease_signing_audit_1" value="[FK] lease_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_lease_signing_audit">
+          <mxGeometry y="56" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_lease_signing_audit_2" value="[FK] signer_id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_lease_signing_audit">
+          <mxGeometry y="80" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_lease_signing_audit_3" value="action: text" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_lease_signing_audit">
+          <mxGeometry y="104" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_lease_signing_audit_4" value="created_at: timestamptz" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_lease_signing_audit">
+          <mxGeometry y="128" width="230" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: payments (D6: Billing & Financial) -->
+        <mxCell id="tbl_payments" value="&lt;b&gt;payments&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D6: Billing & Financial]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#7c3aed;strokeColor=#7c3aed;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="870" y="60" width="240" height="178" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_payments_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_payments">
+          <mxGeometry y="32" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_payments_1" value="[FK] lease_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_payments">
+          <mxGeometry y="56" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_payments_2" value="[FK] tenant_id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_payments">
+          <mxGeometry y="80" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_payments_3" value="total_amount: numeric" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_payments">
+          <mxGeometry y="104" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_payments_4" value="due_date: date" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_payments">
+          <mxGeometry y="128" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_payments_5" value="status: payment_status" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_payments">
+          <mxGeometry y="152" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: utility_readings (D6: Billing & Financial) -->
+        <mxCell id="tbl_utility_readings" value="&lt;b&gt;utility_readings&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D6: Billing & Financial]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#7c3aed;strokeColor=#7c3aed;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="870" y="260" width="240" height="178" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_utility_readings_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_utility_readings">
+          <mxGeometry y="32" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_utility_readings_1" value="[FK] unit_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_utility_readings">
+          <mxGeometry y="56" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_utility_readings_2" value="[FK] payment_id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_utility_readings">
+          <mxGeometry y="80" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_utility_readings_3" value="utility_type: utility_type" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_utility_readings">
+          <mxGeometry y="104" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_utility_readings_4" value="current_reading: numeric" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_utility_readings">
+          <mxGeometry y="128" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_utility_readings_5" value="computed_charge: numeric" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_utility_readings">
+          <mxGeometry y="152" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: payment_receipts (D6: Billing & Financial) -->
+        <mxCell id="tbl_payment_receipts" value="&lt;b&gt;payment_receipts&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D6: Billing & Financial]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#7c3aed;strokeColor=#7c3aed;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="870" y="460" width="240" height="154" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_payment_receipts_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_payment_receipts">
+          <mxGeometry y="32" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_payment_receipts_1" value="[FK] payment_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_payment_receipts">
+          <mxGeometry y="56" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_payment_receipts_2" value="receipt_number: text" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_payment_receipts">
+          <mxGeometry y="80" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_payment_receipts_3" value="amount: numeric" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_payment_receipts">
+          <mxGeometry y="104" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_payment_receipts_4" value="issued_at: timestamptz" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_payment_receipts">
+          <mxGeometry y="128" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: expenses (D7: Maintenance & Expenses) -->
+        <mxCell id="tbl_expenses" value="&lt;b&gt;expenses&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D7: Maintenance & Expenses]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#e11d48;strokeColor=#e11d48;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="870" y="640" width="240" height="154" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_expenses_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_expenses">
+          <mxGeometry y="32" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_expenses_1" value="[FK] property_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_expenses">
+          <mxGeometry y="56" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_expenses_2" value="category: text" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_expenses">
+          <mxGeometry y="80" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_expenses_3" value="amount: numeric" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_expenses">
+          <mxGeometry y="104" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_expenses_4" value="date: date" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_expenses">
+          <mxGeometry y="128" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: maintenance_requests (D7: Maintenance & Expenses) -->
+        <mxCell id="tbl_maintenance_requests" value="&lt;b&gt;maintenance_requests&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D7: Maintenance & Expenses]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#e11d48;strokeColor=#e11d48;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="870" y="820" width="240" height="178" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_maintenance_requests_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_maintenance_requests">
+          <mxGeometry y="32" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_maintenance_requests_1" value="[FK] unit_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_maintenance_requests">
+          <mxGeometry y="56" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_maintenance_requests_2" value="[FK] tenant_id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_maintenance_requests">
+          <mxGeometry y="80" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_maintenance_requests_3" value="title: text" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_maintenance_requests">
+          <mxGeometry y="104" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_maintenance_requests_4" value="priority: maintenance_priority" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_maintenance_requests">
+          <mxGeometry y="128" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_maintenance_requests_5" value="status: maintenance_status" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_maintenance_requests">
+          <mxGeometry y="152" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: community_posts (D9: Community & Amenities) -->
+        <mxCell id="tbl_community_posts" value="&lt;b&gt;community_posts&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D9: Community & Amenities]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#0284c7;strokeColor=#0284c7;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="870" y="1040" width="240" height="154" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_community_posts_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_community_posts">
+          <mxGeometry y="32" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_community_posts_1" value="[FK] property_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_community_posts">
+          <mxGeometry y="56" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_community_posts_2" value="[FK] author_id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_community_posts">
+          <mxGeometry y="80" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_community_posts_3" value="title: text" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_community_posts">
+          <mxGeometry y="104" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_community_posts_4" value="type: post_type_enum" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_community_posts">
+          <mxGeometry y="128" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <!-- Table: amenity_bookings (D9: Community & Amenities) -->
+        <mxCell id="tbl_amenity_bookings" value="&lt;b&gt;amenity_bookings&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; font-weight: normal; opacity: 0.85;&quot;&gt;[D9: Community & Amenities]&lt;/font&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#0284c7;strokeColor=#0284c7;fontColor=#ffffff;fontSize=11;rounded=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="870" y="1240" width="240" height="154" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_amenity_bookings_0" value="[PK] id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=5;" vertex="1" parent="tbl_amenity_bookings">
+          <mxGeometry y="32" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_amenity_bookings_1" value="[FK] amenity_id: uuid" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_amenity_bookings">
+          <mxGeometry y="56" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_amenity_bookings_2" value="[FK] tenant_id: uuid" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;fontStyle=2;" vertex="1" parent="tbl_amenity_bookings">
+          <mxGeometry y="80" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_amenity_bookings_3" value="booking_date: date" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_amenity_bookings">
+          <mxGeometry y="104" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="col_amenity_bookings_4" value="status: text" style="text;strokeColor=none;fillColor=#f8fafc;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=10;fontColor=#1e293b;" vertex="1" parent="tbl_amenity_bookings">
+          <mxGeometry y="128" width="240" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_1" value="1 : 1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_profiles" target="tbl_user_security_settings">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_2" value="1 : M" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_profiles" target="tbl_properties">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_3" value="1 : M" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_properties" target="tbl_units">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_4" value="1 : M" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_properties" target="tbl_property_floor_configs">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_5" value="1 : 1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_units" target="tbl_unit_map_positions">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_6" value="1 : M" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_units" target="tbl_applications">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_7" value="1 : M" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_properties" target="tbl_tenant_intake_invites">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_8" value="1 : M" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_units" target="tbl_leases">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_9" value="1 : M" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_leases" target="tbl_lease_signing_audit">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_10" value="1 : M" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_leases" target="tbl_payments">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_11" value="1 : M" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_units" target="tbl_utility_readings">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_12" value="1 : 1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_payments" target="tbl_payment_receipts">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_13" value="1 : M" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_properties" target="tbl_expenses">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_14" value="1 : M" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_units" target="tbl_maintenance_requests">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_15" value="1 : M" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_conversations" target="tbl_messages">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_16" value="1 : M" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_profiles" target="tbl_notifications">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_17" value="1 : M" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_properties" target="tbl_community_posts">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_18" value="1 : M" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#475569;strokeWidth=1.5;fontSize=9;fontColor=#334155;" edge="1" parent="1" source="tbl_profiles" target="tbl_amenity_bookings">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
