@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTimeFormat } from '@/hooks/useTimeFormat';
 
 interface ClientOnlyDateProps {
   date: string | Date;
@@ -51,6 +52,7 @@ interface ClientOnlyTimeProps {
 
 export function ClientOnlyTime({ date, format, locale = 'en-US', children }: ClientOnlyTimeProps) {
   const [formatted, setFormatted] = useState<string>('');
+  const { is24Hour } = useTimeFormat();
 
   useEffect(() => {
     try {
@@ -59,21 +61,26 @@ export function ClientOnlyTime({ date, format, locale = 'en-US', children }: Cli
         setFormatted('');
         return;
       }
+      const timeOptions: Intl.DateTimeFormatOptions = {
+        hour12: !is24Hour,
+        ...format,
+      };
+
       // If date-related options are passed, use toLocaleString to prevent "TypeError: Invalid option : dateStyle"
       if (format && ('dateStyle' in format || 'year' in format || 'month' in format || 'day' in format)) {
-        setFormatted(dateObj.toLocaleString(locale, format));
+        setFormatted(dateObj.toLocaleString(locale, timeOptions));
       } else {
-        setFormatted(dateObj.toLocaleTimeString(locale, format));
+        setFormatted(dateObj.toLocaleTimeString(locale, timeOptions));
       }
     } catch {
       try {
         const dateObj = typeof date === 'string' ? new Date(date) : date;
-        setFormatted(dateObj.toLocaleTimeString(locale));
+        setFormatted(dateObj.toLocaleTimeString(locale, { hour12: !is24Hour }));
       } catch {
         setFormatted('');
       }
     }
-  }, [date, format, locale]);
+  }, [date, format, locale, is24Hour]);
 
   if (!formatted) {
     return null;

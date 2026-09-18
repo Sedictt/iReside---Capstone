@@ -78,6 +78,7 @@ import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { useTheme } from "next-themes";
 import { useHighContrast } from "@/hooks/useHighContrast";
 import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
+import { TimeFormatToggle } from "@/components/ui/TimeFormatToggle";
 import { CURATED_BANNER_PRESETS, DEFAULT_BANNER_URL } from "@/components/landlord/dashboard/BannerCustomizerModal";
 import { ColorPickerModal } from "@/components/ui/ColorPickerModal";
 import { UnsavedChangesModal } from "@/components/ui/UnsavedChangesModal";
@@ -2451,6 +2452,13 @@ export function LandlordSettings() {
                                 description="Adjust interface font scaling for maximum comfort without compromising card structures or layout symmetry."
                             >
                                 <FontSizeToggle variant="slider" showPreview={true} />
+                            </GlassCard>
+
+                            <GlassCard 
+                                title="Time & Clock Format" 
+                                description="Choose between 12-hour (AM/PM) and 24-hour military format for dashboards, digital clocks, and operational timestamps."
+                            >
+                                <TimeFormatToggle variant="segmented" showPreview={true} />
                             </GlassCard>
 
                             <GlassCard 

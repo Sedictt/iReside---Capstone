@@ -53,6 +53,7 @@ import { parseUserAgent } from "@/lib/utils/device-parser";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { useHighContrast } from "@/hooks/useHighContrast";
 import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
+import { TimeFormatToggle } from "@/components/ui/TimeFormatToggle";
 
 // --- Types ---
 type SettingsCategory = "Identity" | "Accessibility" | "Security" | "Notifications" | "Billing" | "Data";
@@ -1345,6 +1346,13 @@ export function TenantSettings() {
                         description="Adjust the interface typography scale without distorting card layouts or button heights."
                     >
                         <FontSizeToggle variant="slider" showPreview={true} />
+                    </GlassCard>
+
+                    <GlassCard 
+                        title="Time & Clock Format" 
+                        description="Choose between 12-hour (AM/PM) and 24-hour military format for your dashboard, clock, and notifications."
+                    >
+                        <TimeFormatToggle variant="segmented" showPreview={true} />
                     </GlassCard>
 
                     <GlassCard 
