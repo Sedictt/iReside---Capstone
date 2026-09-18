@@ -22,13 +22,13 @@ import {
     Settings,
     X,
     Wallet,
-    Sparkles,
     FilePlus,
     Hash,
     Eye,
     Save,
     Loader2
 } from "lucide-react";
+import { PropertyAmenitiesSelector } from "@/components/landlord/properties/PropertyAmenitiesSelector";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { generateUnitList } from "@/lib/unit-naming";
 import { cn } from "@/lib/utils";
@@ -85,8 +85,7 @@ function NewAssetContent() {
     const [saveWarning, setSaveWarning] = useState<string | null>(null);
     const [reloadPropertyKey, setReloadPropertyKey] = useState(0);
     const [isContractBuilderOpen, setIsContractBuilderOpen] = useState(false);
-    const [customAmenity, setCustomAmenity] = useState("");
-    const [customAmenities, setCustomAmenities] = useState<string[]>([]);
+    const [newRule, setNewRule] = useState("");
     const [mediaFiles, setMediaFiles] = useState<File[]>([]);
     const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
     const [mediaPreviewUrls, setMediaPreviewUrls] = useState<string[]>([]);
@@ -833,34 +832,11 @@ function NewAssetContent() {
                                         </div>
                                     </div>
 
-                                    <div className="neumorphic-panel border border-border/60 rounded-[2rem] p-7 space-y-6">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Sparkles className="size-4 text-primary" />
-                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Amenities</h3>
-                                            </div>
-                                            <span className="text-[10px] font-black text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{formData.amenities.length} Selected</span>
-                                        </div>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                            {[
-                                                "Wi-Fi", "Gym", "Pool", "Laundry", "Parking", 
-                                                "Security", "CCTV", "Garden", "Elevator"
-                                            ].map((amenity) => (
-                                                <button
-                                                    key={amenity}
-                                                    onClick={() => {
-                                                        const newAmenities = formData.amenities.includes(amenity)
-                                                            ? formData.amenities.filter(a => a !== amenity)
-                                                            : [...formData.amenities, amenity];
-                                                        handleInputChange("amenities", newAmenities);
-                                                    }}
-                                                    className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all text-center ${formData.amenities.includes(amenity) ? "bg-primary text-black border-primary shadow-md shadow-primary/20" : "neumorphic-inset-card border-border/40 text-muted-foreground hover:text-foreground hover:border-border"}`}
-                                                >
-                                                    {amenity}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
+                                    <PropertyAmenitiesSelector
+                                        selectedAmenities={formData.amenities}
+                                        onChange={(amenities) => handleInputChange("amenities", amenities)}
+                                        landlordId={user?.id}
+                                    />
                                 </div>
                             </div>
                         )}
@@ -888,12 +864,12 @@ function NewAssetContent() {
                                                 <div className="flex gap-2">
                                                     <input 
                                                         type="text"
-                                                        value={customAmenity}
-                                                        onChange={(e) => setCustomAmenity(e.target.value)}
+                                                        value={newRule}
+                                                        onChange={(e) => setNewRule(e.target.value)}
                                                         onKeyDown={(e) => {
-                                                            if (e.key === 'Enter' && customAmenity.trim()) {
-                                                                handleInputChange("buildingRules", [...formData.buildingRules, customAmenity.trim()]);
-                                                                setCustomAmenity("");
+                                                            if (e.key === 'Enter' && newRule.trim()) {
+                                                                handleInputChange("buildingRules", [...formData.buildingRules, newRule.trim()]);
+                                                                setNewRule("");
                                                             }
                                                         }}
                                                         placeholder="Define a new property rule…"
@@ -901,9 +877,9 @@ function NewAssetContent() {
                                                     />
                                                     <button 
                                                         onClick={() => {
-                                                            if (customAmenity.trim()) {
-                                                                handleInputChange("buildingRules", [...formData.buildingRules, customAmenity.trim()]);
-                                                                setCustomAmenity("");
+                                                            if (newRule.trim()) {
+                                                                handleInputChange("buildingRules", [...formData.buildingRules, newRule.trim()]);
+                                                                setNewRule("");
                                                             }
                                                         }}
                                                         className="px-6 py-2 bg-primary text-black rounded-xl font-black hover:scale-[1.02] active:scale-[0.98] transition-all shadow-sm"
