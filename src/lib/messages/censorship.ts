@@ -1,4 +1,4 @@
-import { filipinoProfanityLexicon } from "@/lib/messages/profanity-lexicon";
+import { combinedProfanityLexicon, filipinoProfanityLexicon } from "@/lib/messages/profanity-lexicon";
 import { spamLexicon } from "@/lib/messages/spam-lexicon";
 
 export type MessageCensorshipResult = {
@@ -43,7 +43,36 @@ const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\
 
 const normalizeTerm = (value: string) => value.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
 
-const buildWholeTermRegex = (term: string) => {
+const LEET_CHAR_MAP: Record<string, string> = {
+    a: "[aA@4^\\*#_]",
+    b: "[bB8]",
+    c: "[cC\\(]",
+    d: "[dD]",
+    e: "[eE3\\*#_]",
+    f: "[fF]",
+    g: "[gG69]",
+    h: "[hH]",
+    i: "[iI!1\\|l\\*#_]",
+    j: "[jJ]",
+    k: "[kK]",
+    l: "[lL1\\|]",
+    m: "[mM]",
+    n: "[nN]",
+    o: "[oO0\\*#_]",
+    p: "[pP]",
+    q: "[qQ]",
+    r: "[rR]",
+    s: "[sS$5]",
+    t: "[tT7\\+]",
+    u: "[uUvV\\*@#_]",
+    v: "[vVuU]",
+    w: "[wW]",
+    x: "[xX]",
+    y: "[yY]",
+    z: "[zZ2]",
+};
+
+export const buildWholeTermRegex = (term: string) => {
     const normalizedTerm = normalizeTerm(term);
     if (!normalizedTerm.includes(" ")) {
         return new RegExp(`(?<!${WORD_BOUNDARY_CLASS})${escapeRegExp(normalizedTerm)}(?!${WORD_BOUNDARY_CLASS})`, "giu");
@@ -51,6 +80,27 @@ const buildWholeTermRegex = (term: string) => {
 
     const parts = normalizedTerm.split(" ").filter((part) => part.length > 0).map(escapeRegExp);
     const flexiblePhrase = parts.join("[\\s\\W_]*");
+    return new RegExp(`(?<!${WORD_BOUNDARY_CLASS})${flexiblePhrase}(?!${WORD_BOUNDARY_CLASS})`, "giu");
+};
+
+const buildFlexibleTokenPattern = (token: string): string => {
+    const chars = Array.from(token);
+    const charPatterns = chars.map((char) => {
+        const leet = LEET_CHAR_MAP[char.toLowerCase()];
+        return leet ? `${leet}+` : `${escapeRegExp(char)}+`;
+    });
+    return charPatterns.join("[\\s\\W_]*");
+};
+
+export const buildFlexibleProfanityRegex = (term: string): RegExp => {
+    const normalizedTerm = normalizeTerm(term);
+    if (!normalizedTerm.includes(" ")) {
+        const flexibleToken = buildFlexibleTokenPattern(normalizedTerm);
+        return new RegExp(`(?<!${WORD_BOUNDARY_CLASS})${flexibleToken}(?!${WORD_BOUNDARY_CLASS})`, "giu");
+    }
+
+    const parts = normalizedTerm.split(" ").filter((part) => part.length > 0).map(buildFlexibleTokenPattern);
+    const flexiblePhrase = parts.join("[\\s\\W_]+");
     return new RegExp(`(?<!${WORD_BOUNDARY_CLASS})${flexiblePhrase}(?!${WORD_BOUNDARY_CLASS})`, "giu");
 };
 
@@ -67,17 +117,21 @@ type LexiconSource = {
     tokens: string[];
 };
 
-const applyLexiconRedaction = (text: string, lexicon: LexiconSource) => {
+const applyLexiconRedaction = (
+    text: string,
+    lexicon: LexiconSource,
+    regexBuilder: (term: string) => RegExp = buildWholeTermRegex
+) => {
     let redacted = text;
     const phrases = [...lexicon.phrases].sort((a, b) => b.length - a.length);
     const tokens = [...lexicon.tokens].sort((a, b) => b.length - a.length);
 
     for (const phrase of phrases) {
-        redacted = redacted.replace(buildWholeTermRegex(phrase), REDACTION_TOKEN);
+        redacted = redacted.replace(regexBuilder(phrase), REDACTION_TOKEN);
     }
 
     for (const token of tokens) {
-        redacted = redacted.replace(buildWholeTermRegex(token), REDACTION_TOKEN);
+        redacted = redacted.replace(regexBuilder(token), REDACTION_TOKEN);
     }
 
     return redacted;
@@ -114,9 +168,13 @@ const detectPhishing = (message: string) =>
     (suspiciousUrlPattern.test(message) && phishingPatterns.some((pattern) => pattern.test(message))) ||
     (/\b(?:urgent|immediately|right now)\b/i.test(message) && /\b(?:otp|password|pin)\b/i.test(message));
 
-const hasLexiconMatch = (message: string, lexicon: { allowlist: string[]; phrases: string[]; tokens: string[] }) => {
+const hasLexiconMatch = (
+    message: string,
+    lexicon: { allowlist: string[]; phrases: string[]; tokens: string[] },
+    regexBuilder: (term: string) => RegExp = buildWholeTermRegex
+) => {
     const { protectedMessage } = protectAllowlistTerms(message, lexicon.allowlist);
-    return applyLexiconRedaction(protectedMessage, lexicon) !== protectedMessage;
+    return applyLexiconRedaction(protectedMessage, lexicon, regexBuilder) !== protectedMessage;
 };
 
 const detectSpam = (message: string, containsSpamLexiconMatch: boolean) => {
@@ -168,17 +226,17 @@ export const redactSensitiveContent = (message: string): MessageCensorshipResult
     }
 
     const containsCredentials = hasSensitivePattern(message);
-    const containsProfanity = hasLexiconMatch(message, filipinoProfanityLexicon);
-    const containsSpamLexiconMatch = hasLexiconMatch(message, spamLexicon);
+    const containsProfanity = hasLexiconMatch(message, combinedProfanityLexicon, buildFlexibleProfanityRegex);
+    const containsSpamLexiconMatch = hasLexiconMatch(message, spamLexicon, buildWholeTermRegex);
     const containsSpam = detectSpam(message, containsSpamLexiconMatch);
     const isPhishing = detectPhishing(message);
 
     let redacted = applyPatternRedaction(message, sensitivePatterns);
-    const profanityProtected = protectAllowlistTerms(redacted, filipinoProfanityLexicon.allowlist);
-    redacted = applyLexiconRedaction(profanityProtected.protectedMessage, filipinoProfanityLexicon);
+    const profanityProtected = protectAllowlistTerms(redacted, combinedProfanityLexicon.allowlist);
+    redacted = applyLexiconRedaction(profanityProtected.protectedMessage, combinedProfanityLexicon, buildFlexibleProfanityRegex);
     redacted = restoreAllowlistTerms(redacted, profanityProtected.placeholders);
     const spamProtected = protectAllowlistTerms(redacted, spamLexicon.allowlist);
-    redacted = applyLexiconRedaction(spamProtected.protectedMessage, spamLexicon);
+    redacted = applyLexiconRedaction(spamProtected.protectedMessage, spamLexicon, buildWholeTermRegex);
     redacted = restoreAllowlistTerms(redacted, spamProtected.placeholders);
     redacted = condenseRedactionMarkers(redacted);
 

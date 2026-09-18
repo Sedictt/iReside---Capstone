@@ -6,6 +6,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json, MessageType } from "@/types/database";
 import type { MessageRow, SendMessageInput } from "./messaging.types";
+import { redactSensitiveContent } from "@/lib/messages/censorship";
 import { MessagingValidationError } from "./messaging.errors";
 
 export class MessageService {
@@ -40,8 +41,36 @@ export class MessageService {
    * @returns Created MessageRow record.
    */
   async sendMessage(input: SendMessageInput): Promise<MessageRow> {
-    if (!input.content?.trim() && (!input.type || input.type === "text")) {
+    const content = input.content?.trim() ?? "";
+    if (!content && (!input.type || input.type === "text")) {
       throw new MessagingValidationError("Message content cannot be empty.");
+    }
+
+    let resolvedMetadata = { ...(input.metadata ?? {}) };
+
+    if (content) {
+      const moderation = redactSensitiveContent(content);
+      if (moderation.redactionCategory === "profanity") {
+        throw new MessagingValidationError("Message blocked due to profanity policy violation.");
+      }
+      if (moderation.redactionCategory === "phishing") {
+        throw new MessagingValidationError("Message blocked due to phishing policy violation.");
+      }
+      if (moderation.redactionCategory === "spam") {
+        throw new MessagingValidationError("Message blocked due to spam policy violation.");
+      }
+
+      if (moderation.isSensitive) {
+        resolvedMetadata = {
+          ...resolvedMetadata,
+          isRedacted: moderation.isSensitive,
+          redactedContent: moderation.redactedMessage,
+          isConfirmedDisclosed: false,
+          isPhishing: moderation.isPhishing,
+          redactionCategory: moderation.redactionCategory,
+          disclosureAllowed: moderation.disclosureAllowed,
+        };
+      }
     }
 
     const currentTimestamp = new Date().toISOString();
@@ -51,9 +80,9 @@ export class MessageService {
       .insert({
         conversation_id: input.conversationId,
         sender_id: input.senderId,
-        content: input.content.trim(),
+        content,
         type: input.type ?? "text",
-        metadata: (input.metadata ?? {}) as Json,
+        metadata: resolvedMetadata as Json,
         created_at: currentTimestamp,
       })
       .select("*")

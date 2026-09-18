@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureUserInConversation } from "@/lib/messages/engine";
+import { redactSensitiveContent } from "@/lib/messages/censorship";
 import type { MessageType } from "@/types/database";
 
 const BUCKET_NAME = "message-files";
@@ -101,6 +102,11 @@ export async function POST(
                 { error: "Unsupported file type. Allowed: images, PDF, TXT, DOCX, XLSX, PPTX, ZIP." },
                 { status: 400 }
             );
+        }
+
+        const fileModeration = redactSensitiveContent(file.name);
+        if (fileModeration.redactionCategory === "profanity") {
+            return NextResponse.json({ error: "File name contains inappropriate language." }, { status: 422 });
         }
 
         await ensureBucket();

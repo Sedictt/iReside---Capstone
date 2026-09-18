@@ -73,6 +73,7 @@ import { MessageReportWizard } from "@/components/messaging/MessageReportWizard"
 import { QuickActionSummaryModal } from "@/components/messaging/QuickActionSummaryModal";
 import { PaymentHistoryModal } from "@/components/messaging/PaymentHistoryModal";
 import { playSound } from "@/hooks/useSound";
+import { toast } from "sonner";
 
 const MESSAGE_CACHE_KEY_PREFIX = "ireside:landlord:messages-cache";
 const CONVERSATIONS_CACHE_KEY_PREFIX = "ireside:landlord:conversations-cache";
@@ -1093,6 +1094,7 @@ setPaymentHistoryLoading(true);
                 } catch (error) {
                     const message = error instanceof Error ? error.message : "Failed to send.";
                     messagesErrorRef.current = message;
+                    toast.error(message);
                     setMessagesState((prev) => prev.map((msg) => msg.id === optimisticTextId ? { ...msg, status: "failed" } : msg));
                 }
             })();
@@ -1163,8 +1165,10 @@ setPaymentHistoryLoading(true);
                     playSound("message", 0.4);
                     setMessagesState((prev) => prev.map((msg) => msg.id === optimisticAlbumId ? { ...mapped, status: "sent" } : msg));
                     window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
-                } catch {
-                    messagesErrorRef.current = "Failed to send album.";
+                } catch (error) {
+                    const message = error instanceof Error ? error.message : "Failed to send album.";
+                    messagesErrorRef.current = message;
+                    toast.error(message);
                     setMessagesState((prev) => prev.map((msg) => msg.id === optimisticAlbumId ? { ...msg, status: "failed" } : msg));
                 }
             })();
@@ -1214,8 +1218,10 @@ setPaymentHistoryLoading(true);
                         playSound("message", 0.4);
                         setMessagesState((prev) => prev.map((msg) => msg.id === optimisticImgId ? { ...mapped, status: "sent" } : msg));
                         window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
-                    } catch {
-                        messagesErrorRef.current = `Failed to send ${att.file.name}`;
+                    } catch (error) {
+                        const message = error instanceof Error ? error.message : `Failed to send ${att.file.name}`;
+                        messagesErrorRef.current = message;
+                        toast.error(message);
                         setMessagesState((prev) => prev.map((msg) => msg.id === optimisticImgId ? { ...msg, status: "failed" } : msg));
                     }
                 })();
@@ -1266,8 +1272,10 @@ setPaymentHistoryLoading(true);
                         playSound("message", 0.4);
                         setMessagesState((prev) => prev.map((msg) => msg.id === optimisticFileId ? { ...mapped, status: "sent" } : msg));
                         window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
-                    } catch {
-                        messagesErrorRef.current = `Failed to send ${att.file.name}`;
+                    } catch (error) {
+                        const message = error instanceof Error ? error.message : `Failed to send ${att.file.name}`;
+                        messagesErrorRef.current = message;
+                        toast.error(message);
                         setMessagesState((prev) => prev.map((msg) => msg.id === optimisticFileId ? { ...msg, status: "failed" } : msg));
                     }
                 })();

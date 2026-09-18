@@ -1,5 +1,6 @@
 import { z } from "zod";
-import rawLexicon from "@/lib/messages/moderation/filipino-profanity.json";
+import rawFilipinoLexicon from "@/lib/messages/moderation/filipino-profanity.json";
+import rawEnglishLexicon from "@/lib/messages/moderation/english-profanity.json";
 
 const lexiconSchema = z.object({
     version: z.number().int().positive(),
@@ -20,21 +21,40 @@ const uniqueNormalized = (values: string[]) =>
         )
     );
 
-const parsedLexicon = lexiconSchema.parse(rawLexicon);
+const parsedFilipino = lexiconSchema.parse(rawFilipinoLexicon);
+const parsedEnglish = lexiconSchema.parse(rawEnglishLexicon);
 
 export const filipinoProfanityLexicon = {
-    version: parsedLexicon.version,
-    updatedAt: parsedLexicon.updatedAt,
-    tokens: uniqueNormalized(parsedLexicon.tokens),
-    phrases: uniqueNormalized(parsedLexicon.phrases),
-    allowlist: uniqueNormalized(parsedLexicon.allowlist),
+    version: parsedFilipino.version,
+    updatedAt: parsedFilipino.updatedAt,
+    tokens: uniqueNormalized(parsedFilipino.tokens),
+    phrases: uniqueNormalized(parsedFilipino.phrases),
+    allowlist: uniqueNormalized(parsedFilipino.allowlist),
 };
 
-type FilipinoProfanityLexicon = typeof filipinoProfanityLexicon;
+export const englishProfanityLexicon = {
+    version: parsedEnglish.version,
+    updatedAt: parsedEnglish.updatedAt,
+    tokens: uniqueNormalized(parsedEnglish.tokens),
+    phrases: uniqueNormalized(parsedEnglish.phrases),
+    allowlist: uniqueNormalized(parsedEnglish.allowlist),
+};
+
+export const combinedProfanityLexicon = {
+    version: Math.max(parsedFilipino.version, parsedEnglish.version),
+    updatedAt: parsedEnglish.updatedAt > parsedFilipino.updatedAt ? parsedEnglish.updatedAt : parsedFilipino.updatedAt,
+    tokens: uniqueNormalized([...parsedFilipino.tokens, ...parsedEnglish.tokens]),
+    phrases: uniqueNormalized([...parsedFilipino.phrases, ...parsedEnglish.phrases]),
+    allowlist: uniqueNormalized([...parsedFilipino.allowlist, ...parsedEnglish.allowlist]),
+};
+
+export type FilipinoProfanityLexicon = typeof filipinoProfanityLexicon;
+export type EnglishProfanityLexicon = typeof englishProfanityLexicon;
+export type CombinedProfanityLexicon = typeof combinedProfanityLexicon;
 
 export const buildProfanityPromptHints = (tokenLimit = 30, phraseLimit = 20) => {
-    const tokenHints = filipinoProfanityLexicon.tokens.slice(0, tokenLimit).join(", ");
-    const phraseHints = filipinoProfanityLexicon.phrases.slice(0, phraseLimit).join(", ");
+    const tokenHints = combinedProfanityLexicon.tokens.slice(0, tokenLimit).join(", ");
+    const phraseHints = combinedProfanityLexicon.phrases.slice(0, phraseLimit).join(", ");
     return {
         tokenHints,
         phraseHints,
