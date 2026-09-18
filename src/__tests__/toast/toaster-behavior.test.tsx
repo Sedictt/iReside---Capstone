@@ -47,9 +47,12 @@ describe('AppToaster Adaptive Stacking and Auto-Dismissal', () => {
         const li = toastEl.closest('li');
         expect(li?.getAttribute('data-expanded')).toBe('false');
 
-        // Advance 4300ms (4000ms duration + 300ms animation buffer)
+        // Advance 4000ms (toast duration) + flush dismissal RAF & unmount (500ms)
         act(() => {
-            vi.advanceTimersByTime(4300);
+            vi.advanceTimersByTime(4000);
+        });
+        act(() => {
+            vi.advanceTimersByTime(500);
         });
 
         // Automatically removed from DOM
@@ -99,12 +102,51 @@ describe('AppToaster Adaptive Stacking and Auto-Dismissal', () => {
         const activeToasts = container.querySelectorAll('[data-sonner-toast]');
         expect(activeToasts.length).toBeGreaterThanOrEqual(3);
 
-        const frontToast = screen.getByText('Notification 1').closest('li');
+        // The most recently added toast (Notification 3) is the front toast (index 0)
+        const frontToast = screen.getByText('Notification 3').closest('li');
         expect(frontToast?.getAttribute('data-expanded')).toBe('false');
+        expect(frontToast?.getAttribute('data-front')).toBe('true');
+        expect(frontToast?.getAttribute('data-index')).toBe('0');
 
-        // Fast-forward past duration -> all toasts automatically disappear
+        const secondToast = screen.getByText('Notification 2').closest('li');
+        expect(secondToast?.getAttribute('data-front')).toBe('false');
+        expect(secondToast?.getAttribute('data-index')).toBe('1');
+
+        const thirdToast = screen.getByText('Notification 1').closest('li');
+        expect(thirdToast?.getAttribute('data-front')).toBe('false');
+        expect(thirdToast?.getAttribute('data-index')).toBe('2');
+
+        // Sequential FIFO Dismissal Verification:
+        // After 4000ms + RAF flush, only the FIRST notification (Notification 1) has collapsed!
         act(() => {
-            vi.advanceTimersByTime(4500);
+            vi.advanceTimersByTime(4000);
+        });
+        act(() => {
+            vi.advanceTimersByTime(500);
+        });
+
+        expect(screen.queryByText('Notification 1')).toBeNull();
+        expect(screen.getByText('Notification 2')).toBeDefined();
+        expect(screen.getByText('Notification 3')).toBeDefined();
+
+        // After another 4000ms + RAF flush, the SECOND notification (Notification 2) collapses!
+        act(() => {
+            vi.advanceTimersByTime(4000);
+        });
+        act(() => {
+            vi.advanceTimersByTime(500);
+        });
+
+        expect(screen.queryByText('Notification 1')).toBeNull();
+        expect(screen.queryByText('Notification 2')).toBeNull();
+        expect(screen.getByText('Notification 3')).toBeDefined();
+
+        // After final 4000ms + RAF flush, the THIRD notification collapses and all are cleared!
+        act(() => {
+            vi.advanceTimersByTime(4000);
+        });
+        act(() => {
+            vi.advanceTimersByTime(500);
         });
 
         expect(screen.queryByText('Notification 1')).toBeNull();
