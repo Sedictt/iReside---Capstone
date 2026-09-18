@@ -31,6 +31,7 @@ import { TenantContactsSidebar } from "@/components/tenant/TenantContactsSidebar
 import MoveOutRequest from "@/components/tenant/MoveOutRequest";
 import LeaseRenewalReminder from "@/components/tenant/LeaseRenewalReminder";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
+import { TenantDigitalClock } from "@/components/tenant/dashboard/TenantDigitalClock";
 
 type DashboardData = {
     userName: string;
@@ -418,6 +419,10 @@ export default function TenantDashboard() {
                         <p className="mt-2 text-muted-foreground">
                             {lease ? `Everything is looking good at ${lease.propertyName}.` : "Welcome to your iReside dashboard."}
                         </p>
+                    </div>
+
+                    <div className="hidden sm:flex shrink-0">
+                        <TenantDigitalClock />
                     </div>
                 </div>
 
