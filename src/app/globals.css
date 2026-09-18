@@ -518,6 +518,7 @@ input[type="number"] {
 
 /* Sonner Toast Custom Styling - Adaptive iOS Stacking & Compact Aesthetic */
 [data-sonner-toast] {
+  position: absolute !important;
   --radius: 1rem !important;
   --normal-bg: var(--card) !important;
   --normal-border: var(--border) !important;
@@ -532,10 +533,11 @@ input[type="number"] {
     0 16px 32px -8px rgba(0, 0, 0, 0.16),
     inset 0 0 0 1px rgba(255, 255, 255, 0.15) !important;
   border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  padding: 0.875rem 1.125rem !important;
+  padding: 0.75rem 2.25rem 0.75rem 1rem !important;
   transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms ease, height 300ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms ease !important;
   overflow: hidden !important;
   background: var(--toast-bg) !important;
+  box-sizing: border-box !important;
 }
 
 .dark [data-sonner-toast] {
@@ -547,21 +549,118 @@ input[type="number"] {
     inset 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
 }
 
-/* Enhanced iOS Card Stack Depth for Background Toasts */
-[data-sonner-toast][data-expanded='false'][data-front='false'] {
-  opacity: 0.88 !important;
-  filter: brightness(0.97);
+/* ==========================================================================
+   Authentic iOS Stepped Card Deck (3+ Stacked Notifications - FIFO Order)
+   FIFO Rules:
+   - :nth-last-child(1): Front Card (First notification in!). scale(1), translateY(0)
+   - :nth-last-child(2): 2nd Card. scale(0.96), translateY(12px), indented 7px, peeks 12px at bottom
+   - :nth-last-child(3): 3rd Card. scale(0.92), translateY(22px), indented 14px, peeks 22px at bottom
+   - :nth-last-child(n+4): Hidden behind deck
+   - [data-removed='true']: Slide to the right exit animation like dealing a card off a deck
+   - Hover / Expanded: Smoothly unrolls into full readable vertical list
+   ========================================================================== */
+
+/* Front Card (Oldest / First-In): Full scale, primary drop shadow, all contents visible */
+[data-sonner-toast][data-expanded='false']:nth-last-child(1) {
+  transform: translateY(0) scale(1) !important;
+  transform-origin: top center !important;
+  z-index: 50 !important;
+  opacity: 1 !important;
   box-shadow: 
-    0 6px 14px -2px rgba(0, 0, 0, 0.12),
-    0 12px 24px -6px rgba(0, 0, 0, 0.18) !important;
+    0 4px 6px -1px rgba(0, 0, 0, 0.15), 
+    0 12px 24px -4px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12) !important;
 }
 
-.dark [data-sonner-toast][data-expanded='false'][data-front='false'] {
-  opacity: 0.82 !important;
-  filter: brightness(0.92);
+[data-sonner-toast][data-expanded='false']:nth-last-child(1) > * {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* 2nd Card in FIFO Deck: Stepped 12px below front card, inset 7px on sides */
+[data-sonner-toast][data-expanded='false']:nth-last-child(2) {
+  transform: translateY(12px) scale(0.96) !important;
+  transform-origin: top center !important;
+  z-index: 40 !important;
+  opacity: 0.95 !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.24) !important;
   box-shadow: 
-    0 8px 20px -3px rgba(0, 0, 0, 0.45),
-    0 16px 36px -8px rgba(0, 0, 0, 0.7) !important;
+    0 8px 16px -2px rgba(0, 0, 0, 0.3), 
+    0 16px 32px -4px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+  filter: brightness(0.92);
+}
+
+/* Hide children of background cards in the deck so they appear as clean stepped card lips */
+[data-sonner-toast][data-expanded='false']:not(:nth-last-child(1)) > * {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* 3rd Card in FIFO Deck: Stepped 22px below front card, inset 14px on sides */
+[data-sonner-toast][data-expanded='false']:nth-last-child(3) {
+  transform: translateY(22px) scale(0.92) !important;
+  transform-origin: top center !important;
+  z-index: 30 !important;
+  opacity: 0.90 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.20) !important;
+  box-shadow: 
+    0 12px 24px -4px rgba(0, 0, 0, 0.35), 
+    0 22px 40px -6px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+  filter: brightness(0.85);
+}
+
+/* 4th+ Cards: Hidden cleanly behind deck */
+[data-sonner-toast][data-expanded='false']:nth-last-child(n+4) {
+  transform: translateY(28px) scale(0.88) !important;
+  transform-origin: top center !important;
+  z-index: 20 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Light mode card deck contrast */
+:root:not(.dark) [data-sonner-toast][data-expanded='false']:nth-last-child(2) {
+  border-color: rgba(0, 0, 0, 0.14) !important;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.20) !important;
+  box-shadow: 
+    0 8px 16px -2px rgba(0, 0, 0, 0.1), 
+    0 16px 32px -4px rgba(0, 0, 0, 0.16) !important;
+  filter: brightness(0.96);
+}
+
+:root:not(.dark) [data-sonner-toast][data-expanded='false']:nth-last-child(3) {
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.16) !important;
+  box-shadow: 
+    0 12px 24px -4px rgba(0, 0, 0, 0.12), 
+    0 20px 36px -6px rgba(0, 0, 0, 0.18) !important;
+  filter: brightness(0.92);
+}
+
+/* Slide to the right exit animation when removed from deck view */
+[data-sonner-toast][data-expanded='false'][data-removed='true'] {
+  transform: translateX(115%) translateY(-4px) rotate(3deg) scale(0.98) !important;
+  opacity: 0 !important;
+  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 180ms ease !important;
+  pointer-events: none !important;
+  z-index: 60 !important;
+}
+
+/* When expanded (2 toasts or hovering 3+ deck), reset to full vertical unrolled list and restore all text */
+[data-sonner-toast][data-mounted='true'][data-expanded='true'] {
+  transform: var(--y) !important;
+  transform-origin: top center !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+[data-sonner-toast][data-mounted='true'][data-expanded='true'] > * {
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 /* Ensure rich colors don't compromise readability or premium feel */
@@ -634,11 +733,14 @@ input[type="number"] {
   margin-left: 10px !important;
 }
 
-/* Close button - refined positioning and style */
+/* Close button - vertically centered, accessible and refined */
 [data-sonner-toast] [data-close-button] {
-  top: 8px !important;
-  right: 8px !important;
+  position: absolute !important;
+  top: 50% !important;
+  right: 0.75rem !important;
+  transform: translateY(-50%) !important;
   left: auto !important;
+  bottom: auto !important;
   background: rgba(0, 0, 0, 0.05) !important;
   border: 1px solid rgba(0, 0, 0, 0.08) !important;
   color: var(--foreground) !important;
@@ -649,15 +751,14 @@ input[type="number"] {
   align-items: center !important;
   justify-content: center !important;
   padding: 0 !important;
-  opacity: 0;
+  opacity: 0.65;
   transition: all 0.2s ease !important;
   z-index: 50 !important;
-  transform: scale(0.9);
 }
 
 [data-sonner-toast]:hover [data-close-button] {
   opacity: 1;
-  transform: scale(1);
+  transform: translateY(-50%) scale(1.08) !important;
 }
 
 .dark [data-sonner-toast] [data-close-button] {
@@ -693,7 +794,7 @@ input[type="number"] {
 
 /* Ensure the accent bar is always visible with balanced top padding */
 [data-sonner-toast][data-type] {
-  padding-top: 1.125rem !important;
+  padding-top: 0.875rem !important;
 }
 
 /* Remove legacy side accents */
@@ -1472,75 +1573,5 @@ body {
     radial-gradient(circle at 20%  0%, rgba(196, 176, 255, 0.10), transparent 45%),
     radial-gradient(circle at 85% 15%, rgba(99, 102, 241, 0.07), transparent 40%);
   min-height: 100vh;
-}
-
-/* ==========================================================================
-   Sonner Toast Notifications & Close Button Positioning
-   Fixes default half-overflow / awkward positioning of the close button.
-   ========================================================================== */
-
-[data-sonner-toaster] {
-  --normal-bg: var(--card);
-  --normal-border: var(--border);
-  --normal-text: var(--foreground);
-}
-
-[data-sonner-toast] {
-  position: relative !important;
-  display: flex !important;
-  align-items: center !important;
-  border-radius: 1rem !important;
-  padding: 0.875rem 2.5rem 0.875rem 1rem !important;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.25) !important;
-  font-family: inherit !important;
-}
-
-[data-sonner-toast] [data-close-button] {
-  position: absolute !important;
-  top: 50% !important;
-  right: 0.75rem !important;
-  transform: translateY(-50%) !important;
-  left: auto !important;
-  bottom: auto !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 1.5rem !important;
-  height: 1.5rem !important;
-  border-radius: 0.5rem !important;
-  border: 1px solid var(--border) !important;
-  background: var(--muted) !important;
-  color: var(--muted-foreground) !important;
-  opacity: 0.75 !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
-}
-
-[data-sonner-toast] [data-close-button]:hover {
-  opacity: 1 !important;
-  background: var(--surface-3) !important;
-  color: var(--foreground) !important;
-  transform: translateY(-50%) scale(1.08) !important;
-}
-
-[data-sonner-toast] [data-icon] {
-  margin-right: 0.75rem !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex-shrink: 0 !important;
-}
-
-[data-sonner-toast] [data-title] {
-  font-weight: 700 !important;
-  font-size: 0.875rem !important;
-  line-height: 1.25rem !important;
-}
-
-[data-sonner-toast] [data-description] {
-  font-size: 0.75rem !important;
-  font-weight: 500 !important;
-  opacity: 0.85 !important;
-  margin-top: 0.125rem !important;
 }
 
