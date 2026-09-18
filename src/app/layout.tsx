@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PageTransitionProvider } from "@/components/transitions/PageTransitionProvider";
 import GlobalClickSpark from "@/components/ui/ClickSparkWrapper";
-import { Toaster } from "sonner";
+import { AppToaster } from "@/components/ui/AppToaster";
 import { CookieConsent } from "@/components/cookie-consent";
 import { FramerMotionProvider } from "@/components/providers/FramerMotionProvider";
 import "@/bones/registry";
@@ -92,17 +92,7 @@ export default function RootLayout({
                         <OfflineCommandCenterModal />
                         <GlobalClickSpark>
                           {children}
-                          <Toaster
-                            position="top-right"
-                            richColors
-                            closeButton
-                            expand={true}
-                            theme="system"
-                            className="ireside-toaster"
-                            toastOptions={{
-                              className: 'ireside-toast',
-                            }}
-                          />
+                          <AppToaster />
                           <CookieConsent />
                         </GlobalClickSpark>
                       </TooltipProvider>

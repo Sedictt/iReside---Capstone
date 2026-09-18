@@ -3,7 +3,6 @@
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import { NotificationProvider } from "@/context/NotificationContext";
-import { Toaster } from "sonner";
 
 export default function SigningLayout({
   children,
