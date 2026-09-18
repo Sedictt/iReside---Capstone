@@ -199,7 +199,7 @@ function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: s
 
 // --- Main Component ---
 
-export function TenantSettings() {
+export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}) {
     const router = useRouter();
     const { profile, loading, refreshProfile } = useAuth();
     const supabase = createClient();

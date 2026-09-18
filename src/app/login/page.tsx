@@ -17,7 +17,14 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
+import { validateEmail, validatePassword } from "@/lib/validation/client-validation";
+
 function LoginContent() {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [emailError, setEmailError] = useState<string | null>(null);
+    const [passwordError, setPasswordError] = useState<string | null>(null);
+    const [touched, setTouched] = useState({ email: false, password: false });
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -30,19 +37,55 @@ function LoginContent() {
         setMounted(true);
     }, []);
 
+    const handleEmailChange = (val: string) => {
+        setEmail(val);
+        if (touched.email) {
+            const res = validateEmail(val);
+            setEmailError(res.isValid ? null : (res.error ?? "Invalid email"));
+        }
+    };
+
+    const handleEmailBlur = () => {
+        setTouched(prev => ({ ...prev, email: true }));
+        const res = validateEmail(email);
+        setEmailError(res.isValid ? null : (res.error ?? "Invalid email"));
+    };
+
+    const handlePasswordChange = (val: string) => {
+        setPassword(val);
+        if (touched.password) {
+            const res = validatePassword(val);
+            setPasswordError(res.isValid ? null : (res.error ?? "Invalid password"));
+        }
+    };
+
+    const handlePasswordBlur = () => {
+        setTouched(prev => ({ ...prev, password: true }));
+        const res = validatePassword(password);
+        setPasswordError(res.isValid ? null : (res.error ?? "Invalid password"));
+    };
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setTouched({ email: true, password: true });
+
+        const emailValidation = validateEmail(email);
+        const passwordValidation = validatePassword(password);
+
+        setEmailError(emailValidation.isValid ? null : (emailValidation.error ?? "Invalid email"));
+        setPasswordError(passwordValidation.isValid ? null : (passwordValidation.error ?? "Invalid password"));
+
+        if (!emailValidation.isValid || !passwordValidation.isValid) {
+            return;
+        }
+
         setError(null);
         setLoading(true);
 
         try {
-            const formData = new FormData(e.currentTarget);
-            const email = (formData.get("email") as string | null)?.trim() ?? "";
-            const password = (formData.get("password") as string | null) ?? "";
-
             const supabase = createClient();
             const { data, error } = await supabase.auth.signInWithPassword({
-                email,
+                email: email.trim(),
                 password,
             });
 
@@ -359,12 +402,27 @@ function LoginContent() {
                                             name="email"
                                             type="email"
                                             required
+                                            value={email}
+                                            onChange={(e) => handleEmailChange(e.target.value)}
+                                            onBlur={handleEmailBlur}
                                             autoComplete="email"
                                             autoCapitalize="none"
                                             spellCheck={false}
                                             placeholder="name@example.com"
-                                            className="h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                            aria-invalid={!!(touched.email && emailError)}
+                                            className={cn(
+                                                "h-11 w-full rounded-xl border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
+                                                touched.email && emailError
+                                                    ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+                                                    : "border-border focus:border-primary focus:ring-primary/20"
+                                            )}
                                         />
+                                        {touched.email && emailError && (
+                                            <p className="text-xs font-semibold text-destructive flex items-center gap-1.5 mt-1" role="alert">
+                                                <AlertCircle className="size-3.5 shrink-0" />
+                                                <span>{emailError}</span>
+                                            </p>
+                                        )}
                                     </div>
 
                                     {/* Password Field */}
@@ -389,9 +447,18 @@ function LoginContent() {
                                                 name="password"
                                                 type={isPasswordVisible ? "text" : "password"}
                                                 required
+                                                value={password}
+                                                onChange={(e) => handlePasswordChange(e.target.value)}
+                                                onBlur={handlePasswordBlur}
                                                 autoComplete="current-password"
                                                 placeholder="••••••••"
-                                                className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                                aria-invalid={!!(touched.password && passwordError)}
+                                                className={cn(
+                                                    "h-11 w-full rounded-xl border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
+                                                    touched.password && passwordError
+                                                        ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+                                                        : "border-border focus:border-primary focus:ring-primary/20"
+                                                )}
                                             />
                                             <button 
                                                 type="button"
@@ -407,13 +474,19 @@ function LoginContent() {
                                                 )}
                                             </button>
                                         </div>
+                                        {touched.password && passwordError && (
+                                            <p className="text-xs font-semibold text-destructive flex items-center gap-1.5 mt-1" role="alert">
+                                                <AlertCircle className="size-3.5 shrink-0" />
+                                                <span>{passwordError}</span>
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
 
                                 {/* Submit Button */}
                                 <button
                                     type="submit"
-                                    disabled={loading}
+                                    disabled={loading || !!(touched.email && emailError) || !!(touched.password && passwordError)}
                                     className="h-11 w-full rounded-xl bg-primary text-primary-foreground font-bold text-sm tracking-wide transition-all duration-200 hover:bg-primary/90 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                                 >
                                     {loading ? (

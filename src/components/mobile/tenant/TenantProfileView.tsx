@@ -10,22 +10,16 @@ import {
     User, 
     ShieldCheck, 
     LogOut, 
-    Moon, 
-    Sun, 
     Building2, 
-    Calendar,
-    Phone,
-    Mail,
-    FileText,
-    CheckCircle2,
-    Clock,
-    AlertCircle,
-    MessageSquare,
-    PhoneCall,
-    ShieldAlert,
-    ExternalLink
+    Calendar, 
+    Phone, 
+    Mail, 
+    FileText, 
+    MessageSquare, 
+    PhoneCall, 
+    ShieldAlert, 
+    HeartPulse 
 } from 'lucide-react';
-import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { MobileConfirmModal } from '@/components/mobile/shared/MobileConfirmModal';
@@ -49,8 +43,7 @@ interface LeaseDetails {
 }
 
 export function TenantProfileView() {
-    const { profile, user } = useAuth();
-    const { theme, setTheme } = useTheme();
+    const { profile, user, refreshProfile } = useAuth();
     const router = useRouter();
 
     const [lease, setLease] = useState<LeaseDetails | null>(null);
@@ -58,6 +51,7 @@ export function TenantProfileView() {
 
     const fetchProfileData = async () => {
         try {
+            await refreshProfile();
             const res = await fetch('/api/tenant/dashboard');
             if (res.ok) {
                 const data = await res.json();
@@ -102,7 +96,7 @@ export function TenantProfileView() {
 
     return (
         <PullToRefresh onRefresh={fetchProfileData}>
-            <div className="flex flex-col gap-3 pb-3">
+            <div className="flex flex-col gap-3 pb-8">
                 {/* Resident Profile Identity Card */}
                 <div className="px-4 pt-2.5">
                     <div className="p-4 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex items-center gap-3.5">
@@ -116,7 +110,7 @@ export function TenantProfileView() {
                                     Resident
                                 </span>
                             </div>
-                            <p className="text-xs text-muted-foreground truncate mt-0.5">{profile?.email || 'tenant@ireside.ph'}</p>
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">{profile?.email || user?.email || 'tenant@ireside.ph'}</p>
                             {lease?.unitName && (
                                 <div className="flex items-center gap-1 mt-1 text-[11px] font-semibold text-primary">
                                     <Building2 className="size-3 shrink-0" />
@@ -127,34 +121,10 @@ export function TenantProfileView() {
                     </div>
                 </div>
 
-                {/* Quick Action Preferences: Theme & Sign Out */}
-                <div className="px-4 grid grid-cols-2 gap-2.5">
-                    <button
-                        type="button"
-                        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                        className="p-3 rounded-xl bg-white dark:bg-card/70 border border-slate-300 dark:border-white/15 flex items-center justify-between active:scale-[0.98] transition-all shadow-2xs cursor-pointer"
-                    >
-                        <div className="flex items-center gap-2">
-                            {theme === 'dark' ? <Moon className="size-3.5 text-primary" /> : <Sun className="size-3.5 text-amber-500" />}
-                            <span className="text-xs font-bold text-foreground">Appearance</span>
-                        </div>
-                        <span className="text-[10px] font-bold text-muted-foreground capitalize">{theme || 'dark'}</span>
-                    </button>
 
-                    <button
-                        type="button"
-                        onClick={() => setShowLogoutConfirm(true)}
-                        className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-between text-red-500 dark:text-red-400 active:scale-[0.98] transition-all shadow-2xs cursor-pointer"
-                    >
-                        <div className="flex items-center gap-2">
-                            <LogOut className="size-3.5" />
-                            <span className="text-xs font-bold">Sign Out</span>
-                        </div>
-                    </button>
-                </div>
 
                 {/* Lease Agreement Summary Card */}
-                <div className="mx-4 p-4 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex flex-col gap-3">
+                <div id="lease" className="mx-4 p-4 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex flex-col gap-3 scroll-mt-16">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5 text-primary text-[10px] font-black uppercase tracking-wider">
                             <FileText className="size-3.5" />
@@ -214,6 +184,40 @@ export function TenantProfileView() {
                         <p className="text-xs text-muted-foreground py-2">No active lease agreement found linked to this account.</p>
                     )}
                 </div>
+
+                {/* Emergency Contact on File (if any) */}
+                {((profile as any)?.emergency_contact_name || (profile as any)?.emergency_contact_phone || (profile as any)?.emergency_name || (profile as any)?.emergency_phone) && (
+                    <div className="mx-4 p-4 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex flex-col gap-2.5">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 text-primary text-[10px] font-black uppercase tracking-wider">
+                                <HeartPulse className="size-3.5" />
+                                <span>Emergency Contact</span>
+                            </div>
+                            <Link href="/mobile/tenant/settings?category=Identity&subtab=Emergency+Contact" className="text-[10px] font-bold text-primary hover:underline">
+                                Edit
+                            </Link>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                            <div>
+                                <p className="font-bold text-foreground">
+                                    {(profile as any)?.emergency_contact_name || (profile as any)?.emergency_name || 'Designated Contact'}
+                                </p>
+                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                    {(profile as any)?.emergency_contact_phone || (profile as any)?.emergency_phone || 'No phone'}
+                                </p>
+                            </div>
+                            {((profile as any)?.emergency_contact_phone || (profile as any)?.emergency_phone) && (
+                                <a
+                                    href={`tel:${(profile as any)?.emergency_contact_phone || (profile as any)?.emergency_phone}`}
+                                    className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20 active:scale-95 transition-transform"
+                                    title="Call Emergency Contact"
+                                >
+                                    <Phone className="size-3.5" />
+                                </a>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Landlord Contact & Support Card */}
                 <div className="mx-4 p-4 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex flex-col gap-3">
@@ -282,6 +286,18 @@ export function TenantProfileView() {
                             <Phone className="size-3" />
                         </a>
                     </div>
+                </div>
+
+                {/* Sign Out Action */}
+                <div className="px-4 pt-1">
+                    <button
+                        type="button"
+                        onClick={() => setShowLogoutConfirm(true)}
+                        className="w-full p-3.5 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center gap-2 text-red-500 active:scale-[0.98] transition-all cursor-pointer shadow-2xs"
+                    >
+                        <LogOut className="size-4" />
+                        <span className="text-xs font-bold">Sign Out</span>
+                    </button>
                 </div>
             </div>
 
