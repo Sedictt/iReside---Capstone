@@ -25,15 +25,21 @@ import {
     Layers,
     LayoutGrid,
     Home,
-    Calendar
+    Calendar,
+    StickyNote,
+    Plus,
+    Trash2
 } from "lucide-react";
 import Link from "next/link";
+import { useCalendarNotes } from "@/hooks/useCalendarNotes";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface CalendarEvent {
     id: string;
     title: string;
     date: string;
-    type: "payment" | "lease" | "maintenance" | "booking";
+    type: "payment" | "lease" | "maintenance" | "booking" | "note";
     status: string;
     amount?: number;
     balanceRemaining?: number;
@@ -97,6 +103,17 @@ const EVENT_TYPE_STYLES = {
         glow: "bg-blue-500/25 blur-sm",
         iconColor: "text-blue-500 dark:text-blue-400",
         badge: "bg-blue-500/15 dark:bg-black/40 border-blue-500/30 text-blue-700 dark:text-blue-300 shadow-[inset_0_1px_2px_rgba(0,0,0,0.15)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)]"
+    },
+    note: {
+        color: "bg-amber-500 text-amber-500 border-amber-500/25",
+        bg: "bg-amber-500/10",
+        dot: "bg-amber-500",
+        label: "Notes & Reminders",
+        icon: StickyNote,
+        activePill: "border-amber-500/35 bg-gradient-to-r from-amber-500/15 via-amber-500/10 to-amber-500/5 dark:from-[#3a2810] dark:via-[#251908] dark:to-[#170f04] shadow-[0_2px_12px_rgba(245,158,11,0.2),inset_0_1px_1px_rgba(255,255,255,0.15)] text-foreground dark:text-white",
+        glow: "bg-amber-500/25 blur-sm",
+        iconColor: "text-amber-500 dark:text-amber-400",
+        badge: "bg-amber-500/15 dark:bg-black/40 border-amber-500/30 text-amber-700 dark:text-amber-300 shadow-[inset_0_1px_2px_rgba(0,0,0,0.15)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)]"
     }
 };
 
@@ -109,6 +126,8 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function LandlordCalendarPage() {
     const { selectedPropertyId } = useProperty();
+    const { user } = useAuth();
+    const { notes, addNote, deleteNote } = useCalendarNotes({ landlordId: user?.id });
     
     // Calendar view states
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -117,12 +136,19 @@ export default function LandlordCalendarPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Note form state
+    const [isAddNoteOpen, setIsAddNoteOpen] = useState(false);
+    const [noteTitle, setNoteTitle] = useState("");
+    const [noteDescription, setNoteDescription] = useState("");
+    const [isSavingNote, setIsSavingNote] = useState(false);
+
     // Filter toggles
     const [activeFilters, setActiveFilters] = useState<Record<string, boolean>>({
         payment: true,
         lease: true,
         maintenance: true,
-        booking: true
+        booking: true,
+        note: true
     });
 
     const currentYear = currentDate.getFullYear();
@@ -211,10 +237,23 @@ export default function LandlordCalendarPage() {
         return localDate.toISOString().split("T")[0];
     };
 
+    // Combine system events with user's personal calendar notes
+    const allEvents = useMemo(() => {
+        const noteEvents: CalendarEvent[] = notes.map((n) => ({
+            id: n.id,
+            title: n.title,
+            date: n.date,
+            type: "note" as const,
+            status: "Note",
+            description: n.description,
+        }));
+        return [...events, ...noteEvents];
+    }, [events, notes]);
+
     // Index events by date string for high-speed lookup
     const eventsByDate = useMemo(() => {
         const index: Record<string, CalendarEvent[]> = {};
-        events.forEach(e => {
+        allEvents.forEach(e => {
             if (!activeFilters[e.type]) return;
             if (!index[e.date]) {
                 index[e.date] = [];
@@ -222,7 +261,7 @@ export default function LandlordCalendarPage() {
             index[e.date].push(e);
         });
         return index;
-    }, [events, activeFilters]);
+    }, [allEvents, activeFilters]);
 
     // Retrieve active details for currently selected day
     const selectedDateKey = useMemo(() => formatDateKey(selectedDate), [selectedDate]);
@@ -237,33 +276,46 @@ export default function LandlordCalendarPage() {
             payment: 0,
             lease: 0,
             maintenance: 0,
-            booking: 0
+            booking: 0,
+            note: 0,
         };
-        events.forEach(e => {
+        allEvents.forEach(e => {
             if (counts[e.type] !== undefined) {
                 counts[e.type]++;
             }
         });
         return counts;
-    }, [events]);
+    }, [allEvents]);
 
     const allFiltersActive = useMemo(() => Object.values(activeFilters).every(Boolean), [activeFilters]);
 
     const handleToggleAll = () => {
-        if (allFiltersActive) {
-            setActiveFilters({
-                payment: false,
-                lease: false,
-                maintenance: false,
-                booking: false
-            });
-        } else {
-            setActiveFilters({
-                payment: true,
-                lease: true,
-                maintenance: true,
-                booking: true
-            });
+        const nextVal = !allFiltersActive;
+        setActiveFilters({
+            payment: nextVal,
+            lease: nextVal,
+            maintenance: nextVal,
+            booking: nextVal,
+            note: nextVal,
+        });
+    };
+
+    const handleSaveNote = async () => {
+        if (!noteTitle.trim()) return;
+        setIsSavingNote(true);
+        try {
+            const dateKey = formatDateKey(selectedDate);
+            const res = await addNote(dateKey, noteTitle, noteDescription);
+            if (res.success) {
+                toast.success(`Note saved for ${selectedDate.toLocaleDateString(undefined, { month: "short", day: "numeric" })}!`);
+                setNoteTitle("");
+                setNoteDescription("");
+                setIsAddNoteOpen(false);
+            } else {
+                toast.error(res.error || "Failed to save note.");
+            }
+        } finally {
+            setIsSavingNote(false);
         }
     };
 
@@ -338,7 +390,7 @@ export default function LandlordCalendarPage() {
                             ? "bg-purple-500/15 dark:bg-black/40 border-purple-500/30 text-purple-700 dark:text-purple-300 shadow-[inset_0_1px_2px_rgba(0,0,0,0.15)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)]"
                             : "bg-black/10 dark:bg-black/30 border-border/30 text-muted-foreground/60 shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)]"
                     )}>
-                        {events.length}
+                        {allEvents.length}
                     </span>
                 </button>
 
@@ -492,10 +544,78 @@ export default function LandlordCalendarPage() {
                                     </p>
                                 </div>
                             </div>
-                            <span className="text-xs font-semibold px-2.5 py-1 rounded-xl bg-primary/10 border border-primary/20 text-primary shadow-sm">
-                                {selectedDayEvents.length} {selectedDayEvents.length === 1 ? "Event" : "Events"}
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setIsAddNoteOpen((prev) => !prev)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 text-black text-xs font-black hover:brightness-105 active:scale-95 transition-all shadow-sm"
+                                    title="Add note for this date"
+                                >
+                                    <Plus className="size-3.5 stroke-[3]" />
+                                    <span>Add Note</span>
+                                </button>
+                                <span className="text-xs font-semibold px-2.5 py-1 rounded-xl bg-primary/10 border border-primary/20 text-primary shadow-sm">
+                                    {selectedDayEvents.length} {selectedDayEvents.length === 1 ? "Event" : "Events"}
+                                </span>
+                            </div>
                         </header>
+
+                        {/* Inline Note Creation Form */}
+                        <AnimatePresence>
+                            {isAddNoteOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="rounded-2xl p-4 border border-amber-500/30 bg-amber-500/5 mb-4 space-y-3 overflow-hidden shadow-inner"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-amber-500 flex items-center gap-1.5">
+                                            <StickyNote className="size-3.5" />
+                                            New Note for {selectedDate.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                                        </span>
+                                        <button
+                                            onClick={() => { setIsAddNoteOpen(false); setNoteTitle(""); setNoteDescription(""); }}
+                                            className="text-muted-foreground hover:text-foreground p-1"
+                                        >
+                                            <X className="size-4" />
+                                        </button>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Note title or reminder (e.g. Unit inspection)..."
+                                        value={noteTitle}
+                                        onChange={(e) => setNoteTitle(e.target.value)}
+                                        maxLength={80}
+                                        className="w-full rounded-xl neumorphic-inset px-3.5 py-2 text-xs font-bold text-foreground outline-none focus:ring-2 focus:ring-amber-500/40 border border-border/40"
+                                    />
+                                    <textarea
+                                        placeholder="Optional details, notes, or instructions..."
+                                        value={noteDescription}
+                                        onChange={(e) => setNoteDescription(e.target.value)}
+                                        rows={2}
+                                        maxLength={250}
+                                        className="w-full rounded-xl neumorphic-inset p-3 text-xs text-foreground outline-none focus:ring-2 focus:ring-amber-500/40 border border-border/40 resize-none"
+                                    />
+                                    <div className="flex justify-end gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => { setIsAddNoteOpen(false); setNoteTitle(""); setNoteDescription(""); }}
+                                            className="px-3 py-1.5 text-xs font-semibold rounded-xl text-muted-foreground hover:text-foreground"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="button"
+                                            disabled={!noteTitle.trim() || isSavingNote}
+                                            onClick={handleSaveNote}
+                                            className="px-4 py-1.5 text-xs font-black rounded-xl bg-amber-500 text-black hover:brightness-105 active:scale-95 disabled:opacity-40 shadow-sm"
+                                        >
+                                            {isSavingNote ? "Saving..." : "Save Note"}
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         {/* List items representation */}
                         <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-4 max-h-[480px]">
@@ -504,10 +624,17 @@ export default function LandlordCalendarPage() {
                                     <div className="size-12 rounded-2xl bg-muted/40 flex items-center justify-center mb-3 shadow-[inset_2px_2px_5px_rgba(0,0,0,0.1)]">
                                         <CalendarCheck className="size-6 text-muted-foreground/60" />
                                     </div>
-                                    <h3 className="text-sm font-semibold text-foreground">Priscilla Clean!</h3>
-                                    <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">
+                                    <h3 className="text-sm font-semibold text-foreground">Clean Schedule</h3>
+                                    <p className="text-xs text-muted-foreground mt-1 max-w-[200px] mb-4">
                                         No upcoming utility dues, maintenance requests, or lease milestones for this date.
                                     </p>
+                                    <button
+                                        onClick={() => setIsAddNoteOpen(true)}
+                                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 text-black text-xs font-black hover:brightness-105 active:scale-95 transition-all shadow-sm"
+                                    >
+                                        <Plus className="size-3.5 stroke-[3]" />
+                                        <span>Add Note for this Date</span>
+                                    </button>
                                 </div>
                             ) : (
                                 <AnimatePresence mode="popLayout">
@@ -578,39 +705,60 @@ export default function LandlordCalendarPage() {
                                                     )}
                                                 </div>
 
-                                                {/* Tenant info bar & actions */}
-                                                <div className="flex items-center justify-between border-t border-border/20 pt-3 mt-1 gap-2">
-                                                    {event.tenantName ? (
-                                                        <div className="flex items-center gap-2 truncate">
-                                                            <div
-                                                                className="size-6 rounded-lg text-[10px] font-bold flex items-center justify-center border border-border/40 shrink-0 text-foreground"
-                                                                style={{ backgroundColor: event.tenantBg || "#f3f4f6" }}
-                                                            >
-                                                                {event.tenantAvatar ? (
-                                                                    <img src={event.tenantAvatar} alt="" className="size-full object-cover rounded-lg" />
-                                                                ) : (
-                                                                    event.tenantName.slice(0, 2).toUpperCase()
-                                                                )}
-                                                            </div>
-                                                            <span className="text-xs font-medium text-foreground truncate">{event.tenantName}</span>
+                                                {/* Tenant info bar or Note actions */}
+                                                {event.type === "note" ? (
+                                                    <div className="flex items-center justify-between border-t border-border/20 pt-3 mt-1">
+                                                        <div className="flex items-center gap-1 text-[11px] text-amber-500 font-semibold">
+                                                            <StickyNote className="size-3.5" />
+                                                            <span>Personal Note</span>
                                                         </div>
-                                                    ) : (
-                                                        <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                                                            <Info className="size-3.5 text-muted-foreground/60" />
-                                                            <span>System Milestone</span>
-                                                        </div>
-                                                    )}
-
-                                                    {event.detailsUrl && (
-                                                        <Link
-                                                            href={event.detailsUrl}
-                                                            className="text-xs font-semibold text-primary hover:text-primary-hover flex items-center gap-1 px-3 py-1.5 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 active:scale-95 transition-all duration-150"
+                                                        <button
+                                                            type="button"
+                                                            onClick={async () => {
+                                                                await deleteNote(event.id);
+                                                                toast.success("Note removed.");
+                                                            }}
+                                                            className="text-xs font-semibold text-rose-500 hover:text-rose-600 flex items-center gap-1 px-2.5 py-1 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 active:scale-95 transition-all"
+                                                            title="Delete this note"
                                                         >
-                                                            Inspect
-                                                            <ArrowUpRight className="size-3.5" />
-                                                        </Link>
-                                                    )}
-                                                </div>
+                                                            <Trash2 className="size-3.5" />
+                                                            <span>Delete</span>
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center justify-between border-t border-border/20 pt-3 mt-1 gap-2">
+                                                        {event.tenantName ? (
+                                                            <div className="flex items-center gap-2 truncate">
+                                                                <div
+                                                                    className="size-6 rounded-lg text-[10px] font-bold flex items-center justify-center border border-border/40 shrink-0 text-foreground"
+                                                                    style={{ backgroundColor: event.tenantBg || "#f3f4f6" }}
+                                                                >
+                                                                    {event.tenantAvatar ? (
+                                                                        <img src={event.tenantAvatar} alt="" className="size-full object-cover rounded-lg" />
+                                                                    ) : (
+                                                                        event.tenantName.slice(0, 2).toUpperCase()
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-xs font-medium text-foreground truncate">{event.tenantName}</span>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                                                                <Info className="size-3.5 text-muted-foreground/60" />
+                                                                <span>System Milestone</span>
+                                                            </div>
+                                                        )}
+
+                                                        {event.detailsUrl && (
+                                                            <Link
+                                                                href={event.detailsUrl}
+                                                                className="text-xs font-semibold text-primary hover:text-primary-hover flex items-center gap-1 px-3 py-1.5 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 active:scale-95 transition-all duration-150"
+                                                            >
+                                                                Inspect
+                                                                <ArrowUpRight className="size-3.5" />
+                                                            </Link>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </motion.div>
                                         );
                                     })}
