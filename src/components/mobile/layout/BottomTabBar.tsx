@@ -109,7 +109,7 @@ export function BottomTabBar({ role, badges = {} }: BottomTabBarProps) {
     return (
         <nav className="mobile-tab-bar" aria-label="Main navigation">
             {tabs.map((tab) => {
-                const isActive = pathname?.startsWith(tab.matchPrefix)
+                const isActive = pathname?.startsWith(tab.matchPrefix) || (tab.label === 'Profile' && pathname?.includes('/settings'))
                 const badgeCount = badges[tab.matchPrefix] ?? 0
                 const Icon = tab.icon
 

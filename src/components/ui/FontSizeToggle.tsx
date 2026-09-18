@@ -81,14 +81,20 @@ export function FontSizeToggle({
   // Slider variant (Default for Settings / Accessibility panels)
   const percentageFilled = ((fontScale - MIN_FONT_SCALE) / (MAX_FONT_SCALE - MIN_FONT_SCALE)) * 100;
 
+  const SCALE_PRESETS = [
+    { scale: 100, title: "Standard", percentage: "100%" },
+    { scale: 110, title: "Comfortable", percentage: "110%" },
+    { scale: 120, title: "Extra Large", percentage: "120%" },
+  ];
+
   return (
     <div className={cn("space-y-5", className)}>
       {/* Slider Control Panel */}
-      <div className="p-5 rounded-2xl bg-surface-2 border border-border/70 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-foreground">Display Font Scale</span>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-primary/15 text-primary border border-primary/25">
+      <div className="p-3.5 sm:p-5 rounded-2xl bg-surface-2 border border-border/70 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
+            <span className="text-sm font-bold text-foreground shrink-0">Display Font Scale</span>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-primary/15 text-primary border border-primary/25 whitespace-nowrap shrink-0">
               {fontScale}% · {tierLabel}
             </span>
           </div>
@@ -97,7 +103,7 @@ export function FontSizeToggle({
             <button
               type="button"
               onClick={resetFontScale}
-              className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1 rounded-lg hover:bg-surface-3 cursor-pointer"
+              className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1 rounded-lg hover:bg-surface-3 cursor-pointer shrink-0 ml-auto"
               title="Reset to 100% standard font size"
             >
               <RotateCcw className="size-3.5" />
@@ -108,18 +114,18 @@ export function FontSizeToggle({
 
         {/* Range Slider Track */}
         <div className="space-y-2">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
               type="button"
               onClick={() => setFontScale(Math.max(MIN_FONT_SCALE, fontScale - 10))}
               disabled={fontScale <= MIN_FONT_SCALE}
-              className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors cursor-pointer"
+              className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors cursor-pointer shrink-0"
               aria-label="Decrease font size"
             >
-              <span className="font-serif font-bold text-xs">A</span>
+              <span className="font-serif font-bold text-xs sm:text-sm">A</span>
             </button>
 
-            <div className="relative flex-1 flex items-center">
+            <div className="relative flex-1 flex items-center min-w-0">
               <input
                 type="range"
                 min={MIN_FONT_SCALE}
@@ -139,36 +145,40 @@ export function FontSizeToggle({
               type="button"
               onClick={() => setFontScale(Math.min(MAX_FONT_SCALE, fontScale + 10))}
               disabled={fontScale >= MAX_FONT_SCALE}
-              className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors cursor-pointer"
+              className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors cursor-pointer shrink-0"
               aria-label="Increase font size"
             >
-              <span className="font-serif font-black text-lg">A</span>
+              <span className="font-serif font-black text-base sm:text-lg">A</span>
             </button>
           </div>
 
           {/* Three Choice Buttons */}
-          <div className="flex items-center justify-between px-2 pt-2 gap-2">
-            {FONT_SCALE_STEPS.map((step) => {
-              const isSelected = fontScale === step;
-              const label =
-                step === 100
-                  ? "Standard (100%)"
-                  : step === 110
-                  ? "Comfortable (110%)"
-                  : "Extra Large (120%)";
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5 pt-1.5 items-stretch">
+            {SCALE_PRESETS.map((preset) => {
+              const isSelected = fontScale === preset.scale;
               return (
                 <button
-                  key={step}
+                  key={preset.scale}
                   type="button"
-                  onClick={() => setFontScale(step)}
+                  onClick={() => setFontScale(preset.scale)}
                   className={cn(
-                    "flex-1 text-center py-1.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border",
+                    "group relative flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 py-2 px-1.5 sm:px-3 rounded-xl transition-all cursor-pointer border text-center min-w-0",
                     isSelected
-                      ? "bg-card text-foreground font-bold shadow-sm border-primary/40 text-primary"
-                      : "text-muted-foreground border-transparent hover:text-foreground hover:bg-surface-3"
+                      ? "bg-card text-primary font-bold shadow-sm border-primary/50"
+                      : "bg-surface-1/40 hover:bg-surface-3 text-muted-foreground border-border/40 hover:text-foreground"
                   )}
                 >
-                  {label}
+                  <span className="text-[11px] sm:text-xs font-bold leading-tight truncate">
+                    {preset.title}
+                  </span>
+                  <span
+                    className={cn(
+                      "text-[10px] sm:text-xs font-mono shrink-0",
+                      isSelected ? "text-primary/80 font-semibold" : "opacity-60"
+                    )}
+                  >
+                    ({preset.percentage})
+                  </span>
                 </button>
               );
             })}
@@ -178,13 +188,13 @@ export function FontSizeToggle({
 
       {/* Live Readability Preview Box */}
       {showPreview && (
-        <div className="rounded-2xl border border-border/80 bg-card p-5 space-y-3 transition-all duration-300">
-          <div className="flex items-center justify-between border-b border-border/40 pb-2.5">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <Type className="size-3.5 text-primary" />
+        <div className="rounded-2xl border border-border/80 bg-card p-3.5 sm:p-5 space-y-3 transition-all duration-300">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 pb-2.5">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 shrink-0">
+              <Type className="size-3.5 text-primary shrink-0" />
               Live Readability Preview
             </span>
-            <span className="text-xs font-mono text-primary font-bold">
+            <span className="text-xs font-mono text-primary font-bold shrink-0">
               {fontScale}% scale active
             </span>
           </div>

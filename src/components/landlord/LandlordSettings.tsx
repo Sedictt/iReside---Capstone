@@ -51,11 +51,20 @@ import {
     Wand2,
     Pipette,
     ChevronLeft,
-    ShieldCheck
+    ShieldCheck,
+    X,
+    AlertCircle
 } from "lucide-react";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
+import {
+    validateName,
+    validatePhoneNumber,
+    validateUrl,
+    validatePassword,
+    sanitizeNumericInput
+} from "@/lib/validation/client-validation";
 import { BillingOperationsPanel } from "@/components/landlord/BillingOperationsPanel";
 import { AuditLogsSettingsTab } from "@/components/landlord/settings/AuditLogsSettingsTab";
 import { useAuth } from "@/hooks/useAuth";
@@ -77,6 +86,7 @@ import { UnsavedChangesModal } from "@/components/ui/UnsavedChangesModal";
 import { useBrand } from "@/context/BrandContext";
 import { applyBrandCssVariables } from "@/lib/branding/colors";
 import Link from "next/link";
+import { MobileSettingsCategoryDropdown } from "@/components/mobile/shared/MobileSettingsCategoryDropdown";
 
 // --- Types ---
 type SettingsCategory = "Identity" | "Personalization" | "Finance" | "Security" | "Notifications" | "Data" | "AuditLogs";
@@ -139,17 +149,29 @@ function GlassCard({ children, className, title, description }: { children: Reac
     return (
         <div className={cn("relative overflow-hidden rounded-[2rem] neumorphic-panel transition-all duration-500", className)}>
             {(title || description) && (
-                <div className="border-b border-border/60 px-8 py-6">
+                <div className="border-b border-border/60 px-4 py-3.5 sm:px-8 sm:py-6">
                     {title && <h3 className="text-lg font-black text-foreground">{title}</h3>}
                     {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
                 </div>
             )}
-            <div className="p-8 text-foreground">{children}</div>
+            <div className="p-4 sm:p-8 text-foreground">{children}</div>
         </div>
     );
 }
 
-function SettingField({ label, children, description, icon: Icon }: { label: string; children: React.ReactNode; description?: string; icon?: any }) {
+function SettingField({ 
+    label, 
+    children, 
+    description, 
+    icon: Icon,
+    error
+}: { 
+    label: string; 
+    children: React.ReactNode; 
+    description?: string; 
+    icon?: any;
+    error?: string;
+}) {
     return (
         <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
@@ -157,7 +179,14 @@ function SettingField({ label, children, description, icon: Icon }: { label: str
                 <label className="text-xs font-black uppercase tracking-wider text-foreground/80">{label}</label>
             </div>
             {children}
-            {description && <p className="px-1 text-xs text-muted-foreground">{description}</p>}
+            {error ? (
+                <p className="px-1 text-xs font-semibold text-destructive flex items-center gap-1.5 mt-1" role="alert">
+                    <AlertCircle className="size-3.5 shrink-0" />
+                    <span>{error}</span>
+                </p>
+            ) : description ? (
+                <p className="px-1 text-xs text-muted-foreground">{description}</p>
+            ) : null}
         </div>
     );
 }
@@ -206,33 +235,37 @@ function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: s
 
 // --- Main Component ---
 
-export function LandlordSettings() {
+export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = {}) {
     const router = useRouter();
     const { profile, loading, refreshProfile } = useAuth();
     // UI State
     const [activeTab, setActiveTab] = useState<SettingsCategory>("Identity");
     const [activeSubTab, setActiveSubTab] = useState<string>("Profile");
     const [isSaving, setIsSaving] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [passwordTouched, setPasswordTouched] = useState(false);
+    const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
     const supabase = useMemo(() => createClient(), []);
 
-    // Mapping of Sub-tabs
-    const SUB_TABS: Record<SettingsCategory, string[]> = {
+    // Mapping of Sub-tabs (Danger sub-tab is removed for mobile)
+    const SUB_TABS: Record<SettingsCategory, string[]> = useMemo(() => ({
         Identity: ["Profile", "Socials", "Verification"],
         Personalization: ["Themes & Contrast", "Branding & Logo", "Dashboard Banner"],
         Finance: ["GCash", "Utilities"],
         Security: ["Account", "Protection", "Sessions"],
         Notifications: ["Alerts"],
         AuditLogs: ["Activity Logs"],
-        Data: ["Export", "Tour", "Danger"],
-    };
+        Data: isMobile ? ["Export", "Tour"] : ["Export", "Tour", "Danger"],
+    }), [isMobile]);
 
     // Reset sub-tab when main tab changes (skip if restoring from URL)
     const isRestoringFromUrl = useRef(false);
     useEffect(() => {
         if (!loading && profile && profile.role !== "landlord" && profile.role !== "admin") {
-            router.replace("/tenant/dashboard");
+            router.replace(isMobile ? "/mobile/tenant/home" : "/tenant/dashboard");
         }
-    }, [loading, profile, router]);
+    }, [loading, profile, router, isMobile]);
 
     useEffect(() => {
         if (!isRestoringFromUrl.current) {
@@ -272,6 +305,7 @@ export function LandlordSettings() {
     const [brandSecondaryHex, setBrandSecondaryHex] = useState<string>(brand.secondaryColor || "#06b6d4");
     const [isPrimaryColorPickerOpen, setIsPrimaryColorPickerOpen] = useState(false);
     const [isSecondaryColorPickerOpen, setIsSecondaryColorPickerOpen] = useState(false);
+    const [isPermitPreviewOpen, setIsPermitPreviewOpen] = useState(false);
     const [isUnsavedModalOpen, setIsUnsavedModalOpen] = useState(false);
     const logoFileInputRef = useRef<HTMLInputElement>(null);
     const bannerFileInputRef = useRef<HTMLInputElement>(null);
@@ -553,7 +587,7 @@ export function LandlordSettings() {
         if (isDirty) {
             setIsUnsavedModalOpen(true);
         } else {
-            router.push("/landlord/dashboard");
+            router.push(isMobile ? "/mobile/landlord/profile" : "/landlord/dashboard");
         }
     };
 
@@ -718,6 +752,25 @@ export function LandlordSettings() {
 
     const handleSaveAll = async (): Promise<boolean> => {
         if (!profile) return false;
+
+        const nameVal = validateName(formData.full_name, "Full Name");
+        if (!nameVal.isValid) {
+            toast.error(nameVal.error ?? "Please enter a valid full name.");
+            return false;
+        }
+
+        const phoneVal = validatePhoneNumber(formData.phone, false);
+        if (!phoneVal.isValid) {
+            toast.error(phoneVal.error ?? "Please enter a valid phone number.");
+            return false;
+        }
+
+        const urlVal = validateUrl(formData.website, false);
+        if (!urlVal.isValid) {
+            toast.error(urlVal.error ?? "Please enter a valid website URL.");
+            return false;
+        }
+
         setIsSaving(true);
         const loadingToast = toast.loading("Saving all changes across settings…");
         try {
@@ -926,23 +979,33 @@ export function LandlordSettings() {
                     return (
                         <GlassCard title="Profile Information" description="Basic details about you and your business.">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <SettingField label="Full Name" icon={User} description="Verified by admin. Contact support to change.">
+                                <SettingField 
+                                    label="Full Name" 
+                                    icon={User} 
+                                    description="Your legal or display name."
+                                    error={formData.full_name && !validateName(formData.full_name, "Full Name").isValid ? validateName(formData.full_name, "Full Name").error : undefined}
+                                >
                                     <input
                                         type="text"
-                                        value={profile?.full_name || ""}
-                                        disabled
-                                        className="w-full cursor-not-allowed rounded-xl neumorphic-inset px-4 py-3 text-sm opacity-50"
+                                        value={formData.full_name}
+                                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                            formData.full_name && !validateName(formData.full_name, "Full Name").isValid && "border border-destructive ring-1 ring-destructive/30"
+                                        )}
+                                        placeholder="Enter your full name"
                                     />
                                 </SettingField>
-                                <SettingField label="Business Name" icon={Building2} description="Verified by admin. Contact support to change.">
+                                <SettingField label="Business Name" icon={Building2} description="The name of your rental business.">
                                     <input
                                         type="text"
-                                        value={profile?.business_name || ""}
-                                        disabled
-                                        className="w-full cursor-not-allowed rounded-xl neumorphic-inset px-4 py-3 text-sm opacity-50"
+                                        value={formData.business_name}
+                                        onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
+                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                        placeholder="Enter your business name"
                                     />
                                 </SettingField>
-                                <SettingField label="Contact Email" icon={Mail} description="This email is used for inquiries.">
+                                <SettingField label="Contact Email" icon={Mail} description="Account login email. Contact support to change.">
                                     <input
                                         type="email"
                                         value={profile?.email || ""}
@@ -950,20 +1013,38 @@ export function LandlordSettings() {
                                         className="w-full cursor-not-allowed rounded-xl neumorphic-inset px-4 py-3 text-sm opacity-50"
                                     />
                                 </SettingField>
-                                <SettingField label="Phone Number" icon={Phone}>
+                                <SettingField 
+                                    label="Phone Number" 
+                                    icon={Phone}
+                                    error={formData.phone && !validatePhoneNumber(formData.phone, false).isValid ? validatePhoneNumber(formData.phone, false).error : undefined}
+                                >
                                     <input
                                         type="tel"
+                                        inputMode="numeric"
+                                        maxLength={11}
                                         value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                        onChange={(e) => setFormData({ ...formData, phone: sanitizeNumericInput(e.target.value, 11) })}
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                            formData.phone && !validatePhoneNumber(formData.phone, false).isValid && "border border-destructive ring-1 ring-destructive/30"
+                                        )}
+                                        placeholder="09XXXXXXXXX"
                                     />
                                 </SettingField>
-                                <SettingField label="Website" icon={Globe}>
+                                <SettingField 
+                                    label="Website" 
+                                    icon={Globe}
+                                    error={formData.website && !validateUrl(formData.website, false).isValid ? validateUrl(formData.website, false).error : undefined}
+                                >
                                     <input
                                         type="url"
                                         value={formData.website}
                                         onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none"
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                            formData.website && !validateUrl(formData.website, false).isValid && "border border-destructive ring-1 ring-destructive/30"
+                                        )}
+                                        placeholder="https://example.com"
                                     />
                                 </SettingField>
                                 <div className="md:col-span-2">
@@ -1085,9 +1166,39 @@ export function LandlordSettings() {
                                 <div className="space-y-2">
                                     <label className="text-xs font-black uppercase tracking-wider text-neutral-400">Permit Document (Photo)</label>
                                     <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-                                        <div className="relative h-48 w-full md:w-80 overflow-hidden rounded-2xl neumorphic-inset border-dashed border-white/10 transition-all hover:opacity-80">
+                                        <div 
+                                            onClick={() => {
+                                                if (profile?.business_permit_url) {
+                                                    setIsPermitPreviewOpen(true);
+                                                } else {
+                                                    permitInputRef.current?.click();
+                                                }
+                                            }}
+                                            className={cn(
+                                                "relative h-48 w-full md:w-80 overflow-hidden rounded-2xl neumorphic-inset border-dashed border-white/10 transition-all group cursor-pointer",
+                                                profile?.business_permit_url ? "hover:shadow-lg hover:border-primary/50" : "hover:border-primary/40"
+                                            )}
+                                        >
                                             {profile?.business_permit_url ? (
-                                                <Image src={profile.business_permit_url} alt="Business Permit" fill sizes="(max-width: 768px) 100vw, 320px" className="object-cover" />
+                                                <>
+                                                    <Image 
+                                                        src={profile.business_permit_url} 
+                                                        alt="Business Permit" 
+                                                        fill 
+                                                        sizes="(max-width: 768px) 100vw, 320px" 
+                                                        className="object-cover transition-transform duration-300 group-hover:scale-105" 
+                                                    />
+                                                    {/* Hover overlay hint */}
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white backdrop-blur-[2px]">
+                                                        <Eye className="size-5" />
+                                                        <span className="text-xs font-black uppercase tracking-wider">Tap to View</span>
+                                                    </div>
+                                                    {/* Always-visible corner view badge */}
+                                                    <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-white text-[10px] font-bold border border-white/20 shadow-md">
+                                                        <Eye className="size-3" />
+                                                        <span>View</span>
+                                                    </div>
+                                                </>
                                             ) : (
                                                 <div className="flex h-full flex-col items-center justify-center gap-2 text-neutral-500">
                                                     <UploadCloud className="size-8" />
@@ -1125,6 +1236,10 @@ export function LandlordSettings() {
                 default: return null;
             }
         };
+
+        if (isMobile) {
+            return <div>{renderSubContent()}</div>;
+        }
 
         return (
             <motion.div 
@@ -1219,7 +1334,7 @@ export function LandlordSettings() {
                                             <Contrast className="size-6" />
                                         </div>
                                         <div>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex flex-wrap items-center gap-2">
                                                 <h4 className="text-sm font-black text-foreground">Universal High Contrast</h4>
                                                 <span className={cn(
                                                     "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
@@ -1253,67 +1368,71 @@ export function LandlordSettings() {
                             >
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <SettingField label="Primary Brand Accent" icon={Palette} description="Used for primary buttons, active tabs, and key badges.">
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
                                             <button
                                                 type="button"
                                                 onClick={() => setIsPrimaryColorPickerOpen(true)}
-                                                className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl neumorphic-extruded border border-border/80 hover:border-primary/80 transition-all group cursor-pointer"
+                                                className="flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl neumorphic-extruded border border-border/80 hover:border-primary/80 transition-all group cursor-pointer shrink-0"
                                                 title="Open modern color picker"
                                             >
                                                 <span 
-                                                    className="size-6 rounded-lg shadow-sm border border-white/20 shrink-0 transition-transform group-hover:scale-105" 
+                                                    className="size-5 sm:size-6 rounded-lg shadow-sm border border-white/20 shrink-0 transition-transform group-hover:scale-105" 
                                                     style={{ backgroundColor: brandPrimaryHex }} 
                                                 />
                                                 <span className="font-mono text-xs font-black uppercase text-foreground">
                                                     {brandPrimaryHex}
                                                 </span>
-                                                <Pipette className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors ml-1" />
+                                                <Pipette className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors ml-0.5" />
                                             </button>
-                                            <input
-                                                type="text"
-                                                value={brandPrimaryHex}
-                                                onChange={(e) => setBrandPrimaryHex(e.target.value)}
-                                                placeholder="#C4B0FF"
-                                                className="w-28 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-3 text-foreground"
-                                            />
-                                            <div 
-                                                className="size-10 rounded-xl border border-white/20 shadow-md flex items-center justify-center text-xs font-black"
-                                                style={{ backgroundColor: brandPrimaryHex, color: "#000" }}
-                                            >
-                                                Aa
+                                            <div className="flex items-center gap-2 flex-1 min-w-[130px]">
+                                                <input
+                                                    type="text"
+                                                    value={brandPrimaryHex}
+                                                    onChange={(e) => setBrandPrimaryHex(e.target.value)}
+                                                    placeholder="#C4B0FF"
+                                                    className="w-full min-w-0 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-2.5 sm:py-3 text-foreground"
+                                                />
+                                                <div 
+                                                    className="size-9 sm:size-10 rounded-xl border border-white/20 shadow-md flex items-center justify-center text-xs font-black shrink-0"
+                                                    style={{ backgroundColor: brandPrimaryHex, color: "#000" }}
+                                                >
+                                                    Aa
+                                                </div>
                                             </div>
                                         </div>
                                     </SettingField>
 
                                     <SettingField label="Secondary Ambient Accent" icon={SlidersHorizontal} description="Used for gradients, glowing highlights, and secondary tags.">
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
                                             <button
                                                 type="button"
                                                 onClick={() => setIsSecondaryColorPickerOpen(true)}
-                                                className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl neumorphic-extruded border border-border/80 hover:border-primary/80 transition-all group cursor-pointer"
+                                                className="flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl neumorphic-extruded border border-border/80 hover:border-primary/80 transition-all group cursor-pointer shrink-0"
                                                 title="Open modern color picker"
                                             >
                                                 <span 
-                                                    className="size-6 rounded-lg shadow-sm border border-white/20 shrink-0 transition-transform group-hover:scale-105" 
+                                                    className="size-5 sm:size-6 rounded-lg shadow-sm border border-white/20 shrink-0 transition-transform group-hover:scale-105" 
                                                     style={{ backgroundColor: brandSecondaryHex }} 
                                                 />
                                                 <span className="font-mono text-xs font-black uppercase text-foreground">
                                                     {brandSecondaryHex}
                                                 </span>
-                                                <Pipette className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors ml-1" />
+                                                <Pipette className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors ml-0.5" />
                                             </button>
-                                            <input
-                                                type="text"
-                                                value={brandSecondaryHex}
-                                                onChange={(e) => setBrandSecondaryHex(e.target.value)}
-                                                placeholder="#06B6D4"
-                                                className="w-28 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-3 text-foreground"
-                                            />
-                                            <div 
-                                                className="size-10 rounded-xl border border-white/20 shadow-md flex items-center justify-center text-xs font-black text-white"
-                                                style={{ backgroundColor: brandSecondaryHex }}
-                                            >
-                                                Aa
+                                            <div className="flex items-center gap-2 flex-1 min-w-[130px]">
+                                                <input
+                                                    type="text"
+                                                    value={brandSecondaryHex}
+                                                    onChange={(e) => setBrandSecondaryHex(e.target.value)}
+                                                    placeholder="#06B6D4"
+                                                    className="w-full min-w-0 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-2.5 sm:py-3 text-foreground"
+                                                />
+                                                <div 
+                                                    className="size-9 sm:size-10 rounded-xl border border-white/20 shadow-md flex items-center justify-center text-xs font-black text-white shrink-0"
+                                                    style={{ backgroundColor: brandSecondaryHex }}
+                                                >
+                                                    Aa
+                                                </div>
                                             </div>
                                         </div>
                                     </SettingField>
@@ -1484,7 +1603,7 @@ export function LandlordSettings() {
                                         className="object-cover transition-transform duration-700 group-hover:scale-105"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
-                                    <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
+                                    <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 right-4 sm:right-6 flex flex-wrap items-end justify-between gap-2">
                                         <div>
                                             <span className="px-2.5 py-1 rounded-lg bg-primary/90 text-primary-foreground text-[10px] font-black uppercase tracking-widest">
                                                 Active Hero Header
@@ -1608,6 +1727,10 @@ export function LandlordSettings() {
             }
         };
 
+        if (isMobile) {
+            return <div>{renderSubContent()}</div>;
+        }
+
         return (
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
@@ -1638,7 +1761,7 @@ export function LandlordSettings() {
                 case "GCash":
                     return (
                         <GlassCard className="!p-0">
-                            <div className="p-8">
+                            <div className="p-4 sm:p-8">
                                 <BillingOperationsPanel 
                                     viewMode="gcash"
                                     propertyId={selectedPropertyId}
@@ -1668,7 +1791,7 @@ export function LandlordSettings() {
                                 ))}
                             </div>
                             <GlassCard className="!p-0">
-                                <div className="p-8">
+                                <div className="p-4 sm:p-8">
                                     <BillingOperationsPanel 
                                         viewMode="rates"
                                         utilityType={activeFinanceTab === "Water" ? "water" : "electricity"}
@@ -1681,6 +1804,29 @@ export function LandlordSettings() {
                 default: return null;
             }
         };
+
+        if (isMobile) {
+            return (
+                <div className="space-y-4">
+                    {activeSubTab !== "GCash" && (
+                        <div className="flex items-center gap-2 rounded-2xl neumorphic-panel p-2">
+                            <Building2 className="size-4 text-primary shrink-0 ml-1" />
+                            <select
+                                value={selectedPropertyId}
+                                onChange={(e) => setSelectedPropertyId(e.target.value)}
+                                className="bg-transparent text-xs font-black text-foreground outline-none flex-1 py-1 cursor-pointer"
+                            >
+                                <option value="all" className="bg-surface-1 text-foreground">All Properties</option>
+                                {properties.map(p => (
+                                    <option key={p.id} value={p.id} className="bg-surface-1 text-foreground">{p.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+                    {renderSubContent()}
+                </div>
+            );
+        }
 
         return (
             <motion.div 
@@ -1735,14 +1881,63 @@ export function LandlordSettings() {
         const renderSubContent = () => {
             switch (activeSubTab) {
                 case "Account":
+                    const passwordValidation = newPassword ? validatePassword(newPassword) : { isValid: false, error: "Password is required." };
+                    const handleUpdatePassword = async () => {
+                        setPasswordTouched(true);
+                        if (!passwordValidation.isValid) {
+                            toast.error(passwordValidation.error ?? "Please enter a valid password.");
+                            return;
+                        }
+                        if (!currentPassword) {
+                            toast.error("Please enter your current password.");
+                            return;
+                        }
+                        setIsUpdatingPassword(true);
+                        try {
+                            const { error } = await supabase.auth.updateUser({ password: newPassword });
+                            if (error) throw error;
+                            toast.success("Password updated successfully.");
+                            setCurrentPassword("");
+                            setNewPassword("");
+                            setPasswordTouched(false);
+                        } catch (err: any) {
+                            toast.error(err.message || "Failed to update password.");
+                        } finally {
+                            setIsUpdatingPassword(false);
+                        }
+                    };
+
                     return (
                         <GlassCard title="Change Password" description="Ensure your account is using a long, random password to stay secure.">
                             <div className="space-y-6 max-w-lg">
                                 <SettingField label="Current Password" icon={Key}>
-                                    <input type="password" placeholder="••••••••" className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none" />
+                                    <input 
+                                        type="password" 
+                                        placeholder="••••••••" 
+                                        value={currentPassword}
+                                        onChange={(e) => setCurrentPassword(e.target.value)}
+                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none" 
+                                    />
                                 </SettingField>
-                                <SettingField label="New Password" icon={Key}>
-                                    <input type="password" placeholder="••••••••" className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none" />
+                                <SettingField 
+                                    label="New Password" 
+                                    icon={Key}
+                                    error={passwordTouched && newPassword && !passwordValidation.isValid ? passwordValidation.error : undefined}
+                                    description="At least 8 characters with letters and numbers."
+                                >
+                                    <input 
+                                        type="password" 
+                                        placeholder="••••••••" 
+                                        value={newPassword}
+                                        onChange={(e) => {
+                                            setNewPassword(e.target.value);
+                                            setPasswordTouched(true);
+                                        }}
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                            passwordTouched && newPassword && !passwordValidation.isValid && "border border-destructive ring-1 ring-destructive/30"
+                                        )}
+                                    />
                                 </SettingField>
                                 
                                 {otpEnabled && (
@@ -1757,8 +1952,13 @@ export function LandlordSettings() {
                                     </motion.div>
                                 )}
 
-                                <button className="w-full rounded-2xl neumorphic-extruded py-3 text-sm font-black transition-all hover:text-primary">
-                                    {otpEnabled ? "Verify & Update" : "Update Password"}
+                                <button 
+                                    type="button"
+                                    onClick={handleUpdatePassword}
+                                    disabled={isUpdatingPassword || !newPassword || !passwordValidation.isValid || !currentPassword}
+                                    className="w-full rounded-2xl neumorphic-extruded py-3 text-sm font-black transition-all hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                    {isUpdatingPassword ? "Updating..." : (otpEnabled ? "Verify & Update" : "Update Password")}
                                 </button>
                             </div>
                         </GlassCard>
@@ -2070,6 +2270,10 @@ export function LandlordSettings() {
             }
         };
 
+        if (isMobile) {
+            return <div>{renderSubContent()}</div>;
+        }
+
         return (
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
@@ -2094,61 +2298,72 @@ export function LandlordSettings() {
         );
     };
 
-    const renderNotifications = () => (
-        <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-8"
-        >
-            <div>
-                <h2 className="text-3xl font-black text-foreground">Notifications</h2>
-                <p className="text-muted-foreground">Choose how and when you want to be alerted.</p>
-            </div>
-
-            <SubNav 
-                tabs={SUB_TABS.Notifications} 
-                activeTab={activeSubTab} 
-                onTabChange={setActiveSubTab} 
-            />
-
-            <div className="mt-8">
-                <GlassCard className="!p-0 overflow-hidden">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="border-b border-border/60 bg-surface-2/50">
-                                <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-muted-foreground">Activity Type</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">Email</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">Push</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">SMS</th>
+    const renderNotifications = () => {
+        const content = (
+            <GlassCard className="!p-0 overflow-hidden">
+                <table className="w-full text-left">
+                    <thead>
+                        <tr className="border-b border-border/60 bg-surface-2/50">
+                            <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-muted-foreground">Activity Type</th>
+                            <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">Email</th>
+                            <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">Push</th>
+                            <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">SMS</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/40">
+                        {[
+                            { label: "New Lease Applications", desc: "When a prospective tenant submits an application." },
+                            { label: "Maintenance Requests", desc: "Urgent notifications for unit repairs." },
+                            { label: "Payment Confirmations", desc: "When rent is successfully received." },
+                            { label: "Direct Messages", desc: "Messages from active or prospective tenants." },
+                            { label: "Expiring Leases", desc: "Alerts 30 and 60 days before a lease ends." },
+                            { label: "System Announcements", desc: "Platform updates and regulatory notices." }
+                        ].map((item, idx) => (
+                            <tr key={idx} className="hover:bg-surface-2/30 transition-colors">
+                                <td className="px-8 py-6">
+                                    <h4 className="text-sm font-black text-foreground">{item.label}</h4>
+                                    <p className="text-xs text-muted-foreground">{item.desc}</p>
+                                </td>
+                                <td className="px-4 py-6 text-center"><ToggleSwitch enabled={true} onToggle={() => {}} /></td>
+                                <td className="px-4 py-6 text-center"><ToggleSwitch enabled={true} onToggle={() => {}} /></td>
+                                <td className="px-4 py-6 text-center"><ToggleSwitch enabled={false} onToggle={() => {}} /></td>
                             </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/40">
-                            {[
-                                { label: "New Lease Applications", desc: "When a prospective tenant submits an application." },
-                                { label: "Maintenance Requests", desc: "Urgent notifications for unit repairs." },
-                                { label: "Payment Confirmations", desc: "When rent is successfully received." },
-                                { label: "Direct Messages", desc: "Messages from active or prospective tenants." },
-                                { label: "System Announcements", desc: "Product updates and platform news." },
-                            ].map((item) => (
-                                <tr key={item.label} className="transition-colors hover:bg-surface-2/50">
-                                    <td className="px-8 py-6">
-                                        <h4 className="text-sm font-black text-foreground">{item.label}</h4>
-                                        <p className="text-xs text-muted-foreground">{item.desc}</p>
-                                    </td>
-                                    <td className="px-4 py-6 text-center"><ToggleSwitch enabled={true} onToggle={() => {}} /></td>
-                                    <td className="px-4 py-6 text-center"><ToggleSwitch enabled={true} onToggle={() => {}} /></td>
-                                    <td className="px-4 py-6 text-center"><ToggleSwitch enabled={false} onToggle={() => {}} /></td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    <div className="flex items-center justify-end gap-3 border-t border-border/60 p-6 bg-surface-2/30">
-                        <button className="text-xs font-black text-muted-foreground hover:text-foreground transition-colors">Reset to Defaults</button>
-                    </div>
-                </GlassCard>
-            </div>
-        </motion.div>
-    );
+                        ))}
+                    </tbody>
+                </table>
+                <div className="flex items-center justify-end gap-3 border-t border-border/60 p-6 bg-surface-2/30">
+                    <button className="text-xs font-black text-muted-foreground hover:text-foreground transition-colors">Reset to Defaults</button>
+                </div>
+            </GlassCard>
+        );
+
+        if (isMobile) {
+            return content;
+        }
+
+        return (
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+            >
+                <div>
+                    <h2 className="text-3xl font-black text-foreground">Notifications</h2>
+                    <p className="text-muted-foreground">Choose how and when you want to be alerted.</p>
+                </div>
+
+                <SubNav 
+                    tabs={SUB_TABS.Notifications} 
+                    activeTab={activeSubTab} 
+                    onTabChange={setActiveSubTab} 
+                />
+
+                <div className="mt-8">
+                    {content}
+                </div>
+            </motion.div>
+        );
+    };
 
     const renderData = () => {
         const renderSubContent = () => {
@@ -2187,8 +2402,7 @@ export function LandlordSettings() {
                                         disabled={isResetting}
                                         className="mt-4 flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/5 px-6 py-3 text-sm font-black text-red-500 transition-all hover:bg-red-500/10 disabled:opacity-50"
                                     >
-                                        <RotateCcw className="size-4" /> 
-                                        {isResetting ? "Resetting…" : "Reset All Quests"}
+                                        <RotateCcw className="size-4" /> Reset Mastery Progress
                                     </button>
                                 </div>
                             </div>
@@ -2208,6 +2422,10 @@ export function LandlordSettings() {
                 default: return null;
             }
         };
+
+        if (isMobile) {
+            return <div>{renderSubContent()}</div>;
+        }
 
         return (
             <motion.div 
@@ -2233,6 +2451,70 @@ export function LandlordSettings() {
         );
     };
 
+    const renderPermitPreviewModal = () => {
+        if (!isPermitPreviewOpen || !profile?.business_permit_url) return null;
+
+        return (
+            <div 
+                className="fixed inset-0 z-[999] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200"
+                onClick={() => setIsPermitPreviewOpen(false)}
+            >
+                <div 
+                    className="relative max-w-3xl w-full max-h-[90vh] flex flex-col rounded-3xl neumorphic-panel overflow-hidden border border-white/20 shadow-2xl bg-surface/95"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {/* Modal Header */}
+                    <div className="flex items-center justify-between p-4 px-5 border-b border-border/60 bg-surface-2/60">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                <FileText className="size-4" />
+                            </div>
+                            <div className="min-w-0">
+                                <h3 className="text-sm font-black text-foreground truncate">Business Permit Document</h3>
+                                <p className="text-[11px] text-muted-foreground truncate">Official verification document</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => setIsPermitPreviewOpen(false)}
+                                className="flex size-9 items-center justify-center rounded-xl neumorphic-extruded text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+                                title="Close preview"
+                            >
+                                <X className="size-4" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Modal Image Body */}
+                    <div className="relative flex-1 min-h-[260px] max-h-[68vh] w-full flex items-center justify-center p-3 sm:p-6 bg-black/40 overflow-auto">
+                        <img
+                            src={profile.business_permit_url}
+                            alt="Business Permit Full Preview"
+                            className="max-h-[62vh] max-w-full object-contain rounded-2xl shadow-2xl border border-white/10"
+                        />
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="flex items-center justify-between p-3.5 px-5 border-t border-border/60 bg-surface-2/40 text-xs">
+                        <span className="text-muted-foreground text-[11px]">Tap outside or close to return</span>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setIsPermitPreviewOpen(false);
+                                permitInputRef.current?.click();
+                            }}
+                            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 font-bold transition-all text-xs cursor-pointer"
+                        >
+                            <UploadCloud className="size-3.5" />
+                            <span>Replace Document</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     const renderContent = () => {
         switch (activeTab) {
             case "Identity": return renderIdentity();
@@ -2245,6 +2527,118 @@ export function LandlordSettings() {
             default: return null;
         }
     };
+
+    if (isMobile) {
+        return (
+            <div className="space-y-4">
+                {/* Mobile Unsaved Changes Floating Banner */}
+                {isDirty && (
+                    <div className="sticky top-0 z-20 flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 backdrop-blur-xl shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="flex items-center gap-2 min-w-0 pl-1">
+                            <span className="size-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                            <span className="text-xs font-bold text-amber-600 dark:text-amber-400 truncate">You have unsaved changes</span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handleSaveAll}
+                            disabled={isSaving}
+                            className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-black text-primary-foreground uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer shrink-0"
+                        >
+                            <Save className="size-3.5" />
+                            <span>{isSaving ? "Saving…" : "Save Changes"}</span>
+                        </button>
+                    </div>
+                )}
+
+                {/* Main Category Dropdown Selector */}
+                <MobileSettingsCategoryDropdown
+                    items={SIDEBAR_ITEMS}
+                    activeTab={activeTab}
+                    onSelectTab={(id) => setActiveTab(id as SettingsCategory)}
+                />
+
+                {/* Sub-tabs Tab Strip (Horizontal Scrollable) */}
+                {SUB_TABS[activeTab] && SUB_TABS[activeTab].length > 1 && (
+                    <div className="-mx-4 px-4">
+                        <SubNav 
+                            tabs={SUB_TABS[activeTab]} 
+                            activeTab={activeSubTab} 
+                            onTabChange={setActiveSubTab} 
+                        />
+                    </div>
+                )}
+
+                {/* Content Area */}
+                <main className="min-w-0 pt-1">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={`${activeTab}-${activeSubTab}`}
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -6 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            {renderContent()}
+                        </motion.div>
+                    </AnimatePresence>
+                </main>
+
+                {isAvatarPickerOpen && (
+                    <AvatarPicker 
+                        key={avatarPickerKey}
+                        isOpen={isAvatarPickerOpen}
+                        onClose={() => setIsAvatarPickerOpen(false)}
+                        currentAvatarUrl={profile?.avatar_url || null}
+                        currentBgColor={profile?.avatar_bg_color || null}
+                        onProfileUpdate={handleAvatarPickerUpdate}
+                    />
+                )}
+
+                <ColorPickerModal
+                    isOpen={isPrimaryColorPickerOpen}
+                    onClose={() => setIsPrimaryColorPickerOpen(false)}
+                    title="Primary Brand Accent"
+                    subtitle="Used for primary buttons, active tabs, and key interactive elements"
+                    color={brandPrimaryHex}
+                    onChange={(newColor) => {
+                        setBrandPrimaryHex(newColor);
+                        applyBrandCssVariables(newColor, brandSecondaryHex);
+                    }}
+                />
+
+                <ColorPickerModal
+                    isOpen={isSecondaryColorPickerOpen}
+                    onClose={() => setIsSecondaryColorPickerOpen(false)}
+                    title="Secondary Ambient Tone"
+                    subtitle="Used for gradients, glowing highlights, and secondary tags"
+                    color={brandSecondaryHex}
+                    onChange={(newColor) => {
+                        setBrandSecondaryHex(newColor);
+                        applyBrandCssVariables(brandPrimaryHex, newColor);
+                    }}
+                />
+
+                <UnsavedChangesModal
+                    isOpen={isUnsavedModalOpen}
+                    onClose={() => setIsUnsavedModalOpen(false)}
+                    isSaving={isSaving}
+                    onConfirmDiscard={() => {
+                        setIsUnsavedModalOpen(false);
+                        router.push(isMobile ? "/mobile/landlord/profile" : "/landlord/dashboard");
+                    }}
+                    onSaveAndExit={async () => {
+                        const success = await handleSaveAll();
+                        if (success) {
+                            setIsUnsavedModalOpen(false);
+                            router.push(isMobile ? "/mobile/landlord/profile" : "/landlord/dashboard");
+                        }
+                    }}
+                />
+
+                {renderPermitPreviewModal()}
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-10">
@@ -2395,16 +2789,18 @@ export function LandlordSettings() {
                     isSaving={isSaving}
                     onConfirmDiscard={() => {
                         setIsUnsavedModalOpen(false);
-                        router.push("/landlord/dashboard");
+                        router.push(isMobile ? "/mobile/landlord/profile" : "/landlord/dashboard");
                     }}
                     onSaveAndExit={async () => {
                         const success = await handleSaveAll();
                         if (success) {
                             setIsUnsavedModalOpen(false);
-                            router.push("/landlord/dashboard");
+                            router.push(isMobile ? "/mobile/landlord/profile" : "/landlord/dashboard");
                         }
                     }}
                 />
+
+                {renderPermitPreviewModal()}
             </div>
         </div>
     );

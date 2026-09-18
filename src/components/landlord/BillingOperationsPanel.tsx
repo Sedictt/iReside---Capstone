@@ -24,7 +24,9 @@ import {
  ChevronDown,
  ChevronUp,
  HelpCircle,
- X
+ X,
+ AlertCircle,
+ Boxes
 } from "lucide-react";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import Image from "next/image";
@@ -32,6 +34,13 @@ import { m as motion, AnimatePresence } from "framer-motion";
 
 import type { BillingWorkspace } from "@/lib/billing/server";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import {
+ validateGCashNumber,
+ validateName,
+ sanitizeNumericInput,
+ validateRatePerUnit
+} from "@/lib/validation/client-validation";
 
 type UtilityConfigDraft = {
  localId: string;
@@ -186,6 +195,14 @@ export function BillingOperationsPanel({
  } = state;
 
  const [mounted, setMounted] = useState(false);
+ const [initialPayment, setInitialPayment] = useState<{
+ accountName: string;
+ accountNumber: string;
+ isEnabled: boolean;
+ } | null>(null);
+    const [initialConfigsJson, setInitialConfigsJson] = useState<string | null>(null);
+    const [viewingInventoryProperty, setViewingInventoryProperty] = useState<any | null>(null);
+
  useEffect(() => {
  setMounted(true);
  }, []);
@@ -233,6 +250,27 @@ export function BillingOperationsPanel({
  }
  }
  
+ const paymentDest = payload.paymentDestination as any;
+ setInitialPayment({
+ accountName: paymentDest?.account_name ?? "",
+ accountNumber: paymentDest?.account_number ?? "",
+ isEnabled: paymentDest?.is_enabled ?? true,
+ });
+ setInitialConfigsJson(
+ JSON.stringify(
+ seededConfigs.map((c) => ({
+ id: c.id,
+ pId: c.property_id,
+ uId: c.unit_id,
+ type: c.utility_type,
+ mode: c.billing_mode,
+ rate: c.rate_per_unit,
+ from: c.effective_from,
+ to: c.effective_to,
+ }))
+ )
+ );
+
  dispatch({ type: "SET_WORKSPACE", payload });
  dispatch({ type: "SET_CONFIGS", payload: seededConfigs });
  dispatch({ 
@@ -267,59 +305,143 @@ export function BillingOperationsPanel({
  dispatch({ type: "REMOVE_CONFIG", id: localId });
  }, []);
 
- const save = async () => {
- try {
- dispatch({ type: "SET_SAVING", payload: true });
- dispatch({ type: "SET_MESSAGE", payload: null });
- const formData = new FormData();
- formData.append("accountName", accountName);
- formData.append("accountNumber", accountNumber);
- formData.append("isEnabled", String(isEnabled));
- formData.append("removeQr", String(removeQr));
- formData.append(
- "utilityConfigs",
- JSON.stringify(
- configs.map((config) => ({
- id: config.id,
- property_id: config.property_id,
- unit_id: config.unit_id,
- utility_type: config.utility_type,
- billing_mode: config.billing_mode,
- rate_per_unit: config.rate_per_unit,
- unit_label: config.unit_label,
- is_active: config.is_active,
- effective_from: config.effective_from,
- effective_to: config.effective_to,
- note: config.note,
- })),
- ),
- );
- if (state.qrFile) formData.append("qr", state.qrFile);
+    const gcashNumberValidation = useMemo(() => {
+        if (!accountNumber) return { isValid: false, error: "GCash number is required." };
+        return validateGCashNumber(accountNumber);
+    }, [accountNumber]);
 
- const response = await fetch("/api/landlord/payment-settings", { method: "POST", body: formData });
- if (!response.ok) throw new Error();
- const payload = (await response.json()) as BillingWorkspace;
- 
- dispatch({ type: "SET_WORKSPACE", payload });
- dispatch({ 
- type: "UPDATE_PAYMENT", 
- payload: {
- qrFile: null,
- removeQr: false,
- qrPreview: (payload.paymentDestination as any)?.qr_image_url ?? null
- }
- });
- dispatch({ type: "SET_MESSAGE", payload: { type: "success", value: "Settings saved successfully." } });
- } catch {
- dispatch({ type: "SET_MESSAGE", payload: { type: "error", value: "Failed to save settings." } });
- } finally {
- dispatch({ type: "SET_SAVING", payload: false });
- }
- };
+    const accountNameValidation = useMemo(() => {
+        if (!accountName.trim()) return { isValid: false, error: "Account name is required." };
+        return validateName(accountName, "Account name");
+    }, [accountName]);
 
+    const isGCashValid = gcashNumberValidation.isValid && accountNameValidation.isValid;
 
+    const areRatesValid = useMemo(() => {
+        return configs.every(c => {
+            const isSub = c.billing_mode === "tenant_paid" && c.responsibility_mode === "landlord_bills";
+            if (isSub) {
+                return typeof c.rate_per_unit === "number" && !isNaN(c.rate_per_unit) && c.rate_per_unit > 0;
+            }
+            return true;
+        });
+    }, [configs]);
 
- if (loading) {
+    const save = async () => {
+        if (viewMode === "gcash" && !isGCashValid) {
+            toast.error(gcashNumberValidation.error ?? accountNameValidation.error ?? "Please fix GCash validation errors.");
+            return;
+        }
+        if (viewMode === "rates" && !areRatesValid) {
+            toast.error("Submetered utility rates must be greater than 0.");
+            return;
+        }
+        try {
+            dispatch({ type: "SET_SAVING", payload: true });
+            dispatch({ type: "SET_MESSAGE", payload: null });
+            const formData = new FormData();
+            formData.append("accountName", accountName);
+            formData.append("accountNumber", accountNumber);
+            formData.append("isEnabled", String(isEnabled));
+            formData.append("removeQr", String(removeQr));
+            formData.append(
+                "utilityConfigs",
+                JSON.stringify(
+                    configs.map((config) => ({
+                        id: config.id,
+                        property_id: config.property_id,
+                        unit_id: config.unit_id,
+                        utility_type: config.utility_type,
+                        billing_mode: config.billing_mode,
+                        rate_per_unit: config.rate_per_unit,
+                        unit_label: config.unit_label,
+                        is_active: config.is_active,
+                        effective_from: config.effective_from,
+                        effective_to: config.effective_to,
+                        note: config.note,
+                    })),
+                ),
+            );
+            if (state.qrFile) formData.append("qr", state.qrFile);
+
+            const response = await fetch("/api/landlord/payment-settings", { method: "POST", body: formData });
+            if (!response.ok) throw new Error();
+            const payload = (await response.json()) as BillingWorkspace;
+            
+            dispatch({ type: "SET_WORKSPACE", payload });
+            dispatch({ 
+                type: "UPDATE_PAYMENT", 
+                payload: {
+                    qrFile: null,
+                    removeQr: false,
+                    qrPreview: (payload.paymentDestination as any)?.qr_image_url ?? null
+                }
+            });
+            setInitialPayment({
+                accountName,
+                accountNumber,
+                isEnabled,
+            });
+            setInitialConfigsJson(
+                JSON.stringify(
+                    configs.map((c) => ({
+                        id: c.id,
+                        pId: c.property_id,
+                        uId: c.unit_id,
+                        type: c.utility_type,
+                        mode: c.billing_mode,
+                        rate: c.rate_per_unit,
+                        from: c.effective_from,
+                        to: c.effective_to,
+                    }))
+                )
+            );
+            dispatch({ type: "SET_MESSAGE", payload: { type: "success", value: "Settings saved successfully." } });
+            toast.success("Settings saved successfully.");
+        } catch {
+            dispatch({ type: "SET_MESSAGE", payload: { type: "error", value: "Failed to save settings." } });
+            toast.error("Failed to save settings.");
+        } finally {
+            dispatch({ type: "SET_SAVING", payload: false });
+        }
+    };
+
+    const currentConfigsJson = useMemo(() => {
+        return JSON.stringify(
+            configs.map((c) => ({
+                id: c.id,
+                pId: c.property_id,
+                uId: c.unit_id,
+                type: c.utility_type,
+                mode: c.billing_mode,
+                rate: c.rate_per_unit,
+                from: c.effective_from,
+                to: c.effective_to,
+            }))
+        );
+    }, [configs]);
+
+    const hasGCashChanges = useMemo(() => {
+        if (!initialPayment) return false;
+        return (
+            accountName.trim() !== initialPayment.accountName.trim() ||
+            accountNumber.trim() !== initialPayment.accountNumber.trim() ||
+            isEnabled !== initialPayment.isEnabled ||
+            state.qrFile !== null ||
+            state.removeQr === true
+        );
+    }, [initialPayment, accountName, accountNumber, isEnabled, state.qrFile, state.removeQr]);
+
+    const hasRateChanges = useMemo(() => {
+        if (!initialConfigsJson) return false;
+        return currentConfigsJson !== initialConfigsJson;
+    }, [initialConfigsJson, currentConfigsJson]);
+
+    const isCurrentValid = viewMode === "gcash" ? isGCashValid : areRatesValid;
+    const hasChanges = viewMode === "gcash" ? hasGCashChanges : hasRateChanges;
+    const pendingChangesCount = configs.length;
+
+    if (loading) {
  return (
  <div className="flex h-64 flex-col items-center justify-center space-y-4 rounded-3xl neumorphic-panel">
  <Loader2 className="size-8 animate-spin text-primary" />
@@ -329,8 +451,6 @@ export function BillingOperationsPanel({
  }
 
  if (!workspace) return null;
-
- const pendingChangesCount = configs.length;
 
  return (
  <div className="space-y-12">
@@ -472,9 +592,113 @@ export function BillingOperationsPanel({
  </motion.div>
  </div>
  )}
+
+
+					{/* Unit Inventory Modal */}
+					{viewingInventoryProperty && (
+						<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
+							<motion.div
+								initial={{ opacity: 0, scale: 0.95, y: 10 }}
+								animate={{ opacity: 1, scale: 1, y: 0 }}
+								exit={{ opacity: 0, scale: 0.95, y: 10 }}
+								className="w-full max-w-lg rounded-3xl neumorphic-panel p-5 sm:p-7 space-y-5 max-h-[85vh] flex flex-col shadow-2xl overflow-hidden border border-border/60 bg-card"
+							>
+								<div className="flex items-center justify-between pb-3 border-b border-border/40">
+									<div className="flex items-center gap-3 min-w-0">
+										<div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+											<Boxes className="size-5" />
+										</div>
+										<div className="min-w-0">
+											<h3 className="text-base sm:text-lg font-black text-foreground truncate">
+												{viewingInventoryProperty.name}
+											</h3>
+											<p className="text-xs text-muted-foreground font-semibold">
+												Unit Inventory & Status ({viewingInventoryProperty.units?.length ?? 0} {viewingInventoryProperty.units?.length === 1 ? 'unit' : 'units'})
+											</p>
+										</div>
+									</div>
+									<button
+										type="button"
+										onClick={() => setViewingInventoryProperty(null)}
+										className="size-8 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground transition-colors shrink-0"
+										aria-label="Close modal"
+									>
+										<X className="size-4" />
+									</button>
+								</div>
+
+								<div className="flex-1 overflow-y-auto pr-1 space-y-2.5 min-h-[140px] max-h-[50vh]">
+									{!viewingInventoryProperty.units || viewingInventoryProperty.units.length === 0 ? (
+										<div className="text-center py-8 text-muted-foreground">
+											<Building2 className="size-10 mx-auto mb-2 opacity-30" />
+											<p className="text-sm font-semibold">No units registered for this property yet.</p>
+											<p className="text-xs opacity-70 mt-1">Add units in Property Management to configure rates and utilities.</p>
+										</div>
+									) : (
+										viewingInventoryProperty.units.map((unit: any) => {
+											const activeLease = workspace?.activeLeases?.find(
+												(l) => l.unit?.id === unit.id || (l as any).unit_id === unit.id
+											);
+											const isOccupied = unit.status === 'occupied' || !!activeLease;
+											const isMaintenance = unit.status === 'maintenance';
+
+											return (
+												<div
+													key={unit.id}
+													className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-muted/40 border border-border/40 hover:bg-muted/70 transition-colors gap-3"
+												>
+													<div className="space-y-1 min-w-0">
+														<div className="flex items-center gap-2 flex-wrap">
+															<span className="font-bold text-sm text-foreground">{unit.name}</span>
+															<span
+																className={cn(
+																	"text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider",
+																	isOccupied
+																		? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+																		: isMaintenance
+																		? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+																		: "bg-sky-500/10 text-sky-600 dark:text-sky-400"
+																)}
+															>
+																{isOccupied ? "Occupied" : isMaintenance ? "Maintenance" : "Vacant"}
+															</span>
+														</div>
+														{activeLease?.tenant?.full_name ? (
+															<p className="text-xs text-muted-foreground truncate">
+																Tenant: <span className="font-semibold text-foreground/80">{activeLease.tenant.full_name}</span>
+															</p>
+														) : (
+															<p className="text-[11px] text-muted-foreground/60">No active lease</p>
+														)}
+													</div>
+
+													<div className="text-right shrink-0">
+														<span className="text-xs sm:text-sm font-black text-foreground">
+															₱{Number(activeLease?.monthly_rent ?? unit.rent_amount ?? 0).toLocaleString()}
+														</span>
+														<span className="text-[10px] text-muted-foreground block">/mo</span>
+													</div>
+												</div>
+											);
+										})
+									)}
+								</div>
+
+								<div className="pt-3 border-t border-border/40">
+									<button
+										type="button"
+										onClick={() => setViewingInventoryProperty(null)}
+										className="w-full py-2.5 sm:py-3 rounded-xl border border-border/60 hover:bg-muted text-xs font-bold text-muted-foreground transition-all cursor-pointer text-center"
+									>
+										Close
+									</button>
+								</div>
+							</motion.div>
+						</div>
+					)}
  </AnimatePresence>
- {/* Collapsible Sticky Action Footer */}
- <div className="fixed -bottom-4 left-0 right-0 z-50 flex justify-center pointer-events-none">
+ {/* Collapsible Sticky Action Footer (Desktop only) */}
+ <div className="hidden md:flex fixed bottom-6 left-0 right-0 z-40 justify-center pointer-events-none">
  <motion.div 
  layout
  initial={false}
@@ -509,12 +733,21 @@ export function BillingOperationsPanel({
  <div className="h-8 w-px bg-border hidden md:block" />
  <button
  onClick={save}
- disabled={saving}
- className="group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl neumorphic-primary px-8 py-3.5 text-sm font-black transition-all hover:scale-[1.05] active:scale-95 disabled:opacity-50"
+ disabled={saving || !hasChanges || !isCurrentValid}
+ className={cn(
+ "group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl px-8 py-3.5 text-sm font-black transition-all",
+ hasChanges && isCurrentValid && !saving
+ ? "neumorphic-primary hover:scale-[1.05] active:scale-95 cursor-pointer"
+ : "opacity-40 cursor-not-allowed bg-muted text-muted-foreground"
+ )}
  >
  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
  {saving ? <Loader2 className="size-5 animate-spin" /> : <Save className="size-5" />}
- Confirm Changes
+ {saving
+ ? "Saving..."
+ : hasChanges && !isCurrentValid
+ ? "Fix Errors to Save"
+ : "Confirm Changes"}
  </button>
  <button 
  onClick={() => dispatch({ type: 'SET_FOOTER_EXPANDED', payload: false })}
@@ -573,20 +806,41 @@ export function BillingOperationsPanel({
  </div>
 
  <div className="grid gap-6 md:grid-cols-2">
- <Field label="Account Name">
+ <Field 
+ label="Account Name"
+ error={accountName && !accountNameValidation.isValid ? accountNameValidation.error : undefined}
+ >
  <input
  value={accountName}
  placeholder="e.g. Juan Dela Cruz"
  onChange={(event) => dispatch({ type: 'UPDATE_PAYMENT', payload: { accountName: event.target.value } })}
- className="w-full rounded-xl neumorphic-inset dark:bg-white/[0.03] px-4 py-3 text-sm font-black text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
+ className={cn(
+ "w-full rounded-xl neumorphic-inset dark:bg-white/[0.03] px-4 py-3 text-sm font-black text-foreground outline-none transition-all focus:ring-2",
+ accountName && !accountNameValidation.isValid
+ ? "border border-destructive focus:ring-destructive/20"
+ : "focus:border-primary focus:ring-primary/10"
+ )}
  />
  </Field>
- <Field label="GCash Number">
+ <Field 
+ label="GCash Number"
+ error={accountNumber && !gcashNumberValidation.isValid ? gcashNumberValidation.error : undefined}
+ >
  <input
  value={accountNumber}
  placeholder="0917 XXX XXXX"
- onChange={(event) => dispatch({ type: 'UPDATE_PAYMENT', payload: { accountNumber: event.target.value } })}
- className="w-full rounded-xl neumorphic-inset dark:bg-white/[0.03] px-4 py-3 text-sm font-black text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
+ maxLength={11}
+ inputMode="numeric"
+ onChange={(event) => {
+ const sanitized = sanitizeNumericInput(event.target.value, 11);
+ dispatch({ type: 'UPDATE_PAYMENT', payload: { accountNumber: sanitized } });
+ }}
+ className={cn(
+ "w-full rounded-xl neumorphic-inset dark:bg-white/[0.03] px-4 py-3 text-sm font-black text-foreground outline-none transition-all focus:ring-2",
+ accountNumber && !gcashNumberValidation.isValid
+ ? "border border-destructive focus:ring-destructive/20"
+ : "focus:border-primary focus:ring-primary/10"
+ )}
  />
  </Field>
  </div>
@@ -642,6 +896,35 @@ export function BillingOperationsPanel({
  </motion.button>
  )}
  </AnimatePresence>
+
+ <div className="mt-8 pt-6 border-t border-border/60">
+ <button
+ type="button"
+ onClick={save}
+ disabled={saving || !hasGCashChanges || !isGCashValid}
+ className={cn(
+ "w-full flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-2xl text-sm font-black transition-all",
+ hasGCashChanges && isGCashValid && !saving
+ ? "neumorphic-primary hover:scale-[1.01] active:scale-95 cursor-pointer shadow-md shadow-primary/20"
+ : "bg-surface-2 text-muted-foreground/40 border border-border/40 cursor-not-allowed select-none"
+ )}
+ >
+ {saving ? (
+ <Loader2 className="size-5 animate-spin" />
+ ) : hasGCashChanges && isGCashValid ? (
+ <Save className="size-5" />
+ ) : (
+ <CheckCircle2 className="size-5 opacity-40" />
+ )}
+ {saving
+ ? "Saving Changes..."
+ : hasGCashChanges && !isGCashValid
+ ? "Fix Errors to Save"
+ : hasGCashChanges
+ ? "Save GCash Settings"
+ : "Saved (No Changes)"}
+ </button>
+ </div>
  </div>
  </div>
 
@@ -687,42 +970,44 @@ export function BillingOperationsPanel({
  .map(property => (
  <div key={property.id} className="space-y-8">
  {/* Property Header */}
- <div className="relative group overflow-hidden rounded-[2.5rem] neumorphic-panel p-10 transition-all dark:bg-white/[0.01]">
- <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
- <Building2 className="size-40" />
- </div>
+					<div className="relative group overflow-hidden rounded-3xl neumorphic-panel p-5 sm:p-7 md:p-8 transition-all dark:bg-white/[0.01]">
+						<div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity pointer-events-none">
+							<Building2 className="size-32 sm:size-40" />
+						</div>
 
- <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
- <div className="flex items-center gap-6">
- <div className="size-16 flex items-center justify-center rounded-[1.25rem] neumorphic-inset text-foreground ">
- <Building2 className="size-8" />
- </div>
- <div className="space-y-1">
- <h4 className="text-2xl font-black text-foreground">{property.name}</h4>
- <div className="flex items-center gap-3">
- <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md neumorphic-inset text-[10px] font-black text-muted-foreground uppercase tracking-widest">
- <Target className="size-3" />
- {property.units.length} Units Active
- </span>
- <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 text-[10px] font-black text-emerald-600 uppercase tracking-widest">
- <ShieldCheck className="size-3" />
- Verified
- </span>
- </div>
- </div>
- </div>
- <div className="flex items-center gap-2">
- <button className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:neumorphic-inset transition-all">
- View Inventory
- </button>
- <button className="size-12 flex items-center justify-center rounded-xl hover:neumorphic-inset transition-colors neumorphic-panel">
- <MoreHorizontal className="size-5 text-muted-foreground" />
- </button>
- </div>
- </div>
- </div>
+						<div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
+							<div className="flex items-center gap-4 sm:gap-6 min-w-0">
+								<div className="size-12 sm:size-16 flex items-center justify-center rounded-2xl neumorphic-inset text-foreground shrink-0">
+									<Building2 className="size-6 sm:size-8 text-primary" />
+								</div>
+								<div className="space-y-1 min-w-0">
+									<h4 className="text-xl sm:text-2xl font-black text-foreground truncate">{property.name}</h4>
+									<div className="flex flex-wrap items-center gap-2">
+										<span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md neumorphic-inset text-[10px] font-black text-muted-foreground uppercase tracking-wider">
+											<Target className="size-3 text-primary" />
+											{property.units.length} Units Active
+										</span>
+										<span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+											<ShieldCheck className="size-3" />
+											Verified
+										</span>
+									</div>
+								</div>
+							</div>
+							<div className="flex items-center gap-2 shrink-0">
+								<button 
+									type="button"
+									onClick={() => setViewingInventoryProperty(property)}
+									className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border/60 hover:border-primary/40 bg-card hover:bg-muted text-xs font-bold text-foreground transition-all shadow-sm active:scale-95 cursor-pointer"
+								>
+									<Boxes className="size-3.5 text-primary shrink-0" />
+									<span>View Inventory</span>
+								</button>
+							</div>
+						</div>
+					</div>
 
- {/* Utility Grid */}
+					{/* Utility Grid */}
  <div className={cn(
  "grid grid-cols-1 gap-8",
  !utilityType && "lg:grid-cols-2"
@@ -736,29 +1021,26 @@ export function BillingOperationsPanel({
 
  return (
  <div key={type} className="flex flex-col gap-6">
- <div className="flex items-center justify-between px-2">
- <div className={cn("flex items-center gap-3 px-4 py-2 rounded-2xl border text-sm font-black uppercase tracking-wider ", meta.tint, meta.bg, meta.border)}>
- <meta.icon className="size-4" />
- {meta.label} Management
- </div>
- <button
- onClick={() => addOverride(property.id, type)}
- className="group inline-flex items-center gap-2 text-xs font-black text-primary hover:text-primary/80 transition-all"
- >
- <div className="size-8 flex items-center justify-center rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-all">
- <Plus className="size-4" />
- </div>
- Set Unit-Specific Rule
- </button>
- </div>
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 sm:px-2">
+									<div className={cn("inline-flex items-center gap-2.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl border text-xs sm:text-sm font-black uppercase tracking-wider w-fit", meta.tint, meta.bg, meta.border)}>
+										<meta.icon className="size-4 shrink-0" />
+										<span>{meta.label} Management</span>
+									</div>
+									<button
+										type="button"
+										onClick={() => addOverride(property.id, type)}
+										className="group inline-flex items-center gap-2 text-xs font-black text-primary hover:text-primary/80 transition-all self-start sm:self-auto cursor-pointer"
+									>
+										<div className="size-7 sm:size-8 flex items-center justify-center rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-all shrink-0">
+											<Plus className="size-3.5 sm:size-4" />
+										</div>
+										<span>Set Unit-Specific Rule</span>
+									</button>
+								</div>
 
- {/* Default Logic */}
- <div className="space-y-4">
- <div className="flex items-center gap-2 pl-4">
- <div className="size-1.5 rounded-full bg-primary" />
- <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Property Default</span>
- </div>
- <UtilityConfigEditor
+								{/* Default Logic */}
+								<div className="space-y-4">
+									<UtilityConfigEditor
  config={baseConfig}
  units={property.units}
  isOverride={false}
@@ -849,6 +1131,34 @@ export function BillingOperationsPanel({
  </div>
  </div>
  ))}
+ <div className="pt-6 border-t border-border/60 flex justify-end">
+ <button
+ type="button"
+ onClick={save}
+ disabled={saving || !hasRateChanges || !areRatesValid}
+ className={cn(
+ "w-full sm:w-auto flex items-center justify-center gap-2.5 py-3.5 px-8 rounded-2xl text-sm font-black transition-all",
+ hasRateChanges && areRatesValid && !saving
+ ? "neumorphic-primary hover:scale-[1.01] active:scale-95 cursor-pointer shadow-md shadow-primary/20"
+ : "bg-surface-2 text-muted-foreground/40 border border-border/40 cursor-not-allowed select-none"
+ )}
+ >
+ {saving ? (
+ <Loader2 className="size-5 animate-spin" />
+ ) : hasRateChanges && areRatesValid ? (
+ <Save className="size-5" />
+ ) : (
+ <CheckCircle2 className="size-5 opacity-40" />
+ )}
+ {saving
+ ? "Saving Changes..."
+ : hasRateChanges && !areRatesValid
+ ? "Fix Rates to Save"
+ : hasRateChanges
+ ? "Save Utility Rates"
+ : "Saved (No Changes)"}
+ </button>
+ </div>
  </section>
  )}
  </div>
@@ -856,31 +1166,39 @@ export function BillingOperationsPanel({
 }
 
 function Field({ 
- label, 
- children,
- onHelp
+    label, 
+    children,
+    onHelp,
+    error
 }: { 
- label: string; 
- children: ReactNode;
- onHelp?: () => void;
+    label: string; 
+    children: ReactNode;
+    onHelp?: () => void;
+    error?: string;
 }) {
- return (
- <div className="block space-y-2">
- <div className="flex items-center gap-2 pl-1">
- <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{label}</span>
- {onHelp && (
- <button 
- type="button"
- onClick={onHelp}
- className="text-muted-foreground/40 hover:text-primary transition-colors"
- >
- <HelpCircle className="size-3" />
- </button>
- )}
- </div>
- {children}
- </div>
- );
+    return (
+        <div className="block space-y-2">
+            <div className="flex items-center gap-2 pl-1">
+                <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{label}</span>
+                {onHelp && (
+                    <button 
+                        type="button"
+                        onClick={onHelp}
+                        className="text-muted-foreground/40 hover:text-primary transition-colors"
+                    >
+                        <HelpCircle className="size-3" />
+                    </button>
+                )}
+            </div>
+            {children}
+            {error && (
+                <p className="px-1 text-xs font-semibold text-destructive flex items-center gap-1.5 mt-1" role="alert">
+                    <AlertCircle className="size-3.5 shrink-0" />
+                    <span>{error}</span>
+                </p>
+            )}
+        </div>
+    );
 }
 
 function UtilityConfigEditor({
@@ -912,9 +1230,7 @@ function UtilityConfigEditor({
  return (
  <div className={cn(
  "group rounded-3xl transition-all relative overflow-hidden",
- isOverride 
- ? "neumorphic-panel dark:border-amber-500/20 p-6" 
- : "neumorphic-panel p-8"
+ isOverride ? "neumorphic-panel dark:border-amber-500/20 p-4 sm:p-6" : "neumorphic-panel p-4 sm:p-6 md:p-8"
  )}>
  {/* Decorative Watermark */}
  <div className={cn(
@@ -988,45 +1304,48 @@ function UtilityConfigEditor({
  label="Billing Strategy"
  onHelp={onHelp}
  >
- <div className="grid grid-cols-3 gap-1 rounded-2xl neumorphic-inset p-1">
- <button 
- onClick={() => onChange(config.localId, { billing_mode: "included_in_rent", responsibility_mode: "landlord_bills" })}
- className={cn(
- "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all",
- strategy === "included" 
- ? "neumorphic-primary scale-[1.02]" 
- : "text-muted-foreground hover:neumorphic-inset"
- )}
- >
- {strategy === "included" && <CheckCircle2 className="size-3" />}
- Included
- </button>
- <button 
- onClick={() => onChange(config.localId, { billing_mode: "tenant_paid", responsibility_mode: "landlord_bills" })}
- className={cn(
- "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all",
- strategy === "submetered" 
- ? "neumorphic-primary scale-[1.02]" 
- : "text-muted-foreground hover:neumorphic-inset"
- )}
- >
- {strategy === "submetered" && <CheckCircle2 className="size-3" />}
- Submetered
- </button>
- <button 
- onClick={() => onChange(config.localId, { billing_mode: "tenant_paid", responsibility_mode: "tenant_direct" })}
- className={cn(
- "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all",
- strategy === "direct" 
- ? "neumorphic-primary scale-[1.02]" 
- : "text-muted-foreground hover:neumorphic-inset"
- )}
- >
- {strategy === "direct" && <CheckCircle2 className="size-3" />}
- Direct
- </button>
- </div>
- </Field>
+ <div className="grid grid-cols-3 gap-1.5 rounded-2xl neumorphic-inset p-1 sm:p-1.5">
+							<button 
+								type="button"
+								onClick={() => onChange(config.localId, { billing_mode: "included_in_rent", responsibility_mode: "landlord_bills" })}
+								className={cn(
+									"relative z-10 flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl py-2.5 sm:py-3 px-1 sm:px-2 text-[10px] sm:text-xs font-black uppercase tracking-tight sm:tracking-wider transition-all min-w-0 cursor-pointer",
+									strategy === "included" 
+										? "neumorphic-primary text-white" 
+										: "text-muted-foreground hover:neumorphic-inset"
+								)}
+							>
+								{strategy === "included" && <CheckCircle2 className="size-3 shrink-0" />}
+								<span className="truncate">Included</span>
+							</button>
+							<button 
+								type="button"
+								onClick={() => onChange(config.localId, { billing_mode: "tenant_paid", responsibility_mode: "landlord_bills" })}
+								className={cn(
+									"relative z-10 flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl py-2.5 sm:py-3 px-1 sm:px-2 text-[10px] sm:text-xs font-black uppercase tracking-tight sm:tracking-wider transition-all min-w-0 cursor-pointer",
+									strategy === "submetered" 
+										? "neumorphic-primary text-white" 
+										: "text-muted-foreground hover:neumorphic-inset"
+								)}
+							>
+								{strategy === "submetered" && <CheckCircle2 className="size-3 shrink-0" />}
+								<span className="truncate">Submetered</span>
+							</button>
+							<button 
+								type="button"
+								onClick={() => onChange(config.localId, { billing_mode: "tenant_paid", responsibility_mode: "tenant_direct" })}
+								className={cn(
+									"relative z-10 flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl py-2.5 sm:py-3 px-1 sm:px-2 text-[10px] sm:text-xs font-black uppercase tracking-tight sm:tracking-wider transition-all min-w-0 cursor-pointer",
+									strategy === "direct" 
+										? "neumorphic-primary text-white" 
+										: "text-muted-foreground hover:neumorphic-inset"
+								)}
+							>
+								{strategy === "direct" && <CheckCircle2 className="size-3 shrink-0" />}
+								<span className="truncate">Direct</span>
+							</button>
+						</div>
+					</Field>
  </div>
  </div>
 
@@ -1049,32 +1368,43 @@ function UtilityConfigEditor({
 
  <div className={cn(
  "grid gap-6 sm:grid-cols-2 rounded-3xl neumorphic-panel dark:border-primary/10 dark:bg-primary/[0.02] relative overflow-hidden",
- isOverride ? "p-6" : "p-8"
+ isOverride ? "p-4 sm:p-6" : "p-4 sm:p-6 md:p-8"
  )}>
  <div className="absolute top-0 right-0 p-4 opacity-[0.03] grayscale">
  <DollarSign className="size-20" />
  </div>
  
- <Field label="Rate per Unit">
- <div className="relative group">
- <span className={cn(
- "absolute top-1/2 -translate-y-1/2 font-black text-primary/40 transition-colors group-focus-within:text-primary",
- isOverride ? "left-4 text-base" : "left-5 text-lg"
- )}>₱</span>
- <input 
- type="number" 
- step="0.01"
- value={config.rate_per_unit}
- onChange={(e) => onChange(config.localId, { rate_per_unit: parseFloat(e.target.value) })}
- className={cn(
- "w-full rounded-2xl neumorphic-panel font-black tracking-tight text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/5",
- isOverride ? "h-12 pl-8 pr-4 text-lg" : "h-16 pl-10 pr-4 text-2xl"
- )}
- />
- <div className={cn("absolute top-1/2 -translate-y-1/2 flex flex-col items-end", isOverride ? "right-4" : "right-5")}>
- <span className="text-[10px] font-black text-primary uppercase tracking-widest">{config.utility_type === "water" ? "m³" : "kWh"}</span>
- </div>
- </div>
+ <Field 
+     label="Rate per Unit"
+     error={isSubmetered && (isNaN(config.rate_per_unit) || config.rate_per_unit <= 0) ? "Rate must be greater than 0" : undefined}
+ >
+     <div className="relative group">
+         <span className={cn(
+             "absolute top-1/2 -translate-y-1/2 font-black text-primary/40 transition-colors group-focus-within:text-primary",
+             isOverride ? "left-4 text-base" : "left-5 text-lg"
+         )}>₱</span>
+         <input 
+             type="number" 
+             step="0.01"
+             min="0"
+             value={config.rate_per_unit}
+             onChange={(e) => {
+                 const raw = e.target.value;
+                 const val = raw === "" ? 0 : parseFloat(raw);
+                 if (!isNaN(val) && val >= 0) {
+                     onChange(config.localId, { rate_per_unit: val });
+                 }
+             }}
+             className={cn(
+                 "w-full rounded-2xl neumorphic-panel font-black tracking-tight text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/5",
+                 isOverride ? "h-11 sm:h-12 pl-8 pr-4 text-base sm:text-lg" : "h-12 sm:h-14 md:h-16 pl-9 sm:pl-10 pr-4 text-xl sm:text-2xl",
+                 isSubmetered && (isNaN(config.rate_per_unit) || config.rate_per_unit <= 0) && "border border-destructive focus:ring-destructive/20"
+             )}
+         />
+                                        <div className={cn("absolute top-1/2 -translate-y-1/2 flex flex-col items-end", isOverride ? "right-4" : "right-5")}>
+             <span className="text-[10px] font-black text-primary uppercase tracking-widest">{config.utility_type === "water" ? "m³" : "kWh"}</span>
+         </div>
+     </div>
  </Field>
  
  <Field label="Start Date">
@@ -1082,7 +1412,7 @@ function UtilityConfigEditor({
  {/* Custom UI Trigger */}
  <div className={cn(
  "flex items-center gap-4 w-full rounded-2xl neumorphic-panel font-black text-foreground transition-all group-focus-within:border-primary group-focus-within:ring-4 group-focus-within:ring-primary/5",
- isOverride ? "h-12 px-4" : "h-16 px-5"
+ isOverride ? "h-11 sm:h-12 px-3 sm:px-4" : "h-12 sm:h-14 md:h-16 px-4 sm:px-5"
  )}>
  <Calendar className={cn(
  "text-muted-foreground/30 transition-colors group-focus-within:text-primary shrink-0",

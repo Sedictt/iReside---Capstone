@@ -30,11 +30,18 @@ import {
     X,
     Palette,
     Contrast,
+    AlertCircle
 } from "lucide-react";
 
 import { useState, useEffect, useRef, useReducer } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import {
+    validateName,
+    validatePhoneNumber,
+    validatePassword,
+    sanitizeNumericInput
+} from "@/lib/validation/client-validation";
 import { useAuth } from "@/hooks/useAuth";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
 import { AvatarPicker } from "@/components/profile/AvatarPicker";
@@ -45,6 +52,7 @@ import { parseUserAgent } from "@/lib/utils/device-parser";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { useHighContrast } from "@/hooks/useHighContrast";
 import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
+import { MobileSettingsCategoryDropdown } from "@/components/mobile/shared/MobileSettingsCategoryDropdown";
 
 // --- Types ---
 type SettingsCategory = "Identity" | "Accessibility" | "Security" | "Notifications" | "Billing" | "Data";
@@ -101,17 +109,29 @@ function GlassCard({ children, className, title, description }: { children: Reac
     return (
         <div className={cn("relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/[0.03] backdrop-blur-xl transition-all duration-500 hover:bg-white/[0.05]", className)}>
             {(title || description) && (
-                <div className="border-b border-white/5 px-8 py-6">
+                <div className="border-b border-white/5 px-4 py-3.5 sm:px-8 sm:py-6">
                     {title && <h3 className="text-lg font-black text-white">{title}</h3>}
                     {description && <p className="text-sm text-neutral-400">{description}</p>}
                 </div>
             )}
-            <div className="p-8">{children}</div>
+            <div className="p-4 sm:p-8">{children}</div>
         </div>
     );
 }
 
-function SettingField({ label, children, description, icon: Icon }: { label: string; children: React.ReactNode; description?: string; icon?: any }) {
+function SettingField({ 
+    label, 
+    children, 
+    description, 
+    icon: Icon,
+    error
+}: { 
+    label: string; 
+    children: React.ReactNode; 
+    description?: string; 
+    icon?: any;
+    error?: string;
+}) {
     return (
         <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
@@ -119,7 +139,14 @@ function SettingField({ label, children, description, icon: Icon }: { label: str
                 <label className="text-xs font-black uppercase tracking-wider text-neutral-400">{label}</label>
             </div>
             {children}
-            {description && <p className="px-1 text-xs text-neutral-500">{description}</p>}
+            {error ? (
+                <p className="px-1 text-xs font-semibold text-destructive flex items-center gap-1.5 mt-1" role="alert">
+                    <AlertCircle className="size-3.5 shrink-0" />
+                    <span>{error}</span>
+                </p>
+            ) : description ? (
+                <p className="px-1 text-xs text-neutral-500">{description}</p>
+            ) : null}
         </div>
     );
 }
@@ -171,7 +198,7 @@ function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: s
 
 // --- Main Component ---
 
-export function TenantSettings() {
+export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}) {
     const router = useRouter();
     const { profile, loading, refreshProfile } = useAuth();
     const supabase = createClient();
@@ -188,7 +215,7 @@ export function TenantSettings() {
         Security: ["Account", "Protection", "Sessions"],
         Notifications: ["Alerts"],
         Billing: ["Payment Methods", "History"],
-        Data: ["Export", "Danger"],
+        Data: ["Export"],
     };
 
     const { isHighContrast, toggleHighContrast } = useHighContrast();
@@ -354,6 +381,35 @@ export function TenantSettings() {
 
     const handleSaveProfile = async () => {
         if (!profile) return;
+
+        const nameVal = validateName(formData.full_name, "Full Name");
+        if (!nameVal.isValid) {
+            toast.error(nameVal.error ?? "Please enter a valid full name.");
+            return;
+        }
+
+        const phoneVal = validatePhoneNumber(formData.phone, false);
+        if (!phoneVal.isValid) {
+            toast.error(phoneVal.error ?? "Please enter a valid phone number.");
+            return;
+        }
+
+        if (formData.emergency_phone) {
+            const emergencyPhoneVal = validatePhoneNumber(formData.emergency_phone, false);
+            if (!emergencyPhoneVal.isValid) {
+                toast.error(emergencyPhoneVal.error ?? "Please enter a valid emergency contact phone number.");
+                return;
+            }
+        }
+
+        if (formData.emergency_name) {
+            const emergencyNameVal = validateName(formData.emergency_name, "Emergency contact name");
+            if (!emergencyNameVal.isValid) {
+                toast.error(emergencyNameVal.error ?? "Please enter a valid emergency contact name.");
+                return;
+            }
+        }
+
         setIsSaving(true);
         try {
             const { error } = await supabase
@@ -399,8 +455,9 @@ export function TenantSettings() {
             setPasswordError("Please enter your current password.");
             return;
         }
-        if (newPassword.length < 6) {
-            setPasswordError("New password must be at least 6 characters.");
+        const passwordValidation = validatePassword(newPassword);
+        if (!passwordValidation.isValid) {
+            setPasswordError(passwordValidation.error ?? "Password does not meet complexity requirements.");
             return;
         }
         if (newPassword !== confirmPassword) {
@@ -508,12 +565,20 @@ export function TenantSettings() {
                     return (
                         <GlassCard title="Profile Information" description="Basic details about you.">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <SettingField label="Full Name" icon={User} description="Your verified name.">
+                                <SettingField 
+                                    label="Full Name" 
+                                    icon={User} 
+                                    description="Your verified name."
+                                    error={formData.full_name && !validateName(formData.full_name, "Full Name").isValid ? validateName(formData.full_name, "Full Name").error : undefined}
+                                >
                                     <input
                                         type="text"
                                         value={formData.full_name}
                                         onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                        className={cn(
+                                            "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all",
+                                            formData.full_name && !validateName(formData.full_name, "Full Name").isValid && "border-destructive ring-1 ring-destructive/30"
+                                        )}
                                     />
                                 </SettingField>
                                 <SettingField label="Email" icon={Mail} description="Your verified email.">
@@ -524,12 +589,22 @@ export function TenantSettings() {
                                         className="w-full cursor-not-allowed rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm text-neutral-500"
                                     />
                                 </SettingField>
-                                <SettingField label="Phone Number" icon={Phone}>
+                                <SettingField 
+                                    label="Phone Number" 
+                                    icon={Phone}
+                                    error={formData.phone && !validatePhoneNumber(formData.phone, false).isValid ? validatePhoneNumber(formData.phone, false).error : undefined}
+                                >
                                     <input
                                         type="tel"
+                                        inputMode="numeric"
+                                        maxLength={11}
                                         value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                        onChange={(e) => setFormData({ ...formData, phone: sanitizeNumericInput(e.target.value, 11) })}
+                                        className={cn(
+                                            "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all",
+                                            formData.phone && !validatePhoneNumber(formData.phone, false).isValid && "border-destructive ring-1 ring-destructive/30"
+                                        )}
+                                        placeholder="09XXXXXXXXX"
                                     />
                                 </SettingField>
                                 <SettingField label="Address" icon={Home}>
@@ -557,20 +632,37 @@ export function TenantSettings() {
                     return (
                         <GlassCard title="Emergency Contact" description="Someone we can contact in case of emergency.">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <SettingField label="Contact Name" icon={User}>
+                                <SettingField 
+                                    label="Contact Name" 
+                                    icon={User}
+                                    error={formData.emergency_name && !validateName(formData.emergency_name, "Emergency contact name").isValid ? validateName(formData.emergency_name, "Emergency contact name").error : undefined}
+                                >
                                     <input
                                         type="text"
                                         value={formData.emergency_name}
                                         onChange={(e) => setFormData({ ...formData, emergency_name: e.target.value })}
-                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                        className={cn(
+                                            "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all",
+                                            formData.emergency_name && !validateName(formData.emergency_name, "Emergency contact name").isValid && "border-destructive ring-1 ring-destructive/30"
+                                        )}
                                     />
                                 </SettingField>
-                                <SettingField label="Contact Phone" icon={Phone}>
+                                <SettingField 
+                                    label="Contact Phone" 
+                                    icon={Phone}
+                                    error={formData.emergency_phone && !validatePhoneNumber(formData.emergency_phone, false).isValid ? validatePhoneNumber(formData.emergency_phone, false).error : undefined}
+                                >
                                     <input
                                         type="tel"
+                                        inputMode="numeric"
+                                        maxLength={11}
                                         value={formData.emergency_phone}
-                                        onChange={(e) => setFormData({ ...formData, emergency_phone: e.target.value })}
-                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                        onChange={(e) => setFormData({ ...formData, emergency_phone: sanitizeNumericInput(e.target.value, 11) })}
+                                        className={cn(
+                                            "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all",
+                                            formData.emergency_phone && !validatePhoneNumber(formData.emergency_phone, false).isValid && "border-destructive ring-1 ring-destructive/30"
+                                        )}
+                                        placeholder="09XXXXXXXXX"
                                     />
                                 </SettingField>
                             </div>
@@ -579,6 +671,28 @@ export function TenantSettings() {
                 default: return null;
             }
         };
+
+        const isProfileValid = 
+            validateName(formData.full_name, "Full Name").isValid &&
+            validatePhoneNumber(formData.phone, false).isValid &&
+            (!formData.emergency_phone || validatePhoneNumber(formData.emergency_phone, false).isValid) &&
+            (!formData.emergency_name || validateName(formData.emergency_name, "Emergency contact name").isValid);
+
+        if (isMobile) {
+            return (
+                <div className="space-y-4">
+                    {renderSubContent()}
+                    <button
+                        type="button"
+                        onClick={handleSaveProfile}
+                        disabled={isSaving || !isProfileValid}
+                        className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-sm font-black text-white shadow-xl shadow-primary/20 transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                        {isSaving ? "Saving..." : <><Save className="size-4" /> Save Profile</>}
+                    </button>
+                </div>
+            );
+        }
 
         return (
             <motion.div 
@@ -592,9 +706,10 @@ export function TenantSettings() {
                         <p className="text-neutral-400">Control your personal information.</p>
                     </div>
                     <button
+                        type="button"
                         onClick={handleSaveProfile}
-                        disabled={isSaving}
-                        className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-4 text-sm font-black text-white shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                        disabled={isSaving || !isProfileValid}
+                        className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-4 text-sm font-black text-white shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                         {isSaving ? "Saving..." : <><Save className="size-5" /> Save Changes</>}
                     </button>
@@ -828,6 +943,10 @@ export function TenantSettings() {
             }
         };
 
+        if (isMobile) {
+            return <div>{renderSubContent()}</div>;
+        }
+
         return (
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
@@ -852,85 +971,95 @@ export function TenantSettings() {
         );
     };
 
-    const renderNotifications = () => (
-        <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-8"
-        >
-            <div>
-                <h2 className="text-3xl font-black text-white">Notifications</h2>
-                <p className="text-neutral-400">Choose how and when you want to be alerted.</p>
-            </div>
-
-            <SubNav 
-                tabs={SUB_TABS.Notifications} 
-                activeTab={activeSubTab} 
-                onTabChange={setActiveSubTab} 
-            />
-
-            <div className="mt-8">
-                <GlassCard className="!p-0 overflow-hidden">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="border-b border-white/5 bg-white/[0.02]">
-                                <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-neutral-500">Activity Type</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">Email</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">Push</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">SMS</th>
+    const renderNotifications = () => {
+        const content = (
+            <GlassCard className="!p-0 overflow-x-auto">
+                <table className="w-full text-left min-w-[380px]">
+                    <thead>
+                        <tr className="border-b border-white/5 bg-white/[0.02]">
+                            <th className="px-5 sm:px-8 py-5 text-xs font-black uppercase tracking-widest text-neutral-500">Activity Type</th>
+                            <th className="px-3 sm:px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">Email</th>
+                            <th className="px-3 sm:px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">Push</th>
+                            <th className="px-3 sm:px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">SMS</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                        {[
+                            { key: "rent", label: "Rent Reminders", desc: "When rent is due and payment confirmations." },
+                            { key: "maintenance", label: "Maintenance Updates", desc: "Status changes for your maintenance requests." },
+                            { key: "lease", label: "Lease Updates", desc: "Renewals, expirations and document signing." },
+                            { key: "community", label: "Community Announcements", desc: "News and updates from your property." },
+                            { key: "offers", label: "Special Offers", desc: "Exclusive deals and recommendations." },
+                        ].map((item) => (
+                            <tr key={item.key} className="transition-colors hover:bg-white/[0.01]">
+                                <td className="px-5 sm:px-8 py-6">
+                                    <h4 className="text-sm font-black text-white">{item.label}</h4>
+                                    <p className="text-xs text-neutral-500">{item.desc}</p>
+                                </td>
+                                <td className="px-3 sm:px-4 py-6 text-center">
+                                    <ToggleSwitch 
+                                        size="small"
+                                        enabled={notifications[`${item.key}Email` as keyof typeof notifications] ?? false} 
+                                        onToggle={() => setNotifications(prev => ({ ...prev, [`${item.key}Email`]: !prev[`${item.key}Email` as keyof typeof notifications] }))} 
+                                    />
+                                </td>
+                                <td className="px-3 sm:px-4 py-6 text-center">
+                                    <ToggleSwitch 
+                                        size="small"
+                                        enabled={notifications[`${item.key}Push` as keyof typeof notifications] ?? false} 
+                                        onToggle={() => setNotifications(prev => ({ ...prev, [`${item.key}Push`]: !prev[`${item.key}Push` as keyof typeof notifications] }))} 
+                                    />
+                                </td>
+                                <td className="px-3 sm:px-4 py-6 text-center">
+                                    <ToggleSwitch 
+                                        size="small"
+                                        enabled={notifications[`${item.key}Sms` as keyof typeof notifications] ?? false} 
+                                        onToggle={() => setNotifications(prev => ({ ...prev, [`${item.key}Sms`]: !prev[`${item.key}Sms` as keyof typeof notifications] }))} 
+                                    />
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {[
-                                { key: "rent", label: "Rent Reminders", desc: "When rent is due and payment confirmations." },
-                                { key: "maintenance", label: "Maintenance Updates", desc: "Status changes for your maintenance requests." },
-                                { key: "lease", label: "Lease Updates", desc: "Renewals, expirations and document signing." },
-                                { key: "community", label: "Community Announcements", desc: "News and updates from your property." },
-                                { key: "offers", label: "Special Offers", desc: "Exclusive deals and recommendations." },
-                            ].map((item) => (
-                                <tr key={item.key} className="transition-colors hover:bg-white/[0.01]">
-                                    <td className="px-8 py-6">
-                                        <h4 className="text-sm font-black text-white">{item.label}</h4>
-                                        <p className="text-xs text-neutral-500">{item.desc}</p>
-                                    </td>
-                                    <td className="px-4 py-6 text-center">
-                                        <ToggleSwitch 
-                                            size="small"
-                                            enabled={notifications[`${item.key}Email` as keyof typeof notifications] ?? false} 
-                                            onToggle={() => setNotifications(prev => ({ ...prev, [`${item.key}Email`]: !prev[`${item.key}Email` as keyof typeof notifications] }))} 
-                                        />
-                                    </td>
-                                    <td className="px-4 py-6 text-center">
-                                        <ToggleSwitch 
-                                            size="small"
-                                            enabled={notifications[`${item.key}Push` as keyof typeof notifications] ?? false} 
-                                            onToggle={() => setNotifications(prev => ({ ...prev, [`${item.key}Push`]: !prev[`${item.key}Push` as keyof typeof notifications] }))} 
-                                        />
-                                    </td>
-                                    <td className="px-4 py-6 text-center">
-                                        <ToggleSwitch 
-                                            size="small"
-                                            enabled={notifications[`${item.key}Sms` as keyof typeof notifications] ?? false} 
-                                            onToggle={() => setNotifications(prev => ({ ...prev, [`${item.key}Sms`]: !prev[`${item.key}Sms` as keyof typeof notifications] }))} 
-                                        />
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    <div className="flex items-center justify-end gap-3 border-t border-white/5 p-6 bg-white/[0.02]">
-                        <button className="text-xs font-black text-neutral-400 hover:text-white transition-colors">Reset to Defaults</button>
-                        <button 
-                            onClick={() => toast.success("Notification preferences saved")}
-                            className="rounded-xl bg-white/10 px-4 py-2 text-xs font-black text-white hover:bg-white/20 transition-all"
-                        >
-                            Save Preferences
-                        </button>
-                    </div>
-                </GlassCard>
-            </div>
-        </motion.div>
-    );
+                        ))}
+                    </tbody>
+                </table>
+                <div className="flex items-center justify-end gap-3 border-t border-white/5 p-4 sm:p-6 bg-white/[0.02]">
+                    <button className="text-xs font-black text-neutral-400 hover:text-white transition-colors">Reset to Defaults</button>
+                    <button 
+                        onClick={() => toast.success("Notification preferences saved")}
+                        className="rounded-xl bg-white/10 px-4 py-2 text-xs font-black text-white hover:bg-white/20 transition-all"
+                    >
+                        Save Preferences
+                    </button>
+                </div>
+            </GlassCard>
+        );
+
+        if (isMobile) {
+            return content;
+        }
+
+        return (
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+            >
+                <div>
+                    <h2 className="text-3xl font-black text-white">Notifications</h2>
+                    <p className="text-neutral-400">Choose how and when you want to be alerted.</p>
+                </div>
+
+                <SubNav 
+                    tabs={SUB_TABS.Notifications} 
+                    activeTab={activeSubTab} 
+                    onTabChange={setActiveSubTab} 
+                />
+
+                <div className="mt-8">
+                    {content}
+                </div>
+            </motion.div>
+        );
+    };
 
     const renderBilling = () => {
         const renderSubContent = () => {
@@ -994,6 +1123,10 @@ export function TenantSettings() {
                 default: return null;
             }
         };
+
+        if (isMobile) {
+            return <div>{renderSubContent()}</div>;
+        }
 
         return (
             <motion.div 
@@ -1145,6 +1278,10 @@ export function TenantSettings() {
             }
         };
 
+        if (isMobile) {
+            return <div>{renderSubContent()}</div>;
+        }
+
         return (
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
@@ -1170,6 +1307,65 @@ export function TenantSettings() {
     };
 
     const renderAccessibility = () => {
+        const content = (
+            <div className="space-y-6">
+                <GlassCard 
+                    title="Text Size & Readability" 
+                    description="Adjust the interface typography scale without distorting card layouts or button heights."
+                >
+                    <FontSizeToggle variant="slider" showPreview={true} />
+                </GlassCard>
+
+                <GlassCard 
+                    title="Universal High Contrast" 
+                    description="Reinforces borders, sharpens text outlines, and improves visibility across all tenant pages per WCAG 2.1 AAA standards."
+                >
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-surface-2 border border-border/60">
+                        <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+                            <div className={cn(
+                                "size-12 rounded-xl flex items-center justify-center shrink-0 border transition-all",
+                                isHighContrast 
+                                    ? "bg-foreground text-background border-foreground font-black" 
+                                    : "bg-surface-3 text-muted-foreground border-border"
+                            )}>
+                                <Contrast className="size-6" />
+                            </div>
+                            <div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <h4 className="text-sm font-bold text-foreground">Universal High Contrast</h4>
+                                    <span className={cn(
+                                        "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
+                                        isHighContrast ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" : "bg-surface-3 text-muted-foreground"
+                                    )}>
+                                        {isHighContrast ? "Active (WCAG AAA)" : "Off"}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Replaces soft shadows with solid high-contrast borders and high-visibility text.
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => toggleHighContrast()}
+                            className={cn(
+                                "px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer border",
+                                isHighContrast
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-muted text-foreground border-border hover:bg-muted/80"
+                            )}
+                        >
+                            {isHighContrast ? "Disable High Contrast" : "Enable High Contrast"}
+                        </button>
+                    </div>
+                </GlassCard>
+            </div>
+        );
+
+        if (isMobile) {
+            return content;
+        }
+
         return (
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -1186,58 +1382,7 @@ export function TenantSettings() {
                     </div>
                 </div>
 
-                <div className="space-y-6">
-                    <GlassCard 
-                        title="Text Size & Readability" 
-                        description="Adjust the interface typography scale without distorting card layouts or button heights."
-                    >
-                        <FontSizeToggle variant="slider" showPreview={true} />
-                    </GlassCard>
-
-                    <GlassCard 
-                        title="Universal High Contrast" 
-                        description="Reinforces borders, sharpens text outlines, and improves visibility across all tenant pages per WCAG 2.1 AAA standards."
-                    >
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-surface-2 border border-border/60">
-                            <div className="flex items-start gap-4">
-                                <div className={cn(
-                                    "size-12 rounded-xl flex items-center justify-center shrink-0 border transition-all",
-                                    isHighContrast 
-                                        ? "bg-foreground text-background border-foreground font-black" 
-                                        : "bg-surface-3 text-muted-foreground border-border"
-                                )}>
-                                    <Contrast className="size-6" />
-                                </div>
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <h4 className="text-sm font-bold text-foreground">Universal High Contrast</h4>
-                                        <span className={cn(
-                                            "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
-                                            isHighContrast ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" : "bg-surface-3 text-muted-foreground"
-                                        )}>
-                                            {isHighContrast ? "Active (WCAG AAA)" : "Off"}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        Replaces soft shadows with solid high-contrast borders and high-visibility text.
-                                    </p>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => toggleHighContrast()}
-                                className={cn(
-                                    "px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer border",
-                                    isHighContrast
-                                        ? "bg-primary text-primary-foreground border-primary"
-                                        : "bg-muted text-foreground border-border hover:bg-muted/80"
-                                )}
-                            >
-                                {isHighContrast ? "Disable High Contrast" : "Enable High Contrast"}
-                            </button>
-                        </div>
-                    </GlassCard>
-                </div>
+                {content}
             </motion.div>
         );
     };
@@ -1253,6 +1398,55 @@ export function TenantSettings() {
             default: return null;
         }
     };
+
+    if (isMobile) {
+        return loading ? (
+            <PageLoader message="Loading settings..." />
+        ) : (
+            <div className="space-y-4">
+                {/* Main Category Dropdown Selector */}
+                <MobileSettingsCategoryDropdown
+                    items={SIDEBAR_ITEMS}
+                    activeTab={activeTab}
+                    onSelectTab={(id) => setActiveTab(id as SettingsCategory)}
+                />
+
+                {/* Sub-tabs Tab Strip (Horizontal Scrollable) */}
+                {SUB_TABS[activeTab] && SUB_TABS[activeTab].length > 1 && (
+                    <div className="-mx-4 px-4">
+                        <SubNav 
+                            tabs={SUB_TABS[activeTab]} 
+                            activeTab={activeSubTab} 
+                            onTabChange={setActiveSubTab} 
+                        />
+                    </div>
+                )}
+
+                {/* Content Area */}
+                <main className="min-w-0 pt-1">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={`${activeTab}-${activeSubTab}`}
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -6 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            {renderContent()}
+                        </motion.div>
+                    </AnimatePresence>
+                </main>
+
+                <AvatarPicker 
+                    isOpen={isAvatarPickerOpen}
+                    onClose={() => setIsAvatarPickerOpen(false)}
+                    currentAvatarUrl={profile?.avatar_url || null}
+                    currentBgColor={profile?.avatar_bg_color || null}
+                    onProfileUpdate={() => router.refresh()}
+                />
+            </div>
+        );
+    }
 
     return loading ? (
         <PageLoader message="Loading your settings..." />
