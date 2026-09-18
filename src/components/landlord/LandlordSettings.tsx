@@ -443,7 +443,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
         Security: ["Account", "Protection", "Sessions"],
         Notifications: ["Alerts"],
         AuditLogs: ["Activity Logs"],
-        Data: ["Export", "Tour", "Danger"],
+        Data: ["Export", "Tour"],
     };
 
     // Reset sub-tab when main tab changes (skip if restoring from URL)
@@ -4028,8 +4028,8 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
 
     return (
         <div className="space-y-6 sm:space-y-10">
-            {/* Top Navigation Bar */}
-            <div className="flex items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-border/40">
+            {/* Top Navigation Bar (Desktop only) */}
+            <div className="hidden lg:flex items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-border/40">
                 <button
                     type="button"
                     onClick={handleRequestExit}

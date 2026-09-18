@@ -260,7 +260,7 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
         Security: ["Account", "Protection", "Sessions"],
         Notifications: ["Alerts"],
         Billing: ["Payment Methods", "History"],
-        Data: ["Export", "Danger"],
+        Data: ["Export"],
     };
 
     const { isHighContrast, toggleHighContrast } = useHighContrast();
@@ -1420,8 +1420,8 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
         <PageLoader message="Loading your settings..." />
     ) : (
         <div className="space-y-6 sm:space-y-10">
-            {/* Top Navigation Bar */}
-            <div className="flex items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-border/40">
+            {/* Top Navigation Bar (Desktop only) */}
+            <div className="hidden lg:flex items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-border/40">
                 <button
                     type="button"
                     onClick={() => router.push("/tenant/dashboard")}
