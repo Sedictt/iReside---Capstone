@@ -16,10 +16,32 @@ import {
     BarChart3,
     FolderSearch2,
     Hammer,
-    RefreshCw
+    RefreshCw,
+    SlidersHorizontal,
+    Check,
+    RotateCcw,
+    Plus,
+    EyeOff,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+    SortableContext,
+    sortableKeyboardCoordinates,
+    rectSortingStrategy,
+} from "@dnd-kit/sortable";
 import { cn } from "@/lib/utils";
+import { useQuickActions } from "@/hooks/useQuickActions";
+import { SortableActionCard } from "./SortableActionCard";
+import type { QuickActionId } from "@/lib/landlord/quick-actions";
 
 type CommandCenterProps = {
     overdueCount: number;
@@ -74,6 +96,39 @@ export function CommandCenter({
     onOpenNearDuePayments,
     onOpenInvites,
 }: CommandCenterProps) {
+    const {
+        config,
+        displayedActions,
+        hiddenActions,
+        isCustomizing,
+        startCustomizing,
+        finishCustomizing,
+        reorderActions,
+        toggleVisibility,
+        restoreAll,
+        setSortMode,
+        trackActionUsage,
+        resetToDefaults,
+    } = useQuickActions();
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            reorderActions(active.id as QuickActionId, over.id as QuickActionId);
+        }
+    };
+
     const statCards: StatCard[] = [
         {
             label: "Overdue",
@@ -237,109 +292,177 @@ export function CommandCenter({
                     "neumorphic-inset rounded-[2rem] p-4 sm:p-5 md:p-6 min-w-0",
                     "dark:bento-glass-inset"
                 )}>
-                    <h3 className="mb-5 sm:mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/80">
-                        <span className="h-1 w-4 rounded-full bg-primary" />
-                        Operations Center
-                    </h3>
-                    
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-                        {[
-                            { 
-                                label: "Invoice Ledger", 
-                                icon: ReceiptText, 
-                                href: "/landlord/invoices", 
-                                color: "text-blue-400",
-                                description: "Track rental payments, monitor pending balances, and issue invoices."
-                            },
-                            { 
-                                label: "Utility Submeters", 
-                                icon: Zap, 
-                                href: "/landlord/utility-billing", 
-                                color: "text-amber-400",
-                                description: "Record water & electric readings, calculate usage, and post invoice updates."
-                            },
-                            { 
-                                label: "Tenant Records", 
-                                icon: FileText, 
-                                href: "/landlord/tenants", 
-                                color: "text-emerald-400",
-                                description: "View active tenant profiles, lease status, and occupant contact details."
-                            },
-                            { 
-                                label: "Property Portfolio", 
-                                icon: Building2, 
-                                href: "/landlord/properties", 
-                                color: "text-violet-400",
-                                description: "Manage properties, configure rental units, and review occupancy."
-                            },
-                            { 
-                                label: "Rental Applications", 
-                                icon: ClipboardList, 
-                                href: "/landlord/applications", 
-                                color: "text-primary",
-                                description: "Evaluate applicant submissions, verify screening data, and approve leases."
-                            },
-                            { 
-                                label: "Unit Visualizer", 
-                                icon: FolderSearch2, 
-                                href: "/landlord/unit-map", 
-                                color: "text-amber-400",
-                                description: "Interactive architectural layout of units, floor maps, and occupancy status."
-                            },
-                            { 
-                                label: "Maintenance Desk", 
-                                icon: Hammer, 
-                                href: "/landlord/maintenance", 
-                                color: "text-rose-400",
-                                description: "Resolve work orders, track repairs, and communicate with maintenance staff."
-                            },
-                            { 
-                                label: "Lease Lifecycle", 
-                                icon: RefreshCw, 
-                                href: "/landlord/tenants?tab=renewals", 
-                                color: "text-indigo-400",
-                                description: "Monitor ending leases, process contract extensions, and manage renewals."
-                            },
-                            { 
-                                label: "Financial Metrics", 
-                                icon: BarChart3, 
-                                href: "/landlord/analytics", 
-                                color: "text-teal-400",
-                                description: "Deep-dive cash flow, yield tracking, utility usage, and forecast projections."
-                            },
-                            { 
-                                label: "Settings", 
-                                icon: Settings2, 
-                                href: "/landlord/settings", 
-                                color: "text-slate-400",
-                                description: "Configure system rules, customize utility pricing, and manage account security."
-                            },
-                        ].map((action) => (
-                            <Tooltip key={action.label} content={action.description}>
-                                <Link
-                                    href={action.href}
-                                    className={cn(
-                                        "neumorphic-extruded group flex flex-col items-center justify-center text-center gap-1.5 sm:gap-2 rounded-[1.25rem] p-2.5 sm:p-3 xl:p-3.5 min-w-0 w-full overflow-hidden transition-all",
-                                        "dark:bento-glass-card dark:hover:bg-primary/5 dark:hover:border-primary/20 dark:hover:shadow-[0_0_20px_rgba(196,176,255,0.1)] active:scale-95"
-                                    )}
-                                    aria-label={`${action.label}: ${action.description}`}
-                                >
-                                    <div className={cn(
-                                        "neumorphic-inset-card flex size-8 sm:size-9 xl:size-10 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 shrink-0",
-                                        "dark:bg-white/[0.05] dark:border-white/10 dark:shadow-none",
-                                        action.color
-                                    )}>
-                                        <action.icon className="size-4 sm:size-5" />
+                    <div className="mb-5 sm:mb-6 flex items-start sm:items-center justify-between gap-3 flex-wrap">
+                        <div>
+                            <div className="flex items-center gap-2.5">
+                                <span className="h-1.5 w-4 rounded-full bg-primary" />
+                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/90">
+                                    Operations Center
+                                </h3>
+                                {isCustomizing && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
+                                        Customizing
+                                    </span>
+                                )}
+                            </div>
+                            {isCustomizing ? (
+                                <p className="text-[11px] text-muted-foreground font-medium mt-1">
+                                    Drag cards to rearrange &bull; Tap eye icon to hide &bull; Click any item below to restore
+                                </p>
+                            ) : null}
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                            {!isCustomizing ? (
+                                <>
+                                    {/* Compact Segmented Sort Control */}
+                                    <div className="flex items-center rounded-lg bg-muted/60 dark:bg-white/[0.05] p-0.5 text-[10.5px] font-semibold border border-border/40 shadow-inner">
+                                        <button
+                                            type="button"
+                                            onClick={() => setSortMode("custom")}
+                                            className={cn(
+                                                "px-2 py-0.5 rounded-md transition-all",
+                                                config.sortMode === "custom"
+                                                    ? "bg-background text-foreground shadow-xs font-bold"
+                                                    : "text-muted-foreground hover:text-foreground"
+                                            )}
+                                            title="Sort actions in your custom drag-and-drop order"
+                                        >
+                                            Custom
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSortMode("frequently_used")}
+                                            className={cn(
+                                                "px-2 py-0.5 rounded-md transition-all flex items-center gap-1",
+                                                config.sortMode === "frequently_used"
+                                                    ? "bg-background text-foreground shadow-xs font-bold"
+                                                    : "text-muted-foreground hover:text-foreground"
+                                            )}
+                                            title="Sort actions dynamically by your usage frequency"
+                                        >
+                                            <TrendingUp className="size-2.5 text-amber-500" />
+                                            Frequent
+                                        </button>
                                     </div>
-                                    <div className="flex flex-col gap-0.5 text-center min-w-0 w-full px-1">
-                                        <span className="text-[11px] sm:text-xs font-bold tracking-tight transition-colors text-foreground/90 group-hover:text-foreground line-clamp-2 break-words leading-tight">
-                                            {action.label}
-                                        </span>
-                                    </div>
-                                </Link>
-                            </Tooltip>
-                        ))}
+
+                                    {/* Compact Customize Trigger Button */}
+                                    <button
+                                        type="button"
+                                        onClick={startCustomizing}
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-lg border border-border/60 hover:bg-muted/60 text-foreground transition-all shadow-xs active:scale-95"
+                                        title="Customize grid layout and hidden actions"
+                                    >
+                                        <SlidersHorizontal className="size-3 text-muted-foreground" />
+                                        <span>Customize</span>
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    {/* Compact Edit Mode Actions */}
+                                    <button
+                                        type="button"
+                                        onClick={resetToDefaults}
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all border border-transparent hover:border-border/40 active:scale-95"
+                                        title="Reset to factory layout"
+                                    >
+                                        <RotateCcw className="size-3" />
+                                        <span>Reset</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={finishCustomizing}
+                                        className="inline-flex items-center gap-1 px-3 py-1 text-[11px] font-bold rounded-lg bg-foreground text-background dark:bg-primary dark:text-primary-foreground hover:opacity-90 transition-all shadow-sm active:scale-95"
+                                        title="Save and finish customization"
+                                    >
+                                        <Check className="size-3" />
+                                        <span>Done</span>
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
+
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                    >
+                        <SortableContext
+                            items={displayedActions.map((a) => a.id)}
+                            strategy={rectSortingStrategy}
+                        >
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                                {displayedActions.map((action) => (
+                                    <SortableActionCard
+                                        key={action.id}
+                                        action={action}
+                                        isCustomizing={isCustomizing}
+                                        onHide={toggleVisibility}
+                                        onTrackUsage={trackActionUsage}
+                                    />
+                                ))}
+                            </div>
+                        </SortableContext>
+                    </DndContext>
+
+                    {/* Hidden Actions Shelf */}
+                    {isCustomizing && hiddenActions.length > 0 && (
+                        <div className="mt-6 pt-5 border-t border-border/50">
+                            <div className="mb-3 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <EyeOff className="size-3.5 text-muted-foreground" />
+                                    <h4 className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
+                                        Hidden Actions
+                                    </h4>
+                                    <span className="flex items-center justify-center size-4.5 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-muted text-muted-foreground">
+                                        {hiddenActions.length}
+                                    </span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={restoreAll}
+                                    className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline hover:opacity-85 transition-all cursor-pointer"
+                                    title="Restore all hidden actions to the grid"
+                                >
+                                    <RotateCcw className="size-3" />
+                                    <span>Restore all to grid</span>
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                                {hiddenActions.map((action) => (
+                                    <button
+                                        key={action.id}
+                                        type="button"
+                                        onClick={() => toggleVisibility(action.id)}
+                                        className={cn(
+                                            "flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl transition-all group",
+                                            "neumorphic-extruded hover:shadow-md hover:scale-[1.01] active:scale-98",
+                                            "dark:bento-glass-card dark:hover:bg-white/[0.04]"
+                                        )}
+                                        title={`Restore ${action.label} to grid`}
+                                    >
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className={cn(
+                                                "flex size-7 items-center justify-center rounded-lg neumorphic-inset-card shrink-0",
+                                                "dark:bg-white/[0.05]",
+                                                action.color
+                                            )}>
+                                                <action.icon className="size-3.5" />
+                                            </div>
+                                            <span className="text-xs font-bold text-foreground/90 truncate">
+                                                {action.label}
+                                            </span>
+                                        </div>
+                                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-primary opacity-80 group-hover:opacity-100 transition-opacity shrink-0">
+                                            <Plus className="size-3.5" />
+                                            Restore
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Insights Hub */}
