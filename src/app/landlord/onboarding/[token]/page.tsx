@@ -37,6 +37,7 @@ import { LeaseDocument } from "@/components/lease/LeaseDocument";
 import { LeaseData } from "@/types/lease";
 import { generateLeasePdf } from "@/lib/lease-pdf";
 import { AvatarPicker } from "@/components/profile/AvatarPicker";
+import { PropertyAmenitiesSelector } from "@/components/landlord/properties/PropertyAmenitiesSelector";
 import html2canvas from "html2canvas";
 import { LucideIcon } from "lucide-react";
 
@@ -828,33 +829,11 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     </div>
 
                                     {/* Amenities */}
-                                    <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Settings className="size-4 text-primary" />
-                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Amenities</h3>
-                                            </div>
-                                            <span className="text-[10px] font-black text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{amenities.length} Selected</span>
-                                        </div>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                            {[
-                                                "Wi-Fi", "Gym", "Pool", "Laundry", "Parking", 
-                                                "Security", "CCTV", "Garden", "Elevator"
-                                            ].map((amenity) => (
-                                                <button
-                                                    key={amenity}
-                                                    aria-pressed={amenities.includes(amenity)}
-                                                    onClick={() => {
-                                                        if (amenities.includes(amenity)) setAmenities(prev => prev.filter(a => a !== amenity));
-                                                        else setAmenities(prev => [...prev, amenity]);
-                                                    }}
-                                                    className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all text-center focus:outline-none focus:ring-2 focus:ring-primary/40 ${amenities.includes(amenity) ? "bg-primary text-black border-primary shadow-lg shadow-primary/20" : "bg-white/5 border-white/5 text-white/30 hover:text-white/50"}`}
-                                                >
-                                                    {amenity}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
+                                    <PropertyAmenitiesSelector
+                                        selectedAmenities={amenities}
+                                        onChange={setAmenities}
+                                        variant="dark"
+                                    />
                                 </div>
 
                                 {/* Building Rules - Spans 12 columns */}
