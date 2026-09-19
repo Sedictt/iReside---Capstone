@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { DEFAULT_BRANDING, BrandConfig } from "@/context/BrandContext";
+import { generateSecurityKey, encryptSecurityKey } from "@/lib/security/recovery-keys";
+import { logUserActivity } from "@/lib/audit/audit-logger";
 
 interface SetupLaunchPayload {
   branding: {
@@ -161,9 +163,41 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 5. Generate and encrypt initial single-use security recovery key for Master Admin
+    const plaintextSecurityKey = generateSecurityKey();
+    const encryptedKey = encryptSecurityKey(plaintextSecurityKey);
+
+    await (adminClient as any)
+      .from("user_security_settings")
+      .upsert(
+        {
+          profile_id: userId,
+          security_key_encrypted: encryptedKey.encrypted,
+          security_key_iv: encryptedKey.iv,
+          security_key_auth_tag: encryptedKey.authTag,
+          security_key_updated_at: timestamp,
+          security_key_failed_attempts: 0,
+          security_key_locked_until: null,
+          has_changed_password: true,
+          updated_at: timestamp,
+        },
+        { onConflict: "profile_id" }
+      );
+
+    await logUserActivity({
+      userId,
+      userRole: "landlord",
+      action: "security_key_generated",
+      category: "security",
+      title: "Security Recovery Key Created",
+      description: "Master Admin initial security recovery key generated during Turnkey workspace launch.",
+      severity: "info",
+    });
+
     return NextResponse.json({
       success: true,
       message: "Workspace personalization claimed and finalized successfully.",
+      securityKey: plaintextSecurityKey,
       branding: {
         propertyName,
         propertyTagline,

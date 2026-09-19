@@ -3,6 +3,8 @@ import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { Database, UnitStatus, UserRole } from "@/types/database";
+import { generateSecurityKey, encryptSecurityKey } from "@/lib/security/recovery-keys";
+import { logUserActivity } from "@/lib/audit/audit-logger";
 
 interface RouteParams {
     params: Promise<{ token: string }>;
@@ -514,9 +516,42 @@ export async function POST(request: Request, context: RouteParams) {
             })
             .eq("onboarding_token", token);
 
+        // Generate and encrypt initial single-use security recovery key
+        const plaintextSecurityKey = generateSecurityKey();
+        const encryptedKey = encryptSecurityKey(plaintextSecurityKey);
+        const timestamp = new Date().toISOString();
+
+        await (adminClient as any)
+            .from("user_security_settings")
+            .upsert(
+                {
+                    profile_id: userId,
+                    security_key_encrypted: encryptedKey.encrypted,
+                    security_key_iv: encryptedKey.iv,
+                    security_key_auth_tag: encryptedKey.authTag,
+                    security_key_updated_at: timestamp,
+                    security_key_failed_attempts: 0,
+                    security_key_locked_until: null,
+                    has_changed_password: true,
+                    updated_at: timestamp,
+                },
+                { onConflict: "profile_id" }
+            );
+
+        await logUserActivity({
+            userId,
+            userRole: "landlord",
+            action: "security_key_generated",
+            category: "security",
+            title: "Security Recovery Key Created",
+            description: "Landlord initial security recovery key generated during onboarding.",
+            severity: "info",
+        });
+
         return NextResponse.json({
             success: true,
             message: "Onboarding completed successfully",
+            securityKey: plaintextSecurityKey,
             redirectUrl: "/landlord/dashboard",
         });
 

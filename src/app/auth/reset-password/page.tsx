@@ -17,6 +17,7 @@ import { createClient } from "@/lib/supabase/client";
 import { updateTenantPassword } from "@/lib/supabase/client-auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useRouter } from "next/navigation";
+import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
 
 function ResetPasswordContent() {
     const [newPassword, setNewPassword] = useState("");
@@ -29,6 +30,8 @@ function ResetPasswordContent() {
     const [userRole, setUserRole] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [securityKey, setSecurityKey] = useState<string | null>(null);
+    const [isAcknowledged, setIsAcknowledged] = useState(false);
     const [countdown, setCountdown] = useState(3);
     const [mounted, setMounted] = useState(false);
     const router = useRouter();
@@ -70,7 +73,8 @@ function ResetPasswordContent() {
     }, []);
 
     useEffect(() => {
-        if (!isSuccess) return;
+        // Only auto-redirect if there is no security key requiring user acknowledgement
+        if (!isSuccess || securityKey) return;
 
         const timer = setInterval(() => {
             setCountdown((prev) => {
@@ -85,7 +89,7 @@ function ResetPasswordContent() {
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [isSuccess, userRole, router]);
+    }, [isSuccess, securityKey, userRole, router]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -123,6 +127,19 @@ function ResetPasswordContent() {
                     setLoading(false);
                     return;
                 }
+            }
+
+            // Generate initial single-use security recovery key for the user
+            try {
+                const keyRes = await fetch("/api/auth/security-key", { method: "POST" });
+                if (keyRes.ok) {
+                    const keyData = await keyRes.json();
+                    if (keyData.securityKey) {
+                        setSecurityKey(keyData.securityKey);
+                    }
+                }
+            } catch (kErr) {
+                console.warn("[ResetPassword] Could not generate initial security key:", kErr);
             }
 
             setIsSuccess(true);
@@ -188,30 +205,64 @@ function ResetPasswordContent() {
                         </div>
                     ) : isSuccess ? (
                         /* Success */
-                        <div className="space-y-4 text-center py-2">
-                            <div className="mx-auto size-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                                <CheckCircle2 className="size-6" />
+                        securityKey ? (
+                            <div className="space-y-4 py-1">
+                                <div className="space-y-1 text-center sm:text-left">
+                                    <h1 className="text-lg font-bold text-foreground">
+                                        Password Set Successfully
+                                    </h1>
+                                    <p className="text-xs text-muted-foreground">
+                                        Save your single-use security recovery key now before accessing your dashboard.
+                                    </p>
+                                </div>
+
+                                <SecurityKeyDisplayCard
+                                    securityKey={securityKey}
+                                    isAcknowledged={isAcknowledged}
+                                    onToggleAcknowledge={setIsAcknowledged}
+                                    title="Your Security Recovery Key"
+                                    description="This single-use recovery key allows you to regain access to your account if you ever lose access to your email."
+                                />
+
+                                <button
+                                    type="button"
+                                    disabled={!isAcknowledged}
+                                    onClick={() => {
+                                        const target = userRole === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard";
+                                        router.push(target);
+                                    }}
+                                    className="w-full h-10 bg-primary text-primary-foreground font-medium rounded-xl text-xs transition-colors hover:bg-primary/90 flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                    <span>Continue to Dashboard</span>
+                                    <ArrowRight className="size-3.5" />
+                                </button>
                             </div>
-                            <div className="space-y-1">
-                                <h1 className="text-lg font-bold text-foreground">
-                                    Password Updated
-                                </h1>
-                                <p className="text-xs text-muted-foreground">
-                                    Redirecting in {countdown}s...
-                                </p>
+                        ) : (
+                            <div className="space-y-4 text-center py-2">
+                                <div className="mx-auto size-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                                    <CheckCircle2 className="size-6" />
+                                </div>
+                                <div className="space-y-1">
+                                    <h1 className="text-lg font-bold text-foreground">
+                                        Password Updated
+                                    </h1>
+                                    <p className="text-xs text-muted-foreground">
+                                        Redirecting in {countdown}s...
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const target = userRole === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard";
+                                        router.push(target);
+                                    }}
+                                    className="w-full h-10 bg-primary text-primary-foreground font-medium rounded-xl text-xs transition-colors hover:bg-primary/90 flex items-center justify-center gap-1.5 mt-2"
+                                >
+                                    <span>Go to Dashboard</span>
+                                    <ArrowRight className="size-3.5" />
+                                </button>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    const target = userRole === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard";
-                                    router.push(target);
-                                }}
-                                className="w-full h-10 bg-primary text-primary-foreground font-medium rounded-xl text-xs transition-colors hover:bg-primary/90 flex items-center justify-center gap-1.5 mt-2"
-                            >
-                                <span>Go to Dashboard</span>
-                                <ArrowRight className="size-3.5" />
-                            </button>
-                        </div>
+                        )
                     ) : (
                         /* Reset Form */
                         <div className="space-y-5">

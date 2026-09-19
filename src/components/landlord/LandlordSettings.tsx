@@ -84,6 +84,7 @@ import { ColorPickerModal } from "@/components/ui/ColorPickerModal";
 import { UnsavedChangesModal } from "@/components/ui/UnsavedChangesModal";
 import { useBrand, DEFAULT_BRANDING } from "@/context/BrandContext";
 import { applyBrandCssVariables } from "@/lib/branding/colors";
+import { SecurityKeyManagementCard } from "@/components/auth/SecurityKeyManagementCard";
 import Link from "next/link";
 import {
     validateFullName,
@@ -3400,7 +3401,10 @@ export function LandlordSettings() {
                     };
 
                     return (
-    <GlassCard title="Two-Factor Authentication" description="Add an extra layer of security using your Google account.">
+                        <div className="space-y-6 max-w-2xl">
+                            <SecurityKeyManagementCard accountEmail={user?.email || profile?.email || undefined} />
+
+                            <GlassCard title="Two-Factor Authentication" description="Add an extra layer of security using your Google account.">
         {twoFAStatus === 'loading' ? (
             <div className="flex items-center justify-center py-12">
                 <div className="relative flex items-center justify-center">
@@ -3528,6 +3532,7 @@ export function LandlordSettings() {
             </div>
         )}
     </GlassCard>
+                        </div>
                     );
                 case "Sessions":
                     return (
