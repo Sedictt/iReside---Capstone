@@ -1128,7 +1128,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
             setIsSyncing(false);
             setHasLoadedOnce(true);
         }
-    }, [profile, user?.id, supabase]);
+    }, [profile?.id, user?.id, supabase]);
 
     // Background sync on mount & when user identity resolves
     useEffect(() => {
@@ -1524,7 +1524,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
             setIsSaving(false);
             toast.dismiss(loadingToast);
             toast.error("Saving took longer than expected. Changes were saved locally.");
-        }, 12000);
+        }, 25000);
 
         try {
             // 0. Save finance changes if dirty
@@ -1539,10 +1539,27 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 setIsFinanceDirty(false);
             }
 
-            const hasFormChanged = !initialSnapshot || JSON.stringify(formData) !== JSON.stringify(initialSnapshot.formData);
-            const hasNotifsChanged = !initialSnapshot || JSON.stringify(notificationPreferences) !== JSON.stringify(initialSnapshot.notificationPreferences);
+            const hasProfileChanged = Boolean(
+                initialSnapshot &&
+                JSON.stringify(formData) !== JSON.stringify(initialSnapshot.formData)
+            );
+            const hasNotifsChanged = Boolean(
+                initialSnapshot &&
+                JSON.stringify(notificationPreferences) !== JSON.stringify(initialSnapshot.notificationPreferences)
+            );
+            const hasBrandingChanged = Boolean(
+                !initialSnapshot ||
+                propertyTradeName !== initialSnapshot.propertyTradeName ||
+                propertyTagline !== initialSnapshot.propertyTagline ||
+                normalizeRentalArchetype(rentalArchetype) !== normalizeRentalArchetype(initialSnapshot.rentalArchetype) ||
+                brandPrimaryHex.toLowerCase() !== initialSnapshot.brandPrimaryHex.toLowerCase() ||
+                brandSecondaryHex.toLowerCase() !== initialSnapshot.brandSecondaryHex.toLowerCase() ||
+                bannerUrl !== initialSnapshot.bannerUrl ||
+                propertyLogoUrl !== initialSnapshot.propertyLogoUrl
+            );
 
-            if (hasFormChanged || hasNotifsChanged) {
+            // 1. Save Profile & Contact changes only if profile or notifications actually changed
+            if (hasProfileChanged || hasNotifsChanged) {
                 const res = await fetch("/api/landlord/profile", {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
@@ -1571,7 +1588,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                     localStorage.setItem("ireside_landlord_notification_preferences", JSON.stringify(notificationPreferences));
                 }
 
-                if (formData.email && formData.email !== profile?.email) {
+                if (hasProfileChanged && formData.email && profile?.email && formData.email !== profile.email) {
                     try {
                         await supabase.auth.updateUser({ email: formData.email });
                     } catch (emailErr: any) {
@@ -1581,25 +1598,31 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
             }
 
             // 2. Personalization & Branding (API, LocalStorage & CSS Variables)
-            await brand.updateBranding({
-                propertyName: propertyTradeName,
-                propertyTagline,
-                rentalArchetype: (rentalArchetype === "boarding_house" ? "boarding_house" : rentalArchetype === "dormitory" ? "dormitory" : "apartment"),
-                primaryColor: brandPrimaryHex,
-                secondaryColor: brandSecondaryHex,
-                logoUrl: propertyLogoUrl,
-                bannerUrl,
-            }, true);
+            if (hasBrandingChanged) {
+                const brandSuccess = await brand.updateBranding({
+                    propertyName: propertyTradeName,
+                    propertyTagline,
+                    rentalArchetype: (rentalArchetype === "boarding_house" ? "boarding_house" : rentalArchetype === "dormitory" ? "dormitory" : "apartment"),
+                    primaryColor: brandPrimaryHex,
+                    secondaryColor: brandSecondaryHex,
+                    logoUrl: propertyLogoUrl,
+                    bannerUrl,
+                }, true);
+
+                if (!brandSuccess) {
+                    console.warn("[LandlordSettings] Branding saved locally, server sync reported warning.");
+                }
+            }
 
             if (typeof window !== "undefined") {
                 window.dispatchEvent(new CustomEvent("banner-updated", { detail: bannerUrl }));
             }
 
-            // 3. Await profile refresh so state has fresh data from DB
-            try {
-                await refreshProfile();
-            } catch (pErr) {
-                console.warn("[LandlordSettings] Non-critical refreshProfile note:", pErr);
+            // 3. Non-blocking profile refresh if profile fields were touched
+            if (hasProfileChanged) {
+                refreshProfile().catch((pErr) => {
+                    console.warn("[LandlordSettings] Non-critical refreshProfile note:", pErr);
+                });
             }
 
             // 4. Update Snapshot to clear isDirty immediately
@@ -2364,102 +2387,45 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 case "Themes & Contrast":
                     return (
                         <div className="space-y-8">
-                            <GlassCard title="Visual Theme" description="Choose how iReside renders across all screens.">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => toggleThemeWithTransition("light")}
-                                        className={cn(
-                                            "flex items-center justify-between p-5 rounded-2xl border transition-all text-left group",
-                                            resolvedTheme === "light"
-                                                ? "border-primary bg-primary/10 ring-2 ring-primary/40 text-foreground"
-                                                : "border-border/60 hover:border-border hover:bg-surface-2 text-muted-foreground"
-                                        )}
-                                    >
-                                        <div className="flex items-center gap-3.5">
-                                            <div className="size-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center border border-amber-500/20">
-                                                <Sun className="size-5" />
-                                            </div>
-                                            <div>
-                                                <div className="text-sm font-black text-foreground">Light Mode</div>
-                                                <div className="text-xs text-muted-foreground">Clean, high-brightness daylight aesthetic</div>
-                                            </div>
-                                        </div>
-                                        {resolvedTheme === "light" && <Check className="size-5 text-primary" />}
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => toggleThemeWithTransition("dark")}
-                                        className={cn(
-                                            "flex items-center justify-between p-5 rounded-2xl border transition-all text-left group",
-                                            resolvedTheme === "dark"
-                                                ? "border-primary bg-primary/10 ring-2 ring-primary/40 text-foreground"
-                                                : "border-border/60 hover:border-border hover:bg-surface-2 text-muted-foreground"
-                                        )}
-                                    >
-                                        <div className="flex items-center gap-3.5">
-                                            <div className="size-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
-                                                <Moon className="size-5" />
-                                            </div>
-                                            <div>
-                                                <div className="text-sm font-black text-foreground">Dark Mode</div>
-                                                <div className="text-xs text-muted-foreground">Sleek, eye-friendly low-light atmosphere</div>
-                                            </div>
-                                        </div>
-                                        {resolvedTheme === "dark" && <Check className="size-5 text-primary" />}
-                                    </button>
-                                </div>
-                            </GlassCard>
-
-                            <GlassCard 
-                                title="Accessibility: High Contrast Mode" 
-                                description="Engineered per WCAG 2.1 AAA standards for maximum legibility and visibility."
-                            >
+                            <GlassCard title="Visual Theme" description="Choose how iReside renders across all screens. Default is light mode.">
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 p-4 rounded-2xl bg-surface-2 border border-border/60">
                                     <div className="flex items-start gap-4">
                                         <div className={cn(
                                             "size-12 rounded-xl flex items-center justify-center shrink-0 border transition-all",
-                                            isHighContrast 
-                                                ? "bg-foreground text-background border-foreground font-black" 
+                                            resolvedTheme === "dark" 
+                                                ? "bg-primary/10 text-primary border-primary/30" 
                                                 : "bg-surface-3 text-muted-foreground border-border"
                                         )}>
-                                            <Contrast className="size-6" />
+                                            {resolvedTheme === "dark" ? (
+                                                <Moon className="size-6 text-primary" />
+                                            ) : (
+                                                <Sun className="size-6 text-amber-500" />
+                                            )}
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <h4 className="text-sm font-black text-foreground">Universal High Contrast</h4>
+                                                <h4 className="text-sm font-black text-foreground">Dark Mode</h4>
                                                 <span className={cn(
                                                     "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
-                                                    isHighContrast ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-surface-3 text-muted-foreground"
+                                                    resolvedTheme === "dark" 
+                                                        ? "bg-primary/20 text-primary border border-primary/30" 
+                                                        : "bg-surface-3 text-muted-foreground"
                                                 )}>
-                                                    {isHighContrast ? "Active (WCAG AAA)" : "Off"}
+                                                    {resolvedTheme === "dark" ? "Enabled" : "Disabled"}
                                                 </span>
                                             </div>
                                             <p className="text-xs text-muted-foreground mt-1 max-w-xl">
-                                                Replaces all soft neumorphic shadows with crisp 2.5px solid borders, pure black/white contrasts, and reinforced bold text across the landlord & tenant portals.
+                                                {resolvedTheme === "dark"
+                                                    ? "Sleek, eye-friendly low-light atmosphere active across all screens."
+                                                    : "Clean, high-brightness daylight aesthetic active by default across all screens."}
                                             </p>
                                         </div>
                                     </div>
                                     <ToggleSwitch 
-                                        enabled={isHighContrast} 
-                                        onToggle={toggleHighContrast} 
+                                        enabled={resolvedTheme === "dark"} 
+                                        onToggle={() => toggleThemeWithTransition(resolvedTheme === "dark" ? "light" : "dark")} 
                                     />
                                 </div>
-                            </GlassCard>
-
-                            <GlassCard 
-                                title="Accessibility: Text Size & Readability" 
-                                description="Adjust interface font scaling for maximum comfort without compromising card structures or layout symmetry."
-                            >
-                                <FontSizeToggle variant="slider" showPreview={true} />
-                            </GlassCard>
-
-                            <GlassCard 
-                                title="Time & Clock Format" 
-                                description="Choose between 12-hour (AM/PM) and 24-hour military format for dashboards, digital clocks, and operational timestamps."
-                            >
-                                <TimeFormatToggle variant="segmented" showPreview={true} />
                             </GlassCard>
 
                             <GlassCard 
@@ -2623,6 +2589,56 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                                             <span>{preset.name}</span>
                                         </button>
                                     ))}
+                                </div>
+                            </GlassCard>
+
+                            <GlassCard 
+                                title="Time & Clock Format" 
+                                description="Choose between 12-hour (AM/PM) and 24-hour military format for dashboards, digital clocks, and operational timestamps."
+                            >
+                                <TimeFormatToggle variant="segmented" showPreview={true} />
+                            </GlassCard>
+
+                            <GlassCard 
+                                title="Accessibility: Text Size & Readability" 
+                                description="Adjust interface font scaling for maximum comfort without compromising card structures or layout symmetry."
+                            >
+                                <FontSizeToggle variant="slider" showPreview={true} />
+                            </GlassCard>
+
+                            <GlassCard 
+                                title="Accessibility: High Contrast Mode" 
+                                description="Engineered per WCAG 2.1 AAA standards for maximum legibility and visibility."
+                            >
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 p-4 rounded-2xl bg-surface-2 border border-border/60">
+                                    <div className="flex items-start gap-4">
+                                        <div className={cn(
+                                            "size-12 rounded-xl flex items-center justify-center shrink-0 border transition-all",
+                                            isHighContrast 
+                                                ? "bg-foreground text-background border-foreground font-black" 
+                                                : "bg-surface-3 text-muted-foreground border-border"
+                                        )}>
+                                            <Contrast className="size-6" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="text-sm font-black text-foreground">Universal High Contrast</h4>
+                                                <span className={cn(
+                                                    "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
+                                                    isHighContrast ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-surface-3 text-muted-foreground"
+                                                )}>
+                                                    {isHighContrast ? "Active (WCAG AAA)" : "Off"}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-1 max-w-xl">
+                                                Replaces all soft neumorphic shadows with crisp 2.5px solid borders, pure black/white contrasts, and reinforced bold text across the landlord & tenant portals.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <ToggleSwitch 
+                                        enabled={isHighContrast} 
+                                        onToggle={toggleHighContrast} 
+                                    />
                                 </div>
                             </GlassCard>
                         </div>

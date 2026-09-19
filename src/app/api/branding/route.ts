@@ -262,15 +262,21 @@ export async function POST(request: NextRequest) {
     // A Windows installer cannot change its embedded icon or Start-menu name at
     // runtime. Queue a fresh branded package after an identity change, but do
     // not make a successful branding save depend on GitHub Actions availability.
-    const previousPropertyName = existingProperty?.name || DEFAULT_BRANDING.propertyName;
-    const previousLogoUrl =
-      currentBranding?.logoUrl || (existingProperty?.images?.[0] ? existingProperty.images[0] : null);
+    const previousPropertyName =
+      currentBranding?.propertyName || existingProperty?.name || DEFAULT_BRANDING.propertyName;
+    const previousLogoUrl = currentBranding?.logoUrl ?? null;
     const identityChanged =
       (body.propertyName !== undefined && body.propertyName !== previousPropertyName) ||
       (body.logoUrl !== undefined && body.logoUrl !== previousLogoUrl);
-    const desktopBuildQueued = identityChanged
-      ? await queueBrandedInstaller(request.nextUrl.origin)
-      : false;
+
+    let desktopBuildQueued = false;
+    if (identityChanged) {
+      // Fire-and-forget so branding save response returns immediately without waiting for GitHub API
+      queueBrandedInstaller(request.nextUrl.origin).catch((err) => {
+        console.warn("[POST /api/branding] Non-blocking queueBrandedInstaller error:", err);
+      });
+      desktopBuildQueued = true;
+    }
 
     return NextResponse.json({ ...fullBranding, desktopBuildQueued });
   } catch (error: any) {
