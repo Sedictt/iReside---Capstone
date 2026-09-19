@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { parseModelCensorshipResponse, redactSensitiveContent } from "@/lib/messages/censorship";
-import { combinedProfanityLexicon, englishProfanityLexicon, filipinoProfanityLexicon } from "@/lib/messages/profanity-lexicon";
-import { spamLexicon } from "@/lib/messages/spam-lexicon";
+import { parseModelCensorshipResponse, redactSensitiveContent } from "../censorship";
+import { combinedProfanityLexicon, englishProfanityLexicon, filipinoProfanityLexicon } from "../profanity-lexicon";
+import { spamLexicon } from "../spam-lexicon";
 
 describe("messages censorship", () => {
     it("redacts sensitive credentials and contact details", () => {
@@ -162,20 +162,20 @@ describe("messages censorship", () => {
     it("validates curated lexicons at load time and removes blank entries", () => {
         expect(filipinoProfanityLexicon.tokens.length).toBeGreaterThan(0);
         expect(filipinoProfanityLexicon.phrases.length).toBeGreaterThan(0);
-        expect(filipinoProfanityLexicon.tokens.some((token) => token.trim().length === 0)).toBe(false);
-        expect(filipinoProfanityLexicon.phrases.some((phrase) => phrase.trim().length === 0)).toBe(false);
+        expect(filipinoProfanityLexicon.tokens.some((token: string) => token.trim().length === 0)).toBe(false);
+        expect(filipinoProfanityLexicon.phrases.some((phrase: string) => phrase.trim().length === 0)).toBe(false);
 
         expect(englishProfanityLexicon.tokens.length).toBeGreaterThan(0);
         expect(englishProfanityLexicon.phrases.length).toBeGreaterThan(0);
-        expect(englishProfanityLexicon.tokens.some((token) => token.trim().length === 0)).toBe(false);
-        expect(englishProfanityLexicon.phrases.some((phrase) => phrase.trim().length === 0)).toBe(false);
+        expect(englishProfanityLexicon.tokens.some((token: string) => token.trim().length === 0)).toBe(false);
+        expect(englishProfanityLexicon.phrases.some((phrase: string) => phrase.trim().length === 0)).toBe(false);
 
         expect(combinedProfanityLexicon.tokens.length).toBeGreaterThan(filipinoProfanityLexicon.tokens.length);
         expect(combinedProfanityLexicon.phrases.length).toBeGreaterThan(filipinoProfanityLexicon.phrases.length);
 
         expect(spamLexicon.tokens.length).toBeGreaterThan(0);
         expect(spamLexicon.phrases.length).toBeGreaterThan(0);
-        expect(spamLexicon.tokens.some((token) => token.trim().length === 0)).toBe(false);
-        expect(spamLexicon.phrases.some((phrase) => phrase.trim().length === 0)).toBe(false);
+        expect(spamLexicon.tokens.some((token: string) => token.trim().length === 0)).toBe(false);
+        expect(spamLexicon.phrases.some((phrase: string) => phrase.trim().length === 0)).toBe(false);
     });
 });

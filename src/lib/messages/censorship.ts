@@ -1,5 +1,5 @@
-import { combinedProfanityLexicon, filipinoProfanityLexicon } from "@/lib/messages/profanity-lexicon";
-import { spamLexicon } from "@/lib/messages/spam-lexicon";
+import { combinedProfanityLexicon, filipinoProfanityLexicon } from "./profanity-lexicon";
+import { spamLexicon } from "./spam-lexicon";
 
 export type MessageCensorshipResult = {
     isSensitive: boolean;

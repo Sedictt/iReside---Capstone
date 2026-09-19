@@ -272,14 +272,19 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
 
       // 4. Persist to backend database if requested
       if (persistToDatabase && typeof navigator !== "undefined" && navigator.onLine) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
         try {
           const res = await fetch("/api/branding", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(merged),
+            signal: controller.signal,
           });
+          clearTimeout(timeoutId);
           return res.ok;
         } catch (err) {
+          clearTimeout(timeoutId);
           console.warn("[BrandProvider] Failed to persist to backend:", err);
           return false;
         }

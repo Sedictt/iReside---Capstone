@@ -1,5 +1,5 @@
 import { z } from "zod";
-import rawLexicon from "@/lib/messages/moderation/spam-phishing.json";
+import rawLexicon from "./moderation/spam-phishing.json";
 
 const lexiconSchema = z.object({
     version: z.number().int().positive(),
