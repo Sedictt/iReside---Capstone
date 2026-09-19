@@ -42,6 +42,7 @@ import { useBrand } from "@/context/BrandContext";
 import { applyBrandCssVariables } from "@/lib/branding/colors";
 import { useAuth } from "@/hooks/useAuth";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
+import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
 
 // HSL to HEX helper
 function hslToHex(h: number, s: number, l: number): string {
@@ -206,6 +207,8 @@ function WizardContent() {
   // Step 4: Launch State
   const [isLaunching, setIsLaunching] = useState(false);
   const [isLaunched, setIsLaunched] = useState(false);
+  const [launchedSecurityKey, setLaunchedSecurityKey] = useState<string | null>(null);
+  const [isSecurityKeyAcknowledged, setIsSecurityKeyAcknowledged] = useState(false);
 
   // Contrast calculations
   const surfaceHex = modePreference === "dark" ? "#09090b" : "#ffffff";
@@ -351,6 +354,9 @@ function WizardContent() {
         },
         false // already saved in database by /api/setup/launch
       );
+      if (json.securityKey) {
+        setLaunchedSecurityKey(json.securityKey);
+      }
       setIsLaunched(true);
       toast.success("Property Portal White-Labeled & Initialized!", {
         description: `Branded as ${propertyName}. Master Admin claimed and operational.`,
@@ -1289,31 +1295,58 @@ function WizardContent() {
                     <motion.div
                       initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-between gap-3"
+                      className="space-y-4"
                     >
-                      <div className="flex items-center gap-2.5">
-                        <CheckCircle2 className="size-5 text-emerald-600" />
-                        <div>
-                          <h4 className="text-xs font-bold uppercase tracking-wide text-zinc-950 dark:text-white">
-                            Portal Live & Personalized!
-                          </h4>
-                          <p className="text-[10px] text-zinc-500">
-                            Your workspace is ready for operations.
-                          </p>
-                        </div>
-                      </div>
+                      {launchedSecurityKey && (
+                        <SecurityKeyDisplayCard
+                          securityKey={launchedSecurityKey}
+                          isAcknowledged={isSecurityKeyAcknowledged}
+                          onToggleAcknowledge={setIsSecurityKeyAcknowledged}
+                          title="Master Admin Security Recovery Key"
+                          description="Your workspace is initialized. Save your single-use recovery key now in case you ever lose access to your email."
+                          accountEmail={adminEmail}
+                        />
+                      )}
 
-                      <Link
-                        href="/landlord/dashboard"
-                        className="px-4 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1.5 shrink-0 shadow-xs"
-                        style={{
-                          backgroundColor: primaryColor,
-                          color: primaryTextColor,
-                        }}
-                      >
-                        <span>Open Dashboard</span>
-                        <ArrowRight className="size-3.5" />
-                      </Link>
+                      <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <CheckCircle2 className="size-5 text-emerald-600 shrink-0" />
+                          <div>
+                            <h4 className="text-xs font-bold uppercase tracking-wide text-zinc-950 dark:text-white">
+                              Portal Live & Personalized!
+                            </h4>
+                            <p className="text-[10px] text-zinc-500">
+                              {launchedSecurityKey && !isSecurityKeyAcknowledged
+                                ? "Confirm saving your security key above to open your dashboard."
+                                : "Your workspace is ready for operational management."}
+                            </p>
+                          </div>
+                        </div>
+
+                        <Link
+                          href={!launchedSecurityKey || isSecurityKeyAcknowledged ? "/landlord/dashboard" : "#"}
+                          onClick={(e) => {
+                            if (launchedSecurityKey && !isSecurityKeyAcknowledged) {
+                              e.preventDefault();
+                              toast.error("Please confirm that you have saved your security recovery key before proceeding.");
+                            }
+                          }}
+                          aria-disabled={launchedSecurityKey ? !isSecurityKeyAcknowledged : false}
+                          className={cn(
+                            "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-xs",
+                            !launchedSecurityKey || isSecurityKeyAcknowledged
+                              ? "cursor-pointer active:scale-95"
+                              : "opacity-40 cursor-not-allowed"
+                          )}
+                          style={{
+                            backgroundColor: primaryColor,
+                            color: primaryTextColor,
+                          }}
+                        >
+                          <span>Open Dashboard</span>
+                          <ArrowRight className="size-3.5" />
+                        </Link>
+                      </div>
                     </motion.div>
                   )}
                 </motion.div>

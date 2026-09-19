@@ -55,6 +55,7 @@ import { useHighContrast } from "@/hooks/useHighContrast";
 import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
 import { TimeFormatToggle } from "@/components/ui/TimeFormatToggle";
 import { MobileSettingsCategoryDropdown } from "@/components/mobile/shared/MobileSettingsCategoryDropdown";
+import { SecurityKeyManagementCard } from "@/components/auth/SecurityKeyManagementCard";
 
 // --- Types ---
 type SettingsCategory = "Identity" | "Accessibility" | "Security" | "Notifications" | "Billing" | "Data";
@@ -820,42 +821,46 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
                     );
                 case "Protection":
                     return (
-                        <GlassCard title="Two-Factor Authentication" description="Add an extra layer of security to your account.">
-                            {twoFAStatus === 'loading' ? (
-                                <div className="flex items-center justify-center py-12">
-                                    <div className="relative flex items-center justify-center">
-                                        <div className="absolute size-12 animate-ping rounded-full bg-primary/20"></div>
-                                        <div className="relative size-12 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-                                    </div>
-                                </div>
-                            ) : twoFAStatus === 'enabled' ? (
-                                <div className="space-y-6 max-w-lg">
-                                    <div className="flex items-center gap-4 p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10">
-                                        <div className="size-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                                            <ShieldCheck className="size-5 text-emerald-500" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-black text-foreground">2FA is Active</p>
-                                            <p className="text-xs text-muted-foreground">Your account is protected with two-factor authentication.</p>
+                        <div className="space-y-6 max-w-2xl">
+                            <SecurityKeyManagementCard accountEmail={profile?.email || undefined} />
+
+                            <GlassCard title="Two-Factor Authentication" description="Add an extra layer of security to your account.">
+                                {twoFAStatus === 'loading' ? (
+                                    <div className="flex items-center justify-center py-12">
+                                        <div className="relative flex items-center justify-center">
+                                            <div className="absolute size-12 animate-ping rounded-full bg-primary/20"></div>
+                                            <div className="relative size-12 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
                                         </div>
                                     </div>
-                                    <div className="pt-4 border-t border-border/40">
-                                        <p className="text-xs text-muted-foreground mb-4">To disable 2FA, please contact support.</p>
+                                ) : twoFAStatus === 'enabled' ? (
+                                    <div className="space-y-6 max-w-lg">
+                                        <div className="flex items-center gap-4 p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10">
+                                            <div className="size-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                                                <ShieldCheck className="size-5 text-emerald-500" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-black text-foreground">2FA is Active</p>
+                                                <p className="text-xs text-muted-foreground">Your account is protected with two-factor authentication.</p>
+                                            </div>
+                                        </div>
+                                        <div className="pt-4 border-t border-border/40">
+                                            <p className="text-xs text-muted-foreground mb-4">To disable 2FA, please contact support.</p>
+                                        </div>
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="space-y-6 max-w-lg">
-                                    <p className="text-sm text-muted-foreground">Two-factor authentication adds an extra layer of security by requiring a verification code in addition to your password.</p>
-                                    <button 
-                                        type="button"
-                                        className="w-full rounded-xl sm:rounded-2xl neumorphic-primary py-3 text-sm font-black text-primary-foreground transition-all shadow-md active:scale-95 cursor-pointer"
-                                        onClick={() => toast.info("2FA setup is managed by your administrator.")}
-                                    >
-                                        Enable Two-Factor Authentication
-                                    </button>
-                                </div>
-                            )}
-                        </GlassCard>
+                                ) : (
+                                    <div className="space-y-6 max-w-lg">
+                                        <p className="text-sm text-muted-foreground">Two-factor authentication adds an extra layer of security by requiring a verification code in addition to your password.</p>
+                                        <button 
+                                            type="button"
+                                            className="w-full rounded-xl sm:rounded-2xl neumorphic-primary py-3 text-sm font-black text-primary-foreground transition-all shadow-md active:scale-95 cursor-pointer"
+                                            onClick={() => toast.info("2FA setup is managed by your administrator.")}
+                                        >
+                                            Enable Two-Factor Authentication
+                                        </button>
+                                    </div>
+                                )}
+                            </GlassCard>
+                        </div>
                     );
                 case "Sessions":
                     return (

@@ -40,6 +40,7 @@ import { AvatarPicker } from "@/components/profile/AvatarPicker";
 import { PropertyAmenitiesSelector } from "@/components/landlord/properties/PropertyAmenitiesSelector";
 import html2canvas from "html2canvas";
 import { LucideIcon } from "lucide-react";
+import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
 
 interface OnboardingData {
     email: string;
@@ -69,6 +70,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     
     const [currentStep, setCurrentStep] = useState<Step>("password");
     const [data, setData] = useState<OnboardingData | null>(null);
+    const [onboardingSecurityKey, setOnboardingSecurityKey] = useState<string | null>(null);
+    const [isKeyAcknowledged, setIsKeyAcknowledged] = useState(false);
     
     // Form states
     const [password, setPassword] = useState("");
@@ -376,16 +379,19 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                 return;
             }
             
+            if (result.securityKey) {
+                setOnboardingSecurityKey(result.securityKey);
+            } else {
+                setTimeout(() => {
+                    router.push("/login?message=onboarding-success");
+                }, 2000);
+            }
+
             setCurrentStep("complete");
             if (data?.email) {
                 localStorage.removeItem(`onboarding_progress_${data.email}`);
             }
             toast.success("Account created successfully!");
-            
-            // Redirect after a short delay
-            setTimeout(() => {
-                router.push("/login?message=onboarding-success");
-            }, 2000);
             
         } catch (err) {
             toast.error("An error occurred");
@@ -425,15 +431,44 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     if (currentStep === "complete") {
         return (
             <div className="min-h-screen bg-[#121212] flex items-center justify-center p-4">
-                <div className="max-w-md w-full p-10 text-center bg-white/[0.02] border border-white/12 rounded-3xl backdrop-blur-xl">
-                    <div className="size-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto border border-primary/20 shadow-[0_0_30px_rgba(109,152,56,0.2)] mb-6">
-                        <CheckCircle className="size-12 text-emerald-500" />
+                <div className="max-w-md w-full p-8 text-center bg-white/[0.02] border border-white/12 rounded-3xl backdrop-blur-xl space-y-6">
+                    <div className="size-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto border border-primary/20 shadow-[0_0_30px_rgba(109,152,56,0.2)]">
+                        <CheckCircle className="size-10 text-emerald-500" />
                     </div>
-                    <h2 className="text-3xl font-black text-white mb-2">All Set!</h2>
-                    <p className="text-white/60 mb-6">
-                        Your landlord account has been created. Redirecting you to login...
-                    </p>
-                    <Loader2 className="size-6 animate-spin text-primary mx-auto" />
+                    <div>
+                        <h2 className="text-2xl font-black text-white mb-1">Account Created!</h2>
+                        <p className="text-xs text-white/60">
+                            Your landlord portal configuration has been finalized.
+                        </p>
+                    </div>
+
+                    {onboardingSecurityKey ? (
+                        <div className="space-y-4 text-left">
+                            <SecurityKeyDisplayCard
+                                securityKey={onboardingSecurityKey}
+                                isAcknowledged={isKeyAcknowledged}
+                                onToggleAcknowledge={setIsKeyAcknowledged}
+                                accountEmail={data?.email}
+                                title="Landlord Security Recovery Key"
+                                description="Save your single-use recovery key now in case you lose access to your email."
+                            />
+
+                            <button
+                                type="button"
+                                disabled={!isKeyAcknowledged}
+                                onClick={() => router.push("/login?message=onboarding-success")}
+                                className="w-full py-3.5 bg-primary text-black rounded-xl font-black hover:bg-primary-dark transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-xs uppercase tracking-wider"
+                            >
+                                <span>Proceed to Login</span>
+                                <ArrowRight className="size-4" />
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="py-4">
+                            <p className="text-white/60 mb-4 text-xs">Redirecting to login...</p>
+                            <Loader2 className="size-6 animate-spin text-primary mx-auto" />
+                        </div>
+                    )}
                 </div>
             </div>
         );

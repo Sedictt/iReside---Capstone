@@ -79,6 +79,16 @@ describe("POST /api/setup/launch (Turnkey Setup Claiming & Locking)", () => {
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === "profiles") return mockProfilesChain;
       if (table === "properties") return mockPropertyQuery;
+      if (table === "user_security_settings") {
+        return {
+          upsert: vi.fn().mockResolvedValue({ error: null }),
+        };
+      }
+      if (table === "user_audit_logs") {
+        return {
+          insert: vi.fn().mockResolvedValue({ error: null }),
+        };
+      }
       return {};
     });
 
