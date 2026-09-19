@@ -370,7 +370,7 @@ export default function TenantDashboard() {
     }, [lease, leaseProgress.endLabel, nextPayment, overduePayments.length, overdueTotal]);
 
     return (
-        <div className="relative md:pr-[104px] lg:pr-[112px]">
+        <div className="w-full relative md:pr-[104px] lg:pr-[112px]">
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <Image
                     src="https://images.unsplash.com/photo-1481277542470-605612bd2d61?q=80&w=2600&auto=format&fit=crop"
