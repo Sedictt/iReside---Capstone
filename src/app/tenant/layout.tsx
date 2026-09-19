@@ -51,7 +51,7 @@ export default function TenantLayout({
                         >
                             <div className={cn(
                                 "w-full z-[100] pointer-events-none",
-                                !useImmersiveLayout && "max-w-7xl mr-auto px-4 sm:px-6 md:pr-[104px] lg:pr-[112px]"
+                                !useImmersiveLayout && "w-full px-4 sm:px-6 lg:px-8 md:pr-[104px] lg:pr-[112px]"
                             )}>
                                 <NotificationBanner />
                             </div>
@@ -68,7 +68,7 @@ export default function TenantLayout({
                                     {useImmersiveLayout ? (
                                         children
                                     ) : (
-                                        <div className="w-full max-w-7xl mr-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 flex flex-col">
+                                        <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 flex flex-col">
                                             {children}
                                         </div>
                                     )}
