@@ -606,19 +606,19 @@ export default function TenantDashboard() {
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Quick Services</h3>
                             </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-5 gap-2.5 sm:gap-3 lg:gap-4">
                                 {quickActions.map((quickActionItem) => {
                                     const IconComponent = ICON_MAP[quickActionItem.iconName];
                                     return (
                                         <Link
                                             key={quickActionItem.id}
                                             href={quickActionItem.href}
-                                            className="neumorphic-extruded rounded-3xl p-6 flex flex-col items-center justify-center gap-4 transition-all hover:-translate-y-1 group"
+                                            className="neumorphic-extruded rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 flex flex-col items-center justify-center gap-3 transition-all hover:-translate-y-1 group"
                                         >
-                                            <div className={cn("size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 neumorphic-inset-card", quickActionItem.colorClass)}>
-                                                {IconComponent && <IconComponent className="size-7" />}
+                                            <div className={cn("size-12 sm:size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 neumorphic-inset-card", quickActionItem.colorClass)}>
+                                                {IconComponent && <IconComponent className="size-6 sm:size-7" />}
                                             </div>
-                                            <span className="text-xs font-black text-center group-hover:text-primary transition-colors uppercase tracking-widest">{quickActionItem.label}</span>
+                                            <span className="text-[10px] sm:text-xs font-black text-center group-hover:text-primary transition-colors uppercase tracking-wider truncate max-w-full">{quickActionItem.label}</span>
                                         </Link>
                                     );
                                 })}
