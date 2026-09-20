@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { m as motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Plus, Layers, Edit2, Check } from 'lucide-react';
+import { ChevronDown, Plus, Layers, Edit2, Check, Home } from 'lucide-react';
 import { FloorId } from '../types';
 
 interface FloorTab {
@@ -20,6 +20,7 @@ interface FloorSelectorProps {
     isDark: boolean;
     readOnly?: boolean;
     itemCount: number;
+    assignedFloorKey?: string;
 }
 
 export const FloorSelector: React.FC<FloorSelectorProps> = ({
@@ -30,7 +31,8 @@ export const FloorSelector: React.FC<FloorSelectorProps> = ({
     onRename,
     isDark,
     readOnly = false,
-    itemCount
+    itemCount,
+    assignedFloorKey
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -47,6 +49,7 @@ export const FloorSelector: React.FC<FloorSelectorProps> = ({
     }, []);
 
     const activeTab = floorTabs.find(t => t.id === activeFloor);
+    const isCurrentActiveAssigned = Boolean(readOnly && assignedFloorKey && activeTab?.id === assignedFloorKey);
 
     return (
         <div className="flex items-center gap-1.5 z-50" ref={dropdownRef}>
@@ -67,7 +70,11 @@ export const FloorSelector: React.FC<FloorSelectorProps> = ({
                             flex size-6 shrink-0 items-center justify-center rounded-lg
                             ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}
                         `}>
-                            <Layers className={`size-3.5 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`} />
+                            {isCurrentActiveAssigned ? (
+                                <Home className="size-3.5 text-primary" />
+                            ) : (
+                                <Layers className={`size-3.5 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`} />
+                            )}
                         </div>
                         <span className={`text-xs font-black truncate text-left uppercase tracking-wider ${isDark ? 'text-white' : 'text-zinc-900'}`}>
                             {activeTab?.title || (floorTabs.length === 0 ? 'No Floors' : 'Unknown')}
@@ -85,7 +92,7 @@ export const FloorSelector: React.FC<FloorSelectorProps> = ({
                             exit={{ opacity: 0, y: 8, scale: 0.95 }}
                             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                             className={`
-                                absolute top-full left-0 z-[100] w-full min-w-[200px] p-1.5 rounded-2xl border backdrop-blur-2xl shadow-2xl
+                                absolute top-full left-0 z-[100] w-full min-w-[220px] p-1.5 rounded-2xl border backdrop-blur-2xl shadow-2xl
                                 ${isDark 
                                     ? 'bg-zinc-900/95 border-white/10 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.6)]' 
                                     : 'bg-white/95 border-zinc-200 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)]'}
@@ -108,26 +115,37 @@ export const FloorSelector: React.FC<FloorSelectorProps> = ({
                                         )}
                                     </div>
                                 ) : (
-                                    floorTabs.map((tab) => (
-                                        <button
-                                            key={tab.id}
-                                            onClick={() => {
-                                                onSelect(tab.id);
-                                                setIsOpen(false);
-                                            }}
-                                            className={`
-                                                flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 group
-                                                ${tab.id === activeFloor
-                                                    ? (isDark ? 'bg-primary/20 text-primary' : 'bg-primary/10 text-primary')
-                                                    : (isDark ? 'text-zinc-400 hover:bg-white/5 hover:text-white' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900')}
-                                            `}
-                                        >
-                                            <span>{tab.title}</span>
-                                            {tab.id === activeFloor && (
-                                                <div className="size-1.5 rounded-full bg-primary" />
-                                            )}
-                                        </button>
-                                    ))
+                                    floorTabs.map((tab) => {
+                                        const isAssigned = Boolean(readOnly && assignedFloorKey && tab.id === assignedFloorKey);
+                                        return (
+                                            <button
+                                                key={tab.id}
+                                                onClick={() => {
+                                                    onSelect(tab.id);
+                                                    setIsOpen(false);
+                                                }}
+                                                className={`
+                                                    flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 group
+                                                    ${tab.id === activeFloor
+                                                        ? (isDark ? 'bg-primary/20 text-primary' : 'bg-primary/10 text-primary')
+                                                        : (isDark ? 'text-zinc-400 hover:bg-white/5 hover:text-white' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900')}
+                                                `}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <span>{tab.title}</span>
+                                                    {isAssigned && (
+                                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/15 text-primary border border-primary/30 text-[9px] font-bold tracking-normal normal-case">
+                                                            <Home className="size-2.5" />
+                                                            <span>Your Unit</span>
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {tab.id === activeFloor && (
+                                                    <div className="size-1.5 rounded-full bg-primary" />
+                                                )}
+                                            </button>
+                                        );
+                                    })
                                 )}
                             </div>
                         </motion.div>

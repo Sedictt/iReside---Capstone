@@ -441,6 +441,18 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         ...structures.map(s => ({ kind: 'structure' as const, id: s.id, x: s.x, y: s.y, w: s.w, h: s.h }))
     ], [units, corridors, structures]);
 
+    const assignedFloorKey = useMemo(() => {
+        if (!currentUnitId || !readOnly) return undefined;
+        const assigned = dbUnits.find(u => u.id === currentUnitId);
+        if (assigned?.position?.floor_key) return assigned.position.floor_key;
+        for (const [floorKey, layout] of Object.entries(floorLayouts)) {
+            if (layout.units.some(u => u.id === currentUnitId || u.dbId === currentUnitId)) {
+                return floorKey;
+            }
+        }
+        return undefined;
+    }, [currentUnitId, readOnly, dbUnits, floorLayouts]);
+
     useEffect(() => {
         setHasMounted(true);
     }, []);
@@ -3413,6 +3425,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 isDark={isDark}
                                 readOnly={readOnly}
                                 itemCount={activeFloorItemCount}
+                                assignedFloorKey={assignedFloorKey}
                             />
                         )}
                     </div>
@@ -3878,7 +3891,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         )}
                                     </motion.div>
                                     );
-                                })}
+                               })}
 
 {units.map((unit) => {
                                         const isFiltered = !statusFilters.includes(unit.status);
@@ -3888,13 +3901,18 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         const unitNoteText = unitNotes[unit.id]?.trim();
                                         const hasNote = Boolean(unitNoteText && unitNoteText.length > 0);
                                         const isAnyDragging = Boolean(activeDragItem || draggingUnitId || draggingCorridorId || draggingStructureId || isPanning || sidebarBlockGhost);
+                                        const isCurrentTenantUnit = Boolean(readOnly && currentUnitId && (unit.id === currentUnitId || unit.dbId === currentUnitId));
 
                                         return (
                                             <motion.div
                                                 key={unit.id}
                                                 data-unit-id={unit.id}
                                                 data-unit-card="true"
-                                                className={`absolute group cursor-pointer ${
+                                                className={`absolute group ${
+                                                    isCurrentTenantUnit
+                                                        ? 'cursor-pointer ring-2 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_15px_rgba(var(--primary-rgb,59,130,246),0.25)]'
+                                                        : 'cursor-pointer'
+                                                } ${
                                                     draggingUnitId === unit.id
                                                         ? dragPlacement?.kind === "unit" && dragPlacement.id === unit.id && !dragPlacement.isValid
                                                             ? 'ring-2 ring-red-500/80 ring-offset-2 ring-offset-background'
@@ -3908,7 +3926,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     top: displayY,
                                                     width: unit.w,
                                                     height: unit.h,
-                                                    zIndex: isDragging ? 40 : (floatingChatUnitId === unit.id || floatingNoteUnitId === unit.id) ? 60 : 10,
+                                                    zIndex: isDragging ? 40 : isCurrentTenantUnit ? 30 : (floatingChatUnitId === unit.id || floatingNoteUnitId === unit.id) ? 60 : 10,
                                                 }}
                                                 initial={false}
                                                 animate={{ 
@@ -3997,6 +4015,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                         isFiltered
                                                             ? (isDark ? 'bg-zinc-800/40 opacity-100' : 'bg-zinc-300/40 opacity-100')
                                                             : `opacity-[0.18] group-hover:opacity-[0.3] ${
+                                                                isCurrentTenantUnit ? 'bg-primary' :
                                                                 unit.status === 'occupied' ? 'bg-blue-500' :
                                                                 unit.status === 'vacant' ? 'bg-emerald-500' :
                                                                 unit.status === 'maintenance' ? 'bg-red-500' : 'bg-amber-500'
@@ -4005,7 +4024,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
                                                     <div className="absolute inset-0 flex flex-col items-center justify-center p-2 z-20">
                                                         <div className={`size-2.5 rounded-full mb-2 transition-all duration-300 ease-out ${
-                                                            isFiltered
+                                                            isCurrentTenantUnit
+                                                                ? 'bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb,59,130,246),0.9)] animate-pulse'
+                                                                : isFiltered
                                                                 ? (isDark ? 'bg-zinc-500 border border-zinc-400/40 shadow-none' : 'bg-zinc-400 border border-zinc-500/40 shadow-none')
                                                                 : unit.status === 'occupied' ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.9)]'
                                                                 : unit.status === 'vacant' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.9)]'
@@ -4014,45 +4035,61 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                         }`}></div>
 
                                                         <h4 className={`text-xs font-black drop-shadow-sm transition-colors duration-300 ease-out ${
-                                                            isFiltered
+                                                            isCurrentTenantUnit
+                                                                ? (isDark ? 'text-white' : 'text-zinc-950')
+                                                                : isFiltered
                                                                 ? (isDark ? 'text-zinc-300' : 'text-zinc-600')
                                                                 : (isDark ? 'text-neutral-200' : 'text-zinc-700')
                                                         }`}>{unit.name}</h4>
 
-                                                        {unit.status === 'occupied' && unit.tenant && (
+                                                        {unit.status === 'occupied' && unit.tenant && !isCurrentTenantUnit && (
                                                             <p className={`mt-1 font-mono text-[10px] transition-colors duration-300 ease-out ${
                                                                 isFiltered
                                                                     ? (isDark ? 'text-zinc-400' : 'text-zinc-500')
                                                                     : (isDark ? 'text-neutral-400' : 'text-zinc-500')
                                                             }`}>{unit.tenant}</p>
                                                         )}
-                                                        {unit.status === 'vacant' && (
-                                                            <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
-                                                                isFiltered
-                                                                    ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
-                                                                    : (isDark ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-emerald-400/60 bg-emerald-100/90 text-emerald-800')
-                                                            }`}>Vacant</span>
-                                                        )}
-                                                        {unit.status === 'occupied' && (
-                                                            <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
-                                                                isFiltered
-                                                                    ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
-                                                                    : (isDark ? 'border-blue-500/30 bg-blue-500/10 text-blue-400' : 'border-blue-400/60 bg-blue-100/90 text-blue-800')
-                                                            }`}>Occupied</span>
-                                                        )}
-                                                        {unit.status === 'maintenance' && (
-                                                            <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
-                                                                isFiltered
-                                                                    ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
-                                                                    : (isDark ? 'border-red-500/30 bg-red-500/10 text-red-400' : 'border-red-400/60 bg-red-100/90 text-red-800')
-                                                            }`}>Maint</span>
-                                                        )}
-                                                        {unit.status === 'neardue' && (
-                                                            <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
-                                                                isFiltered
-                                                                    ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
-                                                                    : (isDark ? 'border-amber-500/30 bg-amber-500/10 text-amber-400' : 'border-amber-400/60 bg-amber-100/90 text-amber-800')
-                                                            }`}>Near Due</span>
+
+                                                        {isCurrentTenantUnit ? (
+                                                            <span className={`mt-1 inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
+                                                                isDark 
+                                                                    ? 'border-primary/40 bg-primary/20 text-primary shadow-[0_0_10px_rgba(var(--primary-rgb,59,130,246),0.2)]' 
+                                                                    : 'border-primary/50 bg-primary/10 text-primary shadow-sm'
+                                                            }`}>
+                                                                <span className="material-icons-round text-[11px]">home</span>
+                                                                Your Unit
+                                                            </span>
+                                                        ) : (
+                                                            <>
+                                                                {unit.status === 'vacant' && (
+                                                                    <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
+                                                                        isFiltered
+                                                                            ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
+                                                                            : (isDark ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-emerald-400/60 bg-emerald-100/90 text-emerald-800')
+                                                                    }`}>Vacant</span>
+                                                                )}
+                                                                {unit.status === 'occupied' && (
+                                                                    <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
+                                                                        isFiltered
+                                                                            ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
+                                                                            : (isDark ? 'border-blue-500/30 bg-blue-500/10 text-blue-400' : 'border-blue-400/60 bg-blue-100/90 text-blue-800')
+                                                                    }`}>Occupied</span>
+                                                                )}
+                                                                {unit.status === 'maintenance' && (
+                                                                    <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
+                                                                        isFiltered
+                                                                            ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
+                                                                            : (isDark ? 'border-red-500/30 bg-red-500/10 text-red-400' : 'border-red-400/60 bg-red-100/90 text-red-800')
+                                                                    }`}>Maint</span>
+                                                                )}
+                                                                {unit.status === 'neardue' && (
+                                                                    <span className={`mt-1 rounded border px-1.5 text-[9px] font-black uppercase tracking-wider transition-all duration-300 ease-out ${
+                                                                        isFiltered
+                                                                            ? (isDark ? 'border-zinc-700 bg-zinc-800/90 text-zinc-400' : 'border-zinc-400 bg-zinc-300 text-zinc-600')
+                                                                            : (isDark ? 'border-amber-500/30 bg-amber-500/10 text-amber-400' : 'border-amber-400/60 bg-amber-100/90 text-amber-800')
+                                                                    }`}>Near Due</span>
+                                                                )}
+                                                            </>
                                                         )}
                                                     </div>
 
@@ -4228,6 +4265,17 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 onClose={() => setTooltipUnit(null)} 
                                                 isDark={isDark}
                                                 zoom={scale}
+                                                isOwnUnit={Boolean(readOnly && currentUnitId && (tooltipUnit.id === currentUnitId || tooltipUnit.dbId === currentUnitId))}
+                                                onOpenMaintenance={() => {
+                                                    setActiveMaintenanceRequest(null);
+                                                    setMaintenanceModalMode("create");
+                                                    setIsMaintenanceModalOpen(true);
+                                                    setTooltipUnit(null);
+                                                }}
+                                                onOpenLease={() => {
+                                                    setIsLeasePreviewModalOpen(true);
+                                                    setTooltipUnit(null);
+                                                }}
                                                 onAction={(action: "transfer" | "complain") => {
                                                     if (action === "transfer") {
                                                         setTransferModalUnit(tooltipUnit);
@@ -4357,11 +4405,14 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
                                                     {units.map((unit) => {
                                                         const isMinimapFiltered = !statusFilters.includes(unit.status);
+                                                        const isCurrentMinimapUnit = Boolean(readOnly && currentUnitId && (unit.id === currentUnitId || unit.dbId === currentUnitId));
                                                         return (
                                                             <div
                                                                 key={`minimap-${unit.id}`}
                                                                 className={`absolute rounded-[1px] transition-all ${
-                                                                    isMinimapFiltered
+                                                                    isCurrentMinimapUnit
+                                                                        ? 'bg-primary ring-1 ring-white shadow-[0_0_8px_rgba(var(--primary-rgb,59,130,246),0.9)] z-10'
+                                                                        : isMinimapFiltered
                                                                         ? (isDark ? 'bg-zinc-600 border border-zinc-500/40' : 'bg-zinc-400 border border-zinc-500/40')
                                                                         : unit.status === 'occupied' ? 'bg-blue-500/85'
                                                                         : unit.status === 'vacant' ? 'bg-emerald-500/85'
@@ -4923,8 +4974,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 <LeasePreviewModal
                     isOpen={isLeasePreviewModalOpen}
                     onClose={() => setIsLeasePreviewModalOpen(false)}
-                    unit={selectedUnit}
-                    property={selectedProperty}
+                    unit={selectedUnit || (currentUnitId ? units.find(u => u.id === currentUnitId || u.dbId === currentUnitId) || null : null)}
+                    property={selectedProperty || (externalPropertyId ? { id: externalPropertyId, name: externalPropertyName, address: externalPropertyAddress } : null)}
                 />
 
                 <MaintenanceRequestModal
@@ -4932,7 +4983,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     onClose={() => setIsMaintenanceModalOpen(false)}
                     request={activeMaintenanceRequest}
                     mode={maintenanceModalMode}
-                    propertyId={selectedPropertyId !== "all" ? selectedPropertyId : undefined}
+                    propertyId={selectedPropertyId !== "all" ? selectedPropertyId : externalPropertyId}
                     units={dbUnits.map(u => ({ id: u.id, name: u.name }))}
                     onRequestUpdated={(updated) => {
                         if (selectedUnit) {

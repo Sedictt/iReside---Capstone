@@ -17,6 +17,9 @@ export async function GET() {
             id, 
             landlord_id, 
             unit_id,
+            start_date,
+            end_date,
+            monthly_rent,
             units (
                 id,
                 name,
@@ -93,11 +96,18 @@ export async function GET() {
             .map(p => [p.unit_id, p] as const)
     );
 
-    // Enrich units with positions
-    const unitsWithPositions = (units ?? []).map(unit => ({
-        ...unit,
-        position: positionsByUnitId.get(unit.id) ?? null
-    }));
+    // Enrich units with positions and active tenant lease details
+    const rawLease = leaseWithUnit as any;
+    const unitsWithPositions = (units ?? []).map(unit => {
+        const isCurrent = unit.id === unitInfo.id;
+        return {
+            ...unit,
+            lease_start: isCurrent ? rawLease?.start_date : undefined,
+            lease_end: isCurrent ? rawLease?.end_date : undefined,
+            rent_amount: isCurrent && rawLease?.monthly_rent ? Number(rawLease.monthly_rent) : unit.rent_amount,
+            position: positionsByUnitId.get(unit.id) ?? null
+        };
+    });
 
     const transferTableMissing = requestsError && (requestsError as { code?: string }).code === "42P01";
     if (requestsError && !transferTableMissing) {
@@ -115,6 +125,8 @@ export async function GET() {
     return NextResponse.json({
         property,
         leaseId: leaseWithUnit.id,
+        leaseStart: rawLease?.start_date ?? null,
+        leaseEnd: rawLease?.end_date ?? null,
         landlordId: leaseWithUnit.landlord_id,
         tenantId: user.id,
         currentUnitId: unitInfo.id,
