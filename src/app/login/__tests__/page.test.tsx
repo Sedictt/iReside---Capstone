@@ -82,7 +82,7 @@ describe("LoginPage - UI and Form Validation", () => {
         expect(getPasswordInput()).toBeInTheDocument();
 
         // Check buttons
-        const submitButton = screen.getByRole("button", { name: /Sign into Workspace/i });
+        const submitButton = screen.getByRole("button", { name: "Sign In" });
         expect(screen.getByText("Google Account")).toBeInTheDocument();
 
         // Check forgot password link
@@ -129,7 +129,7 @@ describe("LoginPage - UI and Form Validation", () => {
 
         const emailInput = getEmailInput();
         const passwordInput = getPasswordInput();
-        const submitButton = screen.getByRole("button", { name: /Sign into Workspace/i });
+        const submitButton = screen.getByRole("button", { name: "Sign In" });
 
         fireEvent.change(emailInput, { target: { value: "test@example.com" } });
         fireEvent.change(passwordInput, { target: { value: "password123" } });
@@ -166,7 +166,7 @@ describe("LoginPage - Authentication", () => {
 
         const emailInput = getEmailInput();
         const passwordInput = getPasswordInput();
-        const submitButton = screen.getByRole("button", { name: /Sign into Workspace/i });
+        const submitButton = screen.getByRole("button", { name: "Sign In" });
 
         fireEvent.change(emailInput, { target: { value: "tenant@example.com" } });
         fireEvent.change(passwordInput, { target: { value: "securepassword" } });
@@ -193,7 +193,7 @@ describe("LoginPage - Authentication", () => {
 
         const emailInput = getEmailInput();
         const passwordInput = getPasswordInput();
-        const submitButton = screen.getByRole("button", { name: /Sign into Workspace/i });
+        const submitButton = screen.getByRole("button", { name: "Sign In" });
 
         fireEvent.change(emailInput, { target: { value: "tenant@example.com" } });
         fireEvent.change(passwordInput, { target: { value: "password123" } });
@@ -234,7 +234,7 @@ describe("LoginPage - Authentication", () => {
 
         const emailInput = getEmailInput();
         const passwordInput = getPasswordInput();
-        const submitButton = screen.getByRole("button", { name: /Sign into Workspace/i });
+        const submitButton = screen.getByRole("button", { name: "Sign In" });
 
         fireEvent.change(emailInput, { target: { value: "landlord@example.com" } });
         fireEvent.change(passwordInput, { target: { value: "password123" } });
@@ -257,7 +257,7 @@ describe("LoginPage - Authentication", () => {
 
         const emailInput = getEmailInput();
         const passwordInput = getPasswordInput();
-        const submitButton = screen.getByRole("button", { name: /Sign into Workspace/i });
+        const submitButton = screen.getByRole("button", { name: "Sign In" });
 
         fireEvent.change(emailInput, { target: { value: "wrong@example.com" } });
         fireEvent.change(passwordInput, { target: { value: "wrongpassword" } });

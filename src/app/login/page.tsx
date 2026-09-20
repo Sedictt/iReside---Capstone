@@ -309,7 +309,7 @@ function LoginContent() {
                                     Sign In
                                 </h2>
                                 <p className="text-sm text-muted-foreground">
-                                    Enter your credentials to access your workspace.
+                                    Enter your credentials to access your account.
                                 </p>
                             </div>
 
@@ -411,7 +411,7 @@ function LoginContent() {
                                         </>
                                     ) : (
                                         <>
-                                            <span>Sign into Workspace</span>
+                                            <span>Sign In</span>
                                             <ArrowRight className="size-4" />
                                         </>
                                     )}
