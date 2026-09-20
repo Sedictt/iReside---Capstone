@@ -16,19 +16,31 @@ import {
     Clock,
     Building2,
     User,
-    X
+    X,
+    Paperclip,
+    Camera,
+    FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { triggerHaptic } from '@/lib/haptics';
 import { 
     fetchConversations, 
     fetchConversationMessages, 
     sendConversationMessage, 
+    uploadConversationFile,
     type ConversationSummary, 
     type ConversationMessage 
 } from '@/lib/messages/client';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 
 const FALLBACK_AVATAR = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80';
+
+interface PendingAttachment {
+    id: string;
+    file: File;
+    isImage: boolean;
+    previewUrl: string | null;
+}
 
 export function TenantMessagesView() {
     const { profile } = useAuth();
@@ -37,6 +49,7 @@ export function TenantMessagesView() {
     const [activeConversation, setActiveConversation] = useState<ConversationSummary | null>(null);
     const [messages, setMessages] = useState<ConversationMessage[]>([]);
     const [messageInput, setMessageInput] = useState('');
+    const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
     const [loadingConversations, setLoadingConversations] = useState(true);
     const [loadingMessages, setLoadingMessages] = useState(false);
     const [sending, setSending] = useState(false);
@@ -49,6 +62,8 @@ export function TenantMessagesView() {
     }, []);
     
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const cameraInputRef = useRef<HTMLInputElement>(null);
 
     const loadConversationsAndBroadcasts = async () => {
         try {
@@ -88,33 +103,72 @@ export function TenantMessagesView() {
         }
     };
 
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+        triggerHaptic('medium');
+
+        const newAttachments: PendingAttachment[] = files.map((file) => ({
+            id: `att-${Date.now()}-${Math.random()}`,
+            file,
+            isImage: file.type.startsWith('image/'),
+            previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+        }));
+
+        setPendingAttachments((prev) => [...prev, ...newAttachments]);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        if (cameraInputRef.current) cameraInputRef.current.value = '';
+    };
+
+    const removeAttachment = (id: string) => {
+        triggerHaptic('light');
+        setPendingAttachments((prev) => prev.filter((a) => a.id !== id));
+    };
+
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!messageInput.trim() || sending || !activeConversation) return;
+        if ((!messageInput.trim() && pendingAttachments.length === 0) || sending || !activeConversation) return;
 
         const text = messageInput.trim();
+        const attachmentsToSend = [...pendingAttachments];
         setMessageInput('');
+        setPendingAttachments([]);
         setSending(true);
 
         try {
-            const newMsg = await sendConversationMessage(activeConversation.id, text);
-            if (newMsg) {
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        ...newMsg,
-                        sender: {
-                            id: profile?.id || '',
-                            fullName: `${profile?.first_name || 'Tenant'} ${profile?.last_name || ''}`.trim(),
-                            avatarUrl: profile?.avatar_url || null,
-                            avatarBgColor: null,
-                            role: 'tenant',
-                        }
-                    } as ConversationMessage
-                ]);
-                setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+            // Upload pending attachments first if any
+            if (attachmentsToSend.length > 0) {
+                for (const att of attachmentsToSend) {
+                    await uploadConversationFile(activeConversation.id, att.file);
+                }
             }
+
+            if (text) {
+                const newMsg = await sendConversationMessage(activeConversation.id, text);
+                if (newMsg) {
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            ...newMsg,
+                            sender: {
+                                id: profile?.id || '',
+                                fullName: `${profile?.first_name || 'Tenant'} ${profile?.last_name || ''}`.trim(),
+                                avatarUrl: profile?.avatar_url || null,
+                                avatarBgColor: null,
+                                role: 'tenant',
+                            }
+                        } as ConversationMessage
+                    ]);
+                }
+            } else {
+                // If only attachments were sent, reload messages to display them
+                const { data } = await fetchConversationMessages(activeConversation.id);
+                if (data) setMessages(data);
+            }
+            triggerHaptic('success');
+            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
         } catch (err) {
+            triggerHaptic('error');
             console.error('[TenantMessages] Send failed:', err);
         } finally {
             setSending(false);
@@ -196,7 +250,26 @@ export function TenantMessagesView() {
                                                 : 'bg-white dark:bg-card border border-slate-200/90 dark:border-white/10 text-foreground rounded-bl-xs shadow-xs'
                                         )}
                                     >
-                                        <p>{msg.content}</p>
+                                        {msg.fileUrl && (
+                                            <div className="mb-2">
+                                                {/\.(jpg|jpeg|png|gif|webp)$/i.test(msg.fileUrl) || msg.fileMimeType?.startsWith('image/') ? (
+                                                    <div className="relative size-44 rounded-xl overflow-hidden border border-white/20 bg-black/10">
+                                                        <Image src={msg.fileUrl} alt={msg.fileName || 'Attachment'} fill sizes="176px" className="object-cover" />
+                                                    </div>
+                                                ) : (
+                                                    <a
+                                                        href={msg.fileUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center gap-2 p-2 rounded-xl bg-black/10 dark:bg-white/10 text-inherit hover:underline"
+                                                    >
+                                                        <Paperclip className="size-3.5 shrink-0" />
+                                                        <span className="truncate text-xs">{msg.fileName || 'View attachment'}</span>
+                                                    </a>
+                                                )}
+                                            </div>
+                                        )}
+                                        {msg.content && <p>{msg.content}</p>}
                                     </div>
                                     <span className="text-[9px] text-muted-foreground mt-1 px-1">
                                         {msg.createdAt
@@ -210,11 +283,78 @@ export function TenantMessagesView() {
                     <div ref={messagesEndRef} />
                 </div>
 
+                {/* Pending Attachments Chip Strip */}
+                {pendingAttachments.length > 0 && (
+                    <div className="p-2 border-t border-slate-200/90 dark:border-white/10 bg-card/95 flex gap-2 overflow-x-auto">
+                        {pendingAttachments.map((att) => (
+                            <div key={att.id} className="relative flex items-center gap-2 p-1.5 pr-2 rounded-xl bg-muted/60 border border-border shrink-0">
+                                {att.isImage && att.previewUrl ? (
+                                    <div className="relative size-8 rounded-lg overflow-hidden border border-border">
+                                        <Image src={att.previewUrl} alt={att.file.name} fill sizes="32px" className="object-cover" />
+                                    </div>
+                                ) : (
+                                    <FileText className="size-4 text-primary ml-1" />
+                                )}
+                                <span className="text-[10px] font-bold text-foreground max-w-[100px] truncate">{att.file.name}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => removeAttachment(att.id)}
+                                    className="p-1 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                    aria-label="Remove attachment"
+                                >
+                                    <X className="size-3" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
                 {/* Message Input Bar */}
                 <form
                     onSubmit={handleSendMessage}
-                    className="p-3 border-t border-slate-200/90 dark:border-white/10 bg-card/95 backdrop-blur-md flex items-center gap-2 shrink-0"
+                    className="p-3 border-t border-slate-200/90 dark:border-white/10 bg-card/95 backdrop-blur-md flex items-center gap-1.5 shrink-0"
                 >
+                    {/* Hidden Inputs */}
+                    <input
+                        ref={cameraInputRef}
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                    />
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*,.pdf,.doc,.docx"
+                        onChange={handleFileSelect}
+                        multiple
+                        className="hidden"
+                    />
+
+                    {/* Camera Button */}
+                    <button
+                        type="button"
+                        onClick={() => cameraInputRef.current?.click()}
+                        className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-95 transition-all cursor-pointer shrink-0"
+                        title="Take Photo"
+                        aria-label="Take Photo"
+                    >
+                        <Camera className="size-4 text-primary" />
+                    </button>
+
+                    {/* Paperclip Button */}
+                    <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-95 transition-all cursor-pointer shrink-0"
+                        title="Attach File"
+                        aria-label="Attach File"
+                    >
+                        <Paperclip className="size-4" />
+                    </button>
+
+                    {/* Text Input */}
                     <input
                         type="text"
                         placeholder="Message your landlord…"
@@ -222,10 +362,12 @@ export function TenantMessagesView() {
                         onChange={(e) => setMessageInput(e.target.value)}
                         className="flex-1 bg-background border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
                     />
+
+                    {/* Send Button */}
                     <button
                         type="submit"
-                        disabled={!messageInput.trim() || sending}
-                        className="p-2 rounded-xl bg-primary text-primary-foreground hover:brightness-105 active:scale-95 transition-all disabled:opacity-40 shadow-xs cursor-pointer"
+                        disabled={(!messageInput.trim() && pendingAttachments.length === 0) || sending}
+                        className="p-2 rounded-xl bg-primary text-primary-foreground hover:brightness-105 active:scale-95 transition-all disabled:opacity-40 shadow-xs cursor-pointer shrink-0"
                         aria-label="Send message"
                     >
                         <Send className="size-4" />
