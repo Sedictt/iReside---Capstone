@@ -26,6 +26,7 @@ import {
     BookOpen,
     Download,
     AlertTriangle,
+    Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -89,6 +90,7 @@ const NAV_SECTIONS = [
         category: "Tenant Tools",
         items: [
             { label: "Leases", href: "/tenant/lease", icon: FileText },
+            { label: "Calendar", href: "/tenant/calendar", icon: Calendar },
             { label: "Unit Map", href: "/tenant/unit-map", icon: Map },
             { label: "Facilities", href: "/tenant/utilities", icon: LayoutGrid },
             { label: "Maintenance", href: "/tenant/maintenance", icon: Wrench },

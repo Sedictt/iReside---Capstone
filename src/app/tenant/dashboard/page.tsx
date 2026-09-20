@@ -116,12 +116,14 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
     Wrench,
     MessageSquare,
     Home,
+    Calendar,
 };
 
 // Fallback quick actions — render immediately, never blank.
 // API can override these once it loads, but the grid is always visible.
 const DEFAULT_QUICK_ACTIONS = [
     { id: "request-repair", iconName: "Wrench", label: "Request Repair", href: "/tenant/maintenance/new", colorClass: "text-orange-500", bgClass: "bg-orange-500/10" },
+    { id: "calendar", iconName: "Calendar", label: "Schedule", href: "/tenant/calendar", colorClass: "text-purple-500", bgClass: "bg-purple-500/10" },
     { id: "messages", iconName: "MessageSquare", label: "Messages", href: "/tenant/messages", colorClass: "text-emerald-500", bgClass: "bg-emerald-500/10" },
     { id: "unit-view", iconName: "Home", label: "Unit View", href: "/tenant/unit-map", colorClass: "text-blue-500", bgClass: "bg-blue-500/10" },
 ];
