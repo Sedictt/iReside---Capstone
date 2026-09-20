@@ -165,6 +165,14 @@ const BUILT_IN_QUICK_ACTIONS: QuickActionItem[] = [
         bgClass: "bg-emerald-500/10",
     },
     {
+        id: "calendar",
+        iconName: "Calendar",
+        label: "Schedule",
+        href: "/tenant/calendar",
+        colorClass: "text-purple-500",
+        bgClass: "bg-purple-500/10",
+    },
+    {
         id: "unit-view",
         iconName: "Home",
         label: "Unit View",

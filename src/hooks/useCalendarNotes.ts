@@ -35,10 +35,14 @@ function writeStoredNotes(key: string, notes: CalendarNoteRecord[]): void {
 
 export interface UseCalendarNotesOptions {
     landlordId?: string | null;
+    userId?: string | null;
+    apiEndpoint?: string;
 }
 
-export function useCalendarNotes({ landlordId }: UseCalendarNotesOptions = {}) {
-    const storageKey = useMemo(() => getStorageKey(landlordId), [landlordId]);
+export function useCalendarNotes({ landlordId, userId, apiEndpoint }: UseCalendarNotesOptions = {}) {
+    const effectiveId = userId || landlordId;
+    const targetEndpoint = apiEndpoint || (userId && !landlordId ? "/api/tenant/calendar/notes" : "/api/landlord/calendar/notes");
+    const storageKey = useMemo(() => getStorageKey(effectiveId), [effectiveId]);
 
     const [notes, setNotes] = useState<CalendarNoteRecord[]>(() => {
         return readStoredNotes(storageKey);
@@ -57,7 +61,7 @@ export function useCalendarNotes({ landlordId }: UseCalendarNotesOptions = {}) {
         const fetchNotes = async () => {
             setIsLoading(true);
             try {
-                const res = await fetch("/api/landlord/calendar/notes", {
+                const res = await fetch(targetEndpoint, {
                     signal: controller.signal,
                 });
                 if (!res.ok) return;
@@ -130,7 +134,7 @@ export function useCalendarNotes({ landlordId }: UseCalendarNotesOptions = {}) {
 
             // Sync with backend asynchronously
             try {
-                fetch("/api/landlord/calendar/notes", {
+                fetch(targetEndpoint, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(newNote),
@@ -141,7 +145,7 @@ export function useCalendarNotes({ landlordId }: UseCalendarNotesOptions = {}) {
 
             return { success: true, note: newNote };
         },
-        [storageKey]
+        [storageKey, targetEndpoint]
     );
 
     // Delete a note
@@ -154,14 +158,14 @@ export function useCalendarNotes({ landlordId }: UseCalendarNotesOptions = {}) {
 
             // Sync with backend asynchronously
             try {
-                fetch(`/api/landlord/calendar/notes?id=${encodeURIComponent(id)}`, {
+                fetch(`${targetEndpoint}?id=${encodeURIComponent(id)}`, {
                     method: "DELETE",
                 }).catch((err) => console.warn("[useCalendarNotes] Background delete failed:", err));
             } catch {
                 // Ignore background sync errors
             }
         },
-        [storageKey]
+        [storageKey, targetEndpoint]
     );
 
     return {
