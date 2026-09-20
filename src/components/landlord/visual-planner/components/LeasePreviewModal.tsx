@@ -109,6 +109,17 @@ export const LeasePreviewModal = ({
                         return;
                     }
                 }
+
+                // Try fetching real active lease from tenant API
+                const tenantRes = await fetch("/api/tenant/lease");
+                if (tenantRes.ok) {
+                    const tenantPayload = await tenantRes.json();
+                    if (tenantPayload.lease && isMounted) {
+                        setLeaseData(tenantPayload.lease);
+                        setLoading(false);
+                        return;
+                    }
+                }
             } catch (err) {
                 console.warn("[LeasePreviewModal] Failed to fetch backend lease, using unit snapshot:", err);
             }
