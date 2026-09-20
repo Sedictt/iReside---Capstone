@@ -22,8 +22,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "iReside",
   description: "Modern Property Management Platform",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "iReside",
+  },
   icons: {
     icon: "/logos/favicon.png",
+    apple: "/logos/favicon.png",
   },
 };
 

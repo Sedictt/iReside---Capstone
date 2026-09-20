@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { 
     CreditCard, 
     Upload, 
+    Camera,
     CheckCircle2, 
     Clock, 
     AlertTriangle, 
@@ -19,6 +20,7 @@ import {
     ChevronUp
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { triggerHaptic } from '@/lib/haptics';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 
 interface PaymentOverviewItem {
@@ -58,6 +60,8 @@ export function TenantPayView() {
     const [note, setNote] = useState('');
     const [receiptFile, setReceiptFile] = useState<File | null>(null);
     const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const cameraInputRef = useRef<HTMLInputElement>(null);
     const [submitting, setSubmitting] = useState(false);
     const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -107,6 +111,7 @@ export function TenantPayView() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            triggerHaptic('medium');
             setReceiptFile(file);
             const reader = new FileReader();
             reader.onload = () => setReceiptPreview(reader.result as string);
@@ -114,10 +119,19 @@ export function TenantPayView() {
         }
     };
 
+    const handleClearReceipt = () => {
+        triggerHaptic('light');
+        setReceiptFile(null);
+        setReceiptPreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        if (cameraInputRef.current) cameraInputRef.current.value = '';
+    };
+
     const handleSubmitProof = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedInvoice) return;
         if (!referenceNumber.trim()) {
+            triggerHaptic('warning');
             setToast({ type: 'error', message: 'Please enter your reference number (e.g. GCash Ref #).' });
             return;
         }
@@ -142,6 +156,7 @@ export function TenantPayView() {
                 throw new Error(errJson.error || 'Failed to submit payment proof.');
             }
 
+            triggerHaptic('success');
             setToast({ type: 'success', message: 'Payment proof submitted! Landlord will verify shortly.' });
             setSelectedInvoice(null);
             setReceiptFile(null);
@@ -150,6 +165,7 @@ export function TenantPayView() {
             setNote('');
             fetchPayments();
         } catch (err: any) {
+            triggerHaptic('error');
             setToast({ type: 'error', message: err?.message || 'Error submitting proof.' });
         } finally {
             setSubmitting(false);
@@ -416,25 +432,61 @@ export function TenantPayView() {
                                 <label className="text-[11px] font-bold text-foreground block mb-1">
                                     Receipt Screenshot / Photo
                                 </label>
-                                <label className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border-2 border-dashed border-border/80 bg-muted/20 hover:bg-muted/40 cursor-pointer transition-all">
-                                    {receiptPreview ? (
-                                        <div className="relative size-24 rounded-lg overflow-hidden border border-border">
-                                            <Image src={receiptPreview} alt="Receipt preview" fill sizes="96px" className="object-cover" />
+                                {receiptPreview ? (
+                                    <div className="relative rounded-xl border border-border p-2.5 bg-muted/20 flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className="relative size-14 rounded-lg overflow-hidden border border-border shrink-0 bg-background">
+                                                <Image src={receiptPreview} alt="Receipt preview" fill sizes="56px" className="object-cover" />
+                                            </div>
+                                            <div className="flex flex-col min-w-0 text-left">
+                                                <span className="text-xs font-bold text-foreground truncate">{receiptFile?.name || 'receipt_photo.jpg'}</span>
+                                                <span className="text-[10px] text-muted-foreground">
+                                                    {receiptFile?.size ? `${(receiptFile.size / 1024).toFixed(0)} KB • Attached` : 'Ready to submit'}
+                                                </span>
+                                            </div>
                                         </div>
-                                    ) : (
-                                        <>
+                                        <button
+                                            type="button"
+                                            onClick={handleClearReceipt}
+                                            className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 active:scale-95 transition-all text-xs font-bold shrink-0"
+                                            title="Remove photo"
+                                            aria-label="Remove photo"
+                                        >
+                                            <X className="size-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {/* Direct Camera Capture */}
+                                        <label className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border-2 border-dashed border-border/80 bg-muted/20 hover:bg-muted/40 cursor-pointer active:scale-[0.98] transition-all text-center">
+                                            <Camera className="size-5 text-primary" />
+                                            <span className="text-xs font-bold text-foreground">Take Photo</span>
+                                            <span className="text-[9px] text-muted-foreground">Open Camera</span>
+                                            <input
+                                                ref={cameraInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                capture="environment"
+                                                onChange={handleFileChange}
+                                                className="hidden"
+                                            />
+                                        </label>
+
+                                        {/* Gallery Upload */}
+                                        <label className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border-2 border-dashed border-border/80 bg-muted/20 hover:bg-muted/40 cursor-pointer active:scale-[0.98] transition-all text-center">
                                             <Upload className="size-5 text-muted-foreground" />
-                                            <span className="text-xs font-bold text-foreground">Tap to select photo</span>
-                                            <span className="text-[10px] text-muted-foreground">PNG, JPG up to 5MB</span>
-                                        </>
-                                    )}
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleFileChange}
-                                        className="hidden"
-                                    />
-                                </label>
+                                            <span className="text-xs font-bold text-foreground">Photo Gallery</span>
+                                            <span className="text-[9px] text-muted-foreground">PNG, JPG up to 5MB</span>
+                                            <input
+                                                ref={fileInputRef}
+                                                type="file"
+                                                accept="image/*,application/pdf"
+                                                onChange={handleFileChange}
+                                                className="hidden"
+                                            />
+                                        </label>
+                                    </div>
+                                )}
                             </div>
 
                             <button

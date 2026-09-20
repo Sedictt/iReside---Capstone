@@ -70,7 +70,7 @@ const PUBLIC_ROUTE_PREFIXES = [
     "/terms",
     "/privacy",
 ];
-const PUBLIC_EXACT_ROUTES = ["/"];
+const PUBLIC_EXACT_ROUTES = ["/", "/manifest.json"];
 
 const isPublicRoute = (pathname: string, request?: NextRequest) => {
     if (request && (
