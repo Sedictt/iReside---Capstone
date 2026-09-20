@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { triggerHaptic } from '@/lib/haptics'
 import {
     LayoutDashboard,
     CreditCard,
@@ -117,6 +118,7 @@ export function BottomTabBar({ role, badges = {} }: BottomTabBarProps) {
                     <Link
                         key={tab.href}
                         href={tab.href}
+                        onClick={() => triggerHaptic('light')}
                         className={cn('mobile-tab-item', isActive && 'active')}
                         aria-label={tab.label}
                         aria-current={isActive ? 'page' : undefined}

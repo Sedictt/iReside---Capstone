@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { 
@@ -12,13 +12,15 @@ import {
     AlertTriangle, 
     X, 
     Upload, 
+    Camera,
     Maximize2, 
     ChevronDown, 
-    ChevronUp,
-    Calendar,
-    Tag
+    ChevronUp, 
+    Calendar, 
+    Tag 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { triggerHaptic } from '@/lib/haptics';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 
 interface MaintenanceRequest {
@@ -56,6 +58,8 @@ export function TenantMaintenanceView() {
     const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
     const [description, setDescription] = useState('');
     const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const cameraInputRef = useRef<HTMLInputElement>(null);
     const [submitting, setSubmitting] = useState(false);
     const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -98,15 +102,24 @@ export function TenantMaintenanceView() {
     const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            triggerHaptic('medium');
             const reader = new FileReader();
             reader.onload = () => setSelectedPhoto(reader.result as string);
             reader.readAsDataURL(file);
         }
     };
 
+    const handleClearPhoto = () => {
+        triggerHaptic('light');
+        setSelectedPhoto(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        if (cameraInputRef.current) cameraInputRef.current.value = '';
+    };
+
     const handleCreateRequest = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!title.trim() || !description.trim()) {
+            triggerHaptic('warning');
             setToast({ type: 'error', message: 'Please provide both title and description.' });
             return;
         }
@@ -134,6 +147,7 @@ export function TenantMaintenanceView() {
                 throw new Error(errJson.error || 'Failed to submit request.');
             }
 
+            triggerHaptic('success');
             setToast({ type: 'success', message: 'Maintenance request submitted! Management will review shortly.' });
             setShowNewModal(false);
             setTitle('');
@@ -142,6 +156,7 @@ export function TenantMaintenanceView() {
             setPriority('medium');
             fetchRequests();
         } catch (err: any) {
+            triggerHaptic('error');
             setToast({ type: 'error', message: err?.message || 'Submission error.' });
         } finally {
             setSubmitting(false);
@@ -426,25 +441,59 @@ export function TenantMaintenanceView() {
                                 <label className="text-[11px] font-bold text-foreground block mb-1">
                                     Attach Photo (Optional)
                                 </label>
-                                <label className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border-2 border-dashed border-border/80 bg-muted/20 hover:bg-muted/40 cursor-pointer transition-all">
-                                    {selectedPhoto ? (
-                                        <div className="relative size-20 rounded-lg overflow-hidden border border-border">
-                                            <Image src={selectedPhoto} alt="Issue photo preview" fill sizes="80px" className="object-cover" />
+                                {selectedPhoto ? (
+                                    <div className="relative rounded-xl border border-border p-2 bg-muted/20 flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className="relative size-14 rounded-lg overflow-hidden border border-border shrink-0 bg-background">
+                                                <Image src={selectedPhoto} alt="Issue photo preview" fill sizes="56px" className="object-cover" />
+                                            </div>
+                                            <div className="flex flex-col min-w-0 text-left">
+                                                <span className="text-xs font-bold text-foreground">Photo Attached</span>
+                                                <span className="text-[10px] text-muted-foreground">Tap remove to clear</span>
+                                            </div>
                                         </div>
-                                    ) : (
-                                        <>
+                                        <button
+                                            type="button"
+                                            onClick={handleClearPhoto}
+                                            className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 active:scale-95 transition-all text-xs font-bold shrink-0"
+                                            title="Remove photo"
+                                            aria-label="Remove photo"
+                                        >
+                                            <X className="size-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {/* Direct Camera Capture */}
+                                        <label className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl border-2 border-dashed border-border/80 bg-muted/20 hover:bg-muted/40 cursor-pointer active:scale-[0.98] transition-all text-center">
+                                            <Camera className="size-4 text-primary" />
+                                            <span className="text-xs font-bold text-foreground">Take Photo</span>
+                                            <span className="text-[9px] text-muted-foreground">Open Camera</span>
+                                            <input
+                                                ref={cameraInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                capture="environment"
+                                                onChange={handlePhotoSelect}
+                                                className="hidden"
+                                            />
+                                        </label>
+
+                                        {/* Gallery Upload */}
+                                        <label className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl border-2 border-dashed border-border/80 bg-muted/20 hover:bg-muted/40 cursor-pointer active:scale-[0.98] transition-all text-center">
                                             <Upload className="size-4 text-muted-foreground" />
-                                            <span className="text-xs font-bold text-foreground">Attach issue photo</span>
-                                            <span className="text-[9px] text-muted-foreground">PNG, JPG up to 5MB</span>
-                                        </>
-                                    )}
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handlePhotoSelect}
-                                        className="hidden"
-                                    />
-                                </label>
+                                            <span className="text-xs font-bold text-foreground">Photo Gallery</span>
+                                            <span className="text-[9px] text-muted-foreground">Choose from files</span>
+                                            <input
+                                                ref={fileInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handlePhotoSelect}
+                                                className="hidden"
+                                            />
+                                        </label>
+                                    </div>
+                                )}
                             </div>
 
                             <button

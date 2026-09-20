@@ -70,7 +70,7 @@ const PUBLIC_ROUTE_PREFIXES = [
     "/terms",
     "/privacy",
 ];
-const PUBLIC_EXACT_ROUTES = ["/"];
+const PUBLIC_EXACT_ROUTES = ["/", "/manifest.json"];
 
 const isPublicRoute = (pathname: string, request?: NextRequest) => {
     if (request && (
@@ -227,11 +227,12 @@ export async function updateSession(request: NextRequest) {
         return supabaseResponse;
     }
 
+    const userAgent = request.headers.get("user-agent") || "";
+    const isMobileDevice = /Mobile|Android|iPhone|iPad|iPod/i.test(userAgent);
+
     // If user is already logged in, prevent them from accessing auth pages.
     if (user && (request.nextUrl.pathname.startsWith("/login") || request.nextUrl.pathname.startsWith("/signup") || request.nextUrl.pathname.startsWith("/forgot-password"))) {
         const url = request.nextUrl.clone();
-        const userAgent = request.headers.get("user-agent") || "";
-        const isMobileDevice = /Mobile|Android|iPhone|iPad|iPod/i.test(userAgent);
         const redirectParam = request.nextUrl.searchParams.get("redirect");
 
         if (redirectParam) {
@@ -265,10 +266,15 @@ export async function updateSession(request: NextRequest) {
     if (user && role === "tenant") {
         if (request.nextUrl.pathname.startsWith("/landlord") || request.nextUrl.pathname.startsWith("/setup")) {
             const url = request.nextUrl.clone();
-            url.pathname = "/tenant/dashboard";
+            url.pathname = isMobileDevice ? "/mobile/tenant/home" : "/tenant/dashboard";
             return NextResponse.redirect(url);
         }
         if (request.nextUrl.pathname.startsWith("/mobile/landlord")) {
+            const url = request.nextUrl.clone();
+            url.pathname = "/mobile/tenant/home";
+            return NextResponse.redirect(url);
+        }
+        if (isMobileDevice && (request.nextUrl.pathname === "/tenant/dashboard" || request.nextUrl.pathname === "/tenant")) {
             const url = request.nextUrl.clone();
             url.pathname = "/mobile/tenant/home";
             return NextResponse.redirect(url);
@@ -277,6 +283,11 @@ export async function updateSession(request: NextRequest) {
 
     if (user && (role === "landlord" || role === "admin")) {
         if (request.nextUrl.pathname.startsWith("/mobile/tenant")) {
+            const url = request.nextUrl.clone();
+            url.pathname = "/mobile/landlord/overview";
+            return NextResponse.redirect(url);
+        }
+        if (isMobileDevice && (request.nextUrl.pathname === "/landlord/dashboard" || request.nextUrl.pathname === "/landlord")) {
             const url = request.nextUrl.clone();
             url.pathname = "/mobile/landlord/overview";
             return NextResponse.redirect(url);

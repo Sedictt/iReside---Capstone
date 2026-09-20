@@ -164,8 +164,8 @@ export function LandlordProfileView() {
 
                     {properties.length > 0 && (
                         <div className="space-y-1.5 pt-1">
-                            {properties.slice(0, 3).map((prop) => (
-                                <div key={prop.id} className="flex items-center justify-between p-2 rounded-xl neumorphic-inset text-xs">
+                            {properties.slice(0, 3).map((prop, index) => (
+                                <div key={`${prop.id || 'property'}-${index}`} className="flex items-center justify-between p-2 rounded-xl neumorphic-inset text-xs">
                                     <div className="truncate mr-2">
                                         <span className="font-bold text-foreground block truncate">{prop.name}</span>
                                         <span className="text-[10px] text-muted-foreground truncate block">{prop.address || 'Address on file'}</span>
