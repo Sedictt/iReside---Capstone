@@ -44,6 +44,44 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
         )
     }
 
+    // When there is only 1 property (or 0), render as a static label instead of a dropdown
+    if (properties.length <= 1) {
+        const singleProperty = properties[0];
+        const propertyDisplayName = singleProperty?.name || (loading ? 'Loading…' : 'No Property');
+
+        return (
+            <div
+                className={cn(
+                    "flex h-14 items-center transition-all select-none",
+                    isCollapsed 
+                        ? "size-11 justify-center rounded-2xl mx-auto border border-primary/25 bg-primary/[0.06] text-primary shadow-sm" 
+                        : "w-full gap-3 px-3.5 rounded-2xl border border-primary/25 bg-primary/[0.06] dark:bg-primary/[0.08] dark:border-primary/30 shadow-sm"
+                )}
+                title={isCollapsed ? propertyDisplayName : undefined}
+                aria-label={`Current Property: ${propertyDisplayName}`}
+            >
+                <div className={cn(
+                    "flex shrink-0 items-center justify-center rounded-xl shadow-sm",
+                    isCollapsed ? "size-7" : "size-10",
+                    "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                )}>
+                    <Building2 className={cn(isCollapsed ? "size-3.5" : "size-5")} />
+                </div>
+                
+                {!isCollapsed && (
+                    <div className="flex min-w-0 flex-1 flex-col items-start leading-tight text-left">
+                        <span className="text-[9px] font-black uppercase tracking-[0.22em] text-primary/90 dark:text-primary">
+                            Property
+                        </span>
+                        <span className="truncate text-xs font-black uppercase tracking-wider text-foreground mt-0.5">
+                            {propertyDisplayName}
+                        </span>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     return (
         <div className="relative" ref={dropdownRef}>
             <button

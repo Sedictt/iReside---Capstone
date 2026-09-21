@@ -47,8 +47,16 @@ describe("Brand Setup Validation Module", () => {
       expect(res.error).toContain("forbidden markup");
     });
 
+    it("rejects pre-seeded placeholder property trade names", () => {
+      expect(validatePropertyTradeName("Reyes Residences").isValid).toBe(false);
+      expect(validatePropertyTradeName("reyes residences").isValid).toBe(false);
+      expect(validatePropertyTradeName("Sample Property").isValid).toBe(false);
+      expect(validatePropertyTradeName("Default Property").isValid).toBe(false);
+      expect(validatePropertyTradeName("Reyes Residences").error).toContain("sample placeholder");
+    });
+
     it("accepts valid property trade names", () => {
-      expect(validatePropertyTradeName("Reyes Residences").isValid).toBe(true);
+      expect(validatePropertyTradeName("Pinecrest Lofts & Suites").isValid).toBe(true);
       expect(validatePropertyTradeName("Skyline Lofts & Suites").isValid).toBe(true);
       expect(validatePropertyTradeName("St. Jude Dormitory").isValid).toBe(true);
     });
@@ -72,8 +80,16 @@ describe("Brand Setup Validation Module", () => {
       expect(res.isValid).toBe(false);
     });
 
+    it("rejects pre-seeded placeholder taglines", () => {
+      expect(validatePropertyTagline("Premier Student & Residential Living in Valenzuela").isValid).toBe(false);
+      expect(validatePropertyTagline("residential living").isValid).toBe(false);
+      expect(validatePropertyTagline("Premier Student Living").isValid).toBe(false);
+      expect(validatePropertyTagline("residential living").error).toContain("sample placeholder");
+    });
+
     it("accepts valid taglines", () => {
-      expect(validatePropertyTagline("Premier Student & Residential Living in Valenzuela").isValid).toBe(true);
+      expect(validatePropertyTagline("Modern and accessible student accommodations").isValid).toBe(true);
+      expect(validatePropertyTagline("Comfortable urban living close to universities").isValid).toBe(true);
     });
   });
 
@@ -213,8 +229,15 @@ describe("Brand Setup Validation Module", () => {
       expect(validateAdminFullName("Roberto $ Reyes").isValid).toBe(false);
     });
 
+    it("rejects pre-seeded dummy admin full names", () => {
+      expect(validateAdminFullName("Roberto Reyes").isValid).toBe(false);
+      expect(validateAdminFullName("Default Admin").isValid).toBe(false);
+      expect(validateAdminFullName("Administrator").isValid).toBe(false);
+      expect(validateAdminFullName("Roberto Reyes").error).toContain("sample placeholder");
+    });
+
     it("accepts standard legal names with hyphens and periods", () => {
-      expect(validateAdminFullName("Roberto Reyes").isValid).toBe(true);
+      expect(validateAdminFullName("Juan Dela Cruz").isValid).toBe(true);
       expect(validateAdminFullName("Mary-Ann Del Rosario").isValid).toBe(true);
       expect(validateAdminFullName("Dr. Jose P. Rizal").isValid).toBe(true);
     });
@@ -228,8 +251,15 @@ describe("Brand Setup Validation Module", () => {
       expect(validateAdminEmail("@domain.com").isValid).toBe(false);
     });
 
+    it("rejects pre-seeded placeholder emails", () => {
+      expect(validateAdminEmail("landlord@reyesresidences.com").isValid).toBe(false);
+      expect(validateAdminEmail("admin@reyesresidences.com").isValid).toBe(false);
+      expect(validateAdminEmail("admin@property.com").isValid).toBe(false);
+      expect(validateAdminEmail("landlord@reyesresidences.com").error).toContain("sample placeholder");
+    });
+
     it("accepts valid email format", () => {
-      expect(validateAdminEmail("admin@reyesresidences.ph").isValid).toBe(true);
+      expect(validateAdminEmail("admin@pinecrestsuites.ph").isValid).toBe(true);
     });
   });
 
@@ -242,9 +272,17 @@ describe("Brand Setup Validation Module", () => {
       expect(validateAdminPhone("12345").isValid).toBe(false);
     });
 
+    it("rejects pre-seeded placeholder phone numbers", () => {
+      expect(validateAdminPhone("0917-882-9912").isValid).toBe(false);
+      expect(validateAdminPhone("09178829912").isValid).toBe(false);
+      expect(validateAdminPhone("0917-000-0000").isValid).toBe(false);
+      expect(validateAdminPhone("09178829912").error).toContain("sample placeholder");
+    });
+
     it("accepts valid Philippine numbers", () => {
-      expect(validateAdminPhone("09178829912").isValid).toBe(true);
-      expect(validateAdminPhone("+639178829912").isValid).toBe(true);
+      expect(validateAdminPhone("09187654321").isValid).toBe(true);
+      expect(validateAdminPhone("+639187654321").isValid).toBe(true);
+      expect(validateAdminPhone("0920-111-2233").isValid).toBe(true);
     });
   });
 
@@ -277,8 +315,8 @@ describe("Brand Setup Validation Module", () => {
 
   describe("Step & End-to-End Validation Runners", () => {
     const validStep1 = {
-      propertyName: "Reyes Residences",
-      tagline: "Premier Living",
+      propertyName: "Pinecrest Lofts & Suites",
+      tagline: "Quality student homes and serviced apartments",
       propertyArchetype: "apartment",
       totalUnits: "16",
       propertyAddress: "Karuhatan, Valenzuela City",
@@ -291,9 +329,9 @@ describe("Brand Setup Validation Module", () => {
     };
 
     const validStep3 = {
-      adminName: "Roberto Reyes",
-      adminEmail: "admin@reyes.com",
-      adminPhone: "09178829912",
+      adminName: "Juan Dela Cruz",
+      adminEmail: "landlord@pinecrest.ph",
+      adminPhone: "09187654321",
       adminPassword: "••••••••••••",
       confirmPassword: "••••••••••••",
       isExistingPlaceholder: true,
@@ -323,8 +361,8 @@ describe("Brand Setup Validation Module", () => {
 
     it("validates Step 1 successfully when totalUnits and propertyAddress are omitted", () => {
       const res = validateStep1Identity({
-        propertyName: "Reyes Residences",
-        tagline: "Premier Living",
+        propertyName: "Pinecrest Lofts & Suites",
+        tagline: "Quality student homes and serviced apartments",
         propertyArchetype: "apartment",
       });
       expect(res.isValid).toBe(true);
@@ -391,8 +429,8 @@ describe("Brand Setup Validation Module", () => {
     it("validates setupLaunchSchema with valid payload", () => {
       const payload = {
         branding: {
-          propertyName: "Reyes Residences",
-          propertyTagline: "Premier Living",
+          propertyName: "Pinecrest Lofts & Suites",
+          propertyTagline: "Premier Living Experience",
           rentalArchetype: "dormitory",
           primaryColor: "#8B5CF6",
           secondaryColor: "#06B6D4",
@@ -400,9 +438,9 @@ describe("Brand Setup Validation Module", () => {
           totalUnits: "24",
         },
         admin: {
-          fullName: "Roberto Reyes",
-          email: "admin@reyesresidences.ph",
-          phone: "0917-123-4567",
+          fullName: "Juan Dela Cruz",
+          email: "admin@pinecrestresidences.ph",
+          phone: "0918-123-4567",
           password: "SecurePassword123!",
         },
       };
@@ -410,6 +448,28 @@ describe("Brand Setup Validation Module", () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.branding.totalUnits).toBe(24);
+      }
+    });
+
+    it("rejects setupLaunchSchema when pre-seeded dummy data is used", () => {
+      const payload = {
+        branding: {
+          propertyName: "Reyes Residences",
+          rentalArchetype: "apartment" as const,
+          primaryColor: "#8B5CF6",
+          secondaryColor: "#06B6D4",
+        },
+        admin: {
+          fullName: "Roberto Reyes",
+          email: "landlord@reyesresidences.com",
+          phone: "0917-882-9912",
+        },
+      };
+      const result = setupLaunchSchema.safeParse(payload);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const fieldErrors = result.error.flatten().fieldErrors as Record<string, string[]>;
+        expect(JSON.stringify(result.error.issues)).toContain("sample placeholder");
       }
     });
 

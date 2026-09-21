@@ -37,13 +37,47 @@ export const MAX_LOGO_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 export const VALID_ARCHETYPES = ["apartment", "dormitory", "boarding_house"] as const;
 export type RentalArchetype = (typeof VALID_ARCHETYPES)[number];
 
+export const DISALLOWED_PRESEEDED_DATA = {
+  propertyNames: [
+    "reyes residences",
+    "default property",
+    "untitled property",
+    "sample property",
+    "my property",
+  ],
+  taglines: [
+    "premier student & residential living in valenzuela",
+    "residential living",
+    "premier student living",
+  ],
+  adminNames: [
+    "roberto reyes",
+    "default admin",
+    "administrator",
+    "landlord",
+  ],
+  emails: [
+    "landlord@reyesresidences.com",
+    "admin@reyesresidences.com",
+    "admin@property.com",
+    "landlord@property.com",
+    "landlord@example.com",
+  ],
+  phones: [
+    "0917-882-9912",
+    "0917-000-0000",
+    "09170000000",
+    "09178829912",
+  ],
+};
+
 // ---------------------------------------------------------------------------
 // Field-Level Validation Functions
 // ---------------------------------------------------------------------------
 
 /**
  * Validates the Property Trade Name.
- * Requirements: Required, 2-80 characters, no HTML tags.
+ * Requirements: Required, 2-80 characters, no HTML tags, must not use pre-seeded dummy text.
  */
 export function validatePropertyTradeName(value: string): { isValid: boolean; error?: string } {
   const trimmed = value?.trim() ?? "";
@@ -59,12 +93,15 @@ export function validatePropertyTradeName(value: string): { isValid: boolean; er
   if (/<[a-z][\s\S]*>/i.test(trimmed)) {
     return { isValid: false, error: "Property trade name contains forbidden markup tags." };
   }
+  if (DISALLOWED_PRESEEDED_DATA.propertyNames.includes(trimmed.toLowerCase())) {
+    return { isValid: false, error: "Please enter your actual property or business name instead of the sample placeholder." };
+  }
   return { isValid: true };
 }
 
 /**
  * Validates the Property Tagline / Subtitle.
- * Requirements: Optional, maximum 120 characters.
+ * Requirements: Optional, maximum 120 characters, must not use pre-seeded dummy text.
  */
 export function validatePropertyTagline(value: string): { isValid: boolean; error?: string } {
   const trimmed = value?.trim() ?? "";
@@ -76,6 +113,9 @@ export function validatePropertyTagline(value: string): { isValid: boolean; erro
   }
   if (/<[a-z][\s\S]*>/i.test(trimmed)) {
     return { isValid: false, error: "Tagline contains forbidden markup tags." };
+  }
+  if (DISALLOWED_PRESEEDED_DATA.taglines.includes(trimmed.toLowerCase())) {
+    return { isValid: false, error: "Please enter your own brand tagline instead of the sample placeholder." };
   }
   return { isValid: true };
 }
@@ -168,27 +208,43 @@ export function validateLogoFile(file: { size: number; type?: string; name?: str
 }
 
 /**
- * Validates the Master Admin Full Name.
- * 2-70 characters, legal name characters only.
+ * Validates the Landlord Full Name.
+ * 2-70 characters, legal name characters only, must not use pre-seeded dummy text.
  */
 export function validateAdminFullName(value: string): { isValid: boolean; error?: string } {
-  return validateFullName(value);
+  const base = validateFullName(value);
+  if (!base.isValid) return base;
+  if (DISALLOWED_PRESEEDED_DATA.adminNames.includes(value.trim().toLowerCase())) {
+    return { isValid: false, error: "Please enter your real legal or business name instead of the sample placeholder." };
+  }
+  return { isValid: true };
 }
 
 /**
- * Validates the Master Admin Email.
- * Required, valid email format.
+ * Validates the Landlord Email.
+ * Required, valid email format, must not use pre-seeded dummy email.
  */
 export function validateAdminEmail(value: string): { isValid: boolean; error?: string } {
-  return validateEmail(value);
+  const base = validateEmail(value);
+  if (!base.isValid) return base;
+  if (DISALLOWED_PRESEEDED_DATA.emails.includes(value.trim().toLowerCase())) {
+    return { isValid: false, error: "Please enter your actual working email address instead of the sample placeholder." };
+  }
+  return { isValid: true };
 }
 
 /**
- * Validates the Master Admin Phone Number.
- * Required for setup, Philippine or international format.
+ * Validates the Landlord Phone Number.
+ * Required for setup, Philippine or international format, must not use pre-seeded dummy phone.
  */
 export function validateAdminPhone(value: string): { isValid: boolean; error?: string } {
-  return validatePhoneNumber(value, true);
+  const base = validatePhoneNumber(value, true);
+  if (!base.isValid) return base;
+  const cleanDigits = value.replace(/\D/g, "");
+  if (DISALLOWED_PRESEEDED_DATA.phones.some((p) => p.replace(/\D/g, "") === cleanDigits)) {
+    return { isValid: false, error: "Please enter your actual phone number instead of the sample placeholder." };
+  }
+  return { isValid: true };
 }
 
 /**
@@ -400,13 +456,19 @@ export const setupLaunchSchema = z.object({
       .string()
       .trim()
       .min(2, "Property trade name must be at least 2 characters")
-      .max(80, "Property trade name cannot exceed 80 characters"),
+      .max(80, "Property trade name cannot exceed 80 characters")
+      .refine((val) => !DISALLOWED_PRESEEDED_DATA.propertyNames.includes(val.toLowerCase()), {
+        message: "Please enter your actual property or business name instead of the sample placeholder.",
+      }),
     propertyTagline: z
       .string()
       .trim()
       .max(120, "Tagline cannot exceed 120 characters")
       .optional()
-      .nullable(),
+      .nullable()
+      .refine((val) => !val || !DISALLOWED_PRESEEDED_DATA.taglines.includes(val.toLowerCase()), {
+        message: "Please write your own brand tagline instead of the sample placeholder.",
+      }),
     rentalArchetype: z.enum(VALID_ARCHETYPES),
     primaryColor: z
       .string()
@@ -440,22 +502,35 @@ export const setupLaunchSchema = z.object({
     fullName: z
       .string()
       .trim()
-      .min(2, "Admin full name must be at least 2 characters")
-      .max(70, "Admin full name cannot exceed 70 characters")
-      .regex(REGEX_NAME, "Admin full name can only contain letters, spaces, hyphens, and periods"),
+      .min(2, "Landlord full name must be at least 2 characters")
+      .max(70, "Landlord full name cannot exceed 70 characters")
+      .regex(REGEX_NAME, "Landlord full name can only contain letters, spaces, hyphens, and periods")
+      .refine((val) => !DISALLOWED_PRESEEDED_DATA.adminNames.includes(val.toLowerCase()), {
+        message: "Please enter your real legal or business name instead of the sample placeholder.",
+      }),
     email: z
       .string()
       .trim()
-      .regex(REGEX_EMAIL, "Invalid admin email address")
+      .regex(REGEX_EMAIL, "Invalid landlord email address")
       .optional()
-      .nullable(),
+      .nullable()
+      .refine((val) => !val || !DISALLOWED_PRESEEDED_DATA.emails.includes(val.toLowerCase()), {
+        message: "Please enter your actual working email address instead of the sample placeholder.",
+      }),
     phone: z
       .string()
       .trim()
       .min(7, "Phone number must be at least 7 digits")
       .max(25, "Phone number is too long")
       .optional()
-      .nullable(),
+      .nullable()
+      .refine((val) => {
+        if (!val) return true;
+        const clean = val.replace(/\D/g, "");
+        return !DISALLOWED_PRESEEDED_DATA.phones.some((p) => p.replace(/\D/g, "") === clean);
+      }, {
+        message: "Please enter your actual phone number instead of the sample placeholder.",
+      }),
     password: z
       .string()
       .min(6, "Password must be at least 6 characters")
