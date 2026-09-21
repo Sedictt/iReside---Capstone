@@ -361,7 +361,7 @@ function WizardContent() {
       }
       setIsLaunched(true);
       toast.success("Property Portal White-Labeled & Initialized!", {
-        description: `Branded as ${propertyName}. Master Admin claimed and operational.`,
+        description: `Branded as ${propertyName}. Landlord account configured and operational.`,
       });
     } catch (err: any) {
       toast.error("Failed to save setup: " + (err?.message || "Unknown error"));
@@ -393,7 +393,7 @@ function WizardContent() {
   const stepsList = [
     { num: 1, label: "Identity & Archetype", icon: Building2 },
     { num: 2, label: "Theme & Palette", icon: Palette },
-    { num: 3, label: "Master Admin", icon: UserCheck },
+    { num: 3, label: "Landlord Account", icon: UserCheck },
     { num: 4, label: "Review & Launch", icon: ShieldCheck },
   ];
 
@@ -1024,14 +1024,14 @@ function WizardContent() {
                         color: primaryTextColor,
                       }}
                     >
-                      <span>Next: Master Admin</span>
+                      <span>Next: Landlord Account</span>
                       <ArrowRight className="size-3.5" />
                     </button>
                   </div>
                 </motion.div>
               )}
 
-              {/* STEP 3: MASTER ADMIN ACCOUNT */}
+              {/* STEP 3: LANDLORD ACCOUNT */}
               {currentStep === 3 && (
                 <motion.div
                   key="step3"
@@ -1051,9 +1051,9 @@ function WizardContent() {
                       </div>
                       <div>
                         <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
-                          Step 3: Master Admin Account
+                          Step 3: Landlord Account
                         </h2>
-                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Primary owner login for managing the property</p>
+                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Primary landlord login for managing the property</p>
                       </div>
                     </div>
                   </div>
@@ -1061,7 +1061,7 @@ function WizardContent() {
                   <div className="space-y-2.5">
                     <div>
                       <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1 block">
-                        Owner Full Name
+                        Landlord Full Name
                       </label>
                       <div className="bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-1.5 flex items-center gap-2.5 text-xs text-zinc-900 dark:text-zinc-100">
                         <User className="size-3.5 text-zinc-400 shrink-0" />
@@ -1078,7 +1078,7 @@ function WizardContent() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       <div>
                         <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1 block">
-                          Master Login Email
+                          Landlord Login Email
                         </label>
                         <div className="bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-1.5 flex items-center gap-2.5 text-xs text-zinc-900 dark:text-zinc-100">
                           <Mail className="size-3.5 text-zinc-400 shrink-0" />
@@ -1086,7 +1086,7 @@ function WizardContent() {
                             type="email"
                             value={adminEmail}
                             onChange={(e) => setAdminEmail(e.target.value)}
-                            placeholder="admin@property.com"
+                            placeholder="landlord@property.com"
                             className="bg-transparent border-none outline-none w-full text-xs font-mono text-zinc-900 dark:text-zinc-100 focus:ring-0"
                           />
                         </div>
@@ -1112,7 +1112,7 @@ function WizardContent() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       <div>
                         <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1 block">
-                          Master Password
+                          Account Password
                         </label>
                         <div className="bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-1.5 flex items-center gap-2.5 text-xs text-zinc-900 dark:text-zinc-100">
                           <Lock className="size-3.5 text-zinc-400 shrink-0" />
@@ -1252,7 +1252,7 @@ function WizardContent() {
 
                       <div>
                         <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 block">
-                          Master Admin
+                          Landlord Account
                         </span>
                         <span className="text-[11px] font-bold text-zinc-800 dark:text-zinc-200 truncate block mt-0.5">{adminName}</span>
                       </div>
@@ -1304,7 +1304,7 @@ function WizardContent() {
                           securityKey={launchedSecurityKey}
                           isAcknowledged={isSecurityKeyAcknowledged}
                           onToggleAcknowledge={setIsSecurityKeyAcknowledged}
-                          title="Master Admin Security Recovery Key"
+                          title="Landlord Security Recovery Key"
                           description="Your workspace is initialized. Save your single-use recovery key now in case you ever lose access to your email."
                           accountEmail={adminEmail}
                         />
