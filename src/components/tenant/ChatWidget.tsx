@@ -18,7 +18,8 @@ import {
     Phone,
     Mail,
     Building2,
-    CreditCard
+    CreditCard,
+    AlertCircle
 } from "lucide-react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -574,7 +575,7 @@ export function ChatWidget({
                     </div>
 
                     {/* Input Area */}
-                    <div className="p-5 bg-card border-t border-border">
+                    <div className="p-4 bg-card border-t border-border">
                         <div className="relative flex items-center gap-3">
                             <div className="flex-1 relative group">
                                 <div className="absolute -inset-[1px] bg-gradient-to-r from-primary/50 to-blue-500/50 rounded-full blur opacity-0 group-focus-within:opacity-30 transition-opacity"></div>
@@ -595,6 +596,12 @@ export function ChatWidget({
                             >
                                 <ArrowUp className="size-5" />
                             </button>
+                        </div>
+                        <div className="flex items-center justify-center gap-1.5 text-center mt-2.5">
+                            <AlertCircle className="size-3 text-muted-foreground/70 shrink-0" />
+                            <p className="text-[10px] text-muted-foreground font-medium">
+                                iRis can make mistakes. Verify important info.
+                            </p>
                         </div>
                     </div>
 

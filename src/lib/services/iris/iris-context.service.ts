@@ -225,6 +225,7 @@ export class IrisContextService {
     systemPrompt += `- WI-FI INQUIRIES: When asked for Wi-Fi or internet details/password, provide the exact Network Name and Password from the BUILDING WI-FI INFORMATION section.\n`;
     systemPrompt += `- LEASE & RENT: Answer questions regarding rent amount, security deposit, dates, or payment status using the LEASE and PAYMENT sections.\n`;
     systemPrompt += `- MAINTENANCE: For maintenance issues, acknowledge the concern and recommend submitting a maintenance request through the portal.\n`;
+    systemPrompt += `- ACCURACY & LIMITATIONS: Be honest about limitations. If unsure or if information is not found in the context, clearly advise the tenant to verify the information directly with their landlord or building administration.\n`;
     systemPrompt += `- Keep responses concise, well-structured, and helpful without unnecessary filler.\n`;
 
     return systemPrompt;
