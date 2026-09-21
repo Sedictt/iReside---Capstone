@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 5. Generate and encrypt initial single-use security recovery key for Master Admin
+    // 5. Generate and encrypt initial single-use security recovery key for Landlord
     const plaintextSecurityKey = generateSecurityKey();
     const encryptedKey = encryptSecurityKey(plaintextSecurityKey);
 
@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
       action: "security_key_generated",
       category: "security",
       title: "Security Recovery Key Created",
-      description: "Master Admin initial security recovery key generated during Turnkey workspace launch.",
+      description: "Landlord initial security recovery key generated during Turnkey workspace launch.",
       severity: "info",
     });
 
