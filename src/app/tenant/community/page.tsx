@@ -36,7 +36,7 @@ import { useOptionalProperty } from "@/context/PropertyContext"
 // New Components
 import { CommunityHeader } from "@/components/community/CommunityHeader"
 import { CommunityComposer } from "@/components/community/CommunityComposer"
-import { CommunityPostCard } from "@/components/community/CommunityPostCard"
+import { CommunityPostCard, type CommentData } from "@/components/community/CommunityPostCard"
 import { CommunityRules } from "@/components/community/CommunityRules"
 import { CommunityAnnouncement } from "@/components/community/CommunityAnnouncement"
 import { toast } from "sonner"
@@ -100,7 +100,7 @@ export default function TenantCommunityHubPage() {
     })
     const [savedPostIds, setSavedPostIds] = useState<string[]>([])
     const [openCommentPostId, setOpenCommentPostId] = useState<string | null>(null)
-    const [commentsByPost, setCommentsByPost] = useState<Record<string, any[]>>({})
+    const [commentsByPost, setCommentsByPost] = useState<Record<string, CommentData[]>>({})
     const [loadingCommentsPostId, setLoadingCommentsPostId] = useState<string | null>(null)
     const [cursor, setCursor] = useState<string | null>(null)
     const [loadingFeed, setLoadingFeed] = useState(false)
@@ -454,16 +454,90 @@ export default function TenantCommunityHubPage() {
 
 
     const handleCommentSubmit = async (post: CommunityPost, content: string) => {
-        startPostMutation(async () => {
-            try {
-                const result = await addComment(post.id, content)
-                const comments = await getPostComments(post.id)
-                setCommentsByPost(prev => ({ ...prev, [post.id]: comments }))
-                setPosts(current => current.map(p => p.id === post.id ? { ...p, commentCount: result.commentCount } : p))
-            } catch (err) {
-                setError("Failed to add comment.")
-            }
-        })
+        const trimmed = content.trim()
+        if (!trimmed) return
+
+        const authorDisplayName = profile?.full_name 
+            || (user?.user_metadata?.full_name as string | undefined)
+            || user?.email?.split("@")[0]
+            || "You"
+
+        const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+        const optimisticComment: CommentData = {
+            id: tempId,
+            postId: post.id,
+            authorId: user?.id,
+            authorName: authorDisplayName,
+            authorAvatar: profile?.avatar_url || null,
+            authorAvatarBgColor: profile?.avatar_bg_color || '#f3f4f6',
+            content: trimmed,
+            createdAt: new Date().toISOString(),
+            isPending: true,
+            isFailed: false,
+        }
+
+        setCommentsByPost(prev => ({
+            ...prev,
+            [post.id]: [...(prev[post.id] || []), optimisticComment]
+        }))
+
+        try {
+            const result = await addComment(post.id, trimmed)
+            const freshComments = await getPostComments(post.id)
+            setCommentsByPost(prev => {
+                const currentComments = prev[post.id] || []
+                const otherPending = currentComments.filter(c => c.id !== tempId && (c.isPending || c.isFailed))
+                return {
+                    ...prev,
+                    [post.id]: [...freshComments, ...otherPending]
+                }
+            })
+            setPosts(current => current.map(p => p.id === post.id ? { ...p, commentCount: result.commentCount } : p))
+        } catch {
+            setCommentsByPost(prev => ({
+                ...prev,
+                [post.id]: (prev[post.id] || []).map(c =>
+                    c.id === tempId ? { ...c, isPending: false, isFailed: true } : c
+                )
+            }))
+        }
+    }
+
+    const handleRetryComment = async (post: CommunityPost, comment: CommentData) => {
+        setCommentsByPost(prev => ({
+            ...prev,
+            [post.id]: (prev[post.id] || []).map(c =>
+                c.id === comment.id ? { ...c, isPending: true, isFailed: false } : c
+            )
+        }))
+
+        try {
+            const result = await addComment(post.id, comment.content)
+            const freshComments = await getPostComments(post.id)
+            setCommentsByPost(prev => {
+                const currentComments = prev[post.id] || []
+                const otherPending = currentComments.filter(c => c.id !== comment.id && (c.isPending || c.isFailed))
+                return {
+                    ...prev,
+                    [post.id]: [...freshComments, ...otherPending]
+                }
+            })
+            setPosts(current => current.map(p => p.id === post.id ? { ...p, commentCount: result.commentCount } : p))
+        } catch {
+            setCommentsByPost(prev => ({
+                ...prev,
+                [post.id]: (prev[post.id] || []).map(c =>
+                    c.id === comment.id ? { ...c, isPending: false, isFailed: true } : c
+                )
+            }))
+        }
+    }
+
+    const handleDiscardComment = (postId: string, commentId: string) => {
+        setCommentsByPost(prev => ({
+            ...prev,
+            [postId]: (prev[postId] || []).filter(c => c.id !== commentId)
+        }))
     }
 
     const handleToggleComments = async (postId: string) => {
@@ -645,6 +719,8 @@ export default function TenantCommunityHubPage() {
                                     onCommentSubmit={handleCommentSubmit}
                                     onEditComment={handleEditComment}
                                     onDeleteComment={handleDeleteComment}
+                                    onRetryComment={handleRetryComment}
+                                    onDiscardComment={handleDiscardComment}
                                     onView={recordPostView}
                                     isMutating={isMutatingPost}
                                     currentUserId={user?.id}

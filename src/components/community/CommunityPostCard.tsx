@@ -18,19 +18,25 @@ import {
     Pencil,
     Trash2,
     Heart,
-    X
+    X,
+    Loader2,
+    AlertCircle,
+    RotateCw
 } from "lucide-react"
 import type { CommunityPost, CommunityReactionType } from "@/lib/community/types"
 import { CommunityPhotoLightbox } from "./CommunityPhotoLightbox"
 
-interface CommentData {
+export interface CommentData {
     id: string
+    postId?: string
     authorId?: string
     authorAvatarBgColor?: string | null
     authorAvatar?: string | null
     authorName: string
     createdAt: string
     content: string
+    isPending?: boolean
+    isFailed?: boolean
 }
 
 interface CommunityPostCardProps {
@@ -50,6 +56,8 @@ interface CommunityPostCardProps {
     onCommentSubmit: (post: CommunityPost, content: string) => void
     onEditComment?: (commentId: string, content: string) => void
     onDeleteComment?: (commentId: string) => void
+    onRetryComment?: (post: CommunityPost, comment: CommentData) => void
+    onDiscardComment?: (postId: string, commentId: string) => void
     isMutating: boolean
     currentUserId?: string
     isManagementUser?: boolean
@@ -96,6 +104,8 @@ export function CommunityPostCard({
     onCommentSubmit,
     onEditComment,
     onDeleteComment,
+    onRetryComment,
+    onDiscardComment,
     isMutating,
     currentUserId,
     isManagementUser,
@@ -147,9 +157,13 @@ export function CommunityPostCard({
 
     const handleCommentSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        if (!commentContent.trim()) return
-        onCommentSubmit(post, commentContent)
+        const trimmed = commentContent.trim()
+        if (!trimmed) return
+        onCommentSubmit(post, trimmed)
         setCommentContent("")
+        if (commentInputRef.current) {
+            commentInputRef.current.style.height = 'auto'
+        }
     }
 
     const handleShare = async () => {
@@ -532,7 +546,7 @@ export function CommunityPostCard({
                                             key={comment.id}
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            className="flex gap-3 group"
+                                            className={`flex gap-3 group ${comment.isPending ? 'opacity-75' : ''}`}
                                         >
                                             <div
                                                 className="relative flex size-8 shrink-0 items-center justify-center rounded-full neumorphic-inset-card"
@@ -570,12 +584,30 @@ export function CommunityPostCard({
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="rounded-2xl rounded-tl-sm bg-background/80 px-3.5 py-2.5 dark:bg-white/5">
+                                                    <div className={`rounded-2xl rounded-tl-sm px-3.5 py-2.5 transition-all ${
+                                                        comment.isFailed
+                                                            ? 'border border-red-500/30 bg-red-50/50 dark:bg-red-950/20'
+                                                            : comment.isPending
+                                                            ? 'border border-primary/20 bg-primary/5 dark:bg-primary/10'
+                                                            : 'bg-background/80 dark:bg-white/5'
+                                                    }`}>
                                                         <div className="flex items-center justify-between gap-2 mb-1">
                                                             <span className="text-xs font-black text-foreground dark:text-white">{comment.authorName}</span>
                                                             <div className="flex items-center gap-1.5">
-                                                                <span className="text-[10px] text-muted-foreground/60">{formatRelative(comment.createdAt)}</span>
-                                                                {currentUserId === comment.authorId && onEditComment && onDeleteComment && (
+                                                                {comment.isPending ? (
+                                                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary">
+                                                                        <Loader2 className="size-2.5 animate-spin" />
+                                                                        Posting...
+                                                                    </span>
+                                                                ) : comment.isFailed ? (
+                                                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-red-500">
+                                                                        <AlertCircle className="size-2.5" />
+                                                                        Failed to post
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-[10px] text-muted-foreground/60">{formatRelative(comment.createdAt)}</span>
+                                                                )}
+                                                                {!comment.isPending && !comment.isFailed && currentUserId === comment.authorId && onEditComment && onDeleteComment && (
                                                                     <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                         <button
                                                                             onClick={() => handleEditComment(comment)}
@@ -596,6 +628,26 @@ export function CommunityPostCard({
                                                             </div>
                                                         </div>
                                                         <p className="text-sm leading-relaxed text-muted-foreground/80 dark:text-white/60">{comment.content}</p>
+                                                        {comment.isFailed && (
+                                                            <div className="flex items-center gap-3 mt-2 pt-2 border-t border-red-500/20">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => onRetryComment?.(post, comment)}
+                                                                    className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                                                                >
+                                                                    <RotateCw className="size-3" />
+                                                                    Retry
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => onDiscardComment?.(post.id, comment.id)}
+                                                                    className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground/70 hover:text-red-500 transition-colors"
+                                                                >
+                                                                    <Trash2 className="size-3" />
+                                                                    Delete
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>
@@ -635,7 +687,7 @@ export function CommunityPostCard({
                                     />
                                     <button
                                         type="submit"
-                                        disabled={!commentContent.trim() || isMutating}
+                                        disabled={!commentContent.trim()}
                                         className="absolute right-2 top-1/2 -translate-y-1/2 text-primary hover:scale-110 disabled:opacity-30 transition-all p-1"
                                     >
                                         <Send className="size-4" />
