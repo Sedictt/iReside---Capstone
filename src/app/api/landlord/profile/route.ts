@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuthenticatedUser, requireRole } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { landlordProfilePatchSchema } from "@/lib/validation/landlord-settings";
+import { normalizeSocialUrl, type SocialPlatform } from "@/lib/validation/profile";
 
 /**
  * GET /api/landlord/profile
@@ -113,10 +114,25 @@ export async function PATCH(request: Request) {
             ? (currentProfile.socials as Record<string, any>)
             : {};
 
+        // Normalize social links
+        const normalizedSocialsInput: Record<string, string> = {};
+        if (body.socials && typeof body.socials === "object") {
+            const knownPlatforms: SocialPlatform[] = ["facebook", "twitter", "linkedin", "instagram", "website"];
+            for (const [platformKey, rawVal] of Object.entries(body.socials)) {
+                if (typeof rawVal === "string" && rawVal.trim()) {
+                    if (knownPlatforms.includes(platformKey as SocialPlatform)) {
+                        normalizedSocialsInput[platformKey] = normalizeSocialUrl(platformKey as SocialPlatform, rawVal);
+                    } else {
+                        normalizedSocialsInput[platformKey] = rawVal.trim();
+                    }
+                }
+            }
+        }
+
         // Merge socials and emergency contact
         const mergedSocials = {
             ...currentSocials,
-            ...(body.socials || {}),
+            ...normalizedSocialsInput,
             emergency_contact_name: body.emergency_contact_name !== undefined 
                 ? body.emergency_contact_name 
                 : (currentSocials.emergency_contact_name || ""),

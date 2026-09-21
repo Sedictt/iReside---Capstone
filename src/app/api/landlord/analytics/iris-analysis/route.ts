@@ -3,7 +3,7 @@ import Groq from "groq-sdk";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
 const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY,
+    apiKey: process.env.GROQ_API_KEY || "dummy-key",
 });
 
 const unwrapJsonBlock = (text: string) => {

@@ -9,6 +9,7 @@
  */
 
 import { z } from "zod";
+import { validateSocialInput, socialsRecordSchema } from "./profile";
 
 // ---------------------------------------------------------------------------
 // Regular Expressions & Constants
@@ -195,33 +196,7 @@ export function validateSocialHandleOrUrl(
     platform: "facebook" | "instagram" | "twitter" | "linkedin",
     value: string
 ): { isValid: boolean; error?: string } {
-    const trimmed = value?.trim() ?? "";
-    if (!trimmed) return { isValid: true };
-
-    if (trimmed.includes(" ") && !trimmed.startsWith("http")) {
-        return { isValid: false, error: `${platform} handle or link cannot contain spaces.` };
-    }
-
-    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-        try {
-            const parsed = new URL(trimmed);
-            if (!parsed.hostname.includes(".")) {
-                return { isValid: false, error: `Please enter a valid ${platform} URL.` };
-            }
-        } catch {
-            return { isValid: false, error: `Please enter a valid ${platform} URL.` };
-        }
-    } else {
-        // Handle validation (without URL)
-        if (trimmed.length > 50) {
-            return { isValid: false, error: `${platform} handle cannot exceed 50 characters.` };
-        }
-        if (/[^a-zA-Z0-9._@/-]/.test(trimmed)) {
-            return { isValid: false, error: `${platform} handle contains invalid characters.` };
-        }
-    }
-
-    return { isValid: true };
+    return validateSocialInput(platform, value);
 }
 
 /**
@@ -477,9 +452,12 @@ export function validateAllLandlordSettings(
     if (!emergPhoneCheck.isValid) {
         errors["emergency_contact_phone"] = emergPhoneCheck.error!;
     }
-    // Cross check: if one is present, both are recommended
+    // Cross check: if one is present, both are required
     if (formData.emergency_contact_name.trim() && !formData.emergency_contact_phone.trim()) {
         errors["emergency_contact_phone"] = "Emergency phone number is required when a contact name is provided.";
+    }
+    if (formData.emergency_contact_phone.trim() && !formData.emergency_contact_name.trim()) {
+        errors["emergency_contact_name"] = "Emergency contact name is required when a phone number is provided.";
     }
 
     // 3. Identity -> Socials
@@ -560,6 +538,25 @@ export const landlordProfilePatchSchema = z.object({
     emergency_contact_name: z.string().trim().max(70).optional(),
     emergency_contact_phone: z.string().trim().max(25).optional(),
     business_permit_number: z.string().trim().max(50).optional(),
-    socials: z.record(z.string(), z.string()).optional(),
+    socials: socialsRecordSchema,
     notification_preferences: z.record(z.string(), z.any()).optional(),
+}).superRefine((data, ctx) => {
+    const emergName = data.emergency_contact_name?.trim() || "";
+    const emergPhone = data.emergency_contact_phone?.trim() || "";
+    if (emergName || emergPhone) {
+        if (!emergName) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Emergency contact name is required when emergency phone is provided",
+                path: ["emergency_contact_name"],
+            });
+        }
+        if (!emergPhone) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Emergency contact phone is required when emergency name is provided",
+                path: ["emergency_contact_phone"],
+            });
+        }
+    }
 });

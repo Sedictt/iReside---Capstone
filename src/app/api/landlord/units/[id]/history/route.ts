@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(
     request: NextRequest,
-    context: { params: Promise<{ id: string }> | { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;

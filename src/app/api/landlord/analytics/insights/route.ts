@@ -26,7 +26,7 @@ type InsightRequestBody = {
 };
 
 const openai = new OpenAI({
-    apiKey: process.env.GROQ_API_KEY,
+    apiKey: process.env.GROQ_API_KEY || "dummy-key",
     baseURL: "https://api.groq.com/openai/v1",
 });
 
