@@ -50,3 +50,33 @@ export type {
   ResetPasswordRequestInput,
   UpdateProfileInput,
 } from "./schemas/auth.schema";
+
+// Brand Setup validation
+export {
+  validatePropertyTradeName,
+  validatePropertyTagline,
+  validateRentalArchetype,
+  validateTotalUnits,
+  validatePropertyAddress,
+  validateBrandColor,
+  validateLogoFile,
+  validateAdminFullName,
+  validateAdminEmail,
+  validateAdminPhone,
+  validateAdminPassword,
+  validateConfirmPassword,
+  validateStep1Identity,
+  validateStep2Theme,
+  validateStep3Admin,
+  validateAllBrandSetup,
+  setupLaunchSchema,
+  brandingUpdateSchema,
+} from "./brand-setup";
+
+export type {
+  RentalArchetype,
+  Step1IdentityData,
+  Step2ThemeData,
+  Step3AdminData,
+  BrandSetupValidationResult,
+} from "./brand-setup";

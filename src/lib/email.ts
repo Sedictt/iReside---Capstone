@@ -664,6 +664,59 @@ const text = `Your iReside verification code is: ${otp}\n\nThis code expires in 
     await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
 
+export async function sendEmailVerificationOTP({
+    to,
+    otp,
+}: {
+    to: string;
+    otp: string;
+}) {
+    const subject = `${otp} is your iReside email verification code`;
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Verify your new email address</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <div style="max-width:480px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+    <div style="background-color:#c4b0ff;padding:24px 32px;text-align:center;">
+      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
+    </div>
+    <div style="padding:32px;text-align:center;">
+      <h2 style="margin:0 0 8px;font-size:18px;font-weight:700;color:#09090b;">Verify Your New Email</h2>
+      <p style="margin:0 0 28px;color:#52525b;font-size:14px;line-height:1.6;">
+        Use the single-use verification code below to verify and link your new email address to your iReside landlord account.
+      </p>
+
+      <div style="background-color:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:24px;margin-bottom:28px;">
+        <span style="font-size:32px;font-weight:900;color:#09090b;font-family:Consolas,'Liberation Mono',Menlo,monospace;letter-spacing:8px;margin-left:8px;">${otp}</span>
+      </div>
+
+      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
+        This code expires in 10 minutes. If you did not request to link this email address, you can safely ignore this message.
+      </p>
+    </div>
+    <div style="padding:16px;background-color:#fafafa;text-align:center;border-top:1px solid #f4f4f5;">
+      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const text = `Your iReside email verification code is: ${otp}\n\nThis code expires in 10 minutes.`;
+
+    await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
+}
+
 export async function sendLandlordRegistrationApproved({
     to,
     landlordName,

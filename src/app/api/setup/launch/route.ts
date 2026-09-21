@@ -4,6 +4,7 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { DEFAULT_BRANDING, BrandConfig } from "@/context/BrandContext";
 import { generateSecurityKey, encryptSecurityKey } from "@/lib/security/recovery-keys";
 import { logUserActivity } from "@/lib/audit/audit-logger";
+import { setupLaunchSchema } from "@/lib/validation/brand-setup";
 
 interface SetupLaunchPayload {
   branding: {
@@ -40,21 +41,45 @@ export async function POST(request: NextRequest) {
     }
 
     const { userId } = authContext;
-    const body = (await request.json()) as SetupLaunchPayload;
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
+    }
+
+    const validationResult = setupLaunchSchema.safeParse(rawBody);
+    if (!validationResult.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of validationResult.error.issues) {
+        const path = issue.path.join(".");
+        fieldErrors[path] = issue.message;
+      }
+      return NextResponse.json(
+        {
+          error: "Validation failed: Please check your input fields.",
+          details: fieldErrors,
+        },
+        { status: 400 }
+      );
+    }
+
+    const body = validationResult.data;
     const adminClient = createServiceRoleSupabaseClient();
     const timestamp = new Date().toISOString();
 
-    const propertyName = body.branding?.propertyName?.trim() || "iReside Residences";
-    const propertyTagline = body.branding?.propertyTagline?.trim() || DEFAULT_BRANDING.propertyTagline;
-    const rentalArchetype = body.branding?.rentalArchetype || "apartment";
-    const primaryColor = body.branding?.primaryColor || DEFAULT_BRANDING.primaryColor;
-    const secondaryColor = body.branding?.secondaryColor || DEFAULT_BRANDING.secondaryColor;
-    const logoUrl = body.branding?.logoUrl || null;
-    const propertyAddress = body.branding?.propertyAddress?.trim() || "Valenzuela City";
-    const totalUnitsCount = Number(body.branding?.totalUnits) || 16;
+    const propertyName = body.branding.propertyName;
+    const propertyTagline = body.branding.propertyTagline || DEFAULT_BRANDING.propertyTagline;
+    const rentalArchetype = body.branding.rentalArchetype;
+    const primaryColor = body.branding.primaryColor;
+    const secondaryColor = body.branding.secondaryColor;
+    const logoUrl = body.branding.logoUrl || null;
+    const propertyAddress = body.branding.propertyAddress;
+    const totalUnitsCount = body.branding.totalUnits;
+
 
     // 1. Account Claiming: Update Supabase Auth Credentials if requested
-    const updatesToAuth: { password?: string; email?: string; email_confirm?: boolean; user_metadata?: Record<string, unknown> } = {};
+    const updatesToAuth: { password?: string; email?: string } = {};
     const newPassword = body.admin?.password?.trim();
     if (newPassword && newPassword.length >= 6 && !newPassword.includes("•")) {
       updatesToAuth.password = newPassword;
@@ -63,17 +88,6 @@ export async function POST(request: NextRequest) {
     const newEmail = body.admin?.email?.trim();
     if (newEmail && newEmail.includes("@") && !newEmail.includes("turnkey.local")) {
       updatesToAuth.email = newEmail;
-      updatesToAuth.email_confirm = true;
-    }
-
-    const adminFullName = body.admin?.fullName?.trim();
-    const adminPhone = body.admin?.phone?.trim();
-
-    if (adminFullName || adminPhone) {
-      updatesToAuth.user_metadata = {
-        ...(adminFullName ? { full_name: adminFullName } : {}),
-        ...(adminPhone ? { phone: adminPhone } : {}),
-      };
     }
 
     if (Object.keys(updatesToAuth).length > 0) {
@@ -87,6 +101,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Account Profile Updates: Name, Phone & Business Name
+    const adminFullName = body.admin?.fullName?.trim();
+    const adminPhone = body.admin?.phone?.trim();
+
     const profileUpdates: Record<string, unknown> = {
       business_name: propertyName,
       updated_at: timestamp,
@@ -117,7 +134,7 @@ export async function POST(request: NextRequest) {
       setup_completed_at: timestamp,
     };
 
-    // 4. Property Record: Update existing property or create new primary property
+    // 4. Update existing property branding if landlord already has an active property, otherwise do NOT auto-create a phantom property
     const { data: existingProperty } = await adminClient
       .from("properties")
       .select("id, map_decorations")
@@ -137,39 +154,23 @@ export async function POST(request: NextRequest) {
       await adminClient
         .from("properties")
         .update({
-          name: propertyName,
-          description: propertyTagline,
-          type: rentalArchetype,
-          address: propertyAddress,
           map_decorations: newDecorations as any,
           updated_at: timestamp,
         })
         .eq("id", existingProperty.id);
-    } else {
-      // Create initial turnkey property
-      const { error: insertPropError } = await adminClient
-        .from("properties")
-        .insert({
-          landlord_id: userId,
-          name: propertyName,
-          description: propertyTagline,
-          address: propertyAddress,
-          type: rentalArchetype,
-          map_decorations: {
-            branding: brandingMeta,
-          } as any,
-          created_at: timestamp,
-          updated_at: timestamp,
-        });
-
-      if (insertPropError) {
-        console.error("[Setup Launch] Failed creating primary property:", insertPropError.message);
-        return NextResponse.json(
-          { error: "Failed creating initial property profile: " + insertPropError.message },
-          { status: 500 }
-        );
-      }
     }
+
+    // Always sync business brand to landlord_business_profiles
+    await (adminClient as any)
+      .from("landlord_business_profiles")
+      .upsert(
+        {
+          profile_id: userId,
+          business_name: propertyName,
+          updated_at: timestamp,
+        },
+        { onConflict: "profile_id" }
+      );
 
     // 5. Generate and encrypt initial single-use security recovery key for Landlord
     const plaintextSecurityKey = generateSecurityKey();
@@ -198,7 +199,7 @@ export async function POST(request: NextRequest) {
       action: "security_key_generated",
       category: "security",
       title: "Security Recovery Key Created",
-      description: "Landlord initial security recovery key generated during Turnkey workspace launch.",
+      description: "Landlord initial security recovery key generated during workspace launch.",
       severity: "info",
     });
 

@@ -16,6 +16,8 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/context/BrandContext";
+import { validateBannerImageUrl } from "@/lib/validation/landlord-settings";
+
 
 export const CURATED_BANNER_PRESETS = [
   {
@@ -130,20 +132,17 @@ export function BannerCustomizerModal({
   };
 
   const handleApplyCustomUrl = () => {
-    const trimmed = customUrlInput.trim();
-    if (!trimmed) return;
-
-    try {
-      new URL(trimmed);
-    } catch {
-      toast.error("Please enter a valid URL starting with http:// or https://");
+    const check = validateBannerImageUrl(customUrlInput);
+    if (!check.isValid) {
+      toast.error(check.error || "Please enter a valid image URL starting with http:// or https://");
       return;
     }
 
-    setSelectedBanner(trimmed);
+    setSelectedBanner(customUrlInput.trim());
     toast.success("Image URL applied! Click 'Apply Banner Photo' to save.");
     setCustomUrlInput("");
   };
+
 
   const handleSave = async () => {
     setIsSaving(true);

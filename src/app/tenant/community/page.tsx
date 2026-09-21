@@ -628,11 +628,12 @@ export default function TenantCommunityHubPage() {
                 pendingCount={pendingPosts.length}
             />
 
-            <div className="relative mt-8 space-y-8">
-                <AnimatePresence>
-                    {showRules && <CommunityRules onClose={() => setShowRules(false)} />}
-                </AnimatePresence>
+            <CommunityRules 
+                isOpen={showRules} 
+                onClose={() => setShowRules(false)} 
+            />
 
+            <div className="relative mt-8 space-y-8">
                 <CommunityAnnouncement 
                     announcement={topAnnouncement}
                     config={announcementConfig}
