@@ -11,8 +11,10 @@ import {
     ChevronRight, 
     PanelLeftClose, 
     PanelLeftOpen,
-    Menu
+    Menu,
+    Lock
 } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -52,6 +54,7 @@ interface RoleSidebarProps {
     isCollapsed?: boolean;
     onToggleCollapse?: () => void;
     showCollapseToggle?: boolean;
+    isLocked?: boolean;
 }
 
 function LogoLink({ children }: { children: React.ReactNode }) {
@@ -94,6 +97,7 @@ export function RoleSidebar({
     isCollapsed = false,
     onToggleCollapse,
     showCollapseToggle = false,
+    isLocked = false,
 }: RoleSidebarProps) {
     const pathname = usePathname();
     const [expandedOverrides, setExpandedOverrides] = useState<Record<string, boolean>>({});
@@ -110,62 +114,89 @@ export function RoleSidebar({
 
     const renderNavItem = (item: SidebarNavItem, nested = false) => {
         const isActive = isItemActive(item.href);
+        const isItemLocked = Boolean(
+            isLocked && 
+            item.href !== "/landlord/properties" && 
+            item.href !== "/landlord/properties/new"
+        );
+        const resolvedHref = (isLocked && item.href === "/landlord/properties")
+            ? "/landlord/properties/new"
+            : item.href;
 
         const tooltipContent = (
             <div className="flex flex-col gap-1 max-w-[220px] text-left py-0.5">
                 <div className="flex items-center gap-1.5">
                     <span className="font-black text-xs text-foreground tracking-tight">{item.label}</span>
-                    {item.urgent && (
+                    {isItemLocked ? (
+                        <span className="flex items-center gap-1 text-[9px] font-bold text-amber-500 uppercase tracking-wider">
+                            <Lock className="size-2.5" />
+                            Setup Required
+                        </span>
+                    ) : item.urgent ? (
                         <span className="size-1.5 rounded-full bg-red-500 animate-ping" />
-                    )}
+                    ) : null}
                 </div>
-                {item.description && (
+                {isItemLocked ? (
+                    <span className="text-[11px] font-medium text-amber-500/90 leading-snug">
+                        Register your first property to unlock this section.
+                    </span>
+                ) : item.description ? (
                     <span className="text-[11px] font-medium text-muted-foreground/90 leading-snug">
                         {item.description}
                     </span>
-                )}
+                ) : null}
             </div>
         );
 
         return (
             <Tooltip
                 key={item.href}
-                content={isCollapsed ? tooltipContent : undefined}
+                content={isCollapsed || isItemLocked ? tooltipContent : undefined}
                 side="right"
                 align="center"
                 sideOffset={18}
                 showArrow
             >
                 <Link
-                    href={item.href}
-                    prefetch={true}
+                    href={resolvedHref}
+                    prefetch={!isItemLocked}
                     data-tour-id={item.tourId}
-                    aria-current={isActive ? "page" : undefined}
+                    aria-current={isActive && !isItemLocked ? "page" : undefined}
+                    aria-disabled={isItemLocked}
+                    onClick={(e) => {
+                        if (isItemLocked) {
+                            e.preventDefault();
+                            toast.warning("Property setup required. Please complete your property setup first to unlock portal operations.");
+                        }
+                    }}
                     className={cn(
                         "group relative flex items-center transition-all duration-200 ease-out",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.98]",
-                        /* Soft shadows */
-                        isActive
-                            ? "text-primary neumorphic-active"
-                            : "text-muted-foreground hover:text-foreground neumorphic-extruded neumorphic-extruded-hover",
+                        isItemLocked
+                            ? "opacity-35 cursor-not-allowed text-muted-foreground hover:text-muted-foreground active:scale-100 shadow-none pointer-events-auto"
+                            : cn(
+                                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.98]",
+                                isActive
+                                    ? "text-primary neumorphic-active"
+                                    : "text-muted-foreground hover:text-foreground neumorphic-extruded neumorphic-extruded-hover"
+                            ),
                         nested && !isCollapsed ? "ml-0" : "", // Reduced margin
                         isCollapsed ? "justify-center rounded-xl px-0 size-12 mx-auto" : "justify-between px-6 py-4 mx-3 my-2 rounded-xl"
                     )}
                 >
                     {/* Active Indicator removed for seamless molded aesthetic */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                         <item.icon 
                             className={cn(
                                 "transition-transform duration-300", 
                                 isCollapsed ? "size-6" : "size-5 shrink-0",
-                                isActive ? "text-primary drop-shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" : "text-muted-foreground group-hover:text-foreground"
+                                isActive && !isItemLocked ? "text-primary drop-shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" : "text-muted-foreground group-hover:text-foreground"
                             )} 
                             aria-hidden="true" 
                         />
                         {!isCollapsed && (
                             <span
                                 className={cn(
-                                    "whitespace-nowrap text-[11px] uppercase tracking-widest leading-none font-black"
+                                    "whitespace-nowrap text-[11px] uppercase tracking-widest leading-none font-black truncate"
                                 )}
                             >
                                 {item.label}
@@ -173,14 +204,24 @@ export function RoleSidebar({
                         )}
                     </div>
 
-                    {!isCollapsed && item.badge ? (
+                    {isItemLocked && !isCollapsed && (
+                        <Lock className="size-3.5 text-muted-foreground/60 shrink-0 ml-auto" />
+                    )}
+
+                    {isItemLocked && isCollapsed && (
+                        <span className="absolute right-1 top-1 text-muted-foreground/60">
+                            <Lock className="size-2.5" />
+                        </span>
+                    )}
+
+                    {!isItemLocked && !isCollapsed && item.badge ? (
                         <span className={cn(
                             "flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-foreground shadow-[inset_2px_2px_4px_rgba(255,255,255,0.4),inset_-2px_-2px_4px_rgba(0,0,0,0.2)]",
                             item.urgent && "animate-pulse shadow-lg shadow-red-500/40"
                         )}>
                             {item.badge > 99 ? '99+' : item.badge}
                         </span>
-                    ) : isCollapsed && item.badge ? (
+                    ) : !isItemLocked && isCollapsed && item.badge ? (
                         <span className={cn(
                             "absolute right-2 top-2 size-2.5 rounded-full bg-red-500 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.4),0_0_6px_rgba(239,68,68,0.5)]",
                             item.urgent && "animate-ping"

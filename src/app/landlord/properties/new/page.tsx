@@ -36,6 +36,7 @@ import { SmartContractPreviewModal } from "@/components/landlord/properties/Smar
 import ClickSpark from "@/components/ui/ClickSpark";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useProperty } from "@/context/PropertyContext";
 import { playSound } from "@/hooks/useSound";
 import { useAppToast } from "@/hooks/useAppToast";
 
@@ -74,6 +75,7 @@ function NewAssetContent() {
     const isEditMode = mode === "edit";
 
     const { user, profile } = useAuth();
+    const { properties, refreshProperties } = useProperty();
     const supabase = createClient();
     const toast = useAppToast();
     
@@ -275,8 +277,13 @@ function NewAssetContent() {
     };
 
     const handleBack = () => {
-        if (step > 1) setStep(s => (s - 1) as Step);
-        else router.push("/landlord/properties");
+        if (step > 1) {
+            setStep(s => (s - 1) as Step);
+        } else if (properties.length === 0) {
+            toast.info("Initial property registration is required before accessing the portal.");
+        } else {
+            router.push("/landlord/properties");
+        }
     };
 
     const handleSubmit = async () => {
@@ -396,6 +403,7 @@ function NewAssetContent() {
             }
 
             toast.success(isEditMode ? "Property updated successfully!" : "Property created successfully!");
+            await refreshProperties();
             router.refresh();
             router.push("/landlord/properties");
         } catch (e) {
@@ -421,10 +429,21 @@ function NewAssetContent() {
 
             <div className="max-w-4xl mx-auto px-4 pt-8 space-y-8 animate-in fade-in duration-700">
                 <div className="flex items-center justify-between">
-                    <button onClick={handleBack} className="group flex items-center gap-2 text-sm font-black text-muted-foreground hover:text-foreground transition-all neumorphic-panel px-5 py-2.5 rounded-full border border-border/60 backdrop-blur-xl">
-                        <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
-                        {step === 1 ? "Cancel" : "Back"}
-                    </button>
+                    {properties.length > 0 ? (
+                        <button onClick={handleBack} className="group flex items-center gap-2 text-sm font-black text-muted-foreground hover:text-foreground transition-all neumorphic-panel px-5 py-2.5 rounded-full border border-border/60 backdrop-blur-xl cursor-pointer">
+                            <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
+                            {step === 1 ? "Cancel" : "Back"}
+                        </button>
+                    ) : step > 1 ? (
+                        <button onClick={handleBack} className="group flex items-center gap-2 text-sm font-black text-muted-foreground hover:text-foreground transition-all neumorphic-panel px-5 py-2.5 rounded-full border border-border/60 backdrop-blur-xl cursor-pointer">
+                            <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
+                            Back
+                        </button>
+                    ) : (
+                        <div className="flex items-center gap-2 text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-4 py-2 rounded-full border border-amber-500/20">
+                            <span>Initial Property Setup (Required)</span>
+                        </div>
+                    )}
                     <div className="text-[10px] font-black text-primary uppercase tracking-[0.3em] bg-primary/10 px-5 py-2 rounded-full border border-primary/20 backdrop-blur-xl shadow-sm">
                         {isEditMode ? "Asset Configuration" : "Expansion Wizard"}
                     </div>

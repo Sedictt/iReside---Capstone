@@ -27,6 +27,7 @@ import { RoleSidebar, type SidebarNavSection } from "@/components/navigation/Rol
 import { PropertySelector } from "@/components/landlord/PropertySelector";
 import { LogoutConfirmationModal } from "@/components/ui/LogoutConfirmationModal";
 import { useNotifications } from "@/context/NotificationContext";
+import { useProperty } from "@/context/PropertyContext";
 import { cn } from "@/lib/utils";
 
 export function Sidebar({
@@ -41,6 +42,8 @@ export function Sidebar({
     className?: string;
 }) {
     const { counts, importantNotifications } = useNotifications();
+    const { properties, loading: propertyLoading } = useProperty();
+    const isLocked = !propertyLoading && properties.length === 0;
     
     const isUrgent = (type: string) => importantNotifications.some(n => n.type === type);
 
@@ -219,6 +222,7 @@ export function Sidebar({
                 isCollapsed={isCollapsed}
                 onToggleCollapse={onToggleCollapse}
                 showCollapseToggle={showCollapseToggle}
+                isLocked={isLocked}
                 className={`neu-landlord-sidebar ${className || ''}`}
             />
             <LogoutConfirmationModal

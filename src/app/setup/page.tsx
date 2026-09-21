@@ -161,20 +161,29 @@ function WizardContent() {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const brand = useBrand();
 
+  // Step 4: Launch State & Security Recovery Key Modal
+  const [isLaunching, setIsLaunching] = useState(false);
+  const [isLaunched, setIsLaunched] = useState(false);
+  const [launchedSecurityKey, setLaunchedSecurityKey] = useState<string | null>(null);
+  const [isSecurityKeyAcknowledged, setIsSecurityKeyAcknowledged] = useState(false);
+  const [hasCopiedKey, setHasCopiedKey] = useState(false);
+  const [hasDownloadedKey, setHasDownloadedKey] = useState(false);
+  const [isKeyVisible, setIsKeyVisible] = useState(false);
+
   useEffect(() => {
     if (!loading && profile && profile.role === "tenant") {
       router.replace("/tenant/dashboard");
       return;
     }
 
-    // Completion Lock: Redirect to dashboard if setup is already finalized unless in reconfigure mode
-    if (!loading && brand && brand.setupCompleted && !isReconfigure) {
+    // Completion Lock: Redirect to dashboard if setup is already finalized unless in reconfigure mode or currently in launched key lightbox
+    if (!loading && brand && brand.setupCompleted && !isReconfigure && !isLaunched && !launchedSecurityKey) {
       toast.info("Setup already finalized", {
         description: "Your property portal is already operational. You can update your brand in Settings.",
       });
       router.replace("/landlord/dashboard");
     }
-  }, [loading, profile, brand, brand.setupCompleted, isReconfigure, router]);
+  }, [loading, profile, brand, brand.setupCompleted, isReconfigure, isLaunched, launchedSecurityKey, router]);
 
   // Pre-fill profile info from authenticated user if available and not pre-seeded
   useEffect(() => {
@@ -279,15 +288,6 @@ function WizardContent() {
     const timer = setTimeout(() => setOtpCooldown((prev) => prev - 1), 1000);
     return () => clearTimeout(timer);
   }, [otpCooldown]);
-
-  // Step 4: Launch State & Security Recovery Key Modal
-  const [isLaunching, setIsLaunching] = useState(false);
-  const [isLaunched, setIsLaunched] = useState(false);
-  const [launchedSecurityKey, setLaunchedSecurityKey] = useState<string | null>(null);
-  const [isSecurityKeyAcknowledged, setIsSecurityKeyAcknowledged] = useState(false);
-  const [hasCopiedKey, setHasCopiedKey] = useState(false);
-  const [hasDownloadedKey, setHasDownloadedKey] = useState(false);
-  const [isKeyVisible, setIsKeyVisible] = useState(false);
 
   const handleDownloadSecurityKey = (key: string, email?: string) => {
     try {
@@ -699,7 +699,8 @@ CRITICAL SECURITY INSTRUCTIONS:
         throw new Error(json.error || "Failed to launch workspace");
       }
 
-      // 2. Update local BrandContext state with setup_completed: true
+      // 2. Update local BrandContext styling, but do NOT mark setupCompleted: true yet.
+      // Setup completion will only be finalized once the landlord copies & downloads their security recovery key!
       await brand.updateBranding(
         {
           propertyName: propertyName.trim(),
@@ -708,8 +709,7 @@ CRITICAL SECURITY INSTRUCTIONS:
           primaryColor,
           secondaryColor,
           logoUrl,
-          setupCompleted: true,
-          setupCompletedAt: new Date().toISOString(),
+          setupCompleted: false,
         },
         false // already saved in database by /api/setup/launch
       );
@@ -2257,11 +2257,24 @@ CRITICAL SECURITY INSTRUCTIONS:
                         <button
                           type="button"
                           disabled={launchedSecurityKey ? (!hasCopiedKey || !hasDownloadedKey || !isSecurityKeyAcknowledged) : false}
-                          onClick={() => {
+                          onClick={async () => {
                             if (launchedSecurityKey && (!hasCopiedKey || !hasDownloadedKey || !isSecurityKeyAcknowledged)) {
                               toast.error("Please copy, download, and confirm saving your security recovery key before proceeding.");
                               return;
                             }
+                            await brand.updateBranding(
+                              {
+                                propertyName: propertyName.trim(),
+                                propertyTagline: tagline.trim(),
+                                rentalArchetype: propertyArchetype,
+                                primaryColor,
+                                secondaryColor,
+                                logoUrl,
+                                setupCompleted: true,
+                                setupCompletedAt: new Date().toISOString(),
+                              },
+                              false
+                            );
                             router.push("/landlord/dashboard");
                           }}
                           className={cn(
@@ -2586,7 +2599,24 @@ CRITICAL SECURITY INSTRUCTIONS:
             <button
               type="button"
               disabled={!hasCopiedKey || !hasDownloadedKey || !isSecurityKeyAcknowledged}
-              onClick={() => {
+              onClick={async () => {
+                if (!hasCopiedKey || !hasDownloadedKey || !isSecurityKeyAcknowledged) {
+                  toast.error("Please copy, download, and confirm saving your security recovery key before proceeding.");
+                  return;
+                }
+                await brand.updateBranding(
+                  {
+                    propertyName: propertyName.trim(),
+                    propertyTagline: tagline.trim(),
+                    rentalArchetype: propertyArchetype,
+                    primaryColor,
+                    secondaryColor,
+                    logoUrl,
+                    setupCompleted: true,
+                    setupCompletedAt: new Date().toISOString(),
+                  },
+                  false // already saved in database by /api/setup/launch
+                );
                 router.push("/landlord/dashboard");
               }}
               className={cn(

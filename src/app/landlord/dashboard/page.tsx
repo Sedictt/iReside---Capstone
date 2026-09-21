@@ -29,7 +29,6 @@ import { WalkInApplicationModal } from "@/components/landlord/applications/WalkI
 import { TenantInviteManager } from "@/components/landlord/applications/TenantInviteManager";
 import { CommandCenter } from "@/components/landlord/dashboard/CommandCenter";
 import { VacantUnitsModal } from "@/components/landlord/dashboard/VacantUnitsModal";
-import { LandlordWelcomeLightbox } from "@/components/landlord/dashboard/LandlordWelcomeLightbox";
 import { MobileMessagesSheet } from "@/components/landlord/dashboard/MobileMessagesSheet";
 import { LobbyFlyerModal } from "@/components/landlord/flyer/LobbyFlyerModal";
 
@@ -533,9 +532,6 @@ export default function LandlordDashboard() {
                     <ActionRequired />
                 </div>
             </div>
-
-            {/* Welcome Lightbox on First Visit */}
-            <LandlordWelcomeLightbox />
 
             {/* Modals & Overlays */}
             <PaymentModal
