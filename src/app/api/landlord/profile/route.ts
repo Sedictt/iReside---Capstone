@@ -157,6 +157,17 @@ export async function PATCH(request: Request) {
         if (body.website !== undefined) profileUpdates.website = body.website;
         if (body.bio !== undefined) profileUpdates.bio = body.bio;
         if (body.business_permit_number !== undefined) profileUpdates.business_permit_number = body.business_permit_number;
+        if (body.email !== undefined && body.email.trim() && body.email.trim() !== currentProfile.email) {
+            const newEmail = body.email.trim();
+            profileUpdates.email = newEmail;
+            const { error: authErr } = await admin.auth.admin.updateUserById(userId, {
+                email: newEmail,
+                email_confirm: true,
+            });
+            if (authErr) {
+                console.warn("[landlord/profile PATCH] Supabase Auth email update warning:", authErr.message);
+            }
+        }
 
         // 3. Update public.profiles
         const { data: updatedProfile, error: updateError } = await (admin as any)

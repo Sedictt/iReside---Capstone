@@ -58,6 +58,7 @@ import { MobileSettingsCategoryDropdown } from "@/components/mobile/shared/Mobil
 import { SecurityKeyManagementCard } from "@/components/auth/SecurityKeyManagementCard";
 import { 
     validateFullName, 
+    validateEmail,
     validatePhoneNumber, 
     validateAddress, 
     validateBio, 
@@ -321,6 +322,9 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
         const nameCheck = validateFullName(data.full_name);
         if (!nameCheck.isValid) errors.full_name = nameCheck.error!;
 
+        const emailCheck = validateEmail(data.email);
+        if (!emailCheck.isValid) errors.email = emailCheck.error!;
+
         const phoneCheck = validatePhoneNumber(data.phone);
         if (!phoneCheck.isValid) errors.phone = phoneCheck.error!;
 
@@ -344,6 +348,9 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
         if (field === "full_name") {
             const check = validateFullName(value);
             setProfileErrors(prev => ({ ...prev, full_name: check.isValid ? "" : check.error! }));
+        } else if (field === "email") {
+            const check = validateEmail(value);
+            setProfileErrors(prev => ({ ...prev, email: check.isValid ? "" : check.error! }));
         } else if (field === "phone") {
             const check = validatePhoneNumber(value);
             setProfileErrors(prev => ({ ...prev, phone: check.isValid ? "" : check.error! }));
@@ -502,28 +509,31 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
         setIsSaving(true);
         try {
             const trimmedFullName = formData.full_name.trim();
+            const trimmedEmail = formData.email.trim();
             const trimmedBio = formData.bio.trim();
             const trimmedPhone = formData.phone.trim();
             const trimmedAddress = formData.address.trim();
             const trimmedEmergName = formData.emergency_name.trim();
             const trimmedEmergPhone = formData.emergency_phone.trim();
 
-            const socialsWithEmergency = {
-                ...((profile.socials as any) || {}),
-                emergency_contact_name: trimmedEmergName,
-                emergency_contact_phone: trimmedEmergPhone,
-            };
-
-            const { error } = await supabase
-                .from("profiles")
-                .update({
+            const res = await fetch("/api/tenant/profile", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
                     full_name: trimmedFullName,
+                    email: trimmedEmail,
                     bio: trimmedBio,
-                    socials: socialsWithEmergency,
-                } as any)
-                .eq("id", profile.id);
+                    phone: trimmedPhone,
+                    address: trimmedAddress,
+                    emergency_contact_name: trimmedEmergName,
+                    emergency_contact_phone: trimmedEmergPhone,
+                }),
+            });
 
-            if (error) throw error;
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || "Failed to update profile");
+            }
 
             try {
                 await supabase.auth.updateUser({
@@ -715,12 +725,16 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
                                             )}
                                         />
                                     </SettingField>
-                                    <SettingField label="Email" icon={Mail} description="Your verified email.">
+                                    <SettingField label="Email Address" icon={Mail} description="Your contact and notification email." error={profileErrors.email}>
                                         <input
                                             type="email"
                                             value={formData.email}
-                                            disabled
-                                            className="w-full cursor-not-allowed rounded-xl neumorphic-inset opacity-60 px-4 py-3 text-sm text-muted-foreground"
+                                            onChange={(e) => handleProfileFieldChange("email", e.target.value)}
+                                            placeholder="name@example.com"
+                                            className={cn(
+                                                "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none transition-colors",
+                                                profileErrors.email ? "border border-rose-500/80 focus:ring-1 focus:ring-rose-500" : "focus:ring-1 focus:ring-primary"
+                                            )}
                                         />
                                     </SettingField>
                                     <SettingField label="Phone Number" icon={Phone} error={profileErrors.phone}>
