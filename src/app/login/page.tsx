@@ -99,19 +99,30 @@ function LoginContent() {
             }
 
             let role = data.user?.user_metadata?.role;
-            if (!role && data.user?.id) {
+            let businessName: string | null = null;
+            if (data.user?.id) {
                 const { data: profile } = await supabase
                     .from("profiles")
-                    .select("role")
+                    .select("role, business_name")
                     .eq("id", data.user.id)
                     .single();
-                role = profile?.role;
+                if (profile) {
+                    role = profile.role;
+                    businessName = profile.business_name;
+                }
             }
 
             const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
             let defaultTarget: string;
             if (isMobile) {
                 defaultTarget = role === "tenant" ? "/mobile/tenant/home" : "/mobile/landlord/overview";
+            } else if (role === "landlord" && !businessName && !redirectUrl) {
+                // If a desktop landlord has no business setup, check if they have properties
+                const { count } = await supabase
+                    .from("properties")
+                    .select("id", { count: "exact", head: true })
+                    .eq("landlord_id", data.user.id);
+                defaultTarget = count === 0 ? "/setup" : "/landlord/dashboard";
             } else {
                 defaultTarget = role === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard";
             }
