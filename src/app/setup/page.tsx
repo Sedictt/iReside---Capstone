@@ -139,8 +139,10 @@ function WizardContent() {
       return;
     }
 
-    // Completion Lock: Redirect to dashboard if setup is already finalized unless in reconfigure mode
-    if (!loading && brand && brand.setupCompleted && !isReconfigure) {
+    // Completion Lock: Redirect to dashboard if setup is already finalized unless in reconfigure mode.
+    // Unclaimed landlords without a business_name are always permitted to complete setup.
+    const isLandlordUnclaimed = profile?.role === "landlord" && !profile?.business_name;
+    if (!loading && brand && brand.setupCompleted && !isReconfigure && !isLandlordUnclaimed) {
       toast.info("Setup already finalized", {
         description: "Your property portal is already operational. You can update your brand in Settings.",
       });
