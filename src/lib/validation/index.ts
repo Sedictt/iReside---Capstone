@@ -71,6 +71,7 @@ export {
   validateAllBrandSetup,
   setupLaunchSchema,
   brandingUpdateSchema,
+  DISALLOWED_PRESEEDED_DATA,
 } from "./brand-setup";
 
 export type {

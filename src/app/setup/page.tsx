@@ -33,6 +33,9 @@ import {
   Contrast,
   Edit3,
   KeyRound,
+  Copy,
+  Download,
+  ShieldAlert,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -48,6 +51,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
 import {
+  DISALLOWED_PRESEEDED_DATA,
   validatePropertyTradeName,
   validatePropertyTagline,
   validateRentalArchetype,
@@ -172,26 +176,42 @@ function WizardContent() {
     }
   }, [loading, profile, brand, brand.setupCompleted, isReconfigure, router]);
 
-  // Pre-fill profile info from authenticated user if available
+  // Pre-fill profile info from authenticated user if available and not pre-seeded
   useEffect(() => {
     if (profile) {
-      if (profile.full_name && profile.full_name !== "Default Admin") {
+      if (
+        profile.full_name &&
+        !DISALLOWED_PRESEEDED_DATA.adminNames.includes(profile.full_name.trim().toLowerCase())
+      ) {
         setAdminName(profile.full_name);
       }
-      if (profile.email && !profile.email.includes("turnkey.local")) {
+      if (
+        profile.email &&
+        !DISALLOWED_PRESEEDED_DATA.emails.includes(profile.email.trim().toLowerCase()) &&
+        !profile.email.includes("turnkey.local")
+      ) {
         setAdminEmail(profile.email);
         setInitialEmail(profile.email);
         setIsEmailVerified(true);
       }
-      if (profile.phone) {
+      if (
+        profile.phone &&
+        !DISALLOWED_PRESEEDED_DATA.phones.some((p) => p.replace(/\D/g, "") === profile.phone?.replace(/\D/g, ""))
+      ) {
         setAdminPhone(profile.phone);
       }
     }
   }, [profile]);
 
-  // Step 1: Identity, Archetype & Logo
-  const [propertyName, setPropertyName] = useState(brand.propertyName || "Reyes Residences");
-  const [tagline, setTagline] = useState(brand.propertyTagline || "Premier Student & Residential Living in Valenzuela");
+  // Step 1: Identity, Archetype & Logo (Pre-seeded dummy data disallowed)
+  const [propertyName, setPropertyName] = useState(() => {
+    const raw = brand.propertyName?.trim() || "";
+    return raw && !DISALLOWED_PRESEEDED_DATA.propertyNames.includes(raw.toLowerCase()) ? raw : "";
+  });
+  const [tagline, setTagline] = useState(() => {
+    const raw = brand.propertyTagline?.trim() || "";
+    return raw && !DISALLOWED_PRESEEDED_DATA.taglines.includes(raw.toLowerCase()) ? raw : "";
+  });
   const [logoUrl, setLogoUrl] = useState<string | null>(brand.logoUrl);
   const [propertyArchetype, setPropertyArchetype] = useState<"apartment" | "dormitory" | "boarding_house">(
     brand.rentalArchetype || "apartment"
@@ -221,20 +241,37 @@ function WizardContent() {
   const [primaryColor, setPrimaryColor] = useState(brand.primaryColor || "#8b5cf6");
   const [secondaryColor, setSecondaryColor] = useState(brand.secondaryColor || "#06b6d4");
 
-  // Step 3: Landlord Account & Email OTP State
-  const [adminName, setAdminName] = useState("Roberto Reyes");
-  const [adminEmail, setAdminEmail] = useState("landlord@reyesresidences.com");
-  const [initialEmail, setInitialEmail] = useState("landlord@reyesresidences.com");
-  const [isEmailVerified, setIsEmailVerified] = useState(true);
+  // Step 3: Landlord Account & Email OTP State (Pre-seeded dummy data disallowed)
+  const [adminName, setAdminName] = useState(() => {
+    const raw = profile?.full_name?.trim() || "";
+    return raw && !DISALLOWED_PRESEEDED_DATA.adminNames.includes(raw.toLowerCase()) ? raw : "";
+  });
+  const [adminEmail, setAdminEmail] = useState(() => {
+    const raw = profile?.email?.trim() || "";
+    return raw && !DISALLOWED_PRESEEDED_DATA.emails.includes(raw.toLowerCase()) && !raw.includes("turnkey.local") ? raw : "";
+  });
+  const [initialEmail, setInitialEmail] = useState(() => {
+    const raw = profile?.email?.trim() || "";
+    return raw && !DISALLOWED_PRESEEDED_DATA.emails.includes(raw.toLowerCase()) && !raw.includes("turnkey.local") ? raw : "";
+  });
+  const [isEmailVerified, setIsEmailVerified] = useState(() => {
+    const raw = profile?.email?.trim() || "";
+    return Boolean(raw && !DISALLOWED_PRESEEDED_DATA.emails.includes(raw.toLowerCase()) && !raw.includes("turnkey.local"));
+  });
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [otpCooldown, setOtpCooldown] = useState(0);
+  const [otpError, setOtpError] = useState<string | null>(null);
 
   const [adminPassword, setAdminPassword] = useState("••••••••••••");
   const [confirmPassword, setConfirmPassword] = useState("••••••••••••");
-  const [adminPhone, setAdminPhone] = useState("0917-882-9912");
+  const [adminPhone, setAdminPhone] = useState(() => {
+    const raw = profile?.phone?.trim() || "";
+    const clean = raw.replace(/\D/g, "");
+    return raw && !DISALLOWED_PRESEEDED_DATA.phones.some((p) => p.replace(/\D/g, "") === clean) ? raw : "";
+  });
 
   // OTP Resend Cooldown Timer
   useEffect(() => {
@@ -243,11 +280,64 @@ function WizardContent() {
     return () => clearTimeout(timer);
   }, [otpCooldown]);
 
-  // Step 4: Launch State
+  // Step 4: Launch State & Security Recovery Key Modal
   const [isLaunching, setIsLaunching] = useState(false);
   const [isLaunched, setIsLaunched] = useState(false);
   const [launchedSecurityKey, setLaunchedSecurityKey] = useState<string | null>(null);
   const [isSecurityKeyAcknowledged, setIsSecurityKeyAcknowledged] = useState(false);
+  const [hasCopiedKey, setHasCopiedKey] = useState(false);
+  const [hasDownloadedKey, setHasDownloadedKey] = useState(false);
+  const [isKeyVisible, setIsKeyVisible] = useState(false);
+
+  const handleDownloadSecurityKey = (key: string, email?: string) => {
+    try {
+      const timestamp = new Date().toLocaleString("en-US", {
+        dateStyle: "full",
+        timeStyle: "medium",
+      });
+
+      const fileContent = `=======================================================
+iReside Landlord Security Recovery Key
+=======================================================
+Generated On : ${timestamp}
+${email ? `Landlord Email: ${email}\n` : ""}
+SECURITY RECOVERY KEY:
+${key}
+
+CRITICAL SECURITY INSTRUCTIONS:
+- This key is your ultimate failsafe to recover your landlord account if you lose access to your email.
+- This key is encrypted by the system and will NOT be displayed again.
+- Each key is single-use. Once used, a new key will be generated.
+- Store this file in a safe location (e.g. encrypted vault, password manager, or secure offline drive).
+- Never share this key with anyone. iReside staff will never ask for your key.
+=======================================================`;
+
+      const blob = new Blob([fileContent], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `ireside-security-recovery-key-${new Date().toISOString().split("T")[0]}.txt`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(url);
+
+      setHasDownloadedKey(true);
+      toast.success("Security key downloaded successfully.");
+    } catch {
+      toast.error("Failed to download security key file.");
+    }
+  };
+
+  const handleCopySecurityKey = async (key: string) => {
+    try {
+      await navigator.clipboard.writeText(key);
+      setHasCopiedKey(true);
+      toast.success("Security key copied to clipboard.");
+    } catch {
+      toast.error("Failed to copy security key.");
+    }
+  };
 
   // Field Validation & Interaction State
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -326,11 +416,13 @@ function WizardContent() {
 
   const handleVerifyEmailOtp = async () => {
     if (!otpCode || otpCode.trim().length !== 6) {
-      toast.error("Please enter the 6-digit verification code.");
+      setOtpError("Please enter the complete 6-digit verification code.");
+      toast.error("Please enter the complete 6-digit verification code.");
       return;
     }
 
     setIsVerifyingOtp(true);
+    setOtpError(null);
     try {
       const res = await fetch("/api/setup/email/verify-otp", {
         method: "POST",
@@ -342,15 +434,20 @@ function WizardContent() {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to verify code.");
+        const errorMsg = data.error || "Invalid or expired verification code.";
+        setOtpError(errorMsg);
+        throw new Error(errorMsg);
       }
       setInitialEmail(adminEmail.trim());
       setIsEmailVerified(true);
       setOtpSent(false);
       setOtpCode("");
+      setOtpError(null);
       toast.success("Email verified and successfully linked!");
     } catch (err: any) {
-      toast.error(err.message || "Failed to verify code.");
+      const errorMsg = err.message || "Invalid or expired verification code. Please check and try again.";
+      setOtpError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsVerifyingOtp(false);
     }
@@ -905,7 +1002,7 @@ function WizardContent() {
                               markFieldTouched("propertyName");
                               setFieldError("propertyName", validatePropertyTradeName(propertyName).error);
                             }}
-                            placeholder="e.g. Reyes Residences"
+                            placeholder="e.g. Pinecrest Suites"
                             className="bg-transparent border-none outline-none w-full text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:ring-0"
                             aria-invalid={!!(touchedFields.propertyName && fieldErrors.propertyName)}
                           />
@@ -954,7 +1051,7 @@ function WizardContent() {
                               markFieldTouched("tagline");
                               setFieldError("tagline", validatePropertyTagline(tagline).error);
                             }}
-                            placeholder="e.g. Premier Student Living"
+                            placeholder="e.g. Quality student homes & modern suites"
                             className="bg-transparent border-none outline-none w-full text-xs text-zinc-900 dark:text-zinc-100 focus:ring-0"
                             aria-invalid={!!(touchedFields.tagline && fieldErrors.tagline)}
                           />
@@ -1549,7 +1646,7 @@ function WizardContent() {
                               markFieldTouched("adminName");
                               setFieldError("adminName", validateAdminFullName(adminName).error);
                             }}
-                            placeholder="e.g. Roberto Reyes"
+                            placeholder="e.g. Juan Dela Cruz"
                             className="bg-transparent border-none outline-none w-full text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:ring-0"
                             aria-invalid={!!(touchedFields.adminName && fieldErrors.adminName)}
                           />
@@ -1588,7 +1685,7 @@ function WizardContent() {
                               markFieldTouched("adminPhone");
                               setFieldError("adminPhone", validateAdminPhone(adminPhone).error);
                             }}
-                            placeholder="0917-000-0000"
+                            placeholder="0918-123-4567"
                             className="bg-transparent border-none outline-none w-full text-xs font-mono text-zinc-900 dark:text-zinc-100 focus:ring-0"
                             aria-invalid={!!(touchedFields.adminPhone && fieldErrors.adminPhone)}
                           />
@@ -1637,7 +1734,7 @@ function WizardContent() {
                             markFieldTouched("adminEmail");
                             setFieldError("adminEmail", validateAdminEmail(adminEmail).error);
                           }}
-                          placeholder="landlord@property.com"
+                          placeholder="landlord@yourdomain.com"
                           className="bg-transparent border-none outline-none w-full text-xs font-mono text-zinc-900 dark:text-zinc-100 focus:ring-0"
                           aria-invalid={!!(touchedFields.adminEmail && fieldErrors.adminEmail)}
                         />
@@ -1681,44 +1778,62 @@ function WizardContent() {
                           </div>
 
                           {otpSent && (
-                            <div className="flex items-center gap-2 pt-1 border-t border-amber-500/15">
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                maxLength={6}
-                                value={otpCode}
-                                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                                placeholder="123456"
-                                className="w-28 px-2.5 py-1 text-center font-mono text-xs font-bold tracking-widest bg-white dark:bg-zinc-900 border border-amber-500/30 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 text-zinc-900 dark:text-zinc-100 placeholder:tracking-normal placeholder:font-sans placeholder:text-zinc-400"
-                              />
-                              <button
-                                type="button"
-                                onClick={handleVerifyEmailOtp}
-                                disabled={isVerifyingOtp || otpCode.trim().length !== 6}
-                                className="px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white transition-all disabled:opacity-50 flex items-center gap-1 shadow-xs active:scale-95 shrink-0"
-                              >
-                                {isVerifyingOtp ? (
-                                  <>
-                                    <RefreshCw className="size-3 animate-spin" />
-                                    <span>Verifying...</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Check className="size-3 stroke-[3]" />
-                                    <span>Verify & Link</span>
-                                  </>
-                                )}
-                              </button>
+                            <div className="flex flex-col gap-2 pt-1 border-t border-amber-500/15">
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
+                                  maxLength={6}
+                                  value={otpCode}
+                                  onChange={(e) => {
+                                    setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6));
+                                    if (otpError) setOtpError(null);
+                                  }}
+                                  placeholder="123456"
+                                  className={cn(
+                                    "w-28 px-2.5 py-1 text-center font-mono text-xs font-bold tracking-widest bg-white dark:bg-zinc-900 border rounded-lg focus:outline-none focus:ring-1 text-zinc-900 dark:text-zinc-100 placeholder:tracking-normal placeholder:font-sans placeholder:text-zinc-400 transition-all",
+                                    otpError
+                                      ? "border-rose-500 ring-1 ring-rose-500 focus:ring-rose-500 text-rose-600 dark:text-rose-400"
+                                      : "border-amber-500/30 focus:ring-amber-500"
+                                  )}
+                                  aria-invalid={!!otpError}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={handleVerifyEmailOtp}
+                                  disabled={isVerifyingOtp || otpCode.trim().length !== 6}
+                                  className="px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white transition-all disabled:opacity-50 flex items-center gap-1 shadow-xs active:scale-95 shrink-0"
+                                >
+                                  {isVerifyingOtp ? (
+                                    <>
+                                      <RefreshCw className="size-3 animate-spin" />
+                                      <span>Verifying...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Check className="size-3 stroke-[3]" />
+                                      <span>Verify & Link</span>
+                                    </>
+                                  )}
+                                </button>
 
-                              <button
-                                type="button"
-                                onClick={handleSendEmailOtp}
-                                disabled={isSendingOtp || otpCooldown > 0}
-                                className="text-[11px] text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 font-medium ml-auto disabled:opacity-50 transition-colors"
-                              >
-                                {otpCooldown > 0 ? `Resend (${otpCooldown}s)` : "Resend code"}
-                              </button>
+                                <button
+                                  type="button"
+                                  onClick={handleSendEmailOtp}
+                                  disabled={isSendingOtp || otpCooldown > 0}
+                                  className="text-[11px] text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 font-medium ml-auto disabled:opacity-50 transition-colors"
+                                >
+                                  {otpCooldown > 0 ? `Resend (${otpCooldown}s)` : "Resend code"}
+                                </button>
+                              </div>
+
+                              {otpError && (
+                                <p className="text-[11px] font-semibold text-rose-500 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                                  <AlertCircle className="size-3.5 shrink-0 text-rose-500" />
+                                  <span>{otpError}</span>
+                                </p>
+                              )}
                             </div>
                           )}
                         </div>
@@ -2139,18 +2254,19 @@ function WizardContent() {
                           </div>
                         </div>
 
-                        <Link
-                          href={!launchedSecurityKey || isSecurityKeyAcknowledged ? "/landlord/dashboard" : "#"}
-                          onClick={(e) => {
-                            if (launchedSecurityKey && !isSecurityKeyAcknowledged) {
-                              e.preventDefault();
-                              toast.error("Please confirm that you have saved your security recovery key before proceeding.");
+                        <button
+                          type="button"
+                          disabled={launchedSecurityKey ? (!hasCopiedKey || !hasDownloadedKey || !isSecurityKeyAcknowledged) : false}
+                          onClick={() => {
+                            if (launchedSecurityKey && (!hasCopiedKey || !hasDownloadedKey || !isSecurityKeyAcknowledged)) {
+                              toast.error("Please copy, download, and confirm saving your security recovery key before proceeding.");
+                              return;
                             }
+                            router.push("/landlord/dashboard");
                           }}
-                          aria-disabled={launchedSecurityKey ? !isSecurityKeyAcknowledged : false}
                           className={cn(
                             "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-xs",
-                            !launchedSecurityKey || isSecurityKeyAcknowledged
+                            (!launchedSecurityKey || (hasCopiedKey && hasDownloadedKey && isSecurityKeyAcknowledged))
                               ? "cursor-pointer active:scale-95"
                               : "opacity-40 cursor-not-allowed"
                           )}
@@ -2161,7 +2277,7 @@ function WizardContent() {
                         >
                           <span>Open Dashboard</span>
                           <ArrowRight className="size-3.5" />
-                        </Link>
+                        </button>
                       </div>
                     </motion.div>
                   )}
@@ -2315,6 +2431,182 @@ function WizardContent() {
           )}
         </div>
       </main>
+
+      {/* Unbypassable Security Recovery Key Lightbox Modal */}
+      {isLaunched && launchedSecurityKey && (
+        <div 
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="security-key-modal-title"
+        >
+          <div 
+            className="w-full max-w-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5 animate-in zoom-in-95 duration-300 my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-start gap-4">
+              <div className="size-12 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                <KeyRound className="size-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 id="security-key-modal-title" className="text-lg font-black tracking-tight text-zinc-950 dark:text-white">
+                    Security Recovery Key Required
+                  </h2>
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                    Mandatory Backup
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                  Your portal setup is complete. To safeguard your account, you must copy and download your single-use recovery key before accessing your dashboard.
+                </p>
+              </div>
+            </div>
+
+            {/* Key Box */}
+            <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/80 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Your Single-Use Recovery Key
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsKeyVisible((prev) => !prev)}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                >
+                  {isKeyVisible ? (
+                    <>
+                      <EyeOff className="size-3.5" />
+                      <span>Hide</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="size-3.5" />
+                      <span>Show</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="py-2.5 px-4 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono text-sm sm:text-base font-black tracking-widest text-zinc-900 dark:text-zinc-100 text-center select-all">
+                {isKeyVisible ? launchedSecurityKey : "••••-••••-••••-••••"}
+              </div>
+
+              {/* Two Action Buttons: Copy & Download */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => handleCopySecurityKey(launchedSecurityKey)}
+                  className={cn(
+                    "flex items-center justify-center gap-2 h-11 px-4 rounded-xl border text-xs font-bold transition-all active:scale-95",
+                    hasCopiedKey
+                      ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
+                      : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 text-zinc-900 dark:text-zinc-100"
+                  )}
+                >
+                  {hasCopiedKey ? (
+                    <>
+                      <Check className="size-4 text-emerald-500 stroke-[3]" />
+                      <span>Key Copied ✓</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="size-4 text-zinc-400" />
+                      <span>Copy Key</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleDownloadSecurityKey(launchedSecurityKey, adminEmail)}
+                  className={cn(
+                    "flex items-center justify-center gap-2 h-11 px-4 rounded-xl border text-xs font-bold transition-all active:scale-95",
+                    hasDownloadedKey
+                      ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
+                      : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 text-zinc-900 dark:text-zinc-100"
+                  )}
+                >
+                  {hasDownloadedKey ? (
+                    <>
+                      <Check className="size-4 text-emerald-500 stroke-[3]" />
+                      <span>Downloaded (.txt) ✓</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="size-4 text-zinc-400" />
+                      <span>Download (.txt)</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Security Notice */}
+            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs leading-relaxed">
+              <ShieldAlert className="size-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+              <p>
+                <span className="font-bold">This key will never be shown again.</span> Once you leave this screen, the key is permanently encrypted and cannot be retrieved by support.
+              </p>
+            </div>
+
+            {/* Checkbox */}
+            <label className="flex items-start gap-3 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer transition-colors select-none">
+              <input
+                type="checkbox"
+                checked={isSecurityKeyAcknowledged}
+                onChange={(e) => setIsSecurityKeyAcknowledged(e.target.checked)}
+                className="size-4 mt-0.5 rounded border-zinc-300 dark:border-zinc-700 text-primary focus:ring-primary cursor-pointer shrink-0"
+              />
+              <span className="text-xs text-zinc-700 dark:text-zinc-300 leading-snug">
+                I have copied and downloaded my security recovery key and stored it in a secure location.
+              </span>
+            </label>
+
+            {/* Checklist requirements status */}
+            <div className="flex flex-wrap items-center gap-3 text-[11px] font-semibold text-zinc-500">
+              <span className={cn("flex items-center gap-1", hasCopiedKey ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400")}>
+                <Check className={cn("size-3.5", hasCopiedKey ? "stroke-[3]" : "opacity-30")} />
+                1. Copied
+              </span>
+              <span>•</span>
+              <span className={cn("flex items-center gap-1", hasDownloadedKey ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400")}>
+                <Check className={cn("size-3.5", hasDownloadedKey ? "stroke-[3]" : "opacity-30")} />
+                2. Downloaded
+              </span>
+              <span>•</span>
+              <span className={cn("flex items-center gap-1", isSecurityKeyAcknowledged ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400")}>
+                <Check className={cn("size-3.5", isSecurityKeyAcknowledged ? "stroke-[3]" : "opacity-30")} />
+                3. Acknowledged
+              </span>
+            </div>
+
+            {/* Action: Proceed to Dashboard */}
+            <button
+              type="button"
+              disabled={!hasCopiedKey || !hasDownloadedKey || !isSecurityKeyAcknowledged}
+              onClick={() => {
+                router.push("/landlord/dashboard");
+              }}
+              className={cn(
+                "w-full h-12 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm",
+                hasCopiedKey && hasDownloadedKey && isSecurityKeyAcknowledged
+                  ? "cursor-pointer active:scale-98 text-white hover:brightness-105"
+                  : "opacity-40 cursor-not-allowed text-zinc-400 bg-zinc-200 dark:bg-zinc-800"
+              )}
+              style={
+                hasCopiedKey && hasDownloadedKey && isSecurityKeyAcknowledged
+                  ? { backgroundColor: primaryColor, color: primaryTextColor }
+                  : undefined
+              }
+            >
+              <span>Proceed to Dashboard</span>
+              <ArrowRight className="size-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

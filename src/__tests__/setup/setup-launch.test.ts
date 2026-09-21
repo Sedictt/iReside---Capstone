@@ -96,18 +96,18 @@ describe("POST /api/setup/launch (Turnkey Setup Claiming & Locking)", () => {
       method: "POST",
       body: JSON.stringify({
         branding: {
-          propertyName: "Reyes Residences",
-          propertyTagline: "Premium Student Living",
+          propertyName: "Pinecrest Residences",
+          propertyTagline: "Modern student living close to campus",
           rentalArchetype: "dormitory",
           primaryColor: "#8b5cf6",
           secondaryColor: "#06b6d4",
           propertyAddress: "Karuhatan, Valenzuela",
         },
         admin: {
-          fullName: "Roberto Reyes",
-          email: "roberto@reyesresidences.ph",
+          fullName: "Juan Dela Cruz",
+          email: "juan@pinecrestsuites.ph",
           password: "MySecurePassword2026!",
-          phone: "0917-123-4567",
+          phone: "0918-123-4567",
         },
       }),
     });
@@ -118,23 +118,23 @@ describe("POST /api/setup/launch (Turnkey Setup Claiming & Locking)", () => {
     const json = await res.json();
     expect(json.success).toBe(true);
     expect(json.branding.setupCompleted).toBe(true);
-    expect(json.branding.propertyName).toBe("Reyes Residences");
+    expect(json.branding.propertyName).toBe("Pinecrest Residences");
 
     // Verify auth credential updating was invoked with personal password
     expect(mockUpdateUserById).toHaveBeenCalledWith(
       "landlord-turnkey-1",
       expect.objectContaining({
         password: "MySecurePassword2026!",
-        email: "roberto@reyesresidences.ph",
+        email: "juan@pinecrestsuites.ph",
       })
     );
 
     // Verify profile updating
     expect(mockProfilesChain.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        full_name: "Roberto Reyes",
-        phone: "0917-123-4567",
-        business_name: "Reyes Residences",
+        full_name: "Juan Dela Cruz",
+        phone: "0918-123-4567",
+        business_name: "Pinecrest Residences",
       })
     );
   });
