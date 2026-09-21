@@ -56,6 +56,14 @@ import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
 import { TimeFormatToggle } from "@/components/ui/TimeFormatToggle";
 import { MobileSettingsCategoryDropdown } from "@/components/mobile/shared/MobileSettingsCategoryDropdown";
 import { SecurityKeyManagementCard } from "@/components/auth/SecurityKeyManagementCard";
+import { 
+    validateFullName, 
+    validatePhoneNumber, 
+    validateAddress, 
+    validateBio, 
+    validateEmergencyContactPair, 
+    MAX_BIO_LENGTH 
+} from "@/lib/validation/profile";
 
 // --- Types ---
 type SettingsCategory = "Identity" | "Accessibility" | "Security" | "Notifications" | "Billing" | "Data";
@@ -137,7 +145,7 @@ function GlassCard({
     );
 }
 
-function SettingField({ label, children, description, icon: Icon }: { label: string; children: React.ReactNode; description?: string; icon?: any }) {
+function SettingField({ label, children, description, icon: Icon, error }: { label: string; children: React.ReactNode; description?: string; icon?: any; error?: string }) {
     return (
         <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
@@ -145,7 +153,13 @@ function SettingField({ label, children, description, icon: Icon }: { label: str
                 <label className="text-xs font-black uppercase tracking-wider text-foreground/80">{label}</label>
             </div>
             {children}
-            {description && <p className="px-1 text-xs text-muted-foreground">{description}</p>}
+            {error ? (
+                <p className="px-1 text-xs text-rose-500 flex items-center gap-1 font-medium">
+                    <AlertCircle className="size-3 shrink-0" /> {error}
+                </p>
+            ) : description ? (
+                <p className="px-1 text-xs text-muted-foreground">{description}</p>
+            ) : null}
         </div>
     );
 }
@@ -299,6 +313,58 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
         emergency_name: "",
         emergency_phone: "",
     });
+    const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
+
+    const validateProfileForm = (data: typeof formData) => {
+        const errors: Record<string, string> = {};
+
+        const nameCheck = validateFullName(data.full_name);
+        if (!nameCheck.isValid) errors.full_name = nameCheck.error!;
+
+        const phoneCheck = validatePhoneNumber(data.phone);
+        if (!phoneCheck.isValid) errors.phone = phoneCheck.error!;
+
+        const addressCheck = validateAddress(data.address);
+        if (!addressCheck.isValid) errors.address = addressCheck.error!;
+
+        const bioCheck = validateBio(data.bio, MAX_BIO_LENGTH);
+        if (!bioCheck.isValid) errors.bio = bioCheck.error!;
+
+        const emergCheck = validateEmergencyContactPair(data.emergency_name, data.emergency_phone);
+        if (emergCheck.nameError) errors.emergency_name = emergCheck.nameError;
+        if (emergCheck.phoneError) errors.emergency_phone = emergCheck.phoneError;
+
+        return errors;
+    };
+
+    const handleProfileFieldChange = (field: keyof typeof formData, value: string) => {
+        const updated = { ...formData, [field]: value };
+        setFormData(updated);
+
+        if (field === "full_name") {
+            const check = validateFullName(value);
+            setProfileErrors(prev => ({ ...prev, full_name: check.isValid ? "" : check.error! }));
+        } else if (field === "phone") {
+            const check = validatePhoneNumber(value);
+            setProfileErrors(prev => ({ ...prev, phone: check.isValid ? "" : check.error! }));
+        } else if (field === "address") {
+            const check = validateAddress(value);
+            setProfileErrors(prev => ({ ...prev, address: check.isValid ? "" : check.error! }));
+        } else if (field === "bio") {
+            const check = validateBio(value, MAX_BIO_LENGTH);
+            setProfileErrors(prev => ({ ...prev, bio: check.isValid ? "" : check.error! }));
+        } else if (field === "emergency_name" || field === "emergency_phone") {
+            const emerg = validateEmergencyContactPair(
+                field === "emergency_name" ? value : formData.emergency_name,
+                field === "emergency_phone" ? value : formData.emergency_phone
+            );
+            setProfileErrors(prev => ({
+                ...prev,
+                emergency_name: emerg.nameError || "",
+                emergency_phone: emerg.phoneError || "",
+            }));
+        }
+    };
 
     // Security States
     const [twoFAStatus, setTwoFAStatus] = useState<'loading' | 'disabled' | 'enabled'>('loading');
@@ -419,19 +485,40 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
 
     const handleSaveProfile = async () => {
         if (!profile) return;
+
+        const errors = validateProfileForm(formData);
+        const hasErrors = Object.values(errors).some(Boolean);
+        if (hasErrors) {
+            setProfileErrors(errors);
+            toast.error("Please fix validation errors before saving.");
+            if (errors.emergency_name || errors.emergency_phone) {
+                setActiveSubTab("Emergency Contact");
+            } else if (errors.full_name || errors.phone || errors.address || errors.bio) {
+                setActiveSubTab("Profile");
+            }
+            return;
+        }
+
         setIsSaving(true);
         try {
+            const trimmedFullName = formData.full_name.trim();
+            const trimmedBio = formData.bio.trim();
+            const trimmedPhone = formData.phone.trim();
+            const trimmedAddress = formData.address.trim();
+            const trimmedEmergName = formData.emergency_name.trim();
+            const trimmedEmergPhone = formData.emergency_phone.trim();
+
             const socialsWithEmergency = {
                 ...((profile.socials as any) || {}),
-                emergency_contact_name: formData.emergency_name,
-                emergency_contact_phone: formData.emergency_phone,
+                emergency_contact_name: trimmedEmergName,
+                emergency_contact_phone: trimmedEmergPhone,
             };
 
             const { error } = await supabase
                 .from("profiles")
                 .update({
-                    full_name: formData.full_name,
-                    bio: formData.bio,
+                    full_name: trimmedFullName,
+                    bio: trimmedBio,
                     socials: socialsWithEmergency,
                 } as any)
                 .eq("id", profile.id);
@@ -441,8 +528,8 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
             try {
                 await supabase.auth.updateUser({
                     data: {
-                        emergency_contact_name: formData.emergency_name,
-                        emergency_contact_phone: formData.emergency_phone,
+                        emergency_contact_name: trimmedEmergName,
+                        emergency_contact_phone: trimmedEmergPhone,
                     }
                 });
             } catch {
@@ -454,8 +541,8 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
                 .upsert(
                     {
                         profile_id: profile.id,
-                        phone: formData.phone,
-                        address: formData.address,
+                        phone: trimmedPhone,
+                        address: trimmedAddress,
                         updated_at: new Date().toISOString(),
                     },
                     { onConflict: "profile_id" }
@@ -616,12 +703,16 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
 
                             <GlassCard title="Profile Information" description="Basic details about you.">
                                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                    <SettingField label="Full Name" icon={User} description="Your verified name.">
+                                    <SettingField label="Full Name" icon={User} description="Your verified name." error={profileErrors.full_name}>
                                         <input
                                             type="text"
                                             value={formData.full_name}
-                                            onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                            onChange={(e) => handleProfileFieldChange("full_name", e.target.value)}
+                                            placeholder="e.g. Juan Dela Cruz"
+                                            className={cn(
+                                                "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none transition-colors",
+                                                profileErrors.full_name ? "border border-rose-500/80 focus:ring-1 focus:ring-rose-500" : "focus:ring-1 focus:ring-primary"
+                                            )}
                                         />
                                     </SettingField>
                                     <SettingField label="Email" icon={Mail} description="Your verified email.">
@@ -632,30 +723,51 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
                                             className="w-full cursor-not-allowed rounded-xl neumorphic-inset opacity-60 px-4 py-3 text-sm text-muted-foreground"
                                         />
                                     </SettingField>
-                                    <SettingField label="Phone Number" icon={Phone}>
+                                    <SettingField label="Phone Number" icon={Phone} error={profileErrors.phone}>
                                         <input
                                             type="tel"
                                             value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                            onChange={(e) => handleProfileFieldChange("phone", e.target.value)}
+                                            placeholder="09XXXXXXXXX or +639XXXXXXXXX"
+                                            className={cn(
+                                                "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none transition-colors",
+                                                profileErrors.phone ? "border border-rose-500/80 focus:ring-1 focus:ring-rose-500" : "focus:ring-1 focus:ring-primary"
+                                            )}
                                         />
                                     </SettingField>
-                                    <SettingField label="Address" icon={Home}>
+                                    <SettingField label="Address" icon={Home} error={profileErrors.address}>
                                         <input
                                             type="text"
                                             value={formData.address}
-                                            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                            onChange={(e) => handleProfileFieldChange("address", e.target.value)}
+                                            placeholder="e.g. Metro Manila, Philippines"
+                                            className={cn(
+                                                "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none transition-colors",
+                                                profileErrors.address ? "border border-rose-500/80 focus:ring-1 focus:ring-rose-500" : "focus:ring-1 focus:ring-primary"
+                                            )}
                                         />
                                     </SettingField>
                                     <div className="md:col-span-2">
-                                        <SettingField label="Bio" icon={FileText} description="Tell landlords a bit about yourself.">
+                                        <SettingField label="Bio" icon={FileText} description="Tell landlords a bit about yourself." error={profileErrors.bio}>
                                             <textarea
                                                 rows={4}
                                                 value={formData.bio}
-                                                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                                                className="w-full resize-none rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                                maxLength={MAX_BIO_LENGTH}
+                                                onChange={(e) => handleProfileFieldChange("bio", e.target.value)}
+                                                placeholder="Tell landlords a bit about yourself..."
+                                                className={cn(
+                                                    "w-full resize-none rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none transition-colors",
+                                                    profileErrors.bio ? "border border-rose-500/80 focus:ring-1 focus:ring-rose-500" : "focus:ring-1 focus:ring-primary"
+                                                )}
                                             />
+                                            <div className="flex justify-end px-1 mt-1">
+                                                <span className={cn(
+                                                    "text-[10px] font-mono",
+                                                    formData.bio.length >= MAX_BIO_LENGTH ? "text-rose-500 font-bold" : formData.bio.length >= MAX_BIO_LENGTH - 50 ? "text-amber-500" : "text-muted-foreground"
+                                                )}>
+                                                    {formData.bio.length} / {MAX_BIO_LENGTH}
+                                                </span>
+                                            </div>
                                         </SettingField>
                                     </div>
                                 </div>
@@ -666,20 +778,28 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
                     return (
                         <GlassCard title="Emergency Contact" description="Someone we can contact in case of emergency.">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <SettingField label="Contact Name" icon={User}>
+                                <SettingField label="Contact Name" icon={User} error={profileErrors.emergency_name}>
                                     <input
                                         type="text"
                                         value={formData.emergency_name}
-                                        onChange={(e) => setFormData({ ...formData, emergency_name: e.target.value })}
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                        onChange={(e) => handleProfileFieldChange("emergency_name", e.target.value)}
+                                        placeholder="Full name of emergency contact"
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none transition-colors",
+                                            profileErrors.emergency_name ? "border border-rose-500/80 focus:ring-1 focus:ring-rose-500" : "focus:ring-1 focus:ring-primary"
+                                        )}
                                     />
                                 </SettingField>
-                                <SettingField label="Contact Phone" icon={Phone}>
+                                <SettingField label="Contact Phone" icon={Phone} error={profileErrors.emergency_phone}>
                                     <input
                                         type="tel"
                                         value={formData.emergency_phone}
-                                        onChange={(e) => setFormData({ ...formData, emergency_phone: e.target.value })}
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                        onChange={(e) => handleProfileFieldChange("emergency_phone", e.target.value)}
+                                        placeholder="09XXXXXXXXX or +639XXXXXXXXX"
+                                        className={cn(
+                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none transition-colors",
+                                            profileErrors.emergency_phone ? "border border-rose-500/80 focus:ring-1 focus:ring-rose-500" : "focus:ring-1 focus:ring-primary"
+                                        )}
                                     />
                                 </SettingField>
                             </div>
@@ -688,6 +808,8 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
                 default: return null;
             }
         };
+
+        const hasProfileErrors = Object.values(profileErrors).some(Boolean);
 
         return (
             <motion.div 
@@ -703,8 +825,11 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
                     <button
                         type="button"
                         onClick={handleSaveProfile}
-                        disabled={isSaving}
-                        className="flex items-center gap-2 rounded-xl sm:rounded-2xl neumorphic-primary px-6 sm:px-8 py-2.5 sm:py-3.5 text-xs sm:text-sm font-black text-primary-foreground shadow-md transition-all active:scale-95 disabled:opacity-50 cursor-pointer w-fit"
+                        disabled={isSaving || hasProfileErrors}
+                        className={cn(
+                            "flex items-center gap-2 rounded-xl sm:rounded-2xl neumorphic-primary px-6 sm:px-8 py-2.5 sm:py-3.5 text-xs sm:text-sm font-black text-primary-foreground shadow-md transition-all active:scale-95 cursor-pointer w-fit",
+                            (isSaving || hasProfileErrors) && "opacity-50 cursor-not-allowed"
+                        )}
                     >
                         {isSaving ? "Saving..." : <><Save className="size-4 sm:size-5" /> Save Changes</>}
                     </button>
