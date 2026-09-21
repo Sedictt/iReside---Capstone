@@ -289,6 +289,26 @@ export function validatePhoneNumber(value: string, isRequired = false): Validati
 }
 
 /**
+ * Validates an email address.
+ */
+export function validateEmail(value: string, isRequired = true): ValidationFieldResult {
+    const trimmed = (value ?? "").trim();
+    if (!trimmed) {
+        if (isRequired) {
+            return { isValid: false, error: "Email address is required." };
+        }
+        return { isValid: true };
+    }
+    if (trimmed.length > 254) {
+        return { isValid: false, error: "Email cannot exceed 254 characters." };
+    }
+    if (!REGEX_EMAIL.test(trimmed)) {
+        return { isValid: false, error: "Please enter a valid email address." };
+    }
+    return { isValid: true };
+}
+
+/**
  * Validates an address string.
  */
 export function validateAddress(value: string): ValidationFieldResult {
@@ -367,6 +387,7 @@ export const socialsRecordSchema = z.record(
 
 export const tenantProfilePatchSchema = z.object({
     full_name: z.string().trim().min(2, "Full name must be at least 2 characters").max(MAX_NAME_LENGTH, `Full name cannot exceed ${MAX_NAME_LENGTH} characters`).regex(REGEX_NAME, "Full name can only contain letters, spaces, hyphens, and periods").optional(),
+    email: z.string().trim().regex(REGEX_EMAIL, "Invalid email address").optional(),
     bio: z.string().trim().max(MAX_BIO_LENGTH, `Bio cannot exceed ${MAX_BIO_LENGTH} characters`).optional(),
     phone: z.string().trim().max(25).optional(),
     address: z.string().trim().max(MAX_ADDRESS_LENGTH, `Address cannot exceed ${MAX_ADDRESS_LENGTH} characters`).optional(),

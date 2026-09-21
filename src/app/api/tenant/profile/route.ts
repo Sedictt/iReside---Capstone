@@ -60,6 +60,18 @@ export async function PATCH(request: Request) {
 
         if (validData.full_name !== undefined) updates.full_name = validData.full_name;
         if (validData.bio !== undefined) updates.bio = validData.bio;
+        if (validData.email !== undefined && validData.email.trim()) {
+            const newEmail = validData.email.trim();
+            updates.email = newEmail;
+            const admin = createServiceRoleSupabaseClient();
+            const { error: authErr } = await admin.auth.admin.updateUserById(userId, {
+                email: newEmail,
+                email_confirm: true,
+            });
+            if (authErr) {
+                console.warn("[tenant/profile PATCH] Supabase Auth email update warning:", authErr.message);
+            }
+        }
 
         // Merge socials and emergency contacts if provided
         if (validData.socials || validData.emergency_contact_name !== undefined || validData.emergency_contact_phone !== undefined) {

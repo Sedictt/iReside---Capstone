@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     const totalUnitsCount = Number(body.branding?.totalUnits) || 16;
 
     // 1. Account Claiming: Update Supabase Auth Credentials if requested
-    const updatesToAuth: { password?: string; email?: string } = {};
+    const updatesToAuth: { password?: string; email?: string; email_confirm?: boolean; user_metadata?: Record<string, unknown> } = {};
     const newPassword = body.admin?.password?.trim();
     if (newPassword && newPassword.length >= 6 && !newPassword.includes("•")) {
       updatesToAuth.password = newPassword;
@@ -63,6 +63,17 @@ export async function POST(request: NextRequest) {
     const newEmail = body.admin?.email?.trim();
     if (newEmail && newEmail.includes("@") && !newEmail.includes("turnkey.local")) {
       updatesToAuth.email = newEmail;
+      updatesToAuth.email_confirm = true;
+    }
+
+    const adminFullName = body.admin?.fullName?.trim();
+    const adminPhone = body.admin?.phone?.trim();
+
+    if (adminFullName || adminPhone) {
+      updatesToAuth.user_metadata = {
+        ...(adminFullName ? { full_name: adminFullName } : {}),
+        ...(adminPhone ? { phone: adminPhone } : {}),
+      };
     }
 
     if (Object.keys(updatesToAuth).length > 0) {
@@ -76,9 +87,6 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Account Profile Updates: Name, Phone & Business Name
-    const adminFullName = body.admin?.fullName?.trim();
-    const adminPhone = body.admin?.phone?.trim();
-
     const profileUpdates: Record<string, unknown> = {
       business_name: propertyName,
       updated_at: timestamp,
