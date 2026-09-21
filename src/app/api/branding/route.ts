@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { DEFAULT_BRANDING, BrandConfig } from "@/context/BrandContext";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { queueBrandedInstaller } from "@/lib/desktop/queue-branded-installer";
+import { brandingUpdateSchema } from "@/lib/validation/brand-setup";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -168,9 +169,29 @@ export async function POST(request: NextRequest) {
       );
     }
     const { userId } = authContext;
+    let rawBody: unknown;
 
-    const body = (await request.json()) as Partial<BrandConfig>;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
+    }
+
+    const validationResult = brandingUpdateSchema.safeParse(rawBody);
+    if (!validationResult.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of validationResult.error.issues) {
+        fieldErrors[issue.path.join(".")] = issue.message;
+      }
+      return NextResponse.json(
+        { error: "Validation failed: Please check your branding fields.", details: fieldErrors },
+        { status: 400 }
+      );
+    }
+
+    const body = validationResult.data;
     const admin = createServiceRoleSupabaseClient();
+
 
     // 1. Fetch current primary property for this landlord (or any property if shared)
     let { data: existingProperty } = await admin

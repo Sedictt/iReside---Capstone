@@ -25,7 +25,7 @@ export function SecurityKeyDisplayCard({
     className,
 }: SecurityKeyDisplayCardProps) {
     const [copied, setCopied] = useState(false);
-    const [isVisible, setIsVisible] = useState(true);
+    const [isVisible, setIsVisible] = useState(false);
 
     const handleCopy = async () => {
         try {

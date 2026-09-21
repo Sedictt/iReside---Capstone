@@ -79,7 +79,7 @@ describe("POST /api/setup/launch (Turnkey Setup Claiming & Locking)", () => {
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === "profiles") return mockProfilesChain;
       if (table === "properties") return mockPropertyQuery;
-      if (table === "user_security_settings") {
+      if (table === "landlord_business_profiles" || table === "user_security_settings") {
         return {
           upsert: vi.fn().mockResolvedValue({ error: null }),
         };
@@ -138,4 +138,44 @@ describe("POST /api/setup/launch (Turnkey Setup Claiming & Locking)", () => {
       })
     );
   });
+
+  it("rejects invalid branding and admin inputs with 400 Bad Request and validation details", async () => {
+    mockRequireAuthenticatedUser.mockResolvedValue({
+      userId: "landlord-turnkey-1",
+      userRole: "landlord",
+    });
+
+    const req = new NextRequest("http://localhost:3000/api/setup/launch", {
+      method: "POST",
+      body: JSON.stringify({
+        branding: {
+          propertyName: "", // invalid: empty
+          rentalArchetype: "castle", // invalid archetype
+          primaryColor: "not-hex", // invalid hex
+          secondaryColor: "#12345", // invalid 5 digits
+          propertyAddress: "ab", // invalid: under 3 characters
+          totalUnits: -5, // invalid negative units
+        },
+        admin: {
+          fullName: "12345", // invalid legal name
+          email: "not-an-email", // invalid email
+        },
+      }),
+    });
+
+    const res = await setupLaunchPost(req);
+    expect(res.status).toBe(400);
+
+    const json = await res.json();
+    expect(json.error).toContain("Validation failed");
+    expect(json.details).toBeDefined();
+    expect(json.details["branding.propertyName"]).toBeDefined();
+    expect(json.details["branding.rentalArchetype"]).toBeDefined();
+    expect(json.details["branding.primaryColor"]).toBeDefined();
+    expect(json.details["branding.totalUnits"]).toBeDefined();
+    expect(json.details["branding.propertyAddress"]).toBeDefined();
+    expect(json.details["admin.fullName"]).toBeDefined();
+    expect(json.details["admin.email"]).toBeDefined();
+  });
 });
+
