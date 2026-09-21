@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Building2, ArrowRight, Grid, Wallet, ShieldCheck } from "lucide-react";
 import { useProperty } from "@/context/PropertyContext";
 import { cn } from "@/lib/utils";
 
 export function LandlordWelcomeLightbox() {
     const router = useRouter();
+    const pathname = usePathname();
     const { properties, loading } = useProperty();
     const [hasMounted, setHasMounted] = useState(false);
 
@@ -15,8 +16,9 @@ export function LandlordWelcomeLightbox() {
         setHasMounted(true);
     }, []);
 
-    // Only display when client mounted, property loading is complete, and landlord has zero properties
-    const isVisible = hasMounted && !loading && properties.length === 0;
+    // Only display when client mounted, property loading is complete, landlord has zero properties,
+    // and the user is NOT actively on the property creation wizard page
+    const isVisible = hasMounted && !loading && properties.length === 0 && pathname !== "/landlord/properties/new";
 
     if (!isVisible) return null;
 
@@ -26,18 +28,18 @@ export function LandlordWelcomeLightbox() {
 
     return (
         <div 
-            className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6"
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6"
             role="dialog"
             aria-modal="true"
             aria-labelledby="property-setup-lightbox-title"
         >
             {/* Dimmed Non-Dismissible Background */}
-            <div className="absolute inset-0 bg-black/75 backdrop-blur-md animate-in fade-in duration-300 pointer-events-auto" />
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300 pointer-events-auto" />
 
             {/* Unskippable Property Setup Lightbox Modal */}
             <div
                 className={cn(
-                    "relative z-[111] w-full max-w-[540px] pointer-events-auto",
+                    "relative z-[201] w-full max-w-[540px] pointer-events-auto",
                     "rounded-[2.5rem] border border-border/80 bg-card/98 dark:bg-zinc-900/98 backdrop-blur-2xl shadow-2xl",
                     "p-7 sm:p-10",
                     "animate-in zoom-in-95 fade-in duration-400 space-y-6"
@@ -117,7 +119,7 @@ export function LandlordWelcomeLightbox() {
                     <button
                         type="button"
                         onClick={handleCreateProperty}
-                        className="group relative w-full flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-primary px-6 py-4 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-105 active:scale-98"
+                        className="group relative w-full flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-primary px-6 py-4 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-105 active:scale-98 cursor-pointer"
                     >
                         <span className="text-xs sm:text-sm font-black uppercase tracking-wider relative z-10">
                             Create Property Now

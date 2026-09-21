@@ -3,21 +3,50 @@
 import { Sidebar } from "@/components/landlord/Sidebar";
 import { InPersonPaymentModal } from "@/components/landlord/InPersonPaymentModal";
 import { ContactsSidebar } from "@/components/landlord/dashboard/ContactsSidebar";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { AuthProvider } from "@/context/AuthContext";
-import { PropertyProvider } from "@/context/PropertyContext";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { PropertyProvider, useProperty } from "@/context/PropertyContext";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { ProfileCardProvider } from "@/context/ProfileCardContext";
 import { ProfileCard } from "@/components/ui/ProfileCard";
 import { GlobalDetailModal } from "@/components/landlord/tenants/GlobalDetailModal";
 import { NotificationBanner } from "@/components/navigation/NotificationBanner";
+import { LandlordWelcomeLightbox } from "@/components/landlord/dashboard/LandlordWelcomeLightbox";
 import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 import { AnimatePresence, m as motion } from "framer-motion";
+
+function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
+    const router = useRouter();
+    const { profile, loading: authLoading } = useAuth();
+    const { properties, loading: propertyLoading } = useProperty();
+
+    const isLandlord = profile?.role === "landlord" || profile?.role === "admin";
+    const isReady = !authLoading && !propertyLoading;
+    const hasZeroProperties = isReady && isLandlord && properties.length === 0;
+    const isAllowedCreationRoute = pathname === "/landlord/properties/new";
+
+    useEffect(() => {
+        if (hasZeroProperties && !isAllowedCreationRoute) {
+            // When zero properties and not on properties/new, keep user routed toward property setup
+            if (pathname !== "/landlord/dashboard") {
+                router.replace("/landlord/properties/new");
+            }
+        }
+    }, [hasZeroProperties, isAllowedCreationRoute, pathname, router]);
+
+    return (
+        <>
+            {children}
+            <LandlordWelcomeLightbox />
+        </>
+    );
+}
 
 export default function LandlordLayout({
     children,
@@ -55,7 +84,8 @@ export default function LandlordLayout({
             <PropertyProvider>
                 <NotificationProvider>
                     <ProfileCardProvider>
-                        <div className="flex h-screen w-full bg-background text-foreground overflow-hidden flex-col md:flex-row">
+                        <MandatoryPropertySetupGuard>
+                            <div className="flex h-screen w-full bg-background text-foreground overflow-hidden flex-col md:flex-row">
                             {/* Desktop Sidebar (hidden on mobile, visible on desktop) */}
                             {showSidebar && (
                                 <Sidebar 
@@ -148,7 +178,8 @@ export default function LandlordLayout({
                         </div>
                         <ProfileCard />
                         <GlobalDetailModal />
-                    </ProfileCardProvider>
+                    </MandatoryPropertySetupGuard>
+                </ProfileCardProvider>
                 </NotificationProvider>
             </PropertyProvider>
         </AuthProvider>
