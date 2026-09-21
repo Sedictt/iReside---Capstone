@@ -18,13 +18,15 @@ import {
     Phone,
     Mail,
     Building2,
-    CreditCard
+    CreditCard,
+    AlertCircle
 } from "lucide-react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchIrisHistory, getCachedIrisHistory, setCachedIrisHistory, type IrisHistoryMessage } from "@/lib/iris/client";
 import type { IrisCardData } from "@/lib/services/iris";
+import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
 
 const EMPTY_ARRAY = Object.freeze([]) as unknown as any[];
 
@@ -401,7 +403,7 @@ export function ChatWidget({
                                                     ? "bg-primary text-primary-foreground rounded-br-none shadow-primary/20"
                                                     : "bg-card text-foreground rounded-bl-none border border-border"
                                             )}>
-                                                <p>{msg.content}</p>
+                                                <ChatMessageMarkdown content={msg.content} isUser={msg.role === "user"} />
                                                 <span className={cn(
                                                     "text-[9px] mt-1 block opacity-50 font-medium",
                                                     msg.role === "user" ? "text-right" : ""
@@ -568,7 +570,7 @@ export function ChatWidget({
                     </div>
 
                     {/* Input Area */}
-                    <div className="p-5 bg-card border-t border-border">
+                    <div className="p-4 bg-card border-t border-border">
                         <div className="relative flex items-center gap-3">
                             <div className="flex-1 relative group">
                                 <div className="absolute -inset-[1px] bg-gradient-to-r from-primary/50 to-blue-500/50 rounded-full blur opacity-0 group-focus-within:opacity-30 transition-opacity"></div>
@@ -589,6 +591,12 @@ export function ChatWidget({
                             >
                                 <ArrowUp className="size-5" />
                             </button>
+                        </div>
+                        <div className="flex items-center justify-center gap-1.5 text-center mt-2.5">
+                            <AlertCircle className="size-3 text-muted-foreground/70 shrink-0" />
+                            <p className="text-[10px] text-muted-foreground font-medium">
+                                iRis can make mistakes. Verify important info.
+                            </p>
                         </div>
                     </div>
 

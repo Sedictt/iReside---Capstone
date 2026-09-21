@@ -2,11 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from 'next/image';
-import { ArrowUp, ArrowLeft, Wifi, Copy, ShieldCheck, Check, Phone, Mail, Building2, CreditCard, Search, Folder, MoreVertical } from "lucide-react";
+import { ArrowUp, ArrowLeft, Wifi, Copy, ShieldCheck, Check, Phone, Mail, Building2, CreditCard, Search, Folder, MoreVertical, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchIrisHistory, getCachedIrisHistory, setCachedIrisHistory, type IrisHistoryMessage } from "@/lib/iris/client";
 import type { IrisCardData } from "@/lib/services/iris";
+import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
 
 interface Message {
     id: string;
@@ -293,6 +294,10 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                         <span className="text-xs font-black text-muted-foreground uppercase tracking-widest bg-card px-4 py-1.5 rounded-full border border-border shadow-sm">
                             Conversation with iRis • Private & Secured
                         </span>
+                        <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-medium max-w-md text-center">
+                            <AlertCircle className="size-3.5 text-muted-foreground/70 shrink-0" />
+                            <span>iRis is an AI assistant and can make mistakes. Always verify critical lease and payment details.</span>
+                        </div>
                     </div>
 
                     {isChatInitializing ? (
@@ -335,7 +340,7 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                                 ? "bg-primary text-primary-foreground rounded-br-sm font-medium shadow-[0_10px_24px_-16px_rgba(109,152,56,0.55)]"
                                                 : "bg-card text-foreground rounded-bl-sm border border-border"
                                         )}>
-                                            <p>{msg.content}</p>
+                                            <ChatMessageMarkdown content={msg.content} isUser={msg.role === "user"} />
                                         </div>
 
                                         {/* Wi-Fi Card */}
@@ -551,9 +556,20 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                             </button>
                         </div>
                     </div>
-                    <div className="flex items-center justify-center gap-1.5 text-center mt-1">
-                        <ShieldCheck className="size-3 text-emerald-500/70" />
-                        <p className="text-[10px] text-neutral-500 font-medium">Conversations are monitored by AI specifically for building administration.</p>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 text-center mt-1">
+                        <div className="flex items-center gap-1.5">
+                            <AlertCircle className="size-3 text-muted-foreground/70 shrink-0" />
+                            <p className="text-[10px] text-muted-foreground font-medium">
+                                iRis can make mistakes. Verify important property and lease details.
+                            </p>
+                        </div>
+                        <span className="hidden sm:inline text-muted-foreground/30 text-[10px]">•</span>
+                        <div className="flex items-center gap-1.5">
+                            <ShieldCheck className="size-3 text-emerald-500/70 shrink-0" />
+                            <p className="text-[10px] text-muted-foreground font-medium">
+                                Conversations are monitored by AI specifically for building administration.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -24,6 +24,7 @@ import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
 import { NotificationCard } from "@/components/messaging/NotificationCard";
 import { OfficialReceipt } from "@/components/messaging/OfficialReceipt";
 import { MiniChatSkeleton } from "@/components/messaging/MiniChatSkeleton";
+import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
 
 interface ChatUser {
     id: string;
@@ -1292,7 +1293,11 @@ export function TenantContactsSidebar() {
                                             )}
 
                                             {!message.fileUrl && (
-                                                <span className="leading-relaxed whitespace-pre-wrap">{message.content}</span>
+                                                <ChatMessageMarkdown
+                                                    content={message.content}
+                                                    isUser={message.isOwn}
+                                                    className="text-xs sm:text-sm"
+                                                />
                                             )}
                                         </div>
                                         <div className={cn("text-[10px] flex items-center gap-1", message.isOwn ? "text-muted-foreground" : "text-muted-foreground px-1")}>

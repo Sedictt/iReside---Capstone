@@ -413,13 +413,13 @@ export default function TenantDashboard() {
                     )}
                 </AnimatePresence>
 
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1" data-tour-id="tour-dashboard-overview">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2" data-tour-id="tour-dashboard-overview">
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+                        <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
                             Welcome back, {userName}
                         </h1>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            {lease ? `Everything is up to date at ${lease.propertyName}.` : "Welcome to your tenant portal."}
+                        <p className="mt-2 text-muted-foreground">
+                            {lease ? `Everything is looking good at ${lease.propertyName}.` : "Welcome to your iReside dashboard."}
                         </p>
                     </div>
 
@@ -428,51 +428,42 @@ export default function TenantDashboard() {
                     </div>
                 </div>
 
-                <div className="rounded-2xl border border-border/70 bg-card p-6 sm:p-7 relative transition-all">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-center">
-                        <div className="md:col-span-2 space-y-5">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border bg-muted/40 border-border/60">
-                                <span className={cn(
-                                    "size-2 rounded-full",
-                                    isInitialLoading ? "bg-muted-foreground animate-pulse" :
-                                    nextPayment ? "bg-amber-500" : "bg-emerald-500"
-                                )} />
-                                <span className="text-foreground">
-                                    {isInitialLoading
-                                        ? "Checking status..."
-                                        : nextPayment
-                                            ? `Payment Due · ${formatDueDate(nextPayment.dueDate)}`
-                                            : "All payments up to date"}
+                <div className="relative overflow-hidden neumorphic-panel rounded-[2.5rem] p-8">
+                    <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
+                        <Home className="size-48" />
+                    </div>
+                    
+                    <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                        <div className="md:col-span-2 space-y-6">
+                            <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 shadow-sm">
+                                <span className="size-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(109,152,56,0.6)]" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+                                    {isInitialLoading ? "Loading status..." : nextPayment ? "Payment Due • Active Standing" : "Account Up to Date • Excellent"}
                                 </span>
                             </div>
 
-                            <div className="space-y-1.5">
-                                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                                    Current Balance Due
-                                </p>
-                                <div className="flex items-baseline">
-                                    <h2 className={cn("text-4xl sm:text-5xl font-bold tracking-tight text-foreground tabular-nums", isInitialLoading && "animate-pulse")}>
-                                        ₱{displayPaymentParts.whole}
-                                        <span className="text-2xl text-muted-foreground font-normal">.{displayPaymentParts.decimal}</span>
-                                    </h2>
-                                </div>
-                                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                                    <Calendar className="size-3.5" />
+                            <div className="space-y-1">
+                                <h2 className={cn("text-5xl font-black tracking-tight text-foreground", isInitialLoading && "animate-pulse")}>
+                                    {"\u20B1"}{displayPaymentParts.whole}
+                                    <span className="text-2xl text-muted-foreground font-medium">.{displayPaymentParts.decimal}</span>
+                                </h2>
+                                <p className="text-muted-foreground flex items-center gap-2 font-medium">
+                                    <Calendar className="size-4" />
                                     {isInitialLoading
-                                        ? "Calculating schedule..."
+                                        ? "Calculating..."
                                         : nextPayment?.dueDate
-                                            ? `Due on ${formatDueDate(nextPayment.dueDate)}`
+                                            ? `Due ${formatDueDate(nextPayment.dueDate)}`
                                             : upcomingMonths[0]?.dueDate
-                                                ? `Next rent due on ${formatDueDate(upcomingMonths[0].dueDate)}`
-                                                : "No outstanding balances due"}
+                                                ? `Next rent due: ${formatDueDate(upcomingMonths[0].dueDate)}`
+                                                : "No upcoming payments"}
                                 </p>
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-3 pt-1">
+                            <div className="flex flex-wrap gap-4 pt-2">
                                 {nextPayment && (
                                     <Link
                                         href={nextPayment.id ? `/tenant/payments/${nextPayment.id}/checkout` : "/tenant/payments"}
-                                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 px-5 py-2.5 text-sm font-semibold transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                        className="neumorphic-primary px-8 py-4 rounded-2xl font-black text-sm flex items-center gap-2"
                                     >
                                         <CreditCard className="size-4" />
                                         Pay Rent Now
@@ -480,36 +471,36 @@ export default function TenantDashboard() {
                                 )}
                                 <Link
                                     href="/tenant/payments"
-                                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card hover:bg-muted/40 text-foreground px-5 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                    className="neumorphic-extruded text-secondary-foreground px-8 py-4 rounded-2xl font-black text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
                                 >
                                     Billing Details
                                 </Link>
                             </div>
                         </div>
 
-                        <div className="rounded-xl border border-border/50 bg-muted/20 p-5 space-y-4">
+                        <div className="neumorphic-inset rounded-3xl p-6 space-y-4">
                             <div className="flex items-center justify-between">
-                                <p className="text-xs font-semibold text-foreground">Lease Progress</p>
-                                <span className="text-xs font-semibold text-foreground tabular-nums">{leaseProgress.progressPercent}%</span>
+                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Lease Progress</p>
+                                <span className="text-xs font-black text-primary">{leaseProgress.progressPercent}%</span>
                             </div>
-                            <div className="h-2 bg-muted/60 rounded-full overflow-hidden">
+                            <div className="h-2.5 bg-muted rounded-full overflow-hidden">
                                 <motion.div 
                                     initial={{ width: 0 }}
                                     animate={{ width: `${leaseProgress.progressPercent}%` }}
-                                    transition={{ duration: 0.6, ease: "easeOut" }}
-                                    className="h-full bg-primary rounded-full" 
+                                    transition={{ duration: 1, ease: "easeOut" }}
+                                    className="h-full bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" 
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-3 pt-1 text-xs">
+                            <div className="flex justify-between items-end pt-2">
                                 <div>
-                                    <p className="text-muted-foreground font-medium">Remaining</p>
-                                    <p className="font-semibold text-foreground mt-0.5">
-                                        {leaseProgress.monthsLeft !== null ? `${leaseProgress.monthsLeft} months` : "—"}
+                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Remaining</p>
+                                    <p className="text-sm font-black text-foreground">
+                                        {leaseProgress.monthsLeft !== null ? `${leaseProgress.monthsLeft} months` : "--"}
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-muted-foreground font-medium">Expires</p>
-                                    <p className="font-semibold text-foreground mt-0.5">{leaseProgress.endLabel}</p>
+                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Expires</p>
+                                    <p className="text-sm font-black text-foreground">{leaseProgress.endLabel}</p>
                                 </div>
                             </div>
                         </div>
@@ -517,37 +508,35 @@ export default function TenantDashboard() {
                 </div>
 
                 {upcomingMonths.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                         {upcomingMonths.map((monthForecast) => (
                             <div 
                                 key={monthForecast.month}
-                                className="rounded-xl border border-border/50 bg-card p-4 transition-colors hover:border-border"
+                                className={cn(
+                                    "rounded-2xl p-4",
+                                    monthForecast.isForecast 
+                                        ? "neumorphic-inset" 
+                                        : "neumorphic-panel"
+                                )}
                             >
-                                <div className="flex items-center justify-between">
-                                    <p className="text-xs font-medium text-muted-foreground">
-                                        {monthForecast.monthLabel}
-                                    </p>
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
+                                    {monthForecast.monthLabel}
+                                </p>
+                                <p className="text-lg font-black text-foreground mt-1">
+                                    ₱{formatCurrency(monthForecast.amount)}
+                                </p>
+                                <div className="flex items-center justify-between gap-1 mt-2">
                                     {monthForecast.isForecast ? (
-                                        <span className="text-[11px] font-medium text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">
-                                            Estimated
-                                        </span>
+                                        <span className="text-[9px] font-medium text-muted-foreground">Estimated</span>
                                     ) : (
-                                        <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
-                                            Ready to Pay
+                                        <span className="text-[9px] font-medium text-primary">Ready to Pay</span>
+                                    )}
+                                    {monthForecast.dueDate && (
+                                        <span className="text-[9px] text-muted-foreground">
+                                            Due {new Date(monthForecast.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                                         </span>
                                     )}
                                 </div>
-                                <p className="text-xl font-bold text-foreground mt-2 tabular-nums">
-                                    ₱{formatCurrency(monthForecast.amount)}
-                                </p>
-                                {monthForecast.dueDate && (
-                                    <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border/40 flex items-center justify-between">
-                                        <span>Due date</span>
-                                        <span className="font-medium text-foreground">
-                                            {new Date(monthForecast.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                                        </span>
-                                    </p>
-                                )}
                             </div>
                         ))}
                     </div>
@@ -559,29 +548,26 @@ export default function TenantDashboard() {
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 gap-4">
                     {announcement && showBanner && (
                         <motion.div 
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="rounded-xl border border-border/60 bg-muted/20 p-4 flex items-start sm:items-center justify-between gap-4"
+                            className="neumorphic-panel rounded-2xl p-4 flex items-center justify-between gap-4"
                         >
-                            <div className="flex items-start sm:items-center gap-3 min-w-0">
-                                <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
-                                    <Megaphone className="size-4" />
+                            <div className="flex items-center gap-4">
+                                <div className="p-2.5 rounded-xl bg-primary text-white">
+                                    <Megaphone className="size-5" />
                                 </div>
-                                <div className="min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[11px] font-semibold uppercase tracking-wider text-primary">Announcement</span>
-                                        <span className="text-muted-foreground/40 hidden sm:inline">•</span>
-                                        <h3 className="font-semibold text-sm text-foreground truncate">{announcement.title}</h3>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{announcement.message}</p>
+                                <div>
+                                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-0.5">Announcement</p>
+                                    <h3 className="font-black text-sm text-foreground">{announcement.title}</h3>
+                                    <p className="text-xs text-muted-foreground mt-0.5">{announcement.message}</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setShowBanner(false)}
-                                className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted/40 shrink-0"
+                                className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors px-3 py-2"
                             >
                                 Dismiss
                             </button>
@@ -592,24 +578,21 @@ export default function TenantDashboard() {
                         <motion.div 
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="rounded-xl border border-red-500/30 bg-red-500/5 p-4 flex items-start sm:items-center justify-between gap-4"
+                            className="neumorphic-panel rounded-2xl p-4 flex items-center justify-between gap-4"
                         >
-                            <div className="flex items-start sm:items-center gap-3 min-w-0">
-                                <div className="size-8 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
-                                    <AlertCircle className="size-4" />
+                            <div className="flex items-center gap-4">
+                                <div className="p-2.5 rounded-xl bg-red-500 text-white">
+                                    <AlertCircle className="size-5" />
                                 </div>
-                                <div className="min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[11px] font-semibold uppercase tracking-wider text-red-500">Payment Overdue</span>
-                                        <span className="text-muted-foreground/40 hidden sm:inline">•</span>
-                                        <h3 className="font-semibold text-sm text-foreground">You have {overduePayments.length} overdue bill{overduePayments.length === 1 ? "" : "s"}</h3>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-0.5">Total balance: ₱{formatCurrency(overdueTotal, 2)} • Please settle your account.</p>
+                                <div>
+                                    <p className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] mb-0.5">Payment Required</p>
+                                    <h3 className="font-black text-sm text-foreground">You have {overduePayments.length} overdue bills</h3>
+                                    <p className="text-xs text-muted-foreground mt-0.5">Totaling ₱{formatCurrency(overdueTotal, 2)} • Please settle your balance.</p>
                                 </div>
                             </div>
                             <Link
                                 href={overduePayments[0]?.id ? `/tenant/payments/${overduePayments[0].id}/checkout` : "/tenant/payments"}
-                                className="shrink-0 bg-red-600 hover:bg-red-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                                className="neumorphic-primary bg-red-500 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                             >
                                 Pay Now
                             </Link>
@@ -617,27 +600,25 @@ export default function TenantDashboard() {
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-                    <div className="lg:col-span-2 space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 space-y-8">
                         <div data-tour-id="tour-quick-actions">
-                            <div className="flex items-center justify-between mb-3">
-                                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quick Services</h3>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Quick Services</h3>
                             </div>
-                            <div className="grid grid-cols-5 gap-2.5 sm:gap-3">
+                            <div className="grid grid-cols-5 gap-2.5 sm:gap-3 lg:gap-4">
                                 {quickActions.map((quickActionItem) => {
                                     const IconComponent = ICON_MAP[quickActionItem.iconName];
                                     return (
                                         <Link
                                             key={quickActionItem.id}
                                             href={quickActionItem.href}
-                                            className="rounded-xl border border-border/50 bg-card hover:bg-muted/40 hover:border-border p-3 sm:p-4 flex flex-col items-center justify-center gap-2.5 transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                            className="neumorphic-extruded rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 flex flex-col items-center justify-center gap-3 transition-all hover:-translate-y-1 group"
                                         >
-                                            <div className="size-10 sm:size-11 rounded-lg bg-muted/50 border border-border/40 flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 group-hover:border-primary/20 transition-colors">
-                                                {IconComponent && <IconComponent className="size-5" />}
+                                            <div className={cn("size-12 sm:size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 neumorphic-inset-card", quickActionItem.colorClass)}>
+                                                {IconComponent && <IconComponent className="size-6 sm:size-7" />}
                                             </div>
-                                            <span className="text-xs font-medium text-foreground text-center truncate max-w-full group-hover:text-primary transition-colors">
-                                                {quickActionItem.label}
-                                            </span>
+                                            <span className="text-[10px] sm:text-xs font-black text-center group-hover:text-primary transition-colors uppercase tracking-wider truncate max-w-full">{quickActionItem.label}</span>
                                         </Link>
                                     );
                                 })}
@@ -645,55 +626,52 @@ export default function TenantDashboard() {
                             </div>
                         </div>
 
-                        <div className="rounded-2xl border border-border/70 bg-card p-6">
-                            <div className="flex items-center justify-between mb-5">
+                        <div className="neumorphic-panel rounded-[2.5rem] p-8">
+                            <div className="flex items-center justify-between mb-8">
                                 <div>
-                                    <h3 className="text-base font-semibold text-foreground">Recent Activity</h3>
-                                    <p className="text-xs text-muted-foreground mt-0.5">Your latest updates and billing history</p>
+                                    <h3 className="text-xl font-black text-foreground tracking-tight">Recent Activity</h3>
+                                    <p className="text-xs text-muted-foreground mt-1">Your latest updates and transactions</p>
                                 </div>
-                                <Link href="/tenant/payments" className="text-xs font-medium text-primary hover:text-primary-dark transition-colors flex items-center gap-1">
+                                <Link href="/tenant/payments" className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary-dark transition-colors">
                                     Full History
-                                    <ChevronRight className="size-3.5" />
                                 </Link>
                             </div>
 
                             {paymentHistory.length > 0 ? (
-                                <div className="divide-y divide-border/40">
+                                <div className="space-y-3">
                                     {paymentHistory.slice(0, 4).map((paymentRecord) => {
                                         const isAdvanceRent = paymentRecord.description?.toLowerCase().includes('advance rent');
                                         const isSecurityDeposit = paymentRecord.category?.toLowerCase() === 'security_deposit';
                                         
                                         return (
-                                            <div key={paymentRecord.id} className="flex items-center justify-between py-3.5 first:pt-0 last:pb-0 group">
-                                                <div className="flex items-center gap-3.5 min-w-0">
+                                            <div key={paymentRecord.id} className="group flex items-center justify-between p-4 rounded-2xl neumorphic-extruded transition-all">
+                                                <div className="flex items-center gap-4">
                                                     <div className={cn(
-                                                        "size-8 rounded-lg flex items-center justify-center shrink-0",
-                                                        paymentRecord.status === 'completed' 
-                                                            ? "bg-emerald-500/10 text-emerald-500" 
-                                                            : "bg-amber-500/10 text-amber-500"
+                                                        "size-10 rounded-xl flex items-center justify-center shrink-0",
+                                                        paymentRecord.status === 'completed' ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
                                                     )}>
-                                                        {paymentRecord.status === 'completed' ? <CheckCircle2 className="size-4" /> : <Clock className="size-4" />}
+                                                        {paymentRecord.status === 'completed' ? <CheckCircle2 className="size-5" /> : <Clock className="size-5" />}
                                                     </div>
                                                     <div className="min-w-0">
                                                         <div className="flex items-center gap-2">
-                                                            <p className="font-medium text-sm text-foreground truncate">
+                                                            <p className="font-black text-sm text-foreground truncate">
                                                                 {paymentRecord.description ?? "Payment"}
                                                             </p>
                                                             {(isAdvanceRent || isSecurityDeposit) && (
-                                                                <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground shrink-0">
+                                                                <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 shrink-0">
                                                                     {isAdvanceRent ? "Advance" : "Deposit"}
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <p className="text-xs text-muted-foreground mt-0.5">
+                                                        <p className="text-[10px] text-muted-foreground mt-0.5 uppercase font-black tracking-wider">
                                                             {paymentRecord.paidAt ? <>Settled <ClientOnlyDate date={paymentRecord.paidAt} /></> : <>Due <ClientOnlyDate date={paymentRecord.dueDate} /></>}
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div className="text-right shrink-0 pl-3">
-                                                    <p className="font-semibold text-sm text-foreground tabular-nums">₱{formatCurrency(paymentRecord.amount, 2)}</p>
+                                                <div className="text-right shrink-0">
+                                                    <p className="font-black text-sm text-foreground tracking-tight">₱{formatCurrency(paymentRecord.amount, 2)}</p>
                                                     <p className={cn(
-                                                        "text-xs font-medium capitalize mt-0.5",
+                                                        "text-[8px] font-black uppercase tracking-[0.2em] mt-0.5",
                                                         paymentRecord.status === 'completed' ? "text-emerald-500" : "text-amber-500"
                                                     )}>
                                                         {paymentRecord.status}
@@ -704,62 +682,65 @@ export default function TenantDashboard() {
                                     })}
                                 </div>
                             ) : (
-                                <div className="text-center py-10 border border-dashed border-border/60 rounded-xl bg-muted/10">
-                                    <p className="text-xs text-muted-foreground">No recent activity to show.</p>
+                                <div className="text-center py-12 border border-dashed border-border rounded-3xl bg-muted/20">
+                                    <p className="text-sm text-muted-foreground">No recent activity to show.</p>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="space-y-6">
-                        <div className="rounded-2xl border border-border/70 bg-card p-6" data-tour-id="tour-lease-details">
-                            <div>
-                                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Your Home</p>
-                                <h3 className="text-lg font-bold text-foreground tracking-tight mt-1">
-                                    {lease?.propertyName ?? "Property"}
-                                </h3>
-                                <p className="text-sm text-muted-foreground font-medium">{lease?.unitName ?? "Unit"}</p>
-                            </div>
+                    <div className="space-y-8">
+                        <div className="neumorphic-panel rounded-[2.5rem] p-8 relative overflow-hidden" data-tour-id="tour-lease-details">
+                            <div className="absolute top-0 right-0 size-32 bg-primary/5 blur-3xl -mr-8 -mt-8" />
+                            <div className="relative z-10 space-y-6">
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Your Home</p>
+                                    <h3 className="text-2xl font-black text-foreground tracking-tight leading-tight">
+                                        {lease?.propertyName ?? "Property"}<br/>
+                                        <span className="text-muted-foreground text-lg">{lease?.unitName ?? "Unit"}</span>
+                                    </h3>
+                                </div>
 
-                            <div className="grid grid-cols-2 gap-3 pt-4">
-                                <div className="rounded-xl border border-border/50 bg-muted/20 p-3.5">
-                                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-                                        <Zap className="size-3.5 text-muted-foreground" />
-                                        <span>Electricity</span>
+                                <div className="space-y-4 pt-2">
+                                    <div className="flex items-center gap-4 p-4 rounded-2xl neumorphic-inset">
+                                        <div className="p-2.5 rounded-xl neumorphic-extruded">
+                                            <Zap className="size-5 text-amber-500" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Electricity</p>
+                                            <p className="font-black text-sm text-foreground">₱{formatCurrency(electricityAmount ?? 0)}</p>
+                                        </div>
                                     </div>
-                                    <p className="text-base font-bold text-foreground mt-1 tabular-nums">
-                                        ₱{formatCurrency(electricityAmount ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="rounded-xl border border-border/50 bg-muted/20 p-3.5">
-                                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-                                        <Droplets className="size-3.5 text-muted-foreground" />
-                                        <span>Water</span>
+                                    <div className="flex items-center gap-4 p-4 rounded-2xl neumorphic-inset">
+                                        <div className="p-2.5 rounded-xl neumorphic-extruded">
+                                            <Droplets className="size-5 text-blue-500" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Water</p>
+                                            <p className="font-black text-sm text-foreground">₱{formatCurrency(waterAmount ?? 0)}</p>
+                                        </div>
                                     </div>
-                                    <p className="text-base font-bold text-foreground mt-1 tabular-nums">
-                                        ₱{formatCurrency(waterAmount ?? 0)}
-                                    </p>
                                 </div>
-                            </div>
 
-                            <div className="pt-4 mt-4 border-t border-border/50 space-y-3">
-                                <div className="flex justify-between items-center">
-                                    <p className="text-xs font-semibold text-foreground">Contract Summary</p>
-                                    <button 
-                                        onClick={() => setIsLeaseModalOpen(true)}
-                                        className="text-xs font-medium text-primary hover:text-primary-dark transition-colors"
-                                    >
-                                        View Contract
-                                    </button>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3 text-xs">
-                                    <div>
-                                        <p className="text-muted-foreground font-medium">Monthly Rent</p>
-                                        <p className="font-semibold text-foreground mt-0.5 tabular-nums">₱{formatCurrency(lease?.monthlyRent ?? 0)}</p>
+                                <div className="pt-4 border-t border-border/50">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Lease Details</p>
+                                        <button 
+                                            onClick={() => setIsLeaseModalOpen(true)}
+                                            className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline"
+                                        >
+                                            View Contract
+                                        </button>
                                     </div>
-                                    <div>
-                                        <p className="text-muted-foreground font-medium">Security Deposit</p>
-                                        <p className="font-semibold text-foreground mt-0.5 tabular-nums">₱{formatCurrency(lease?.securityDeposit ?? 0)}</p>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-wider">Monthly Rent</p>
+                                            <p className="text-sm font-black text-foreground">₱{formatCurrency(lease?.monthlyRent ?? 0)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-wider">Deposit</p>
+                                            <p className="text-sm font-black text-foreground">₱{formatCurrency(lease?.securityDeposit ?? 0)}</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

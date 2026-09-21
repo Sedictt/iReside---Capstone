@@ -6,7 +6,7 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
  */
 export async function PATCH(
     request: NextRequest,
-    context: { params: Promise<{ id: string }> | { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;

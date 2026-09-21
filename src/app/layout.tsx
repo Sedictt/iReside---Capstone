@@ -86,7 +86,7 @@ export default function RootLayout({
                 >
                   <PageTransitionProvider>
                     <FramerMotionProvider>
-                      <TooltipProvider delayDuration={200} skipDelayDuration={150}>
+                      <TooltipProvider delayDuration={600} skipDelayDuration={300}>
                         <GlobalTooltipManager />
                         <OfflineBanner />
                         <OfflineCommandCenterModal />

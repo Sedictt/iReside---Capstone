@@ -60,13 +60,9 @@ export function TenantDigitalClock({ className, compact = false }: TenantDigital
         <span className="font-mono text-3xl sm:text-4xl font-black tracking-tight text-foreground tabular-nums group-hover:text-primary transition-colors">
           {hours}:{minutes}
         </span>
-        {period ? (
+        {period && (
           <span className="text-sm sm:text-base font-black uppercase tracking-wider text-primary">
             {period}
-          </span>
-        ) : (
-          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 bg-muted/40 px-1.5 py-0.5 rounded border border-border/40">
-            24H
           </span>
         )}
       </button>

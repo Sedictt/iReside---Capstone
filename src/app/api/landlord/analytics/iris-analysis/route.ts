@@ -2,9 +2,13 @@ import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY,
-});
+export const dynamic = "force-dynamic";
+
+const getGroqClient = () => {
+    return new Groq({
+        apiKey: process.env.GROQ_API_KEY || "placeholder-key",
+    });
+};
 
 const unwrapJsonBlock = (text: string) => {
     const trimmed = text.trim();
@@ -170,6 +174,7 @@ export async function POST(request: Request) {
         
         Analyze this and provide the JSON response.`;
 
+        const groq = getGroqClient();
         const completion = await groq.chat.completions.create({
             model: "groq/compound-mini",
             temperature: 0.6,

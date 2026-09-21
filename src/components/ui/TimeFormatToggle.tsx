@@ -18,27 +18,52 @@ export function TimeFormatToggle({
 }: TimeFormatToggleProps) {
   const { timeFormat, setTimeFormat, toggleTimeFormat, is24Hour } = useTimeFormat();
 
-  // Compact variant: Small pill for clocks / headers
+  // Compact variant: Clean segmented switch for clocks / headers
   if (variant === "compact") {
     return (
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          toggleTimeFormat();
-        }}
+      <div
         className={cn(
-          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider transition-all uppercase cursor-pointer select-none",
-          "border border-border/70 hover:border-primary/60 bg-background/80 hover:bg-background backdrop-blur-md",
-          "text-muted-foreground hover:text-foreground active:scale-95 shadow-sm",
+          "inline-flex items-center p-0.5 rounded-lg border border-border/70 bg-muted/30 backdrop-blur-md select-none",
           className
         )}
-        title={`Current format: ${is24Hour ? "24-Hour" : "12-Hour"}. Click to switch to ${is24Hour ? "12-Hour" : "24-Hour"}.`}
-        aria-label={`Switch time format from ${is24Hour ? "24-Hour" : "12-Hour"} to ${is24Hour ? "12-Hour" : "24-Hour"}`}
+        role="group"
+        aria-label="Time format selector"
       >
-        <Clock className="size-3 text-primary shrink-0" />
-        <span>{is24Hour ? "24H" : "12H"}</span>
-      </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setTimeFormat("12h");
+          }}
+          className={cn(
+            "px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer",
+            !is24Hour
+              ? "bg-background text-foreground shadow-xs font-black border border-border/40"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          aria-pressed={!is24Hour}
+          title="Switch to 12-hour format (AM/PM)"
+        >
+          12H
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setTimeFormat("24h");
+          }}
+          className={cn(
+            "px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer",
+            is24Hour
+              ? "bg-background text-foreground shadow-xs font-black border border-border/40"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          aria-pressed={is24Hour}
+          title="Switch to 24-hour format"
+        >
+          24H
+        </button>
+      </div>
     );
   }
 

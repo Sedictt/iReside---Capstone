@@ -25,10 +25,14 @@ type InsightRequestBody = {
     kpis: KpiInput[];
 };
 
-const openai = new OpenAI({
-    apiKey: process.env.GROQ_API_KEY,
-    baseURL: "https://api.groq.com/openai/v1",
-});
+export const dynamic = "force-dynamic";
+
+const getOpenAIClient = () => {
+    return new OpenAI({
+        apiKey: process.env.GROQ_API_KEY || "placeholder-key",
+        baseURL: "https://api.groq.com/openai/v1",
+    });
+};
 
 const buildFallbackInsight = (kpi: KpiInput): KpiInsight => {
     const trend =
@@ -140,6 +144,7 @@ export async function POST(request: Request) {
             "}",
         ].join("\n");
 
+        const openai = getOpenAIClient();
         const completion = await openai.chat.completions.create({
             model: "groq/compound-mini",
             temperature: 0.4,

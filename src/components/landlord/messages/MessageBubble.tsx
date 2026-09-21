@@ -33,6 +33,7 @@ import { Logo } from "@/components/ui/Logo";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { OfficialReceipt } from "@/components/messaging/OfficialReceipt";
 import { NotificationCard } from "@/components/messaging/NotificationCard";
+import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
 
 interface MessageBubbleProps {
     message: UiMessage;
@@ -266,9 +267,17 @@ export function MessageBubble({
                         ) : null}
                         
                         {(message.messageType !== "image" || hasCustomCaption) && message.content && (
-                            <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                                {message.isRedacted ? (message.redactedContent || "••••••••") : message.content}
-                            </p>
+                            message.isRedacted ? (
+                                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                                    {message.redactedContent || "••••••••"}
+                                </p>
+                            ) : (
+                                <ChatMessageMarkdown
+                                    content={message.content}
+                                    isUser={isMe}
+                                    className="text-sm"
+                                />
+                            )
                         )}
                     </motion.div>
                 )}

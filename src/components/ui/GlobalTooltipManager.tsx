@@ -112,9 +112,12 @@ export function GlobalTooltipManager() {
 
             clearShowTimer();
 
-            // Warm delay logic: if recently hovered another tooltip, show faster
-            const isWarm = Date.now() - lastTooltipHideTime < 250;
-            const delay = isWarm ? 40 : 200;
+            // Warm delay logic: if recently hovered another tooltip, show slightly faster without flickering
+            const isWarm = Date.now() - lastTooltipHideTime < 300;
+            const customDelayAttr = element.getAttribute("data-tooltip-delay");
+            const customDelay = customDelayAttr ? parseInt(customDelayAttr, 10) : null;
+            const defaultDelay = isWarm ? 200 : 600;
+            const delay = customDelay !== null && !isNaN(customDelay) ? customDelay : defaultDelay;
 
             showTimerRef.current = setTimeout(() => {
                 if (!currentTargetRef.current || !document.body.contains(currentTargetRef.current)) {
