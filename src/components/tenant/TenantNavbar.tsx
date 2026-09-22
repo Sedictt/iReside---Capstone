@@ -97,7 +97,7 @@ const NAV_SECTIONS = [
             { label: "Finance Hub", href: "/tenant/payments", icon: CreditCard },
             { label: "Messages", href: "/tenant/messages", icon: MessageSquare },
             { label: "User Manual", href: "/tenant/docs", icon: BookOpen },
-            { label: "Download App", href: "/download", icon: Download },
+            { label: "Download App", href: "/tenant/download", icon: Download },
         ],
     },
 ];

@@ -44,17 +44,22 @@ export const DISALLOWED_PRESEEDED_DATA = {
     "untitled property",
     "sample property",
     "my property",
+    "ireside residences",
+    "ireside",
   ],
   taglines: [
     "premier student & residential living in valenzuela",
     "residential living",
     "premier student living",
+    "modern property management & residential operations",
   ],
   adminNames: [
     "roberto reyes",
     "default admin",
     "administrator",
     "landlord",
+    "turnkey landlord",
+    "master admin",
   ],
   emails: [
     "landlord@reyesresidences.com",
@@ -62,6 +67,7 @@ export const DISALLOWED_PRESEEDED_DATA = {
     "admin@property.com",
     "landlord@property.com",
     "landlord@example.com",
+    "landlord@turnkey.local",
   ],
   phones: [
     "0917-882-9912",

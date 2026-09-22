@@ -5,6 +5,7 @@ import {
     isAllowlistedTenantWritePath,
     isTenantApiWriteRequest,
     isExplicitLogoutRequest,
+    isPublicRoute,
 } from "../middleware";
 
 const mockRequest = (pathname: string, method: string, searchParams?: Record<string, string>): NextRequest => {
@@ -62,6 +63,27 @@ describe("middleware explicit logout handling", () => {
 
     it("does not treat other routes as explicit logout", () => {
         expect(isExplicitLogoutRequest(mockRequest("/tenant/dashboard", "GET", { logout: "true" }))).toBe(false);
+    });
+});
+
+describe("middleware public routes", () => {
+    it("allows public access to /download", () => {
+        expect(isPublicRoute("/download")).toBe(true);
+        expect(isPublicRoute("/download/windows")).toBe(true);
+    });
+
+    it("allows public access to other public routes", () => {
+        expect(isPublicRoute("/")).toBe(true);
+        expect(isPublicRoute("/login")).toBe(true);
+        expect(isPublicRoute("/signup")).toBe(true);
+        expect(isPublicRoute("/docs")).toBe(true);
+        expect(isPublicRoute("/about")).toBe(true);
+    });
+
+    it("does not treat protected tenant or landlord routes as public", () => {
+        expect(isPublicRoute("/tenant/dashboard")).toBe(false);
+        expect(isPublicRoute("/tenant/lease")).toBe(false);
+        expect(isPublicRoute("/landlord/dashboard")).toBe(false);
     });
 });
 

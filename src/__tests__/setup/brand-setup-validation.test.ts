@@ -52,6 +52,9 @@ describe("Brand Setup Validation Module", () => {
       expect(validatePropertyTradeName("reyes residences").isValid).toBe(false);
       expect(validatePropertyTradeName("Sample Property").isValid).toBe(false);
       expect(validatePropertyTradeName("Default Property").isValid).toBe(false);
+      expect(validatePropertyTradeName("iReside Residences").isValid).toBe(false);
+      expect(validatePropertyTradeName("ireside residences").isValid).toBe(false);
+      expect(validatePropertyTradeName("iReside").isValid).toBe(false);
       expect(validatePropertyTradeName("Reyes Residences").error).toContain("sample placeholder");
     });
 
@@ -233,6 +236,8 @@ describe("Brand Setup Validation Module", () => {
       expect(validateAdminFullName("Roberto Reyes").isValid).toBe(false);
       expect(validateAdminFullName("Default Admin").isValid).toBe(false);
       expect(validateAdminFullName("Administrator").isValid).toBe(false);
+      expect(validateAdminFullName("Turnkey Landlord").isValid).toBe(false);
+      expect(validateAdminFullName("Master Admin").isValid).toBe(false);
       expect(validateAdminFullName("Roberto Reyes").error).toContain("sample placeholder");
     });
 
@@ -399,6 +404,18 @@ describe("Brand Setup Validation Module", () => {
       });
       expect(res.isValid).toBe(false);
       expect(res.errors["confirmPassword"]).toContain("do not match");
+    });
+
+    it("strictly requires passwords during initial setup when isExistingPlaceholder is false", () => {
+      const res = validateStep3Admin({
+        ...validStep3,
+        adminPassword: "",
+        confirmPassword: "",
+        isExistingPlaceholder: false,
+      });
+      expect(res.isValid).toBe(false);
+      expect(res.errors["adminPassword"]).toContain("required");
+      expect(res.errors["confirmPassword"]).toContain("confirm your master password");
     });
 
     it("validates entire setup successfully and identifies firstErrorStep when invalid", () => {

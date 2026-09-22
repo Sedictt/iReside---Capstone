@@ -22,7 +22,6 @@ import {
   Lock,
   KeyRound,
   ShieldAlert,
-  Sparkles,
   UserCheck,
   RotateCcw,
 } from "lucide-react";
@@ -352,7 +351,7 @@ export default function TechnicalCommissioningPage() {
                       Next Step: Hand the device over to the Property Owner
                     </p>
                     <p className="text-[11px] text-zinc-300 dark:text-zinc-700 leading-relaxed">
-                      The technical setup is complete. Pass this device to the landlord to personalize their property name, upload their logo, choose brand colors, and create their Landlord account.
+                      The technical setup is complete. Pass this device to the landlord to personalize their property name, upload their logo, choose brand colors, and create their Master Admin account.
                     </p>
                   </div>
                 </div>

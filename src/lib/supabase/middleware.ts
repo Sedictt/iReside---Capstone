@@ -66,13 +66,14 @@ const PUBLIC_ROUTE_PREFIXES = [
     "/demo",
     "/sign",
     "/docs",
+    "/download",
     "/about",
     "/terms",
     "/privacy",
 ];
-const PUBLIC_EXACT_ROUTES = ["/", "/manifest.json"];
+const PUBLIC_EXACT_ROUTES = ["/"];
 
-const isPublicRoute = (pathname: string, request?: NextRequest) => {
+export const isPublicRoute = (pathname: string, request?: NextRequest) => {
     if (request && (
         request.headers.get("user-agent")?.includes("boneyard") ||
         request.headers.get("x-boneyard") === "true" ||
@@ -227,20 +228,10 @@ export async function updateSession(request: NextRequest) {
         return supabaseResponse;
     }
 
-    const userAgent = request.headers.get("user-agent") || "";
-    const isMobileDevice = /Mobile|Android|iPhone|iPad|iPod/i.test(userAgent);
-
     // If user is already logged in, prevent them from accessing auth pages.
     if (user && (request.nextUrl.pathname.startsWith("/login") || request.nextUrl.pathname.startsWith("/signup") || request.nextUrl.pathname.startsWith("/forgot-password"))) {
         const url = request.nextUrl.clone();
-        const redirectParam = request.nextUrl.searchParams.get("redirect");
-
-        if (redirectParam) {
-            url.pathname = redirectParam;
-            url.search = "";
-        } else if (isMobileDevice) {
-            url.pathname = role === "tenant" ? "/mobile/tenant/home" : "/mobile/landlord/overview";
-        } else if (role === "admin" || role === "landlord") {
+        if (role === "admin" || role === "landlord") {
             url.pathname = "/landlord/dashboard";
         } else {
             url.pathname = "/tenant/dashboard";
@@ -256,38 +247,14 @@ export async function updateSession(request: NextRequest) {
         }
         const url = request.nextUrl.clone();
         url.pathname = "/login";
-        url.searchParams.set("redirect", request.nextUrl.pathname + request.nextUrl.search);
         return NextResponse.redirect(url);
     }
 
-    // Role-based portal protection: prevent cross-portal access for both desktop and mobile
+    // Role-based portal protection: prevent tenants from accessing landlord or setup routes
     if (user && role === "tenant") {
         if (request.nextUrl.pathname.startsWith("/landlord") || request.nextUrl.pathname.startsWith("/setup")) {
             const url = request.nextUrl.clone();
-            url.pathname = isMobileDevice ? "/mobile/tenant/home" : "/tenant/dashboard";
-            return NextResponse.redirect(url);
-        }
-        if (request.nextUrl.pathname.startsWith("/mobile/landlord")) {
-            const url = request.nextUrl.clone();
-            url.pathname = "/mobile/tenant/home";
-            return NextResponse.redirect(url);
-        }
-        if (isMobileDevice && (request.nextUrl.pathname === "/tenant/dashboard" || request.nextUrl.pathname === "/tenant")) {
-            const url = request.nextUrl.clone();
-            url.pathname = "/mobile/tenant/home";
-            return NextResponse.redirect(url);
-        }
-    }
-
-    if (user && (role === "landlord" || role === "admin")) {
-        if (request.nextUrl.pathname.startsWith("/mobile/tenant")) {
-            const url = request.nextUrl.clone();
-            url.pathname = "/mobile/landlord/overview";
-            return NextResponse.redirect(url);
-        }
-        if (isMobileDevice && (request.nextUrl.pathname === "/landlord/dashboard" || request.nextUrl.pathname === "/landlord")) {
-            const url = request.nextUrl.clone();
-            url.pathname = "/mobile/landlord/overview";
+            url.pathname = "/tenant/dashboard";
             return NextResponse.redirect(url);
         }
     }

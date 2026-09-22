@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     const newEmail = body.admin?.email?.trim();
-    if (newEmail && newEmail.includes("@") && !newEmail.includes("turnkey.local")) {
+    if (newEmail && newEmail.includes("@") && !newEmail.includes("turnkey.local") && newEmail !== authContext.userEmail) {
       updatesToAuth.email = newEmail;
     }
 
@@ -106,6 +106,7 @@ export async function POST(request: NextRequest) {
 
     const profileUpdates: Record<string, unknown> = {
       business_name: propertyName,
+      has_changed_password: true,
       updated_at: timestamp,
     };
     if (adminFullName) profileUpdates.full_name = adminFullName;
