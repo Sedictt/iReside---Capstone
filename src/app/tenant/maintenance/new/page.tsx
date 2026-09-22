@@ -31,6 +31,7 @@ import { mutationQueue } from "@/lib/offline/mutationQueue";
 import { OfflineBlobStorage } from "@/lib/offline/offlineStorage";
 import { toast } from "sonner";
 import { WifiOff, MessageSquare } from "lucide-react";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 export default function NewMaintenanceRequest() {
     const router = useRouter();
     const [title, setTitle] = useState("");
@@ -44,19 +45,34 @@ export default function NewMaintenanceRequest() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || []);
-        if (files.length + mediaFiles.length > 5) {
-            setError("You can only upload up to 5 images.");
+        const rawFiles = Array.from(e.target.files || []);
+        if (rawFiles.length + mediaFiles.length > 5) {
+            const limitMsg = "You can only upload up to 5 images.";
+            setError(limitMsg);
+            toast.error("Upload limit exceeded", { description: limitMsg });
+            if (e.target) e.target.value = "";
             return;
         }
 
-        const newFiles = [...mediaFiles, ...files];
+        const validFiles = handleMediaSelection(e, {
+            preset: "image",
+            multiple: true,
+            notify: (message, description) => {
+                setError(`${message}: ${description}`);
+                toast.error(message, { description });
+            },
+        });
+
+        if (!validFiles || validFiles.length === 0) {
+            return;
+        }
+
+        setError(null);
+        const newFiles = [...mediaFiles, ...validFiles];
         setMediaFiles(newFiles);
 
-        const newPreviews = files.map(file => URL.createObjectURL(file));
+        const newPreviews = validFiles.map(file => URL.createObjectURL(file));
         setPreviews([...previews, ...newPreviews]);
-        
-        if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
     const removeFile = (index: number) => {
@@ -356,7 +372,7 @@ export default function NewMaintenanceRequest() {
                                 type="file"
                                 ref={fileInputRef}
                                 onChange={handleFileChange}
-                                accept="image/*"
+                                accept={MEDIA_ACCEPT_STRINGS.image}
                                 multiple
                                 className="hidden"
                             />

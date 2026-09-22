@@ -7,6 +7,7 @@ import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import Link from "next/link";
 import styles from "./blueprint.module.css";
 // We are using Material Icons via the CDN link in layout.tsx, so we use standard <span> tags for icons.
@@ -213,9 +214,15 @@ const ComplaintModal = ({
                                             <input 
                                                 id="photo-upload"
                                                 type="file" 
-                                                accept="image/*" 
+                                                accept={MEDIA_ACCEPT_STRINGS.image} 
                                                 className="hidden" 
-                                                onChange={(e) => setAttachment(e.target.files?.[0] || null)}
+                                                onChange={(e) => {
+                                                    const file = handleMediaSelection(e, {
+                                                        preset: "image",
+                                                        notify: (msg, desc) => toast.error(msg, { description: desc }),
+                                                    });
+                                                    setAttachment(file);
+                                                }}
                                             />
                                             {attachment ? (
                                                 <>

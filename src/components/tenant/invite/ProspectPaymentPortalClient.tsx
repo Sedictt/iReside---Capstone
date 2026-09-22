@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { applyBrandCssVariables, getContrastTextColor, getMonogramInitials } from "@/lib/branding/colors";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { toast } from "sonner";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 
 type PaymentRequestItem = {
     id: string;
@@ -188,12 +190,21 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
             setProofFile(null);
             return;
         }
-        if (file.size > 10 * 1024 * 1024) {
-            setError("The selected file exceeds the 10MB upload limit. Please select a smaller file.");
+        const validFile = handleMediaSelection(file, {
+            preset: "document_and_image",
+            maxSizeBytes: 10 * 1024 * 1024,
+            notify: (message, description) => {
+                setError(`${message}: ${description}`);
+                toast.error(message, { description });
+            },
+        });
+        if (!validFile) {
+            setProofFile(null);
+            if (fileInputRef.current) fileInputRef.current.value = "";
             return;
         }
         setError(null);
-        setProofFile(file);
+        setProofFile(validFile);
     };
 
     const handleCopyNumber = () => {
@@ -861,7 +872,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                             <input
                                                 ref={fileInputRef}
                                                 type="file"
-                                                accept="image/jpeg,image/png,image/webp,application/pdf"
+                                                accept={MEDIA_ACCEPT_STRINGS.document_and_image}
                                                 onChange={(e) => handleFileSelected(e.target.files?.[0] ?? null)}
                                                 className="hidden"
                                             />

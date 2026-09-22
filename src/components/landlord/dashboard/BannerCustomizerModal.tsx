@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/context/BrandContext";
 import { validateBannerImageUrl } from "@/lib/validation/landlord-settings";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 
 
 export const CURATED_BANNER_PRESETS = [
@@ -88,18 +89,11 @@ export function BannerCustomizerModal({
   }, [isOpen, currentBanner]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = handleMediaSelection(e, {
+      preset: "image",
+      notify: (message, description) => toast.error(message, { description }),
+    });
     if (!file) return;
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Image too large. Maximum size is 10MB.");
-      return;
-    }
-
-    if (!file.type || !file.type.startsWith("image/")) {
-      toast.error("Please select a valid image file (PNG, JPG, WEBP).");
-      return;
-    }
 
     setIsUploading(true);
     const toastId = toast.loading("Uploading property banner photo...");
@@ -211,7 +205,7 @@ export function BannerCustomizerModal({
         type="file"
         ref={fileInputRef}
         onChange={handleFileUpload}
-        accept="image/png, image/jpeg, image/webp, image/jpg"
+        accept={MEDIA_ACCEPT_STRINGS.image}
         className="hidden"
       />
 

@@ -25,6 +25,8 @@ import { NotificationCard } from "@/components/messaging/NotificationCard";
 import { OfficialReceipt } from "@/components/messaging/OfficialReceipt";
 import { MiniChatSkeleton } from "@/components/messaging/MiniChatSkeleton";
 import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
+import { toast } from "sonner";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 
 interface ChatUser {
     id: string;
@@ -1333,9 +1335,13 @@ export function TenantContactsSidebar() {
                                             type="file"
                                             className="hidden"
                                             disabled={!chat.isActive || chatState.isUploading}
+                                            accept={MEDIA_ACCEPT_STRINGS.chat_attachment}
                                             onChange={(event) => {
-                                                const file = event.target.files?.[0];
-                                                event.currentTarget.value = "";
+                                                const file = handleMediaSelection(event, {
+                                                    preset: "chat_attachment",
+                                                    maxSizeBytes: 25 * 1024 * 1024,
+                                                    notify: (msg, desc) => toast.error(msg, { description: desc }),
+                                                });
                                                 if (file) {
                                                     void uploadMiniFile(chat.id, file);
                                                 }

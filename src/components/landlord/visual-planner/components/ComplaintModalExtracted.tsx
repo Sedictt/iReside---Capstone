@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { X } from "lucide-react";
+import { toast } from "sonner";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import { Unit } from "../types";
 
 interface ComplaintModalProps {
@@ -158,9 +160,15 @@ export function ComplaintModal({
                                             <input 
                                                 id="photo-upload"
                                                 type="file" 
-                                                accept="image/*" 
+                                                accept={MEDIA_ACCEPT_STRINGS.image} 
                                                 className="hidden" 
-                                                onChange={(e) => setAttachment(e.target.files?.[0] || null)}
+                                                onChange={(e) => {
+                                                    const file = handleMediaSelection(e, {
+                                                        preset: "image",
+                                                        notify: (msg, desc) => toast.error(msg, { description: desc }),
+                                                    });
+                                                    setAttachment(file);
+                                                }}
                                             />
                                             {attachment ? (
                                                 <>

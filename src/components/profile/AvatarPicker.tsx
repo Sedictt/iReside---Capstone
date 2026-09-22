@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
+import { handleMediaSelection } from "@/lib/validation/media-validation";
 
 interface AvatarPickerProps {
     isOpen: boolean;
@@ -191,10 +192,17 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
         const file = e.target.files?.[0];
         if (!file || !profile) return;
 
-        if (file.size > MAX_FILE_SIZE) {
-            toast.error("File too large", {
-                description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit.`
-            });
+        const isValid = handleMediaSelection({
+            files: file,
+            options: { preset: "image", maxSizeMb: MAX_FILE_SIZE_MB, customLabel: "Profile Avatar" },
+            inputElement: e.target,
+            onValid: () => {},
+            onBlocked: (msg) => {
+                dispatch({ type: "SET_ERROR", payload: msg });
+            },
+        });
+
+        if (!isValid) {
             e.target.value = "";
             return;
         }
@@ -338,7 +346,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                         >
                                             {state.currentPage === 0 && (
                                                 <label className="group relative aspect-square flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 transition-all hover:border-primary/40 hover:bg-primary/5 active:scale-95">
-                                                    <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={state.isUploading} />
+                                                    <input type="file" className="hidden" accept="image/png,image/jpeg,image/webp,image/jpg" onChange={handleFileUpload} disabled={state.isUploading} />
                                                     {state.isUploading ? <Loader2 className="size-5 animate-spin text-primary" /> : <Upload className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />}
                                                 </label>
                                             )}

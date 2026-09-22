@@ -17,6 +17,8 @@ import { formatDateLong, formatPhpCurrency, getInvoiceDisplayStatus } from "@/li
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Upload, Camera, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 
 type InvoiceDetail = Awaited<ReturnType<typeof import("@/lib/billing/server").getInvoiceDetailForActor>>;
 
@@ -1667,8 +1669,15 @@ function RefundCenter({
                             <input 
                                 type="file" 
                                 className="hidden" 
-                                accept="image/*"
-                                onChange={(event) => onProofChange(event.target.files?.[0] || null)}
+                                accept={MEDIA_ACCEPT_STRINGS.image}
+                                onChange={(event) => {
+                                    const file = handleMediaSelection(event, {
+                                        preset: "image",
+                                        maxSizeBytes: 5 * 1024 * 1024,
+                                        notify: (msg, desc) => toast.error(msg, { description: desc }),
+                                    });
+                                    onProofChange(file);
+                                }}
                             />
                         </label>
                     ) : (

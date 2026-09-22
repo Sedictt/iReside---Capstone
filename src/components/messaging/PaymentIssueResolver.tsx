@@ -11,6 +11,8 @@ import { UiMessage } from "../landlord/messages/types";
 import { formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 
 export interface PaymentIssueResolverProps {
     message: UiMessage | null;
@@ -199,7 +201,18 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                                             <label className="flex cursor-pointer items-center justify-center gap-3 rounded-xl border-2 border-dashed border-white/10 bg-surface-2 py-4 text-text-disabled transition-colors hover:border-primary/30 hover:bg-surface-3">
                                                 <Upload className="size-4" />
                                                 <span className="text-xs font-black uppercase tracking-widest">{qrFile ? qrFile.name : "Choose File"}</span>
-                                                <input type="file" className="hidden" onChange={(e) => setQrFile(e.target.files?.[0] || null)} />
+                                                <input 
+                                                    type="file" 
+                                                    accept={MEDIA_ACCEPT_STRINGS.image}
+                                                    className="hidden" 
+                                                    onChange={(e) => {
+                                                        const file = handleMediaSelection(e, {
+                                                            preset: "image",
+                                                            notify: (message, description) => toast.error(message, { description }),
+                                                        });
+                                                        setQrFile(file);
+                                                    }} 
+                                                />
                                             </label>
                                         </div>
                                     </div>
