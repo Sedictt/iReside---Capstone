@@ -695,30 +695,20 @@ CRITICAL SECURITY INSTRUCTIONS:
 
     setIsLaunching(true);
     try {
-      // 0. Update master password via authenticated client session if modified.
-      // Calling supabase.auth.updateUser directly from the authenticated browser client updates credentials
-      // and issues fresh session tokens in place, preventing backend session revocation and subsequent CORS / invalid_grant errors.
       const isPasswordChanged = Boolean(
         adminPassword &&
         adminPassword !== "••••••••••••" &&
         !adminPassword.includes("•")
       );
 
-      if (isPasswordChanged) {
-        const supabase = createBrowserSupabaseClient();
-        const { error: authError } = await supabase.auth.updateUser({
-          password: adminPassword.trim(),
-        });
+      // 1. Call atomic setup launch API to claim credentials & save setup state securely on the server
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s safety timeout
 
-        if (authError) {
-          throw new Error("Failed to update password: " + authError.message);
-        }
-      }
-
-      // 1. Call atomic setup launch API to claim credentials & save setup state
       const res = await fetch("/api/setup/launch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           branding: {
             propertyName: propertyName.trim(),
@@ -731,10 +721,21 @@ CRITICAL SECURITY INSTRUCTIONS:
             fullName: adminName.trim(),
             email: adminEmail.trim(),
             phone: adminPhone.trim(),
-            // Password is already updated via authenticated client session above
+            password: isPasswordChanged ? adminPassword.trim() : undefined,
           },
         }),
       });
+      clearTimeout(timeoutId);
+
+      // Soft-refresh browser client session in background without blocking
+      if (isPasswordChanged) {
+        try {
+          const supabase = createBrowserSupabaseClient();
+          supabase.auth.refreshSession().catch(() => {});
+        } catch {
+          // Non-blocking background sync
+        }
+      }
 
       const json = await res.json();
       if (!res.ok) {

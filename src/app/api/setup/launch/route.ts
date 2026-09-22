@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { DEFAULT_BRANDING, BrandConfig } from "@/context/BrandContext";
 import { generateSecurityKey, encryptSecurityKey } from "@/lib/security/recovery-keys";
 import { logUserActivity } from "@/lib/audit/audit-logger";
@@ -97,6 +98,19 @@ export async function POST(request: NextRequest) {
       );
       if (authUpdateError) {
         console.warn("[Setup Launch] Failed updating auth credentials:", authUpdateError.message);
+      } else if (newPassword) {
+        const targetEmail = newEmail || authContext.userEmail;
+        if (targetEmail) {
+          try {
+            const authSupabase = await createServerSupabaseClient();
+            await authSupabase.auth.signInWithPassword({
+              email: targetEmail,
+              password: newPassword,
+            });
+          } catch {
+            // Non-critical session refresh; credentials already updated via admin client
+          }
+        }
       }
     }
 

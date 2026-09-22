@@ -92,30 +92,36 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
         const res = await fetch("/api/branding", { cache: "no-store" });
         if (res.ok) {
           const data: BrandConfig = await res.json();
-          setBranding(data);
-          applyBrandCssVariables(data.primaryColor, data.secondaryColor);
-          OfflineStorage.set("brand_configuration", data, null, "branding");
+          const safeData: BrandConfig = {
+            ...DEFAULT_BRANDING,
+            ...data,
+            primaryColor: data?.primaryColor || DEFAULT_BRANDING.primaryColor,
+            secondaryColor: data?.secondaryColor || DEFAULT_BRANDING.secondaryColor,
+          };
+          setBranding(safeData);
+          applyBrandCssVariables(safeData.primaryColor, safeData.secondaryColor);
+          OfflineStorage.set("brand_configuration", safeData, null, "branding");
 
           // Sync to legacy localStorage keys for backward compatibility
-          localStorage.setItem("ireside_property_name", data.propertyName);
-          if (data.rentalArchetype) {
-            localStorage.setItem("ireside_rental_archetype", data.rentalArchetype);
+          localStorage.setItem("ireside_property_name", safeData.propertyName);
+          if (safeData.rentalArchetype) {
+            localStorage.setItem("ireside_rental_archetype", safeData.rentalArchetype);
           } else {
             localStorage.removeItem("ireside_rental_archetype");
           }
-          localStorage.setItem("ireside_brand_primary", data.primaryColor);
-          localStorage.setItem("ireside_brand_secondary", data.secondaryColor);
-          if (data.logoUrl) localStorage.setItem("ireside_property_logo", data.logoUrl);
-          if (data.bannerUrl) localStorage.setItem("ireside_landlord_custom_banner_url", data.bannerUrl);
-          if (data.setupCompleted) {
+          localStorage.setItem("ireside_brand_primary", safeData.primaryColor);
+          localStorage.setItem("ireside_brand_secondary", safeData.secondaryColor);
+          if (safeData.logoUrl) localStorage.setItem("ireside_property_logo", safeData.logoUrl);
+          if (safeData.bannerUrl) localStorage.setItem("ireside_landlord_custom_banner_url", safeData.bannerUrl);
+          if (safeData.setupCompleted) {
             localStorage.setItem("ireside_setup_completed", "true");
-            if (data.setupCompletedAt) localStorage.setItem("ireside_setup_completed_at", data.setupCompletedAt);
+            if (safeData.setupCompletedAt) localStorage.setItem("ireside_setup_completed_at", safeData.setupCompletedAt);
           } else {
             localStorage.removeItem("ireside_setup_completed");
             localStorage.removeItem("ireside_setup_completed_at");
           }
 
-          window.dispatchEvent(new CustomEvent("property-branding-updated", { detail: data }));
+          window.dispatchEvent(new CustomEvent("property-branding-updated", { detail: safeData }));
           return;
         }
       }
