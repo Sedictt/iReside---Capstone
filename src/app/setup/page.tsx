@@ -274,6 +274,7 @@ function WizardContent() {
   const [otpCode, setOtpCode] = useState("");
   const [otpCooldown, setOtpCooldown] = useState(0);
   const [otpError, setOtpError] = useState<string | null>(null);
+  const lastAttemptedOtpRef = useRef<string>("");
 
   const [adminPassword, setAdminPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -382,6 +383,9 @@ CRITICAL SECURITY INSTRUCTIONS:
       setIsEmailVerified(false);
       setOtpSent(false);
     }
+    setOtpCode("");
+    setOtpError(null);
+    lastAttemptedOtpRef.current = "";
     if (touchedFields.adminEmail) {
       setFieldError("adminEmail", validateAdminEmail(newVal).error);
     }
@@ -408,6 +412,9 @@ CRITICAL SECURITY INSTRUCTIONS:
       }
       setOtpSent(true);
       setOtpCooldown(60);
+      setOtpCode("");
+      setOtpError(null);
+      lastAttemptedOtpRef.current = "";
       toast.success(data.message || `Verification code sent to ${adminEmail.trim()}`);
     } catch (err: any) {
       toast.error(err.message || "Failed to send verification code.");
@@ -416,10 +423,10 @@ CRITICAL SECURITY INSTRUCTIONS:
     }
   };
 
-  const handleVerifyEmailOtp = async () => {
-    if (!otpCode || otpCode.trim().length !== 6) {
+  const handleVerifyEmailOtp = async (codeToVerify?: string) => {
+    const code = (typeof codeToVerify === "string" ? codeToVerify : otpCode).trim();
+    if (!code || code.length !== 6) {
       setOtpError("Please enter the complete 6-digit verification code.");
-      toast.error("Please enter the complete 6-digit verification code.");
       return;
     }
 
@@ -431,7 +438,7 @@ CRITICAL SECURITY INSTRUCTIONS:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           newEmail: adminEmail.trim(),
-          otp: otpCode.trim(),
+          otp: code,
         }),
       });
       const data = await res.json();
@@ -445,6 +452,7 @@ CRITICAL SECURITY INSTRUCTIONS:
       setOtpSent(false);
       setOtpCode("");
       setOtpError(null);
+      lastAttemptedOtpRef.current = "";
       toast.success("Email verified and successfully linked!");
     } catch (err: any) {
       const errorMsg = err.message || "Invalid or expired verification code. Please check and try again.";
@@ -454,6 +462,26 @@ CRITICAL SECURITY INSTRUCTIONS:
       setIsVerifyingOtp(false);
     }
   };
+
+  // Auto-verify OTP once complete 6 digits are entered
+  useEffect(() => {
+    const clean = otpCode.trim();
+    if (clean.length < 6) {
+      lastAttemptedOtpRef.current = "";
+      return;
+    }
+
+    if (
+      clean.length === 6 &&
+      clean !== lastAttemptedOtpRef.current &&
+      !isVerifyingOtp &&
+      !isEmailVerified &&
+      otpSent
+    ) {
+      lastAttemptedOtpRef.current = clean;
+      handleVerifyEmailOtp(clean);
+    }
+  }, [otpCode, isVerifyingOtp, isEmailVerified, otpSent, adminEmail]);
 
   const handleContinueToStep2 = () => {
     const check = validateStep1Identity({
@@ -1663,42 +1691,45 @@ CRITICAL SECURITY INSTRUCTIONS:
                                   pattern="[0-9]*"
                                   maxLength={6}
                                   value={otpCode}
+                                  disabled={isVerifyingOtp}
                                   onChange={(e) => {
-                                    setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6));
+                                    const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+                                    setOtpCode(val);
                                     if (otpError) setOtpError(null);
+                                    if (val.length < 6) {
+                                      lastAttemptedOtpRef.current = "";
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault();
+                                      if (otpCode.trim().length === 6 && !isVerifyingOtp) {
+                                        handleVerifyEmailOtp(otpCode.trim());
+                                      }
+                                    }
                                   }}
                                   placeholder="123456"
                                   className={cn(
                                     "w-28 px-2.5 py-1 text-center font-mono text-xs font-bold tracking-widest bg-white dark:bg-zinc-900 border rounded-lg focus:outline-none focus:ring-1 text-zinc-900 dark:text-zinc-100 placeholder:tracking-normal placeholder:font-sans placeholder:text-zinc-400 transition-all",
+                                    isVerifyingOtp && "opacity-75 cursor-wait",
                                     otpError
                                       ? "border-rose-500 ring-1 ring-rose-500 focus:ring-rose-500 text-rose-600 dark:text-rose-400"
                                       : "border-amber-500/30 focus:ring-amber-500"
                                   )}
                                   aria-invalid={!!otpError}
                                 />
-                                <button
-                                  type="button"
-                                  onClick={handleVerifyEmailOtp}
-                                  disabled={isVerifyingOtp || otpCode.trim().length !== 6}
-                                  className="px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white transition-all disabled:opacity-50 flex items-center gap-1 shadow-xs active:scale-95 shrink-0"
-                                >
-                                  {isVerifyingOtp ? (
-                                    <>
-                                      <RefreshCw className="size-3 animate-spin" />
-                                      <span>Verifying...</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Check className="size-3 stroke-[3]" />
-                                      <span>Verify & Link</span>
-                                    </>
-                                  )}
-                                </button>
+
+                                {isVerifyingOtp && (
+                                  <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 animate-in fade-in duration-150">
+                                    <RefreshCw className="size-3 animate-spin shrink-0" />
+                                    <span className="text-[11px] font-medium">Verifying...</span>
+                                  </div>
+                                )}
 
                                 <button
                                   type="button"
                                   onClick={handleSendEmailOtp}
-                                  disabled={isSendingOtp || otpCooldown > 0}
+                                  disabled={isSendingOtp || otpCooldown > 0 || isVerifyingOtp}
                                   className="text-[11px] text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 font-medium ml-auto disabled:opacity-50 transition-colors"
                                 >
                                   {otpCooldown > 0 ? `Resend (${otpCooldown}s)` : "Resend code"}
