@@ -53,6 +53,7 @@ interface CommunityPostCardProps {
     isOpen: boolean
     comments: CommentData[]
     loadingComments: boolean
+    onPrefetchComments?: (postId: string) => void
     onCommentSubmit: (post: CommunityPost, content: string) => void
     onEditComment?: (commentId: string, content: string) => void
     onDeleteComment?: (commentId: string) => void
@@ -101,6 +102,7 @@ export function CommunityPostCard({
     isOpen,
     comments,
     loadingComments,
+    onPrefetchComments,
     onCommentSubmit,
     onEditComment,
     onDeleteComment,
@@ -484,11 +486,14 @@ export function CommunityPostCard({
 
                     <button
                         onClick={() => onToggleComments(post.id)}
+                        onMouseEnter={() => onPrefetchComments?.(post.id)}
+                        onTouchStart={() => onPrefetchComments?.(post.id)}
                         className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-all active:scale-95 ${
                             isOpen
                                 ? 'neumorphic-inset text-primary'
                                 : 'neumorphic-extruded text-muted-foreground'
                         }`}
+                        aria-label={`Comments (${post.commentCount || 0})`}
                     >
                         <MessageCircle className="size-4" />
                         <span className="text-xs font-black">{post.commentCount || 0}</span>
@@ -527,138 +532,161 @@ export function CommunityPostCard({
                         className="overflow-hidden border-t border-border/30 dark:border-white/5"
                     >
                         <div className="space-y-4 p-5 md:p-6 bg-muted/20">
-                            {loadingComments ? (
-                                <div className="space-y-3">
-                                    {[1, 2].map(i => (
-                                        <div key={i} className="flex gap-3 animate-pulse">
-                                            <div className="size-8 rounded-full bg-muted" />
-                                            <div className="flex-1 space-y-1.5">
-                                                <div className="h-3 w-20 rounded bg-muted" />
-                                                <div className="h-10 rounded-xl bg-muted/50" />
+                            <AnimatePresence mode="wait">
+                                {loadingComments ? (
+                                    <motion.div
+                                        key="comments-skeleton"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="space-y-3"
+                                    >
+                                        {Array.from({ length: Math.max(1, Math.min(post.commentCount || 1, 3)) }).map((_, i) => (
+                                            <div key={i} className="flex gap-3 animate-pulse">
+                                                <div className="size-8 rounded-full bg-muted/70 dark:bg-white/10 shrink-0" />
+                                                <div className="flex-1 space-y-1.5">
+                                                    <div className="h-3 w-20 rounded bg-muted/70 dark:bg-white/10" />
+                                                    <div className="h-10 rounded-2xl rounded-tl-sm bg-muted/40 dark:bg-white/5 border border-border/30 dark:border-white/5" />
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : comments.length > 0 ? (
-                                <div className="space-y-3">
-                                    {comments.map((comment) => (
-                                        <motion.div
-                                            key={comment.id}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className={`flex gap-3 group ${comment.isPending ? 'opacity-75' : ''}`}
-                                        >
-                                            <div
-                                                className="relative flex size-8 shrink-0 items-center justify-center rounded-full neumorphic-inset-card"
-                                                style={{ backgroundColor: comment.authorAvatarBgColor || '#f3f4f6' }}
+                                        ))}
+                                    </motion.div>
+                                ) : comments.length > 0 ? (
+                                    <motion.div
+                                        key="comments-content"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="space-y-3"
+                                    >
+                                        {comments.map((comment) => (
+                                            <motion.div
+                                                key={comment.id}
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className={`flex gap-3 group ${comment.isPending ? 'opacity-75' : ''}`}
                                             >
-                                                {comment.authorAvatar ? (
-                                                    <Image src={comment.authorAvatar} alt={comment.authorName} fill className="object-cover" />
-                                                ) : (
-                                                    <span className="text-[10px] font-black text-foreground/50">{comment.authorName.charAt(0).toUpperCase()}</span>
-                                                )}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                {editingCommentId === comment.id ? (
-                                                    <div className="space-y-2">
-                                                        <textarea
-                                                            value={editingCommentContent}
-                                                            onChange={(e) => setEditingCommentContent(e.target.value)}
-                                                            className="w-full rounded-xl border border-border bg-background/80 px-3 py-2 text-sm outline-none transition-all focus:border-primary/50 dark:border-white/10 dark:bg-white/5 min-h-[60px] resize-none"
-                                                            autoFocus
-                                                        />
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                onClick={handleSaveCommentEdit}
-                                                                disabled={isMutating}
-                                                                className="rounded-lg bg-primary px-3 py-1 text-xs font-black text-primary-foreground hover:opacity-90 disabled:opacity-50"
-                                                            >
-                                                                Save
-                                                            </button>
-                                                            <button
-                                                                onClick={handleCancelCommentEdit}
-                                                                className="rounded-lg border border-border px-3 py-1 text-xs font-black hover:bg-muted/50"
-                                                            >
-                                                                Cancel
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className={`rounded-2xl rounded-tl-sm px-3.5 py-2.5 transition-all ${
-                                                        comment.isFailed
-                                                            ? 'border border-red-500/30 bg-red-50/50 dark:bg-red-950/20'
-                                                            : comment.isPending
-                                                            ? 'border border-primary/20 bg-primary/5 dark:bg-primary/10'
-                                                            : 'bg-background/80 dark:bg-white/5'
-                                                    }`}>
-                                                        <div className="flex items-center justify-between gap-2 mb-1">
-                                                            <span className="text-xs font-black text-foreground dark:text-white">{comment.authorName}</span>
-                                                            <div className="flex items-center gap-1.5">
-                                                                {comment.isPending ? (
-                                                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary">
-                                                                        <Loader2 className="size-2.5 animate-spin" />
-                                                                        Posting...
-                                                                    </span>
-                                                                ) : comment.isFailed ? (
-                                                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-red-500">
-                                                                        <AlertCircle className="size-2.5" />
-                                                                        Failed to post
-                                                                    </span>
-                                                                ) : (
-                                                                    <span className="text-[10px] text-muted-foreground/60">{formatRelative(comment.createdAt)}</span>
-                                                                )}
-                                                                {!comment.isPending && !comment.isFailed && currentUserId === comment.authorId && onEditComment && onDeleteComment && (
-                                                                    <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                        <button
-                                                                            onClick={() => handleEditComment(comment)}
-                                                                            className="p-1 text-muted-foreground/60 hover:text-primary rounded hover:bg-primary/10"
-                                                                            title="Edit"
-                                                                        >
-                                                                            <Pencil className="size-3" />
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => handleDeleteComment(comment.id)}
-                                                                            className="p-1 text-muted-foreground/60 hover:text-red-500 rounded hover:bg-red-500/10"
-                                                                            title="Delete"
-                                                                        >
-                                                                            <Trash2 className="size-3" />
-                                                                        </button>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                        <p className="text-sm leading-relaxed text-muted-foreground/80 dark:text-white/60">{comment.content}</p>
-                                                        {comment.isFailed && (
-                                                            <div className="flex items-center gap-3 mt-2 pt-2 border-t border-red-500/20">
+                                                <div
+                                                    className="relative flex size-8 shrink-0 items-center justify-center rounded-full neumorphic-inset-card"
+                                                    style={{ backgroundColor: comment.authorAvatarBgColor || '#f3f4f6' }}
+                                                >
+                                                    {comment.authorAvatar ? (
+                                                        <Image src={comment.authorAvatar} alt={comment.authorName} fill className="object-cover" />
+                                                    ) : (
+                                                        <span className="text-[10px] font-black text-foreground/50">{comment.authorName.charAt(0).toUpperCase()}</span>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    {editingCommentId === comment.id ? (
+                                                        <div className="space-y-2">
+                                                            <textarea
+                                                                value={editingCommentContent}
+                                                                onChange={(e) => setEditingCommentContent(e.target.value)}
+                                                                className="w-full rounded-xl border border-border bg-background/80 px-3 py-2 text-sm outline-none transition-all focus:border-primary/50 dark:border-white/10 dark:bg-white/5 min-h-[60px] resize-none"
+                                                                autoFocus
+                                                            />
+                                                            <div className="flex gap-2">
                                                                 <button
-                                                                    type="button"
-                                                                    onClick={() => onRetryComment?.(post, comment)}
-                                                                    className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                                                                    onClick={handleSaveCommentEdit}
+                                                                    disabled={isMutating}
+                                                                    className="rounded-lg bg-primary px-3 py-1 text-xs font-black text-primary-foreground hover:opacity-90 disabled:opacity-50"
                                                                 >
-                                                                    <RotateCw className="size-3" />
-                                                                    Retry
+                                                                    Save
                                                                 </button>
                                                                 <button
-                                                                    type="button"
-                                                                    onClick={() => onDiscardComment?.(post.id, comment.id)}
-                                                                    className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground/70 hover:text-red-500 transition-colors"
+                                                                    onClick={handleCancelCommentEdit}
+                                                                    className="rounded-lg border border-border px-3 py-1 text-xs font-black hover:bg-muted/50"
                                                                 >
-                                                                    <Trash2 className="size-3" />
-                                                                    Delete
+                                                                    Cancel
                                                                 </button>
                                                             </div>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="py-6 text-center">
-                                    <p className="text-sm text-muted-foreground/60">No comments yet. Start the conversation!</p>
-                                </div>
-                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <div className={`rounded-2xl rounded-tl-sm px-3.5 py-2.5 transition-all ${
+                                                            comment.isFailed
+                                                                ? 'border border-red-500/30 bg-red-50/50 dark:bg-red-950/20'
+                                                                : comment.isPending
+                                                                ? 'border border-primary/20 bg-primary/5 dark:bg-primary/10'
+                                                                : 'bg-background/80 dark:bg-white/5'
+                                                        }`}>
+                                                            <div className="flex items-center justify-between gap-2 mb-1">
+                                                                <span className="text-xs font-black text-foreground dark:text-white">{comment.authorName}</span>
+                                                                <div className="flex items-center gap-1.5">
+                                                                    {comment.isPending ? (
+                                                                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary">
+                                                                            <Loader2 className="size-2.5 animate-spin" />
+                                                                            Posting...
+                                                                        </span>
+                                                                    ) : comment.isFailed ? (
+                                                                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-red-500">
+                                                                            <AlertCircle className="size-2.5" />
+                                                                            Failed to post
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="text-[10px] text-muted-foreground/60">{formatRelative(comment.createdAt)}</span>
+                                                                    )}
+                                                                    {!comment.isPending && !comment.isFailed && currentUserId === comment.authorId && onEditComment && onDeleteComment && (
+                                                                        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                            <button
+                                                                                onClick={() => handleEditComment(comment)}
+                                                                                className="p-1 text-muted-foreground/60 hover:text-primary rounded hover:bg-primary/10"
+                                                                                title="Edit"
+                                                                            >
+                                                                                <Pencil className="size-3" />
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => handleDeleteComment(comment.id)}
+                                                                                className="p-1 text-muted-foreground/60 hover:text-red-500 rounded hover:bg-red-500/10"
+                                                                                title="Delete"
+                                                                            >
+                                                                                <Trash2 className="size-3" />
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <p className="text-sm leading-relaxed text-muted-foreground/80 dark:text-white/60">{comment.content}</p>
+                                                            {comment.isFailed && (
+                                                                <div className="flex items-center gap-3 mt-2 pt-2 border-t border-red-500/20">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => onRetryComment?.(post, comment)}
+                                                                        className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                                                                    >
+                                                                        <RotateCw className="size-3" />
+                                                                        Retry
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => onDiscardComment?.(post.id, comment.id)}
+                                                                        className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground/70 hover:text-red-500 transition-colors"
+                                                                    >
+                                                                        <Trash2 className="size-3" />
+                                                                        Delete
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        key="comments-empty"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="py-6 text-center"
+                                    >
+                                        <p className="text-sm text-muted-foreground/60">No comments yet. Start the conversation!</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
                             <form onSubmit={handleCommentSubmit} className="flex gap-2.5 items-start pt-2">
                                 <div

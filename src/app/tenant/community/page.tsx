@@ -120,6 +120,8 @@ export default function TenantCommunityHubPage() {
     const [isSubmitting, startSubmit] = useTransition()
     const [uploadingPhotos, setUploadingPhotos] = useState(false)
     const voteRequestSeqRef = useRef<Record<string, number>>({})
+    const commentCacheTimestampsRef = useRef<Record<string, number | undefined>>({})
+    const inFlightCommentRequestsRef = useRef<Record<string, Promise<CommentData[]> | undefined>>({})
 
     const loadPosts = async (mode: "replace" | "append") => {
         if (!user?.id) return
@@ -453,6 +455,51 @@ export default function TenantCommunityHubPage() {
     }
 
 
+    const fetchComments = async (postId: string): Promise<CommentData[]> => {
+        try {
+            const res = await fetch(`/api/community/posts/${postId}/comments`, {
+                headers: { "Accept": "application/json" }
+            })
+            if (res.ok) {
+                const data = await res.json()
+                return data.comments || []
+            }
+        } catch (e) {
+            console.warn("[Community] Comments API fetch failed, falling back to server action:", e)
+        }
+        return await getPostComments(postId)
+    }
+
+    const handlePrefetchComments = (postId: string) => {
+        const existing = commentsByPost[postId]
+        const timestamp = commentCacheTimestampsRef.current[postId] || 0
+        const isFresh = existing && (Date.now() - timestamp < 60000)
+        if (isFresh || inFlightCommentRequestsRef.current[postId]) return
+
+        const post = posts.find(p => p.id === postId)
+        if (post && (post.commentCount === 0 || !post.commentCount)) {
+            setCommentsByPost(prev => ({ ...prev, [postId]: [] }))
+            commentCacheTimestampsRef.current[postId] = Date.now()
+            return
+        }
+
+        const promise = (async () => {
+            try {
+                const fresh = await fetchComments(postId)
+                setCommentsByPost(prev => ({ ...prev, [postId]: fresh }))
+                commentCacheTimestampsRef.current[postId] = Date.now()
+                return fresh
+            } catch (err) {
+                console.error(err)
+                return []
+            } finally {
+                delete inFlightCommentRequestsRef.current[postId]
+            }
+        })()
+
+        inFlightCommentRequestsRef.current[postId] = promise
+    }
+
     const handleCommentSubmit = async (post: CommunityPost, content: string) => {
         const trimmed = content.trim()
         if (!trimmed) return
@@ -483,7 +530,8 @@ export default function TenantCommunityHubPage() {
 
         try {
             const result = await addComment(post.id, trimmed)
-            const freshComments = await getPostComments(post.id)
+            const freshComments = await fetchComments(post.id)
+            commentCacheTimestampsRef.current[post.id] = Date.now()
             setCommentsByPost(prev => {
                 const currentComments = prev[post.id] || []
                 const otherPending = currentComments.filter(c => c.id !== tempId && (c.isPending || c.isFailed))
@@ -513,7 +561,8 @@ export default function TenantCommunityHubPage() {
 
         try {
             const result = await addComment(post.id, comment.content)
-            const freshComments = await getPostComments(post.id)
+            const freshComments = await fetchComments(post.id)
+            commentCacheTimestampsRef.current[post.id] = Date.now()
             setCommentsByPost(prev => {
                 const currentComments = prev[post.id] || []
                 const otherPending = currentComments.filter(c => c.id !== comment.id && (c.isPending || c.isFailed))
@@ -546,14 +595,57 @@ export default function TenantCommunityHubPage() {
             return
         }
         setOpenCommentPostId(postId)
-        if (!commentsByPost[postId]) {
-            setLoadingCommentsPostId(postId)
+
+        // Instant 0-comment bypass: zero network delay if post has 0 comments
+        const post = posts.find(p => p.id === postId)
+        if (post && (post.commentCount === 0 || !post.commentCount)) {
+            if (!commentsByPost[postId]) {
+                setCommentsByPost(prev => ({ ...prev, [postId]: [] }))
+                commentCacheTimestampsRef.current[postId] = Date.now()
+            }
+            return
+        }
+
+        const cached = commentsByPost[postId]
+        const lastFetched = commentCacheTimestampsRef.current[postId] || 0
+        const isStale = !cached || (Date.now() - lastFetched > 60000)
+
+        // If an in-flight request is already resolving
+        if (inFlightCommentRequestsRef.current[postId]) {
+            if (!cached) setLoadingCommentsPostId(postId)
             try {
-                const comments = await getPostComments(postId)
-                setCommentsByPost(prev => ({ ...prev, [postId]: comments }))
+                await inFlightCommentRequestsRef.current[postId]
             } finally {
                 setLoadingCommentsPostId(null)
             }
+            return
+        }
+
+        if (!cached) {
+            // First time loading: show skeleton loader while fetching
+            setLoadingCommentsPostId(postId)
+            try {
+                const req = fetchComments(postId)
+                inFlightCommentRequestsRef.current[postId] = req
+                const comments = await req
+                setCommentsByPost(prev => ({ ...prev, [postId]: comments }))
+                commentCacheTimestampsRef.current[postId] = Date.now()
+            } catch {
+                setError("Failed to load comments.")
+            } finally {
+                delete inFlightCommentRequestsRef.current[postId]
+                setLoadingCommentsPostId(null)
+            }
+        } else if (isStale) {
+            // SWR: cached data is already visible, silently revalidate in background
+            const req = fetchComments(postId)
+            inFlightCommentRequestsRef.current[postId] = req
+            req.then(comments => {
+                setCommentsByPost(prev => ({ ...prev, [postId]: comments }))
+                commentCacheTimestampsRef.current[postId] = Date.now()
+            }).catch(console.error).finally(() => {
+                delete inFlightCommentRequestsRef.current[postId]
+            })
         }
     }
 
@@ -711,6 +803,7 @@ export default function TenantCommunityHubPage() {
                                     onVote={handleVote}
                                     onReport={(id) => setReportModalPostId(id)}
                                     onToggleComments={handleToggleComments}
+                                    onPrefetchComments={handlePrefetchComments}
                                     onEditPost={handleEditPost}
                                     onDeletePost={handleDeletePost}
                                     onPinPost={handlePinPost}
