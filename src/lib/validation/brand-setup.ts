@@ -305,7 +305,7 @@ export function validateConfirmPassword(
 export interface Step1IdentityData {
   propertyName: string;
   tagline: string;
-  propertyArchetype: string;
+  propertyArchetype?: string | null;
   totalUnits?: number | string;
   propertyAddress?: string;
 }
@@ -344,8 +344,10 @@ export function validateStep1Identity(data: Step1IdentityData): { isValid: boole
   const taglineCheck = validatePropertyTagline(data.tagline);
   if (!taglineCheck.isValid) errors["tagline"] = taglineCheck.error!;
 
-  const archetypeCheck = validateRentalArchetype(data.propertyArchetype);
-  if (!archetypeCheck.isValid) errors["propertyArchetype"] = archetypeCheck.error!;
+  if (data.propertyArchetype) {
+    const archetypeCheck = validateRentalArchetype(data.propertyArchetype);
+    if (!archetypeCheck.isValid) errors["propertyArchetype"] = archetypeCheck.error!;
+  }
 
   if (data.totalUnits !== undefined && data.totalUnits !== null && String(data.totalUnits).trim() !== "") {
     const unitsCheck = validateTotalUnits(data.totalUnits);
@@ -475,7 +477,7 @@ export const setupLaunchSchema = z.object({
       .refine((val) => !val || !DISALLOWED_PRESEEDED_DATA.taglines.includes(val.toLowerCase()), {
         message: "Please write your own brand tagline instead of the sample placeholder.",
       }),
-    rentalArchetype: z.enum(VALID_ARCHETYPES),
+    rentalArchetype: z.enum(VALID_ARCHETYPES).optional().nullable(),
     primaryColor: z
       .string()
       .trim()
@@ -558,7 +560,7 @@ export const brandingUpdateSchema = z.object({
     .max(120, "Tagline cannot exceed 120 characters")
     .optional()
     .nullable(),
-  rentalArchetype: z.enum(VALID_ARCHETYPES).optional(),
+  rentalArchetype: z.enum(VALID_ARCHETYPES).optional().nullable(),
   primaryColor: z
     .string()
     .trim()

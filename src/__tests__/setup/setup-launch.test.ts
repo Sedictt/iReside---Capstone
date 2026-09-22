@@ -139,6 +139,71 @@ describe("POST /api/setup/launch (Turnkey Setup Claiming & Locking)", () => {
     );
   });
 
+  it("allows landlord to launch setup when rentalArchetype is omitted or null", async () => {
+    mockRequireAuthenticatedUser.mockResolvedValue({
+      userId: "landlord-turnkey-2",
+      userRole: "landlord",
+    });
+
+    const mockProfilesChain = {
+      update: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      }),
+    };
+
+    const mockPropertyQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: null,
+        error: null,
+      }),
+    };
+
+    const mockBusinessProfileChain = {
+      upsert: vi.fn().mockResolvedValue({ error: null }),
+    };
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === "profiles") return mockProfilesChain;
+      if (table === "properties") return mockPropertyQuery;
+      if (table === "landlord_business_profiles") return mockBusinessProfileChain;
+      if (table === "user_security_settings") {
+        return { upsert: vi.fn().mockResolvedValue({ error: null }) };
+      }
+      if (table === "user_audit_logs") {
+        return { insert: vi.fn().mockResolvedValue({ error: null }) };
+      }
+      return {};
+    });
+
+    const req = new NextRequest("http://localhost:3000/api/setup/launch", {
+      method: "POST",
+      body: JSON.stringify({
+        branding: {
+          propertyName: "Oakridge Suites",
+          primaryColor: "#3b82f6",
+          secondaryColor: "#10b981",
+        },
+        admin: {
+          fullName: "Maria Clara",
+          email: "maria@oakridge.ph",
+          phone: "0919-888-7766",
+        },
+      }),
+    });
+
+    const res = await setupLaunchPost(req);
+    expect(res.status).toBe(200);
+
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json.branding.propertyName).toBe("Oakridge Suites");
+    expect(json.branding.rentalArchetype).toBeNull();
+  });
+
   it("rejects invalid branding and admin inputs with 400 Bad Request and validation details", async () => {
     mockRequireAuthenticatedUser.mockResolvedValue({
       userId: "landlord-turnkey-1",

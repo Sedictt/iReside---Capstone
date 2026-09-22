@@ -374,6 +374,15 @@ describe("Brand Setup Validation Module", () => {
       expect(Object.keys(res.errors)).toHaveLength(0);
     });
 
+    it("validates Step 1 successfully when propertyArchetype is omitted", () => {
+      const res = validateStep1Identity({
+        propertyName: "Pinecrest Lofts & Suites",
+        tagline: "Quality student homes and serviced apartments",
+      });
+      expect(res.isValid).toBe(true);
+      expect(Object.keys(res.errors)).toHaveLength(0);
+    });
+
     it("validates Step 2 successfully", () => {
       const res = validateStep2Theme(validStep2);
       expect(res.isValid).toBe(true);
@@ -507,6 +516,32 @@ describe("Brand Setup Validation Module", () => {
       };
       const result = setupLaunchSchema.safeParse(invalidPayload);
       expect(result.success).toBe(false);
+    });
+
+    it("validates setupLaunchSchema when rentalArchetype is omitted or null", () => {
+      const payloadWithoutArchetype = {
+        branding: {
+          propertyName: "Pinecrest Lofts & Suites",
+          primaryColor: "#8B5CF6",
+          secondaryColor: "#06B6D4",
+        },
+        admin: {
+          fullName: "Juan Dela Cruz",
+          email: "admin@pinecrestresidences.ph",
+          phone: "0918-123-4567",
+          password: "SecurePassword123!",
+        },
+      };
+      expect(setupLaunchSchema.safeParse(payloadWithoutArchetype).success).toBe(true);
+
+      const payloadWithNullArchetype = {
+        ...payloadWithoutArchetype,
+        branding: {
+          ...payloadWithoutArchetype.branding,
+          rentalArchetype: null,
+        },
+      };
+      expect(setupLaunchSchema.safeParse(payloadWithNullArchetype).success).toBe(true);
     });
 
     it("validates brandingUpdateSchema", () => {

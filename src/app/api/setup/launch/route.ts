@@ -10,7 +10,7 @@ interface SetupLaunchPayload {
   branding: {
     propertyName: string;
     propertyTagline?: string;
-    rentalArchetype?: "apartment" | "dormitory" | "boarding_house";
+    rentalArchetype?: "apartment" | "dormitory" | "boarding_house" | null;
     primaryColor?: string;
     secondaryColor?: string;
     logoUrl?: string | null;
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
 
     const propertyName = body.branding.propertyName;
     const propertyTagline = body.branding.propertyTagline || DEFAULT_BRANDING.propertyTagline;
-    const rentalArchetype = body.branding.rentalArchetype;
+    const rentalArchetype = body.branding.rentalArchetype || null;
     const primaryColor = body.branding.primaryColor;
     const secondaryColor = body.branding.secondaryColor;
     const logoUrl = body.branding.logoUrl || null;
