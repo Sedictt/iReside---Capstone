@@ -7,21 +7,28 @@ import {
     ArrowRight, 
     Download,
     AlertCircle,
+    CheckCircle2,
     Loader2
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
-import { useState, Suspense, useEffect } from "react";
+import { useState, Suspense, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { AccountActivationModal } from "@/components/auth/AccountActivationModal";
 
 function LoginContent() {
     const [error, setError] = useState<string | null>(null);
+    const [activationBanner, setActivationBanner] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+    const [showActivationModal, setShowActivationModal] = useState(false);
+    const [prefilledEmail, setPrefilledEmail] = useState("");
     const [mounted, setMounted] = useState(false);
+
+    const passwordInputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectUrl = searchParams.get('redirect');
@@ -30,9 +37,24 @@ function LoginContent() {
         setMounted(true);
     }, []);
 
+    const handleActivationComplete = async (newEmail: string) => {
+        setShowActivationModal(false);
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        setPrefilledEmail(newEmail);
+        setActivationBanner(`Account successfully claimed! Please enter your password to sign in as ${newEmail}.`);
+        setTimeout(() => {
+            if (passwordInputRef.current) {
+                passwordInputRef.current.value = "";
+                passwordInputRef.current.focus();
+            }
+        }, 150);
+    };
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError(null);
+        setActivationBanner(null);
         setLoading(true);
 
         try {
@@ -56,13 +78,48 @@ function LoginContent() {
             }
 
             let role = data.user?.user_metadata?.role;
-            if (!role && data.user?.id) {
+            let isClaimed = data.user?.user_metadata?.is_account_claimed;
+
+            if (data.user?.id) {
                 const { data: profile } = await supabase
                     .from("profiles")
-                    .select("role")
+                    .select("role, is_account_claimed")
                     .eq("id", data.user.id)
                     .single();
-                role = profile?.role;
+                if (profile) {
+                    if (!role) role = profile.role;
+                    if (isClaimed === undefined) isClaimed = (profile as any).is_account_claimed;
+                }
+            }
+
+            const userEmail = data.user?.email || "";
+            const isDefaultAccount =
+                userEmail.includes("turnkey.local") ||
+                userEmail.toLowerCase() === "admin@turnkey.local" ||
+                userEmail.toLowerCase() === "landlord@turnkey.local" ||
+                isClaimed === false;
+
+            // Intercept initial setup/default accounts for landlord/admin
+            if ((role === "landlord" || role === "admin") && (!isClaimed || isDefaultAccount)) {
+                setShowActivationModal(true);
+                setLoading(false);
+                return;
+            }
+
+            // For claimed landlords, check if workspace setup is complete
+            if (role === "landlord" || role === "admin") {
+                try {
+                    const brandRes = await fetch("/api/branding");
+                    if (brandRes.ok) {
+                        const brandData = await brandRes.json();
+                        if (!brandData.setupCompleted) {
+                            router.push(redirectUrl || "/setup");
+                            return;
+                        }
+                    }
+                } catch {
+                    // Fallback to regular dashboard
+                }
             }
 
             const target = role === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard";
@@ -331,6 +388,24 @@ function LoginContent() {
                                 )}
                             </AnimatePresence>
 
+                            {/* Activation Success Re-login Notification */}
+                            <AnimatePresence mode="wait">
+                                {activationBanner && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        role="alert"
+                                        aria-live="polite"
+                                        className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-start gap-3 overflow-hidden text-emerald-700 dark:text-emerald-400"
+                                    >
+                                        <CheckCircle2 className="size-4 shrink-0 mt-0.5" />
+                                        <p className="text-xs font-semibold leading-relaxed">{activationBanner}</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
                             {/* Authentication Form */}
                             <form className="space-y-4" onSubmit={handleSubmit} noValidate>
                                 <div className="space-y-4">
@@ -350,6 +425,8 @@ function LoginContent() {
                                             autoComplete="email"
                                             autoCapitalize="none"
                                             spellCheck={false}
+                                            value={prefilledEmail || undefined}
+                                            onChange={(e) => setPrefilledEmail(e.target.value)}
                                             placeholder="name@example.com"
                                             className="h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                                         />
@@ -373,6 +450,7 @@ function LoginContent() {
                                         </div>
                                         <div className="relative">
                                             <input
+                                                ref={passwordInputRef}
                                                 id="password"
                                                 name="password"
                                                 type={isPasswordVisible ? "text" : "password"}
@@ -471,6 +549,12 @@ function LoginContent() {
                     </div>
                 </div>
             </main>
+
+            {/* Account Activation Lightbox Modal */}
+            <AccountActivationModal
+                isOpen={showActivationModal}
+                onComplete={handleActivationComplete}
+            />
 
             {/* Bottom Footer */}
             <footer className="relative z-20 w-full border-t border-border/40 py-5 text-center select-none bg-background/50 backdrop-blur-xs">

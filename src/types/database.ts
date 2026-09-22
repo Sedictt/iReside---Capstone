@@ -68,6 +68,7 @@ export interface Database {
                     otp_code: string | null
                     otp_expiry: string | null
                     has_changed_password: boolean
+                    is_account_claimed?: boolean
                     created_at: string
                     updated_at: string
                 }
@@ -96,6 +97,7 @@ export interface Database {
                     otp_code?: string | null
                     otp_expiry?: string | null
                     has_changed_password?: boolean
+                    is_account_claimed?: boolean
                     created_at?: string
                     updated_at?: string
                 }
@@ -124,6 +126,7 @@ export interface Database {
                     otp_code?: string | null
                     otp_expiry?: string | null
                     has_changed_password?: boolean
+                    is_account_claimed?: boolean
                     created_at?: string
                     updated_at?: string
                 }

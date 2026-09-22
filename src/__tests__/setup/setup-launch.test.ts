@@ -242,5 +242,78 @@ describe("POST /api/setup/launch (Turnkey Setup Claiming & Locking)", () => {
     expect(json.details["admin.fullName"]).toBeDefined();
     expect(json.details["admin.email"]).toBeDefined();
   });
+
+  it("allows landlord to launch setup when admin payload is completely omitted (new streamlined 3-step setup)", async () => {
+    mockRequireAuthenticatedUser.mockResolvedValue({
+      userId: "landlord-turnkey-3",
+      userRole: "landlord",
+    });
+
+    const mockProfilesChain = {
+      update: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      }),
+    };
+
+    const mockPropertyQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: null,
+        error: null,
+      }),
+    };
+
+    const mockBusinessProfileChain = {
+      upsert: vi.fn().mockResolvedValue({ error: null }),
+    };
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === "profiles") return mockProfilesChain;
+      if (table === "properties") return mockPropertyQuery;
+      if (table === "landlord_business_profiles") return mockBusinessProfileChain;
+      if (table === "user_security_settings") {
+        return { upsert: vi.fn().mockResolvedValue({ error: null }) };
+      }
+      if (table === "user_audit_logs") {
+        return { insert: vi.fn().mockResolvedValue({ error: null }) };
+      }
+      return {};
+    });
+
+    const req = new NextRequest("http://localhost:3000/api/setup/launch", {
+      method: "POST",
+      body: JSON.stringify({
+        branding: {
+          propertyName: "Sunset Heights",
+          propertyTagline: "Elevated living in the city",
+          primaryColor: "#6366f1",
+          secondaryColor: "#14b8a6",
+          logoUrl: "https://example.com/logo.png",
+        },
+      }),
+    });
+
+    const res = await setupLaunchPost(req);
+    expect(res.status).toBe(200);
+
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json.branding.propertyName).toBe("Sunset Heights");
+    expect(json.branding.setupCompleted).toBe(true);
+    expect(json.securityKey).toBeDefined();
+
+    // Verify auth credential updating was NOT invoked since admin was omitted
+    expect(mockUpdateUserById).not.toHaveBeenCalled();
+
+    // Verify profile updating still synced business_name
+    expect(mockProfilesChain.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        business_name: "Sunset Heights",
+      })
+    );
+  });
 });
 

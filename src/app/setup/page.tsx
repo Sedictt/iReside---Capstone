@@ -16,15 +16,10 @@ import {
   Moon,
   Sun,
   Check,
-  User,
-  Mail,
-  Lock,
-  Phone,
   RefreshCw,
   Eye,
   Award,
   Upload,
-  Image as ImageIcon,
   Trash2,
   CreditCard,
   Contrast,
@@ -45,28 +40,16 @@ import { cn } from "@/lib/utils";
 import { useBrand } from "@/context/BrandContext";
 import { applyBrandCssVariables } from "@/lib/branding/colors";
 import { useAuth } from "@/hooks/useAuth";
-import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
 import {
   DISALLOWED_PRESEEDED_DATA,
   validatePropertyTradeName,
   validatePropertyTagline,
-  validateTotalUnits,
-  validatePropertyAddress,
   validateBrandColor,
-  validateLogoFile,
-  validateAdminFullName,
-  validateAdminEmail,
-  validateAdminPhone,
-  validateAdminPassword,
-  validateConfirmPassword,
   validateStep1Identity,
   validateStep2Theme,
-  validateStep3Admin,
-  validateAllBrandSetup,
 } from "@/lib/validation/brand-setup";
-import { evaluatePasswordStrength } from "@/lib/validation/landlord-settings";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation/media-validation";
 
 
@@ -157,7 +140,7 @@ function WizardContent() {
   const isReconfigure = searchParams.get("reconfigure") === "true" || searchParams.get("troubleshoot") === "true";
   const { profile, loading } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const brand = useBrand();
 
   // Step 4: Launch State & Security Recovery Key Modal
@@ -184,34 +167,7 @@ function WizardContent() {
     }
   }, [loading, profile, brand, brand.setupCompleted, isReconfigure, isLaunched, launchedSecurityKey, router]);
 
-  // Pre-fill profile info from authenticated user if in reconfigure mode and not pre-seeded
-  useEffect(() => {
-    if (profile) {
-      if (
-        isReconfigure &&
-        profile.full_name &&
-        !DISALLOWED_PRESEEDED_DATA.adminNames.includes(profile.full_name.trim().toLowerCase())
-      ) {
-        setAdminName(profile.full_name);
-      }
-      if (
-        profile.email &&
-        !DISALLOWED_PRESEEDED_DATA.emails.includes(profile.email.trim().toLowerCase()) &&
-        !profile.email.includes("turnkey.local")
-      ) {
-        setAdminEmail((curr) => curr || profile.email || "");
-        setInitialEmail((curr) => curr || profile.email || "");
-        setIsEmailVerified(true);
-      }
-      if (
-        isReconfigure &&
-        profile.phone &&
-        !DISALLOWED_PRESEEDED_DATA.phones.some((p) => p.replace(/\D/g, "") === profile.phone?.replace(/\D/g, ""))
-      ) {
-        setAdminPhone(profile.phone);
-      }
-    }
-  }, [profile, isReconfigure]);
+
 
   // Step 1: Identity, Archetype & Logo (Pre-seeded dummy data disallowed; empty in initial setup)
   const [propertyName, setPropertyName] = useState(() => {
@@ -250,47 +206,7 @@ function WizardContent() {
   const [primaryColor, setPrimaryColor] = useState(brand.primaryColor || "#8b5cf6");
   const [secondaryColor, setSecondaryColor] = useState(brand.secondaryColor || "#06b6d4");
 
-  // Step 3: Landlord Account & Email OTP State (Pre-seeded dummy data disallowed; empty in initial setup)
-  const [adminName, setAdminName] = useState(() => {
-    if (!isReconfigure) return "";
-    const raw = profile?.full_name?.trim() || "";
-    return raw && !DISALLOWED_PRESEEDED_DATA.adminNames.includes(raw.toLowerCase()) ? raw : "";
-  });
-  const [adminEmail, setAdminEmail] = useState(() => {
-    const raw = profile?.email?.trim() || "";
-    return raw && !DISALLOWED_PRESEEDED_DATA.emails.includes(raw.toLowerCase()) && !raw.includes("turnkey.local") ? raw : "";
-  });
-  const [initialEmail, setInitialEmail] = useState(() => {
-    const raw = profile?.email?.trim() || "";
-    return raw && !DISALLOWED_PRESEEDED_DATA.emails.includes(raw.toLowerCase()) && !raw.includes("turnkey.local") ? raw : "";
-  });
-  const [isEmailVerified, setIsEmailVerified] = useState(() => {
-    const raw = profile?.email?.trim() || "";
-    return Boolean(raw && !DISALLOWED_PRESEEDED_DATA.emails.includes(raw.toLowerCase()) && !raw.includes("turnkey.local"));
-  });
-  const [isSendingOtp, setIsSendingOtp] = useState(false);
-  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
-  const [otpCooldown, setOtpCooldown] = useState(0);
-  const [otpError, setOtpError] = useState<string | null>(null);
-  const lastAttemptedOtpRef = useRef<string>("");
 
-  const [adminPassword, setAdminPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [adminPhone, setAdminPhone] = useState(() => {
-    if (!isReconfigure) return "";
-    const raw = profile?.phone?.trim() || "";
-    const clean = raw.replace(/\D/g, "");
-    return raw && !DISALLOWED_PRESEEDED_DATA.phones.some((p) => p.replace(/\D/g, "") === clean) ? raw : "";
-  });
-
-  // OTP Resend Cooldown Timer
-  useEffect(() => {
-    if (otpCooldown <= 0) return;
-    const timer = setTimeout(() => setOtpCooldown((prev) => prev - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [otpCooldown]);
 
   const handleDownloadSecurityKey = (key: string, email?: string) => {
     try {
@@ -345,8 +261,6 @@ CRITICAL SECURITY INSTRUCTIONS:
   // Field Validation & Interaction State
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
-  const [showAdminPassword, setShowAdminPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const markFieldTouched = (field: string) => {
     setTouchedFields((prev) => ({ ...prev, [field]: true }));
@@ -363,125 +277,6 @@ CRITICAL SECURITY INSTRUCTIONS:
       return next;
     });
   };
-
-  const isExistingPasswordPlaceholder = Boolean(isReconfigure && !adminPassword && !confirmPassword);
-  const passwordStrength = useMemo(() => {
-    if (isExistingPasswordPlaceholder || !adminPassword) {
-      return null;
-    }
-    return evaluatePasswordStrength(adminPassword);
-  }, [adminPassword, isExistingPasswordPlaceholder]);
-
-  const handleEmailChange = (newVal: string) => {
-    setAdminEmail(newVal);
-    const normalizedNew = newVal.trim().toLowerCase();
-    const normalizedInit = initialEmail.trim().toLowerCase();
-    if (normalizedInit && normalizedNew === normalizedInit) {
-      setIsEmailVerified(true);
-      setOtpSent(false);
-    } else {
-      setIsEmailVerified(false);
-      setOtpSent(false);
-    }
-    setOtpCode("");
-    setOtpError(null);
-    lastAttemptedOtpRef.current = "";
-    if (touchedFields.adminEmail) {
-      setFieldError("adminEmail", validateAdminEmail(newVal).error);
-    }
-  };
-
-  const handleSendEmailOtp = async () => {
-    const check = validateAdminEmail(adminEmail);
-    if (!check.isValid) {
-      setFieldError("adminEmail", check.error);
-      toast.error(check.error || "Please enter a valid email address.");
-      return;
-    }
-
-    setIsSendingOtp(true);
-    try {
-      const res = await fetch("/api/setup/email/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newEmail: adminEmail.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to send verification code.");
-      }
-      setOtpSent(true);
-      setOtpCooldown(60);
-      setOtpCode("");
-      setOtpError(null);
-      lastAttemptedOtpRef.current = "";
-      toast.success(data.message || `Verification code sent to ${adminEmail.trim()}`);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to send verification code.");
-    } finally {
-      setIsSendingOtp(false);
-    }
-  };
-
-  const handleVerifyEmailOtp = async (codeToVerify?: string) => {
-    const code = (typeof codeToVerify === "string" ? codeToVerify : otpCode).trim();
-    if (!code || code.length !== 6) {
-      setOtpError("Please enter the complete 6-digit verification code.");
-      return;
-    }
-
-    setIsVerifyingOtp(true);
-    setOtpError(null);
-    try {
-      const res = await fetch("/api/setup/email/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          newEmail: adminEmail.trim(),
-          otp: code,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        const errorMsg = data.error || "Invalid or expired verification code.";
-        setOtpError(errorMsg);
-        throw new Error(errorMsg);
-      }
-      setInitialEmail(adminEmail.trim());
-      setIsEmailVerified(true);
-      setOtpSent(false);
-      setOtpCode("");
-      setOtpError(null);
-      lastAttemptedOtpRef.current = "";
-      toast.success("Email verified and successfully linked!");
-    } catch (err: any) {
-      const errorMsg = err.message || "Invalid or expired verification code. Please check and try again.";
-      setOtpError(errorMsg);
-      toast.error(errorMsg);
-    } finally {
-      setIsVerifyingOtp(false);
-    }
-  };
-
-  // Auto-verify OTP once complete 6 digits are entered
-  useEffect(() => {
-    const clean = otpCode.trim();
-    if (clean.length < 6) {
-      lastAttemptedOtpRef.current = "";
-      return;
-    }
-
-    if (
-      clean.length === 6 &&
-      clean !== lastAttemptedOtpRef.current &&
-      !isVerifyingOtp &&
-      !isEmailVerified &&
-      otpSent
-    ) {
-      lastAttemptedOtpRef.current = clean;
-      handleVerifyEmailOtp(clean);
-    }
-  }, [otpCode, isVerifyingOtp, isEmailVerified, otpSent, adminEmail]);
 
   const handleContinueToStep2 = () => {
     const check = validateStep1Identity({
@@ -524,39 +319,6 @@ CRITICAL SECURITY INSTRUCTIONS:
     }
 
     setCurrentStep(3);
-  };
-
-  const handleContinueToStep4 = () => {
-    if (!isEmailVerified) {
-      toast.error("Please verify your new email address with the 6-digit code before continuing.");
-      return;
-    }
-
-    const check = validateStep3Admin({
-      adminName,
-      adminEmail,
-      adminPhone,
-      adminPassword,
-      confirmPassword,
-      isExistingPlaceholder: isExistingPasswordPlaceholder,
-    });
-
-    if (!check.isValid) {
-      setFieldErrors((prev) => ({ ...prev, ...check.errors }));
-      setTouchedFields((prev) => ({
-        ...prev,
-        adminName: true,
-        adminEmail: true,
-        adminPhone: true,
-        adminPassword: true,
-        confirmPassword: true,
-      }));
-      const firstMsg = Object.values(check.errors)[0];
-      toast.error(firstMsg || "Please fix the errors in Step 3 before continuing.");
-      return;
-    }
-
-    setCurrentStep(4);
   };
 
   // Contrast calculations
@@ -664,44 +426,26 @@ CRITICAL SECURITY INSTRUCTIONS:
   };
 
   const handleLaunchPortal = async () => {
-    if (!isEmailVerified) {
-      toast.error("Please verify your email address before launching.");
-      setCurrentStep(3);
+    const s1 = validateStep1Identity({ propertyName, tagline });
+    if (!s1.isValid) {
+      setFieldErrors((prev) => ({ ...prev, ...s1.errors }));
+      setTouchedFields((prev) => ({ ...prev, propertyName: true, tagline: true }));
+      toast.error(Object.values(s1.errors)[0] || "Please correct errors in Step 1.");
+      setCurrentStep(1);
       return;
     }
 
-    // 0. Full comprehensive validation across all fields
-    const fullCheck = validateAllBrandSetup(
-      { propertyName, tagline },
-      { primaryColor, secondaryColor, modePreference },
-      { adminName, adminEmail, adminPhone, adminPassword, confirmPassword, isExistingPlaceholder: isExistingPasswordPlaceholder }
-    );
-
-    if (!fullCheck.isValid) {
-      setFieldErrors(fullCheck.errors);
-      const allTouched: Record<string, boolean> = {};
-      for (const k of Object.keys(fullCheck.errors)) {
-        allTouched[k] = true;
-      }
-      setTouchedFields((prev) => ({ ...prev, ...allTouched }));
-
-      if (fullCheck.firstErrorStep) {
-        setCurrentStep(fullCheck.firstErrorStep);
-      }
-      const firstErr = Object.values(fullCheck.errors)[0];
-      toast.error(`Please correct errors in Step ${fullCheck.firstErrorStep || 1}: ${firstErr}`);
+    const s2 = validateStep2Theme({ primaryColor, secondaryColor, modePreference });
+    if (!s2.isValid) {
+      setFieldErrors((prev) => ({ ...prev, ...s2.errors }));
+      setTouchedFields((prev) => ({ ...prev, primaryColor: true, secondaryColor: true }));
+      toast.error(Object.values(s2.errors)[0] || "Please correct errors in Step 2.");
+      setCurrentStep(2);
       return;
     }
 
     setIsLaunching(true);
     try {
-      const isPasswordChanged = Boolean(
-        adminPassword &&
-        adminPassword !== "••••••••••••" &&
-        !adminPassword.includes("•")
-      );
-
-      // 1. Call atomic setup launch API to claim credentials & save setup state securely on the server
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s safety timeout
 
@@ -717,25 +461,9 @@ CRITICAL SECURITY INSTRUCTIONS:
             secondaryColor,
             logoUrl,
           },
-          admin: {
-            fullName: adminName.trim(),
-            email: adminEmail.trim(),
-            phone: adminPhone.trim(),
-            password: isPasswordChanged ? adminPassword.trim() : undefined,
-          },
         }),
       });
       clearTimeout(timeoutId);
-
-      // Soft-refresh browser client session in background without blocking
-      if (isPasswordChanged) {
-        try {
-          const supabase = createBrowserSupabaseClient();
-          supabase.auth.refreshSession().catch(() => {});
-        } catch {
-          // Non-blocking background sync
-        }
-      }
 
       const json = await res.json();
       if (!res.ok) {
@@ -746,7 +474,7 @@ CRITICAL SECURITY INSTRUCTIONS:
       }
 
       // 2. Update local BrandContext styling, but do NOT mark setupCompleted: true yet.
-      // Setup completion will only be finalized once the landlord copies & downloads their security recovery key!
+      // Setup completion will only be finalized once the landlord downloads and acknowledges their security recovery key!
       await brand.updateBranding(
         {
           propertyName: propertyName.trim(),
@@ -785,8 +513,7 @@ CRITICAL SECURITY INSTRUCTIONS:
   const stepsList = [
     { num: 1, label: "Property Identity & Logo", icon: Building2 },
     { num: 2, label: "Theme & Palette", icon: Palette },
-    { num: 3, label: "Landlord Account", icon: UserCheck },
-    { num: 4, label: "Review & Launch", icon: ShieldCheck },
+    { num: 3, label: "Review & Launch", icon: ShieldCheck },
   ];
 
   return (
@@ -855,7 +582,7 @@ CRITICAL SECURITY INSTRUCTIONS:
           </button>
 
           <div className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-3 py-1 rounded-md text-xs font-bold font-mono text-zinc-600 dark:text-zinc-300">
-            <span style={{ color: primaryColor }} className="font-black">{isLaunched ? "✓" : currentStep}</span> / 4
+            <span style={{ color: primaryColor }} className="font-black">{isLaunched ? "✓" : currentStep}</span> / 3
           </div>
         </div>
       </nav>
@@ -864,16 +591,16 @@ CRITICAL SECURITY INSTRUCTIONS:
       <main
         className={cn(
           "flex-1 w-full mx-auto px-4 py-2.5 sm:py-3 flex flex-col justify-center gap-2.5 transition-all",
-          currentStep === 4 ? "max-w-4xl" : "max-w-5xl"
+          currentStep === 3 ? "max-w-4xl" : "max-w-5xl"
         )}
       >
         {/* Minimal Toned-down Header */}
         <div className="text-center">
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-zinc-950 dark:text-white">
-            Business Personalization Setup
+            Workspace Personalization Setup
           </h1>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-            Configure your property branding, logo, custom palette, and landlord account credentials.
+            Configure your property branding, logo, custom color palette, and launch your tenant portal.
           </p>
         </div>
 
@@ -890,7 +617,7 @@ CRITICAL SECURITY INSTRUCTIONS:
                 onClick={() => {
                   if (step.num === currentStep) return;
                   if (step.num < currentStep || isDone) {
-                    setCurrentStep(step.num as 1 | 2 | 3 | 4);
+                    setCurrentStep(step.num as 1 | 2 | 3);
                     return;
                   }
                   if (step.num === 2) {
@@ -905,24 +632,6 @@ CRITICAL SECURITY INSTRUCTIONS:
                       return;
                     }
                     handleContinueToStep3();
-                  } else if (step.num === 4) {
-                    const s1 = validateStep1Identity({ propertyName, tagline });
-                    if (!s1.isValid) {
-                      setFieldErrors((prev) => ({ ...prev, ...s1.errors }));
-                      setTouchedFields((prev) => ({ ...prev, propertyName: true, tagline: true }));
-                      toast.error(Object.values(s1.errors)[0] || "Please complete Step 1 first.");
-                      setCurrentStep(1);
-                      return;
-                    }
-                    const s2 = validateStep2Theme({ primaryColor, secondaryColor, modePreference });
-                    if (!s2.isValid) {
-                      setFieldErrors((prev) => ({ ...prev, ...s2.errors }));
-                      setTouchedFields((prev) => ({ ...prev, primaryColor: true, secondaryColor: true }));
-                      toast.error(Object.values(s2.errors)[0] || "Please complete Step 2 first.");
-                      setCurrentStep(2);
-                      return;
-                    }
-                    handleContinueToStep4();
                   }
                 }}
 
@@ -957,14 +666,14 @@ CRITICAL SECURITY INSTRUCTIONS:
         <div
           className={cn(
             "grid gap-3.5 items-start",
-            currentStep === 4 ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-12"
+            currentStep === 3 ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-12"
           )}
         >
           {/* Main Form Column */}
           <div
             className={cn(
               "flex flex-col gap-3",
-              currentStep === 4 ? "w-full" : "lg:col-span-7"
+              currentStep === 3 ? "w-full" : "lg:col-span-7"
             )}
           >
             <AnimatePresence mode="wait">
@@ -1488,415 +1197,6 @@ CRITICAL SECURITY INSTRUCTIONS:
                         color: primaryTextColor,
                       }}
                     >
-                      <span>Next: Landlord Account</span>
-                      <ArrowRight className="size-3.5" />
-                    </button>
-                  </div>
-                </motion.div>
-
-              )}
-
-              {/* STEP 3: LANDLORD ACCOUNT */}
-              {currentStep === 3 && (
-                <motion.div
-                  key="step3"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.15 }}
-                  className="bg-white dark:bg-zinc-900 rounded-2xl p-4 sm:p-5 flex flex-col gap-3.5 border border-zinc-200 dark:border-zinc-800 shadow-xs"
-                >
-                  <div className="flex items-center justify-between pb-2.5 border-b border-zinc-100 dark:border-zinc-800">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="size-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center transition-colors"
-                        style={{ color: primaryColor }}
-                      >
-                        <UserCheck className="size-4" />
-                      </div>
-                      <div>
-                        <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
-                          Step 3: Landlord Account
-                        </h2>
-                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Primary landlord login for managing your properties</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    {/* Owner Name & Phone */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      <div>
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1 block">
-                          Owner Full Name <span className="text-rose-500">*</span>
-                        </label>
-                        <div
-                          className={cn(
-                            "bg-zinc-50 dark:bg-zinc-950/60 border rounded-xl px-3 py-1.5 flex items-center gap-2.5 text-xs text-zinc-900 dark:text-zinc-100 transition-all",
-                            touchedFields.adminName && fieldErrors.adminName
-                              ? "border-rose-500 ring-1 ring-rose-500"
-                              : "border-zinc-200 dark:border-zinc-800"
-                          )}
-                        >
-                          <User className="size-3.5 text-zinc-400 shrink-0" />
-                          <input
-                            type="text"
-                            value={adminName}
-                            onChange={(e) => {
-                              setAdminName(e.target.value);
-                              if (touchedFields.adminName) {
-                                setFieldError("adminName", validateAdminFullName(e.target.value).error);
-                              }
-                            }}
-                            onBlur={() => {
-                              markFieldTouched("adminName");
-                              setFieldError("adminName", validateAdminFullName(adminName).error);
-                            }}
-                            placeholder="e.g. Juan Dela Cruz"
-                            className="bg-transparent border-none outline-none w-full text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:ring-0"
-                            aria-invalid={!!(touchedFields.adminName && fieldErrors.adminName)}
-                          />
-                        </div>
-                        {touchedFields.adminName && fieldErrors.adminName && (
-                          <p className="mt-1 text-[11px] font-medium text-rose-500 flex items-center gap-1">
-                            <AlertCircle className="size-3 shrink-0" />
-                            <span>{fieldErrors.adminName}</span>
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1 block">
-                          Phone Number <span className="text-rose-500">*</span>
-                        </label>
-                        <div
-                          className={cn(
-                            "bg-zinc-50 dark:bg-zinc-950/60 border rounded-xl px-3 py-1.5 flex items-center gap-2.5 text-xs text-zinc-900 dark:text-zinc-100 transition-all",
-                            touchedFields.adminPhone && fieldErrors.adminPhone
-                              ? "border-rose-500 ring-1 ring-rose-500"
-                              : "border-zinc-200 dark:border-zinc-800"
-                          )}
-                        >
-                          <Phone className="size-3.5 text-zinc-400 shrink-0" />
-                          <input
-                            type="tel"
-                            value={adminPhone}
-                            onChange={(e) => {
-                              setAdminPhone(e.target.value);
-                              if (touchedFields.adminPhone) {
-                                setFieldError("adminPhone", validateAdminPhone(e.target.value).error);
-                              }
-                            }}
-                            onBlur={() => {
-                              markFieldTouched("adminPhone");
-                              setFieldError("adminPhone", validateAdminPhone(adminPhone).error);
-                            }}
-                            placeholder="0918-123-4567"
-                            className="bg-transparent border-none outline-none w-full text-xs font-mono text-zinc-900 dark:text-zinc-100 focus:ring-0"
-                            aria-invalid={!!(touchedFields.adminPhone && fieldErrors.adminPhone)}
-                          />
-                        </div>
-                        {touchedFields.adminPhone && fieldErrors.adminPhone && (
-                          <p className="mt-1 text-[11px] font-medium text-rose-500 flex items-center gap-1">
-                            <AlertCircle className="size-3 shrink-0" />
-                            <span>{fieldErrors.adminPhone}</span>
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Email Address with Verification Badge & Inline OTP */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 block">
-                          Email Address <span className="text-rose-500">*</span>
-                        </label>
-                        {isEmailVerified ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded">
-                            <Check className="size-2.5 stroke-[3]" />
-                            Verified
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-1.5 py-0.5 rounded">
-                            Verification Required
-                          </span>
-                        )}
-                      </div>
-
-                      <div
-                        className={cn(
-                          "bg-zinc-50 dark:bg-zinc-950/60 border rounded-xl px-3 py-1.5 flex items-center gap-2.5 text-xs text-zinc-900 dark:text-zinc-100 transition-all",
-                          touchedFields.adminEmail && fieldErrors.adminEmail
-                            ? "border-rose-500 ring-1 ring-rose-500"
-                            : "border-zinc-200 dark:border-zinc-800"
-                        )}
-                      >
-                        <Mail className="size-3.5 text-zinc-400 shrink-0" />
-                        <input
-                          type="email"
-                          value={adminEmail}
-                          onChange={(e) => handleEmailChange(e.target.value)}
-                          onBlur={() => {
-                            markFieldTouched("adminEmail");
-                            setFieldError("adminEmail", validateAdminEmail(adminEmail).error);
-                          }}
-                          placeholder="landlord@yourdomain.com"
-                          className="bg-transparent border-none outline-none w-full text-xs font-mono text-zinc-900 dark:text-zinc-100 focus:ring-0"
-                          aria-invalid={!!(touchedFields.adminEmail && fieldErrors.adminEmail)}
-                        />
-                      </div>
-                      {touchedFields.adminEmail && fieldErrors.adminEmail && (
-                        <p className="mt-1 text-[11px] font-medium text-rose-500 flex items-center gap-1">
-                          <AlertCircle className="size-3 shrink-0" />
-                          <span>{fieldErrors.adminEmail}</span>
-                        </p>
-                      )}
-
-                      {/* Inline OTP Verification Box when linking a new / unverified email */}
-                      {!isEmailVerified && (
-                        <div className="mt-2 p-3 rounded-xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 flex flex-col gap-2.5">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-1.5 text-xs text-amber-900 dark:text-amber-200">
-                              <KeyRound className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                              <span className="text-[11px] font-medium">
-                                {otpSent
-                                  ? `Enter the 6-digit code sent to ${adminEmail}`
-                                  : "Link this new email address with a 6-digit confirmation code"}
-                              </span>
-                            </div>
-                            {!otpSent && (
-                              <button
-                                type="button"
-                                onClick={handleSendEmailOtp}
-                                disabled={isSendingOtp || !adminEmail.trim()}
-                                className="px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-amber-600 hover:bg-amber-700 text-white transition-all disabled:opacity-50 flex items-center gap-1 shadow-xs active:scale-95 shrink-0"
-                              >
-                                {isSendingOtp ? (
-                                  <>
-                                    <RefreshCw className="size-3 animate-spin" />
-                                    <span>Sending...</span>
-                                  </>
-                                ) : (
-                                  <span>Send Code</span>
-                                )}
-                              </button>
-                            )}
-                          </div>
-
-                          {otpSent && (
-                            <div className="flex flex-col gap-2 pt-1 border-t border-amber-500/15">
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="text"
-                                  inputMode="numeric"
-                                  pattern="[0-9]*"
-                                  maxLength={6}
-                                  value={otpCode}
-                                  disabled={isVerifyingOtp}
-                                  onChange={(e) => {
-                                    const val = e.target.value.replace(/\D/g, "").slice(0, 6);
-                                    setOtpCode(val);
-                                    if (otpError) setOtpError(null);
-                                    if (val.length < 6) {
-                                      lastAttemptedOtpRef.current = "";
-                                    }
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                      e.preventDefault();
-                                      if (otpCode.trim().length === 6 && !isVerifyingOtp) {
-                                        handleVerifyEmailOtp(otpCode.trim());
-                                      }
-                                    }
-                                  }}
-                                  placeholder="123456"
-                                  className={cn(
-                                    "w-28 px-2.5 py-1 text-center font-mono text-xs font-bold tracking-widest bg-white dark:bg-zinc-900 border rounded-lg focus:outline-none focus:ring-1 text-zinc-900 dark:text-zinc-100 placeholder:tracking-normal placeholder:font-sans placeholder:text-zinc-400 transition-all",
-                                    isVerifyingOtp && "opacity-75 cursor-wait",
-                                    otpError
-                                      ? "border-rose-500 ring-1 ring-rose-500 focus:ring-rose-500 text-rose-600 dark:text-rose-400"
-                                      : "border-amber-500/30 focus:ring-amber-500"
-                                  )}
-                                  aria-invalid={!!otpError}
-                                />
-
-                                {isVerifyingOtp && (
-                                  <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 animate-in fade-in duration-150">
-                                    <RefreshCw className="size-3 animate-spin shrink-0" />
-                                    <span className="text-[11px] font-medium">Verifying...</span>
-                                  </div>
-                                )}
-
-                                <button
-                                  type="button"
-                                  onClick={handleSendEmailOtp}
-                                  disabled={isSendingOtp || otpCooldown > 0 || isVerifyingOtp}
-                                  className="text-[11px] text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 font-medium ml-auto disabled:opacity-50 transition-colors"
-                                >
-                                  {otpCooldown > 0 ? `Resend (${otpCooldown}s)` : "Resend code"}
-                                </button>
-                              </div>
-
-                              {otpError && (
-                                <p className="text-[11px] font-semibold text-rose-500 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
-                                  <AlertCircle className="size-3.5 shrink-0 text-rose-500" />
-                                  <span>{otpError}</span>
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Account Passwords */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      <div>
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1 block">
-                          Account Password <span className="text-rose-500">*</span>
-                        </label>
-                        <div
-                          className={cn(
-                            "bg-zinc-50 dark:bg-zinc-950/60 border rounded-xl px-3 py-1.5 flex items-center gap-2.5 text-xs text-zinc-900 dark:text-zinc-100 transition-all",
-                            touchedFields.adminPassword && fieldErrors.adminPassword
-                              ? "border-rose-500 ring-1 ring-rose-500"
-                              : "border-zinc-200 dark:border-zinc-800"
-                          )}
-                        >
-                          <Lock className="size-3.5 text-zinc-400 shrink-0" />
-                          <input
-                            type={showAdminPassword ? "text" : "password"}
-                            value={adminPassword}
-                            placeholder={isReconfigure ? "Leave blank to keep existing password" : "Min. 8 characters (letters & numbers)"}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setAdminPassword(val);
-                              if (touchedFields.adminPassword) {
-                                setFieldError("adminPassword", validateAdminPassword(val, isReconfigure && !val && !confirmPassword).error);
-                              }
-                              if (touchedFields.confirmPassword) {
-                                setFieldError("confirmPassword", validateConfirmPassword(val, confirmPassword, isReconfigure && !val && !confirmPassword).error);
-                              }
-                            }}
-                            onBlur={() => {
-                              markFieldTouched("adminPassword");
-                              setFieldError(
-                                "adminPassword",
-                                validateAdminPassword(adminPassword, isExistingPasswordPlaceholder).error
-                              );
-                            }}
-                            className="bg-transparent border-none outline-none w-full text-xs font-mono text-zinc-900 dark:text-zinc-100 focus:ring-0"
-                            aria-invalid={!!(touchedFields.adminPassword && fieldErrors.adminPassword)}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowAdminPassword(!showAdminPassword)}
-                            className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors p-0.5"
-                            tabIndex={-1}
-                            title={showAdminPassword ? "Hide password" : "Show password"}
-                          >
-                            {showAdminPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-                          </button>
-                        </div>
-                        {touchedFields.adminPassword && fieldErrors.adminPassword && (
-                          <p className="mt-1 text-[11px] font-medium text-rose-500 flex items-center gap-1">
-                            <AlertCircle className="size-3 shrink-0" />
-                            <span>{fieldErrors.adminPassword}</span>
-                          </p>
-                        )}
-                        {passwordStrength && !fieldErrors.adminPassword && (
-                          <div className="mt-1.5 flex items-center gap-2">
-                            <div className="flex-1 h-1 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden flex gap-0.5">
-                              {[1, 2, 3, 4].map((level) => (
-                                <div
-                                  key={level}
-                                  className={cn(
-                                    "h-full flex-1 transition-all rounded-full",
-                                    passwordStrength.score >= level ? passwordStrength.color : "bg-transparent"
-                                  )}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">
-                              {passwordStrength.label}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1 block">
-                          Confirm Password <span className="text-rose-500">*</span>
-                        </label>
-                        <div
-                          className={cn(
-                            "bg-zinc-50 dark:bg-zinc-950/60 border rounded-xl px-3 py-1.5 flex items-center gap-2.5 text-xs text-zinc-900 dark:text-zinc-100 transition-all",
-                            touchedFields.confirmPassword && fieldErrors.confirmPassword
-                              ? "border-rose-500 ring-1 ring-rose-500"
-                              : "border-zinc-200 dark:border-zinc-800"
-                          )}
-                        >
-                          <Lock className="size-3.5 text-zinc-400 shrink-0" />
-                          <input
-                            type={showConfirmPassword ? "text" : "password"}
-                            value={confirmPassword}
-                            placeholder={isReconfigure ? "Leave blank to keep existing password" : "Re-enter master password"}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setConfirmPassword(val);
-                              if (touchedFields.confirmPassword) {
-                                setFieldError("confirmPassword", validateConfirmPassword(adminPassword, val, isReconfigure && !adminPassword && !val).error);
-                              }
-                            }}
-                            onBlur={() => {
-                              markFieldTouched("confirmPassword");
-                              setFieldError(
-                                "confirmPassword",
-                                validateConfirmPassword(adminPassword, confirmPassword, isExistingPasswordPlaceholder).error
-                              );
-                            }}
-                            className="bg-transparent border-none outline-none w-full text-xs font-mono text-zinc-900 dark:text-zinc-100 focus:ring-0"
-                            aria-invalid={!!(touchedFields.confirmPassword && fieldErrors.confirmPassword)}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors p-0.5"
-                            tabIndex={-1}
-                            title={showConfirmPassword ? "Hide password" : "Show password"}
-                          >
-                            {showConfirmPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-                          </button>
-                        </div>
-                        {touchedFields.confirmPassword && fieldErrors.confirmPassword && (
-                          <p className="mt-1 text-[11px] font-medium text-rose-500 flex items-center gap-1">
-                            <AlertCircle className="size-3 shrink-0" />
-                            <span>{fieldErrors.confirmPassword}</span>
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-1 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep(2)}
-                      className="py-2 px-4 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 active:scale-95 text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100 shadow-xs"
-                    >
-                      <ArrowLeft className="size-3.5" />
-                      <span>Back</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleContinueToStep4}
-                      className="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 active:scale-95 shadow-xs"
-                      style={{
-                        backgroundColor: primaryColor,
-                        color: primaryTextColor,
-                      }}
-                    >
                       <span>Next: Review & Launch</span>
                       <ArrowRight className="size-3.5" />
                     </button>
@@ -1905,10 +1205,10 @@ CRITICAL SECURITY INSTRUCTIONS:
 
               )}
 
-              {/* STEP 4: REVIEW & LAUNCH */}
-              {currentStep === 4 && (
+              {/* STEP 3: REVIEW & LAUNCH */}
+              {currentStep === 3 && (
                 <motion.div
-                  key="step4"
+                  key="step3"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
@@ -1925,7 +1225,7 @@ CRITICAL SECURITY INSTRUCTIONS:
                       </div>
                       <div>
                         <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
-                          Step 4: Review & Launch
+                          Step 3: Review & Launch
                         </h2>
                         <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                           Review your property workspace configuration before launching
@@ -2037,57 +1337,41 @@ CRITICAL SECURITY INSTRUCTIONS:
                       </div>
                     </div>
 
-                    {/* 3. Landlord Account Card */}
+                    {/* 3. Verified Administrator Card */}
                     <div className="bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3.5 flex flex-col justify-between">
                       <div>
                         <div className="flex items-center justify-between pb-2 border-b border-zinc-200/70 dark:border-zinc-800">
                           <div className="flex items-center gap-1.5 text-zinc-500 text-[10px] font-bold uppercase tracking-wider">
                             <UserCheck className="size-3.5" />
-                            <span>Landlord Account</span>
+                            <span>Administrator</span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => setCurrentStep(3)}
-                            className="text-[10px] font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center gap-1 transition-colors"
-                          >
-                            <Edit3 className="size-3" />
-                            <span>Edit</span>
-                          </button>
+                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                            <Check className="size-3 stroke-[3]" />
+                            <span>Claimed</span>
+                          </span>
                         </div>
 
                         <div className="mt-3 space-y-1.5">
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-[10px] text-zinc-500 font-medium">Owner</span>
+                            <span className="text-[10px] text-zinc-500 font-medium">Name</span>
                             <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 truncate max-w-[130px]">
-                              {adminName || "Landlord"}
+                              {profile?.full_name || "Administrator"}
                             </span>
                           </div>
 
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-[10px] text-zinc-500 font-medium">Email</span>
-                            <div className="flex items-center gap-1 max-w-[140px] truncate">
-                              <span className="text-[11px] font-mono font-medium text-zinc-800 dark:text-zinc-200 truncate">
-                                {adminEmail}
-                              </span>
-                              {isEmailVerified && (
-                                <Check className="size-2.5 text-emerald-600 stroke-[3] shrink-0" />
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-[10px] text-zinc-500 font-medium">Phone</span>
-                            <span className="text-[11px] font-mono text-zinc-800 dark:text-zinc-200">
-                              {adminPhone || "Not set"}
+                            <span className="text-[11px] font-mono font-medium text-zinc-800 dark:text-zinc-200 truncate max-w-[140px]">
+                              {profile?.email || "—"}
                             </span>
                           </div>
                         </div>
                       </div>
 
                       <div className="mt-3 pt-2 border-t border-zinc-200/70 dark:border-zinc-800 flex items-center justify-between text-[10px]">
-                        <span className="text-zinc-400 font-medium">Password</span>
-                        <span className="font-mono text-zinc-500 font-semibold">
-                          {adminPassword ? "•••••••••••• (Configured)" : "•••••••••••• (Existing)"}
+                        <span className="text-zinc-400 font-medium">Security</span>
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                          Permanent Credentials Active
                         </span>
                       </div>
                     </div>
@@ -2097,7 +1381,7 @@ CRITICAL SECURITY INSTRUCTIONS:
                     <div className="pt-2 flex items-center justify-between">
                       <button
                         type="button"
-                        onClick={() => setCurrentStep(3)}
+                        onClick={() => setCurrentStep(2)}
                         className="py-2 px-4 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 active:scale-95 text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100 shadow-xs"
                       >
                         <ArrowLeft className="size-3.5" />
@@ -2140,7 +1424,7 @@ CRITICAL SECURITY INSTRUCTIONS:
                           onToggleAcknowledge={setIsSecurityKeyAcknowledged}
                           title="Landlord Security Recovery Key"
                           description="Your workspace is initialized. Save your single-use recovery key now in case you ever lose access to your email."
-                          accountEmail={adminEmail}
+                          accountEmail={profile?.email || undefined}
                         />
                       )}
 
@@ -2161,10 +1445,10 @@ CRITICAL SECURITY INSTRUCTIONS:
 
                         <button
                           type="button"
-                          disabled={launchedSecurityKey ? (!hasCopiedKey || !hasDownloadedKey || !isSecurityKeyAcknowledged) : false}
+                          disabled={launchedSecurityKey ? (!hasDownloadedKey || !isSecurityKeyAcknowledged) : false}
                           onClick={async () => {
-                            if (launchedSecurityKey && (!hasCopiedKey || !hasDownloadedKey || !isSecurityKeyAcknowledged)) {
-                              toast.error("Please copy, download, and confirm saving your security recovery key before proceeding.");
+                            if (launchedSecurityKey && (!hasDownloadedKey || !isSecurityKeyAcknowledged)) {
+                              toast.error("Please download and confirm saving your security recovery key before proceeding.");
                               return;
                             }
                             await brand.updateBranding(
@@ -2183,7 +1467,7 @@ CRITICAL SECURITY INSTRUCTIONS:
                           }}
                           className={cn(
                             "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-xs",
-                            (!launchedSecurityKey || (hasCopiedKey && hasDownloadedKey && isSecurityKeyAcknowledged))
+                            (!launchedSecurityKey || (hasDownloadedKey && isSecurityKeyAcknowledged))
                               ? "cursor-pointer active:scale-95"
                               : "opacity-40 cursor-not-allowed"
                           )}
@@ -2203,8 +1487,8 @@ CRITICAL SECURITY INSTRUCTIONS:
             </AnimatePresence>
           </div>
 
-          {/* Right Column: Live Mockup Frame (5 Cols) - Hidden on Step 4 */}
-          {currentStep !== 4 && (
+          {/* Right Column: Live Mockup Frame (5 Cols) - Hidden on Step 3 */}
+          {currentStep !== 3 && (
             <div className="lg:col-span-5">
               <div className="bg-white dark:bg-zinc-900 rounded-2xl p-4 flex flex-col gap-3 border border-zinc-200 dark:border-zinc-800 shadow-xs">
                 {/* Window Bar */}
@@ -2327,14 +1611,14 @@ CRITICAL SECURITY INSTRUCTIONS:
                       className="size-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 shadow-xs"
                       style={{ backgroundColor: secondaryColor, color: secondaryTextColor }}
                     >
-                      {adminName.slice(0, 1) || "L"}
+                      {(profile?.full_name || "L").slice(0, 1).toUpperCase()}
                     </div>
                     <div className="min-w-0">
                       <p className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 truncate">
-                        {adminName || "Landlord"}
+                        {profile?.full_name || "Landlord"}
                       </p>
                       <p className="text-[9px] text-zinc-500 truncate font-mono">
-                        {adminEmail || "landlord@property.com"}
+                        {profile?.email || "landlord@property.com"}
                       </p>
                     </div>
                   </div>
@@ -2379,7 +1663,7 @@ CRITICAL SECURITY INSTRUCTIONS:
                   </span>
                 </div>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                  Your portal setup is complete. To safeguard your account, you must copy and download your single-use recovery key before accessing your dashboard.
+                  Your portal setup is complete. To safeguard your account, you must download your single-use recovery key before accessing your dashboard.
                 </p>
               </div>
             </div>
@@ -2440,7 +1724,7 @@ CRITICAL SECURITY INSTRUCTIONS:
 
                 <button
                   type="button"
-                  onClick={() => handleDownloadSecurityKey(launchedSecurityKey, adminEmail)}
+                  onClick={() => handleDownloadSecurityKey(launchedSecurityKey, profile?.email || undefined)}
                   className={cn(
                     "flex items-center justify-center gap-2 h-11 px-4 rounded-xl border text-xs font-bold transition-all active:scale-95",
                     hasDownloadedKey
@@ -2480,35 +1764,30 @@ CRITICAL SECURITY INSTRUCTIONS:
                 className="size-4 mt-0.5 rounded border-zinc-300 dark:border-zinc-700 text-primary focus:ring-primary cursor-pointer shrink-0"
               />
               <span className="text-xs text-zinc-700 dark:text-zinc-300 leading-snug">
-                I have copied and downloaded my security recovery key and stored it in a secure location.
+                I have downloaded my security recovery key and stored it in a secure location.
               </span>
             </label>
 
             {/* Checklist requirements status */}
             <div className="flex flex-wrap items-center gap-3 text-[11px] font-semibold text-zinc-500">
-              <span className={cn("flex items-center gap-1", hasCopiedKey ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400")}>
-                <Check className={cn("size-3.5", hasCopiedKey ? "stroke-[3]" : "opacity-30")} />
-                1. Copied
-              </span>
-              <span>•</span>
               <span className={cn("flex items-center gap-1", hasDownloadedKey ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400")}>
                 <Check className={cn("size-3.5", hasDownloadedKey ? "stroke-[3]" : "opacity-30")} />
-                2. Downloaded
+                1. Downloaded
               </span>
               <span>•</span>
               <span className={cn("flex items-center gap-1", isSecurityKeyAcknowledged ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400")}>
                 <Check className={cn("size-3.5", isSecurityKeyAcknowledged ? "stroke-[3]" : "opacity-30")} />
-                3. Acknowledged
+                2. Acknowledged
               </span>
             </div>
 
             {/* Action: Proceed to Dashboard */}
             <button
               type="button"
-              disabled={!hasCopiedKey || !hasDownloadedKey || !isSecurityKeyAcknowledged}
+              disabled={!hasDownloadedKey || !isSecurityKeyAcknowledged}
               onClick={async () => {
-                if (!hasCopiedKey || !hasDownloadedKey || !isSecurityKeyAcknowledged) {
-                  toast.error("Please copy, download, and confirm saving your security recovery key before proceeding.");
+                if (!hasDownloadedKey || !isSecurityKeyAcknowledged) {
+                  toast.error("Please download and confirm saving your security recovery key before proceeding.");
                   return;
                 }
                 await brand.updateBranding(
@@ -2527,12 +1806,12 @@ CRITICAL SECURITY INSTRUCTIONS:
               }}
               className={cn(
                 "w-full h-12 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm",
-                hasCopiedKey && hasDownloadedKey && isSecurityKeyAcknowledged
+                hasDownloadedKey && isSecurityKeyAcknowledged
                   ? "cursor-pointer active:scale-98 text-white hover:brightness-105"
                   : "opacity-40 cursor-not-allowed text-zinc-400 bg-zinc-200 dark:bg-zinc-800"
               )}
               style={
-                hasCopiedKey && hasDownloadedKey && isSecurityKeyAcknowledged
+                hasDownloadedKey && isSecurityKeyAcknowledged
                   ? { backgroundColor: primaryColor, color: primaryTextColor }
                   : undefined
               }

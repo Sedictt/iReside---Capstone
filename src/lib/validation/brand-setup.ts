@@ -515,7 +515,8 @@ export const setupLaunchSchema = z.object({
       .regex(REGEX_NAME, "Landlord full name can only contain letters, spaces, hyphens, and periods")
       .refine((val) => !DISALLOWED_PRESEEDED_DATA.adminNames.includes(val.toLowerCase()), {
         message: "Please enter your real legal or business name instead of the sample placeholder.",
-      }),
+      })
+      .optional(),
     email: z
       .string()
       .trim()
@@ -544,7 +545,7 @@ export const setupLaunchSchema = z.object({
       .min(6, "Password must be at least 6 characters")
       .optional()
       .nullable(),
-  }),
+  }).optional(),
 });
 
 export const brandingUpdateSchema = z.object({
