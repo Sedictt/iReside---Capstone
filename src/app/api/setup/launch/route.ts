@@ -18,8 +18,8 @@ interface SetupLaunchPayload {
     propertyAddress?: string;
     totalUnits?: string | number;
   };
-  admin: {
-    fullName: string;
+  admin?: {
+    fullName?: string;
     email?: string;
     password?: string;
     phone?: string;

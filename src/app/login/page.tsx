@@ -7,28 +7,28 @@ import {
     ArrowRight, 
     Download,
     AlertCircle,
+    CheckCircle2,
     Loader2
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
-import { useState, Suspense, useEffect } from "react";
+import { useState, Suspense, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-
-import { validateEmail, validatePassword } from "@/lib/validation/client-validation";
+import { AccountActivationModal } from "@/components/auth/AccountActivationModal";
 
 function LoginContent() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [emailError, setEmailError] = useState<string | null>(null);
-    const [passwordError, setPasswordError] = useState<string | null>(null);
-    const [touched, setTouched] = useState({ email: false, password: false });
     const [error, setError] = useState<string | null>(null);
+    const [activationBanner, setActivationBanner] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+    const [showActivationModal, setShowActivationModal] = useState(false);
+    const [prefilledEmail, setPrefilledEmail] = useState("");
     const [mounted, setMounted] = useState(false);
+
+    const passwordInputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectUrl = searchParams.get('redirect');
@@ -37,55 +37,34 @@ function LoginContent() {
         setMounted(true);
     }, []);
 
-    const handleEmailChange = (val: string) => {
-        setEmail(val);
-        if (touched.email) {
-            const res = validateEmail(val);
-            setEmailError(res.isValid ? null : (res.error ?? "Invalid email"));
-        }
-    };
-
-    const handleEmailBlur = () => {
-        setTouched(prev => ({ ...prev, email: true }));
-        const res = validateEmail(email);
-        setEmailError(res.isValid ? null : (res.error ?? "Invalid email"));
-    };
-
-    const handlePasswordChange = (val: string) => {
-        setPassword(val);
-        if (touched.password) {
-            const res = validatePassword(val);
-            setPasswordError(res.isValid ? null : (res.error ?? "Invalid password"));
-        }
-    };
-
-    const handlePasswordBlur = () => {
-        setTouched(prev => ({ ...prev, password: true }));
-        const res = validatePassword(password);
-        setPasswordError(res.isValid ? null : (res.error ?? "Invalid password"));
+    const handleActivationComplete = async (newEmail: string) => {
+        setShowActivationModal(false);
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        setPrefilledEmail(newEmail);
+        setActivationBanner(`Account successfully claimed! Please enter your password to sign in as ${newEmail}.`);
+        setTimeout(() => {
+            if (passwordInputRef.current) {
+                passwordInputRef.current.value = "";
+                passwordInputRef.current.focus();
+            }
+        }, 150);
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setTouched({ email: true, password: true });
-
-        const emailValidation = validateEmail(email);
-        const passwordValidation = validatePassword(password);
-
-        setEmailError(emailValidation.isValid ? null : (emailValidation.error ?? "Invalid email"));
-        setPasswordError(passwordValidation.isValid ? null : (passwordValidation.error ?? "Invalid password"));
-
-        if (!emailValidation.isValid || !passwordValidation.isValid) {
-            return;
-        }
-
         setError(null);
+        setActivationBanner(null);
         setLoading(true);
 
         try {
+            const formData = new FormData(e.currentTarget);
+            const email = (formData.get("email") as string | null)?.trim() ?? "";
+            const password = (formData.get("password") as string | null) ?? "";
+
             const supabase = createClient();
             const { data, error } = await supabase.auth.signInWithPassword({
-                email: email.trim(),
+                email,
                 password,
             });
 
@@ -99,35 +78,52 @@ function LoginContent() {
             }
 
             let role = data.user?.user_metadata?.role;
-            let businessName: string | null = null;
+            let isClaimed = data.user?.user_metadata?.is_account_claimed;
+
             if (data.user?.id) {
                 const { data: profile } = await supabase
                     .from("profiles")
-                    .select("role, business_name")
+                    .select("role, is_account_claimed")
                     .eq("id", data.user.id)
                     .single();
                 if (profile) {
-                    role = profile.role;
-                    businessName = profile.business_name;
+                    if (!role) role = profile.role;
+                    if (isClaimed === undefined) isClaimed = (profile as any).is_account_claimed;
                 }
             }
 
-            const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-            let defaultTarget: string;
-            if (isMobile) {
-                defaultTarget = role === "tenant" ? "/mobile/tenant/home" : "/mobile/landlord/overview";
-            } else if (role === "landlord" && !businessName && !redirectUrl) {
-                // If a desktop landlord has no business setup, check if they have properties
-                const { count } = await supabase
-                    .from("properties")
-                    .select("id", { count: "exact", head: true })
-                    .eq("landlord_id", data.user.id);
-                defaultTarget = count === 0 ? "/setup" : "/landlord/dashboard";
-            } else {
-                defaultTarget = role === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard";
+            const userEmail = data.user?.email || "";
+            const isDefaultAccount =
+                userEmail.includes("turnkey.local") ||
+                userEmail.toLowerCase() === "admin@turnkey.local" ||
+                userEmail.toLowerCase() === "landlord@turnkey.local" ||
+                isClaimed === false;
+
+            // Intercept initial setup/default accounts for landlord/admin
+            if ((role === "landlord" || role === "admin") && (!isClaimed || isDefaultAccount)) {
+                setShowActivationModal(true);
+                setLoading(false);
+                return;
             }
 
-            router.push(redirectUrl || defaultTarget);
+            // For claimed landlords, check if workspace setup is complete
+            if (role === "landlord" || role === "admin") {
+                try {
+                    const brandRes = await fetch("/api/branding");
+                    if (brandRes.ok) {
+                        const brandData = await brandRes.json();
+                        if (!brandData.setupCompleted) {
+                            router.push(redirectUrl || "/setup");
+                            return;
+                        }
+                    }
+                } catch {
+                    // Fallback to regular dashboard
+                }
+            }
+
+            const target = role === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard";
+            router.push(redirectUrl || target);
         } catch (err) {
             console.error('[Login] Unexpected error:', err);
             setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
@@ -140,15 +136,10 @@ function LoginContent() {
         setLoading(true);
         setError(null);
         const supabase = createClient();
-        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-        const defaultMobileNext = isMobile ? '/mobile' : '';
-        const effectiveNext = redirectUrl || defaultMobileNext;
-        const nextParam = effectiveNext ? `?next=${encodeURIComponent(effectiveNext)}` : '';
-
         const { error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-                redirectTo: `${window.location.origin}/auth/callback${nextParam}`,
+                redirectTo: `${window.location.origin}/auth/callback${redirectUrl ? `?next=${redirectUrl}` : ''}`,
             },
         });
         if (error) {
@@ -397,6 +388,24 @@ function LoginContent() {
                                 )}
                             </AnimatePresence>
 
+                            {/* Activation Success Re-login Notification */}
+                            <AnimatePresence mode="wait">
+                                {activationBanner && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        role="alert"
+                                        aria-live="polite"
+                                        className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-start gap-3 overflow-hidden text-emerald-700 dark:text-emerald-400"
+                                    >
+                                        <CheckCircle2 className="size-4 shrink-0 mt-0.5" />
+                                        <p className="text-xs font-semibold leading-relaxed">{activationBanner}</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
                             {/* Authentication Form */}
                             <form className="space-y-4" onSubmit={handleSubmit} noValidate>
                                 <div className="space-y-4">
@@ -413,27 +422,14 @@ function LoginContent() {
                                             name="email"
                                             type="email"
                                             required
-                                            value={email}
-                                            onChange={(e) => handleEmailChange(e.target.value)}
-                                            onBlur={handleEmailBlur}
                                             autoComplete="email"
                                             autoCapitalize="none"
                                             spellCheck={false}
+                                            value={prefilledEmail || undefined}
+                                            onChange={(e) => setPrefilledEmail(e.target.value)}
                                             placeholder="name@example.com"
-                                            aria-invalid={!!(touched.email && emailError)}
-                                            className={cn(
-                                                "h-11 w-full rounded-xl border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
-                                                touched.email && emailError
-                                                    ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                                                    : "border-border focus:border-primary focus:ring-primary/20"
-                                            )}
+                                            className="h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                                         />
-                                        {touched.email && emailError && (
-                                            <p className="text-xs font-semibold text-destructive flex items-center gap-1.5 mt-1" role="alert">
-                                                <AlertCircle className="size-3.5 shrink-0" />
-                                                <span>{emailError}</span>
-                                            </p>
-                                        )}
                                     </div>
 
                                     {/* Password Field */}
@@ -454,22 +450,14 @@ function LoginContent() {
                                         </div>
                                         <div className="relative">
                                             <input
+                                                ref={passwordInputRef}
                                                 id="password"
                                                 name="password"
                                                 type={isPasswordVisible ? "text" : "password"}
                                                 required
-                                                value={password}
-                                                onChange={(e) => handlePasswordChange(e.target.value)}
-                                                onBlur={handlePasswordBlur}
                                                 autoComplete="current-password"
                                                 placeholder="••••••••"
-                                                aria-invalid={!!(touched.password && passwordError)}
-                                                className={cn(
-                                                    "h-11 w-full rounded-xl border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
-                                                    touched.password && passwordError
-                                                        ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                                                        : "border-border focus:border-primary focus:ring-primary/20"
-                                                )}
+                                                className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                                             />
                                             <button 
                                                 type="button"
@@ -485,19 +473,13 @@ function LoginContent() {
                                                 )}
                                             </button>
                                         </div>
-                                        {touched.password && passwordError && (
-                                            <p className="text-xs font-semibold text-destructive flex items-center gap-1.5 mt-1" role="alert">
-                                                <AlertCircle className="size-3.5 shrink-0" />
-                                                <span>{passwordError}</span>
-                                            </p>
-                                        )}
                                     </div>
                                 </div>
 
                                 {/* Submit Button */}
                                 <button
                                     type="submit"
-                                    disabled={loading || !!(touched.email && emailError) || !!(touched.password && passwordError)}
+                                    disabled={loading}
                                     className="h-11 w-full rounded-xl bg-primary text-primary-foreground font-bold text-sm tracking-wide transition-all duration-200 hover:bg-primary/90 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                                 >
                                     {loading ? (
@@ -567,6 +549,12 @@ function LoginContent() {
                     </div>
                 </div>
             </main>
+
+            {/* Account Activation Lightbox Modal */}
+            <AccountActivationModal
+                isOpen={showActivationModal}
+                onComplete={handleActivationComplete}
+            />
 
             {/* Bottom Footer */}
             <footer className="relative z-20 w-full border-t border-border/40 py-5 text-center select-none bg-background/50 backdrop-blur-xs">
