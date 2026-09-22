@@ -1021,12 +1021,14 @@ export async function addComment(postId: string, content: string, parentCommentI
 }
 
 export async function getPostComments(postId: string) {
-    const session = await auth()
-    if (!session) {
+    const supabase = (await createClient()) as any
+    const {
+        data: { user },
+        error: authError
+    } = await supabase.auth.getUser()
+    if (authError || !user) {
         throw new Error("Unauthorized")
     }
-    await getAuthenticatedUserId()
-    const supabase = (await createClient()) as any
 
     const { data, error } = await supabase
         .from('community_comments')
