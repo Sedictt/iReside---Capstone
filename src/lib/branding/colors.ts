@@ -145,10 +145,11 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } {
 /**
  * Injects dynamic CSS variables into document.documentElement.
  */
-export function applyBrandCssVariables(primaryHex: string, secondaryHex?: string): void {
+export function applyBrandCssVariables(primaryHex?: string | null, secondaryHex?: string | null): void {
   if (typeof window === "undefined" || typeof document === "undefined") return;
 
-  const validPrimary = primaryHex.startsWith("#") ? primaryHex : `#${primaryHex}`;
+  const rawPrimary = (typeof primaryHex === "string" && primaryHex.trim()) ? primaryHex.trim() : "#8b5cf6";
+  const validPrimary = rawPrimary.startsWith("#") ? rawPrimary : `#${rawPrimary}`;
   const hsl = hexToHsl(validPrimary);
   const rgb = hexToRgb(validPrimary);
   const fgColor = getContrastTextColor(validPrimary);
@@ -161,8 +162,9 @@ export function applyBrandCssVariables(primaryHex: string, secondaryHex?: string
   
   // Set Raw HEX & RGB CSS variables for inline styles & gradients
   root.style.setProperty("--brand-primary", validPrimary);
-  if (secondaryHex) {
-    const validSecondary = secondaryHex.startsWith("#") ? secondaryHex : `#${secondaryHex}`;
+  if (typeof secondaryHex === "string" && secondaryHex.trim()) {
+    const rawSecondary = secondaryHex.trim();
+    const validSecondary = rawSecondary.startsWith("#") ? rawSecondary : `#${rawSecondary}`;
     root.style.setProperty("--brand-secondary", validSecondary);
   }
 
