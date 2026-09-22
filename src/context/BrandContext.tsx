@@ -8,7 +8,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 export interface BrandConfig {
   propertyName: string;
   propertyTagline: string;
-  rentalArchetype: "apartment" | "dormitory" | "boarding_house";
+  rentalArchetype?: "apartment" | "dormitory" | "boarding_house" | null;
   primaryColor: string;
   secondaryColor: string;
   logoUrl: string | null;
@@ -29,7 +29,7 @@ export interface BrandContextValue extends BrandConfig {
 export const DEFAULT_BRANDING: BrandConfig = {
   propertyName: "iReside Residences",
   propertyTagline: "Modern Property Management & Residential Operations",
-  rentalArchetype: "apartment",
+  rentalArchetype: null,
   primaryColor: "#c4b0ff",
   secondaryColor: "#8b5cf6",
   logoUrl: null,
@@ -98,8 +98,11 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
 
           // Sync to legacy localStorage keys for backward compatibility
           localStorage.setItem("ireside_property_name", data.propertyName);
-          localStorage.setItem("ireside_property_tagline", data.propertyTagline);
-          localStorage.setItem("ireside_rental_archetype", data.rentalArchetype);
+          if (data.rentalArchetype) {
+            localStorage.setItem("ireside_rental_archetype", data.rentalArchetype);
+          } else {
+            localStorage.removeItem("ireside_rental_archetype");
+          }
           localStorage.setItem("ireside_brand_primary", data.primaryColor);
           localStorage.setItem("ireside_brand_secondary", data.secondaryColor);
           if (data.logoUrl) localStorage.setItem("ireside_property_logo", data.logoUrl);
@@ -166,8 +169,11 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
             applyBrandCssVariables(data.primaryColor, data.secondaryColor);
             OfflineStorage.set("brand_configuration", data, null, "branding");
             localStorage.setItem("ireside_property_name", data.propertyName);
-            localStorage.setItem("ireside_property_tagline", data.propertyTagline);
-            localStorage.setItem("ireside_rental_archetype", data.rentalArchetype);
+            if (data.rentalArchetype) {
+              localStorage.setItem("ireside_rental_archetype", data.rentalArchetype);
+            } else {
+              localStorage.removeItem("ireside_rental_archetype");
+            }
             localStorage.setItem("ireside_brand_primary", data.primaryColor);
             localStorage.setItem("ireside_brand_secondary", data.secondaryColor);
             if (data.logoUrl) localStorage.setItem("ireside_property_logo", data.logoUrl);
@@ -233,8 +239,11 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
       if (typeof window !== "undefined") {
         OfflineStorage.set("brand_configuration", merged, null, "branding");
         localStorage.setItem("ireside_property_name", merged.propertyName);
-        localStorage.setItem("ireside_property_tagline", merged.propertyTagline);
-        localStorage.setItem("ireside_rental_archetype", merged.rentalArchetype);
+        if (merged.rentalArchetype) {
+          localStorage.setItem("ireside_rental_archetype", merged.rentalArchetype);
+        } else {
+          localStorage.removeItem("ireside_rental_archetype");
+        }
         localStorage.setItem("ireside_brand_primary", merged.primaryColor);
         localStorage.setItem("ireside_brand_secondary", merged.secondaryColor);
         if (merged.logoUrl) {

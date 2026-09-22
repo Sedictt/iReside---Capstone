@@ -325,7 +325,7 @@ export interface CachedLandlordSettings {
     personalization: {
         propertyTradeName: string;
         propertyTagline: string;
-        rentalArchetype: string;
+        rentalArchetype?: string | null;
         brandPrimaryHex: string;
         brandSecondaryHex: string;
         bannerUrl: string;
@@ -589,10 +589,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
     const [propertyLogoUrl, setPropertyLogoUrl] = useState<string | null>(() => {
         const cached = getCachedSettings();
         return cached?.personalization?.propertyLogoUrl ?? (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_logo") || brand.logoUrl || null) : (brand.logoUrl || null));
-    });
-    const [rentalArchetype, setRentalArchetype] = useState<string>(() => {
-        const cached = getCachedSettings();
-        return normalizeRentalArchetype(cached?.personalization?.rentalArchetype || (typeof window !== "undefined" ? (localStorage.getItem("ireside_rental_archetype") || brand.rentalArchetype || DEFAULT_BRANDING.rentalArchetype) : (brand.rentalArchetype || DEFAULT_BRANDING.rentalArchetype)));
     });
     const [brandPrimaryHex, setBrandPrimaryHex] = useState<string>(() => {
         const cached = getCachedSettings();
@@ -879,7 +875,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
         notificationPreferences: NotificationPreferences;
         propertyTradeName: string;
         propertyTagline: string;
-        rentalArchetype: string;
         brandPrimaryHex: string;
         brandSecondaryHex: string;
         bannerUrl: string;
@@ -892,7 +887,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 notificationPreferences: JSON.parse(JSON.stringify(cached.notificationPreferences)),
                 propertyTradeName: cached.personalization?.propertyTradeName || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_name") || brand.propertyName || DEFAULT_BRANDING.propertyName) : DEFAULT_BRANDING.propertyName),
                 propertyTagline: cached.personalization?.propertyTagline || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_tagline") || brand.propertyTagline || DEFAULT_BRANDING.propertyTagline) : DEFAULT_BRANDING.propertyTagline),
-                rentalArchetype: normalizeRentalArchetype(cached.personalization?.rentalArchetype || (typeof window !== "undefined" ? (localStorage.getItem("ireside_rental_archetype") || brand.rentalArchetype || DEFAULT_BRANDING.rentalArchetype) : DEFAULT_BRANDING.rentalArchetype)),
                 brandPrimaryHex: cached.personalization?.brandPrimaryHex || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_primary") || brand.primaryColor || DEFAULT_BRANDING.primaryColor) : DEFAULT_BRANDING.primaryColor),
                 brandSecondaryHex: cached.personalization?.brandSecondaryHex || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_secondary") || brand.secondaryColor || DEFAULT_BRANDING.secondaryColor) : DEFAULT_BRANDING.secondaryColor),
                 bannerUrl: cached.personalization?.bannerUrl || (typeof window !== "undefined" ? (localStorage.getItem("ireside_landlord_custom_banner_url") || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL),
@@ -1065,7 +1059,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 setPropertyLogoUrl(savedLogo);
                 setPropertyTradeName(savedName);
                 setPropertyTagline(savedTagline);
-                setRentalArchetype(savedArchetype);
                 setBrandPrimaryHex(savedPrimary);
                 setBrandSecondaryHex(savedSecondary);
 
@@ -1074,7 +1067,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                     notificationPreferences: JSON.parse(JSON.stringify(syncedNotifs)),
                     propertyTradeName: savedName,
                     propertyTagline: savedTagline,
-                    rentalArchetype: savedArchetype,
                     brandPrimaryHex: savedPrimary,
                     brandSecondaryHex: savedSecondary,
                     bannerUrl: savedBanner,
@@ -1133,13 +1125,12 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
             JSON.stringify(notificationPreferences) !== JSON.stringify(initialSnapshot.notificationPreferences) ||
             propertyTradeName !== initialSnapshot.propertyTradeName ||
             propertyTagline !== initialSnapshot.propertyTagline ||
-            normalizeRentalArchetype(rentalArchetype) !== normalizeRentalArchetype(initialSnapshot.rentalArchetype) ||
             brandPrimaryHex.toLowerCase() !== initialSnapshot.brandPrimaryHex.toLowerCase() ||
             brandSecondaryHex.toLowerCase() !== initialSnapshot.brandSecondaryHex.toLowerCase() ||
             bannerUrl !== initialSnapshot.bannerUrl ||
             propertyLogoUrl !== initialSnapshot.propertyLogoUrl
         );
-    }, [isFinanceDirty, hasUserEdited, formData, notificationPreferences, propertyTradeName, propertyTagline, rentalArchetype, brandPrimaryHex, brandSecondaryHex, bannerUrl, propertyLogoUrl, initialSnapshot]);
+    }, [isFinanceDirty, hasUserEdited, formData, notificationPreferences, propertyTradeName, propertyTagline, brandPrimaryHex, brandSecondaryHex, bannerUrl, propertyLogoUrl, initialSnapshot]);
 
     const isDirtyRef = useRef(false);
     isDirtyRef.current = isDirty;
@@ -1151,7 +1142,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
             const nextSecondary = brand.secondaryColor || DEFAULT_BRANDING.secondaryColor;
             const nextName = brand.propertyName || DEFAULT_BRANDING.propertyName;
             const nextTagline = brand.propertyTagline || DEFAULT_BRANDING.propertyTagline;
-            const nextArchetype = normalizeRentalArchetype(brand.rentalArchetype || DEFAULT_BRANDING.rentalArchetype);
             const nextLogo = brand.logoUrl !== undefined ? brand.logoUrl : null;
             const nextBanner = brand.bannerUrl || DEFAULT_BANNER_URL;
 
@@ -1159,7 +1149,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
             setBrandSecondaryHex(nextSecondary);
             setPropertyTradeName(nextName);
             setPropertyTagline(nextTagline);
-            setRentalArchetype(nextArchetype);
             if (brand.logoUrl !== undefined) setPropertyLogoUrl(nextLogo);
             if (brand.bannerUrl) setBannerUrl(nextBanner);
 
@@ -1169,12 +1158,11 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 brandSecondaryHex: nextSecondary,
                 propertyTradeName: nextName,
                 propertyTagline: nextTagline,
-                rentalArchetype: nextArchetype,
                 propertyLogoUrl: nextLogo,
                 bannerUrl: nextBanner,
             } : null);
         }
-    }, [brand.primaryColor, brand.secondaryColor, brand.propertyName, brand.propertyTagline, brand.rentalArchetype, brand.logoUrl, brand.bannerUrl, brand.isLoading, hasUserEdited]);
+    }, [brand.primaryColor, brand.secondaryColor, brand.propertyName, brand.propertyTagline, brand.logoUrl, brand.bannerUrl, brand.isLoading, hasUserEdited]);
 
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -1226,7 +1214,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
         setNotificationPreferences(JSON.parse(JSON.stringify(initialSnapshot.notificationPreferences)));
         setPropertyTradeName(initialSnapshot.propertyTradeName);
         setPropertyTagline(initialSnapshot.propertyTagline);
-        setRentalArchetype(initialSnapshot.rentalArchetype);
         setBrandPrimaryHex(initialSnapshot.brandPrimaryHex);
         setBrandSecondaryHex(initialSnapshot.brandSecondaryHex);
         setBannerUrl(initialSnapshot.bannerUrl);
@@ -1541,7 +1528,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 !initialSnapshot ||
                 propertyTradeName !== initialSnapshot.propertyTradeName ||
                 propertyTagline !== initialSnapshot.propertyTagline ||
-                normalizeRentalArchetype(rentalArchetype) !== normalizeRentalArchetype(initialSnapshot.rentalArchetype) ||
                 brandPrimaryHex.toLowerCase() !== initialSnapshot.brandPrimaryHex.toLowerCase() ||
                 brandSecondaryHex.toLowerCase() !== initialSnapshot.brandSecondaryHex.toLowerCase() ||
                 bannerUrl !== initialSnapshot.bannerUrl ||
@@ -1592,7 +1578,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 const brandSuccess = await brand.updateBranding({
                     propertyName: propertyTradeName,
                     propertyTagline,
-                    rentalArchetype: (rentalArchetype === "boarding_house" ? "boarding_house" : rentalArchetype === "dormitory" ? "dormitory" : "apartment"),
+                    rentalArchetype: brand.rentalArchetype,
                     primaryColor: brandPrimaryHex,
                     secondaryColor: brandSecondaryHex,
                     logoUrl: propertyLogoUrl,
@@ -1621,7 +1607,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 notificationPreferences: JSON.parse(JSON.stringify(notificationPreferences)),
                 propertyTradeName,
                 propertyTagline,
-                rentalArchetype: normalizeRentalArchetype(rentalArchetype),
                 brandPrimaryHex,
                 brandSecondaryHex,
                 bannerUrl,
@@ -1637,7 +1622,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 personalization: {
                     propertyTradeName,
                     propertyTagline,
-                    rentalArchetype,
+                    rentalArchetype: brand.rentalArchetype,
                     brandPrimaryHex,
                     brandSecondaryHex,
                     bannerUrl,
@@ -2764,41 +2749,9 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                                 </div>
                             </GlassCard>
 
-                            <GlassCard title="Rental Business Archetype" description="Adapts terminology and automated billing cadences to match your operation.">
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    {[
-                                        { id: "apartment", label: "Apartment Complex", desc: "Per-unit monthly leases with submeter utilities" },
-                                        { id: "dormitory", label: "Student Dormitory", desc: "Per-bed contracts with shared utility billing" },
-                                        { id: "boarding_house", label: "Boarding House", desc: "Flexible short/long-term room lodging" },
-                                    ].map((arch) => (
-                                        <button
-                                            key={arch.id}
-                                            type="button"
-                                            onClick={() => {
-                                                setHasUserEdited(true);
-                                                setRentalArchetype(arch.id);
-                                                toast.success(`Archetype set to ${arch.label}`);
-                                            }}
-                                            className={cn(
-                                                "p-4 rounded-2xl border text-left transition-all flex flex-col justify-between",
-                                                normalizeRentalArchetype(rentalArchetype) === arch.id
-                                                    ? "border-primary bg-primary/10 ring-2 ring-primary/40 text-foreground"
-                                                    : "border-border/60 hover:border-border hover:bg-surface-2 text-muted-foreground"
-                                            )}
-                                        >
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-sm font-black text-foreground">{arch.label}</span>
-                                                {normalizeRentalArchetype(rentalArchetype) === arch.id && <Check className="size-4 text-primary" />}
-                                            </div>
-                                            <span className="text-xs text-muted-foreground">{arch.desc}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </GlassCard>
-
                             <GlassCard 
                                 title="Turnkey Workspace Personalization Wizard" 
-                                description="Need to re-evaluate your property archetype, dynamic HSL color harmonies, or setup flow?"
+                                description="Need to re-evaluate your visual theme, dynamic HSL color harmonies, or setup flow?"
                                 headerExtra={
                                     <Link
                                         href="/setup?reconfigure=true"
@@ -2810,7 +2763,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                                 }
                             >
                                 <div className="p-2 text-xs text-muted-foreground leading-relaxed">
-                                    The 4-step personalization wizard guides you through archetype classification, WCAG contrast verification, and landlord account claiming. Running it in reconfiguration mode updates your branding and operational settings without affecting active leases or units.
+                                    The 4-step personalization wizard guides you through property identity, WCAG contrast verification, and master administrator claiming. Running it in reconfiguration mode updates your branding and operational settings without affecting active leases or units.
                                 </div>
                             </GlassCard>
                         </div>

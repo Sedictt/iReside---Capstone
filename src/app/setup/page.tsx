@@ -15,9 +15,6 @@ import {
   ArrowLeft,
   Moon,
   Sun,
-  Home,
-  Bed,
-  DoorClosed,
   Check,
   User,
   Mail,
@@ -55,7 +52,6 @@ import {
   DISALLOWED_PRESEEDED_DATA,
   validatePropertyTradeName,
   validatePropertyTagline,
-  validateRentalArchetype,
   validateTotalUnits,
   validatePropertyAddress,
   validateBrandColor,
@@ -229,9 +225,6 @@ function WizardContent() {
     return raw && !DISALLOWED_PRESEEDED_DATA.taglines.includes(raw.toLowerCase()) ? raw : "";
   });
   const [logoUrl, setLogoUrl] = useState<string | null>(brand.logoUrl);
-  const [propertyArchetype, setPropertyArchetype] = useState<"apartment" | "dormitory" | "boarding_house">(
-    brand.rentalArchetype || "apartment"
-  );
 
   // Step 2: Light / Dark Mode & Modern HSL Palette
   const { resolvedTheme, setTheme } = useTheme();
@@ -466,7 +459,6 @@ CRITICAL SECURITY INSTRUCTIONS:
     const check = validateStep1Identity({
       propertyName,
       tagline,
-      propertyArchetype,
     });
 
     if (!check.isValid) {
@@ -475,7 +467,6 @@ CRITICAL SECURITY INSTRUCTIONS:
         ...prev,
         propertyName: true,
         tagline: true,
-        propertyArchetype: true,
       }));
       const firstMsg = Object.values(check.errors)[0];
       toast.error(firstMsg || "Please fix the errors in Step 1 before continuing.");
@@ -653,7 +644,7 @@ CRITICAL SECURITY INSTRUCTIONS:
 
     // 0. Full comprehensive validation across all fields
     const fullCheck = validateAllBrandSetup(
-      { propertyName, tagline, propertyArchetype },
+      { propertyName, tagline },
       { primaryColor, secondaryColor, modePreference },
       { adminName, adminEmail, adminPhone, adminPassword, confirmPassword, isExistingPlaceholder: isExistingPasswordPlaceholder }
     );
@@ -704,7 +695,6 @@ CRITICAL SECURITY INSTRUCTIONS:
           branding: {
             propertyName: propertyName.trim(),
             propertyTagline: tagline.trim() || undefined,
-            rentalArchetype: propertyArchetype,
             primaryColor,
             secondaryColor,
             logoUrl,
@@ -732,7 +722,6 @@ CRITICAL SECURITY INSTRUCTIONS:
         {
           propertyName: propertyName.trim(),
           propertyTagline: tagline.trim(),
-          rentalArchetype: propertyArchetype,
           primaryColor,
           secondaryColor,
           logoUrl,
@@ -764,19 +753,8 @@ CRITICAL SECURITY INSTRUCTIONS:
       .toUpperCase();
   };
 
-  const getArchetypeLabel = () => {
-    switch (propertyArchetype) {
-      case "apartment":
-        return "Apartment Complex";
-      case "dormitory":
-        return "Student Dormitory";
-      case "boarding_house":
-        return "Boarding House";
-    }
-  };
-
   const stepsList = [
-    { num: 1, label: "Identity & Archetype", icon: Building2 },
+    { num: 1, label: "Property Identity & Logo", icon: Building2 },
     { num: 2, label: "Theme & Palette", icon: Palette },
     { num: 3, label: "Landlord Account", icon: UserCheck },
     { num: 4, label: "Review & Launch", icon: ShieldCheck },
@@ -889,20 +867,20 @@ CRITICAL SECURITY INSTRUCTIONS:
                   if (step.num === 2) {
                     handleContinueToStep2();
                   } else if (step.num === 3) {
-                    const s1 = validateStep1Identity({ propertyName, tagline, propertyArchetype });
+                    const s1 = validateStep1Identity({ propertyName, tagline });
                     if (!s1.isValid) {
                       setFieldErrors((prev) => ({ ...prev, ...s1.errors }));
-                      setTouchedFields((prev) => ({ ...prev, propertyName: true, tagline: true, propertyArchetype: true }));
+                      setTouchedFields((prev) => ({ ...prev, propertyName: true, tagline: true }));
                       toast.error(Object.values(s1.errors)[0] || "Please complete Step 1 first.");
                       setCurrentStep(1);
                       return;
                     }
                     handleContinueToStep3();
                   } else if (step.num === 4) {
-                    const s1 = validateStep1Identity({ propertyName, tagline, propertyArchetype });
+                    const s1 = validateStep1Identity({ propertyName, tagline });
                     if (!s1.isValid) {
                       setFieldErrors((prev) => ({ ...prev, ...s1.errors }));
-                      setTouchedFields((prev) => ({ ...prev, propertyName: true, tagline: true, propertyArchetype: true }));
+                      setTouchedFields((prev) => ({ ...prev, propertyName: true, tagline: true }));
                       toast.error(Object.values(s1.errors)[0] || "Please complete Step 1 first.");
                       setCurrentStep(1);
                       return;
@@ -984,7 +962,7 @@ CRITICAL SECURITY INSTRUCTIONS:
                           Step 1: Property Identity & Logo
                         </h2>
                         <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                          Set your property brand name, custom logo, and rental archetype
+                          Set your property brand name and custom logo
                         </p>
                       </div>
                     </div>
@@ -1148,134 +1126,6 @@ CRITICAL SECURITY INSTRUCTIONS:
                         <span>{fieldErrors.logoUrl}</span>
                       </p>
                     )}
-
-                    {/* Archetype Selector */}
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1 block">
-                        Property Archetype <span className="text-rose-500">*</span>
-                      </label>
-                      <div className="grid grid-cols-3 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPropertyArchetype("apartment");
-                            setFieldError("propertyArchetype", undefined);
-                          }}
-                          className={cn(
-                            "p-2 rounded-xl text-left transition-all flex flex-col justify-between gap-1 border",
-                            propertyArchetype === "apartment"
-                              ? "bg-zinc-50 dark:bg-zinc-800/80 border-zinc-400 dark:border-zinc-600 shadow-xs"
-                              : "bg-zinc-50/50 dark:bg-zinc-950/40 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300"
-                          )}
-                          style={
-                            propertyArchetype === "apartment"
-                              ? { borderColor: primaryColor, backgroundColor: `${primaryColor}12` }
-                              : undefined
-                          }
-                        >
-                          <div className="flex items-center justify-between">
-                            <Home
-                              className="size-3.5"
-                              style={propertyArchetype === "apartment" ? { color: primaryColor } : undefined}
-                            />
-                            {propertyArchetype === "apartment" && (
-                              <span
-                                className="size-3.5 rounded-full flex items-center justify-center text-[8px] font-bold"
-                                style={{ backgroundColor: primaryColor, color: primaryTextColor }}
-                              >
-                                <Check className="size-2 stroke-[3]" />
-                              </span>
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-900 dark:text-zinc-100">Apartment</p>
-                            <p className="text-[8px] text-zinc-500 leading-tight">Whole units</p>
-                          </div>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPropertyArchetype("dormitory");
-                            setFieldError("propertyArchetype", undefined);
-                          }}
-                          className={cn(
-                            "p-2 rounded-xl text-left transition-all flex flex-col justify-between gap-1 border",
-                            propertyArchetype === "dormitory"
-                              ? "bg-zinc-50 dark:bg-zinc-800/80 border-zinc-400 dark:border-zinc-600 shadow-xs"
-                              : "bg-zinc-50/50 dark:bg-zinc-950/40 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300"
-                          )}
-                          style={
-                            propertyArchetype === "dormitory"
-                              ? { borderColor: primaryColor, backgroundColor: `${primaryColor}12` }
-                              : undefined
-                          }
-                        >
-                          <div className="flex items-center justify-between">
-                            <Bed
-                              className="size-3.5"
-                              style={propertyArchetype === "dormitory" ? { color: primaryColor } : undefined}
-                            />
-                            {propertyArchetype === "dormitory" && (
-                              <span
-                                className="size-3.5 rounded-full flex items-center justify-center text-[8px] font-bold"
-                                style={{ backgroundColor: primaryColor, color: primaryTextColor }}
-                              >
-                                <Check className="size-2 stroke-[3]" />
-                              </span>
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-900 dark:text-zinc-100">Dormitory</p>
-                            <p className="text-[8px] text-zinc-500 leading-tight">Bedspaces</p>
-                          </div>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPropertyArchetype("boarding_house");
-                            setFieldError("propertyArchetype", undefined);
-                          }}
-                          className={cn(
-                            "p-2 rounded-xl text-left transition-all flex flex-col justify-between gap-1 border",
-                            propertyArchetype === "boarding_house"
-                              ? "bg-zinc-50 dark:bg-zinc-800/80 border-zinc-400 dark:border-zinc-600 shadow-xs"
-                              : "bg-zinc-50/50 dark:bg-zinc-950/40 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300"
-                          )}
-                          style={
-                            propertyArchetype === "boarding_house"
-                              ? { borderColor: primaryColor, backgroundColor: `${primaryColor}12` }
-                              : undefined
-                          }
-                        >
-                          <div className="flex items-center justify-between">
-                            <DoorClosed
-                              className="size-3.5"
-                              style={propertyArchetype === "boarding_house" ? { color: primaryColor } : undefined}
-                            />
-                            {propertyArchetype === "boarding_house" && (
-                              <span
-                                className="size-3.5 rounded-full flex items-center justify-center text-[8px] font-bold"
-                                style={{ backgroundColor: primaryColor, color: primaryTextColor }}
-                              >
-                                <Check className="size-2 stroke-[3]" />
-                              </span>
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-900 dark:text-zinc-100">Boarding</p>
-                            <p className="text-[8px] text-zinc-500 leading-tight">Room lease</p>
-                          </div>
-                        </button>
-                      </div>
-                      {fieldErrors.propertyArchetype && (
-                        <p className="mt-1 text-[11px] font-medium text-rose-500 flex items-center gap-1">
-                          <AlertCircle className="size-3 shrink-0" />
-                          <span>{fieldErrors.propertyArchetype}</span>
-                        </p>
-                      )}
-                    </div>
                   </div>
 
                   <div className="pt-1 flex justify-end">
@@ -2098,16 +1948,6 @@ CRITICAL SECURITY INSTRUCTIONS:
                           </div>
                         </div>
                       </div>
-
-                      <div className="mt-3 pt-2 border-t border-zinc-200/70 dark:border-zinc-800 flex items-center justify-between text-[10px]">
-                        <span className="text-zinc-400 font-medium">Archetype</span>
-                        <span
-                          className="font-bold px-2 py-0.5 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800"
-                          style={{ color: primaryColor }}
-                        >
-                          {getArchetypeLabel()}
-                        </span>
-                      </div>
                     </div>
 
                     {/* 2. Visual Theme & Palette Card */}
@@ -2299,7 +2139,6 @@ CRITICAL SECURITY INSTRUCTIONS:
                               {
                                 propertyName: propertyName.trim(),
                                 propertyTagline: tagline.trim(),
-                                rentalArchetype: propertyArchetype,
                                 primaryColor,
                                 secondaryColor,
                                 logoUrl,
@@ -2388,20 +2227,8 @@ CRITICAL SECURITY INSTRUCTIONS:
                   </div>
                 </div>
 
-                {/* Archetype & Inventory Pills */}
+                {/* Brand Theme & Accent Pills */}
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-lg p-2 flex flex-col gap-0.5">
-                    <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-400">
-                      Archetype
-                    </span>
-                    <span
-                      className="text-[10px] font-bold truncate"
-                      style={{ color: primaryColor }}
-                    >
-                      {getArchetypeLabel()}
-                    </span>
-                  </div>
-
                   <div className="bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-lg p-2 flex flex-col gap-0.5">
                     <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-400">
                       Primary Theme
@@ -2413,6 +2240,21 @@ CRITICAL SECURITY INSTRUCTIONS:
                       />
                       <span className="text-[10px] font-mono font-bold text-zinc-700 dark:text-zinc-300 truncate uppercase">
                         {primaryColor}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-lg p-2 flex flex-col gap-0.5">
+                    <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-400">
+                      Secondary Accent
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <div
+                        className="size-2.5 rounded-full border border-zinc-300 dark:border-zinc-700 shrink-0"
+                        style={{ backgroundColor: secondaryColor }}
+                      />
+                      <span className="text-[10px] font-mono font-bold text-zinc-700 dark:text-zinc-300 truncate uppercase">
+                        {secondaryColor}
                       </span>
                     </div>
                   </div>
@@ -2641,7 +2483,6 @@ CRITICAL SECURITY INSTRUCTIONS:
                   {
                     propertyName: propertyName.trim(),
                     propertyTagline: tagline.trim(),
-                    rentalArchetype: propertyArchetype,
                     primaryColor,
                     secondaryColor,
                     logoUrl,
