@@ -22,7 +22,6 @@ import {
   Lock,
   KeyRound,
   ShieldAlert,
-  Sparkles,
   UserCheck,
   RotateCcw,
 } from "lucide-react";

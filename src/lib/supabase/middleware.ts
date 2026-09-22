@@ -66,13 +66,14 @@ const PUBLIC_ROUTE_PREFIXES = [
     "/demo",
     "/sign",
     "/docs",
+    "/download",
     "/about",
     "/terms",
     "/privacy",
 ];
 const PUBLIC_EXACT_ROUTES = ["/"];
 
-const isPublicRoute = (pathname: string, request?: NextRequest) => {
+export const isPublicRoute = (pathname: string, request?: NextRequest) => {
     if (request && (
         request.headers.get("user-agent")?.includes("boneyard") ||
         request.headers.get("x-boneyard") === "true" ||

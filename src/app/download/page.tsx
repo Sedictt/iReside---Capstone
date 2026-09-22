@@ -18,12 +18,19 @@ import {
   HardDrive,
   HelpCircle,
   Package,
+  ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Logo } from "@/components/ui/Logo";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function AppDownloadPage() {
+  const { user, profile, loading } = useAuth();
+  const role = profile?.role || (user?.user_metadata as any)?.role;
+  const dashboardHref = role === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard";
+  const dashboardLabel = role === "tenant" ? "Tenant Dashboard" : "Landlord Dashboard";
+
   const [activeModal, setActiveModal] = useState<"qr" | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [isWindowsDownloading, setIsWindowsDownloading] = useState(false);
@@ -102,12 +109,22 @@ export default function AppDownloadPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="/login"
-            className="neumorphic-extruded hover:text-primary active:scale-95 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all"
-          >
-            Sign In
-          </Link>
+          {!loading && user ? (
+            <Link
+              href={dashboardHref}
+              className="neumorphic-primary hover:scale-[1.02] active:scale-95 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5"
+            >
+              <ArrowLeft className="size-3.5" />
+              <span>{dashboardLabel}</span>
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="neumorphic-extruded hover:text-primary active:scale-95 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+            >
+              Sign In
+            </Link>
+          )}
         </div>
       </nav>
 

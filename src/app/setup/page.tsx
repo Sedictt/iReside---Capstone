@@ -48,6 +48,7 @@ import { cn } from "@/lib/utils";
 import { useBrand } from "@/context/BrandContext";
 import { applyBrandCssVariables } from "@/lib/branding/colors";
 import { useAuth } from "@/hooks/useAuth";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
 import {
@@ -185,10 +186,11 @@ function WizardContent() {
     }
   }, [loading, profile, brand, brand.setupCompleted, isReconfigure, isLaunched, launchedSecurityKey, router]);
 
-  // Pre-fill profile info from authenticated user if available and not pre-seeded
+  // Pre-fill profile info from authenticated user if in reconfigure mode and not pre-seeded
   useEffect(() => {
     if (profile) {
       if (
+        isReconfigure &&
         profile.full_name &&
         !DISALLOWED_PRESEEDED_DATA.adminNames.includes(profile.full_name.trim().toLowerCase())
       ) {
@@ -199,25 +201,28 @@ function WizardContent() {
         !DISALLOWED_PRESEEDED_DATA.emails.includes(profile.email.trim().toLowerCase()) &&
         !profile.email.includes("turnkey.local")
       ) {
-        setAdminEmail(profile.email);
-        setInitialEmail(profile.email);
+        setAdminEmail((curr) => curr || profile.email || "");
+        setInitialEmail((curr) => curr || profile.email || "");
         setIsEmailVerified(true);
       }
       if (
+        isReconfigure &&
         profile.phone &&
         !DISALLOWED_PRESEEDED_DATA.phones.some((p) => p.replace(/\D/g, "") === profile.phone?.replace(/\D/g, ""))
       ) {
         setAdminPhone(profile.phone);
       }
     }
-  }, [profile]);
+  }, [profile, isReconfigure]);
 
-  // Step 1: Identity, Archetype & Logo (Pre-seeded dummy data disallowed)
+  // Step 1: Identity, Archetype & Logo (Pre-seeded dummy data disallowed; empty in initial setup)
   const [propertyName, setPropertyName] = useState(() => {
+    if (!isReconfigure) return "";
     const raw = brand.propertyName?.trim() || "";
     return raw && !DISALLOWED_PRESEEDED_DATA.propertyNames.includes(raw.toLowerCase()) ? raw : "";
   });
   const [tagline, setTagline] = useState(() => {
+    if (!isReconfigure) return "";
     const raw = brand.propertyTagline?.trim() || "";
     return raw && !DISALLOWED_PRESEEDED_DATA.taglines.includes(raw.toLowerCase()) ? raw : "";
   });
@@ -250,8 +255,9 @@ function WizardContent() {
   const [primaryColor, setPrimaryColor] = useState(brand.primaryColor || "#8b5cf6");
   const [secondaryColor, setSecondaryColor] = useState(brand.secondaryColor || "#06b6d4");
 
-  // Step 3: Landlord Account & Email OTP State (Pre-seeded dummy data disallowed)
+  // Step 3: Landlord Account & Email OTP State (Pre-seeded dummy data disallowed; empty in initial setup)
   const [adminName, setAdminName] = useState(() => {
+    if (!isReconfigure) return "";
     const raw = profile?.full_name?.trim() || "";
     return raw && !DISALLOWED_PRESEEDED_DATA.adminNames.includes(raw.toLowerCase()) ? raw : "";
   });
@@ -274,9 +280,10 @@ function WizardContent() {
   const [otpCooldown, setOtpCooldown] = useState(0);
   const [otpError, setOtpError] = useState<string | null>(null);
 
-  const [adminPassword, setAdminPassword] = useState("••••••••••••");
-  const [confirmPassword, setConfirmPassword] = useState("••••••••••••");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [adminPhone, setAdminPhone] = useState(() => {
+    if (!isReconfigure) return "";
     const raw = profile?.phone?.trim() || "";
     const clean = raw.replace(/\D/g, "");
     return raw && !DISALLOWED_PRESEEDED_DATA.phones.some((p) => p.replace(/\D/g, "") === clean) ? raw : "";
@@ -361,7 +368,7 @@ CRITICAL SECURITY INSTRUCTIONS:
     });
   };
 
-  const isExistingPasswordPlaceholder = adminPassword === "••••••••••••";
+  const isExistingPasswordPlaceholder = Boolean(isReconfigure && !adminPassword && !confirmPassword);
   const passwordStrength = useMemo(() => {
     if (isExistingPasswordPlaceholder || !adminPassword) {
       return null;
@@ -669,6 +676,26 @@ CRITICAL SECURITY INSTRUCTIONS:
 
     setIsLaunching(true);
     try {
+      // 0. Update master password via authenticated client session if modified.
+      // Calling supabase.auth.updateUser directly from the authenticated browser client updates credentials
+      // and issues fresh session tokens in place, preventing backend session revocation and subsequent CORS / invalid_grant errors.
+      const isPasswordChanged = Boolean(
+        adminPassword &&
+        adminPassword !== "••••••••••••" &&
+        !adminPassword.includes("•")
+      );
+
+      if (isPasswordChanged) {
+        const supabase = createBrowserSupabaseClient();
+        const { error: authError } = await supabase.auth.updateUser({
+          password: adminPassword.trim(),
+        });
+
+        if (authError) {
+          throw new Error("Failed to update password: " + authError.message);
+        }
+      }
+
       // 1. Call atomic setup launch API to claim credentials & save setup state
       const res = await fetch("/api/setup/launch", {
         method: "POST",
@@ -685,8 +712,8 @@ CRITICAL SECURITY INSTRUCTIONS:
           admin: {
             fullName: adminName.trim(),
             email: adminEmail.trim(),
-            password: adminPassword !== "••••••••••••" ? adminPassword : undefined,
             phone: adminPhone.trim(),
+            // Password is already updated via authenticated client session above
           },
         }),
       });
@@ -1858,13 +1885,15 @@ CRITICAL SECURITY INSTRUCTIONS:
                           <input
                             type={showAdminPassword ? "text" : "password"}
                             value={adminPassword}
+                            placeholder={isReconfigure ? "Leave blank to keep existing password" : "Min. 8 characters (letters & numbers)"}
                             onChange={(e) => {
-                              setAdminPassword(e.target.value);
+                              const val = e.target.value;
+                              setAdminPassword(val);
                               if (touchedFields.adminPassword) {
-                                setFieldError("adminPassword", validateAdminPassword(e.target.value, false).error);
+                                setFieldError("adminPassword", validateAdminPassword(val, isReconfigure && !val && !confirmPassword).error);
                               }
                               if (touchedFields.confirmPassword) {
-                                setFieldError("confirmPassword", validateConfirmPassword(e.target.value, confirmPassword, false).error);
+                                setFieldError("confirmPassword", validateConfirmPassword(val, confirmPassword, isReconfigure && !val && !confirmPassword).error);
                               }
                             }}
                             onBlur={() => {
@@ -1929,10 +1958,12 @@ CRITICAL SECURITY INSTRUCTIONS:
                           <input
                             type={showConfirmPassword ? "text" : "password"}
                             value={confirmPassword}
+                            placeholder={isReconfigure ? "Leave blank to keep existing password" : "Re-enter master password"}
                             onChange={(e) => {
-                              setConfirmPassword(e.target.value);
+                              const val = e.target.value;
+                              setConfirmPassword(val);
                               if (touchedFields.confirmPassword) {
-                                setFieldError("confirmPassword", validateConfirmPassword(adminPassword, e.target.value, false).error);
+                                setFieldError("confirmPassword", validateConfirmPassword(adminPassword, val, isReconfigure && !adminPassword && !val).error);
                               }
                             }}
                             onBlur={() => {
@@ -2183,7 +2214,9 @@ CRITICAL SECURITY INSTRUCTIONS:
 
                       <div className="mt-3 pt-2 border-t border-zinc-200/70 dark:border-zinc-800 flex items-center justify-between text-[10px]">
                         <span className="text-zinc-400 font-medium">Password</span>
-                        <span className="font-mono text-zinc-500 font-semibold">••••••••••••</span>
+                        <span className="font-mono text-zinc-500 font-semibold">
+                          {adminPassword ? "•••••••••••• (Configured)" : "•••••••••••• (Existing)"}
+                        </span>
                       </div>
                     </div>
                   </div>
