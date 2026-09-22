@@ -85,7 +85,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     },
     { 
         id: "Accessibility", 
-        label: "Display & A11y", 
+        label: "Display & Accessibility", 
         icon: Palette,
         description: "Text size, contrast and readability"
     },
