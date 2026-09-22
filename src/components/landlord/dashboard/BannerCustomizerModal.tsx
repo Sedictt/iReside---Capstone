@@ -10,13 +10,11 @@ import {
   RotateCcw,
   X,
   Building2,
-  Link2,
 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/context/BrandContext";
-import { validateBannerImageUrl } from "@/lib/validation/landlord-settings";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 
 
@@ -77,7 +75,7 @@ export function BannerCustomizerModal({
   const brand = useBrand();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedBanner, setSelectedBanner] = useState(currentBanner);
-  const [customUrlInput, setCustomUrlInput] = useState("");
+
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -125,17 +123,7 @@ export function BannerCustomizerModal({
     }
   };
 
-  const handleApplyCustomUrl = () => {
-    const check = validateBannerImageUrl(customUrlInput);
-    if (!check.isValid) {
-      toast.error(check.error || "Please enter a valid image URL starting with http:// or https://");
-      return;
-    }
 
-    setSelectedBanner(customUrlInput.trim());
-    toast.success("Image URL applied! Click 'Apply Banner Photo' to save.");
-    setCustomUrlInput("");
-  };
 
 
   const handleSave = async () => {
@@ -260,42 +248,19 @@ export function BannerCustomizerModal({
         </div>
 
         {/* Upload Custom Action */}
-        <div className="flex flex-col sm:flex-row gap-2.5">
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading || isSaving}
-            className="flex-1 py-3 px-4 rounded-2xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-dashed border-zinc-300 dark:border-zinc-700 text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center justify-center gap-2 transition-all active:scale-95 shadow-xs disabled:opacity-50"
-          >
-            {isUploading ? (
-              <span className="inline-block size-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-            ) : (
-              <Upload className="size-4 text-primary" />
-            )}
-            <span>{isUploading ? "Uploading photo..." : "Upload Property Photo (PNG / JPG)"}</span>
-          </button>
-
-          <div className="flex-1 flex gap-2">
-            <div className="flex-1 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-3 py-1.5 flex items-center gap-2 text-xs">
-              <Link2 className="size-3.5 text-zinc-400 shrink-0" />
-              <input
-                type="url"
-                value={customUrlInput}
-                onChange={(e) => setCustomUrlInput(e.target.value)}
-                placeholder="Or paste direct image URL…"
-                className="bg-transparent border-none outline-none w-full text-xs text-zinc-900 dark:text-zinc-100 focus:ring-0"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={handleApplyCustomUrl}
-              disabled={!customUrlInput.trim()}
-              className="px-3 py-1.5 rounded-xl bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 text-xs font-bold uppercase tracking-wider disabled:opacity-40 transition-all active:scale-95"
-            >
-              Apply
-            </button>
-          </div>
-        </div>
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading || isSaving}
+          className="w-full py-3 px-4 rounded-2xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-dashed border-zinc-300 dark:border-zinc-700 text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center justify-center gap-2 transition-all active:scale-95 shadow-xs disabled:opacity-50"
+        >
+          {isUploading ? (
+            <span className="inline-block size-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          ) : (
+            <Upload className="size-4 text-primary" />
+          )}
+          <span>{isUploading ? "Uploading photo..." : "Upload Property Photo (PNG / JPG)"}</span>
+        </button>
 
         {/* Curated Presets Grid */}
         <div className="space-y-2">
