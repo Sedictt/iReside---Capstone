@@ -80,4 +80,29 @@ export type {
   Step2ThemeData,
   Step3AdminData,
   BrandSetupValidationResult,
-} from "./brand-setup";
+} from "./brand-setup";
+
+// Media Upload validation
+export {
+  validateMediaFile,
+  validateMediaBatch,
+  handleMediaSelection,
+  normalizeMediaFiles,
+  formatBytes,
+  getFileExtension,
+  MEDIA_PRESETS,
+  MEDIA_ACCEPT_STRINGS,
+  DANGEROUS_EXTENSIONS,
+  COMMON_UNSUPPORTED_IMAGE_FORMATS,
+} from "./media-validation";
+
+export type {
+  MediaPreset,
+  PresetConfig,
+  MediaRejectionReason,
+  MediaValidationResult,
+  MediaBatchValidationResult,
+  ValidateMediaOptions,
+  HandleMediaSelectionParams,
+  FunctionalMediaSelectionOptions,
+} from "./media-validation";

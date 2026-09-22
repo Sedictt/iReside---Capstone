@@ -40,6 +40,8 @@ import { m as motion, AnimatePresence } from "framer-motion";
 
 import type { BillingWorkspace } from "@/lib/billing/server";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 
 type UtilityConfigDraft = {
  localId: string;
@@ -1572,10 +1574,14 @@ export function BillingOperationsPanel({
 											<input
 												id="side-qr-upload"
 												type="file"
-												accept="image/*"
+												accept={MEDIA_ACCEPT_STRINGS.image}
 												className="hidden"
 												onChange={(event) => {
-													const file = event.target.files?.[0] ?? null;
+													const file = handleMediaSelection(event, {
+														preset: "image",
+														maxSizeBytes: 5 * 1024 * 1024,
+														notify: (msg, desc) => toast.error(msg, { description: desc }),
+													});
 													if (file) {
 														dispatch({ type: 'UPDATE_PAYMENT', payload: { qrFile: file, qrPreview: URL.createObjectURL(file), removeQr: false } });
 													}

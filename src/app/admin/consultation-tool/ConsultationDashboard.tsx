@@ -12,6 +12,8 @@ import { toast } from 'sonner';
 import { FileText, Plus, Copy, Check, Trash2, ExternalLink, Clock, CheckCircle2 } from 'lucide-react';
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from '@/lib/utils';
+import { handleMediaSelection } from '@/lib/validation/media-validation';
+
 
 interface Document {
   id: string;
@@ -49,11 +51,14 @@ export default function ConsultationDashboard() {
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
-      toast.error('Please upload a PDF file');
-      return;
-    }
+    const file = handleMediaSelection(e, {
+      preset: "document_only",
+      allowedExtensions: [".pdf"],
+      allowedMimeTypes: ["application/pdf"],
+      label: "PDF document",
+      notify: (msg, desc) => toast.error(msg, { description: desc }),
+    });
+    if (!file) return;
 
     setIsUploading(true);
     try {
@@ -129,7 +134,7 @@ export default function ConsultationDashboard() {
               {isUploading ? <div className="size-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Plus className="size-5" />}
               {isUploading ? 'Uploading...' : 'Prepare New Document'}
             </div>
-            <input type="file" className="hidden" accept=".pdf" onChange={handleFileUpload} disabled={isUploading} />
+            <input type="file" className="hidden" accept=".pdf,application/pdf" onChange={handleFileUpload} disabled={isUploading} />
           </label>
         </header>
 

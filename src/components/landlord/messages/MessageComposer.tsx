@@ -18,6 +18,8 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 import { Skeleton } from "@/components/ui/Skeleton";
+import { toast } from "sonner";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 
 
 interface MessageComposerProps {
@@ -298,10 +300,17 @@ export function MessageComposer({
                         ref={fileInputRef} 
                         className="hidden" 
                         multiple
+                        accept={MEDIA_ACCEPT_STRINGS.chat_attachment}
                         onChange={(e) => {
-                            const files = Array.from(e.target.files || []);
-                            if (files.length > 0) onFileUpload(files);
-                            e.target.value = ''; // Reset for same file selection
+                            const validFiles = handleMediaSelection(e, {
+                                preset: "chat_attachment",
+                                multiple: true,
+                                maxSizeBytes: 25 * 1024 * 1024,
+                                notify: (msg, desc) => toast.error(msg, { description: desc }),
+                            });
+                            if (validFiles && validFiles.length > 0) {
+                                onFileUpload(validFiles);
+                            }
                         }}
                     />
                     

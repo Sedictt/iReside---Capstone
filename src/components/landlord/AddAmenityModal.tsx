@@ -87,6 +87,7 @@ import { useProperty } from '@/context/PropertyContext'
 import { upsertAmenity } from '@/lib/queries/amenities'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from '@/lib/validation'
 import type { AmenityWithProperty } from '@/types/database'
 
 interface AddAmenityModalProps {
@@ -824,13 +825,16 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                             id="facility-photo-input"
                                             type="file" 
                                             suppressHydrationWarning
-                                            accept="image/*"
+                                            accept={MEDIA_ACCEPT_STRINGS.image}
                                             className="hidden"
                                             onChange={(e) => {
-                                                const file = e.target.files?.[0]
+                                                const file = handleMediaSelection(e, {
+                                                    preset: "image",
+                                                    notify: (msg, desc) => toast.error(msg, { description: desc }),
+                                                });
                                                 if (file) {
-                                                    setPhotoFile(file)
-                                                    setPhotoPreview(URL.createObjectURL(file))
+                                                    setPhotoFile(file);
+                                                    setPhotoPreview(URL.createObjectURL(file));
                                                 }
                                             }}
                                         />

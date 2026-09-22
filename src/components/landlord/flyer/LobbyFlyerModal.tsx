@@ -45,6 +45,7 @@ import { useProperty } from "@/context/PropertyContext";
 import { useBrand } from "@/context/BrandContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 
 interface LobbyFlyerModalProps {
   isOpen: boolean;
@@ -621,13 +622,11 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = handleMediaSelection(e, {
+      preset: "image",
+      notify: (msg, desc) => toast.error(msg, { description: desc }),
+    });
     if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please upload a valid image (.jpg, .png, .webp)");
-      return;
-    }
 
     // 1. Instant local preview
     const reader = new FileReader();
@@ -784,7 +783,7 @@ export function LobbyFlyerModal({ isOpen, onClose }: LobbyFlyerModalProps) {
           type="file"
           ref={fileInputRef}
           onChange={handleFileUpload}
-          accept="image/*"
+          accept={MEDIA_ACCEPT_STRINGS.image}
           className="hidden"
         />
 

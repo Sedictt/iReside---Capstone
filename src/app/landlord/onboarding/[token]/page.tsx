@@ -33,6 +33,7 @@ import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
 import { toast } from "sonner";
 import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import { LeaseDocument } from "@/components/lease/LeaseDocument";
 import { LeaseData } from "@/types/lease";
 import { generateLeasePdf } from "@/lib/lease-pdf";
@@ -106,15 +107,11 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+        const file = handleMediaSelection(e, {
+            preset: "image",
+            notify: (msg, desc) => toast.error(msg, { description: desc }),
+        });
         if (file) {
-            if (file.size > MAX_FILE_SIZE) {
-                toast.error("File too large", {
-                    description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit.`
-                });
-                e.target.value = "";
-                return;
-            }
             const reader = new FileReader();
             reader.onloadend = () => {
                 setPropertyPhoto(reader.result as string);
@@ -124,15 +121,11 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     };
 
     const handleCoverPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+        const file = handleMediaSelection(e, {
+            preset: "image",
+            notify: (msg, desc) => toast.error(msg, { description: desc }),
+        });
         if (file) {
-            if (file.size > MAX_FILE_SIZE) {
-                toast.error("File too large", {
-                    description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit.`
-                });
-                e.target.value = "";
-                return;
-            }
             const reader = new FileReader();
             reader.onloadend = () => {
                 setCoverPhoto(reader.result as string);
@@ -142,15 +135,11 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     };
 
     const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+        const file = handleMediaSelection(e, {
+            preset: "image",
+            notify: (msg, desc) => toast.error(msg, { description: desc }),
+        });
         if (file) {
-            if (file.size > MAX_FILE_SIZE) {
-                toast.error("File too large", {
-                    description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit.`
-                });
-                e.target.value = "";
-                return;
-            }
             const reader = new FileReader();
             reader.onloadend = () => {
                 setProfilePhoto(reader.result as string);
@@ -689,7 +678,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                     </>
                                                 )}
                                             </div>
-                                            <input id="cover-photo-input" type="file" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" accept="image/*" />
+                                            <input id="cover-photo-input" type="file" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" accept={MEDIA_ACCEPT_STRINGS.image} />
                                             {propertyPhoto && (
                                                 <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-20 pointer-events-none">
                                                     <div className="bg-white/10 border border-white/20 px-4 py-2 rounded-full flex items-center gap-2">
@@ -958,21 +947,17 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 id="contract-upload-input"
                                                 type="file" 
                                                 onChange={(e) => {
-                                                    const file = e.target.files?.[0];
+                                                    const file = handleMediaSelection(e, {
+                                                        preset: "document_only",
+                                                        notify: (msg, desc) => toast.error(msg, { description: desc }),
+                                                    });
                                                     if (file) {
-                                                        if (file.size > MAX_FILE_SIZE) {
-                                                            toast.error("File too large", {
-                                                                description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit.`
-                                                            });
-                                                            e.target.value = "";
-                                                            return;
-                                                        }
                                                         setContractFile(file.name);
                                                         toast.success(`Contract linked: ${file.name}`);
                                                     }
                                                 }}
                                                 className="hidden"
-                                                accept=".pdf,.doc,.docx"
+                                                accept={MEDIA_ACCEPT_STRINGS.document_only}
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-black/60 pointer-events-none" />
                                             
@@ -1266,7 +1251,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                                     type="file" 
                                                                     onChange={handleCoverPhotoChange}
                                                                     className="hidden" 
-                                                                    accept="image/*"
+                                                                    accept={MEDIA_ACCEPT_STRINGS.image}
                                                                 />
                                                                 <div 
                                                                     onClick={() => document.getElementById('cover-photo-input')?.click()}

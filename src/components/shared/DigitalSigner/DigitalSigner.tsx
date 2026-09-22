@@ -28,6 +28,7 @@ import { PDFDocument } from 'pdf-lib';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { playSound } from '@/hooks/useSound';
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from '@/lib/validation';
 import { IResideLoading } from '../IResideLoading';
 
 // Configure worker using the local build
@@ -273,7 +274,10 @@ export function DigitalSigner({
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const photo = e.target.files?.[0];
+    const photo = handleMediaSelection(e, {
+      preset: "image",
+      notify: (message, description) => toast.error(message, { description }),
+    });
     if (!photo) return;
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -648,7 +652,7 @@ export function DigitalSigner({
                   <label className="h-10 px-4 rounded-full hover:bg-primary/10 hover:text-primary text-muted-foreground transition-all cursor-pointer flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
                     <ImageIcon className="size-4" />
                     Upload
-                    <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+                    <input type="file" accept={MEDIA_ACCEPT_STRINGS.image} className="hidden" onChange={handlePhotoUpload} />
                   </label>
                 </div>
               </motion.div>

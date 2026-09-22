@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
 
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+
 type ProfileCoverUploaderProps = {
     initialCoverUrl: string | null;
     fullName: string;
@@ -26,17 +28,12 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
     };
 
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        event.target.value = "";
+        const file = handleMediaSelection(event, {
+            preset: "image",
+            notify: (message, description) => toast.error(message, { description }),
+        });
 
         if (!file) return;
-
-        if (file.size > MAX_FILE_SIZE) {
-            toast.error("File too large", {
-                description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit.`
-            });
-            return;
-        }
 
         const previewUrl = URL.createObjectURL(file);
         setCoverUrl(previewUrl);
@@ -95,7 +92,7 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
             <input
                 ref={inputRef}
                 type="file"
-                accept="image/*"
+                accept={MEDIA_ACCEPT_STRINGS.image}
                 className="hidden"
                 onChange={handleFileChange}
                 disabled={isUploading}

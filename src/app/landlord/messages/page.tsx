@@ -74,6 +74,7 @@ import { QuickActionSummaryModal } from "@/components/messaging/QuickActionSumma
 import { PaymentHistoryModal } from "@/components/messaging/PaymentHistoryModal";
 import { playSound } from "@/hooks/useSound";
 import { toast } from "sonner";
+import { validateMediaBatch } from "@/lib/validation";
 
 const MESSAGE_CACHE_KEY_PREFIX = "ireside:landlord:messages-cache";
 const CONVERSATIONS_CACHE_KEY_PREFIX = "ireside:landlord:conversations-cache";
@@ -993,8 +994,19 @@ setPaymentHistoryLoading(true);
     const queueSelectedFiles = (files: File[]) => {
         if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation first."; return; }
         fileUploadErrorRef.current = null;
+
+        const validation = validateMediaBatch(files, {
+            preset: "chat_attachment",
+            maxSizeBytes: 25 * 1024 * 1024,
+        });
+
+        if (!validation.isValid) {
+            toast.error(validation.message, { description: validation.description });
+            fileUploadErrorRef.current = `${validation.message}: ${validation.description}`;
+            return;
+        }
         
-        files.forEach(file => {
+        validation.validFiles.forEach(file => {
             const id = `pending-${Date.now()}-${Math.random()}`;
             const isImage = file.type.startsWith("image/");
             const previewUrl = isImage ? URL.createObjectURL(file) : null;

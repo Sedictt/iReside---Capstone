@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
 
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+
 type BusinessPermitCardProps = {
     businessName: string | null;
     permitUrl: string | null;
@@ -24,16 +26,11 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
     };
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+        const file = handleMediaSelection(e, {
+            preset: "image",
+            notify: (message, description) => toast.error(message, { description }),
+        });
         if (!file) return;
-
-        if (file.size > MAX_FILE_SIZE) {
-            toast.error("File too large", {
-                description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit. Please upload a smaller file.`
-            });
-            if (fileInputRef.current) fileInputRef.current.value = "";
-            return;
-        }
 
         setUploading(true);
         const formData = new FormData();
@@ -69,7 +66,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                     ref={fileInputRef} 
                     onChange={handleFileChange} 
                     className="hidden" 
-                    accept="image/*"
+                    accept={MEDIA_ACCEPT_STRINGS.image}
                 />
                 <div className="size-16 neumorphic-inset rounded-full flex items-center justify-center mx-auto mb-6">
                     <Building2 className="text-primary" size={32} />
@@ -111,7 +108,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                             ref={fileInputRef} 
                             onChange={handleFileChange} 
                             className="hidden" 
-                            accept="image/*"
+                            accept={MEDIA_ACCEPT_STRINGS.image}
                         />
                         <button 
                             onClick={handleUploadClick}

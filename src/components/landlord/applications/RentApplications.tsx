@@ -45,6 +45,7 @@ import {
 import { ToolAccessBar } from "./ToolAccessBar";
 import { LeaseOfflineSigner } from "@/lib/offline/leaseOfflineSigner";
 import { toast } from "sonner";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import dynamic from "next/dynamic";
 
 const WalkInApplicationModal = dynamic(() => import("@/components/landlord/applications/WalkInApplicationModal").then(mod => mod.WalkInApplicationModal), {
@@ -2309,8 +2310,15 @@ export function RentApplications() {
                       <input
                         ref={resolutionFileInputRef}
                         type="file"
-                        accept="image/jpeg,image/png,image/webp,application/pdf"
-                        onChange={(e) => setResolutionProofFile(e.target.files?.[0] ?? null)}
+                        accept={MEDIA_ACCEPT_STRINGS.document_and_image}
+                        onChange={(e) => {
+                          const file = handleMediaSelection(e, {
+                            preset: "document_and_image",
+                            maxSizeBytes: 10 * 1024 * 1024,
+                            notify: (msg, desc) => toast.error(msg, { description: desc }),
+                          });
+                          setResolutionProofFile(file);
+                        }}
                         className="hidden"
                       />
 

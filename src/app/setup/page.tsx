@@ -71,6 +71,8 @@ import {
   validateAllBrandSetup,
 } from "@/lib/validation/brand-setup";
 import { evaluatePasswordStrength } from "@/lib/validation/landlord-settings";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation/media-validation";
+
 
 
 // HSL to HEX helper
@@ -616,16 +618,14 @@ CRITICAL SECURITY INSTRUCTIONS:
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = handleMediaSelection(e, {
+      preset: "branding_logo",
+      notify: (msg, desc) => {
+        toast.error(msg, { description: desc });
+        setFieldError("logoUrl", `${msg} - ${desc}`);
+      },
+    });
     if (!file) return;
-
-    const check = validateLogoFile({ size: file.size, type: file.type, name: file.name });
-    if (!check.isValid) {
-      toast.error(check.error || "Please upload a valid image file (PNG, JPG, WebP, SVG) under 5MB.");
-      setFieldError("logoUrl", check.error);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      return;
-    }
 
     setFieldError("logoUrl", undefined);
     const reader = new FileReader();
@@ -789,7 +789,7 @@ CRITICAL SECURITY INSTRUCTIONS:
         type="file"
         ref={fileInputRef}
         onChange={handleLogoUpload}
-        accept="image/png, image/jpeg, image/webp, image/svg+xml"
+        accept={MEDIA_ACCEPT_STRINGS.branding_logo}
         className="hidden"
       />
 

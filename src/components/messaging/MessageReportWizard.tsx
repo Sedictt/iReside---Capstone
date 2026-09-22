@@ -21,6 +21,8 @@ import {
   FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 
 export type MessageReportCategory = "spam" | "phishing" | "harassment" | "profanity" | "other";
 
@@ -198,15 +200,16 @@ export function MessageReportWizard({
 
   const addScreenshots = (files: File[]) => {
     if (files.length === 0) return;
-    const allowed = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
-    const next = files
-      .filter((f) => allowed.has(f.type))
-      .slice(0, Math.max(0, 4 - state.screenshots.length));
-    
-    if (next.length === 0) return;
+    if (files.length + state.screenshots.length > 4) {
+      toast.error("Limit exceeded", { description: "You can attach up to 4 screenshots." });
+      return;
+    }
 
-    const newPreviews = next.map(f => URL.createObjectURL(f));
-    dispatch({ type: "SET_SCREENSHOTS", payload: { files: next, previews: newPreviews } });
+    const validFiles = files.slice(0, Math.max(0, 4 - state.screenshots.length));
+    if (validFiles.length === 0) return;
+
+    const newPreviews = validFiles.map(f => URL.createObjectURL(f));
+    dispatch({ type: "SET_SCREENSHOTS", payload: { files: validFiles, previews: newPreviews } });
   };
 
   const removeScreenshot = (index: number) => {
@@ -456,13 +459,19 @@ export function MessageReportWizard({
                   id="screenshot-input"
                   ref={fileInputRef}
                   type="file"
-                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  accept={MEDIA_ACCEPT_STRINGS.image}
                   multiple
                   className="hidden"
                   onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    addScreenshots(files);
-                    e.target.value = "";
+                    const validFiles = handleMediaSelection(e, {
+                      preset: "image",
+                      multiple: true,
+                      maxFiles: 4,
+                      notify: (msg, desc) => toast.error(msg, { description: desc }),
+                    });
+                    if (validFiles && validFiles.length > 0) {
+                      addScreenshots(validFiles);
+                    }
                   }}
                 />
               </section>

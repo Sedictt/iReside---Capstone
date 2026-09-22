@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { OfflineStorage, OfflineBlobStorage } from "@/lib/offline/offlineStorage";
 import { mutationQueue } from "@/lib/offline/mutationQueue";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 
 type InvoiceDetail = NonNullable<Awaited<ReturnType<typeof import("@/lib/billing/server").getInvoiceDetailForActor>>>;
 
@@ -832,7 +833,19 @@ function CheckoutPageContent() {
                                                                 JPG, PNG or PDF up to 5MB
                                                             </p>
                                                         </div>
-                                                        <input type="file" accept="image/*,application/pdf" className="hidden" onChange={(event) => setReceipt(event.target.files?.[0] ?? null)} />
+                                                        <input 
+                                                            type="file" 
+                                                            accept={MEDIA_ACCEPT_STRINGS.document_and_image} 
+                                                            className="hidden" 
+                                                            onChange={(event) => {
+                                                                const validFile = handleMediaSelection(event, {
+                                                                    preset: "document_and_image",
+                                                                    maxSizeBytes: 5 * 1024 * 1024,
+                                                                    notify: (message, description) => toast.error(message, { description }),
+                                                                });
+                                                                setReceipt(validFile);
+                                                            }} 
+                                                        />
                                                     </label>
                                                 </Field>
                                             </div>

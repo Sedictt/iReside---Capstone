@@ -46,6 +46,8 @@ import { cn } from "@/lib/utils";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/ui/Logo";
+import { toast } from "sonner";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 
 type InvitePayload = {
     id: string;
@@ -199,15 +201,31 @@ export function InviteApplicationClient({ token }: { token: string }) {
         }));
     };
 
-    const handleUploadRequirementFiles = async (requirementKey: string, files: FileList | null) => {
+    const handleUploadRequirementFiles = async (requirementKey: string, files: FileList | null | File[]) => {
         if (!files || files.length === 0) return;
+
+        const validFiles = handleMediaSelection(files, {
+            preset: "image",
+            multiple: true,
+            maxFiles: 5,
+            maxSizeBytes: 10 * 1024 * 1024,
+            notify: (message, description) => {
+                setSubmitError(`${message}: ${description}`);
+                toast.error(message, { description });
+            },
+        });
+
+        if (!validFiles || validFiles.length === 0) {
+            return;
+        }
+
         setSubmitError(null);
         setUploadingRequirementKey(requirementKey);
 
         try {
             const form = new FormData();
             form.append("requirementKey", requirementKey);
-            Array.from(files).forEach((file) => form.append("files", file));
+            validFiles.forEach((file) => form.append("files", file));
 
             const response = await fetch(`/api/invites/${token}/documents`, {
                 method: "POST",
@@ -684,7 +702,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                                             {uploadingRequirementKey === key ? "WAIT..." : "UPLOAD"}
                                                                             <input
                                                                                 type="file"
-                                                                                accept="image/*"
+                                                                                accept={MEDIA_ACCEPT_STRINGS.image}
                                                                                 multiple
                                                                                 className="hidden"
                                                                                 disabled={uploadingRequirementKey !== null}

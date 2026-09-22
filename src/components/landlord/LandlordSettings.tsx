@@ -106,6 +106,7 @@ import {
     validateAllLandlordSettings,
     REGEX_NAME,
 } from "@/lib/validation/landlord-settings";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 
 export function normalizeRentalArchetype(val?: string | null): "apartment" | "dormitory" | "boarding_house" {
     if (!val) return "apartment";
@@ -655,18 +656,12 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
     };
 
     const handleBannerFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+        const file = handleMediaSelection(e, {
+            preset: "image",
+            maxSizeBytes: 8 * 1024 * 1024,
+            notify: (message, description) => toast.error(message, { description }),
+        });
         if (!file) return;
-
-        if (!file.type.startsWith("image/")) {
-            toast.error("Please upload a valid image file");
-            return;
-        }
-
-        if (file.size > 8 * 1024 * 1024) {
-            toast.error("Image file size must be less than 8MB");
-            return;
-        }
 
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -681,18 +676,12 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
     };
 
     const handleLogoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+        const file = handleMediaSelection(e, {
+            preset: "branding_logo",
+            maxSizeBytes: 5 * 1024 * 1024,
+            notify: (message, description) => toast.error(message, { description }),
+        });
         if (!file) return;
-
-        if (!file.type.startsWith("image/")) {
-            toast.error("Please upload a valid image file (PNG, JPG, SVG, WebP)");
-            return;
-        }
-
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error("Logo file size must be less than 5MB");
-            return;
-        }
 
         // 1. Instant local preview
         const reader = new FileReader();
@@ -1690,16 +1679,11 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
     };
 
     const handlePermitUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+        const file = handleMediaSelection(e, {
+            preset: "image",
+            notify: (message, description) => toast.error(message, { description }),
+        });
         if (!file) return;
-
-        if (file.size > MAX_FILE_SIZE) {
-            toast.error("File too large", {
-                description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit. Please upload a smaller file.`
-            });
-            if (permitInputRef.current) permitInputRef.current.value = "";
-            return;
-        }
 
         setIsUploadingPermit(true);
         const loadingToast = toast.loading("Uploading permit...");
@@ -2343,7 +2327,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                                             <input 
                                                 ref={permitInputRef}
                                                 type="file" 
-                                                accept="image/*" 
+                                                accept={MEDIA_ACCEPT_STRINGS.image} 
                                                 className="hidden" 
                                                 onChange={handlePermitUpload}
                                             />
@@ -2752,7 +2736,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                                             <input
                                                 ref={logoFileInputRef}
                                                 type="file"
-                                                accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                                                accept={MEDIA_ACCEPT_STRINGS.branding_logo}
                                                 onChange={handleLogoFileUpload}
                                                 className="hidden"
                                             />
@@ -2927,7 +2911,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                                         <input
                                             ref={bannerFileInputRef}
                                             type="file"
-                                            accept="image/*"
+                                            accept={MEDIA_ACCEPT_STRINGS.image}
                                             onChange={handleBannerFileUpload}
                                             className="hidden"
                                         />

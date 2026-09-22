@@ -39,6 +39,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProperty } from "@/context/PropertyContext";
 import { playSound } from "@/hooks/useSound";
 import { useAppToast } from "@/hooks/useAppToast";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -215,9 +216,11 @@ function NewAssetContent() {
     };
 
     const handleMediaFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
-        const selectedFile = files[0];
+        const selectedFile = handleMediaSelection(e, {
+            preset: "image",
+            notify: (msg, desc) => toast.error(desc ? `${msg}: ${desc}` : msg),
+        });
+        if (!selectedFile) return;
         setMediaFiles([selectedFile]);
         setCoverNewIndex(0);
         toast.info("New cover photo selected! Click 'Save Changes' to update.");
@@ -529,7 +532,7 @@ function NewAssetContent() {
                                             <input 
                                                 id="cover-identity" 
                                                 type="file" 
-                                                accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                                accept={MEDIA_ACCEPT_STRINGS.image} 
                                                 onChange={handleMediaFileChange} 
                                                 className="absolute inset-0 opacity-0 cursor-pointer z-20" 
                                             />
@@ -949,13 +952,16 @@ function NewAssetContent() {
                                                     id="contract-upload-input"
                                                     type="file" 
                                                     onChange={(e) => {
-                                                        const file = e.target.files?.[0];
+                                                        const file = handleMediaSelection(e, {
+                                                            preset: "document_only",
+                                                            notify: (msg, desc) => toast.error(desc ? `${msg}: ${desc}` : msg),
+                                                        });
                                                         if (file) {
                                                             handleInputChange("contractFile", file.name);
                                                         }
                                                     }}
                                                     className="hidden"
-                                                    accept=".pdf,.doc,.docx"
+                                                    accept={MEDIA_ACCEPT_STRINGS.document_only}
                                                 />
                                                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-foreground/5 pointer-events-none" />
                                                 

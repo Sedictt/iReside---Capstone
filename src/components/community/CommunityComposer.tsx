@@ -4,6 +4,8 @@ import { useReducer, useRef, FormEvent } from "react"
 import Image from "next/image"
 import { m as motion, AnimatePresence } from "framer-motion"
 import { ImageIcon, X, Send, Megaphone, BarChart3, MessageSquarePlus } from "lucide-react"
+import { toast } from "sonner"
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation"
 
 interface CommunityComposerProps {
     isManagementUser: boolean
@@ -64,11 +66,23 @@ export function CommunityComposer({
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            const newFiles = Array.from(e.target.files)
-            dispatch({ type: "SET_SELECTED_PHOTOS", payload: [...state.selectedPhotos, ...newFiles].slice(0, 4) })
+        const rawFiles = Array.from(e.target.files || []);
+        if (rawFiles.length + state.selectedPhotos.length > 4) {
+            toast.error("Photo limit exceeded", { description: "You can select up to 4 photos." });
+            if (e.target) e.target.value = "";
+            return;
         }
-    }
+
+        const validFiles = handleMediaSelection(e, {
+            preset: "image",
+            multiple: true,
+            notify: (message, description) => toast.error(message, { description }),
+        });
+
+        if (!validFiles || validFiles.length === 0) return;
+
+        dispatch({ type: "SET_SELECTED_PHOTOS", payload: [...state.selectedPhotos, ...validFiles].slice(0, 4) });
+    };
 
     const removePhoto = (index: number) => {
         dispatch({ type: "SET_SELECTED_PHOTOS", payload: state.selectedPhotos.filter((_, i) => i !== index) })
@@ -223,7 +237,7 @@ export function CommunityComposer({
                                 type="file" 
                                 ref={fileInputRef} 
                                 className="hidden" 
-                                accept="image/*" 
+                                accept={MEDIA_ACCEPT_STRINGS.image} 
                                 multiple 
                                 onChange={handlePhotoSelect} 
                             />
