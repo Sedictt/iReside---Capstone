@@ -100,7 +100,6 @@ import {
     validateHexColor,
     validatePropertyTradeName,
     validatePropertyTagline,
-    validateBannerImageUrl,
     evaluatePasswordStrength,
     validatePasswordPair,
     validateAllLandlordSettings,
@@ -577,7 +576,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
         const cached = getCachedSettings();
         return cached?.personalization?.bannerUrl || (typeof window !== "undefined" ? (localStorage.getItem("ireside_landlord_custom_banner_url") || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL);
     });
-    const [customBannerInput, setCustomBannerInput] = useState<string>("");
+
     const [propertyTradeName, setPropertyTradeName] = useState<string>(() => {
         const cached = getCachedSettings();
         return cached?.personalization?.propertyTradeName || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_name") || brand.propertyName || DEFAULT_BRANDING.propertyName) : (brand.propertyName || DEFAULT_BRANDING.propertyName));
@@ -638,18 +637,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
         toast.info("Banner reset to default preview. Save all changes to apply permanently.");
     };
 
-    const handleApplyCustomBannerUrl = (e: React.FormEvent) => {
-        e.preventDefault();
-        const check = validateBannerImageUrl(customBannerInput);
-        if (!check.isValid) {
-            toast.error(check.error || "Please enter a valid image URL");
-            return;
-        }
-        setHasUserEdited(true);
-        setBannerUrl(customBannerInput.trim());
-        setCustomBannerInput("");
-        toast.info("Custom banner preview applied. Save all changes to apply permanently.");
-    };
+
 
     const handleBannerFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = handleMediaSelection(e, {
@@ -2851,51 +2839,29 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                                 </div>
                             </GlassCard>
 
-                            <GlassCard title="Custom Photo Upload or URL" description="Provide your property's real exterior or interior photography.">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <div className="p-6 rounded-2xl border border-dashed border-border flex flex-col items-center justify-center text-center gap-3">
-                                        <div className="size-12 rounded-2xl bg-surface-2 flex items-center justify-center text-primary border border-border">
-                                            <Upload className="size-6" />
-                                        </div>
-                                        <div>
-                                            <h4 className="text-sm font-black text-foreground">Upload Photo File</h4>
-                                            <p className="text-xs text-muted-foreground mt-1">PNG, JPG or WebP up to 8MB</p>
-                                        </div>
-                                        <input
-                                            ref={bannerFileInputRef}
-                                            type="file"
-                                            accept={MEDIA_ACCEPT_STRINGS.image}
-                                            onChange={handleBannerFileUpload}
-                                            className="hidden"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => bannerFileInputRef.current?.click()}
-                                            className="mt-2 px-5 py-2.5 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-wider transition-all"
-                                        >
-                                            Browse Device
-                                        </button>
+                            <GlassCard title="Custom Photo Upload" description="Upload your property's real exterior or interior photography.">
+                                <div className="p-6 rounded-2xl border border-dashed border-border flex flex-col items-center justify-center text-center gap-3">
+                                    <div className="size-12 rounded-2xl bg-surface-2 flex items-center justify-center text-primary border border-border">
+                                        <Upload className="size-6" />
                                     </div>
-
-                                    <form onSubmit={handleApplyCustomBannerUrl} className="flex flex-col justify-between p-6 rounded-2xl bg-surface-2 border border-border/60">
-                                        <div>
-                                            <h4 className="text-sm font-black text-foreground">Direct Image Link</h4>
-                                            <p className="text-xs text-muted-foreground mt-1">Paste a public Unsplash, Cloudinary, or CDN URL</p>
-                                            <input
-                                                type="url"
-                                                value={customBannerInput}
-                                                onChange={(e) => setCustomBannerInput(e.target.value)}
-                                                placeholder="https://images.unsplash.com/..."
-                                                className="mt-4 w-full rounded-xl neumorphic-inset px-4 py-3 text-xs font-medium focus:outline-none"
-                                            />
-                                        </div>
-                                        <button
-                                            type="submit"
-                                            className="mt-4 w-full py-2.5 rounded-xl neumorphic-extruded hover:text-primary text-xs font-black uppercase tracking-wider transition-all"
-                                        >
-                                            Apply Image URL
-                                        </button>
-                                    </form>
+                                    <div>
+                                        <h4 className="text-sm font-black text-foreground">Upload Photo File</h4>
+                                        <p className="text-xs text-muted-foreground mt-1">PNG, JPG or WebP up to 8MB</p>
+                                    </div>
+                                    <input
+                                        ref={bannerFileInputRef}
+                                        type="file"
+                                        accept={MEDIA_ACCEPT_STRINGS.image}
+                                        onChange={handleBannerFileUpload}
+                                        className="hidden"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => bannerFileInputRef.current?.click()}
+                                        className="mt-2 px-5 py-2.5 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-wider transition-all"
+                                    >
+                                        Browse Device
+                                    </button>
                                 </div>
                             </GlassCard>
                         </div>
