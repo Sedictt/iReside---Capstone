@@ -14,6 +14,7 @@ import {
   IrisRateLimitError,
   IrisValidationError,
 } from "./iris.errors";
+import { isPreseededPhone, isPreseededEmail } from "@/lib/validation/brand-setup";
 
 export interface IrisAiClient {
   chat: {
@@ -144,12 +145,18 @@ export class IrisService {
         notes: tenantContext.wifiInfo.notes || undefined,
       };
     } else if (isLandlordQuery && tenantContext.landlord) {
+      const phone = tenantContext.landlord.phone && !isPreseededPhone(tenantContext.landlord.phone)
+        ? tenantContext.landlord.phone
+        : undefined;
+      const email = tenantContext.landlord.email && !isPreseededEmail(tenantContext.landlord.email)
+        ? tenantContext.landlord.email
+        : undefined;
       card = {
         type: "landlord",
         name: tenantContext.landlord.full_name || "Building Management",
         businessName: tenantContext.landlord.business_name ?? undefined,
-        phone: tenantContext.landlord.phone ?? undefined,
-        email: tenantContext.landlord.email ?? undefined,
+        phone,
+        email,
       };
     } else if (isRentQuery && tenantContext.lease) {
       card = {

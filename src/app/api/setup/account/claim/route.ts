@@ -4,16 +4,15 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { logUserActivity } from "@/lib/audit/audit-logger";
 import {
   validateAdminFullName,
-  validateAdminPhone,
   validateAdminEmail,
   validateAdminPassword,
   validateConfirmPassword,
+  isPreseededPhone,
 } from "@/lib/validation/brand-setup";
 import { z } from "zod";
 
 const accountClaimSchema = z.object({
   fullName: z.string().trim().min(2, "Full name must be at least 2 characters."),
-  phone: z.string().trim().optional(),
   newEmail: z.string().trim().email("Please provide a valid email address."),
   otp: z.string().trim().length(6, "Verification code must be exactly 6 digits."),
   newPassword: z.string().min(8, "Password must be at least 8 characters long."),
@@ -54,20 +53,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { fullName, phone, newEmail, otp, newPassword, confirmPassword } = validation.data;
+    const { fullName, newEmail, otp, newPassword, confirmPassword } = validation.data;
     const normalizedEmail = newEmail.toLowerCase().trim();
 
     // Check custom domain & placeholder validation
     const nameCheck = validateAdminFullName(fullName);
     if (!nameCheck.isValid) {
       return NextResponse.json({ error: nameCheck.error }, { status: 400 });
-    }
-
-    if (phone) {
-      const phoneCheck = validateAdminPhone(phone);
-      if (!phoneCheck.isValid) {
-        return NextResponse.json({ error: phoneCheck.error }, { status: 400 });
-      }
     }
 
     const emailCheck = validateAdminEmail(normalizedEmail);
@@ -147,7 +139,6 @@ export async function POST(request: NextRequest) {
         user_metadata: {
           is_account_claimed: true,
           full_name: fullName.trim(),
-          ...(phone ? { phone: phone.trim() } : {}),
         },
       }
     );
@@ -160,7 +151,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Update Profile in database
+    // 4. Update Profile in database: remove any pre-seeded starter phone number
+    const { data: existingProfileForPhone } = await adminClient
+      .from("profiles")
+      .select("phone")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const shouldClearPhone = isPreseededPhone(existingProfileForPhone?.phone);
+
     const fullProfilePayload: Record<string, any> = {
       email: normalizedEmail,
       full_name: fullName.trim(),
@@ -168,7 +167,9 @@ export async function POST(request: NextRequest) {
       has_changed_password: true,
       updated_at: new Date().toISOString(),
     };
-    if (phone) fullProfilePayload.phone = phone.trim();
+    if (shouldClearPhone) {
+      fullProfilePayload.phone = null;
+    }
 
     const { error: profileUpdateErr } = await (adminClient as any)
       .from("profiles")
@@ -177,37 +178,39 @@ export async function POST(request: NextRequest) {
 
     if (profileUpdateErr) {
       console.warn("[Account Claim] Failed updating profiles table with full fields, retrying essential fields:", profileUpdateErr.message);
-      const essentialProfilePayload: Record<string, any> = {
+      const retryPayload: Record<string, any> = {
         email: normalizedEmail,
         full_name: fullName.trim(),
         updated_at: new Date().toISOString(),
       };
-      if (phone) essentialProfilePayload.phone = phone.trim();
+      if (shouldClearPhone) {
+        retryPayload.phone = null;
+      }
       const { error: retryErr } = await (adminClient as any)
         .from("profiles")
-        .update(essentialProfilePayload)
+        .update(retryPayload)
         .eq("id", userId);
       if (retryErr) {
         console.error("[Account Claim] Essential profile fields update also failed:", retryErr.message);
       }
     }
 
-    // Upsert into profile_private if phone was provided
-    if (phone) {
-      try {
+    // Also strip pre-seeded phone from profile_private
+    try {
+      const { data: privateProfile } = await (adminClient as any)
+        .from("profile_private")
+        .select("phone")
+        .eq("profile_id", userId)
+        .maybeSingle();
+
+      if (isPreseededPhone(privateProfile?.phone)) {
         await (adminClient as any)
           .from("profile_private")
-          .upsert(
-            {
-              profile_id: userId,
-              phone: phone.trim(),
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "profile_id" }
-          );
-      } catch (privErr) {
-        console.warn("[Account Claim] profile_private update note:", privErr);
+          .update({ phone: null, updated_at: new Date().toISOString() })
+          .eq("profile_id", userId);
       }
+    } catch (privatePhoneErr) {
+      console.warn("[Account Claim] Note: profile_private phone cleanup:", privatePhoneErr);
     }
 
     // 5. Clear OTP and mark password changed in user_security_settings

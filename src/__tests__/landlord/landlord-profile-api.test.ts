@@ -148,6 +148,82 @@ describe("Landlord Profile API (/api/landlord/profile)", () => {
       expect(json.profile.email).toBe("matching.owner@customdomain.ph");
       expect(mockProfilesUpdate).not.toHaveBeenCalled();
     });
+
+    it("clears pre-seeded starter phone numbers in profiles and profile_private to null via self-healing", async () => {
+      mockRequireAuthenticatedUser.mockResolvedValue({
+        userId: "landlord-user-1",
+        userEmail: "owner@customdomain.ph",
+        userRole: "landlord",
+      });
+
+      const mockProfilesUpdate = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      });
+      const mockPrivateUpdate = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      });
+
+      mockAdminFrom.mockImplementation((table: string) => {
+        if (table === "profiles") {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: {
+                    id: "landlord-user-1",
+                    email: "owner@customdomain.ph",
+                    full_name: "Starter Landlord",
+                    phone: "0917-882-9912",
+                    socials: {},
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+            update: mockProfilesUpdate,
+          };
+        }
+        if (table === "profile_private") {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { phone: "0917-882-9912", address: "123 Street" },
+                  error: null,
+                }),
+              }),
+            }),
+            update: mockPrivateUpdate,
+          };
+        }
+        if (table === "landlord_business_profiles") {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      const req = new NextRequest("http://localhost:3000/api/landlord/profile", {
+        method: "GET",
+      });
+
+      const res = await GET(req);
+      expect(res.status).toBe(200);
+      const json = await res.json();
+
+      expect(json.profile.phone).toBeNull();
+      expect(mockProfilesUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ phone: null })
+      );
+      expect(mockPrivateUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ phone: null })
+      );
+    });
   });
 
   describe("PATCH /api/landlord/profile", () => {
@@ -235,6 +311,89 @@ describe("Landlord Profile API (/api/landlord/profile)", () => {
           email: "new.owner@customdomain.ph",
           email_confirm: true,
         })
+      );
+    });
+
+    it("sanitizes pre-seeded dummy phone numbers to null during update", async () => {
+      mockRequireAuthenticatedUser.mockResolvedValue({
+        userId: "landlord-user-1",
+        userEmail: "owner@customdomain.ph",
+        userRole: "landlord",
+      });
+
+      const mockProfilesUpdate = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: {
+                id: "landlord-user-1",
+                email: "owner@customdomain.ph",
+                full_name: "Juan Dela Cruz",
+                phone: null,
+              },
+              error: null,
+            }),
+          }),
+        }),
+      });
+
+      const mockPrivateUpsert = vi.fn().mockResolvedValue({ error: null });
+
+      mockAdminFrom.mockImplementation((table: string) => {
+        if (table === "profiles") {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: {
+                    id: "landlord-user-1",
+                    email: "owner@customdomain.ph",
+                    full_name: "Juan Dela Cruz",
+                    socials: {},
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+            update: mockProfilesUpdate,
+          };
+        }
+        if (table === "profile_private") {
+          return {
+            upsert: mockPrivateUpsert,
+          };
+        }
+        if (table === "landlord_business_profiles") {
+          return {
+            upsert: vi.fn().mockResolvedValue({ error: null }),
+          };
+        }
+        return {};
+      });
+
+      const req = new NextRequest("http://localhost:3000/api/landlord/profile", {
+        method: "PATCH",
+        body: JSON.stringify({
+          phone: "0917-882-9912", // Pre-seeded starter phone submitted
+        }),
+      });
+
+      const res = await PATCH(req);
+      expect(res.status).toBe(200);
+
+      // profiles table should have phone set to null
+      expect(mockProfilesUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          phone: null,
+        })
+      );
+
+      // profile_private table should also have phone set to null
+      expect(mockPrivateUpsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          phone: null,
+        }),
+        expect.anything()
       );
     });
   });

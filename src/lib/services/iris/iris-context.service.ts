@@ -114,9 +114,20 @@ export class IrisContextService {
       .order("created_at", { ascending: false })
       .limit(5);
 
+    const sanitizedLandlord: TenantLandlordInfo | null = landlord ? {
+      ...landlord,
+      phone: isPreseededPhone(landlord.phone) ? null : landlord.phone,
+      email: isPreseededEmail(landlord.email) ? null : landlord.email,
+    } : null;
+
+    const sanitizedProfile = profile ? {
+      ...profile,
+      phone: isPreseededPhone(profile.phone) ? null : profile.phone,
+    } : null;
+
     return {
-      profile: profile ?? null,
-      landlord,
+      profile: sanitizedProfile,
+      landlord: sanitizedLandlord,
       lease: activeLease,
       unit,
       property,
@@ -139,8 +150,8 @@ export class IrisContextService {
     if (profile) {
       systemPrompt += `TENANT INFORMATION:\n`;
       systemPrompt += `- Name: ${profile.full_name}\n`;
-      systemPrompt += `- Email: ${profile.email}\n`;
-      if (profile.phone) systemPrompt += `- Phone: ${profile.phone}\n`;
+      if (profile.email && !isPreseededEmail(profile.email)) systemPrompt += `- Email: ${profile.email}\n`;
+      if (profile.phone && !isPreseededPhone(profile.phone)) systemPrompt += `- Phone: ${profile.phone}\n`;
       systemPrompt += `\n`;
     }
 

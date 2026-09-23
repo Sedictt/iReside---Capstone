@@ -72,6 +72,8 @@ export {
   setupLaunchSchema,
   brandingUpdateSchema,
   DISALLOWED_PRESEEDED_DATA,
+  isPreseededPhone,
+  isPreseededEmail,
 } from "./brand-setup";
 
 export type {

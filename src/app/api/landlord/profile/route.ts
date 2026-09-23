@@ -65,6 +65,39 @@ export async function GET(request: Request) {
             .eq("profile_id", userId)
             .maybeSingle();
 
+        // Self-heal: ensure pre-seeded starter phone numbers are removed from database
+        const isProfilePhonePreseeded = isPreseededPhone(profile.phone);
+        const isPrivatePhonePreseeded = isPreseededPhone(privateProfile?.phone);
+
+        if (isProfilePhonePreseeded) {
+            try {
+                await admin
+                    .from("profiles")
+                    .update({ phone: null, updated_at: new Date().toISOString() })
+                    .eq("id", userId);
+                profile.phone = null;
+            } catch (err) {
+                console.warn("[landlord/profile GET] Self-healing profile phone note:", err);
+                profile.phone = null;
+            }
+        }
+
+        if (isPrivatePhonePreseeded) {
+            try {
+                await (admin as any)
+                    .from("profile_private")
+                    .update({ phone: null, updated_at: new Date().toISOString() })
+                    .eq("profile_id", userId);
+                if (privateProfile) privateProfile.phone = null;
+            } catch (err) {
+                console.warn("[landlord/profile GET] Self-healing private profile phone note:", err);
+                if (privateProfile) privateProfile.phone = null;
+            }
+        }
+
+        const rawPhone = privateProfile?.phone ?? profile.phone;
+        const resolvedPhone = isPreseededPhone(rawPhone) ? null : rawPhone;
+
         const { data: businessProfile } = await (admin as any)
             .from("landlord_business_profiles")
             .select("business_name, business_permit_url, business_permit_number, business_permits")
@@ -74,25 +107,6 @@ export async function GET(request: Request) {
         const socialsRecord = (profile.socials && typeof profile.socials === "object") 
             ? (profile.socials as Record<string, any>) 
             : {};
-
-        const rawPhone = privateProfile?.phone ?? profile.phone;
-        const isPhonePlaceholder = isPreseededPhone(rawPhone);
-        const resolvedPhone = isPhonePlaceholder ? null : rawPhone;
-
-        if (isPhonePlaceholder && rawPhone) {
-            try {
-                await admin
-                    .from("profiles")
-                    .update({ phone: null, updated_at: new Date().toISOString() })
-                    .eq("id", userId);
-                await (admin as any)
-                    .from("profile_private")
-                    .update({ phone: null, updated_at: new Date().toISOString() })
-                    .eq("profile_id", userId);
-            } catch (pErr) {
-                console.warn("[landlord/profile GET] Self-healing profile phone clear note:", pErr);
-            }
-        }
 
         const fullProfile = {
             ...profile,
@@ -186,7 +200,10 @@ export async function PATCH(request: Request) {
         if (body.email !== undefined && body.email.trim()) {
             profileUpdates.email = body.email.toLowerCase().trim();
         }
-        if (body.phone !== undefined) profileUpdates.phone = body.phone;
+        if (body.phone !== undefined) {
+            const cleanPhone = body.phone ? body.phone.trim() : null;
+            profileUpdates.phone = cleanPhone && !isPreseededPhone(cleanPhone) ? cleanPhone : null;
+        }
         if (body.address !== undefined) profileUpdates.address = body.address;
         if (body.website !== undefined) profileUpdates.website = body.website;
         if (body.bio !== undefined) profileUpdates.bio = body.bio;
@@ -207,12 +224,14 @@ export async function PATCH(request: Request) {
 
         // 4. Update profile_private (phone, address)
         if (body.phone !== undefined || body.address !== undefined) {
+            const cleanPhone = body.phone !== undefined ? (body.phone && !isPreseededPhone(body.phone.trim()) ? body.phone.trim() : null) : undefined;
+            const finalPhone = cleanPhone !== undefined ? cleanPhone : (isPreseededPhone(updatedProfile.phone) ? null : updatedProfile.phone);
             const { error: privateError } = await (admin as any)
                 .from("profile_private")
                 .upsert(
                     {
                         profile_id: userId,
-                        phone: body.phone ?? updatedProfile.phone,
+                        phone: finalPhone,
                         address: body.address ?? updatedProfile.address,
                         updated_at: new Date().toISOString(),
                     },
@@ -268,7 +287,7 @@ export async function PATCH(request: Request) {
             email: profileUpdates.email ?? updatedProfile.email,
             emergency_contact_name: mergedSocials.emergency_contact_name,
             emergency_contact_phone: mergedSocials.emergency_contact_phone,
-            phone: body.phone ?? updatedProfile.phone,
+            phone: profileUpdates.phone !== undefined ? profileUpdates.phone : (isPreseededPhone(updatedProfile.phone) ? null : updatedProfile.phone),
             address: body.address ?? updatedProfile.address,
             business_name: body.business_name ?? updatedProfile.business_name,
             business_permit_number: body.business_permit_number ?? (updatedProfile as any).business_permit_number,

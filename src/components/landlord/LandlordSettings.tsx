@@ -105,7 +105,7 @@ import {
     REGEX_NAME,
 } from "@/lib/validation/landlord-settings";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
-import { DISALLOWED_PRESEEDED_DATA } from "@/lib/validation/brand-setup";
+import { DISALLOWED_PRESEEDED_DATA, isPreseededPhone } from "@/lib/validation/brand-setup";
 
 export function normalizeRentalArchetype(val?: string | null): "apartment" | "dormitory" | "boarding_house" {
     if (!val) return "apartment";
@@ -728,16 +728,15 @@ export function LandlordSettings() {
         const cached = getCachedSettings();
         if (cached?.formData) {
             const cachedEmail = (cached.formData.email || "").toLowerCase().trim();
-            const isEmailDisallowed = !cachedEmail || 
+            const isDisallowed = !cachedEmail || 
                 DISALLOWED_PRESEEDED_DATA.emails.includes(cachedEmail) || 
                 cachedEmail.includes("turnkey.local");
-            const cleanPhoneDigits = (cached.formData.phone || "").replace(/\D/g, "");
-            const isPhoneDisallowed = cleanPhoneDigits && 
-                DISALLOWED_PRESEEDED_DATA.phones.some(p => p.replace(/\D/g, "") === cleanPhoneDigits);
+            const cachedPhone = cached.formData.phone || "";
+            const isPhoneDisallowed = isPreseededPhone(cachedPhone);
             return {
                 ...cached.formData,
-                email: isEmailDisallowed ? "" : cached.formData.email,
-                phone: isPhoneDisallowed ? "" : (cached.formData.phone || ""),
+                email: isDisallowed ? "" : cached.formData.email,
+                phone: isPhoneDisallowed ? "" : cachedPhone,
             };
         }
         return {
@@ -965,22 +964,18 @@ export function LandlordSettings() {
                 resolvedEmail = freshProfile?.email || user?.email || "";
             }
 
-            const rawPhone = (freshProfile?.phone || privateProfile?.phone || "").trim();
-            const cleanPhoneDigits = rawPhone.replace(/\D/g, "");
-            const isPhoneDisallowed = cleanPhoneDigits && 
-                DISALLOWED_PRESEEDED_DATA.phones.some(p => p.replace(/\D/g, "") === cleanPhoneDigits);
-            const resolvedPhone = isPhoneDisallowed ? "" : rawPhone;
-
             const syncedForm = {
                 full_name: freshProfile?.full_name || "",
                 business_name: freshProfile?.business_name || businessProfile?.business_name || "",
                 email: resolvedEmail,
-                phone: resolvedPhone,
+                phone: isPreseededPhone(freshProfile?.phone) ? "" : (freshProfile?.phone || ""),
                 website: freshProfile?.website || businessProfile?.website || "",
                 address: freshProfile?.address || businessProfile?.address || "",
                 bio: freshProfile?.bio || "",
                 emergency_contact_name: freshProfile?.emergency_contact_name || privateProfile?.emergency_contact_name || (freshProfile?.socials as any)?.emergency_contact_name || "",
-                emergency_contact_phone: freshProfile?.emergency_contact_phone || privateProfile?.emergency_contact_phone || (freshProfile?.socials as any)?.emergency_contact_phone || "",
+                emergency_contact_phone: isPreseededPhone(freshProfile?.emergency_contact_phone || privateProfile?.emergency_contact_phone || (freshProfile?.socials as any)?.emergency_contact_phone)
+                    ? ""
+                    : (freshProfile?.emergency_contact_phone || privateProfile?.emergency_contact_phone || (freshProfile?.socials as any)?.emergency_contact_phone || ""),
                 business_permit_number: freshProfile?.business_permit_number || businessProfile?.business_permit_number || "",
                 socials: typeof freshProfile?.socials === 'object' && freshProfile?.socials !== null 
                     ? {
@@ -1142,24 +1137,25 @@ export function LandlordSettings() {
         syncSettingsWithDatabase();
     }, [syncSettingsWithDatabase]);
 
-    // Reconcile pre-seeded placeholder emails & phones with clean state
+    // Reconcile pre-seeded placeholder emails and phone numbers with authenticated identity
     useEffect(() => {
-        if (user?.email) {
-            const currentEmail = (formData.email || "").toLowerCase().trim();
-            const userEmail = user.email.toLowerCase().trim();
-            const isCurrentDisallowed = !currentEmail || 
-                DISALLOWED_PRESEEDED_DATA.emails.includes(currentEmail) || 
-                currentEmail.includes("turnkey.local");
-            const isUserValid = !DISALLOWED_PRESEEDED_DATA.emails.includes(userEmail) && !userEmail.includes("turnkey.local");
-            if (isCurrentDisallowed && isUserValid) {
-                setFormData(prev => ({ ...prev, email: user.email! }));
-            }
+        if (!user?.email) return;
+        const currentEmail = (formData.email || "").toLowerCase().trim();
+        const userEmail = user.email.toLowerCase().trim();
+        const isCurrentDisallowed = !currentEmail || 
+            DISALLOWED_PRESEEDED_DATA.emails.includes(currentEmail) || 
+            currentEmail.includes("turnkey.local");
+        const isUserValid = !DISALLOWED_PRESEEDED_DATA.emails.includes(userEmail) && !userEmail.includes("turnkey.local");
+        if (isCurrentDisallowed && isUserValid) {
+            setFormData(prev => ({ ...prev, email: user.email! }));
         }
-        const currentPhoneDigits = (formData.phone || "").replace(/\D/g, "");
-        if (currentPhoneDigits && DISALLOWED_PRESEEDED_DATA.phones.some(p => p.replace(/\D/g, "") === currentPhoneDigits)) {
+        if (formData.phone && isPreseededPhone(formData.phone)) {
             setFormData(prev => ({ ...prev, phone: "" }));
         }
-    }, [user?.email, formData.email, formData.phone]);
+        if (formData.emergency_contact_phone && isPreseededPhone(formData.emergency_contact_phone)) {
+            setFormData(prev => ({ ...prev, emergency_contact_phone: "" }));
+        }
+    }, [user?.email, formData.email, formData.phone, formData.emergency_contact_phone]);
 
     const isDirty = useMemo(() => {
         if (isFinanceDirty) return true;

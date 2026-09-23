@@ -27,6 +27,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { fetchIrisHistory, getCachedIrisHistory, setCachedIrisHistory, type IrisHistoryMessage } from "@/lib/iris/client";
 import type { IrisCardData } from "@/lib/services/iris";
 import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
+import { isPreseededPhone, isPreseededEmail } from "@/lib/validation/brand-setup";
 
 const EMPTY_ARRAY = Object.freeze([]) as unknown as any[];
 
@@ -464,7 +465,7 @@ export function ChatWidget({
                                                         </div>
                                                     </div>
                                                     <div className="divide-y divide-border text-[11px]">
-                                                        {msg.card.phone && (
+                                                        {msg.card.phone && !isPreseededPhone(msg.card.phone) && (
                                                             <div className="p-2.5 flex items-center justify-between hover:bg-muted/40 transition-colors">
                                                                 <div className="flex items-center gap-2 min-w-0 pr-2">
                                                                     <Phone className="size-3 text-muted-foreground shrink-0" />
@@ -481,7 +482,7 @@ export function ChatWidget({
                                                                 </button>
                                                             </div>
                                                         )}
-                                                        {msg.card.email && (
+                                                        {msg.card.email && !isPreseededEmail(msg.card.email) && (
                                                             <div className="p-2.5 flex items-center justify-between hover:bg-muted/40 transition-colors">
                                                                 <div className="flex items-center gap-2 min-w-0 pr-2">
                                                                     <Mail className="size-3 text-muted-foreground shrink-0" />
@@ -496,6 +497,11 @@ export function ChatWidget({
                                                                 >
                                                                     {copiedKey === `w-email-${msg.id}` ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
                                                                 </button>
+                                                            </div>
+                                                        )}
+                                                        {(!msg.card.phone || isPreseededPhone(msg.card.phone)) && (!msg.card.email || isPreseededEmail(msg.card.email)) && (
+                                                            <div className="p-2.5 text-muted-foreground text-[10px] italic">
+                                                                Direct contact details are not published yet. Please send a message via the Inquiries tab.
                                                             </div>
                                                         )}
                                                     </div>

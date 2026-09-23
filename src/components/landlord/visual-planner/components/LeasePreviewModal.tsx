@@ -6,6 +6,7 @@ import { X, Printer, FileText, Loader2, AlertCircle } from "lucide-react";
 import { Unit } from "../types";
 import { LeaseDocument } from "@/components/lease/LeaseDocument";
 import { LeaseData } from "@/types/lease";
+import { isPreseededPhone } from "@/lib/validation/brand-setup";
 
 interface LeasePreviewModalProps {
     isOpen: boolean;
@@ -97,7 +98,7 @@ export const LeasePreviewModal = ({
                                 full_name: matchedLease.landlord?.full_name || "Property Owner",
                                 avatar_url: matchedLease.landlord?.avatar_url || "",
                                 avatar_bg_color: matchedLease.landlord?.avatar_bg_color || "bg-primary",
-                                phone: matchedLease.landlord?.phone || "+63 900 000 0000",
+                                phone: (matchedLease.landlord?.phone && !isPreseededPhone(matchedLease.landlord.phone)) ? matchedLease.landlord.phone : "",
                             },
                             tenant: {
                                 full_name: matchedLease.tenant?.full_name || unit.tenant || "Valued Resident",
@@ -165,7 +166,7 @@ export const LeasePreviewModal = ({
                     full_name: "Property Management Office",
                     avatar_url: "",
                     avatar_bg_color: "bg-primary",
-                    phone: "+63 900 000 0000",
+                    phone: "",
                 },
                 tenant: {
                     full_name: unit.tenant || "Active Resident",

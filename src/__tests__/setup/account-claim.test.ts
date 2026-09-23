@@ -106,48 +106,6 @@ describe("POST /api/setup/account/claim (Account Claiming & Initial Credential S
     expect(json.error).toContain("sample placeholder");
   });
 
-  it("rejects dummy pre-seeded mobile number or invalid phone format", async () => {
-    mockRequireAuthenticatedUser.mockResolvedValue({
-      userId: "landlord-seed-1",
-      userRole: "landlord",
-      userEmail: "admin@turnkey.local",
-    });
-
-    // 1. Pre-seeded phone number
-    const reqPreseeded = new NextRequest("http://localhost:3000/api/setup/account/claim", {
-      method: "POST",
-      body: JSON.stringify({
-        fullName: "Maria Clara",
-        newEmail: "maria.clara@realdomain.com",
-        phone: "0917-888-1234",
-        otp: "123456",
-        newPassword: "ValidPassword123!",
-        confirmPassword: "ValidPassword123!",
-      }),
-    });
-    const resPreseeded = await accountClaimPost(reqPreseeded);
-    expect(resPreseeded.status).toBe(400);
-    const jsonPreseeded = await resPreseeded.json();
-    expect(jsonPreseeded.error).toContain("sample placeholder");
-
-    // 2. Invalid phone format (Philippine mobile starting with 09 must be 11 digits)
-    const reqInvalid = new NextRequest("http://localhost:3000/api/setup/account/claim", {
-      method: "POST",
-      body: JSON.stringify({
-        fullName: "Maria Clara",
-        newEmail: "maria.clara@realdomain.com",
-        phone: "091234567", // starts with 09 but only 9 digits
-        otp: "123456",
-        newPassword: "ValidPassword123!",
-        confirmPassword: "ValidPassword123!",
-      }),
-    });
-    const resInvalid = await accountClaimPost(reqInvalid);
-    expect(resInvalid.status).toBe(400);
-    const jsonInvalid = await resInvalid.json();
-    expect(jsonInvalid.error).toContain("Philippine mobile numbers starting with 09 must be 11 digits");
-  });
-
   it("rejects when OTP is incorrect or expired", async () => {
     mockRequireAuthenticatedUser.mockResolvedValue({
       userId: "landlord-seed-1",
@@ -259,8 +217,6 @@ describe("POST /api/setup/account/claim (Account Claiming & Initial Credential S
       eq: vi.fn().mockResolvedValue({ error: null }),
     });
 
-    const mockProfilePrivateUpsert = vi.fn().mockResolvedValue({ error: null });
-
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === "user_security_settings") {
         return {
@@ -278,20 +234,36 @@ describe("POST /api/setup/account/claim (Account Claiming & Initial Credential S
         };
       }
       if (table === "profiles") {
+        let queryFields = "";
         return {
-          select: vi.fn().mockReturnThis(),
-          ilike: vi.fn().mockReturnThis(),
-          neq: vi.fn().mockReturnThis(),
-          maybeSingle: vi.fn().mockResolvedValue({
-            data: null,
-            error: null,
+          select: vi.fn().mockImplementation((fields: string) => {
+            queryFields = fields;
+            return {
+              eq: vi.fn().mockReturnThis(),
+              ilike: vi.fn().mockReturnThis(),
+              neq: vi.fn().mockReturnThis(),
+              maybeSingle: vi.fn().mockImplementation(async () => {
+                if (queryFields === "phone") {
+                  return { data: { phone: "0917-882-9912" }, error: null };
+                }
+                return { data: null, error: null };
+              }),
+            };
           }),
           update: mockProfileUpdate,
         };
       }
       if (table === "profile_private") {
         return {
-          upsert: mockProfilePrivateUpsert,
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: { phone: "0917-882-9912" },
+            error: null,
+          }),
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null }),
+          }),
         };
       }
       return {};
@@ -302,7 +274,6 @@ describe("POST /api/setup/account/claim (Account Claiming & Initial Credential S
       body: JSON.stringify({
         fullName: "Maria Clara",
         newEmail: "maria.clara@realdomain.com",
-        phone: "09171234567",
         otp: "112233",
         newPassword: "SuperSecurePassword2026!",
         confirmPassword: "SuperSecurePassword2026!",
@@ -315,7 +286,7 @@ describe("POST /api/setup/account/claim (Account Claiming & Initial Credential S
     expect(json.success).toBe(true);
     expect(json.email).toBe("maria.clara@realdomain.com");
 
-    // Verify auth.admin.updateUserById called with confirmed email, phone and new password
+    // Verify auth.admin.updateUserById called with confirmed email and new password
     expect(mockUpdateUserById).toHaveBeenCalledWith(
       "landlord-seed-1",
       expect.objectContaining({
@@ -325,29 +296,19 @@ describe("POST /api/setup/account/claim (Account Claiming & Initial Credential S
         user_metadata: expect.objectContaining({
           is_account_claimed: true,
           full_name: "Maria Clara",
-          phone: "09171234567",
         }),
       })
     );
 
-    // Verify profiles table updated with is_account_claimed: true and phone
+    // Verify profiles table updated with is_account_claimed: true and pre-seeded phone cleared to null
     expect(mockProfileUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         email: "maria.clara@realdomain.com",
         full_name: "Maria Clara",
-        phone: "09171234567",
+        phone: null,
         is_account_claimed: true,
         has_changed_password: true,
       })
-    );
-
-    // Verify profile_private updated with phone
-    expect(mockProfilePrivateUpsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        profile_id: "landlord-seed-1",
-        phone: "09171234567",
-      }),
-      { onConflict: "profile_id" }
     );
 
     // Verify security settings cleared OTP

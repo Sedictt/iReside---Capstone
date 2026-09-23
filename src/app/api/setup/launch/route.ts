@@ -5,7 +5,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { DEFAULT_BRANDING, BrandConfig } from "@/context/BrandContext";
 import { generateSecurityKey, encryptSecurityKey } from "@/lib/security/recovery-keys";
 import { logUserActivity } from "@/lib/audit/audit-logger";
-import { setupLaunchSchema, DISALLOWED_PRESEEDED_DATA } from "@/lib/validation/brand-setup";
+import { setupLaunchSchema, DISALLOWED_PRESEEDED_DATA, isPreseededPhone } from "@/lib/validation/brand-setup";
 
 interface SetupLaunchPayload {
   branding: {
@@ -162,6 +162,24 @@ export async function POST(request: NextRequest) {
         : undefined
     );
 
+    const effectivePhone = adminPhone && !isPreseededPhone(adminPhone) ? adminPhone : undefined;
+    let shouldClearPhone = Boolean(adminPhone && isPreseededPhone(adminPhone));
+
+    if (!adminPhone) {
+      try {
+        const { data: curProf } = await adminClient
+          .from("profiles")
+          .select("phone")
+          .eq("id", userId)
+          .maybeSingle();
+        if (isPreseededPhone(curProf?.phone)) {
+          shouldClearPhone = true;
+        }
+      } catch {
+        // ignore
+      }
+    }
+
     const profileUpdates: Record<string, unknown> = {
       business_name: propertyName,
       socials: updatedSocials,
@@ -169,7 +187,11 @@ export async function POST(request: NextRequest) {
       updated_at: timestamp,
     };
     if (adminFullName) profileUpdates.full_name = adminFullName;
-    if (adminPhone) profileUpdates.phone = adminPhone;
+    if (effectivePhone) {
+      profileUpdates.phone = effectivePhone;
+    } else if (shouldClearPhone) {
+      profileUpdates.phone = null;
+    }
     if (effectiveEmail) profileUpdates.email = effectiveEmail;
 
     const { error: profileError } = await adminClient
@@ -184,7 +206,11 @@ export async function POST(request: NextRequest) {
         updated_at: timestamp,
       };
       if (adminFullName) fallbackUpdates.full_name = adminFullName;
-      if (adminPhone) fallbackUpdates.phone = adminPhone;
+      if (effectivePhone) {
+        fallbackUpdates.phone = effectivePhone;
+      } else if (shouldClearPhone) {
+        fallbackUpdates.phone = null;
+      }
       if (effectiveEmail) fallbackUpdates.email = effectiveEmail;
       const { error: fallbackError } = await adminClient
         .from("profiles")
@@ -192,6 +218,18 @@ export async function POST(request: NextRequest) {
         .eq("id", userId);
       if (fallbackError) {
         console.error("[Setup Launch] Resilient profile update failed:", fallbackError.message);
+      }
+    }
+
+    // Clean up pre-seeded phone from profile_private if needed
+    if (shouldClearPhone) {
+      try {
+        await (adminClient as any)
+          .from("profile_private")
+          .update({ phone: null, updated_at: timestamp })
+          .eq("profile_id", userId);
+      } catch {
+        // ignore
       }
     }
 

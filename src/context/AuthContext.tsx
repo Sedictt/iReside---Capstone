@@ -14,6 +14,7 @@ import { AUTH_SYNC_CHANNEL_NAME, type AuthSyncEvent } from '@/lib/supabase/clien
 import type { Profile } from '@/types/database'
 import type { User, Session } from '@supabase/supabase-js'
 import { toast } from 'sonner'
+import { isPreseededPhone } from '@/lib/validation/brand-setup'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -232,11 +233,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const socialsRecord = (profile?.socials && typeof profile.socials === 'object') ? (profile.socials as Record<string, any>) : {};
 
+        const rawPhone = privateProfile?.phone ?? profile.phone;
+        const cleanPhone = isPreseededPhone(rawPhone) ? null : rawPhone;
+
         return {
             ...profile,
             emergency_contact_name: (profile as any)?.emergency_contact_name || socialsRecord?.emergency_contact_name || null,
             emergency_contact_phone: (profile as any)?.emergency_contact_phone || socialsRecord?.emergency_contact_phone || null,
-            phone: privateProfile?.phone ?? profile.phone,
+            phone: cleanPhone,
             address: privateProfile?.address ?? profile.address,
             business_name: businessProfile?.business_name ?? profile.business_name,
             business_permit_url: businessProfile?.business_permit_url ?? profile.business_permit_url,
@@ -264,6 +268,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (isDisallowed) {
                 profile.email = state.user.email;
             }
+        }
+        if (profile && isPreseededPhone(profile.phone)) {
+            profile.phone = null;
         }
         setState(prev => ({
             ...prev,
@@ -313,6 +320,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (isDisallowed) {
                     fetchedProfile.email = currentUser.email;
                 }
+            }
+
+            if (fetchedProfile && isPreseededPhone(fetchedProfile.phone)) {
+                fetchedProfile.phone = null;
             }
 
             setState(prev => ({
