@@ -3319,6 +3319,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     onSetupComplete={() => {
                         setIsSetupComplete(true);
                         setRefreshKey((prev) => prev + 1);
+                        void propertyContext?.refreshProperties();
                     }}
                 />
             </div>

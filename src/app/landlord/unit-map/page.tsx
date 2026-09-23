@@ -14,7 +14,14 @@ function UnitMapContent() {
     const preview = searchParams.get("preview");
     const isPreviewEmptyFloor = preview === "empty-floor" || preview === "setup" || preview === "true";
 
-    const { selectedPropertyId, selectedProperty, loading, properties } = useProperty();
+    const { selectedPropertyId, loading, properties, setSelectedPropertyId } = useProperty();
+
+    const paramPropertyId = searchParams.get("propertyId");
+    const unconfiguredProperty = properties.find((p) => !p.isMapSetupComplete);
+    const activePropertyId =
+        selectedPropertyId && selectedPropertyId !== "all"
+            ? selectedPropertyId
+            : paramPropertyId || unconfiguredProperty?.id || (properties.length === 1 ? properties[0]?.id : null);
 
     if (isPreviewEmptyFloor) {
         return (
@@ -33,7 +40,7 @@ function UnitMapContent() {
         return <VisualPlannerSkeleton />;
     }
 
-    if (!selectedPropertyId || selectedPropertyId === "all") {
+    if (!activePropertyId) {
         return (
             <PropertySelectorHub 
                 title="Visual Planner"
@@ -47,7 +54,7 @@ function UnitMapContent() {
 
     return (
         <div className="h-full">
-            <VisualBuilder key={selectedPropertyId} propertyId={selectedPropertyId} />
+            <VisualBuilder key={activePropertyId} propertyId={activePropertyId} />
         </div>
     );
 }

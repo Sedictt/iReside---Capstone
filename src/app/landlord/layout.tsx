@@ -14,6 +14,7 @@ import { ProfileCard } from "@/components/ui/ProfileCard";
 import { GlobalDetailModal } from "@/components/landlord/tenants/GlobalDetailModal";
 import { NotificationBanner } from "@/components/navigation/NotificationBanner";
 import { LandlordWelcomeLightbox } from "@/components/landlord/dashboard/LandlordWelcomeLightbox";
+import { LandlordUnitMapLightbox } from "@/components/landlord/dashboard/LandlordUnitMapLightbox";
 import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -31,19 +32,30 @@ function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }
     const hasZeroProperties = isReady && isLandlord && properties.length === 0;
     const isAllowedCreationRoute = pathname === "/landlord/properties/new";
 
+    // Stage 2: Landlord has registered a property, but unit map is not yet configured
+    const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete);
+    const hasPendingUnitMap = isReady && isLandlord && properties.length > 0 && !hasConfiguredMap;
+    const isAllowedUnitMapRoute = pathname?.startsWith("/landlord/unit-map") || pathname === "/landlord/properties/new";
+
     useEffect(() => {
         if (hasZeroProperties && !isAllowedCreationRoute) {
             // When zero properties and not on properties/new, keep user routed toward property setup
             if (pathname !== "/landlord/dashboard") {
                 router.replace("/landlord/properties/new");
             }
+        } else if (hasPendingUnitMap && !isAllowedUnitMapRoute) {
+            // When property registered but unit map unconfigured, keep user routed toward unit map setup
+            if (pathname !== "/landlord/dashboard") {
+                router.replace("/landlord/unit-map");
+            }
         }
-    }, [hasZeroProperties, isAllowedCreationRoute, pathname, router]);
+    }, [hasZeroProperties, hasPendingUnitMap, isAllowedCreationRoute, isAllowedUnitMapRoute, pathname, router]);
 
     return (
         <>
             {children}
             <LandlordWelcomeLightbox />
+            <LandlordUnitMapLightbox />
         </>
     );
 }

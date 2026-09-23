@@ -19,6 +19,8 @@ export interface Property {
     name: string
     address: string
     image: string | null
+    isMapSetupComplete?: boolean
+    placedCount?: number
     units: Array<{
         id: string
         name: string

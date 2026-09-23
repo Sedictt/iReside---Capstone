@@ -192,6 +192,48 @@ describe("Email Verification OTP Endpoints", () => {
       });
     });
 
+    it("validates OTP without consuming it when validateOnly is true", async () => {
+      mockRequireAuthenticatedUser.mockResolvedValue({
+        userId: "landlord-1",
+        userRole: "landlord",
+      });
+
+      const validFuture = new Date(Date.now() + 600000).toISOString();
+
+      mockAdminFrom.mockImplementation((table: string) => {
+        if (table === "user_security_settings") {
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: {
+                    otp_code: "654321",
+                    otp_expiry: validFuture,
+                    two_factor_email: "verified@example.com",
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      const req = new NextRequest("http://localhost:3000/api/setup/email/verify-otp", {
+        method: "POST",
+        body: JSON.stringify({ newEmail: "verified@example.com", otp: "654321", validateOnly: true }),
+      });
+
+      const res = await verifyOtpPost(req);
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.success).toBe(true);
+      expect(json.valid).toBe(true);
+      // Ensure updateUserById was NOT called in validateOnly mode
+      expect(mockUpdateUserById).not.toHaveBeenCalled();
+    });
+
     it("rejects invalid or expired OTP", async () => {
       mockRequireAuthenticatedUser.mockResolvedValue({
         userId: "landlord-1",

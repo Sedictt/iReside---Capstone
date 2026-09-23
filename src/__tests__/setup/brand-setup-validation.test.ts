@@ -383,6 +383,34 @@ describe("Brand Setup Validation Module", () => {
       expect(Object.keys(res.errors)).toHaveLength(0);
     });
 
+    it("validates Step 1 with valid landlordName", () => {
+      const res = validateStep1Identity({
+        propertyName: "Pinecrest Lofts & Suites",
+        tagline: "Quality student homes and serviced apartments",
+        landlordName: "Juan Dela Cruz",
+      });
+      expect(res.isValid).toBe(true);
+      expect(res.errors["landlordName"]).toBeUndefined();
+    });
+
+    it("rejects placeholder or invalid landlordName in Step 1", () => {
+      const resPlaceholder = validateStep1Identity({
+        propertyName: "Pinecrest Lofts & Suites",
+        tagline: "Quality student homes and serviced apartments",
+        landlordName: "Landlord",
+      });
+      expect(resPlaceholder.isValid).toBe(false);
+      expect(resPlaceholder.errors["landlordName"]).toBeDefined();
+
+      const resShort = validateStep1Identity({
+        propertyName: "Pinecrest Lofts & Suites",
+        tagline: "Quality student homes and serviced apartments",
+        landlordName: "A",
+      });
+      expect(resShort.isValid).toBe(false);
+      expect(resShort.errors["landlordName"]).toBeDefined();
+    });
+
     it("validates Step 2 successfully", () => {
       const res = validateStep2Theme(validStep2);
       expect(res.isValid).toBe(true);

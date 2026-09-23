@@ -9,6 +9,8 @@ interface SecurityKeyDisplayCardProps {
     securityKey: string;
     isAcknowledged: boolean;
     onToggleAcknowledge: (acknowledged: boolean) => void;
+    onDownload?: () => void;
+    onCopy?: () => void;
     title?: string;
     description?: string;
     accountEmail?: string;
@@ -19,6 +21,8 @@ export function SecurityKeyDisplayCard({
     securityKey,
     isAcknowledged,
     onToggleAcknowledge,
+    onDownload,
+    onCopy,
     title = "Your Security Recovery Key",
     description = "Save this single-use recovery key in a safe place. If you ever lose access to your email, this key is your final recourse to restore your account.",
     accountEmail,
@@ -31,6 +35,7 @@ export function SecurityKeyDisplayCard({
         try {
             await navigator.clipboard.writeText(securityKey);
             setCopied(true);
+            onCopy?.();
             toast.success("Security key copied to clipboard");
             setTimeout(() => setCopied(false), 2500);
         } catch {
@@ -71,6 +76,7 @@ IMPORTANT INSTRUCTIONS:
             document.body.removeChild(anchor);
             URL.revokeObjectURL(url);
 
+            onDownload?.();
             toast.success("Security key file downloaded");
         } catch {
             toast.error("Failed to download security key file");
