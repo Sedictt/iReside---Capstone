@@ -12,7 +12,8 @@ import {
     PanelLeftClose, 
     PanelLeftOpen,
     Menu,
-    Lock
+    Lock,
+    AlertTriangle
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,8 @@ export interface SidebarNavItem {
     badge?: number;
     urgent?: boolean;
     tourId?: string;
+    warning?: boolean;
+    warningTooltip?: string;
 }
 
 export interface SidebarNavSection {
@@ -155,7 +158,12 @@ export function RoleSidebar({
             <div className="flex flex-col gap-1 max-w-[220px] text-left py-0.5">
                 <div className="flex items-center gap-1.5">
                     <span className="font-black text-xs text-foreground tracking-tight">{item.label}</span>
-                    {isItemLocked ? (
+                    {item.warning ? (
+                        <span className="flex items-center gap-1 text-[9px] font-bold text-amber-500 uppercase tracking-wider">
+                            <AlertTriangle className="size-2.5" />
+                            Action Needed
+                        </span>
+                    ) : isItemLocked ? (
                         <span className="flex items-center gap-1 text-[9px] font-bold text-amber-500 uppercase tracking-wider">
                             <Lock className="size-2.5" />
                             {lockBadgeText}
@@ -164,7 +172,11 @@ export function RoleSidebar({
                         <span className="size-1.5 rounded-full bg-red-500 animate-ping" />
                     ) : null}
                 </div>
-                {isItemLocked ? (
+                {item.warning ? (
+                    <span className="text-[11px] font-medium text-amber-500/90 leading-snug">
+                        {item.warningTooltip || "Begin setting up your tenants."}
+                    </span>
+                ) : isItemLocked ? (
                     <span className="text-[11px] font-medium text-amber-500/90 leading-snug">
                         {lockTooltipText}
                     </span>
@@ -179,7 +191,7 @@ export function RoleSidebar({
         return (
             <Tooltip
                 key={item.href}
-                content={isCollapsed || isItemLocked ? tooltipContent : undefined}
+                content={isCollapsed || isItemLocked || Boolean(item.warning) ? tooltipContent : undefined}
                 side="right"
                 align="center"
                 sideOffset={18}
@@ -242,14 +254,27 @@ export function RoleSidebar({
                         </span>
                     )}
 
-                    {!isItemLocked && !isCollapsed && item.badge ? (
+                    {!isItemLocked && item.warning && (
+                        <span
+                            data-testid={`warning-icon-${item.label.toLowerCase()}`}
+                            className={cn(
+                                "flex items-center justify-center text-amber-500 shrink-0",
+                                isCollapsed ? "absolute right-2 top-2" : "ml-auto"
+                            )}
+                            title={item.warningTooltip || "Action needed: Begin setting up your tenants"}
+                        >
+                            <AlertTriangle className="size-4 text-amber-500 animate-pulse" />
+                        </span>
+                    )}
+
+                    {!isItemLocked && !isCollapsed && item.badge && !item.warning ? (
                         <span className={cn(
                             "flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-foreground shadow-[inset_2px_2px_4px_rgba(255,255,255,0.4),inset_-2px_-2px_4px_rgba(0,0,0,0.2)]",
                             item.urgent && "animate-pulse shadow-lg shadow-red-500/40"
                         )}>
                             {item.badge > 99 ? '99+' : item.badge}
                         </span>
-                    ) : !isItemLocked && isCollapsed && item.badge ? (
+                    ) : !isItemLocked && isCollapsed && item.badge && !item.warning ? (
                         <span className={cn(
                             "absolute right-2 top-2 size-2.5 rounded-full bg-red-500 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.4),0_0_6px_rgba(239,68,68,0.5)]",
                             item.urgent && "animate-ping"
