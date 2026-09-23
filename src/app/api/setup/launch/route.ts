@@ -98,6 +98,10 @@ export async function POST(request: NextRequest) {
       );
       if (authUpdateError) {
         console.warn("[Setup Launch] Failed updating auth credentials:", authUpdateError.message);
+        return NextResponse.json(
+          { error: `Failed to update account email: ${authUpdateError.message}` },
+          { status: 400 }
+        );
       } else if (newPassword) {
         const targetEmail = newEmail || authContext.userEmail;
         if (targetEmail) {

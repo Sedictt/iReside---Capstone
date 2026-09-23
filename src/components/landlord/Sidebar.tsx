@@ -43,7 +43,15 @@ export function Sidebar({
 }) {
     const { counts, importantNotifications } = useNotifications();
     const { properties, loading: propertyLoading } = useProperty();
-    const isLocked = !propertyLoading && properties.length === 0;
+    const hasZeroProperties = !propertyLoading && properties.length === 0;
+    const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete);
+    const hasPendingUnitMap = !propertyLoading && properties.length > 0 && !hasConfiguredMap;
+    const isLocked = hasZeroProperties || hasPendingUnitMap;
+    const lockStage = hasZeroProperties
+        ? ("no_property" as const)
+        : hasPendingUnitMap
+            ? ("no_unit_map" as const)
+            : null;
     
     const isUrgent = (type: string) => importantNotifications.some(n => n.type === type);
 
@@ -223,6 +231,7 @@ export function Sidebar({
                 onToggleCollapse={onToggleCollapse}
                 showCollapseToggle={showCollapseToggle}
                 isLocked={isLocked}
+                lockStage={lockStage}
                 className={`neu-landlord-sidebar ${className || ''}`}
             />
             <LogoutConfirmationModal

@@ -18,6 +18,7 @@ import { updateTenantPassword } from "@/lib/supabase/client-auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useRouter } from "next/navigation";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
+import { cn } from "@/lib/utils";
 
 function ResetPasswordContent() {
     const [newPassword, setNewPassword] = useState("");
@@ -29,6 +30,7 @@ function ResetPasswordContent() {
     const [hasSession, setHasSession] = useState(false);
     const [userRole, setUserRole] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<{ newPassword?: string; confirmPassword?: string }>({});
     const [isSuccess, setIsSuccess] = useState(false);
     const [securityKey, setSecurityKey] = useState<string | null>(null);
     const [isAcknowledged, setIsAcknowledged] = useState(false);
@@ -94,14 +96,20 @@ function ResetPasswordContent() {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError(null);
+        setFieldErrors({});
+
+        const errors: { newPassword?: string; confirmPassword?: string } = {};
 
         if (newPassword.length < 6) {
-            setError("Password must be at least 6 characters long.");
-            return;
+            errors.newPassword = "Password must be at least 6 characters long.";
         }
 
         if (newPassword !== confirmPassword) {
-            setError("Passwords do not match.");
+            errors.confirmPassword = "Passwords do not match.";
+        }
+
+        if (errors.newPassword || errors.confirmPassword) {
+            setFieldErrors(errors);
             return;
         }
 
@@ -292,7 +300,7 @@ function ResetPasswordContent() {
                                 <div className="space-y-1.5">
                                     <label 
                                         htmlFor="new-password"
-                                        className="block text-xs font-medium text-foreground"
+                                        className={cn("block text-xs font-medium transition-colors", fieldErrors.newPassword ? "text-red-600 dark:text-red-400" : "text-foreground")}
                                     >
                                         New Password
                                     </label>
@@ -303,10 +311,17 @@ function ResetPasswordContent() {
                                             type={isPasswordVisible ? "text" : "password"}
                                             required
                                             value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            onChange={(e) => {
+                                                setNewPassword(e.target.value);
+                                                if (fieldErrors.newPassword) setFieldErrors(prev => ({ ...prev, newPassword: undefined }));
+                                            }}
                                             autoComplete="new-password"
                                             placeholder="••••••••"
-                                            className="h-11 w-full rounded-xl border border-border bg-background pl-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                            aria-invalid={!!fieldErrors.newPassword}
+                                            className={cn(
+                                                "h-11 w-full rounded-xl border bg-background pl-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
+                                                fieldErrors.newPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
+                                            )}
                                         />
                                         <button
                                             type="button"
@@ -317,12 +332,18 @@ function ResetPasswordContent() {
                                             {isPasswordVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                         </button>
                                     </div>
+                                    {fieldErrors.newPassword && (
+                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                            <AlertCircle className="size-3.5 shrink-0" />
+                                            <span>{fieldErrors.newPassword}</span>
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-1.5">
                                     <label 
                                         htmlFor="confirm-password"
-                                        className="block text-xs font-medium text-foreground"
+                                        className={cn("block text-xs font-medium transition-colors", fieldErrors.confirmPassword ? "text-red-600 dark:text-red-400" : "text-foreground")}
                                     >
                                         Confirm Password
                                     </label>
@@ -333,10 +354,25 @@ function ResetPasswordContent() {
                                             type={isConfirmVisible ? "text" : "password"}
                                             required
                                             value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setConfirmPassword(val);
+                                                if (fieldErrors.confirmPassword) {
+                                                    setFieldErrors(prev => ({ ...prev, confirmPassword: undefined }));
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                if (confirmPassword && newPassword && confirmPassword !== newPassword) {
+                                                    setFieldErrors(prev => ({ ...prev, confirmPassword: "Passwords do not match." }));
+                                                }
+                                            }}
                                             autoComplete="new-password"
                                             placeholder="••••••••"
-                                            className="h-11 w-full rounded-xl border border-border bg-background pl-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                            aria-invalid={!!fieldErrors.confirmPassword}
+                                            className={cn(
+                                                "h-11 w-full rounded-xl border bg-background pl-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
+                                                fieldErrors.confirmPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
+                                            )}
                                         />
                                         <button
                                             type="button"
@@ -347,6 +383,12 @@ function ResetPasswordContent() {
                                             {isConfirmVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                         </button>
                                     </div>
+                                    {fieldErrors.confirmPassword && (
+                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                            <AlertCircle className="size-3.5 shrink-0" />
+                                            <span>{fieldErrors.confirmPassword}</span>
+                                        </p>
+                                    )}
                                 </div>
 
                                 <button

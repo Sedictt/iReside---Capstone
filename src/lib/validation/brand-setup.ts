@@ -68,6 +68,10 @@ export const DISALLOWED_PRESEEDED_DATA = {
     "landlord@property.com",
     "landlord@example.com",
     "landlord@turnkey.local",
+    "admin@turnkey.local",
+    "practice.landlord1@ireside.ph",
+    "practice.landlord2@ireside.ph",
+    "practice.landlord3@ireside.ph",
   ],
   phones: [
     "0917-882-9912",
@@ -305,6 +309,7 @@ export function validateConfirmPassword(
 export interface Step1IdentityData {
   propertyName: string;
   tagline: string;
+  landlordName?: string;
   propertyArchetype?: string | null;
   totalUnits?: number | string;
   propertyAddress?: string;
@@ -343,6 +348,11 @@ export function validateStep1Identity(data: Step1IdentityData): { isValid: boole
 
   const taglineCheck = validatePropertyTagline(data.tagline);
   if (!taglineCheck.isValid) errors["tagline"] = taglineCheck.error!;
+
+  if (data.landlordName !== undefined && data.landlordName !== null) {
+    const landlordCheck = validateAdminFullName(data.landlordName);
+    if (!landlordCheck.isValid) errors["landlordName"] = landlordCheck.error!;
+  }
 
   if (data.propertyArchetype) {
     const archetypeCheck = validateRentalArchetype(data.propertyArchetype);

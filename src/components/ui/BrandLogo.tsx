@@ -57,48 +57,26 @@ export function BrandLogo({
     );
   }
 
-  // 2. Monogram Emblem Badge (Custom Property Name without image)
-  if (isCustomBranded) {
-    return (
-      <div className={cn("flex items-center gap-2.5 min-w-0 w-full overflow-hidden", className)}>
-        <div
-          className={cn(
-            "rounded-2xl flex items-center justify-center shrink-0 border shadow-xs transition-transform active:scale-95",
-            sizeClasses.box,
-            imageClassName
-          )}
-          style={{
-            backgroundColor: `${primaryColor}20`,
-            borderColor: `${primaryColor}40`,
-            color: primaryColor,
-          }}
-        >
-          <span className={cn("font-black tracking-wider uppercase", sizeClasses.font)}>
-            {monogramInitials}
-          </span>
-        </div>
-        {showText && (
-          <div className="flex flex-col min-w-0 flex-1 text-left overflow-hidden">
-            <span className={cn("font-black tracking-tight text-foreground truncate block", sizeClasses.text)} title={propertyName}>
-              {propertyName}
-            </span>
-            <span className={cn("text-muted-foreground font-medium truncate block", sizeClasses.subtext)} title={propertyTagline}>
-              {propertyTagline}
-            </span>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // 3. Fallback to standard iReside Logo
+  // 2. Default to standard Wordmark Logo unless custom logo image is uploaded
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn("flex items-center gap-2.5 min-w-0 w-full overflow-hidden", className)}>
       <Logo
         variant="primary"
         theme={theme}
         className={cn(size === "sm" ? "h-7 w-20" : size === "lg" ? "h-12 w-36" : "h-9 w-28", imageClassName)}
       />
+      {showText && propertyName && (
+        <div className="flex flex-col min-w-0 flex-1 text-left overflow-hidden">
+          <span className={cn("font-black tracking-tight text-foreground truncate block", sizeClasses.text)} title={propertyName}>
+            {propertyName}
+          </span>
+          {propertyTagline && (
+            <span className={cn("text-muted-foreground font-medium truncate block", sizeClasses.subtext)} title={propertyTagline}>
+              {propertyTagline}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

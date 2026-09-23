@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useMemo, Suspense } from "react";
+import React, { useState, useRef, useEffect, Suspense } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import {
   Building2,
@@ -8,7 +8,6 @@ import {
   UserCheck,
   ShieldCheck,
   CheckCircle2,
-  SlidersHorizontal,
   AlertCircle,
   EyeOff,
   ArrowRight,
@@ -22,7 +21,6 @@ import {
   Upload,
   Trash2,
   CreditCard,
-  Contrast,
   Edit3,
   KeyRound,
   Copy,
@@ -33,12 +31,16 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
-import { useHighContrast } from "@/hooks/useHighContrast";
-import { HighContrastToggle } from "@/components/ui/HighContrastToggle";
 import { Logo } from "@/components/ui/Logo";
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/context/BrandContext";
-import { applyBrandCssVariables } from "@/lib/branding/colors";
+import {
+  hexToHsl,
+  hslToHex,
+  getContrastRatio,
+  getContrastTextColor,
+  applyBrandCssVariables,
+} from "@/lib/branding/colors";
 import { useAuth } from "@/hooks/useAuth";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
@@ -47,103 +49,70 @@ import {
   validatePropertyTradeName,
   validatePropertyTagline,
   validateBrandColor,
+  validateAdminFullName,
   validateStep1Identity,
   validateStep2Theme,
 } from "@/lib/validation/brand-setup";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation/media-validation";
 
-
-
-// HSL to HEX helper
-function hslToHex(h: number, s: number, l: number): string {
-  l /= 100;
-  const a = (s * Math.min(l, 1 - l)) / 100;
-  const f = (n: number) => {
-    const k = (n + h / 30) % 12;
-    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-    return Math.round(255 * color)
-      .toString(16)
-      .padStart(2, "0");
-  };
-  return `#${f(0)}${f(8)}${f(4)}`;
+// Curated accessible brand palette presets
+interface PalettePreset {
+  id: string;
+  name: string;
+  description: string;
+  primary: string;
+  secondary: string;
 }
 
-// HEX to HSL helper
-function hexToHsl(hex: string): { h: number; s: number; l: number } {
-  let c = hex.replace("#", "");
-  if (c.length === 3) c = c.split("").map((x) => x + x).join("");
-  const r = parseInt(c.substring(0, 2), 16) / 255;
-  const g = parseInt(c.substring(2, 4), 16) / 255;
-  const b = parseInt(c.substring(4, 6), 16) / 255;
-
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  let h = 0;
-  let s = 0;
-  const l = (max + min) / 2;
-
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case r:
-        h = (g - b) / d + (g < b ? 6 : 0);
-        break;
-      case g:
-        h = (b - r) / d + 2;
-        break;
-      case b:
-        h = (r - g) / d + 4;
-        break;
-    }
-    h /= 6;
-  }
-
-  return {
-    h: Math.round(h * 360),
-    s: Math.round(s * 100),
-    l: Math.round(l * 100),
-  };
-}
-
-// Relative Luminance & WCAG Contrast Ratio
-function getLuminance(hex: string): number {
-  let c = hex.replace("#", "");
-  if (c.length === 3) c = c.split("").map((x) => x + x).join("");
-  const rgb = [
-    parseInt(c.substring(0, 2), 16) / 255,
-    parseInt(c.substring(2, 4), 16) / 255,
-    parseInt(c.substring(4, 6), 16) / 255,
-  ].map((val) => {
-    return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
-  });
-  return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
-}
-
-function getContrastRatio(hex1: string, hex2: string): number {
-  const lum1 = getLuminance(hex1);
-  const lum2 = getLuminance(hex2);
-  const brightest = Math.max(lum1, lum2);
-  const darkest = Math.min(lum1, lum2);
-  return Number(((brightest + 0.05) / (darkest + 0.05)).toFixed(1));
-}
-
-// Dynamic Contrast Aware Text Helper
-function getContrastTextColor(bgHex: string): string {
-  const lum = getLuminance(bgHex);
-  return lum > 0.38 ? "#09090b" : "#ffffff";
-}
+const PALETTE_PRESETS: PalettePreset[] = [
+  {
+    id: "sage-slate",
+    name: "Sage & Slate",
+    description: "Calm & Trustworthy",
+    primary: "#10b981",
+    secondary: "#6366f1",
+  },
+  {
+    id: "oceanic-royal",
+    name: "Oceanic Navy",
+    description: "Corporate & Reliable",
+    primary: "#2563eb",
+    secondary: "#06b6d4",
+  },
+  {
+    id: "forest-amber",
+    name: "Forest & Amber",
+    description: "Residential & Natural",
+    primary: "#059669",
+    secondary: "#d97706",
+  },
+  {
+    id: "modern-violet",
+    name: "Modern Violet",
+    description: "Contemporary & Boutique",
+    primary: "#7c3aed",
+    secondary: "#f43f5e",
+  },
+  {
+    id: "slate-sky",
+    name: "Slate & Sky",
+    description: "Architectural & Clean",
+    primary: "#0284c7",
+    secondary: "#64748b",
+  },
+];
 
 function WizardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isReconfigure = searchParams.get("reconfigure") === "true" || searchParams.get("troubleshoot") === "true";
-  const { profile, loading } = useAuth();
+  const isReconfigure =
+    searchParams.get("reconfigure") === "true" || searchParams.get("troubleshoot") === "true";
+  const { profile, user, loading, refreshProfile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const brand = useBrand();
 
-  // Step 4: Launch State & Security Recovery Key Modal
+  // Launch State & Security Recovery Key Modal
   const [isLaunching, setIsLaunching] = useState(false);
   const [isLaunched, setIsLaunched] = useState(false);
   const [launchedSecurityKey, setLaunchedSecurityKey] = useState<string | null>(null);
@@ -158,18 +127,32 @@ function WizardContent() {
       return;
     }
 
-    // Completion Lock: Redirect to dashboard if setup is already finalized unless in reconfigure mode or currently in launched key lightbox
-    if (!loading && brand && brand.setupCompleted && !isReconfigure && !isLaunched && !launchedSecurityKey) {
+    if (
+      !loading &&
+      brand &&
+      brand.setupCompleted &&
+      !isReconfigure &&
+      !isLaunched &&
+      !launchedSecurityKey
+    ) {
       toast.info("Setup already finalized", {
-        description: "Your property portal is already operational. You can update your brand in Settings.",
+        description:
+          "Your property portal is already operational. You can update your brand in Settings.",
       });
       router.replace("/landlord/dashboard");
     }
-  }, [loading, profile, brand, brand.setupCompleted, isReconfigure, isLaunched, launchedSecurityKey, router]);
+  }, [
+    loading,
+    profile,
+    brand,
+    brand.setupCompleted,
+    isReconfigure,
+    isLaunched,
+    launchedSecurityKey,
+    router,
+  ]);
 
-
-
-  // Step 1: Identity, Archetype & Logo (Pre-seeded dummy data disallowed; empty in initial setup)
+  // Step 1: Identity & Landlord Details
   const [propertyName, setPropertyName] = useState(() => {
     if (!isReconfigure) return "";
     const raw = brand.propertyName?.trim() || "";
@@ -180,23 +163,20 @@ function WizardContent() {
     const raw = brand.propertyTagline?.trim() || "";
     return raw && !DISALLOWED_PRESEEDED_DATA.taglines.includes(raw.toLowerCase()) ? raw : "";
   });
+  const [landlordName, setLandlordName] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(brand.logoUrl);
 
   // Step 2: Light / Dark Mode & Modern HSL Palette
   const { resolvedTheme, setTheme } = useTheme();
-  const { isHighContrast, toggleHighContrast } = useHighContrast();
   const [modePreference, setModePreference] = useState<"dark" | "light">("dark");
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (resolvedTheme === "light" || resolvedTheme === "dark") {
       setModePreference(resolvedTheme);
     }
   }, [resolvedTheme]);
 
   const [colorTarget, setColorTarget] = useState<"primary" | "secondary">("primary");
-  const [selectedHarmonyRule, setSelectedHarmonyRule] = useState<
-    "analogous" | "complementary" | "split" | "monochrome"
-  >("analogous");
 
   // HSL Component States
   const [hue, setHue] = useState(264);
@@ -206,7 +186,13 @@ function WizardContent() {
   const [primaryColor, setPrimaryColor] = useState(brand.primaryColor || "#8b5cf6");
   const [secondaryColor, setSecondaryColor] = useState(brand.secondaryColor || "#06b6d4");
 
-
+  // Sync initial HSL with primary color
+  useEffect(() => {
+    const hsl = hexToHsl(brand.primaryColor || "#8b5cf6");
+    setHue(hsl.h);
+    setSaturation(hsl.s);
+    setLightness(hsl.l);
+  }, [brand.primaryColor]);
 
   const handleDownloadSecurityKey = (key: string, email?: string) => {
     try {
@@ -223,9 +209,9 @@ ${email ? `Landlord Email: ${email}\n` : ""}
 SECURITY RECOVERY KEY:
 ${key}
 
-CRITICAL SECURITY INSTRUCTIONS:
+IMPORTANT INSTRUCTIONS:
 - This key is your ultimate failsafe to recover your landlord account if you lose access to your email.
-- This key is encrypted by the system and will NOT be displayed again.
+- This key is encrypted by the system and will not be displayed again.
 - Each key is single-use. Once used, a new key will be generated.
 - Store this file in a safe location (e.g. encrypted vault, password manager, or secure offline drive).
 - Never share this key with anyone. iReside staff will never ask for your key.
@@ -282,6 +268,7 @@ CRITICAL SECURITY INSTRUCTIONS:
     const check = validateStep1Identity({
       propertyName,
       tagline,
+      landlordName,
     });
 
     if (!check.isValid) {
@@ -290,6 +277,7 @@ CRITICAL SECURITY INSTRUCTIONS:
         ...prev,
         propertyName: true,
         tagline: true,
+        landlordName: true,
       }));
       const firstMsg = Object.values(check.errors)[0];
       toast.error(firstMsg || "Please fix the errors in Step 1 before continuing.");
@@ -321,7 +309,7 @@ CRITICAL SECURITY INSTRUCTIONS:
     setCurrentStep(3);
   };
 
-  // Contrast calculations
+  // Contrast calculations against active surface
   const surfaceHex = modePreference === "dark" ? "#09090b" : "#ffffff";
   const primaryContrast = getContrastRatio(primaryColor, surfaceHex);
   const secondaryContrast = getContrastRatio(secondaryColor, surfaceHex);
@@ -329,22 +317,6 @@ CRITICAL SECURITY INSTRUCTIONS:
   const secondaryTextColor = getContrastTextColor(secondaryColor);
 
   const activeHex = colorTarget === "primary" ? primaryColor : secondaryColor;
-
-  // Harmonized palette generator
-  const getHarmonies = (baseHue: number) => {
-    return {
-      analogous: hslToHex((baseHue + 35) % 360, 85, 58),
-      complementary: hslToHex((baseHue + 180) % 360, 85, 58),
-      split: hslToHex((baseHue + 150) % 360, 85, 58),
-      monochrome: hslToHex(baseHue, Math.max(20, saturation - 40), Math.min(85, lightness + 15)),
-    };
-  };
-
-  const currentHarmonies = getHarmonies(colorTarget === "primary" ? hue : hexToHsl(primaryColor).h);
-  const harmonyAnalogous = currentHarmonies.analogous;
-  const harmonyComplementary = currentHarmonies.complementary;
-  const harmonySplit = currentHarmonies.split;
-  const harmonyMonochrome = currentHarmonies.monochrome;
 
   const updateCurrentTargetFromHsl = (newH: number, newS: number, newL: number) => {
     const hex = hslToHex(newH, newS, newL);
@@ -368,34 +340,69 @@ CRITICAL SECURITY INSTRUCTIONS:
     setLightness(hsl.l);
   };
 
-  const applySecondaryHarmony = (
+  const applyPalettePreset = (preset: PalettePreset) => {
+    setPrimaryColor(preset.primary);
+    setSecondaryColor(preset.secondary);
+    setFieldError("primaryColor", undefined);
+    setFieldError("secondaryColor", undefined);
+    applyBrandCssVariables(preset.primary, preset.secondary);
+
+    const activeSelected = colorTarget === "primary" ? preset.primary : preset.secondary;
+    const hsl = hexToHsl(activeSelected);
+    setHue(hsl.h);
+    setSaturation(hsl.s);
+    setLightness(hsl.l);
+
+    toast.success(`Applied ${preset.name} palette`);
+  };
+
+  // Harmonized secondary color calculation from primary hue
+  const applyHarmonizedSecondary = (
     rule: "analogous" | "complementary" | "split" | "monochrome",
-    hex: string,
     label: string
   ) => {
-    setSelectedHarmonyRule(rule);
-    setSecondaryColor(hex);
+    const primaryHsl = hexToHsl(primaryColor);
+    let newHex = "#06b6d4";
+
+    if (rule === "analogous") {
+      newHex = hslToHex((primaryHsl.h + 35) % 360, 80, 56);
+    } else if (rule === "complementary") {
+      newHex = hslToHex((primaryHsl.h + 180) % 360, 80, 56);
+    } else if (rule === "split") {
+      newHex = hslToHex((primaryHsl.h + 150) % 360, 80, 56);
+    } else if (rule === "monochrome") {
+      newHex = hslToHex(
+        primaryHsl.h,
+        Math.max(25, primaryHsl.s - 35),
+        Math.min(82, primaryHsl.l + 14)
+      );
+    }
+
+    setSecondaryColor(newHex);
     setFieldError("secondaryColor", undefined);
-    applyBrandCssVariables(primaryColor, hex);
+    applyBrandCssVariables(primaryColor, newHex);
+
     if (colorTarget === "secondary") {
-      const hsl = hexToHsl(hex);
+      const hsl = hexToHsl(newHex);
       setHue(hsl.h);
       setSaturation(hsl.s);
       setLightness(hsl.l);
     }
-    toast.success(`Applied ${label} Accent: ${hex}`);
+
+    toast.success(`Applied ${label} Accent: ${newHex.toUpperCase()}`);
   };
 
   const handleModeToggle = (mode: "light" | "dark") => {
     setModePreference(mode);
     if (typeof document !== "undefined" && "startViewTransition" in document) {
-      (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(() => {
-        setTheme(mode);
-      });
+      (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(
+        () => {
+          setTheme(mode);
+        }
+      );
     } else {
       setTheme(mode);
     }
-    toast.info(`Switched default to ${mode.toUpperCase()} mode`);
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -403,7 +410,7 @@ CRITICAL SECURITY INSTRUCTIONS:
       preset: "branding_logo",
       notify: (msg, desc) => {
         toast.error(msg, { description: desc });
-        setFieldError("logoUrl", `${msg} - ${desc}`);
+        setFieldError("logoUrl", `${msg}: ${desc}`);
       },
     });
     if (!file) return;
@@ -413,7 +420,7 @@ CRITICAL SECURITY INSTRUCTIONS:
     reader.onload = (event) => {
       const result = event.target?.result as string;
       setLogoUrl(result);
-      toast.success("Property logo uploaded successfully!");
+      toast.success("Property logo uploaded successfully.");
     };
     reader.readAsDataURL(file);
   };
@@ -422,14 +429,23 @@ CRITICAL SECURITY INSTRUCTIONS:
     setLogoUrl(null);
     setFieldError("logoUrl", undefined);
     if (fileInputRef.current) fileInputRef.current.value = "";
-    toast.info("Logo reset to auto-generated monogram badge.");
+    toast.info("Logo reset to default wordmark.");
   };
 
   const handleLaunchPortal = async () => {
-    const s1 = validateStep1Identity({ propertyName, tagline });
+    const s1 = validateStep1Identity({
+      propertyName,
+      tagline,
+      landlordName,
+    });
     if (!s1.isValid) {
       setFieldErrors((prev) => ({ ...prev, ...s1.errors }));
-      setTouchedFields((prev) => ({ ...prev, propertyName: true, tagline: true }));
+      setTouchedFields((prev) => ({
+        ...prev,
+        propertyName: true,
+        tagline: true,
+        landlordName: true,
+      }));
       toast.error(Object.values(s1.errors)[0] || "Please correct errors in Step 1.");
       setCurrentStep(1);
       return;
@@ -447,7 +463,7 @@ CRITICAL SECURITY INSTRUCTIONS:
     setIsLaunching(true);
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s safety timeout
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
 
       const res = await fetch("/api/setup/launch", {
         method: "POST",
@@ -461,6 +477,9 @@ CRITICAL SECURITY INSTRUCTIONS:
             secondaryColor,
             logoUrl,
           },
+          admin: {
+            fullName: landlordName.trim() || undefined,
+          },
         }),
       });
       clearTimeout(timeoutId);
@@ -473,8 +492,6 @@ CRITICAL SECURITY INSTRUCTIONS:
         throw new Error(json.error || "Failed to launch workspace");
       }
 
-      // 2. Update local BrandContext styling, but do NOT mark setupCompleted: true yet.
-      // Setup completion will only be finalized once the landlord downloads and acknowledges their security recovery key!
       await brand.updateBranding(
         {
           propertyName: propertyName.trim(),
@@ -484,73 +501,73 @@ CRITICAL SECURITY INSTRUCTIONS:
           logoUrl,
           setupCompleted: false,
         },
-        false // already saved in database by /api/setup/launch
+        false
       );
+
+      if (refreshProfile) {
+        await refreshProfile();
+      }
       if (json.securityKey) {
         setLaunchedSecurityKey(json.securityKey);
       }
       setIsLaunched(true);
-      toast.success("Property Portal Initialized!", {
-        description: `Branded as ${propertyName}. Landlord Account operational.`,
+      toast.success("Property Portal Initialized", {
+        description: `Branded as ${propertyName}. Landlord account active.`,
       });
-    } catch (err: any) {
-      toast.error("Failed to save setup: " + (err?.message || "Unknown error"));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      toast.error("Failed to save setup: " + message);
     } finally {
       setIsLaunching(false);
     }
   };
 
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .substring(0, 2)
-      .toUpperCase();
-  };
-
   const stepsList = [
-    { num: 1, label: "Property Identity & Logo", icon: Building2 },
-    { num: 2, label: "Theme & Palette", icon: Palette },
+    { num: 1, label: "Property Details", icon: Building2 },
+    { num: 2, label: "Theme & Colors", icon: Palette },
     { num: 3, label: "Review & Launch", icon: ShieldCheck },
   ];
 
   return (
-    <div className="h-screen max-h-screen overflow-y-auto lg:overflow-hidden bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans flex flex-col justify-between transition-colors duration-200">
-      {/* Hidden Logo Input */}
+    <div className="min-h-screen flex flex-col bg-background text-foreground font-sans transition-colors duration-200">
+      {/* Hidden Accessible File Input */}
       <input
+        id="logo-file-input"
         type="file"
         ref={fileInputRef}
         onChange={handleLogoUpload}
         accept={MEDIA_ACCEPT_STRINGS.branding_logo}
+        aria-label="Upload property logo"
         className="hidden"
       />
 
-      {/* Top Navbar */}
-      <nav className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-8 shadow-xs">
-        <div className="flex items-center gap-4 sm:gap-6">
+      {/* Top Navigation Bar */}
+      <nav
+        aria-label="Wizard header navigation"
+        className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between bg-card/95 backdrop-blur-md border-b border-border/80 px-4 sm:px-8 shadow-xs"
+      >
+        <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="flex items-center transition-transform hover:opacity-85 active:scale-95 shrink-0"
+            aria-label="Go to iReside home"
+            className="flex items-center transition-transform hover:opacity-85 active:scale-95 shrink-0 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-md"
           >
             <Logo className="h-8 w-26 sm:h-9 sm:w-28" />
           </Link>
-          <div className="hidden sm:flex items-center gap-2.5">
-            <span className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
-              <SlidersHorizontal className="size-3.5" style={{ color: primaryColor }} />
-              Workspace Setup
-            </span>
-          </div>
+          <span className="text-muted-foreground/40 hidden sm:inline" aria-hidden="true">
+            /
+          </span>
+          <span className="text-xs font-semibold text-muted-foreground hidden sm:inline">
+            Setup Wizard
+          </span>
         </div>
 
         <div className="flex items-center gap-2.5">
-          <HighContrastToggle />
-
           <button
             type="button"
             onClick={() => handleModeToggle(modePreference === "dark" ? "light" : "dark")}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all flex items-center gap-1.5 active:scale-95 overflow-hidden"
+            aria-label={`Switch to ${modePreference === "dark" ? "light" : "dark"} appearance`}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-muted/60 border border-border hover:bg-muted transition-all flex items-center gap-1.5 active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer"
           >
             <AnimatePresence mode="wait" initial={false}>
               {modePreference === "dark" ? (
@@ -560,9 +577,9 @@ CRITICAL SECURITY INSTRUCTIONS:
                   animate={{ opacity: 1, rotate: 0, scale: 1 }}
                   exit={{ opacity: 0, rotate: 45, scale: 0.8 }}
                   transition={{ duration: 0.2 }}
-                  className="flex items-center gap-1.5 text-zinc-800 dark:text-zinc-200"
+                  className="flex items-center gap-1.5 text-foreground"
                 >
-                  <Sun className="size-3.5 text-amber-400" />
+                  <Sun className="size-3.5 text-amber-500" />
                   <span className="hidden sm:inline">Light</span>
                 </motion.span>
               ) : (
@@ -572,186 +589,280 @@ CRITICAL SECURITY INSTRUCTIONS:
                   animate={{ opacity: 1, rotate: 0, scale: 1 }}
                   exit={{ opacity: 0, rotate: 45, scale: 0.8 }}
                   transition={{ duration: 0.2 }}
-                  className="flex items-center gap-1.5 text-zinc-800 dark:text-zinc-200"
+                  className="flex items-center gap-1.5 text-foreground"
                 >
-                  <Moon className="size-3.5 text-zinc-600 dark:text-zinc-400" />
+                  <Moon className="size-3.5 text-muted-foreground" />
                   <span className="hidden sm:inline">Dark</span>
                 </motion.span>
               )}
             </AnimatePresence>
           </button>
 
-          <div className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-3 py-1 rounded-md text-xs font-bold font-mono text-zinc-600 dark:text-zinc-300">
-            <span style={{ color: primaryColor }} className="font-black">{isLaunched ? "✓" : currentStep}</span> / 3
+          <div
+            aria-live="polite"
+            className="bg-muted/60 border border-border px-3 py-1 rounded-lg text-xs font-medium text-muted-foreground"
+          >
+            <span>Step </span>
+            <span style={{ color: primaryColor }} className="font-bold">
+              {isLaunched ? "3" : currentStep}
+            </span>
+            <span> of 3</span>
           </div>
         </div>
       </nav>
 
-      {/* Main Workspace (Fitted & Proportionate) */}
+      {/* Main Container */}
       <main
         className={cn(
-          "flex-1 w-full mx-auto px-4 py-2.5 sm:py-3 flex flex-col justify-center gap-2.5 transition-all",
+          "w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 flex flex-col gap-5 transition-all",
           currentStep === 3 ? "max-w-4xl" : "max-w-5xl"
         )}
       >
-        {/* Minimal Toned-down Header */}
-        <div className="text-center">
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-zinc-950 dark:text-white">
-            Workspace Personalization Setup
+        {/* Header */}
+        <div className="text-center space-y-1">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+            Property Branding & Setup
           </h1>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-            Configure your property branding, logo, custom color palette, and launch your tenant portal.
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-xl mx-auto">
+            Configure your property identity, logo, and color theme for your resident portal.
           </p>
         </div>
 
-        {/* Clean Segmented Step Bar */}
-        <div className="w-full bg-zinc-200/80 dark:bg-zinc-900 border border-zinc-300/70 dark:border-zinc-800 rounded-xl p-1 flex gap-1" role="tablist">
-          {stepsList.map((step) => {
-            const isActive = currentStep === step.num;
-            const isDone = currentStep > step.num || isLaunched;
+        {/* Connected Wizard Stepper */}
+        <nav
+          aria-label="Setup steps"
+          className="w-full bg-card/90 backdrop-blur-xs border border-border/80 rounded-2xl p-3.5 sm:px-8 shadow-xs"
+        >
+          <ol className="relative flex items-center justify-between">
+            {/* Background connecting track */}
+            <div
+              className="absolute top-1/2 left-8 right-8 -translate-y-1/2 h-0.5 bg-border -z-0 hidden sm:block"
+              aria-hidden="true"
+            />
 
-            return (
-              <button
-                key={step.num}
-                type="button"
-                onClick={() => {
-                  if (step.num === currentStep) return;
-                  if (step.num < currentStep || isDone) {
-                    setCurrentStep(step.num as 1 | 2 | 3);
-                    return;
-                  }
-                  if (step.num === 2) {
-                    handleContinueToStep2();
-                  } else if (step.num === 3) {
-                    const s1 = validateStep1Identity({ propertyName, tagline });
-                    if (!s1.isValid) {
-                      setFieldErrors((prev) => ({ ...prev, ...s1.errors }));
-                      setTouchedFields((prev) => ({ ...prev, propertyName: true, tagline: true }));
-                      toast.error(Object.values(s1.errors)[0] || "Please complete Step 1 first.");
-                      setCurrentStep(1);
-                      return;
-                    }
-                    handleContinueToStep3();
-                  }
-                }}
+            {/* Completed connector progress lines */}
+            <div
+              className="absolute top-1/2 left-8 -translate-y-1/2 h-0.5 transition-all duration-300 -z-0 hidden sm:block"
+              aria-hidden="true"
+              style={{
+                width:
+                  currentStep === 1
+                    ? "0%"
+                    : currentStep === 2
+                    ? "50%"
+                    : "calc(100% - 64px)",
+                backgroundColor: primaryColor,
+              }}
+            />
 
-                className={cn(
-                  "flex-1 py-1.5 px-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 focus-visible:outline-none",
-                  isActive
-                    ? "bg-white dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-xs border border-zinc-200 dark:border-zinc-700"
-                    : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-100"
-                )}
-                style={isActive ? { color: primaryColor } : undefined}
-              >
-                <div
-                  className={cn(
-                    "size-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0",
-                    isDone
-                      ? "bg-emerald-600 text-white"
-                      : isActive
-                      ? "bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950"
-                      : "bg-zinc-300/80 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
-                  )}
-                  style={isActive && !isDone ? { backgroundColor: primaryColor, color: primaryTextColor } : undefined}
-                >
-                  {isDone ? <Check className="size-3 stroke-[3]" /> : step.num}
-                </div>
-                <span className="hidden sm:inline text-[11px] truncate">{step.label}</span>
-              </button>
-            );
-          })}
-        </div>
+            {stepsList.map((step) => {
+              const isActive = currentStep === step.num;
+              const isDone = currentStep > step.num || isLaunched;
+
+              return (
+                <li key={step.num} className="relative z-10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (step.num === currentStep) return;
+                      if (step.num < currentStep || isDone) {
+                        setCurrentStep(step.num as 1 | 2 | 3);
+                        return;
+                      }
+                      if (step.num === 2) {
+                        handleContinueToStep2();
+                      } else if (step.num === 3) {
+                        const s1 = validateStep1Identity({
+                          propertyName,
+                          tagline,
+                          landlordName,
+                        });
+                        if (!s1.isValid) {
+                          setFieldErrors((prev) => ({ ...prev, ...s1.errors }));
+                          setTouchedFields((prev) => ({
+                            ...prev,
+                            propertyName: true,
+                            tagline: true,
+                            landlordName: true,
+                          }));
+                          toast.error(
+                            Object.values(s1.errors)[0] || "Please complete Step 1 first."
+                          );
+                          setCurrentStep(1);
+                          return;
+                        }
+                        handleContinueToStep3();
+                      }
+                    }}
+                    aria-current={isActive ? "step" : undefined}
+                    aria-label={`Step ${step.num}: ${step.label}${
+                      isDone ? " (Completed)" : isActive ? " (Active)" : ""
+                    }`}
+                    className={cn(
+                      "flex items-center gap-2 sm:gap-3 py-1.5 px-2 rounded-xl transition-all group focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer",
+                      isActive
+                        ? "text-foreground"
+                        : isDone
+                        ? "text-foreground/90 hover:text-foreground"
+                        : "text-muted-foreground hover:text-foreground/80"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "size-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all border",
+                        isDone
+                          ? "bg-emerald-600 border-emerald-600 text-white shadow-xs"
+                          : isActive
+                          ? "shadow-sm ring-4 ring-primary/20 border-transparent font-extrabold"
+                          : "bg-muted border-border text-muted-foreground group-hover:border-border/80 group-hover:bg-muted/80"
+                      )}
+                      style={
+                        isActive && !isDone
+                          ? { backgroundColor: primaryColor, color: primaryTextColor }
+                          : undefined
+                      }
+                    >
+                      {isDone ? <Check className="size-4 stroke-[3]" /> : step.num}
+                    </div>
+
+                    <div className="text-left hidden xs:block">
+                      <span className="text-[10px] font-medium text-muted-foreground block uppercase tracking-wider leading-tight">
+                        Step {step.num}
+                      </span>
+                      <span
+                        className={cn(
+                          "text-xs font-semibold block leading-tight",
+                          isActive
+                            ? "text-foreground"
+                            : "text-muted-foreground group-hover:text-foreground"
+                        )}
+                      >
+                        {step.label}
+                      </span>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        </nav>
 
         {/* Main Workspace Layout */}
         <div
           className={cn(
-            "grid gap-3.5 items-start",
+            "grid gap-5 items-start",
             currentStep === 3 ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-12"
           )}
         >
           {/* Main Form Column */}
           <div
             className={cn(
-              "flex flex-col gap-3",
+              "flex flex-col gap-4",
               currentStep === 3 ? "w-full" : "lg:col-span-7"
             )}
           >
             <AnimatePresence mode="wait">
-              {/* STEP 1: IDENTITY, ARCHETYPE & LOGO */}
+              {/* STEP 1: IDENTITY & LOGO */}
               {currentStep === 1 && (
-                <motion.div
+                <motion.section
                   key="step1"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.15 }}
-                  className="bg-white dark:bg-zinc-900 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 border border-zinc-200 dark:border-zinc-800 shadow-xs"
+                  aria-labelledby="step1-heading"
+                  className="bg-card rounded-2xl p-5 sm:p-6 flex flex-col gap-4 border border-border/80 shadow-xs"
                 >
-                  <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="size-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center transition-colors"
-                        style={{ color: primaryColor }}
-                      >
-                        <Building2 className="size-4" />
-                      </div>
-                      <div>
-                        <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
-                          Step 1: Property Identity & Logo
-                        </h2>
-                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                          Set your property brand name and custom logo
-                        </p>
-                      </div>
+                  <div className="flex items-center gap-3 pb-3 border-b border-border/60">
+                    <div
+                      className="size-8 rounded-xl bg-muted/70 border border-border flex items-center justify-center shrink-0"
+                      style={{ color: primaryColor }}
+                    >
+                      <Building2 className="size-4" />
+                    </div>
+                    <div>
+                      <h2 id="step1-heading" className="text-sm font-semibold text-foreground">
+                        Property Details
+                      </h2>
+                      <p className="text-[11px] text-muted-foreground">
+                        Set your property name, landlord identity, and official logo
+                      </p>
                     </div>
                   </div>
 
-                  <div className="space-y-2.5">
-                    {/* Brand Name & Tagline */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="space-y-3.5">
+                    {/* Property Name & Landlord Name Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-                            Property Trade Name <span className="text-rose-500">*</span>
-                          </label>
-                          <span
-                            className={cn(
-                              "text-[9px] font-mono",
-                              propertyName.length > 80 ? "text-rose-500 font-bold" : "text-zinc-400"
-                            )}
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label
+                            htmlFor="property-name-input"
+                            className="text-xs font-medium text-foreground cursor-pointer"
                           >
-                            {propertyName.length}/80
-                          </span>
+                            Property Name <span className="text-rose-500" aria-hidden="true">*</span>
+                          </label>
+                          {propertyName.length > 50 && (
+                            <span
+                              className={cn(
+                                "text-[9px] font-mono",
+                                propertyName.length > 80
+                                  ? "text-rose-500 font-bold"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {propertyName.length}/80
+                            </span>
+                          )}
                         </div>
                         <div
                           className={cn(
-                            "bg-zinc-50 dark:bg-zinc-950/60 border rounded-xl px-3 py-1.5 transition-all",
+                            "bg-background border rounded-xl px-3 py-2 transition-all focus-within:ring-2 focus-within:ring-primary/20",
                             touchedFields.propertyName && fieldErrors.propertyName
                               ? "border-rose-500 ring-1 ring-rose-500"
-                              : "border-zinc-200 dark:border-zinc-800"
+                              : "border-border hover:border-border/80"
                           )}
                         >
                           <input
+                            id="property-name-input"
                             type="text"
                             value={propertyName}
                             maxLength={80}
+                            autoComplete="organization"
+                            aria-required="true"
+                            aria-invalid={
+                              !!(touchedFields.propertyName && fieldErrors.propertyName)
+                            }
+                            aria-describedby={
+                              touchedFields.propertyName && fieldErrors.propertyName
+                                ? "property-name-error"
+                                : undefined
+                            }
                             onChange={(e) => {
                               setPropertyName(e.target.value);
                               if (touchedFields.propertyName) {
-                                setFieldError("propertyName", validatePropertyTradeName(e.target.value).error);
+                                setFieldError(
+                                  "propertyName",
+                                  validatePropertyTradeName(e.target.value).error
+                                );
                               }
                             }}
                             onBlur={() => {
                               markFieldTouched("propertyName");
-                              setFieldError("propertyName", validatePropertyTradeName(propertyName).error);
+                              setFieldError(
+                                "propertyName",
+                                validatePropertyTradeName(propertyName).error
+                              );
                             }}
-                            placeholder="e.g. Pinecrest Suites"
-                            className="bg-transparent border-none outline-none w-full text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:ring-0"
-                            aria-invalid={!!(touchedFields.propertyName && fieldErrors.propertyName)}
+                            placeholder="e.g. Pinecrest Residences"
+                            className="bg-transparent border-none outline-none w-full text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:ring-0"
                           />
                         </div>
                         {touchedFields.propertyName && fieldErrors.propertyName && (
-                          <p className="mt-1 text-[11px] font-medium text-rose-500 flex items-center gap-1">
+                          <p
+                            id="property-name-error"
+                            role="alert"
+                            className="mt-1 text-[11px] font-medium text-rose-500 flex items-center gap-1"
+                          >
                             <AlertCircle className="size-3 shrink-0" />
                             <span>{fieldErrors.propertyName}</span>
                           </p>
@@ -759,90 +870,190 @@ CRITICAL SECURITY INSTRUCTIONS:
                       </div>
 
                       <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-                            Tagline / Subtitle
-                          </label>
-                          <span
-                            className={cn(
-                              "text-[9px] font-mono",
-                              tagline.length > 120 ? "text-rose-500 font-bold" : "text-zinc-400"
-                            )}
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label
+                            htmlFor="landlord-name-input"
+                            className="text-xs font-medium text-foreground cursor-pointer"
                           >
-                            {tagline.length}/120
-                          </span>
+                            Landlord Name <span className="text-rose-500" aria-hidden="true">*</span>
+                          </label>
+                          {landlordName.length > 40 && (
+                            <span
+                              className={cn(
+                                "text-[9px] font-mono",
+                                landlordName.length > 70
+                                  ? "text-rose-500 font-bold"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {landlordName.length}/70
+                            </span>
+                          )}
                         </div>
                         <div
                           className={cn(
-                            "bg-zinc-50 dark:bg-zinc-950/60 border rounded-xl px-3 py-1.5 transition-all",
-                            touchedFields.tagline && fieldErrors.tagline
+                            "bg-background border rounded-xl px-3 py-2 transition-all focus-within:ring-2 focus-within:ring-primary/20",
+                            touchedFields.landlordName && fieldErrors.landlordName
                               ? "border-rose-500 ring-1 ring-rose-500"
-                              : "border-zinc-200 dark:border-zinc-800"
+                              : "border-border hover:border-border/80"
                           )}
                         >
                           <input
+                            id="landlord-name-input"
                             type="text"
-                            value={tagline}
-                            maxLength={120}
+                            value={landlordName}
+                            maxLength={70}
+                            autoComplete="name"
+                            aria-required="true"
+                            aria-invalid={
+                              !!(touchedFields.landlordName && fieldErrors.landlordName)
+                            }
+                            aria-describedby={
+                              touchedFields.landlordName && fieldErrors.landlordName
+                                ? "landlord-name-error"
+                                : undefined
+                            }
                             onChange={(e) => {
-                              setTagline(e.target.value);
-                              if (touchedFields.tagline) {
-                                setFieldError("tagline", validatePropertyTagline(e.target.value).error);
+                              setLandlordName(e.target.value);
+                              if (touchedFields.landlordName) {
+                                setFieldError(
+                                  "landlordName",
+                                  validateAdminFullName(e.target.value).error
+                                );
                               }
                             }}
                             onBlur={() => {
-                              markFieldTouched("tagline");
-                              setFieldError("tagline", validatePropertyTagline(tagline).error);
+                              markFieldTouched("landlordName");
+                              setFieldError(
+                                "landlordName",
+                                validateAdminFullName(landlordName).error
+                              );
                             }}
-                            placeholder="e.g. Quality student homes & modern suites"
-                            className="bg-transparent border-none outline-none w-full text-xs text-zinc-900 dark:text-zinc-100 focus:ring-0"
-                            aria-invalid={!!(touchedFields.tagline && fieldErrors.tagline)}
+                            placeholder="e.g. Roberto Reyes"
+                            className="bg-transparent border-none outline-none w-full text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:ring-0"
                           />
                         </div>
-                        {touchedFields.tagline && fieldErrors.tagline && (
-                          <p className="mt-1 text-[11px] font-medium text-rose-500 flex items-center gap-1">
+                        {touchedFields.landlordName && fieldErrors.landlordName && (
+                          <p
+                            id="landlord-name-error"
+                            role="alert"
+                            className="mt-1 text-[11px] font-medium text-rose-500 flex items-center gap-1"
+                          >
                             <AlertCircle className="size-3 shrink-0" />
-                            <span>{fieldErrors.tagline}</span>
+                            <span>{fieldErrors.landlordName}</span>
                           </p>
                         )}
                       </div>
                     </div>
 
+                    {/* Tagline */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label
+                          htmlFor="tagline-input"
+                          className="text-xs font-medium text-foreground cursor-pointer"
+                        >
+                          Tagline{" "}
+                          <span className="text-muted-foreground font-normal text-[11px]">
+                            (Optional)
+                          </span>
+                        </label>
+                        {tagline.length > 80 && (
+                          <span
+                            className={cn(
+                              "text-[9px] font-mono",
+                              tagline.length > 120
+                                ? "text-rose-500 font-bold"
+                                : "text-muted-foreground"
+                            )}
+                          >
+                            {tagline.length}/120
+                          </span>
+                        )}
+                      </div>
+                      <div
+                        className={cn(
+                          "bg-background border rounded-xl px-3 py-2 transition-all focus-within:ring-2 focus-within:ring-primary/20",
+                          touchedFields.tagline && fieldErrors.tagline
+                            ? "border-rose-500 ring-1 ring-rose-500"
+                            : "border-border hover:border-border/80"
+                        )}
+                      >
+                        <input
+                          id="tagline-input"
+                          type="text"
+                          value={tagline}
+                          maxLength={120}
+                          aria-invalid={!!(touchedFields.tagline && fieldErrors.tagline)}
+                          aria-describedby={
+                            touchedFields.tagline && fieldErrors.tagline
+                              ? "tagline-error"
+                              : undefined
+                          }
+                          onChange={(e) => {
+                            setTagline(e.target.value);
+                            if (touchedFields.tagline) {
+                              setFieldError(
+                                "tagline",
+                                validatePropertyTagline(e.target.value).error
+                              );
+                            }
+                          }}
+                          onBlur={() => {
+                            markFieldTouched("tagline");
+                            setFieldError("tagline", validatePropertyTagline(tagline).error);
+                          }}
+                          placeholder="e.g. Modern apartments & student living"
+                          className="bg-transparent border-none outline-none w-full text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:ring-0"
+                        />
+                      </div>
+                      {touchedFields.tagline && fieldErrors.tagline && (
+                        <p
+                          id="tagline-error"
+                          role="alert"
+                          className="mt-1 text-[11px] font-medium text-rose-500 flex items-center gap-1"
+                        >
+                          <AlertCircle className="size-3 shrink-0" />
+                          <span>{fieldErrors.tagline}</span>
+                        </p>
+                      )}
+                    </div>
+
                     {/* Logo Customizer Component */}
-                    <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="p-3.5 rounded-xl bg-muted/40 border border-border/80 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
                         {logoUrl ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
                           <img
                             src={logoUrl}
-                            alt="Property Logo"
-                            className="size-9 rounded-lg object-cover border border-zinc-200 dark:border-zinc-700 shadow-xs shrink-0"
+                            alt="Uploaded property logo"
+                            className="size-11 rounded-xl object-cover border border-border shadow-xs shrink-0 bg-background"
                           />
                         ) : (
-                          <div
-                            className="size-9 rounded-lg flex items-center justify-center font-bold text-xs shadow-xs shrink-0"
-                            style={{ backgroundColor: primaryColor, color: primaryTextColor }}
-                          >
-                            {getInitials(propertyName)}
+                          <div className="h-11 px-3 rounded-xl border border-border/80 bg-background flex items-center justify-center shadow-xs shrink-0">
+                            <Logo className="h-6 w-20" />
                           </div>
                         )}
                         <div className="min-w-0">
-                          <p className="text-[11px] font-bold uppercase tracking-wide text-zinc-900 dark:text-zinc-100 truncate">
-                            {logoUrl ? "Custom Logo Active" : "Auto Monogram Badge"}
+                          <p className="text-xs font-semibold text-foreground truncate">
+                            {logoUrl ? "Custom Logo Active" : "Default Wordmark Active"}
                           </p>
-                          <p className="text-[10px] text-zinc-500 truncate">
-                            {logoUrl ? "Image applied across portals & receipts" : "Upload your PNG/SVG logo or keep monogram"}
+                          <p className="text-[11px] text-muted-foreground truncate">
+                            {logoUrl
+                              ? "Applied across resident portal and billing receipts"
+                              : "PNG, JPG, or SVG up to 5MB (wordmark used if not uploaded)"}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-2 shrink-0">
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 transition-all flex items-center gap-1 text-zinc-800 dark:text-zinc-200 shadow-xs active:scale-95"
+                          aria-label={logoUrl ? "Change property logo" : "Upload property logo"}
+                          className="px-3 py-1.5 rounded-lg text-xs font-medium bg-card hover:bg-muted text-foreground border border-border transition-all flex items-center gap-1.5 shadow-xs active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer"
                         >
-                          <Upload className="size-3" />
+                          <Upload className="size-3.5" />
                           <span>{logoUrl ? "Change" : "Upload Logo"}</span>
                         </button>
 
@@ -850,8 +1061,9 @@ CRITICAL SECURITY INSTRUCTIONS:
                           <button
                             type="button"
                             onClick={handleRemoveLogo}
-                            title="Reset to monogram"
-                            className="p-1 rounded-lg text-zinc-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                            aria-label="Remove uploaded logo"
+                            title="Remove logo"
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none cursor-pointer"
                           >
                             <Trash2 className="size-3.5" />
                           </button>
@@ -859,138 +1071,195 @@ CRITICAL SECURITY INSTRUCTIONS:
                       </div>
                     </div>
                     {fieldErrors.logoUrl && (
-                      <p className="text-[11px] font-medium text-rose-500 flex items-center gap-1 px-1">
+                      <p
+                        id="logo-error"
+                        role="alert"
+                        className="text-[11px] font-medium text-rose-500 flex items-center gap-1 px-1"
+                      >
                         <AlertCircle className="size-3 shrink-0" />
                         <span>{fieldErrors.logoUrl}</span>
                       </p>
                     )}
                   </div>
 
-                  <div className="pt-1 flex justify-end">
+                  <div className="pt-2 flex justify-end">
                     <button
                       type="button"
                       onClick={handleContinueToStep2}
-                      className="w-full sm:w-auto px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 shadow-xs"
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 active:scale-95 shadow-xs focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none cursor-pointer"
                       style={{
                         backgroundColor: primaryColor,
                         color: primaryTextColor,
                       }}
                     >
-                      <span>Continue to Color Studio</span>
+                      <span>Continue to Theme & Colors</span>
                       <ArrowRight className="size-3.5" />
                     </button>
                   </div>
-                </motion.div>
-
+                </motion.section>
               )}
 
               {/* STEP 2: THEME & COLOR STUDIO */}
               {currentStep === 2 && (
-                <motion.div
+                <motion.section
                   key="step2"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.15 }}
-                  className="bg-white dark:bg-zinc-900 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 border border-zinc-200 dark:border-zinc-800 shadow-xs"
+                  aria-labelledby="step2-heading"
+                  className="bg-card rounded-2xl p-5 sm:p-6 flex flex-col gap-4 border border-border/80 shadow-xs"
                 >
-                  <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="size-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center transition-colors"
-                        style={{ color: primaryColor }}
-                      >
-                        <Palette className="size-4" />
-                      </div>
-                      <div>
-                        <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
-                          Step 2: Theme & Color Studio
-                        </h2>
-                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                          Fine-tune brand colors with real-time WCAG contrast feedback
-                        </p>
-                      </div>
+                  <div className="flex items-center gap-3 pb-3 border-b border-border/60">
+                    <div
+                      className="size-8 rounded-xl bg-muted/70 border border-border flex items-center justify-center shrink-0"
+                      style={{ color: primaryColor }}
+                    >
+                      <Palette className="size-4" />
+                    </div>
+                    <div>
+                      <h2 id="step2-heading" className="text-sm font-semibold text-foreground">
+                        Theme & Colors
+                      </h2>
+                      <p className="text-[11px] text-muted-foreground">
+                        Select default appearance mode and configure brand colors
+                      </p>
                     </div>
                   </div>
 
-                  {/* 1. Theme Experience & Accessibility Selector */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {/* 1. Theme Experience Selector */}
+                  <div
+                    role="radiogroup"
+                    aria-label="Default appearance mode"
+                    className="grid grid-cols-1 sm:grid-cols-2 gap-2.5"
+                  >
                     <button
                       type="button"
+                      role="radio"
+                      aria-checked={modePreference === "dark"}
                       onClick={() => handleModeToggle("dark")}
                       className={cn(
-                        "p-2 rounded-xl text-left transition-all flex items-center justify-between border",
-                        modePreference === "dark" && !isHighContrast
-                          ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-400 dark:border-zinc-600 shadow-xs"
-                          : "bg-zinc-50 dark:bg-zinc-950/40 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400"
+                        "p-3 rounded-xl text-left transition-all flex items-center justify-between border cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
+                        modePreference === "dark"
+                          ? "bg-muted/70 border-border shadow-xs"
+                          : "bg-background border-border/70 text-muted-foreground hover:text-foreground"
                       )}
                       style={
-                        modePreference === "dark" && !isHighContrast
-                          ? { borderColor: primaryColor, backgroundColor: `${primaryColor}12` }
+                        modePreference === "dark"
+                          ? { borderColor: primaryColor, backgroundColor: `${primaryColor}14` }
                           : undefined
                       }
                     >
-                      <div className="flex items-center gap-2">
-                        <Moon className="size-3.5" style={modePreference === "dark" && !isHighContrast ? { color: primaryColor } : undefined} />
-                        <span className="text-xs font-bold">Dark Mode</span>
+                      <div className="flex items-center gap-2.5">
+                        <Moon
+                          className="size-4"
+                          style={modePreference === "dark" ? { color: primaryColor } : undefined}
+                        />
+                        <span className="text-xs font-semibold text-foreground">Dark Mode</span>
                       </div>
-                      {modePreference === "dark" && !isHighContrast && <Check className="size-3 stroke-[3]" style={{ color: primaryColor }} />}
+                      {modePreference === "dark" && (
+                        <Check className="size-3.5 stroke-[3]" style={{ color: primaryColor }} />
+                      )}
                     </button>
 
                     <button
                       type="button"
+                      role="radio"
+                      aria-checked={modePreference === "light"}
                       onClick={() => handleModeToggle("light")}
                       className={cn(
-                        "p-2 rounded-xl text-left transition-all flex items-center justify-between border",
-                        modePreference === "light" && !isHighContrast
-                          ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-400 dark:border-zinc-600 shadow-xs"
-                          : "bg-zinc-50 dark:bg-zinc-950/40 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400"
+                        "p-3 rounded-xl text-left transition-all flex items-center justify-between border cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
+                        modePreference === "light"
+                          ? "bg-muted/70 border-border shadow-xs"
+                          : "bg-background border-border/70 text-muted-foreground hover:text-foreground"
                       )}
                       style={
-                        modePreference === "light" && !isHighContrast
-                          ? { borderColor: primaryColor, backgroundColor: `${primaryColor}12` }
+                        modePreference === "light"
+                          ? { borderColor: primaryColor, backgroundColor: `${primaryColor}14` }
                           : undefined
                       }
                     >
-                      <div className="flex items-center gap-2">
-                        <Sun className="size-3.5" style={modePreference === "light" && !isHighContrast ? { color: primaryColor } : undefined} />
-                        <span className="text-xs font-bold">Light Mode</span>
+                      <div className="flex items-center gap-2.5">
+                        <Sun
+                          className="size-4"
+                          style={modePreference === "light" ? { color: primaryColor } : undefined}
+                        />
+                        <span className="text-xs font-semibold text-foreground">Light Mode</span>
                       </div>
-                      {modePreference === "light" && !isHighContrast && <Check className="size-3 stroke-[3]" style={{ color: primaryColor }} />}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => toggleHighContrast()}
-                      className={cn(
-                        "p-2 rounded-xl text-left transition-all flex items-center justify-between border cursor-pointer",
-                        isHighContrast
-                          ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 border-black dark:border-white shadow-xs ring-2 ring-primary/40"
-                          : "bg-zinc-50 dark:bg-zinc-950/40 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400"
+                      {modePreference === "light" && (
+                        <Check className="size-3.5 stroke-[3]" style={{ color: primaryColor }} />
                       )}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Contrast className="size-3.5 text-primary" />
-                        <span className="text-xs font-bold">High Contrast</span>
-                      </div>
-                      {isHighContrast && <Check className="size-3 stroke-[3]" />}
                     </button>
                   </div>
 
-                  {/* 2. Color Target Switcher Tabs */}
-                  <div className="bg-zinc-100 dark:bg-zinc-950/80 border border-zinc-200 dark:border-zinc-800 rounded-xl p-1 flex gap-1">
+                  {/* 2. Curated Brand Palette Presets */}
+                  <div className="space-y-2">
+                    <span className="text-xs font-medium text-foreground block">
+                      Curated Palettes
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      {PALETTE_PRESETS.map((preset) => {
+                        const isPresetActive =
+                          primaryColor.toLowerCase() === preset.primary.toLowerCase() &&
+                          secondaryColor.toLowerCase() === preset.secondary.toLowerCase();
+
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={() => applyPalettePreset(preset)}
+                            aria-label={`Apply ${preset.name} palette`}
+                            className={cn(
+                              "p-2 rounded-xl border text-left transition-all flex flex-col gap-1.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer",
+                              isPresetActive
+                                ? "bg-muted border-border ring-2 ring-primary/40 shadow-xs"
+                                : "bg-card/70 border-border/70 hover:bg-muted/50"
+                            )}
+                          >
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className="size-3 rounded-full border border-border shadow-2xs"
+                                style={{ backgroundColor: preset.primary }}
+                              />
+                              <span
+                                className="size-3 rounded-full border border-border shadow-2xs"
+                                style={{ backgroundColor: preset.secondary }}
+                              />
+                            </div>
+                            <div>
+                              <span className="text-[11px] font-semibold text-foreground block truncate">
+                                {preset.name}
+                              </span>
+                              <span className="text-[9px] text-muted-foreground block truncate">
+                                {preset.description}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 3. Color Target Switcher Tabs */}
+                  <div
+                    role="tablist"
+                    aria-label="Color configuration target"
+                    className="bg-muted/50 border border-border/80 rounded-xl p-1 flex gap-1"
+                  >
                     <button
                       type="button"
+                      role="tab"
+                      aria-selected={colorTarget === "primary"}
                       onClick={() => handleTargetTabChange("primary")}
                       className={cn(
-                        "flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 border",
+                        "flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 border cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
                         colorTarget === "primary"
-                          ? "bg-white dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-xs border-zinc-300 dark:border-zinc-700"
-                          : "border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+                          ? "bg-card text-foreground shadow-xs border-border font-semibold"
+                          : "border-transparent text-muted-foreground hover:text-foreground"
                       )}
                     >
                       <span
-                        className="size-3 rounded-full shrink-0 shadow-xs"
+                        className="size-3 rounded-full shrink-0 shadow-2xs"
                         style={{ backgroundColor: primaryColor }}
                       />
                       <span>Primary Brand</span>
@@ -998,24 +1267,67 @@ CRITICAL SECURITY INSTRUCTIONS:
 
                     <button
                       type="button"
+                      role="tab"
+                      aria-selected={colorTarget === "secondary"}
                       onClick={() => handleTargetTabChange("secondary")}
                       className={cn(
-                        "flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 border",
+                        "flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 border cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
                         colorTarget === "secondary"
-                          ? "bg-white dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-xs border-zinc-300 dark:border-zinc-700"
-                          : "border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+                          ? "bg-card text-foreground shadow-xs border-border font-semibold"
+                          : "border-transparent text-muted-foreground hover:text-foreground"
                       )}
                     >
                       <span
-                        className="size-3 rounded-full shrink-0 shadow-xs"
+                        className="size-3 rounded-full shrink-0 shadow-2xs"
                         style={{ backgroundColor: secondaryColor }}
                       />
                       <span>Secondary Accent</span>
                     </button>
                   </div>
 
-                  {/* 3. Modern HSL Sliders & Direct HEX Input */}
-                  <div className="bg-zinc-50 dark:bg-zinc-950/60 rounded-xl p-3 space-y-2.5 border border-zinc-200 dark:border-zinc-800">
+                  {/* 4. Harmonized Secondary Quick-Picks */}
+                  {colorTarget === "secondary" && (
+                    <div className="p-2.5 rounded-xl bg-muted/30 border border-border/70 space-y-1.5">
+                      <span className="text-[11px] font-medium text-muted-foreground block">
+                        Harmonize with Primary Brand
+                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => applyHarmonizedSecondary("analogous", "Analogous")}
+                          className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-card border border-border hover:bg-muted transition-all cursor-pointer"
+                        >
+                          Analogous
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            applyHarmonizedSecondary("complementary", "Complementary")
+                          }
+                          className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-card border border-border hover:bg-muted transition-all cursor-pointer"
+                        >
+                          Complementary
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => applyHarmonizedSecondary("split", "Split-Complementary")}
+                          className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-card border border-border hover:bg-muted transition-all cursor-pointer"
+                        >
+                          Split
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => applyHarmonizedSecondary("monochrome", "Monochromatic")}
+                          className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-card border border-border hover:bg-muted transition-all cursor-pointer"
+                        >
+                          Monochrome
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 5. Complete HSL Sliders & Direct HEX Input */}
+                  <div className="bg-muted/30 rounded-xl p-3.5 space-y-3 border border-border/80">
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <div className="flex items-center gap-2">
                         <div
@@ -1023,7 +1335,11 @@ CRITICAL SECURITY INSTRUCTIONS:
                           style={{ backgroundColor: activeHex }}
                         />
                         <div className="relative">
+                          <label htmlFor="hex-color-input" className="sr-only">
+                            HEX Color Code
+                          </label>
                           <input
+                            id="hex-color-input"
                             type="text"
                             value={colorTarget === "primary" ? primaryColor : secondaryColor}
                             maxLength={7}
@@ -1080,26 +1396,34 @@ CRITICAL SECURITY INSTRUCTIONS:
                             }}
                             placeholder="#8B5CF6"
                             className={cn(
-                              "w-24 uppercase font-mono text-xs font-bold rounded-lg px-2.5 py-1 bg-white dark:bg-zinc-900 border transition-all text-zinc-900 dark:text-zinc-100",
-                              ((colorTarget === "primary" && touchedFields.primaryColor && fieldErrors.primaryColor) ||
-                               (colorTarget === "secondary" && touchedFields.secondaryColor && fieldErrors.secondaryColor))
+                              "w-24 uppercase font-mono text-xs font-semibold rounded-lg px-2.5 py-1 bg-background border transition-all text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
+                              (colorTarget === "primary" &&
+                                touchedFields.primaryColor &&
+                                fieldErrors.primaryColor) ||
+                                (colorTarget === "secondary" &&
+                                  touchedFields.secondaryColor &&
+                                  fieldErrors.secondaryColor)
                                 ? "border-rose-500 ring-1 ring-rose-500"
-                                : "border-zinc-300 dark:border-zinc-700"
+                                : "border-border"
                             )}
                             aria-invalid={
                               !!(
-                                (colorTarget === "primary" && touchedFields.primaryColor && fieldErrors.primaryColor) ||
-                                (colorTarget === "secondary" && touchedFields.secondaryColor && fieldErrors.secondaryColor)
+                                (colorTarget === "primary" &&
+                                  touchedFields.primaryColor &&
+                                  fieldErrors.primaryColor) ||
+                                (colorTarget === "secondary" &&
+                                  touchedFields.secondaryColor &&
+                                  fieldErrors.secondaryColor)
                               )
                             }
                           />
                         </div>
                       </div>
 
-                      {/* WCAG Contrast Ratio */}
+                      {/* WCAG Contrast Ratio Indicator */}
                       <div
                         className={cn(
-                          "flex items-center gap-1.5 text-[10px] font-mono font-bold",
+                          "flex items-center gap-1.5 text-[11px] font-mono font-medium",
                           (colorTarget === "primary" ? primaryContrast : secondaryContrast) >= 3.0
                             ? "text-emerald-600 dark:text-emerald-400"
                             : "text-amber-600 dark:text-amber-400"
@@ -1118,9 +1442,16 @@ CRITICAL SECURITY INSTRUCTIONS:
                       </div>
                     </div>
 
-                    {((colorTarget === "primary" && touchedFields.primaryColor && fieldErrors.primaryColor) ||
-                      (colorTarget === "secondary" && touchedFields.secondaryColor && fieldErrors.secondaryColor)) && (
-                      <p className="text-[11px] font-medium text-rose-500 flex items-center gap-1">
+                    {((colorTarget === "primary" &&
+                      touchedFields.primaryColor &&
+                      fieldErrors.primaryColor) ||
+                      (colorTarget === "secondary" &&
+                        touchedFields.secondaryColor &&
+                        fieldErrors.secondaryColor)) && (
+                      <p
+                        role="alert"
+                        className="text-[11px] font-medium text-rose-500 flex items-center gap-1"
+                      >
                         <AlertCircle className="size-3 shrink-0" />
                         <span>
                           {colorTarget === "primary"
@@ -1132,15 +1463,22 @@ CRITICAL SECURITY INSTRUCTIONS:
 
                     {/* Rainbow Hue Slider */}
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between text-[10px] font-bold uppercase text-zinc-500">
-                        <span>Hue</span>
-                        <span className="font-mono">{hue}°</span>
+                      <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
+                        <label htmlFor="hue-slider" className="cursor-pointer">
+                          Hue
+                        </label>
+                        <span className="font-mono text-xs">{hue}°</span>
                       </div>
                       <input
+                        id="hue-slider"
                         type="range"
                         min="0"
                         max="360"
                         value={hue}
+                        aria-label="Color hue degree"
+                        aria-valuemin={0}
+                        aria-valuemax={360}
+                        aria-valuenow={hue}
                         onChange={(e) => {
                           const val = Number(e.target.value);
                           setHue(val);
@@ -1156,15 +1494,22 @@ CRITICAL SECURITY INSTRUCTIONS:
 
                     {/* Saturation Slider */}
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between text-[10px] font-bold uppercase text-zinc-500">
-                        <span>Saturation</span>
-                        <span className="font-mono">{saturation}%</span>
+                      <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
+                        <label htmlFor="saturation-slider" className="cursor-pointer">
+                          Saturation
+                        </label>
+                        <span className="font-mono text-xs">{saturation}%</span>
                       </div>
                       <input
+                        id="saturation-slider"
                         type="range"
                         min="0"
                         max="100"
                         value={saturation}
+                        aria-label="Color saturation percentage"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={saturation}
                         onChange={(e) => {
                           const val = Number(e.target.value);
                           setSaturation(val);
@@ -1176,78 +1521,107 @@ CRITICAL SECURITY INSTRUCTIONS:
                         }}
                       />
                     </div>
+
+                    {/* Lightness Slider */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
+                        <label htmlFor="lightness-slider" className="cursor-pointer">
+                          Lightness
+                        </label>
+                        <span className="font-mono text-xs">{lightness}%</span>
+                      </div>
+                      <input
+                        id="lightness-slider"
+                        type="range"
+                        min="15"
+                        max="85"
+                        value={lightness}
+                        aria-label="Color lightness percentage"
+                        aria-valuemin={15}
+                        aria-valuemax={85}
+                        aria-valuenow={lightness}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setLightness(val);
+                          updateCurrentTargetFromHsl(hue, saturation, val);
+                        }}
+                        className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                        style={{
+                          background: `linear-gradient(to right, #000000, hsl(${hue}, ${saturation}%, 50%), #ffffff)`,
+                        }}
+                      />
+                    </div>
                   </div>
 
-                  <div className="pt-1 flex items-center justify-between">
+                  <div className="pt-2 flex items-center justify-between">
                     <button
                       type="button"
                       onClick={() => setCurrentStep(1)}
-                      className="py-2 px-4 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 active:scale-95 text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100 shadow-xs"
+                      className="py-2 px-4 rounded-xl bg-card hover:bg-muted border border-border active:scale-95 text-xs font-medium transition-all flex items-center gap-1.5 text-foreground shadow-xs focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer"
                     >
                       <ArrowLeft className="size-3.5" />
-                      <span>Back</span>
+                      <span>Back to Details</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={handleContinueToStep3}
-                      className="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 active:scale-95 shadow-xs"
+                      className="px-5 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 active:scale-95 shadow-xs focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none cursor-pointer"
                       style={{
                         backgroundColor: primaryColor,
                         color: primaryTextColor,
                       }}
                     >
-                      <span>Next: Review & Launch</span>
+                      <span>Continue to Review & Launch</span>
                       <ArrowRight className="size-3.5" />
                     </button>
                   </div>
-                </motion.div>
-
+                </motion.section>
               )}
 
               {/* STEP 3: REVIEW & LAUNCH */}
               {currentStep === 3 && (
-                <motion.div
+                <motion.section
                   key="step3"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.15 }}
-                  className="bg-white dark:bg-zinc-900 rounded-2xl p-4 sm:p-6 flex flex-col gap-4 border border-zinc-200 dark:border-zinc-800 shadow-xs"
+                  aria-labelledby="step3-heading"
+                  className="bg-card rounded-2xl p-5 sm:p-7 flex flex-col gap-5 border border-border/80 shadow-xs"
                 >
-                  <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="size-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center transition-colors"
-                        style={{ color: primaryColor }}
-                      >
-                        <ShieldCheck className="size-4" />
-                      </div>
-                      <div>
-                        <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
-                          Step 3: Review & Launch
-                        </h2>
-                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                          Review your property workspace configuration before launching
-                        </p>
-                      </div>
+                  <div className="flex items-center gap-3 pb-3 border-b border-border/60">
+                    <div
+                      className="size-8 rounded-xl bg-muted/70 border border-border flex items-center justify-center shrink-0"
+                      style={{ color: primaryColor }}
+                    >
+                      <ShieldCheck className="size-4" />
+                    </div>
+                    <div>
+                      <h2 id="step3-heading" className="text-sm font-semibold text-foreground">
+                        Review & Launch
+                      </h2>
+                      <p className="text-[11px] text-muted-foreground">
+                        Review your details and visual identity before launching the portal
+                      </p>
                     </div>
                   </div>
 
-                  {/* 3 Review Cards Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* 3 Summary Cards Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                     {/* 1. Brand Identity Card */}
-                    <div className="bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3.5 flex flex-col justify-between">
+                    <div className="bg-muted/30 border border-border/80 rounded-xl p-4 flex flex-col justify-between">
                       <div>
-                        <div className="flex items-center justify-between pb-2 border-b border-zinc-200/70 dark:border-zinc-800">
-                          <div className="flex items-center gap-1.5 text-zinc-500 text-[10px] font-bold uppercase tracking-wider">
+                        <div className="flex items-center justify-between pb-2 border-b border-border/60">
+                          <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-medium">
                             <Building2 className="size-3.5" />
                             <span>Brand Identity</span>
                           </div>
                           <button
                             type="button"
                             onClick={() => setCurrentStep(1)}
-                            className="text-[10px] font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center gap-1 transition-colors"
+                            aria-label="Edit property details"
+                            className="text-xs font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded cursor-pointer"
                           >
                             <Edit3 className="size-3" />
                             <span>Edit</span>
@@ -1260,21 +1634,18 @@ CRITICAL SECURITY INSTRUCTIONS:
                             <img
                               src={logoUrl}
                               alt="Brand Logo"
-                              className="size-10 rounded-lg object-cover border border-zinc-200 dark:border-zinc-700 shrink-0 shadow-xs"
+                              className="size-10 rounded-lg object-cover border border-border shrink-0 shadow-xs bg-background"
                             />
                           ) : (
-                            <div
-                              className="size-10 rounded-lg flex items-center justify-center font-bold text-xs shadow-xs shrink-0"
-                              style={{ backgroundColor: primaryColor, color: primaryTextColor }}
-                            >
-                              {getInitials(propertyName)}
+                            <div className="h-10 px-2.5 rounded-lg border border-border/80 bg-background flex items-center justify-center shadow-xs shrink-0">
+                              <Logo className="h-5 w-18" />
                             </div>
                           )}
                           <div className="min-w-0">
-                            <h4 className="text-xs font-bold text-zinc-950 dark:text-white truncate">
+                            <h3 className="text-xs font-semibold text-foreground truncate">
                               {propertyName || "Untitled Property"}
-                            </h4>
-                            <p className="text-[10px] text-zinc-500 truncate mt-0.5">
+                            </h3>
+                            <p className="text-[10px] text-muted-foreground truncate mt-0.5">
                               {tagline || "No tagline configured"}
                             </p>
                           </div>
@@ -1283,17 +1654,18 @@ CRITICAL SECURITY INSTRUCTIONS:
                     </div>
 
                     {/* 2. Visual Theme & Palette Card */}
-                    <div className="bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3.5 flex flex-col justify-between">
+                    <div className="bg-muted/30 border border-border/80 rounded-xl p-4 flex flex-col justify-between">
                       <div>
-                        <div className="flex items-center justify-between pb-2 border-b border-zinc-200/70 dark:border-zinc-800">
-                          <div className="flex items-center gap-1.5 text-zinc-500 text-[10px] font-bold uppercase tracking-wider">
+                        <div className="flex items-center justify-between pb-2 border-b border-border/60">
+                          <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-medium">
                             <Palette className="size-3.5" />
                             <span>Theme & Colors</span>
                           </div>
                           <button
                             type="button"
                             onClick={() => setCurrentStep(2)}
-                            className="text-[10px] font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center gap-1 transition-colors"
+                            aria-label="Edit theme and colors"
+                            className="text-xs font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded cursor-pointer"
                           >
                             <Edit3 className="size-3" />
                             <span>Edit</span>
@@ -1302,26 +1674,26 @@ CRITICAL SECURITY INSTRUCTIONS:
 
                         <div className="mt-3 space-y-2">
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-[10px] text-zinc-500 font-medium">Primary Brand</span>
+                            <span className="text-[11px] text-muted-foreground">Primary Brand</span>
                             <div className="flex items-center gap-1.5">
                               <span
-                                className="size-3.5 rounded shadow-xs border border-black/10"
+                                className="size-3.5 rounded shadow-2xs border border-border"
                                 style={{ backgroundColor: primaryColor }}
                               />
-                              <span className="font-mono text-[11px] font-bold text-zinc-800 dark:text-zinc-200">
+                              <span className="font-mono text-xs font-medium text-foreground">
                                 {primaryColor.toUpperCase()}
                               </span>
                             </div>
                           </div>
 
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-[10px] text-zinc-500 font-medium">Secondary Accent</span>
+                            <span className="text-[11px] text-muted-foreground">Secondary Accent</span>
                             <div className="flex items-center gap-1.5">
                               <span
-                                className="size-3.5 rounded shadow-xs border border-black/10"
+                                className="size-3.5 rounded shadow-2xs border border-border"
                                 style={{ backgroundColor: secondaryColor }}
                               />
-                              <span className="font-mono text-[11px] font-bold text-zinc-800 dark:text-zinc-200">
+                              <span className="font-mono text-xs font-medium text-foreground">
                                 {secondaryColor.toUpperCase()}
                               </span>
                             </div>
@@ -1329,48 +1701,78 @@ CRITICAL SECURITY INSTRUCTIONS:
                         </div>
                       </div>
 
-                      <div className="mt-3 pt-2 border-t border-zinc-200/70 dark:border-zinc-800 flex items-center justify-between text-[10px]">
-                        <span className="text-zinc-400 font-medium">Default Mode</span>
-                        <span className="font-bold capitalize text-zinc-800 dark:text-zinc-200">
+                      <div className="mt-3 pt-2 border-t border-border/60 flex items-center justify-between text-[11px]">
+                        <span className="text-muted-foreground">Default Mode</span>
+                        <span className="font-medium capitalize text-foreground">
                           {modePreference} Mode
                         </span>
                       </div>
                     </div>
 
-                    {/* 3. Verified Administrator Card */}
-                    <div className="bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3.5 flex flex-col justify-between">
+                    {/* 3. Landlord Profile Card */}
+                    <div className="bg-muted/30 border border-border/80 rounded-xl p-4 flex flex-col justify-between">
                       <div>
-                        <div className="flex items-center justify-between pb-2 border-b border-zinc-200/70 dark:border-zinc-800">
-                          <div className="flex items-center gap-1.5 text-zinc-500 text-[10px] font-bold uppercase tracking-wider">
+                        <div className="flex items-center justify-between pb-2 border-b border-border/60">
+                          <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-medium">
                             <UserCheck className="size-3.5" />
-                            <span>Administrator</span>
+                            <span>Landlord Profile</span>
                           </div>
-                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                            <Check className="size-3 stroke-[3]" />
-                            <span>Claimed</span>
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                              <Check className="size-3 stroke-[3]" />
+                              <span>Active</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setCurrentStep(1)}
+                              aria-label="Edit landlord details"
+                              className="text-xs font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded cursor-pointer"
+                            >
+                              <Edit3 className="size-3" />
+                              <span>Edit</span>
+                            </button>
+                          </div>
                         </div>
 
                         <div className="mt-3 space-y-1.5">
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-[10px] text-zinc-500 font-medium">Name</span>
-                            <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 truncate max-w-[130px]">
-                              {profile?.full_name || "Administrator"}
+                            <span className="text-[11px] text-muted-foreground">Name</span>
+                            <span
+                              className="text-xs font-medium text-foreground truncate max-w-[180px]"
+                              title={
+                                landlordName ||
+                                (profile?.full_name &&
+                                !DISALLOWED_PRESEEDED_DATA.adminNames.includes(
+                                  profile.full_name.toLowerCase()
+                                )
+                                  ? profile.full_name
+                                  : "") ||
+                                "Not configured"
+                              }
+                            >
+                              {landlordName ||
+                                (profile?.full_name &&
+                                !DISALLOWED_PRESEEDED_DATA.adminNames.includes(
+                                  profile.full_name.toLowerCase()
+                                )
+                                  ? profile.full_name
+                                  : "") ||
+                                "Not configured"}
                             </span>
                           </div>
 
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-[10px] text-zinc-500 font-medium">Email</span>
-                            <span className="text-[11px] font-mono font-medium text-zinc-800 dark:text-zinc-200 truncate max-w-[140px]">
-                              {profile?.email || "—"}
+                            <span className="text-[11px] text-muted-foreground">Role</span>
+                            <span className="text-xs font-medium text-foreground">
+                              Landlord
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="mt-3 pt-2 border-t border-zinc-200/70 dark:border-zinc-800 flex items-center justify-between text-[10px]">
-                        <span className="text-zinc-400 font-medium">Security</span>
-                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                      <div className="mt-3 pt-2 border-t border-border/60 flex items-center justify-between text-[11px]">
+                        <span className="text-muted-foreground">Security</span>
+                        <span className="font-medium text-emerald-600 dark:text-emerald-400">
                           Permanent Credentials Active
                         </span>
                       </div>
@@ -1378,11 +1780,11 @@ CRITICAL SECURITY INSTRUCTIONS:
                   </div>
 
                   {!isLaunched ? (
-                    <div className="pt-2 flex items-center justify-between">
+                    <div className="pt-3 flex items-center justify-between">
                       <button
                         type="button"
                         onClick={() => setCurrentStep(2)}
-                        className="py-2 px-4 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 active:scale-95 text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100 shadow-xs"
+                        className="px-4 py-2 rounded-xl text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground transition-all flex items-center gap-1.5 cursor-pointer"
                       >
                         <ArrowLeft className="size-3.5" />
                         <span>Back</span>
@@ -1390,9 +1792,12 @@ CRITICAL SECURITY INSTRUCTIONS:
 
                       <button
                         type="button"
-                        onClick={handleLaunchPortal}
                         disabled={isLaunching}
-                        className="px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 active:scale-95 shadow-xs"
+                        onClick={handleLaunchPortal}
+                        className={cn(
+                          "px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 active:scale-95 shadow-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none cursor-pointer",
+                          isLaunching && "opacity-80 cursor-wait"
+                        )}
                         style={{
                           backgroundColor: primaryColor,
                           color: primaryTextColor,
@@ -1401,12 +1806,12 @@ CRITICAL SECURITY INSTRUCTIONS:
                         {isLaunching ? (
                           <>
                             <RefreshCw className="size-3.5 animate-spin" />
-                            <span>Activating System...</span>
+                            <span>Initializing Workspace...</span>
                           </>
                         ) : (
                           <>
                             <ShieldCheck className="size-3.5" />
-                            <span>Save & Launch Property Portal</span>
+                            <span>Launch Property Portal</span>
                           </>
                         )}
                       </button>
@@ -1422,20 +1827,25 @@ CRITICAL SECURITY INSTRUCTIONS:
                           securityKey={launchedSecurityKey}
                           isAcknowledged={isSecurityKeyAcknowledged}
                           onToggleAcknowledge={setIsSecurityKeyAcknowledged}
+                          onDownload={() => setHasDownloadedKey(true)}
+                          onCopy={() => {
+                            setHasCopiedKey(true);
+                            setHasDownloadedKey(true);
+                          }}
                           title="Landlord Security Recovery Key"
                           description="Your workspace is initialized. Save your single-use recovery key now in case you ever lose access to your email."
-                          accountEmail={profile?.email || undefined}
+                          accountEmail={profile?.email || user?.email || undefined}
                         />
                       )}
 
-                      <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-2.5">
-                          <CheckCircle2 className="size-5 text-emerald-600 shrink-0" />
+                          <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           <div>
-                            <h4 className="text-xs font-bold uppercase tracking-wide text-zinc-950 dark:text-white">
-                              Portal Live & Personalized!
+                            <h4 className="text-xs font-bold uppercase tracking-wide text-foreground">
+                              Portal Activated Successfully
                             </h4>
-                            <p className="text-[10px] text-zinc-500">
+                            <p className="text-[11px] text-muted-foreground">
                               {launchedSecurityKey && !isSecurityKeyAcknowledged
                                 ? "Confirm saving your security key above to open your dashboard."
                                 : "Your workspace is ready for operational management."}
@@ -1445,10 +1855,19 @@ CRITICAL SECURITY INSTRUCTIONS:
 
                         <button
                           type="button"
-                          disabled={launchedSecurityKey ? (!hasDownloadedKey || !isSecurityKeyAcknowledged) : false}
+                          disabled={
+                            launchedSecurityKey
+                              ? !hasDownloadedKey || !isSecurityKeyAcknowledged
+                              : false
+                          }
                           onClick={async () => {
-                            if (launchedSecurityKey && (!hasDownloadedKey || !isSecurityKeyAcknowledged)) {
-                              toast.error("Please download and confirm saving your security recovery key before proceeding.");
+                            if (
+                              launchedSecurityKey &&
+                              (!hasDownloadedKey || !isSecurityKeyAcknowledged)
+                            ) {
+                              toast.error(
+                                "Please download and confirm saving your security recovery key before proceeding."
+                              );
                               return;
                             }
                             await brand.updateBranding(
@@ -1466,8 +1885,9 @@ CRITICAL SECURITY INSTRUCTIONS:
                             router.push("/landlord/dashboard");
                           }}
                           className={cn(
-                            "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-xs",
-                            (!launchedSecurityKey || (hasDownloadedKey && isSecurityKeyAcknowledged))
+                            "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-xs focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
+                            !launchedSecurityKey ||
+                              (hasDownloadedKey && isSecurityKeyAcknowledged)
                               ? "cursor-pointer active:scale-95"
                               : "opacity-40 cursor-not-allowed"
                           )}
@@ -1482,202 +1902,208 @@ CRITICAL SECURITY INSTRUCTIONS:
                       </div>
                     </motion.div>
                   )}
-                </motion.div>
+                </motion.section>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Right Column: Live Mockup Frame (5 Cols) - Hidden on Step 3 */}
+          {/* Right Column: Live Preview Panel - Hidden on Step 3 */}
           {currentStep !== 3 && (
-            <div className="lg:col-span-5">
-              <div className="bg-white dark:bg-zinc-900 rounded-2xl p-4 flex flex-col gap-3 border border-zinc-200 dark:border-zinc-800 shadow-xs">
-                {/* Window Bar */}
-                <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
-                  <div className="flex items-center gap-1.5">
-                    <div className="size-2 rounded-full bg-red-400" />
-                    <div className="size-2 rounded-full bg-amber-400" />
-                    <div className="size-2 rounded-full bg-emerald-400" />
-                    <span className="text-[10px] font-bold text-zinc-500 ml-1.5">
-                      Resident Portal Preview
+            <aside
+              aria-label="Portal Live Preview"
+              className="lg:col-span-5 lg:sticky lg:top-20"
+            >
+              <div className="bg-card rounded-2xl p-4 sm:p-5 flex flex-col gap-3.5 border border-border/80 shadow-xs">
+                {/* Preview Header Bar */}
+                <div className="flex items-center justify-between pb-2.5 border-b border-border/60">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex size-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full size-2 bg-emerald-500" />
+                    </span>
+                    <span className="text-xs font-semibold text-foreground">
+                      Preview
                     </span>
                   </div>
 
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-400">
+                  <span className="text-[11px] font-medium text-muted-foreground capitalize">
                     {modePreference} mode
                   </span>
                 </div>
 
-                {/* Portal Header */}
-                <div className="bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    {logoUrl ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={logoUrl}
-                        alt="Property Logo"
-                        className="size-8 rounded-lg object-cover border border-zinc-200 dark:border-zinc-700 shadow-xs shrink-0"
-                      />
-                    ) : (
-                      <div
-                        className="size-8 rounded-lg flex items-center justify-center font-bold text-xs shadow-xs shrink-0"
+                {/* Simulated Resident Portal UI Shell */}
+                <div className="rounded-xl border border-border/70 bg-background/60 p-3 sm:p-3.5 space-y-3 shadow-2xs">
+                  {/* Portal Header */}
+                  <div className="flex items-center justify-between pb-2.5 border-b border-border/50">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {logoUrl ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={logoUrl}
+                          alt="Property Logo"
+                          className="size-8 rounded-lg object-cover border border-border shrink-0 bg-background"
+                        />
+                      ) : (
+                        <div className="h-7 px-2 rounded-md border border-border/60 bg-background flex items-center justify-center shadow-2xs shrink-0">
+                          <Logo className="h-4.5 w-16" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <h4 className="text-xs font-semibold text-foreground truncate">
+                          {propertyName || "Property Name"}
+                        </h4>
+                        <p className="text-[10px] text-muted-foreground truncate">
+                          {tagline || "Resident Portal"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Resident Welcome & Payment Card */}
+                  <div
+                    className="rounded-xl p-3 border border-border/60 space-y-2.5 transition-colors"
+                    style={{
+                      background: `linear-gradient(135deg, ${primaryColor}15 0%, transparent 60%, ${secondaryColor}12 100%)`,
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] text-muted-foreground block">
+                          Welcome back
+                        </span>
+                        <span className="text-xs font-semibold text-foreground">Alex Rivera</span>
+                      </div>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        <span className="size-1.5 rounded-full bg-emerald-500" />
+                        Active Lease
+                      </span>
+                    </div>
+
+                    <div className="bg-card/90 backdrop-blur-xs border border-border/80 rounded-lg p-2.5 flex items-center justify-between shadow-2xs">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">Monthly Rent · Unit 204</p>
+                        <p className="text-xs font-bold text-foreground">₱14,500.00</p>
+                      </div>
+                      <span
+                        className="px-3 py-1 rounded-md text-[10px] font-semibold shadow-2xs shrink-0"
                         style={{ backgroundColor: primaryColor, color: primaryTextColor }}
                       >
-                        {getInitials(propertyName)}
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <h4 className="text-xs font-bold tracking-tight text-zinc-900 dark:text-zinc-100 truncate">
-                        {propertyName || "Property Name"}
-                      </h4>
-                      <p className="text-[9px] text-zinc-500 truncate">
-                        {tagline || "Residential Living"}
-                      </p>
+                        Pay Rent
+                      </span>
                     </div>
                   </div>
 
-                  <div
-                    className="px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider shrink-0 shadow-xs"
-                    style={{ backgroundColor: primaryColor, color: primaryTextColor }}
-                  >
-                    Portal
+                  {/* Quick Services Row */}
+                  <div className="grid grid-cols-2 gap-2 text-left">
+                    <div className="p-2.5 rounded-lg border border-border/60 bg-muted/20 flex items-center gap-2">
+                      <div
+                        className="size-7 rounded-md flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}
+                      >
+                        <CreditCard className="size-3.5" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[11px] font-medium text-foreground block truncate">
+                          Payment History
+                        </span>
+                        <span className="text-[9px] text-muted-foreground block">
+                          All up to date
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg border border-border/60 bg-muted/20 flex items-center gap-2">
+                      <div
+                        className="size-7 rounded-md flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: `${secondaryColor}20`, color: secondaryColor }}
+                      >
+                        <ShieldCheck className="size-3.5" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[11px] font-medium text-foreground block truncate">
+                          Lease Agreement
+                        </span>
+                        <span className="text-[9px] text-muted-foreground block">
+                          Expires Dec 2026
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Brand Theme & Accent Pills */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-lg p-2 flex flex-col gap-0.5">
-                    <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-400">
-                      Primary Theme
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <div
-                        className="size-2.5 rounded-full border border-zinc-300 dark:border-zinc-700 shrink-0"
+                {/* Bottom Color Swatch Summary */}
+                <div className="pt-2 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span className="text-[10px] font-medium text-muted-foreground">Active Palette</span>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 font-mono text-[10px]">
+                      <span
+                        className="size-2.5 rounded-full border border-border shadow-2xs shrink-0"
                         style={{ backgroundColor: primaryColor }}
                       />
-                      <span className="text-[10px] font-mono font-bold text-zinc-700 dark:text-zinc-300 truncate uppercase">
-                        {primaryColor}
-                      </span>
+                      <span className="text-foreground">{primaryColor}</span>
                     </div>
-                  </div>
-
-                  <div className="bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-lg p-2 flex flex-col gap-0.5">
-                    <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-400">
-                      Secondary Accent
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <div
-                        className="size-2.5 rounded-full border border-zinc-300 dark:border-zinc-700 shrink-0"
+                    <div className="flex items-center gap-1.5 font-mono text-[10px]">
+                      <span
+                        className="size-2.5 rounded-full border border-border shadow-2xs shrink-0"
                         style={{ backgroundColor: secondaryColor }}
                       />
-                      <span className="text-[10px] font-mono font-bold text-zinc-700 dark:text-zinc-300 truncate uppercase">
-                        {secondaryColor}
-                      </span>
+                      <span className="text-foreground">{secondaryColor}</span>
                     </div>
                   </div>
-                </div>
-
-                {/* Mock Card: Resident Quick Action */}
-                <div className="border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 space-y-2">
-                  <div className="flex items-center justify-between text-[10px] font-bold text-zinc-400">
-                    <div className="flex items-center gap-1.5">
-                      <CreditCard className="size-3" style={{ color: primaryColor }} />
-                      <span>Resident Ledger</span>
-                    </div>
-                    <span className="text-emerald-600 dark:text-emerald-400">● Active Lease</span>
-                  </div>
-
-                  <div className="bg-white dark:bg-zinc-900 rounded-lg p-2.5 flex items-center justify-between border border-zinc-200 dark:border-zinc-800 shadow-xs">
-                    <div>
-                      <p className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">
-                        Unit 204 · Rent & Water
-                      </p>
-                      <p className="text-[9px] text-zinc-500">
-                        Due on 1st of next month
-                      </p>
-                    </div>
-                    <span
-                      className="px-2.5 py-1 rounded text-[9px] font-bold shadow-xs cursor-pointer"
-                      style={{ backgroundColor: primaryColor, color: primaryTextColor }}
-                    >
-                      Pay GCash
-                    </span>
-                  </div>
-                </div>
-
-                {/* Owner Profile Card */}
-                <div className="bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 p-2.5 rounded-xl flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div
-                      className="size-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 shadow-xs"
-                      style={{ backgroundColor: secondaryColor, color: secondaryTextColor }}
-                    >
-                      {(profile?.full_name || "L").slice(0, 1).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 truncate">
-                        {profile?.full_name || "Landlord"}
-                      </p>
-                      <p className="text-[9px] text-zinc-500 truncate font-mono">
-                        {profile?.email || "landlord@property.com"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <span
-                    className="text-[9px] font-bold uppercase tracking-wider shrink-0 ml-2"
-                    style={{ color: primaryColor }}
-                  >
-                    Owner
-                  </span>
                 </div>
               </div>
-            </div>
+            </aside>
           )}
         </div>
       </main>
 
-      {/* Unbypassable Security Recovery Key Lightbox Modal */}
+      {/* Mandatory Security Recovery Key Modal */}
       {isLaunched && launchedSecurityKey && (
-        <div 
-          className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto"
+        <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="security-key-modal-title"
+          aria-describedby="security-key-modal-desc"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200"
         >
-          <div 
-            className="w-full max-w-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5 animate-in zoom-in-95 duration-300 my-auto"
+          <div
+            className="w-full max-w-xl bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-2xl space-y-5 my-auto animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-start gap-4">
-              <div className="size-12 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <div className="size-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                 <KeyRound className="size-6" />
               </div>
-              <div>
+              <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <h2 id="security-key-modal-title" className="text-lg font-black tracking-tight text-zinc-950 dark:text-white">
-                    Security Recovery Key Required
+                  <h2
+                    id="security-key-modal-title"
+                    className="text-lg font-bold tracking-tight text-foreground"
+                  >
+                    Security Recovery Key
                   </h2>
-                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                     Mandatory Backup
                   </span>
                 </div>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                  Your portal setup is complete. To safeguard your account, you must download your single-use recovery key before accessing your dashboard.
+                <p id="security-key-modal-desc" className="text-xs text-muted-foreground leading-relaxed">
+                  Your portal setup is complete. To safeguard your account, download and confirm your
+                  single-use recovery key before accessing your dashboard.
                 </p>
               </div>
             </div>
 
             {/* Key Box */}
-            <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/80 p-4 space-y-3">
+            <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   Your Single-Use Recovery Key
                 </span>
                 <button
                   type="button"
                   onClick={() => setIsKeyVisible((prev) => !prev)}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded cursor-pointer"
                 >
                   {isKeyVisible ? (
                     <>
@@ -1693,20 +2119,20 @@ CRITICAL SECURITY INSTRUCTIONS:
                 </button>
               </div>
 
-              <div className="py-2.5 px-4 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono text-sm sm:text-base font-black tracking-widest text-zinc-900 dark:text-zinc-100 text-center select-all">
+              <div className="py-2.5 px-4 rounded-xl bg-background border border-border font-mono text-sm sm:text-base font-bold tracking-widest text-foreground text-center select-all">
                 {isKeyVisible ? launchedSecurityKey : "••••-••••-••••-••••"}
               </div>
 
-              {/* Two Action Buttons: Copy & Download */}
+              {/* Action Buttons: Copy & Download */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                 <button
                   type="button"
                   onClick={() => handleCopySecurityKey(launchedSecurityKey)}
                   className={cn(
-                    "flex items-center justify-center gap-2 h-11 px-4 rounded-xl border text-xs font-bold transition-all active:scale-95",
+                    "flex items-center justify-center gap-2 h-10 px-4 rounded-xl border text-xs font-semibold transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer",
                     hasCopiedKey
-                      ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
-                      : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 text-zinc-900 dark:text-zinc-100"
+                      ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
+                      : "bg-background border-border hover:bg-muted text-foreground"
                   )}
                 >
                   {hasCopiedKey ? (
@@ -1716,7 +2142,7 @@ CRITICAL SECURITY INSTRUCTIONS:
                     </>
                   ) : (
                     <>
-                      <Copy className="size-4 text-zinc-400" />
+                      <Copy className="size-4 text-muted-foreground" />
                       <span>Copy Key</span>
                     </>
                   )}
@@ -1724,12 +2150,17 @@ CRITICAL SECURITY INSTRUCTIONS:
 
                 <button
                   type="button"
-                  onClick={() => handleDownloadSecurityKey(launchedSecurityKey, profile?.email || undefined)}
+                  onClick={() =>
+                    handleDownloadSecurityKey(
+                      launchedSecurityKey,
+                      profile?.email || undefined
+                    )
+                  }
                   className={cn(
-                    "flex items-center justify-center gap-2 h-11 px-4 rounded-xl border text-xs font-bold transition-all active:scale-95",
+                    "flex items-center justify-center gap-2 h-10 px-4 rounded-xl border text-xs font-semibold transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer",
                     hasDownloadedKey
-                      ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
-                      : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 text-zinc-900 dark:text-zinc-100"
+                      ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
+                      : "bg-background border-border hover:bg-muted text-foreground"
                   )}
                 >
                   {hasDownloadedKey ? (
@@ -1739,7 +2170,7 @@ CRITICAL SECURITY INSTRUCTIONS:
                     </>
                   ) : (
                     <>
-                      <Download className="size-4 text-zinc-400" />
+                      <Download className="size-4 text-muted-foreground" />
                       <span>Download (.txt)</span>
                     </>
                   )}
@@ -1751,32 +2182,58 @@ CRITICAL SECURITY INSTRUCTIONS:
             <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs leading-relaxed">
               <ShieldAlert className="size-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
               <p>
-                <span className="font-bold">This key will never be shown again.</span> Once you leave this screen, the key is permanently encrypted and cannot be retrieved by support.
+                <span className="font-semibold">This key will never be shown again.</span> Once you leave
+                this screen, the key is permanently encrypted and cannot be retrieved by support.
               </p>
             </div>
 
-            {/* Checkbox */}
-            <label className="flex items-start gap-3 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer transition-colors select-none">
+            {/* Acknowledgment Checkbox */}
+            <label
+              htmlFor="ack-recovery-checkbox"
+              className="flex items-start gap-3 p-3 rounded-xl border border-border bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors select-none"
+            >
               <input
+                id="ack-recovery-checkbox"
                 type="checkbox"
                 checked={isSecurityKeyAcknowledged}
                 onChange={(e) => setIsSecurityKeyAcknowledged(e.target.checked)}
-                className="size-4 mt-0.5 rounded border-zinc-300 dark:border-zinc-700 text-primary focus:ring-primary cursor-pointer shrink-0"
+                className="size-4 mt-0.5 rounded border-border text-primary focus:ring-primary cursor-pointer shrink-0"
               />
-              <span className="text-xs text-zinc-700 dark:text-zinc-300 leading-snug">
-                I have downloaded my security recovery key and stored it in a secure location.
+              <span className="text-xs text-foreground leading-snug">
+                I have downloaded and safely stored my security recovery key in a secure location.
               </span>
             </label>
 
-            {/* Checklist requirements status */}
-            <div className="flex flex-wrap items-center gap-3 text-[11px] font-semibold text-zinc-500">
-              <span className={cn("flex items-center gap-1", hasDownloadedKey ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400")}>
-                <Check className={cn("size-3.5", hasDownloadedKey ? "stroke-[3]" : "opacity-30")} />
+            {/* Checklist Requirements */}
+            <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-muted-foreground">
+              <span
+                className={cn(
+                  "flex items-center gap-1",
+                  hasDownloadedKey
+                    ? "text-emerald-600 dark:text-emerald-400 font-semibold"
+                    : "text-muted-foreground"
+                )}
+              >
+                <Check
+                  className={cn("size-3.5", hasDownloadedKey ? "stroke-[3]" : "opacity-40")}
+                />
                 1. Downloaded
               </span>
               <span>•</span>
-              <span className={cn("flex items-center gap-1", isSecurityKeyAcknowledged ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400")}>
-                <Check className={cn("size-3.5", isSecurityKeyAcknowledged ? "stroke-[3]" : "opacity-30")} />
+              <span
+                className={cn(
+                  "flex items-center gap-1",
+                  isSecurityKeyAcknowledged
+                    ? "text-emerald-600 dark:text-emerald-400 font-semibold"
+                    : "text-muted-foreground"
+                )}
+              >
+                <Check
+                  className={cn(
+                    "size-3.5",
+                    isSecurityKeyAcknowledged ? "stroke-[3]" : "opacity-40"
+                  )}
+                />
                 2. Acknowledged
               </span>
             </div>
@@ -1785,9 +2242,12 @@ CRITICAL SECURITY INSTRUCTIONS:
             <button
               type="button"
               disabled={!hasDownloadedKey || !isSecurityKeyAcknowledged}
+              aria-disabled={!hasDownloadedKey || !isSecurityKeyAcknowledged}
               onClick={async () => {
                 if (!hasDownloadedKey || !isSecurityKeyAcknowledged) {
-                  toast.error("Please download and confirm saving your security recovery key before proceeding.");
+                  toast.error(
+                    "Please download and confirm saving your security recovery key before proceeding."
+                  );
                   return;
                 }
                 await brand.updateBranding(
@@ -1800,15 +2260,15 @@ CRITICAL SECURITY INSTRUCTIONS:
                     setupCompleted: true,
                     setupCompletedAt: new Date().toISOString(),
                   },
-                  false // already saved in database by /api/setup/launch
+                  false
                 );
                 router.push("/landlord/dashboard");
               }}
               className={cn(
-                "w-full h-12 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm",
+                "w-full h-11 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 shadow-xs focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
                 hasDownloadedKey && isSecurityKeyAcknowledged
                   ? "cursor-pointer active:scale-98 text-white hover:brightness-105"
-                  : "opacity-40 cursor-not-allowed text-zinc-400 bg-zinc-200 dark:bg-zinc-800"
+                  : "opacity-40 cursor-not-allowed text-muted-foreground bg-muted"
               )}
               style={
                 hasDownloadedKey && isSecurityKeyAcknowledged

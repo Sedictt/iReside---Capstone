@@ -76,7 +76,7 @@ function NewAssetContent() {
     const isEditMode = mode === "edit";
 
     const { user, profile } = useAuth();
-    const { properties, refreshProperties } = useProperty();
+    const { properties, refreshProperties, setSelectedPropertyId } = useProperty();
     const supabase = createClient();
     const toast = useAppToast();
     
@@ -405,10 +405,17 @@ function NewAssetContent() {
                 }
             }
 
-            toast.success(isEditMode ? "Property updated successfully!" : "Property created successfully!");
             await refreshProperties();
             router.refresh();
-            router.push("/landlord/properties");
+
+            if (!isEditMode && result.propertyId) {
+                setSelectedPropertyId(result.propertyId);
+                toast.success("Property registered! Next, configure your unit map to place your units.");
+                router.push(`/landlord/unit-map?propertyId=${result.propertyId}`);
+            } else {
+                toast.success(isEditMode ? "Property updated successfully!" : "Property created successfully!");
+                router.push("/landlord/properties");
+            }
         } catch (e) {
             console.error("Save error:", e);
             toast.error(e instanceof Error ? e.message : "Failed to save property. Please try again.");

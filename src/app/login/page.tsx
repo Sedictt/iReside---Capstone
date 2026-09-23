@@ -18,6 +18,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { AccountActivationModal } from "@/components/auth/AccountActivationModal";
+import { DISALLOWED_PRESEEDED_DATA } from "@/lib/validation/brand-setup";
 
 function LoginContent() {
     const [error, setError] = useState<string | null>(null);
@@ -92,15 +93,17 @@ function LoginContent() {
                 }
             }
 
-            const userEmail = data.user?.email || "";
+            const userEmail = (data.user?.email || "").toLowerCase().trim();
             const isDefaultAccount =
                 userEmail.includes("turnkey.local") ||
-                userEmail.toLowerCase() === "admin@turnkey.local" ||
-                userEmail.toLowerCase() === "landlord@turnkey.local" ||
+                userEmail === "admin@turnkey.local" ||
+                userEmail === "landlord@turnkey.local" ||
+                userEmail.startsWith("practice.landlord") ||
+                DISALLOWED_PRESEEDED_DATA.emails.includes(userEmail) ||
                 isClaimed === false;
 
             // Intercept initial setup/default accounts for landlord/admin
-            if ((role === "landlord" || role === "admin") && (!isClaimed || isDefaultAccount)) {
+            if ((role === "landlord" || role === "admin") && (isClaimed === false || isDefaultAccount)) {
                 setShowActivationModal(true);
                 setLoading(false);
                 return;

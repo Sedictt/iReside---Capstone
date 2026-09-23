@@ -7,6 +7,7 @@ import { z } from "zod";
 const verifyOtpSchema = z.object({
   newEmail: z.string().trim().email("Please provide a valid email address."),
   otp: z.string().trim().length(6, "Verification code must be exactly 6 digits."),
+  validateOnly: z.boolean().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -77,6 +78,15 @@ export async function POST(request: NextRequest) {
         { error: "Verification code has expired. Please request a new code." },
         { status: 400 }
       );
+    }
+
+    // If caller only wants to validate OTP without consuming/clearing it yet
+    if (validation.data.validateOnly) {
+      return NextResponse.json({
+        success: true,
+        valid: true,
+        message: "Verification code is valid.",
+      });
     }
 
     // 1. Officially update Supabase Auth User Email & confirm it

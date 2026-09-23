@@ -43,6 +43,8 @@ export interface SidebarNavSection {
     dividerBefore?: boolean;
 }
 
+export type SidebarLockStage = "no_property" | "no_unit_map" | null;
+
 interface RoleSidebarProps {
     sections: SidebarNavSection[];
     portalLabel?: string;
@@ -55,6 +57,7 @@ interface RoleSidebarProps {
     onToggleCollapse?: () => void;
     showCollapseToggle?: boolean;
     isLocked?: boolean;
+    lockStage?: SidebarLockStage;
 }
 
 function LogoLink({ children }: { children: React.ReactNode }) {
@@ -98,6 +101,7 @@ export function RoleSidebar({
     onToggleCollapse,
     showCollapseToggle = false,
     isLocked = false,
+    lockStage,
 }: RoleSidebarProps) {
     const pathname = usePathname();
     const [expandedOverrides, setExpandedOverrides] = useState<Record<string, boolean>>({});
@@ -114,14 +118,38 @@ export function RoleSidebar({
 
     const renderNavItem = (item: SidebarNavItem, nested = false) => {
         const isActive = isItemActive(item.href);
-        const isItemLocked = Boolean(
-            isLocked && 
-            item.href !== "/landlord/properties" && 
-            item.href !== "/landlord/properties/new"
-        );
-        const resolvedHref = (isLocked && item.href === "/landlord/properties")
-            ? "/landlord/properties/new"
-            : item.href;
+        const stage: SidebarLockStage = lockStage !== undefined
+            ? lockStage
+            : (isLocked ? "no_property" : null);
+
+        let isItemLocked = false;
+        let resolvedHref = item.href;
+        let lockBadgeText = "Setup Required";
+        let lockTooltipText = "";
+        let lockToastText = "";
+
+        if (stage === "no_property") {
+            isItemLocked = Boolean(
+                item.href !== "/landlord/properties" && 
+                item.href !== "/landlord/properties/new"
+            );
+            resolvedHref = item.href === "/landlord/properties"
+                ? "/landlord/properties/new"
+                : item.href;
+            lockBadgeText = "Property Required";
+            lockTooltipText = "Register your first property to unlock this section.";
+            lockToastText = "Property setup required. Please complete your property setup first to unlock portal operations.";
+        } else if (stage === "no_unit_map") {
+            isItemLocked = Boolean(
+                item.href !== "/landlord/unit-map" && 
+                item.href !== "/landlord/properties" && 
+                item.href !== "/landlord/properties/new"
+            );
+            resolvedHref = item.href;
+            lockBadgeText = "Unit Map Required";
+            lockTooltipText = "Configure your unit map to unlock this section.";
+            lockToastText = "Unit map setup required. Please configure your property's unit layout first to unlock portal operations.";
+        }
 
         const tooltipContent = (
             <div className="flex flex-col gap-1 max-w-[220px] text-left py-0.5">
@@ -130,7 +158,7 @@ export function RoleSidebar({
                     {isItemLocked ? (
                         <span className="flex items-center gap-1 text-[9px] font-bold text-amber-500 uppercase tracking-wider">
                             <Lock className="size-2.5" />
-                            Setup Required
+                            {lockBadgeText}
                         </span>
                     ) : item.urgent ? (
                         <span className="size-1.5 rounded-full bg-red-500 animate-ping" />
@@ -138,7 +166,7 @@ export function RoleSidebar({
                 </div>
                 {isItemLocked ? (
                     <span className="text-[11px] font-medium text-amber-500/90 leading-snug">
-                        Register your first property to unlock this section.
+                        {lockTooltipText}
                     </span>
                 ) : item.description ? (
                     <span className="text-[11px] font-medium text-muted-foreground/90 leading-snug">
@@ -166,7 +194,7 @@ export function RoleSidebar({
                     onClick={(e) => {
                         if (isItemLocked) {
                             e.preventDefault();
-                            toast.warning("Property setup required. Please complete your property setup first to unlock portal operations.");
+                            toast.warning(lockToastText);
                         }
                     }}
                     className={cn(

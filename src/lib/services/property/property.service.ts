@@ -212,6 +212,34 @@ export class PropertyService {
       }
     }
 
+    const placedUnitIds = new Set<string>();
+    if (unitIds.length > 0) {
+      const { data: positions } = await (this.supabase as any)
+        .from("unit_map_positions")
+        .select("unit_id, floor_key, x, y, w, h")
+        .in("unit_id", unitIds);
+
+      if (positions) {
+        for (const pos of positions as any[]) {
+          const floorKey = pos.floor_key?.trim().toLowerCase();
+          if (
+            floorKey &&
+            floorKey !== "none" &&
+            floorKey !== "null" &&
+            floorKey !== "undefined" &&
+            Number.isFinite(pos.x) &&
+            Number.isFinite(pos.y) &&
+            Number.isFinite(pos.w) &&
+            Number.isFinite(pos.h) &&
+            pos.w > 0 &&
+            pos.h > 0
+          ) {
+            placedUnitIds.add(pos.unit_id);
+          }
+        }
+      }
+    }
+
     const unitsByPropertyId = new Map<string, UnitSummary[]>();
     for (const unit of unitList) {
       const existing = unitsByPropertyId.get(unit.property_id) ?? [];
@@ -228,10 +256,17 @@ export class PropertyService {
       unitsByPropertyId.set(unit.property_id, existing);
     }
 
-    return properties.map((property) => ({
-      ...property,
-      units: unitsByPropertyId.get(property.id) ?? [],
-    }));
+    return properties.map((property) => {
+      const propUnits = unitsByPropertyId.get(property.id) ?? [];
+      const placedCount = propUnits.filter((u) => placedUnitIds.has(u.id)).length;
+      const isMapSetupComplete = propUnits.length === 0 || placedCount > 0;
+      return {
+        ...property,
+        units: propUnits,
+        placedCount,
+        isMapSetupComplete,
+      };
+    });
   }
 
   /**

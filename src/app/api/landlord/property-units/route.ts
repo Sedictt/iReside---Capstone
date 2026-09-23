@@ -23,6 +23,8 @@ export async function GET(request: Request) {
             address: property.address,
             contractTemplate: property.contractTemplate,
             image: property.images?.[0] ?? null,
+            isMapSetupComplete: property.isMapSetupComplete ?? false,
+            placedCount: property.placedCount ?? 0,
             units: property.units.map((unit) => ({
                 id: unit.id,
                 name: unit.name,

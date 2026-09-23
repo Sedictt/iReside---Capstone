@@ -21,6 +21,7 @@ import { resetPasswordRequestSchema, otpVerifySchema } from "@/lib/validation/sc
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
 import { formatSecurityKey, normalizeSecurityKey } from "@/lib/security/recovery-keys";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 type RecoveryMode = "EMAIL_OTP" | "SECURITY_KEY";
 type Step = "EMAIL" | "OTP" | "NEW_PASSWORD" | "SUCCESS" | "KEY_RESET" | "KEY_NEW_KEY";
@@ -50,11 +51,22 @@ function ForgotPasswordContent() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [error, setError] = useState<string | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
     const [mounted, setMounted] = useState(false);
 
     const otpInputRef = useRef<HTMLInputElement>(null);
+
+    const clearFieldError = (key: string) => {
+        if (fieldErrors[key]) {
+            setFieldErrors(prev => {
+                const next = { ...prev };
+                delete next[key];
+                return next;
+            });
+        }
+    };
 
     useEffect(() => {
         setMounted(true);
@@ -169,14 +181,18 @@ function ForgotPasswordContent() {
     const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError(null);
+        setFieldErrors({});
 
+        const newErrors: Record<string, string> = {};
         if (newPassword.length < 6) {
-            setError("Password must be at least 6 characters long.");
-            return;
+            newErrors.newPassword = "Password must be at least 6 characters long.";
+        }
+        if (newPassword !== confirmPassword) {
+            newErrors.confirmPassword = "Passwords do not match.";
         }
 
-        if (newPassword !== confirmPassword) {
-            setError("Passwords do not match.");
+        if (Object.keys(newErrors).length > 0) {
+            setFieldErrors(newErrors);
             return;
         }
 
@@ -215,25 +231,28 @@ function ForgotPasswordContent() {
     const handleSecurityKeyRecovery = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError(null);
+        setFieldErrors({});
 
+        const newErrors: Record<string, string> = {};
         const cleanKey = normalizeSecurityKey(securityKeyInput);
         if (cleanKey.length < 16) {
-            setError("Please enter the complete 16-character security key.");
-            return;
+            newErrors.securityKey = "Please enter the complete 16-character security key.";
         }
 
         if (newPassword.length < 6) {
-            setError("Password must be at least 6 characters long.");
-            return;
+            newErrors.newPassword = "Password must be at least 6 characters long.";
         }
 
         if (newPassword !== confirmPassword) {
-            setError("Passwords do not match.");
-            return;
+            newErrors.confirmPassword = "Passwords do not match.";
         }
 
         if (wantUpdateEmail && !newEmail.trim().includes("@")) {
-            setError("Please enter a valid new email address.");
+            newErrors.newEmail = "Please enter a valid new email address.";
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setFieldErrors(newErrors);
             return;
         }
 
@@ -519,9 +538,9 @@ function ForgotPasswordContent() {
                                 </div>
                             )}
 
-                            <form className="space-y-4" onSubmit={handleResetPassword}>
+                            <form className="space-y-4" onSubmit={handleResetPassword} noValidate>
                                 <div className="space-y-1.5">
-                                    <label htmlFor="newPassword" className="block text-xs font-semibold text-foreground/90 select-none">
+                                    <label htmlFor="newPassword" className={cn("block text-xs font-semibold select-none transition-colors", fieldErrors.newPassword ? "text-red-600 dark:text-red-400" : "text-foreground/90")}>
                                         New Password
                                     </label>
                                     <div className="relative">
@@ -531,9 +550,16 @@ function ForgotPasswordContent() {
                                             type={showNewPassword ? "text" : "password"}
                                             required
                                             value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            onChange={(e) => {
+                                                setNewPassword(e.target.value);
+                                                clearFieldError("newPassword");
+                                            }}
                                             placeholder="••••••••"
-                                            className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                            aria-invalid={!!fieldErrors.newPassword}
+                                            className={cn(
+                                                "h-11 w-full rounded-xl border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
+                                                fieldErrors.newPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
+                                            )}
                                         />
                                         <button
                                             type="button"
@@ -545,11 +571,18 @@ function ForgotPasswordContent() {
                                             {showNewPassword ? <EyeOff className="size-4.5" /> : <Eye className="size-4.5" />}
                                         </button>
                                     </div>
-                                    <p className="text-[11px] text-muted-foreground">Minimum 6 characters</p>
+                                    {fieldErrors.newPassword ? (
+                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                            <AlertCircle className="size-3.5 shrink-0" />
+                                            <span>{fieldErrors.newPassword}</span>
+                                        </p>
+                                    ) : (
+                                        <p className="text-[11px] text-muted-foreground">Minimum 6 characters</p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label htmlFor="confirmPassword" className="block text-xs font-semibold text-foreground/90 select-none">
+                                    <label htmlFor="confirmPassword" className={cn("block text-xs font-semibold select-none transition-colors", fieldErrors.confirmPassword ? "text-red-600 dark:text-red-400" : "text-foreground/90")}>
                                         Confirm Password
                                     </label>
                                     <div className="relative">
@@ -559,9 +592,24 @@ function ForgotPasswordContent() {
                                             type={showConfirmPassword ? "text" : "password"}
                                             required
                                             value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setConfirmPassword(val);
+                                                if (fieldErrors.confirmPassword) {
+                                                    clearFieldError("confirmPassword");
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                if (confirmPassword && newPassword && confirmPassword !== newPassword) {
+                                                    setFieldErrors(prev => ({ ...prev, confirmPassword: "Passwords do not match." }));
+                                                }
+                                            }}
                                             placeholder="••••••••"
-                                            className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                            aria-invalid={!!fieldErrors.confirmPassword}
+                                            className={cn(
+                                                "h-11 w-full rounded-xl border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
+                                                fieldErrors.confirmPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
+                                            )}
                                         />
                                         <button
                                             type="button"
@@ -573,6 +621,12 @@ function ForgotPasswordContent() {
                                             {showConfirmPassword ? <EyeOff className="size-4.5" /> : <Eye className="size-4.5" />}
                                         </button>
                                     </div>
+                                    {fieldErrors.confirmPassword && (
+                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                            <AlertCircle className="size-3.5 shrink-0" />
+                                            <span>{fieldErrors.confirmPassword}</span>
+                                        </p>
+                                    )}
                                 </div>
 
                                 <button
@@ -615,7 +669,7 @@ function ForgotPasswordContent() {
                                 </div>
                             )}
 
-                            <form className="space-y-4" onSubmit={handleSecurityKeyRecovery}>
+                            <form className="space-y-4" onSubmit={handleSecurityKeyRecovery} noValidate>
                                 <div className="space-y-1.5">
                                     <label htmlFor="sec-email" className="block text-xs font-semibold text-foreground">
                                         Registered Email Address
@@ -633,7 +687,7 @@ function ForgotPasswordContent() {
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label htmlFor="sec-key" className="block text-xs font-semibold text-foreground">
+                                    <label htmlFor="sec-key" className={cn("block text-xs font-semibold transition-colors", fieldErrors.securityKey ? "text-red-600 dark:text-red-400" : "text-foreground")}>
                                         Security Recovery Key
                                     </label>
                                     <input
@@ -642,15 +696,29 @@ function ForgotPasswordContent() {
                                         required
                                         maxLength={19}
                                         value={securityKeyInput}
-                                        onChange={(e) => handleKeyInputChange(e.target.value)}
+                                        onChange={(e) => {
+                                            handleKeyInputChange(e.target.value);
+                                            clearFieldError("securityKey");
+                                        }}
                                         placeholder="XXXX-XXXX-XXXX-XXXX"
-                                        className="h-11 w-full rounded-xl border border-border bg-background px-3.5 text-center font-mono text-base font-bold tracking-wider text-foreground placeholder:tracking-normal placeholder:font-sans placeholder:text-sm placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 uppercase"
+                                        aria-invalid={!!fieldErrors.securityKey}
+                                        className={cn(
+                                            "h-11 w-full rounded-xl border bg-background px-3.5 text-center font-mono text-base font-bold tracking-wider text-foreground placeholder:tracking-normal placeholder:font-sans placeholder:text-sm placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2 uppercase",
+                                            fieldErrors.securityKey ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
+                                        )}
                                     />
-                                    <p className="text-[11px] text-muted-foreground">Your 16-character single-use security key.</p>
+                                    {fieldErrors.securityKey ? (
+                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                            <AlertCircle className="size-3.5 shrink-0" />
+                                            <span>{fieldErrors.securityKey}</span>
+                                        </p>
+                                    ) : (
+                                        <p className="text-[11px] text-muted-foreground">Your 16-character single-use security key.</p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-1.5 pt-1">
-                                    <label htmlFor="sec-newPassword" className="block text-xs font-semibold text-foreground">
+                                    <label htmlFor="sec-newPassword" className={cn("block text-xs font-semibold transition-colors", fieldErrors.newPassword ? "text-red-600 dark:text-red-400" : "text-foreground")}>
                                         New Password
                                     </label>
                                     <div className="relative">
@@ -659,9 +727,16 @@ function ForgotPasswordContent() {
                                             type={showNewPassword ? "text" : "password"}
                                             required
                                             value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            onChange={(e) => {
+                                                setNewPassword(e.target.value);
+                                                clearFieldError("newPassword");
+                                            }}
                                             placeholder="••••••••"
-                                            className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                            aria-invalid={!!fieldErrors.newPassword}
+                                            className={cn(
+                                                "h-11 w-full rounded-xl border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
+                                                fieldErrors.newPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
+                                            )}
                                         />
                                         <button
                                             type="button"
@@ -671,11 +746,18 @@ function ForgotPasswordContent() {
                                             {showNewPassword ? <EyeOff className="size-4.5" /> : <Eye className="size-4.5" />}
                                         </button>
                                     </div>
-                                    <p className="text-[11px] text-muted-foreground">Minimum 6 characters</p>
+                                    {fieldErrors.newPassword ? (
+                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                            <AlertCircle className="size-3.5 shrink-0" />
+                                            <span>{fieldErrors.newPassword}</span>
+                                        </p>
+                                    ) : (
+                                        <p className="text-[11px] text-muted-foreground">Minimum 6 characters</p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label htmlFor="sec-confirmPassword" className="block text-xs font-semibold text-foreground">
+                                    <label htmlFor="sec-confirmPassword" className={cn("block text-xs font-semibold transition-colors", fieldErrors.confirmPassword ? "text-red-600 dark:text-red-400" : "text-foreground")}>
                                         Confirm New Password
                                     </label>
                                     <div className="relative">
@@ -684,9 +766,24 @@ function ForgotPasswordContent() {
                                             type={showConfirmPassword ? "text" : "password"}
                                             required
                                             value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setConfirmPassword(val);
+                                                if (fieldErrors.confirmPassword) {
+                                                    clearFieldError("confirmPassword");
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                if (confirmPassword && newPassword && confirmPassword !== newPassword) {
+                                                    setFieldErrors(prev => ({ ...prev, confirmPassword: "Passwords do not match." }));
+                                                }
+                                            }}
                                             placeholder="••••••••"
-                                            className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                            aria-invalid={!!fieldErrors.confirmPassword}
+                                            className={cn(
+                                                "h-11 w-full rounded-xl border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
+                                                fieldErrors.confirmPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
+                                            )}
                                         />
                                         <button
                                             type="button"
@@ -696,6 +793,12 @@ function ForgotPasswordContent() {
                                             {showConfirmPassword ? <EyeOff className="size-4.5" /> : <Eye className="size-4.5" />}
                                         </button>
                                     </div>
+                                    {fieldErrors.confirmPassword && (
+                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                            <AlertCircle className="size-3.5 shrink-0" />
+                                            <span>{fieldErrors.confirmPassword}</span>
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Optional New Email Checkbox */}
@@ -714,7 +817,7 @@ function ForgotPasswordContent() {
 
                                     {wantUpdateEmail && (
                                         <div className="space-y-1.5 pl-6 animate-in fade-in-50">
-                                            <label htmlFor="newEmail" className="block text-xs font-medium text-foreground">
+                                            <label htmlFor="newEmail" className={cn("block text-xs font-medium transition-colors", fieldErrors.newEmail ? "text-red-600 dark:text-red-400" : "text-foreground")}>
                                                 New Email Address
                                             </label>
                                             <input
@@ -722,10 +825,23 @@ function ForgotPasswordContent() {
                                                 type="email"
                                                 required={wantUpdateEmail}
                                                 value={newEmail}
-                                                onChange={(e) => setNewEmail(e.target.value)}
+                                                onChange={(e) => {
+                                                    setNewEmail(e.target.value);
+                                                    clearFieldError("newEmail");
+                                                }}
                                                 placeholder="new-email@example.com"
-                                                className="h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                                aria-invalid={!!fieldErrors.newEmail}
+                                                className={cn(
+                                                    "h-11 w-full rounded-xl border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
+                                                    fieldErrors.newEmail ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
+                                                )}
                                             />
+                                            {fieldErrors.newEmail && (
+                                                <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                                    <AlertCircle className="size-3.5 shrink-0" />
+                                                    <span>{fieldErrors.newEmail}</span>
+                                                </p>
+                                            )}
                                         </div>
                                     )}
                                 </div>
