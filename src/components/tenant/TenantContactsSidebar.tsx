@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Users, Phone, MoreHorizontal, MessageSquare, Video, X, Send, Maximize2, Check, CheckCheck, Clock3, MoreVertical, File, HandCoins, Bell, TrendingUp, AlertTriangle, CheckCircle2, History, Zap, Wallet, Receipt } from "lucide-react";
+import { Users, Phone, MoreHorizontal, MessageSquare, Video, X, Send, Maximize2, Check, CheckCheck, Clock3, MoreVertical, File, HandCoins, Bell, TrendingUp, AlertTriangle, CheckCircle2, History, Zap, Wallet, Receipt, Search, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -17,7 +17,10 @@ import {
     markConversationAsRead,
     sendConversationMessage,
     uploadConversationFile,
+    searchMessageUsers,
+    createOrGetDirectConversation,
     type ConversationSummary,
+    type MessageUserSearchResult,
 } from "@/lib/messages/client";
 import { RoleBadge, type BadgeRole } from "@/components/profile/RoleBadge";
 import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
@@ -123,7 +126,12 @@ export function TenantContactsSidebar() {
     const { user } = useAuth();
     const supabase = useMemo(() => createSupabaseClient(), []);
     const [isHovered, setIsHovered] = useState(false);
-    const [activeTab, setActiveTab] = useState<"messages" | "contacts">("messages");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
+    const [searchResults, setSearchResults] = useState<MessageUserSearchResult[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchError, setSearchError] = useState<string | null>(null);
+    const [startingChatUserId, setStartingChatUserId] = useState<string | null>(null);
     const [openChats, setOpenChats] = useState<OpenChatUser[]>([]);
     const [isIrisOpen, setIsIrisOpen] = useState(false);
     const [conversations, setConversations] = useState<ChatUser[]>([]);
@@ -876,6 +884,102 @@ export function TenantContactsSidebar() {
         }
     };
 
+    useEffect(() => {
+        const trimmed = searchQuery.trim();
+        if (trimmed.length < 2) {
+            setSearchResults([]);
+            setIsSearching(false);
+            setSearchError(null);
+            return;
+        }
+
+        let isCancelled = false;
+        const timeout = setTimeout(async () => {
+            setIsSearching(true);
+            setSearchError(null);
+            try {
+                const { data, error } = await searchMessageUsers(trimmed, 8);
+                if (isCancelled) return;
+                setSearchResults(data || []);
+                setSearchError(error);
+            } catch {
+                if (!isCancelled) {
+                    setSearchError("Failed to search directory.");
+                }
+            } finally {
+                if (!isCancelled) {
+                    setIsSearching(false);
+                }
+            }
+        }, 250);
+
+        return () => {
+            isCancelled = true;
+            clearTimeout(timeout);
+        };
+    }, [searchQuery]);
+
+    const filteredConversations = useMemo(() => {
+        if (!searchQuery.trim()) return conversations;
+        const q = searchQuery.trim().toLowerCase();
+        return conversations.filter((c) => {
+            const nameMatch = (c.name || "").toLowerCase().includes(q);
+            const unitMatch = (c.unit || "").toLowerCase().includes(q);
+            const lastMsgMatch = (c.lastMessage || "").toLowerCase().includes(q);
+            return nameMatch || unitMatch || lastMsgMatch;
+        });
+    }, [conversations, searchQuery]);
+
+    const directoryUsers = useMemo(() => {
+        const existingIds = new Set(conversations.map((c) => c.participantUserId).filter(Boolean));
+        if (user?.id) {
+            existingIds.add(user.id);
+        }
+        return searchResults.filter((r) => !existingIds.has(r.id));
+    }, [conversations, searchResults, user?.id]);
+
+    const handleStartConversationWithUser = useCallback(async (targetUser: MessageUserSearchResult) => {
+        const existing = conversations.find((c) => c.participantUserId === targetUser.id);
+        if (existing) {
+            await openChat(existing);
+            setSearchQuery("");
+            return;
+        }
+
+        setStartingChatUserId(targetUser.id);
+        try {
+            const conversationId = await createOrGetDirectConversation(targetUser.id);
+            const updated = await refreshConversations();
+            const found = updated.find((c) => c.id === conversationId);
+            if (found) {
+                await openChat(found);
+            } else {
+                const optimisticChat: ChatUser = {
+                    id: conversationId,
+                    participantUserId: targetUser.id,
+                    name: targetUser.fullName,
+                    role: targetUser.role as BadgeRole,
+                    avatar: targetUser.avatarUrl || FALLBACK_AVATAR,
+                    avatarBgColor: targetUser.avatarBgColor,
+                    lastMessage: "No messages yet",
+                    time: "Just now",
+                    unit: targetUser.role === "landlord" ? "Landlord" : "Resident",
+                    relationshipStatus: "stranger",
+                    unread: false,
+                };
+                await openChat(optimisticChat);
+            }
+            setSearchQuery("");
+        } catch (err) {
+            console.error("Failed to start conversation:", err);
+            toast.error("Could not start conversation with this user.");
+        } finally {
+            setStartingChatUserId(null);
+        }
+    }, [conversations, openChat, refreshConversations]);
+
+    const isExpanded = isHovered || isSearchFocused || searchQuery.trim().length > 0;
+
     return (
         <>
             {/* Sidebar */}
@@ -883,14 +987,14 @@ export function TenantContactsSidebar() {
                 data-tour-id="tour-messages-sidebar"
                 className={cn(
                     "hidden md:flex fixed top-0 right-0 h-screen bg-card/60 border-l border-border z-50 transition-all duration-500 ease-in-out flex-col shadow-2xl overflow-hidden backdrop-blur-2xl",
-                    isHovered ? "w-80" : "w-[88px]"
+                    isExpanded ? "w-80" : "w-[88px]"
                 )}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
-                {/* Header Toggle */}
-                <div className="p-6 border-b border-border flex flex-col shrink-0 min-h-[88px] justify-center">
-                    {!isHovered && (
+                {/* Header with Title and Search Input */}
+                <div className="p-5 border-b border-border flex flex-col shrink-0 min-h-[88px] justify-center">
+                    {!isExpanded && (
                         <div className="flex flex-col items-center gap-4">
                             <div className="relative p-2.5 bg-muted rounded-xl cursor-default border border-border">
                                 <MessageSquare className="size-5 text-primary" />
@@ -901,177 +1005,239 @@ export function TenantContactsSidebar() {
                         </div>
                     )}
 
-                    {isHovered && (
-                        <div className="flex w-full bg-muted rounded-xl p-1 relative animate-in fade-in duration-500 border border-border">
-                            <button
-                                onClick={() => setActiveTab("messages")}
-                                className={cn(
-                                    "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-black transition-all relative z-10",
-                                    activeTab === "messages" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                    {isExpanded && (
+                        <div className="flex flex-col gap-3 animate-in fade-in duration-300">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <MessageSquare className="size-4 text-primary" />
+                                    <h2 className="text-sm font-black tracking-tight text-foreground">Messages</h2>
+                                </div>
+                                {hasUnreadConversations && (
+                                    <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-red-500/10 text-red-500 border border-red-500/20">
+                                        New
+                                    </span>
                                 )}
-                            >
-                                <MessageSquare className="size-4" />
-                                Messages
-                            </button>
-                            <button
-                                onClick={() => setActiveTab("contacts")}
-                                className={cn(
-                                    "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-black transition-all relative z-10",
-                                    activeTab === "contacts" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-                                )}
-                            >
-                                <Users className="size-4" />
-                                Contacts
-                            </button>
+                            </div>
 
-                            {/* Sliding Active Background */}
-                            <div
-                                className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-card rounded-lg border border-border shadow-sm transition-transform duration-300 ease-out z-0"
-                                style={{ transform: activeTab === "contacts" ? "translateX(100%)" : "translateX(0)" }}
-                            />
+                            {/* Search Input */}
+                            <div className="relative">
+                                <Search className={cn(
+                                    "absolute left-3 top-1/2 -translate-y-1/2 size-3.5 transition-colors",
+                                    searchQuery ? "text-primary" : "text-muted-foreground"
+                                )} />
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onFocus={() => setIsSearchFocused(true)}
+                                    onBlur={() => setIsSearchFocused(false)}
+                                    placeholder="Search messages or people..."
+                                    className="w-full rounded-xl bg-muted/60 hover:bg-muted focus:bg-background border border-border/60 focus:border-primary/50 py-2 pl-9 pr-8 text-xs text-foreground placeholder:text-muted-foreground outline-none transition-all"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSearchQuery("");
+                                            setSearchResults([]);
+                                        }}
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                        title="Clear search"
+                                    >
+                                        <X className="size-3.5" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>
 
                 {/* Body Content */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col p-4 relative">
-                    <AnimatePresence mode="wait">
-                        {activeTab === "messages" && (
-                            <motion.div
-                                key="messages"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                transition={{ duration: 0.2 }}
-                                className={cn("flex flex-col", isHovered ? "gap-2" : "gap-4 items-center")}
+                    <div className={cn("flex flex-col", isExpanded ? "gap-2" : "gap-4 items-center")}>
+                        {/* Pinned iRis Assistant (only when not searching) */}
+                        {!searchQuery.trim() && (
+                            <button
+                                onClick={() => setIsIrisOpen(true)}
+                                className={cn(
+                                    "flex items-center gap-3 transition-colors text-left group rounded-2xl border border-primary/20",
+                                    isExpanded ? "p-3 bg-primary/5 hover:bg-primary/10" : "p-1 justify-center hover:scale-110"
+                                )}
                             >
-                                {/* Pinned iRis Assistant */}
-                                <button
-                                    onClick={() => setIsIrisOpen(true)}
-                                    className={cn(
-                                        "flex items-center gap-3 transition-colors text-left group rounded-2xl border border-primary/20",
-                                        isHovered ? "p-3 bg-primary/5 hover:bg-primary/10" : "p-1 justify-center hover:scale-110"
-                                    )}
+                                <div className="relative shrink-0">
+                                    <div className="size-10 rounded-full flex items-center justify-center bg-white overflow-hidden border-2 border-card">
+                                        <Image src="/logos/favicon.png" alt="iRis" width={40} height={40} className="object-cover" />
+                                    </div>
+                                    <div className="absolute top-0 right-0 size-3 rounded-full bg-primary animate-pulse border-2 border-card" />
+                                </div>
+                                {isExpanded && (
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between mb-0.5">
+                                            <h4 className="text-sm font-black text-primary truncate pr-2 transition-colors">
+                                                iRis Assistant
+                                            </h4>
+                                            <span className="text-[10px] text-primary shrink-0 opacity-80 uppercase tracking-widest font-black">AI</span>
+                                        </div>
+                                        <p className="text-xs text-zinc-600 dark:text-neutral-300 font-medium truncate">
+                                            How can I help you today?
+                                        </p>
+                                    </div>
+                                )}
+                            </button>
+                        )}
+
+                        {/* Recent Conversations header if searching */}
+                        {searchQuery.trim() && filteredConversations.length > 0 && isExpanded && (
+                            <div className="px-2 pt-1 pb-0.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                                Recent Chats
+                            </div>
+                        )}
+
+                        {(searchQuery.trim() ? filteredConversations : conversations).map((msg) => (
+                            <button
+                                key={msg.id}
+                                onClick={() => openChat(msg)}
+                                className={cn(
+                                    "flex items-center gap-3 transition-colors text-left group rounded-2xl",
+                                    isExpanded ? "p-3 hover:bg-muted/60" : "p-1 justify-center hover:scale-110"
+                                )}
+                            >
+                                <ProfileCardTrigger 
+                                    userId={msg.participantUserId || ""} 
+                                    initialData={{ full_name: msg.name, avatar_url: msg.avatar, role: msg.role as any }}
+                                    asChild
                                 >
                                     <div className="relative shrink-0">
-                                        <div className="size-10 rounded-full flex items-center justify-center bg-white overflow-hidden border-2 border-card">
-                                            <Image src="/logos/favicon.png" alt="iRis" width={40} height={40} className="object-cover" />
+                                        <div
+                                            className="size-10 rounded-full overflow-hidden border-2 border-card"
+                                            style={{ backgroundColor: msg.avatarBgColor || '#171717' }}
+                                        >
+                                            <Image
+                                                src={msg.avatar}
+                                                alt={msg.name}
+                                                width={40}
+                                                height={40}
+                                                className="object-cover"
+                                            />
                                         </div>
-                                        <div className="absolute top-0 right-0 size-3 rounded-full bg-primary animate-pulse border-2 border-card" />
-                                    </div>
-                                    {isHovered && (
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center justify-between mb-0.5">
-                                                <h4 className="text-sm font-black text-primary truncate pr-2 transition-colors">
-                                                    iRis Assistant
-                                                </h4>
-                                                <span className="text-[10px] text-primary shrink-0 opacity-80 uppercase tracking-widest font-black">AI</span>
-                                            </div>
-                                            <p className="text-xs text-zinc-600 dark:text-neutral-300 font-medium truncate">
-                                                How can I help you today?
-                                            </p>
-                                        </div>
-                                    )}
-                                </button>
-
-                                {conversations.map((msg) => (
-                                    <button
-                                        key={msg.id}
-                                        onClick={() => openChat(msg)}
-                                        className={cn(
-                                            "flex items-center gap-3 transition-colors text-left group rounded-2xl",
-                                            isHovered ? "p-3 hover:bg-muted/60" : "p-1 justify-center hover:scale-110"
+                                        {msg.unread && (
+                                            <div className="absolute -top-1 -right-1 size-3 rounded-full bg-red-500 border-2 border-card" />
                                         )}
-                                    >
-                                        <ProfileCardTrigger 
-                                            userId={msg.participantUserId || ""} 
-                                            initialData={{ full_name: msg.name, avatar_url: msg.avatar, role: msg.role as any }}
-                                            asChild
+                                    </div>
+                                </ProfileCardTrigger>
+                                {isExpanded && (
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between mb-0.5">
+                                            <div className="flex min-w-0 items-center gap-2 pr-2">
+                                                <ProfileCardTrigger 
+                                                    userId={msg.participantUserId || ""} 
+                                                    initialData={{ full_name: msg.name, avatar_url: msg.avatar, role: msg.role as any }}
+                                                >
+                                                    <h4 className={cn("text-sm truncate transition-colors group-hover:text-primary", msg.unread ? "font-black text-foreground dark:text-white" : "font-medium text-zinc-700 dark:text-neutral-200")}>
+                                                        {msg.name}
+                                                    </h4>
+                                                </ProfileCardTrigger>
+                                                <RoleBadge role={msg.role} />
+                                            </div>
+                                            <span className="text-[10px] text-muted-foreground shrink-0">{msg.time}</span>
+                                        </div>
+                                        <p className={cn("text-xs truncate", msg.unread ? "text-zinc-600 dark:text-neutral-300 font-medium" : "text-muted-foreground dark:text-neutral-400")}>
+                                            {msg.lastMessage}
+                                        </p>
+                                    </div>
+                                )}
+                            </button>
+                        ))}
+
+                        {/* Directory Search Results (when searching) */}
+                        {searchQuery.trim().length >= 2 && isExpanded && (
+                            <div className="mt-2 space-y-1">
+                                <div className="px-2 pt-2 pb-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+                                    <span>People & Directory</span>
+                                    {isSearching && <Loader2 className="size-3 animate-spin text-muted-foreground" />}
+                                </div>
+
+                                {isSearching && directoryUsers.length === 0 && (
+                                    <div className="px-3 py-2 text-xs text-muted-foreground animate-pulse">Searching users...</div>
+                                )}
+
+                                {!isSearching && searchError && (
+                                    <div className="px-3 py-2 text-xs text-red-500 font-medium">{searchError}</div>
+                                )}
+
+                                {!isSearching && !searchError && directoryUsers.map((userResult) => {
+                                    const isStarting = startingChatUserId === userResult.id;
+                                    return (
+                                        <button
+                                            key={userResult.id}
+                                            disabled={isStarting}
+                                            onClick={() => handleStartConversationWithUser(userResult)}
+                                            className="flex items-center gap-3 w-full p-2.5 text-left rounded-2xl hover:bg-muted/60 transition-colors group disabled:opacity-50"
                                         >
                                             <div className="relative shrink-0">
                                                 <div
-                                                    className="size-10 rounded-full overflow-hidden border-2 border-card"
-                                                    style={{ backgroundColor: msg.avatarBgColor || '#171717' }}
+                                                    className="size-10 rounded-full overflow-hidden border border-border flex items-center justify-center bg-muted"
+                                                    style={{ backgroundColor: userResult.avatarBgColor || undefined }}
                                                 >
-                                                    <Image
-                                                        src={msg.avatar}
-                                                        alt={msg.name}
-                                                        width={40}
-                                                        height={40}
-                                                        className="object-cover"
-                                                    />
+                                                    {userResult.avatarUrl ? (
+                                                        <Image
+                                                            src={userResult.avatarUrl}
+                                                            alt={userResult.fullName}
+                                                            width={40}
+                                                            height={40}
+                                                            className="object-cover size-full"
+                                                        />
+                                                    ) : (
+                                                        <span className="text-xs font-black text-foreground">
+                                                            {(userResult.fullName || "U").charAt(0).toUpperCase()}
+                                                        </span>
+                                                    )}
                                                 </div>
-                                                {msg.unread && (
-                                                    <div className="absolute -top-1 -right-1 size-3 rounded-full bg-red-500 border-2 border-card" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-xs font-black text-foreground group-hover:text-primary transition-colors truncate">
+                                                        {userResult.fullName}
+                                                    </span>
+                                                    <RoleBadge role={userResult.role as BadgeRole} />
+                                                </div>
+                                                <p className="text-[10px] text-muted-foreground truncate">{userResult.email}</p>
+                                            </div>
+                                            <div className="shrink-0">
+                                                {isStarting ? (
+                                                    <Loader2 className="size-3.5 animate-spin text-primary" />
+                                                ) : (
+                                                    <span className="text-[10px] font-bold text-primary group-hover:underline">Chat</span>
                                                 )}
                                             </div>
-                                        </ProfileCardTrigger>
-                                        {isHovered && (
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center justify-between mb-0.5">
-                                                    <div className="flex min-w-0 items-center gap-2 pr-2">
-                                                        <ProfileCardTrigger 
-                                                            userId={msg.participantUserId || ""} 
-                                                            initialData={{ full_name: msg.name, avatar_url: msg.avatar, role: msg.role as any }}
-                                                        >
-                                                            <h4 className={cn("text-sm truncate transition-colors group-hover:text-primary", msg.unread ? "font-black text-foreground dark:text-white" : "font-medium text-zinc-700 dark:text-neutral-200")}>
-                                                                {msg.name}
-                                                            </h4>
-                                                        </ProfileCardTrigger>
-                                                        <RoleBadge role={msg.role} />
-                                                    </div>
-                                                    <span className="text-[10px] text-muted-foreground shrink-0">{msg.time}</span>
-                                                </div>
-                                                <p className={cn("text-xs truncate", msg.unread ? "text-zinc-600 dark:text-neutral-300 font-medium" : "text-muted-foreground dark:text-neutral-400")}>
-                                                    {msg.lastMessage}
-                                                </p>
-                                            </div>
-                                        )}
-                                    </button>
-                                ))}
-
-                                {!isLoadingConversations && conversations.length === 0 && (
-                                    <div className={cn("text-xs text-muted-foreground", isHovered ? "px-2 pt-2" : "text-center")}>No conversations yet</div>
-                                )}
-
-                                {!isLoadingConversations && conversationsError && (
-                                    <div className={cn("text-xs text-red-600", isHovered ? "px-2 pt-2" : "text-center")}>{conversationsError}</div>
-                                )}
-                            </motion.div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         )}
 
-                        {activeTab === "contacts" && (
-                            <motion.div
-                                key="contacts"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 20 }}
-                                transition={{ duration: 0.2 }}
-                                className={cn("flex flex-col", isHovered ? "gap-2" : "gap-4 items-center")}
-                            >
-                                {conversations.map((contact) => (
-                                    <ContactCard
-                                        key={contact.id}
-                                        name={contact.name}
-                                        role={contact.role}
-                                        unit={contact.unit}
-                                        avatar={contact.avatar}
-                                        avatarBgColor={contact.avatarBgColor}
-                                        status={contact.relationshipStatus === "tenant_landlord" ? "Active" : contact.relationshipStatus === "prospective" ? "Prospective" : "Conversation"}
-                                        isExpanded={isHovered}
-                                    />
-                                ))}
-
-                                {!isLoadingConversations && conversations.length === 0 && (
-                                    <div className={cn("text-xs text-muted-foreground", isHovered ? "px-2 pt-2" : "text-center")}>No contacts yet</div>
-                                )}
-                            </motion.div>
+                        {/* Empty States */}
+                        {!isLoadingConversations && !searchQuery.trim() && conversations.length === 0 && (
+                            <div className={cn("text-xs text-muted-foreground", isExpanded ? "px-2 pt-2" : "text-center")}>No conversations yet</div>
                         )}
-                    </AnimatePresence>
+
+                        {!isLoadingConversations && searchQuery.trim().length > 0 && filteredConversations.length === 0 && directoryUsers.length === 0 && !isSearching && (
+                            <div className="py-8 px-4 text-center">
+                                <p className="text-xs font-bold text-foreground">No matches found</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">
+                                    No conversations or people found for &quot;{searchQuery}&quot;
+                                </p>
+                            </div>
+                        )}
+
+                        {!isLoadingConversations && conversationsError && (
+                            <div className={cn("text-xs text-red-600", isExpanded ? "px-2 pt-2" : "text-center")}>{conversationsError}</div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Footer View All */}
-                {isHovered && (
+                {isExpanded && (
                     <div className="p-4 border-t border-border shrink-0 bg-card/95 animate-in fade-in duration-500">
                         <Link href="/tenant/messages" className="w-full py-3 rounded-xl bg-primary hover:bg-primary/90 text-sm font-black text-primary-foreground transition-colors border border-primary/30 flex items-center justify-center shadow-sm">
                             Open Full Messaging
@@ -1083,7 +1249,7 @@ export function TenantContactsSidebar() {
             {/* Render Multiple Chatboxes Horizontally (Anchored next to Sidebar) */}
             <div className={cn(
                 "hidden md:flex fixed bottom-0 items-end gap-4 z-[55] pointer-events-none transition-all duration-500 ease-in-out",
-                isHovered ? "right-[340px]" : "right-[110px]"
+                isExpanded ? "right-[340px]" : "right-[110px]"
             )}
                 style={{ bottom: "max(0px, env(safe-area-inset-bottom))" }}
             >
@@ -1458,16 +1624,6 @@ export function TenantContactsSidebar() {
     );
 }
 
-type ContactCardProps = {
-    name: string;
-    role: BadgeRole | null;
-    unit: string;
-    avatar: string;
-    avatarBgColor: string | null;
-    status: string;
-    isExpanded: boolean;
-};
-
 function renderSystemIcon(type: string) {
     switch (type) {
         case 'awaiting_in_person': return <HandCoins className="size-5" />;
@@ -1550,52 +1706,6 @@ function MiniSystemMessage({ message, router }: { message: MiniChatMessage; rout
     );
 }
 
-function ContactCard({ name, role, unit, avatar, avatarBgColor, status, isExpanded }: ContactCardProps) {
-    const isIssue = status === "Late Payment" || status === "Notice Given";
-
-    return (
-        <div className={cn(
-            "flex items-center gap-4 rounded-2xl hover:bg-muted/50 border border-transparent hover:border-border transition-all cursor-pointer group shrink-0",
-            isExpanded ? "p-3" : "p-1 justify-center hover:scale-110"
-        )}>
-            <div className="relative shrink-0">
-                <div
-                    className="size-10 rounded-full overflow-hidden border-2 border-card shadow-sm group-hover:scale-105 transition-transform duration-300"
-                    style={{ backgroundColor: avatarBgColor || '#171717' }}
-                >
-                    <Image
-                        src={avatar}
-                        alt={name}
-                        width={40}
-                        height={40}
-                        className="object-cover"
-                    />
-                </div>
-                <div className={cn(
-                    "absolute bottom-0 right-0 size-3 rounded-full border-2 border-card",
-                    isIssue ? "bg-red-500" : status === "Moving In" ? "bg-amber-500" : "bg-emerald-500"
-                )} />
-            </div>
-
-            {isExpanded && (
-                <div className="flex-1 min-w-0 animate-in fade-in duration-300">
-                    <div className="flex items-center justify-between mb-0.5">
-                        <div className="flex min-w-0 items-center gap-2">
-                            <h4 className="font-black text-foreground text-sm group-hover:text-primary transition-colors truncate">{name}</h4>
-                            <RoleBadge role={role} />
-                        </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <p className="text-xs text-muted-foreground font-medium truncate pr-2">{unit}</p>
-                        <div className="flex items-center gap-1.5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0">
-                            <span className="text-[10px] text-muted-foreground">{status}</span>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
-    )
-}
 
 
 
