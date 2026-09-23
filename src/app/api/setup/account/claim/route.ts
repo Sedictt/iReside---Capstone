@@ -163,7 +163,18 @@ export async function POST(request: NextRequest) {
       .eq("id", userId);
 
     if (profileUpdateErr) {
-      console.warn("[Account Claim] Failed updating profiles table:", profileUpdateErr.message);
+      console.warn("[Account Claim] Failed updating profiles table with full fields, retrying essential fields:", profileUpdateErr.message);
+      const { error: retryErr } = await adminClient
+        .from("profiles")
+        .update({
+          email: normalizedEmail,
+          full_name: fullName.trim(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", userId);
+      if (retryErr) {
+        console.error("[Account Claim] Essential profile fields update also failed:", retryErr.message);
+      }
     }
 
     // 5. Clear OTP and mark password changed in user_security_settings

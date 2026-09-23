@@ -105,6 +105,7 @@ import {
     REGEX_NAME,
 } from "@/lib/validation/landlord-settings";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { DISALLOWED_PRESEEDED_DATA } from "@/lib/validation/brand-setup";
 
 export function normalizeRentalArchetype(val?: string | null): "apartment" | "dormitory" | "boarding_house" {
     if (!val) return "apartment";
@@ -725,7 +726,16 @@ export function LandlordSettings() {
 
     const [formData, setFormData] = useState(() => {
         const cached = getCachedSettings();
-        if (cached?.formData) return cached.formData;
+        if (cached?.formData) {
+            const cachedEmail = (cached.formData.email || "").toLowerCase().trim();
+            const isDisallowed = !cachedEmail || 
+                DISALLOWED_PRESEEDED_DATA.emails.includes(cachedEmail) || 
+                cachedEmail.includes("turnkey.local");
+            return {
+                ...cached.formData,
+                email: isDisallowed ? "" : cached.formData.email,
+            };
+        }
         return {
             full_name: "",
             business_name: "",
@@ -933,10 +943,28 @@ export function LandlordSettings() {
                 }
             }
 
+            const rawFreshEmail = (freshProfile?.email || "").toLowerCase().trim();
+            const rawUserEmail = (user?.email || "").toLowerCase().trim();
+            const isFreshEmailDisallowed = !rawFreshEmail || 
+                DISALLOWED_PRESEEDED_DATA.emails.includes(rawFreshEmail) || 
+                rawFreshEmail.includes("turnkey.local");
+            const isUserEmailDisallowed = !rawUserEmail || 
+                DISALLOWED_PRESEEDED_DATA.emails.includes(rawUserEmail) || 
+                rawUserEmail.includes("turnkey.local");
+
+            let resolvedEmail = "";
+            if (!isFreshEmailDisallowed) {
+                resolvedEmail = freshProfile?.email || "";
+            } else if (!isUserEmailDisallowed) {
+                resolvedEmail = user?.email || "";
+            } else {
+                resolvedEmail = freshProfile?.email || user?.email || "";
+            }
+
             const syncedForm = {
                 full_name: freshProfile?.full_name || "",
                 business_name: freshProfile?.business_name || businessProfile?.business_name || "",
-                email: freshProfile?.email || "",
+                email: resolvedEmail,
                 phone: freshProfile?.phone || "",
                 website: freshProfile?.website || businessProfile?.website || "",
                 address: freshProfile?.address || businessProfile?.address || "",
@@ -1103,6 +1131,20 @@ export function LandlordSettings() {
     useEffect(() => {
         syncSettingsWithDatabase();
     }, [syncSettingsWithDatabase]);
+
+    // Reconcile pre-seeded placeholder emails with the authenticated login email
+    useEffect(() => {
+        if (!user?.email) return;
+        const currentEmail = (formData.email || "").toLowerCase().trim();
+        const userEmail = user.email.toLowerCase().trim();
+        const isCurrentDisallowed = !currentEmail || 
+            DISALLOWED_PRESEEDED_DATA.emails.includes(currentEmail) || 
+            currentEmail.includes("turnkey.local");
+        const isUserValid = !DISALLOWED_PRESEEDED_DATA.emails.includes(userEmail) && !userEmail.includes("turnkey.local");
+        if (isCurrentDisallowed && isUserValid) {
+            setFormData(prev => ({ ...prev, email: user.email! }));
+        }
+    }, [user?.email, formData.email]);
 
     const isDirty = useMemo(() => {
         if (isFinanceDirty) return true;

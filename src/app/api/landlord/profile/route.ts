@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuthenticatedUser, requireRole } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { landlordProfilePatchSchema } from "@/lib/validation/landlord-settings";
+import { DISALLOWED_PRESEEDED_DATA } from "@/lib/validation/brand-setup";
 
 /**
  * GET /api/landlord/profile
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
         return e instanceof Response ? e : NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { userId } = authContext;
+    const { userId, userEmail } = authContext;
     const admin = createServiceRoleSupabaseClient();
 
     try {
@@ -29,6 +30,33 @@ export async function GET(request: Request) {
 
         if (profileError || !profile) {
             return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+        }
+
+        // Self-heal: ensure profiles.email reflects authentic claimed login email
+        const authenticatedEmail = (userEmail || "").toLowerCase().trim();
+        const currentProfileEmail = (profile.email || "").toLowerCase().trim();
+        const isCurrentEmailDisallowed = !currentProfileEmail || 
+            DISALLOWED_PRESEEDED_DATA.emails.includes(currentProfileEmail) || 
+            currentProfileEmail.includes("turnkey.local");
+
+        if (authenticatedEmail && authenticatedEmail.includes("@")) {
+            const isAuthenticatedValid = !DISALLOWED_PRESEEDED_DATA.emails.includes(authenticatedEmail) && !authenticatedEmail.includes("turnkey.local");
+            
+            if (isCurrentEmailDisallowed || (isAuthenticatedValid && currentProfileEmail !== authenticatedEmail)) {
+                try {
+                    await admin
+                        .from("profiles")
+                        .update({
+                            email: authenticatedEmail,
+                            updated_at: new Date().toISOString(),
+                        })
+                        .eq("id", userId);
+                    profile.email = authenticatedEmail;
+                } catch (syncErr) {
+                    console.warn("[landlord/profile GET] Self-healing profile email sync note:", syncErr);
+                    profile.email = authenticatedEmail;
+                }
+            }
         }
 
         const { data: privateProfile } = await (admin as any)
@@ -136,6 +164,9 @@ export async function PATCH(request: Request) {
 
         if (body.full_name !== undefined) profileUpdates.full_name = body.full_name;
         if (body.business_name !== undefined) profileUpdates.business_name = body.business_name;
+        if (body.email !== undefined && body.email.trim()) {
+            profileUpdates.email = body.email.toLowerCase().trim();
+        }
         if (body.phone !== undefined) profileUpdates.phone = body.phone;
         if (body.address !== undefined) profileUpdates.address = body.address;
         if (body.website !== undefined) profileUpdates.website = body.website;
@@ -195,21 +226,27 @@ export async function PATCH(request: Request) {
             }
         }
 
-        // 6. Update user metadata in auth.users
+        // 6. Update user metadata and email in auth.users
         try {
-            await admin.auth.admin.updateUserById(userId, {
+            const authUpdates: Record<string, any> = {
                 user_metadata: {
                     emergency_contact_name: body.emergency_contact_name,
                     emergency_contact_phone: body.emergency_contact_phone,
                     notification_preferences: body.notification_preferences,
                 }
-            });
+            };
+            if (body.email !== undefined && body.email.trim()) {
+                authUpdates.email = body.email.toLowerCase().trim();
+                authUpdates.email_confirm = true;
+            }
+            await admin.auth.admin.updateUserById(userId, authUpdates);
         } catch (metaErr) {
-            console.warn("[landlord/profile PATCH] auth metadata update note:", metaErr);
+            console.warn("[landlord/profile PATCH] auth update note:", metaErr);
         }
 
         const consolidated = {
             ...updatedProfile,
+            email: profileUpdates.email ?? updatedProfile.email,
             emergency_contact_name: mergedSocials.emergency_contact_name,
             emergency_contact_phone: mergedSocials.emergency_contact_phone,
             phone: body.phone ?? updatedProfile.phone,

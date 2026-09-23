@@ -5,7 +5,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { DEFAULT_BRANDING, BrandConfig } from "@/context/BrandContext";
 import { generateSecurityKey, encryptSecurityKey } from "@/lib/security/recovery-keys";
 import { logUserActivity } from "@/lib/audit/audit-logger";
-import { setupLaunchSchema } from "@/lib/validation/brand-setup";
+import { setupLaunchSchema, DISALLOWED_PRESEEDED_DATA } from "@/lib/validation/brand-setup";
 
 interface SetupLaunchPayload {
   branding: {
@@ -154,6 +154,14 @@ export async function POST(request: NextRequest) {
       branding: brandingMeta,
     };
 
+    const effectiveEmail = newEmail || (
+      authContext.userEmail &&
+      !authContext.userEmail.includes("turnkey.local") &&
+      !DISALLOWED_PRESEEDED_DATA.emails.includes(authContext.userEmail.toLowerCase().trim())
+        ? authContext.userEmail.toLowerCase().trim()
+        : undefined
+    );
+
     const profileUpdates: Record<string, unknown> = {
       business_name: propertyName,
       socials: updatedSocials,
@@ -162,7 +170,7 @@ export async function POST(request: NextRequest) {
     };
     if (adminFullName) profileUpdates.full_name = adminFullName;
     if (adminPhone) profileUpdates.phone = adminPhone;
-    if (newEmail) profileUpdates.email = newEmail;
+    if (effectiveEmail) profileUpdates.email = effectiveEmail;
 
     const { error: profileError } = await adminClient
       .from("profiles")
@@ -170,7 +178,21 @@ export async function POST(request: NextRequest) {
       .eq("id", userId);
 
     if (profileError) {
-      console.warn("[Setup Launch] Failed updating profile record:", profileError.message);
+      console.warn("[Setup Launch] Failed updating profile record, attempting resilient update:", profileError.message);
+      const fallbackUpdates: Record<string, unknown> = {
+        business_name: propertyName,
+        updated_at: timestamp,
+      };
+      if (adminFullName) fallbackUpdates.full_name = adminFullName;
+      if (adminPhone) fallbackUpdates.phone = adminPhone;
+      if (effectiveEmail) fallbackUpdates.email = effectiveEmail;
+      const { error: fallbackError } = await adminClient
+        .from("profiles")
+        .update(fallbackUpdates as any)
+        .eq("id", userId);
+      if (fallbackError) {
+        console.error("[Setup Launch] Resilient profile update failed:", fallbackError.message);
+      }
     }
 
     // 4. Update existing property branding if landlord already has an active property, otherwise do NOT auto-create a phantom property

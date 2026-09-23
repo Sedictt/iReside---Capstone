@@ -255,12 +255,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setState(prev => ({ ...prev, profileLoading: true }))
         const profile = await fetchProfile(userId)
+        if (profile && state.user?.email) {
+            const currentEmail = (profile.email || '').toLowerCase().trim();
+            const isDisallowed = !currentEmail ||
+                currentEmail.includes("turnkey.local") ||
+                currentEmail.startsWith("practice.landlord") ||
+                currentEmail.includes("@reyesresidences.com");
+            if (isDisallowed) {
+                profile.email = state.user.email;
+            }
+        }
         setState(prev => ({
             ...prev,
             profile: profile ?? prev.profile, // keep old profile if fetch fails
             profileLoading: false,
         }))
-    }, [state.user?.id, fetchProfile])
+    }, [state.user?.id, state.user?.email, fetchProfile])
 
     const clearAuthState = useCallback(() => {
         setState({
@@ -293,6 +303,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (cancelled) return
             const fetchedProfile = await fetchProfile(currentUser.id)
             if (cancelled) return
+
+            if (fetchedProfile && currentUser.email) {
+                const currentEmail = (fetchedProfile.email || '').toLowerCase().trim();
+                const isDisallowed = !currentEmail || 
+                    currentEmail.includes("turnkey.local") || 
+                    currentEmail.startsWith("practice.landlord") ||
+                    currentEmail.includes("@reyesresidences.com");
+                if (isDisallowed) {
+                    fetchedProfile.email = currentUser.email;
+                }
+            }
 
             setState(prev => ({
                 user: currentUser,
