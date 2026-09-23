@@ -10,6 +10,7 @@
     "test": "vitest --run",
     "create:landlord": "npx tsx scripts/create-test-account.ts --role landlord",
     "create:tenant": "npx tsx scripts/create-test-account.ts --role tenant",
+    "reset:starter": "node scripts/reset-starter-account.mjs",
     "seed:turnkey-admin": "npx tsx scripts/create-test-account.ts --turnkey-default",
     "db:inventory": "node scripts/database-inventory.mjs",
     "seed:notifications": "node scripts/seed-notifications.mjs",

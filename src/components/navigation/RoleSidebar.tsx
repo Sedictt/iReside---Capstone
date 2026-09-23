@@ -63,7 +63,15 @@ interface RoleSidebarProps {
     lockStage?: SidebarLockStage;
 }
 
-function LogoLink({ children }: { children: React.ReactNode }) {
+function LogoLink({ 
+    children, 
+    isLocked = false, 
+    lockToastText 
+}: { 
+    children: React.ReactNode; 
+    isLocked?: boolean; 
+    lockToastText?: string;
+}) {
     const { push } = useRouter();
     const { user, loading } = useAuth();
 
@@ -82,11 +90,24 @@ function LogoLink({ children }: { children: React.ReactNode }) {
 
     const handleLogoNavigation = (e: React.MouseEvent) => {
         e.preventDefault();
+        if (isLocked) {
+            if (lockToastText) {
+                toast.warning(lockToastText);
+            }
+            return;
+        }
         push(getRedirectPath());
     };
 
     return (
-        <a href={getRedirectPath()} onClick={handleLogoNavigation} className="cursor-pointer flex items-center min-w-0 flex-1 overflow-hidden">
+        <a 
+            href={isLocked ? undefined : getRedirectPath()} 
+            onClick={handleLogoNavigation} 
+            className={cn(
+                "flex items-center min-w-0 flex-1 overflow-hidden",
+                isLocked ? "cursor-not-allowed opacity-75" : "cursor-pointer"
+            )}
+        >
             {children}
         </a>
     );
@@ -143,11 +164,7 @@ export function RoleSidebar({
             lockTooltipText = "Register your first property to unlock this section.";
             lockToastText = "Property setup required. Please complete your property setup first to unlock portal operations.";
         } else if (stage === "no_unit_map") {
-            isItemLocked = Boolean(
-                item.href !== "/landlord/unit-map" && 
-                item.href !== "/landlord/properties" && 
-                item.href !== "/landlord/properties/new"
-            );
+            isItemLocked = Boolean(item.href !== "/landlord/unit-map");
             resolvedHref = item.href;
             lockBadgeText = "Unit Map Required";
             lockTooltipText = "Configure your unit map to unlock this section.";
@@ -298,7 +315,14 @@ export function RoleSidebar({
                 <div className={cn("flex h-20 items-center justify-between px-4 transition-all duration-300 mb-2 gap-2", isCollapsed ? "justify-center" : "justify-between")}>
                     {!isCollapsed && (
                         <div className="flex items-center min-w-0 flex-1 overflow-hidden pr-1">
-                            <LogoLink>
+                            <LogoLink 
+                                isLocked={Boolean(isLocked || lockStage)} 
+                                lockToastText={
+                                    lockStage === "no_unit_map" 
+                                        ? "Unit map setup required. Please configure your property's unit layout first to unlock portal operations."
+                                        : "Property setup required. Please complete your property setup first to unlock portal operations."
+                                }
+                            >
                                 <BrandLogo size="md" className="w-full min-w-0" />
                             </LogoLink>
                         </div>

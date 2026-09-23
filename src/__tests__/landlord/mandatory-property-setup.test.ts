@@ -62,9 +62,7 @@ describe("Mandatory Property & Unit Map Setup System Lock", () => {
     const processed = items.map((item) => {
       const isItemLocked = Boolean(
         lockStage === "no_unit_map" &&
-        item.href !== "/landlord/unit-map" &&
-        item.href !== "/landlord/properties" &&
-        item.href !== "/landlord/properties/new"
+        item.href !== "/landlord/unit-map"
       );
       const resolvedHref = item.href;
 
@@ -75,12 +73,12 @@ describe("Mandatory Property & Unit Map Setup System Lock", () => {
       };
     });
 
-    // Unit Map and Properties must NOT be locked
+    // Only Unit Map must NOT be locked
     expect(processed.find((i) => i.label === "Unit Map")?.isItemLocked).toBe(false);
-    expect(processed.find((i) => i.label === "Properties")?.isItemLocked).toBe(false);
-    expect(processed.find((i) => i.label === "New Property")?.isItemLocked).toBe(false);
 
-    // Operational routes must be locked
+    // Properties, Dashboard, and operational routes must be locked
+    expect(processed.find((i) => i.label === "Properties")?.isItemLocked).toBe(true);
+    expect(processed.find((i) => i.label === "New Property")?.isItemLocked).toBe(true);
     expect(processed.find((i) => i.label === "Dashboard")?.isItemLocked).toBe(true);
     expect(processed.find((i) => i.label === "Tenants")?.isItemLocked).toBe(true);
     expect(processed.find((i) => i.label === "Finance Hub")?.isItemLocked).toBe(true);
@@ -102,9 +100,7 @@ describe("Mandatory Property & Unit Map Setup System Lock", () => {
     const processed = items.map((item) => {
       const isItemLocked = Boolean(
         lockStage !== null &&
-        item.href !== "/landlord/unit-map" &&
-        item.href !== "/landlord/properties" &&
-        item.href !== "/landlord/properties/new"
+        item.href !== "/landlord/unit-map"
       );
 
       return {
@@ -128,7 +124,7 @@ describe("Mandatory Property & Unit Map Setup System Lock", () => {
 
       const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete);
       const hasPendingUnitMap = isReady && isLandlord && properties.length > 0 && !hasConfiguredMap;
-      const isAllowedUnitMapRoute = pathname.startsWith("/landlord/unit-map") || pathname === "/landlord/properties/new";
+      const isAllowedUnitMapRoute = pathname.startsWith("/landlord/unit-map");
 
       if (hasZeroProperties && !isAllowedCreationRoute) {
         if (pathname !== "/landlord/dashboard") {
@@ -169,6 +165,22 @@ describe("Mandatory Property & Unit Map Setup System Lock", () => {
       redirectTo: null,
       showWelcomeLightbox: false,
       showUnitMapLightbox: false,
+    });
+
+    // Stage 2: 1 property, map NOT configured, visiting /landlord/properties -> redirect to /landlord/unit-map
+    expect(guardEvaluate("/landlord/properties", [{ id: "prop-1", isMapSetupComplete: false }])).toEqual({
+      shouldRedirect: true,
+      redirectTo: "/landlord/unit-map",
+      showWelcomeLightbox: false,
+      showUnitMapLightbox: true,
+    });
+
+    // Stage 2: 1 property, map NOT configured, visiting /landlord/properties/new -> redirect to /landlord/unit-map
+    expect(guardEvaluate("/landlord/properties/new", [{ id: "prop-1", isMapSetupComplete: false }])).toEqual({
+      shouldRedirect: true,
+      redirectTo: "/landlord/unit-map",
+      showWelcomeLightbox: false,
+      showUnitMapLightbox: true,
     });
 
     // Stage 2: 1 property, map NOT configured, visiting /landlord/tenants -> redirect to /landlord/unit-map

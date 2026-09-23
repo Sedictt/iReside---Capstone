@@ -317,8 +317,52 @@ export default function VisualBuilder({
     const SCOPED_LEGEND_VISIBILITY_KEY = getScopedKey(LEGEND_VISIBILITY_STORAGE_KEY);
     const SCOPED_PRESET_PROMPT_KEY = getScopedKey("ireside.unit_map_preset_prompt_dismissed");
     const SCOPED_AWAITING_TENANT_SETUP_KEY = getScopedKey("ireside.onboarding_awaiting_tenant_setup");
+    const SCOPED_EXPLORE_MODAL_SHOWN_KEY = getScopedKey("ireside.unit_map_explore_modal_shown");
     const [isFirstTimePresetModalOpen, setIsFirstTimePresetModalOpen] = useState(false);
     const [isExploreOrReturnModalOpen, setIsExploreOrReturnModalOpen] = useState(false);
+    const exploreModalTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const hasShownExploreModalRef = useRef(false);
+
+    const cancelExploreModalTimer = useCallback(() => {
+        if (exploreModalTimeoutRef.current) {
+            clearTimeout(exploreModalTimeoutRef.current);
+            exploreModalTimeoutRef.current = null;
+        }
+    }, []);
+
+    const scheduleExploreModalAfterDelay = useCallback((delayMs = 3000) => {
+        cancelExploreModalTimer();
+
+        if (typeof window !== "undefined") {
+            try {
+                if (window.localStorage.getItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY) === "true") {
+                    return;
+                }
+                window.sessionStorage.setItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`, "true");
+                window.dispatchEvent(new Event("unit-map-guidance-changed"));
+            } catch {}
+        }
+        if (hasShownExploreModalRef.current) return;
+
+        exploreModalTimeoutRef.current = setTimeout(() => {
+            setIsExploreOrReturnModalOpen(true);
+            hasShownExploreModalRef.current = true;
+            if (typeof window !== "undefined") {
+                try {
+                    window.sessionStorage.setItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`, "true");
+                    window.dispatchEvent(new Event("unit-map-guidance-changed"));
+                } catch {}
+            }
+        }, delayMs);
+    }, [SCOPED_EXPLORE_MODAL_SHOWN_KEY, cancelExploreModalTimer, selectedPropertyId]);
+
+    useEffect(() => {
+        hasShownExploreModalRef.current = false;
+        cancelExploreModalTimer();
+        return () => {
+            cancelExploreModalTimer();
+        };
+    }, [selectedPropertyId, cancelExploreModalTimer]);
 
     const GRID_SIZE = 20;
     const PAN_MARGIN = 280;
@@ -622,6 +666,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 try {
                     const dismissed = window.localStorage.getItem(SCOPED_PRESET_PROMPT_KEY);
                     if (dismissed !== "true") {
+                        window.sessionStorage.setItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`, "true");
+                        window.dispatchEvent(new Event("unit-map-guidance-changed"));
                         setIsFirstTimePresetModalOpen(true);
                     }
                 } catch {}
@@ -2026,6 +2072,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const restoreUnitsToUnplaced = useCallback((unitIds: string[]) => {
         if (unitIds.length === 0) return;
+        cancelExploreModalTimer();
 
         const targetIds = new Set(unitIds);
         const matchingDbUnits = dbUnits.filter((dbUnit) => targetIds.has(dbUnit.id));
@@ -2036,7 +2083,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             const nextUnits = matchingDbUnits.filter((unit) => !existingIds.has(unit.id));
             return nextUnits.length > 0 ? [...prev, ...nextUnits] : prev;
         });
-    }, [dbUnits]);
+    }, [dbUnits, cancelExploreModalTimer]);
 
     const deleteCanvasItem = (item: SelectedCanvasItem) => {
         if (item.kind === "unit") {
@@ -2504,7 +2551,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 floor: dbUnit.floor,
             },
         ]);
-        setUnplacedDbUnits(prev => prev.filter(u => u.id !== dbUnit.id));
+        setUnplacedDbUnits(prev => {
+            const next = prev.filter(u => u.id !== dbUnit.id);
+            if (next.length === 0 && dbUnits.length > 0) {
+                scheduleExploreModalAfterDelay(3000);
+            }
+            return next;
+        });
         setSelectedItem({ kind: "unit", id: dbUnit.id });
     };
 
@@ -2657,7 +2710,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         },
                     ]);
                     // Remove from unplaced list
-                    setUnplacedDbUnits(prev => prev.filter(u => u.id !== parsed.dbUnitId));
+                    setUnplacedDbUnits(prev => {
+                        const next = prev.filter(u => u.id !== parsed.dbUnitId);
+                        if (next.length === 0 && dbUnits.length > 0) {
+                            scheduleExploreModalAfterDelay(3000);
+                        }
+                        return next;
+                    });
                     return;
                 }
             }
@@ -2799,35 +2858,49 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         handleFit();
         isUndoingRef.current = false;
         toast.success(`Applied ${presetType.replace("-", " ")} preset layout across all floors!`);
-        setIsExploreOrReturnModalOpen(true);
+        scheduleExploreModalAfterDelay(3000);
     };
 
     const handleReturnToDashboardFromMap = () => {
+        cancelExploreModalTimer();
         setIsExploreOrReturnModalOpen(false);
         if (typeof window !== "undefined") {
             try {
+                window.sessionStorage.removeItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`);
                 window.localStorage.setItem(SCOPED_AWAITING_TENANT_SETUP_KEY, "true");
+                window.localStorage.setItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY, "true");
+                window.localStorage.setItem(SCOPED_PRESET_PROMPT_KEY, "true");
+                window.dispatchEvent(new Event("unit-map-guidance-changed"));
             } catch {}
         }
         router.push("/landlord/dashboard");
     };
 
     const handleContinueExploringMap = () => {
+        cancelExploreModalTimer();
         setIsExploreOrReturnModalOpen(false);
         if (typeof window !== "undefined") {
             try {
+                window.sessionStorage.removeItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`);
                 window.localStorage.setItem(SCOPED_AWAITING_TENANT_SETUP_KEY, "true");
+                window.localStorage.setItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY, "true");
+                window.localStorage.setItem(SCOPED_PRESET_PROMPT_KEY, "true");
+                window.dispatchEvent(new Event("unit-map-guidance-changed"));
             } catch {}
         }
         toast.info("You can continue customizing your layout. Return to the dashboard anytime to configure tenants.");
     };
 
     const handleChooseManualLayout = () => {
+        cancelExploreModalTimer();
         setIsFirstTimePresetModalOpen(false);
         if (typeof window !== "undefined") {
             try {
+                window.sessionStorage.removeItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`);
                 window.localStorage.setItem(SCOPED_PRESET_PROMPT_KEY, "true");
                 window.localStorage.setItem(SCOPED_AWAITING_TENANT_SETUP_KEY, "true");
+                window.localStorage.setItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY, "true");
+                window.dispatchEvent(new Event("unit-map-guidance-changed"));
             } catch {}
         }
         setIsSidebarVisible(true);
@@ -3244,11 +3317,14 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         setScale(fitScale);
         setPosition({ x: fitX, y: fitY });
 
-        // Ensure unplaced pool reflects the changes
         const placedIds = new Set(newUnits.map(u => u.dbId || u.id));
         const otherUnplaced = unplacedDbUnits.filter(dbu => dbu.floor !== activeFloorNum && dbu.floor !== null && dbu.floor !== undefined);
         const unplacedLeftovers = floorPool.filter(dbu => !placedIds.has(dbu.id));
-        setUnplacedDbUnits([...otherUnplaced, ...unplacedLeftovers]);
+        const nextUnplaced = [...otherUnplaced, ...unplacedLeftovers];
+        setUnplacedDbUnits(nextUnplaced);
+        if (nextUnplaced.length === 0 && dbUnits.length > 0) {
+            scheduleExploreModalAfterDelay(3000);
+        }
         isUndoingRef.current = false;
     };
 
@@ -3460,6 +3536,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         void propertyContext?.refreshProperties();
                         if (typeof window !== "undefined") {
                             try {
+                                window.sessionStorage.setItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`, "true");
+                                window.dispatchEvent(new Event("unit-map-guidance-changed"));
                                 if (window.localStorage.getItem(SCOPED_PRESET_PROMPT_KEY) !== "true") {
                                     setIsFirstTimePresetModalOpen(true);
                                 }

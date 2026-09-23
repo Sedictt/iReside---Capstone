@@ -35,7 +35,7 @@ function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }
     // Stage 2: Landlord has registered a property, but unit map is not yet configured
     const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete);
     const hasPendingUnitMap = isReady && isLandlord && properties.length > 0 && !hasConfiguredMap;
-    const isAllowedUnitMapRoute = pathname?.startsWith("/landlord/unit-map") || pathname === "/landlord/properties/new";
+    const isAllowedUnitMapRoute = pathname?.startsWith("/landlord/unit-map");
 
     useEffect(() => {
         if (hasZeroProperties && !isAllowedCreationRoute) {

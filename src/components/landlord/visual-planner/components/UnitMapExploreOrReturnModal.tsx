@@ -81,28 +81,28 @@ export function UnitMapExploreOrReturnModal({
                 </p>
 
                 {/* Choice Actions */}
-                <div className="space-y-3 pt-2">
-                    <button
-                        type="button"
-                        onClick={onReturnToDashboard}
-                        className="group w-full flex items-center justify-between gap-3 px-6 py-4 rounded-2xl bg-primary text-primary-foreground font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer"
-                    >
-                        <span>Return to Dashboard</span>
-                        <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-                    </button>
-
+                <div className="flex w-full flex-col-reverse sm:flex-row gap-3 pt-2">
                     <button
                         type="button"
                         onClick={onContinueExploring}
                         className={cn(
-                            "w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-black transition-all cursor-pointer active:scale-[0.98]",
+                            "flex-1 inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-5 rounded-xl text-sm font-semibold transition-all cursor-pointer active:scale-[0.98]",
                             isDark
                                 ? "bg-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700/60"
-                                : "bg-muted/70 hover:bg-muted text-zinc-700 hover:text-zinc-950 border border-border/60"
+                                : "bg-muted/70 hover:bg-muted text-zinc-700 hover:text-zinc-950 border border-border/70"
                         )}
                     >
                         <Compass className="size-4" />
                         <span>Continue Exploring Map</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={onReturnToDashboard}
+                        className="flex-1 group inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer"
+                    >
+                        <span>Return to Dashboard</span>
+                        <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                     </button>
                 </div>
 

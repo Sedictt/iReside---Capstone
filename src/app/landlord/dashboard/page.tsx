@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { useEffect, useState, useMemo, useReducer } from "react";
+import { useEffect, useState, useMemo, useReducer, useRef } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { DashboardBanner } from "@/components/landlord/dashboard/DashboardBanner";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -119,6 +119,7 @@ export default function LandlordDashboard() {
     const SCOPED_AWAITING_TENANT_SETUP_KEY = `ireside.onboarding_awaiting_tenant_setup.${activePropertyId}`;
     const SCOPED_TENANT_DELAYED_KEY = `ireside.tenant_setup_delayed.${activePropertyId}`;
     const [isTenantSetupPromptOpen, setIsTenantSetupPromptOpen] = useState(false);
+    const tenantSetupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const [openPaymentModal, setOpenPaymentModal] = useState<"Overdue" | "Near Due" | "Paid" | null>(null);
     const [paymentsState, dispatchPayments] = useReducer(paymentsReducer, {
@@ -210,12 +211,35 @@ export default function LandlordDashboard() {
             const awaiting = window.localStorage.getItem(SCOPED_AWAITING_TENANT_SETUP_KEY);
             const delayed = window.localStorage.getItem(SCOPED_TENANT_DELAYED_KEY);
             if (awaiting === "true" && delayed !== "true") {
-                setIsTenantSetupPromptOpen(true);
+                if (tenantSetupTimeoutRef.current) {
+                    clearTimeout(tenantSetupTimeoutRef.current);
+                }
+                tenantSetupTimeoutRef.current = setTimeout(() => {
+                    setIsTenantSetupPromptOpen(true);
+                }, 3000);
             }
         } catch {}
+        return () => {
+            if (tenantSetupTimeoutRef.current) {
+                clearTimeout(tenantSetupTimeoutRef.current);
+                tenantSetupTimeoutRef.current = null;
+            }
+        };
     }, [mounted, SCOPED_AWAITING_TENANT_SETUP_KEY, SCOPED_TENANT_DELAYED_KEY]);
 
+    const handleCloseTenantSetupPrompt = () => {
+        if (tenantSetupTimeoutRef.current) {
+            clearTimeout(tenantSetupTimeoutRef.current);
+            tenantSetupTimeoutRef.current = null;
+        }
+        setIsTenantSetupPromptOpen(false);
+    };
+
     const handleSelectReusableLink = () => {
+        if (tenantSetupTimeoutRef.current) {
+            clearTimeout(tenantSetupTimeoutRef.current);
+            tenantSetupTimeoutRef.current = null;
+        }
         setIsTenantSetupPromptOpen(false);
         if (typeof window !== "undefined") {
             try {
@@ -228,6 +252,10 @@ export default function LandlordDashboard() {
     };
 
     const handleSelectAddManually = () => {
+        if (tenantSetupTimeoutRef.current) {
+            clearTimeout(tenantSetupTimeoutRef.current);
+            tenantSetupTimeoutRef.current = null;
+        }
         setIsTenantSetupPromptOpen(false);
         if (typeof window !== "undefined") {
             try {
@@ -240,6 +268,10 @@ export default function LandlordDashboard() {
     };
 
     const handleMaybeLaterTenantSetup = () => {
+        if (tenantSetupTimeoutRef.current) {
+            clearTimeout(tenantSetupTimeoutRef.current);
+            tenantSetupTimeoutRef.current = null;
+        }
         setIsTenantSetupPromptOpen(false);
         if (typeof window !== "undefined") {
             try {
@@ -857,7 +889,7 @@ export default function LandlordDashboard() {
 
             <TenantSetupPromptModal
                 isOpen={isTenantSetupPromptOpen}
-                onClose={() => setIsTenantSetupPromptOpen(false)}
+                onClose={handleCloseTenantSetupPrompt}
                 onSelectReusableLink={handleSelectReusableLink}
                 onSelectAddManually={handleSelectAddManually}
                 onMaybeLater={handleMaybeLaterTenantSetup}

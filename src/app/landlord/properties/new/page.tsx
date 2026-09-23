@@ -409,6 +409,12 @@ function NewAssetContent() {
             router.refresh();
 
             if (!isEditMode && result.propertyId) {
+                if (typeof window !== "undefined") {
+                    try {
+                        window.sessionStorage.setItem(`ireside.unit_map_guidance_in_progress.${result.propertyId}`, "true");
+                        window.dispatchEvent(new Event("unit-map-guidance-changed"));
+                    } catch {}
+                }
                 setSelectedPropertyId(result.propertyId);
                 toast.success("Property registered! Next, configure your unit map to place your units.");
                 router.push(`/landlord/unit-map?propertyId=${result.propertyId}`);
