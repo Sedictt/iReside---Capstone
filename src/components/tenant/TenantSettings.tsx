@@ -54,17 +54,7 @@ import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { useHighContrast } from "@/hooks/useHighContrast";
 import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
 import { TimeFormatToggle } from "@/components/ui/TimeFormatToggle";
-import { MobileSettingsCategoryDropdown } from "@/components/mobile/shared/MobileSettingsCategoryDropdown";
 import { SecurityKeyManagementCard } from "@/components/auth/SecurityKeyManagementCard";
-import { 
-    validateFullName, 
-    validateEmail,
-    validatePhoneNumber, 
-    validateAddress, 
-    validateBio, 
-    validateEmergencyContactPair, 
-    MAX_BIO_LENGTH 
-} from "@/lib/validation/profile";
 
 // --- Types ---
 type SettingsCategory = "Identity" | "Accessibility" | "Security" | "Notifications" | "Billing" | "Data";
@@ -146,7 +136,7 @@ function GlassCard({
     );
 }
 
-function SettingField({ label, children, description, icon: Icon, error }: { label: string; children: React.ReactNode; description?: string; icon?: any; error?: string }) {
+function SettingField({ label, children, description, icon: Icon }: { label: string; children: React.ReactNode; description?: string; icon?: any }) {
     return (
         <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
@@ -154,13 +144,7 @@ function SettingField({ label, children, description, icon: Icon, error }: { lab
                 <label className="text-xs font-black uppercase tracking-wider text-foreground/80">{label}</label>
             </div>
             {children}
-            {error ? (
-                <p className="px-1 text-xs text-rose-500 flex items-center gap-1 font-medium">
-                    <AlertCircle className="size-3 shrink-0" /> {error}
-                </p>
-            ) : description ? (
-                <p className="px-1 text-xs text-muted-foreground">{description}</p>
-            ) : null}
+            {description && <p className="px-1 text-xs text-muted-foreground">{description}</p>}
         </div>
     );
 }
@@ -216,7 +200,7 @@ function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: s
 
 // --- Main Component ---
 
-export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}) {
+export function TenantSettings() {
     const router = useRouter();
     const { profile, loading, refreshProfile } = useAuth();
     const supabase = createClient();
@@ -276,7 +260,7 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
         Security: ["Account", "Protection", "Sessions"],
         Notifications: ["Alerts"],
         Billing: ["Payment Methods", "History"],
-        Data: ["Export"],
+        Data: ["Export", "Danger"],
     };
 
     const { isHighContrast, toggleHighContrast } = useHighContrast();
@@ -314,64 +298,6 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
         emergency_name: "",
         emergency_phone: "",
     });
-    const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
-
-    const validateProfileForm = (data: typeof formData) => {
-        const errors: Record<string, string> = {};
-
-        const nameCheck = validateFullName(data.full_name);
-        if (!nameCheck.isValid) errors.full_name = nameCheck.error!;
-
-        const emailCheck = validateEmail(data.email);
-        if (!emailCheck.isValid) errors.email = emailCheck.error!;
-
-        const phoneCheck = validatePhoneNumber(data.phone);
-        if (!phoneCheck.isValid) errors.phone = phoneCheck.error!;
-
-        const addressCheck = validateAddress(data.address);
-        if (!addressCheck.isValid) errors.address = addressCheck.error!;
-
-        const bioCheck = validateBio(data.bio, MAX_BIO_LENGTH);
-        if (!bioCheck.isValid) errors.bio = bioCheck.error!;
-
-        const emergCheck = validateEmergencyContactPair(data.emergency_name, data.emergency_phone);
-        if (emergCheck.nameError) errors.emergency_name = emergCheck.nameError;
-        if (emergCheck.phoneError) errors.emergency_phone = emergCheck.phoneError;
-
-        return errors;
-    };
-
-    const handleProfileFieldChange = (field: keyof typeof formData, value: string) => {
-        const updated = { ...formData, [field]: value };
-        setFormData(updated);
-
-        if (field === "full_name") {
-            const check = validateFullName(value);
-            setProfileErrors(prev => ({ ...prev, full_name: check.isValid ? "" : check.error! }));
-        } else if (field === "email") {
-            const check = validateEmail(value);
-            setProfileErrors(prev => ({ ...prev, email: check.isValid ? "" : check.error! }));
-        } else if (field === "phone") {
-            const check = validatePhoneNumber(value);
-            setProfileErrors(prev => ({ ...prev, phone: check.isValid ? "" : check.error! }));
-        } else if (field === "address") {
-            const check = validateAddress(value);
-            setProfileErrors(prev => ({ ...prev, address: check.isValid ? "" : check.error! }));
-        } else if (field === "bio") {
-            const check = validateBio(value, MAX_BIO_LENGTH);
-            setProfileErrors(prev => ({ ...prev, bio: check.isValid ? "" : check.error! }));
-        } else if (field === "emergency_name" || field === "emergency_phone") {
-            const emerg = validateEmergencyContactPair(
-                field === "emergency_name" ? value : formData.emergency_name,
-                field === "emergency_phone" ? value : formData.emergency_phone
-            );
-            setProfileErrors(prev => ({
-                ...prev,
-                emergency_name: emerg.nameError || "",
-                emergency_phone: emerg.phoneError || "",
-            }));
-        }
-    };
 
     // Security States
     const [twoFAStatus, setTwoFAStatus] = useState<'loading' | 'disabled' | 'enabled'>('loading');
@@ -492,54 +418,30 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
 
     const handleSaveProfile = async () => {
         if (!profile) return;
-
-        const errors = validateProfileForm(formData);
-        const hasErrors = Object.values(errors).some(Boolean);
-        if (hasErrors) {
-            setProfileErrors(errors);
-            toast.error("Please fix validation errors before saving.");
-            if (errors.emergency_name || errors.emergency_phone) {
-                setActiveSubTab("Emergency Contact");
-            } else if (errors.full_name || errors.phone || errors.address || errors.bio) {
-                setActiveSubTab("Profile");
-            }
-            return;
-        }
-
         setIsSaving(true);
         try {
-            const trimmedFullName = formData.full_name.trim();
-            const trimmedEmail = formData.email.trim();
-            const trimmedBio = formData.bio.trim();
-            const trimmedPhone = formData.phone.trim();
-            const trimmedAddress = formData.address.trim();
-            const trimmedEmergName = formData.emergency_name.trim();
-            const trimmedEmergPhone = formData.emergency_phone.trim();
+            const socialsWithEmergency = {
+                ...((profile.socials as any) || {}),
+                emergency_contact_name: formData.emergency_name,
+                emergency_contact_phone: formData.emergency_phone,
+            };
 
-            const res = await fetch("/api/tenant/profile", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    full_name: trimmedFullName,
-                    email: trimmedEmail,
-                    bio: trimmedBio,
-                    phone: trimmedPhone,
-                    address: trimmedAddress,
-                    emergency_contact_name: trimmedEmergName,
-                    emergency_contact_phone: trimmedEmergPhone,
-                }),
-            });
+            const { error } = await supabase
+                .from("profiles")
+                .update({
+                    full_name: formData.full_name,
+                    bio: formData.bio,
+                    socials: socialsWithEmergency,
+                } as any)
+                .eq("id", profile.id);
 
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.error || "Failed to update profile");
-            }
+            if (error) throw error;
 
             try {
                 await supabase.auth.updateUser({
                     data: {
-                        emergency_contact_name: trimmedEmergName,
-                        emergency_contact_phone: trimmedEmergPhone,
+                        emergency_contact_name: formData.emergency_name,
+                        emergency_contact_phone: formData.emergency_phone,
                     }
                 });
             } catch {
@@ -551,8 +453,8 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
                 .upsert(
                     {
                         profile_id: profile.id,
-                        phone: trimmedPhone,
-                        address: trimmedAddress,
+                        phone: formData.phone,
+                        address: formData.address,
                         updated_at: new Date().toISOString(),
                     },
                     { onConflict: "profile_id" }
@@ -713,75 +615,46 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
 
                             <GlassCard title="Profile Information" description="Basic details about you.">
                                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                    <SettingField label="Full Name" icon={User} description="Your verified name." error={profileErrors.full_name}>
+                                    <SettingField label="Full Name" icon={User} description="Your verified name.">
                                         <input
                                             type="text"
                                             value={formData.full_name}
-                                            onChange={(e) => handleProfileFieldChange("full_name", e.target.value)}
-                                            placeholder="e.g. Juan Dela Cruz"
-                                            className={cn(
-                                                "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none transition-colors",
-                                                profileErrors.full_name ? "border border-rose-500/80 focus:ring-1 focus:ring-rose-500" : "focus:ring-1 focus:ring-primary"
-                                            )}
+                                            onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                                         />
                                     </SettingField>
-                                    <SettingField label="Email Address" icon={Mail} description="Your contact and notification email." error={profileErrors.email}>
+                                    <SettingField label="Email" icon={Mail} description="Your verified email.">
                                         <input
                                             type="email"
                                             value={formData.email}
-                                            onChange={(e) => handleProfileFieldChange("email", e.target.value)}
-                                            placeholder="name@example.com"
-                                            className={cn(
-                                                "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none transition-colors",
-                                                profileErrors.email ? "border border-rose-500/80 focus:ring-1 focus:ring-rose-500" : "focus:ring-1 focus:ring-primary"
-                                            )}
+                                            disabled
+                                            className="w-full cursor-not-allowed rounded-xl neumorphic-inset opacity-60 px-4 py-3 text-sm text-muted-foreground"
                                         />
                                     </SettingField>
-                                    <SettingField label="Phone Number" icon={Phone} error={profileErrors.phone}>
+                                    <SettingField label="Phone Number" icon={Phone}>
                                         <input
                                             type="tel"
                                             value={formData.phone}
-                                            onChange={(e) => handleProfileFieldChange("phone", e.target.value)}
-                                            placeholder="09XXXXXXXXX or +639XXXXXXXXX"
-                                            className={cn(
-                                                "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none transition-colors",
-                                                profileErrors.phone ? "border border-rose-500/80 focus:ring-1 focus:ring-rose-500" : "focus:ring-1 focus:ring-primary"
-                                            )}
+                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                                         />
                                     </SettingField>
-                                    <SettingField label="Address" icon={Home} error={profileErrors.address}>
+                                    <SettingField label="Address" icon={Home}>
                                         <input
                                             type="text"
                                             value={formData.address}
-                                            onChange={(e) => handleProfileFieldChange("address", e.target.value)}
-                                            placeholder="e.g. Metro Manila, Philippines"
-                                            className={cn(
-                                                "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none transition-colors",
-                                                profileErrors.address ? "border border-rose-500/80 focus:ring-1 focus:ring-rose-500" : "focus:ring-1 focus:ring-primary"
-                                            )}
+                                            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                                         />
                                     </SettingField>
                                     <div className="md:col-span-2">
-                                        <SettingField label="Bio" icon={FileText} description="Tell landlords a bit about yourself." error={profileErrors.bio}>
+                                        <SettingField label="Bio" icon={FileText} description="Tell landlords a bit about yourself.">
                                             <textarea
                                                 rows={4}
                                                 value={formData.bio}
-                                                maxLength={MAX_BIO_LENGTH}
-                                                onChange={(e) => handleProfileFieldChange("bio", e.target.value)}
-                                                placeholder="Tell landlords a bit about yourself..."
-                                                className={cn(
-                                                    "w-full resize-none rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none transition-colors",
-                                                    profileErrors.bio ? "border border-rose-500/80 focus:ring-1 focus:ring-rose-500" : "focus:ring-1 focus:ring-primary"
-                                                )}
+                                                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                                                className="w-full resize-none rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                                             />
-                                            <div className="flex justify-end px-1 mt-1">
-                                                <span className={cn(
-                                                    "text-[10px] font-mono",
-                                                    formData.bio.length >= MAX_BIO_LENGTH ? "text-rose-500 font-bold" : formData.bio.length >= MAX_BIO_LENGTH - 50 ? "text-amber-500" : "text-muted-foreground"
-                                                )}>
-                                                    {formData.bio.length} / {MAX_BIO_LENGTH}
-                                                </span>
-                                            </div>
                                         </SettingField>
                                     </div>
                                 </div>
@@ -792,28 +665,20 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
                     return (
                         <GlassCard title="Emergency Contact" description="Someone we can contact in case of emergency.">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <SettingField label="Contact Name" icon={User} error={profileErrors.emergency_name}>
+                                <SettingField label="Contact Name" icon={User}>
                                     <input
                                         type="text"
                                         value={formData.emergency_name}
-                                        onChange={(e) => handleProfileFieldChange("emergency_name", e.target.value)}
-                                        placeholder="Full name of emergency contact"
-                                        className={cn(
-                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none transition-colors",
-                                            profileErrors.emergency_name ? "border border-rose-500/80 focus:ring-1 focus:ring-rose-500" : "focus:ring-1 focus:ring-primary"
-                                        )}
+                                        onChange={(e) => setFormData({ ...formData, emergency_name: e.target.value })}
+                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                                     />
                                 </SettingField>
-                                <SettingField label="Contact Phone" icon={Phone} error={profileErrors.emergency_phone}>
+                                <SettingField label="Contact Phone" icon={Phone}>
                                     <input
                                         type="tel"
                                         value={formData.emergency_phone}
-                                        onChange={(e) => handleProfileFieldChange("emergency_phone", e.target.value)}
-                                        placeholder="09XXXXXXXXX or +639XXXXXXXXX"
-                                        className={cn(
-                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none transition-colors",
-                                            profileErrors.emergency_phone ? "border border-rose-500/80 focus:ring-1 focus:ring-rose-500" : "focus:ring-1 focus:ring-primary"
-                                        )}
+                                        onChange={(e) => setFormData({ ...formData, emergency_phone: e.target.value })}
+                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                                     />
                                 </SettingField>
                             </div>
@@ -822,8 +687,6 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
                 default: return null;
             }
         };
-
-        const hasProfileErrors = Object.values(profileErrors).some(Boolean);
 
         return (
             <motion.div 
@@ -839,11 +702,8 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
                     <button
                         type="button"
                         onClick={handleSaveProfile}
-                        disabled={isSaving || hasProfileErrors}
-                        className={cn(
-                            "flex items-center gap-2 rounded-xl sm:rounded-2xl neumorphic-primary px-6 sm:px-8 py-2.5 sm:py-3.5 text-xs sm:text-sm font-black text-primary-foreground shadow-md transition-all active:scale-95 cursor-pointer w-fit",
-                            (isSaving || hasProfileErrors) && "opacity-50 cursor-not-allowed"
-                        )}
+                        disabled={isSaving}
+                        className="flex items-center gap-2 rounded-xl sm:rounded-2xl neumorphic-primary px-6 sm:px-8 py-2.5 sm:py-3.5 text-xs sm:text-sm font-black text-primary-foreground shadow-md transition-all active:scale-95 disabled:opacity-50 cursor-pointer w-fit"
                     >
                         {isSaving ? "Saving..." : <><Save className="size-4 sm:size-5" /> Save Changes</>}
                     </button>
@@ -1564,8 +1424,8 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
         <PageLoader message="Loading your settings..." />
     ) : (
         <div className="space-y-6 sm:space-y-10">
-            {/* Top Navigation Bar (Desktop only) */}
-            <div className="hidden lg:flex items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-border/40">
+            {/* Top Navigation Bar */}
+            <div className="flex items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-border/40">
                 <button
                     type="button"
                     onClick={() => router.push("/tenant/dashboard")}
@@ -1598,17 +1458,106 @@ export function TenantSettings({ isMobile = false }: { isMobile?: boolean } = {}
             </div>
 
             <div className="min-h-[80vh] flex flex-col lg:flex-row gap-6 lg:gap-12">
-                {/* Mobile / Tablet Category Dropdown (< lg) */}
-                <div className="block lg:hidden mb-2">
-                    <MobileSettingsCategoryDropdown
-                        items={SIDEBAR_ITEMS}
-                        activeTab={activeTab}
-                        onSelectTab={(id) => {
-                            setActiveTab(id as SettingsCategory);
-                            const firstSubTab = SUB_TABS[id as SettingsCategory]?.[0];
-                            if (firstSubTab) setActiveSubTab(firstSubTab);
-                        }}
-                    />
+                {/* Mobile / Tablet Horizontal Navigation (< lg) */}
+                <div className="block lg:hidden space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                        <div className="flex items-center gap-2.5">
+                            <div className="flex size-9 items-center justify-center rounded-xl bg-primary/20 text-primary border border-primary/20">
+                                <Layout className="size-4.5" />
+                            </div>
+                            <div>
+                                <h1 className="text-base font-black text-foreground leading-tight">Settings</h1>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                    {SIDEBAR_ITEMS.find(i => i.id === activeTab)?.label}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Swipe / Slide affordance hint */}
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-full border border-border/40 select-none">
+                            <SlidersHorizontal className="size-3 text-primary/70" />
+                            <span>Swipe to reveal</span>
+                            <ChevronRight className="size-3 text-primary animate-pulse" />
+                        </div>
+                    </div>
+
+                    <div className="relative group/rail">
+                        {/* Left Fade Gradient & Scroll Arrow */}
+                        <AnimatePresence>
+                            {canScrollLeft && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="absolute left-0 top-0 bottom-0 z-10 flex items-center pr-3 pl-0.5 bg-gradient-to-r from-background via-background/95 to-transparent pointer-events-none"
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollMobileTabs("left")}
+                                        aria-label="Scroll tabs left"
+                                        className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto"
+                                    >
+                                        <ChevronLeft className="size-3.5" />
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Scrollable Pills Container */}
+                        <div 
+                            ref={mobileTabRailRef}
+                            className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-1 scrollbar-hide -mx-1 px-1 scroll-smooth"
+                        >
+                            {SIDEBAR_ITEMS.map((item) => {
+                                const Icon = item.icon;
+                                const isActive = activeTab === item.id;
+                                return (
+                                    <button
+                                        key={item.id}
+                                        data-tab-id={item.id}
+                                        type="button"
+                                        onClick={() => handleMobileTabClick(item.id)}
+                                        className={cn(
+                                            "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black whitespace-nowrap transition-all duration-300 cursor-pointer shrink-0",
+                                            isActive
+                                                ? "neumorphic-panel text-primary font-black shadow-sm border-primary/30 ring-1 ring-primary/20"
+                                                : "neumorphic-extruded text-muted-foreground hover:text-foreground font-bold"
+                                        )}
+                                    >
+                                        <Icon className={cn("size-4 transition-transform", isActive ? "scale-110 text-primary" : "text-muted-foreground")} />
+                                        <span>{item.label}</span>
+                                        {isActive && (
+                                            <span className="size-1.5 rounded-full bg-primary" />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Right Fade Gradient & Scroll Arrow */}
+                        <AnimatePresence>
+                            {canScrollRight && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="absolute right-0 top-0 bottom-0 z-10 flex items-center pl-3 pr-0.5 bg-gradient-to-l from-background via-background/95 to-transparent pointer-events-none"
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollMobileTabs("right")}
+                                        aria-label="Scroll tabs right"
+                                        title="Slide to view more tabs"
+                                        className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto animate-pulse hover:animate-none"
+                                    >
+                                        <ChevronRight className="size-3.5" />
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
 
                 {/* Desktop Collapsible Sidebar (lg+) */}

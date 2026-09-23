@@ -29,6 +29,7 @@ import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
 import { NotificationCard } from "@/components/messaging/NotificationCard";
 import { OfficialReceipt } from "@/components/messaging/OfficialReceipt";
 import { MiniChatSkeleton } from "@/components/messaging/MiniChatSkeleton";
+import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 
@@ -1434,7 +1435,11 @@ export function ContactsSidebar() {
                                             )}
 
                                             {!message.fileUrl && (
-                                                <span className="leading-relaxed whitespace-pre-wrap">{message.content}</span>
+                                                <ChatMessageMarkdown
+                                                    content={message.content}
+                                                    isUser={message.isOwn}
+                                                    className="text-xs sm:text-sm"
+                                                />
                                             )}
                                         </div>
                                         <div className={cn("flex items-center gap-1 text-[10px]", message.isOwn ? "text-muted-foreground" : "px-1 text-muted-foreground")}>

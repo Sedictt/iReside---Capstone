@@ -18,23 +18,12 @@ export default function RootTurnkeyEntryPage() {
         }
 
         const role = profile?.role || (user.user_metadata as any)?.role || "landlord";
-        const isMobile =
-            typeof window !== "undefined" &&
-            (window.innerWidth < 768 || /Mobile|Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
 
-        if (isMobile) {
-            if (role === "tenant") {
-                router.replace("/mobile/tenant/home");
-            } else {
-                router.replace("/mobile/landlord/overview");
-            }
+        if (role === "tenant") {
+            router.replace("/tenant/dashboard");
         } else {
-            if (role === "tenant") {
-                router.replace("/tenant/dashboard");
-            } else {
-                // Both landlord and legacy admin accounts route directly to Landlord Dashboard
-                router.replace("/landlord/dashboard");
-            }
+            // Both landlord and legacy admin accounts route directly to Landlord Dashboard
+            router.replace("/landlord/dashboard");
         }
     }, [user, profile, loading, router]);
 

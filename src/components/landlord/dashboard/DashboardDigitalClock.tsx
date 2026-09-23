@@ -24,13 +24,9 @@ export function DashboardDigitalClock({ time }: DashboardDigitalClockProps) {
                 <span className="font-mono text-7xl font-black tracking-tighter text-foreground tabular-nums group-hover:text-primary transition-colors">
                     {hours}:{minutes}
                 </span>
-                {period ? (
+                {period && (
                     <span className="text-2xl font-black uppercase tracking-[0.2em] text-primary">
                         {period}
-                    </span>
-                ) : (
-                    <span className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground/70 bg-muted/40 px-2 py-0.5 rounded-md border border-border/40">
-                        24H
                     </span>
                 )}
             </button>

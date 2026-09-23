@@ -61,6 +61,9 @@ import { TenantMapNotReady } from "@/components/tenant/TenantMapNotReady";
 import { MaintenanceRequestModal } from "@/components/landlord/maintenance/MaintenanceRequestModal";
 import type { MaintenanceRequest } from "@/components/landlord/maintenance/MaintenanceDashboard";
 import { UnitHistoryModal } from "./components/UnitHistoryModal";
+import { FirstTimePresetModal, type LayoutPresetType } from "./components/FirstTimePresetModal";
+import { UnitMapExploreOrReturnModal } from "./components/UnitMapExploreOrReturnModal";
+import { generatePresetLayout } from "./utils/presets";
 
 /** Complaint Modal Component */
 const ComplaintModal = ({
@@ -297,7 +300,8 @@ export default function VisualBuilder({
     showBackButton?: boolean;
     currentUnitId?: string;
 } = {}) {
-    const { back } = useRouter();
+    const router = useRouter();
+    const { back } = router;
     const propertyContext = useOptionalProperty();
     const selectedPropertyId = externalPropertyId ?? propertyContext?.selectedPropertyId ?? "all";
     const selectedProperty = propertyContext?.selectedProperty;
@@ -311,6 +315,54 @@ export default function VisualBuilder({
     const SCOPED_ACTIVE_FLOOR_KEY = getScopedKey(ACTIVE_FLOOR_STORAGE_KEY);
     const SCOPED_UNIT_NOTES_KEY = getScopedKey(UNIT_NOTES_STORAGE_KEY);
     const SCOPED_LEGEND_VISIBILITY_KEY = getScopedKey(LEGEND_VISIBILITY_STORAGE_KEY);
+    const SCOPED_PRESET_PROMPT_KEY = getScopedKey("ireside.unit_map_preset_prompt_dismissed");
+    const SCOPED_AWAITING_TENANT_SETUP_KEY = getScopedKey("ireside.onboarding_awaiting_tenant_setup");
+    const SCOPED_EXPLORE_MODAL_SHOWN_KEY = getScopedKey("ireside.unit_map_explore_modal_shown");
+    const [isFirstTimePresetModalOpen, setIsFirstTimePresetModalOpen] = useState(false);
+    const [isExploreOrReturnModalOpen, setIsExploreOrReturnModalOpen] = useState(false);
+    const exploreModalTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const hasShownExploreModalRef = useRef(false);
+
+    const cancelExploreModalTimer = useCallback(() => {
+        if (exploreModalTimeoutRef.current) {
+            clearTimeout(exploreModalTimeoutRef.current);
+            exploreModalTimeoutRef.current = null;
+        }
+    }, []);
+
+    const scheduleExploreModalAfterDelay = useCallback((delayMs = 3000) => {
+        cancelExploreModalTimer();
+
+        if (typeof window !== "undefined") {
+            try {
+                if (window.localStorage.getItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY) === "true") {
+                    return;
+                }
+                window.sessionStorage.setItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`, "true");
+                window.dispatchEvent(new Event("unit-map-guidance-changed"));
+            } catch {}
+        }
+        if (hasShownExploreModalRef.current) return;
+
+        exploreModalTimeoutRef.current = setTimeout(() => {
+            setIsExploreOrReturnModalOpen(true);
+            hasShownExploreModalRef.current = true;
+            if (typeof window !== "undefined") {
+                try {
+                    window.sessionStorage.setItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`, "true");
+                    window.dispatchEvent(new Event("unit-map-guidance-changed"));
+                } catch {}
+            }
+        }, delayMs);
+    }, [SCOPED_EXPLORE_MODAL_SHOWN_KEY, cancelExploreModalTimer, selectedPropertyId]);
+
+    useEffect(() => {
+        hasShownExploreModalRef.current = false;
+        cancelExploreModalTimer();
+        return () => {
+            cancelExploreModalTimer();
+        };
+    }, [selectedPropertyId, cancelExploreModalTimer]);
 
     const GRID_SIZE = 20;
     const PAN_MARGIN = 280;
@@ -608,6 +660,20 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         setStructures(targetStructures);
         setHasHydratedFloorState(true);
 
+        // First-time preset prompt check during setup phase
+        if (!readOnly && !demoMode && data.isSetupComplete && data.totalUnits > 0 && selectedPropertyId && selectedPropertyId !== "all") {
+            if (typeof window !== "undefined") {
+                try {
+                    const dismissed = window.localStorage.getItem(SCOPED_PRESET_PROMPT_KEY);
+                    if (dismissed !== "true") {
+                        window.sessionStorage.setItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`, "true");
+                        window.dispatchEvent(new Event("unit-map-guidance-changed"));
+                        setIsFirstTimePresetModalOpen(true);
+                    }
+                } catch {}
+            }
+        }
+
         isUndoingRef.current = true;
         historyRef.current = [{
             units: targetUnits,
@@ -616,7 +682,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         }];
         historyIndexRef.current = 0;
         setUndoAvailable(false);
-    }, [SCOPED_ACTIVE_FLOOR_KEY, activeFloor, currentUnitId, readOnly]);
+    }, [SCOPED_ACTIVE_FLOOR_KEY, SCOPED_PRESET_PROMPT_KEY, activeFloor, currentUnitId, demoMode, readOnly, selectedPropertyId]);
 
     // ---------------------------------------------------------------
     // Load real data from DB when a property is selected (SWR Instant Cache)
@@ -2006,6 +2072,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const restoreUnitsToUnplaced = useCallback((unitIds: string[]) => {
         if (unitIds.length === 0) return;
+        cancelExploreModalTimer();
 
         const targetIds = new Set(unitIds);
         const matchingDbUnits = dbUnits.filter((dbUnit) => targetIds.has(dbUnit.id));
@@ -2016,7 +2083,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             const nextUnits = matchingDbUnits.filter((unit) => !existingIds.has(unit.id));
             return nextUnits.length > 0 ? [...prev, ...nextUnits] : prev;
         });
-    }, [dbUnits]);
+    }, [dbUnits, cancelExploreModalTimer]);
 
     const deleteCanvasItem = (item: SelectedCanvasItem) => {
         if (item.kind === "unit") {
@@ -2484,7 +2551,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 floor: dbUnit.floor,
             },
         ]);
-        setUnplacedDbUnits(prev => prev.filter(u => u.id !== dbUnit.id));
+        setUnplacedDbUnits(prev => {
+            const next = prev.filter(u => u.id !== dbUnit.id);
+            if (next.length === 0 && dbUnits.length > 0) {
+                scheduleExploreModalAfterDelay(3000);
+            }
+            return next;
+        });
         setSelectedItem({ kind: "unit", id: dbUnit.id });
     };
 
@@ -2637,7 +2710,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         },
                     ]);
                     // Remove from unplaced list
-                    setUnplacedDbUnits(prev => prev.filter(u => u.id !== parsed.dbUnitId));
+                    setUnplacedDbUnits(prev => {
+                        const next = prev.filter(u => u.id !== parsed.dbUnitId);
+                        if (next.length === 0 && dbUnits.length > 0) {
+                            scheduleExploreModalAfterDelay(3000);
+                        }
+                        return next;
+                    });
                     return;
                 }
             }
@@ -2694,6 +2773,138 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             return;
         }
         confirmApplyPreset(presetType);
+    };
+
+    const applyPresetToAllFloors = (presetType: LayoutPresetType) => {
+        setIsFirstTimePresetModalOpen(false);
+        if (typeof window !== "undefined") {
+            try {
+                window.localStorage.setItem(SCOPED_PRESET_PROMPT_KEY, "true");
+            } catch {}
+        }
+
+        const allFloorConfigs = floorConfigs.length > 0 
+            ? floorConfigs 
+            : [{ id: "f1", floor_number: 1, floor_key: "floor1", display_name: "Floor 1", sort_order: 1 }];
+
+        const updatedLayouts: Record<FloorId, FloorLayout> = { ...floorLayouts };
+        let activeFloorGeneratedUnits: Unit[] = [];
+        let activeFloorGeneratedCorridors: Corridor[] = [];
+        const allPlacedIds = new Set<string>();
+
+        allFloorConfigs.forEach(fc => {
+            const floorNum = fc.floor_number;
+            const floorKey = fc.floor_key;
+
+            // Collect all units belonging to this floor
+            const floorUnits = dbUnits.filter(u => 
+                u.floor === floorNum || (allFloorConfigs.length === 1 && (!u.floor || u.floor === 1))
+            );
+
+            // If some units have no floor assigned, distribute them
+            const pool = floorUnits.length > 0 
+                ? floorUnits 
+                : dbUnits.filter((_, idx) => (idx % allFloorConfigs.length) === (floorNum - 1));
+
+            const finalPool = pool.length > 0 ? pool : (floorNum === 1 ? dbUnits : []);
+            const generated = generatePresetLayout(presetType, finalPool, floorNum);
+
+            generated.units.forEach(u => allPlacedIds.add(u.dbId || u.id));
+
+            updatedLayouts[floorKey] = {
+                ...(updatedLayouts[floorKey] || {}),
+                name: fc.display_name ?? updatedLayouts[floorKey]?.name ?? `Floor ${floorNum}`,
+                units: generated.units,
+                corridors: generated.corridors,
+                structures: [],
+            };
+
+            if (floorKey === activeFloor) {
+                activeFloorGeneratedUnits = generated.units;
+                activeFloorGeneratedCorridors = generated.corridors;
+            }
+        });
+
+        if (activeFloorGeneratedUnits.length === 0 && allFloorConfigs.length > 0) {
+            const firstKey = allFloorConfigs[0].floor_key;
+            activeFloorGeneratedUnits = updatedLayouts[firstKey]?.units ?? [];
+            activeFloorGeneratedCorridors = updatedLayouts[firstKey]?.corridors ?? [];
+        }
+
+        setFloorLayouts(updatedLayouts);
+        setUnits(activeFloorGeneratedUnits);
+        setCorridors(activeFloorGeneratedCorridors);
+        setStructures([]);
+
+        const remainingUnplaced = dbUnits.filter(u => !allPlacedIds.has(u.id));
+        setUnplacedDbUnits(remainingUnplaced);
+
+        // Adjust dimensions and auto-fit
+        let maxX = 0;
+        let maxY = 0;
+        activeFloorGeneratedUnits.forEach(u => { maxX = Math.max(maxX, u.x + u.w); maxY = Math.max(maxY, u.y + u.h); });
+        activeFloorGeneratedCorridors.forEach(c => { maxX = Math.max(maxX, c.x + c.w); maxY = Math.max(maxY, c.y + c.h); });
+
+        const CANVAS_PADDING = 260;
+        const MIN_BLUEPRINT_WIDTH = Math.max(420, viewportSize.width - BLUEPRINT_MARGIN * 2);
+        const MIN_BLUEPRINT_HEIGHT = Math.max(320, viewportSize.height - BLUEPRINT_MARGIN * 2);
+
+        const neededExtraW = Math.max(0, Math.ceil((maxX + CANVAS_PADDING - MIN_BLUEPRINT_WIDTH) / 50) * 50);
+        const neededExtraH = Math.max(0, Math.ceil((maxY + CANVAS_PADDING - MIN_BLUEPRINT_HEIGHT) / 50) * 50);
+
+        setExtraDimensions({ width: neededExtraW, height: neededExtraH });
+        extraDimensionsRef.current = { width: neededExtraW, height: neededExtraH };
+
+        handleFit();
+        isUndoingRef.current = false;
+        toast.success(`Applied ${presetType.replace("-", " ")} preset layout across all floors!`);
+        scheduleExploreModalAfterDelay(3000);
+    };
+
+    const handleReturnToDashboardFromMap = () => {
+        cancelExploreModalTimer();
+        setIsExploreOrReturnModalOpen(false);
+        if (typeof window !== "undefined") {
+            try {
+                window.sessionStorage.removeItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`);
+                window.localStorage.setItem(SCOPED_AWAITING_TENANT_SETUP_KEY, "true");
+                window.localStorage.setItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY, "true");
+                window.localStorage.setItem(SCOPED_PRESET_PROMPT_KEY, "true");
+                window.dispatchEvent(new Event("unit-map-guidance-changed"));
+            } catch {}
+        }
+        router.push("/landlord/dashboard");
+    };
+
+    const handleContinueExploringMap = () => {
+        cancelExploreModalTimer();
+        setIsExploreOrReturnModalOpen(false);
+        if (typeof window !== "undefined") {
+            try {
+                window.sessionStorage.removeItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`);
+                window.localStorage.setItem(SCOPED_AWAITING_TENANT_SETUP_KEY, "true");
+                window.localStorage.setItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY, "true");
+                window.localStorage.setItem(SCOPED_PRESET_PROMPT_KEY, "true");
+                window.dispatchEvent(new Event("unit-map-guidance-changed"));
+            } catch {}
+        }
+        toast.info("You can continue customizing your layout. Return to the dashboard anytime to configure tenants.");
+    };
+
+    const handleChooseManualLayout = () => {
+        cancelExploreModalTimer();
+        setIsFirstTimePresetModalOpen(false);
+        if (typeof window !== "undefined") {
+            try {
+                window.sessionStorage.removeItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`);
+                window.localStorage.setItem(SCOPED_PRESET_PROMPT_KEY, "true");
+                window.localStorage.setItem(SCOPED_AWAITING_TENANT_SETUP_KEY, "true");
+                window.localStorage.setItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY, "true");
+                window.dispatchEvent(new Event("unit-map-guidance-changed"));
+            } catch {}
+        }
+        setIsSidebarVisible(true);
+        toast.info("Manual layout active. Drag units and add stairs or corridors from the sidebar.");
     };
 
     const confirmApplyPreset = (presetType: "double-loaded" | "u-shape" | "l-shape" | "single-loaded") => {
@@ -3106,11 +3317,14 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         setScale(fitScale);
         setPosition({ x: fitX, y: fitY });
 
-        // Ensure unplaced pool reflects the changes
         const placedIds = new Set(newUnits.map(u => u.dbId || u.id));
         const otherUnplaced = unplacedDbUnits.filter(dbu => dbu.floor !== activeFloorNum && dbu.floor !== null && dbu.floor !== undefined);
         const unplacedLeftovers = floorPool.filter(dbu => !placedIds.has(dbu.id));
-        setUnplacedDbUnits([...otherUnplaced, ...unplacedLeftovers]);
+        const nextUnplaced = [...otherUnplaced, ...unplacedLeftovers];
+        setUnplacedDbUnits(nextUnplaced);
+        if (nextUnplaced.length === 0 && dbUnits.length > 0) {
+            scheduleExploreModalAfterDelay(3000);
+        }
         isUndoingRef.current = false;
     };
 
@@ -3320,6 +3534,15 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         setIsSetupComplete(true);
                         setRefreshKey((prev) => prev + 1);
                         void propertyContext?.refreshProperties();
+                        if (typeof window !== "undefined") {
+                            try {
+                                window.sessionStorage.setItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`, "true");
+                                window.dispatchEvent(new Event("unit-map-guidance-changed"));
+                                if (window.localStorage.getItem(SCOPED_PRESET_PROMPT_KEY) !== "true") {
+                                    setIsFirstTimePresetModalOpen(true);
+                                }
+                            } catch {}
+                        }
                     }}
                 />
             </div>
@@ -3349,7 +3572,14 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 <div className="flex items-center gap-4">
                     {showBackButton && (
                         <button
-                            onClick={() => back()}
+                            onClick={() => {
+                                if (typeof window !== "undefined") {
+                                    try {
+                                        window.localStorage.setItem(SCOPED_AWAITING_TENANT_SETUP_KEY, "true");
+                                    } catch {}
+                                }
+                                back();
+                            }}
                             className={`flex items-center gap-2 ${isDark ? 'text-zinc-400 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'} transition-colors group`}
                         >
                             <div className={`size-8 rounded-full flex items-center justify-center border ${isDark ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-neutral-200 shadow-sm'} group-hover:shadow transition-all`}>
@@ -4830,7 +5060,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                             >
                                 <div className="p-8 pb-6">
                                     <div className={`mb-6 flex size-16 items-center justify-center rounded-2xl ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
-                                        <span className="material-icons-round text-3xl">auto_awesome_mosaic</span>
+                                        <span className="material-icons-round text-3xl">dashboard_customize</span>
                                     </div>
                                     <h3 className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}>Apply Layout Preset?</h3>
                                     <p className={`mt-3 text-sm leading-relaxed ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
@@ -4868,6 +5098,24 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         onClose={() => setIsComplaintModalOpen(false)} 
                         unit={complaintUnit} 
                         isDark={isDark}
+                    />
+
+                    <FirstTimePresetModal
+                        isOpen={isFirstTimePresetModalOpen}
+                        onClose={handleChooseManualLayout}
+                        onChooseManual={handleChooseManualLayout}
+                        onSelectPreset={applyPresetToAllFloors}
+                        isDark={isDark}
+                        unitCount={totalDbUnits || units.length}
+                        floorCount={floorConfigs.length || 1}
+                    />
+
+                    <UnitMapExploreOrReturnModal
+                        isOpen={isExploreOrReturnModalOpen}
+                        onReturnToDashboard={handleReturnToDashboardFromMap}
+                        onContinueExploring={handleContinueExploringMap}
+                        isDark={isDark}
+                        propertyName={activePropertyName}
                     />
                 </main>
 
@@ -5900,7 +6148,12 @@ const SidebarBlockLibrary = ({
                 </div>
             )}
             <div className={`p-4 border-b ${isDark ? 'border-zinc-800' : 'border-border'}`}>
-                <h2 className={`mb-4 text-xs font-black uppercase tracking-wider ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>Building Blocks</h2>
+                <div className="mb-3">
+                    <h2 className={`text-xs font-black uppercase tracking-wider ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>Building Blocks</h2>
+                    <p className={`mt-0.5 text-[11px] leading-relaxed ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                        Drag units or add stairs and corridors to design your floor plan.
+                    </p>
+                </div>
                 <div className="relative">
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                         <span className="material-icons-round text-zinc-400 text-lg">search</span>
@@ -5911,7 +6164,7 @@ const SidebarBlockLibrary = ({
             <div className={`flex-1 overflow-y-auto p-4 space-y-6 ${styles['scrollbarHide'] || ''}`}>
                 <div>
                     <h3 className={`mb-3 flex items-center gap-2 text-sm font-black ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
-                        <span className="material-icons-round text-primary text-sm">auto_awesome_mosaic</span>
+                        <span className="material-icons-round text-primary text-sm">dashboard_customize</span>
                         Layout Presets
                     </h3>
                     <div className="grid grid-cols-2 gap-3">

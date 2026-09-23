@@ -92,12 +92,39 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
         const res = await fetch("/api/branding", { cache: "no-store" });
         if (res.ok) {
           const data: BrandConfig = await res.json();
-          const safeData: BrandConfig = {
-            ...DEFAULT_BRANDING,
-            ...data,
-            primaryColor: data?.primaryColor || DEFAULT_BRANDING.primaryColor,
-            secondaryColor: data?.secondaryColor || DEFAULT_BRANDING.secondaryColor,
-          };
+          const localSnapshot = loadLocalSnapshot();
+
+          // Protect locally completed setup / custom colors from being clobbered if server returns unclaimed defaults
+          const isServerDefault =
+            (!data.setupCompleted &&
+             data.primaryColor === DEFAULT_BRANDING.primaryColor &&
+             data.secondaryColor === DEFAULT_BRANDING.secondaryColor);
+
+          const hasLocalCustomization =
+            Boolean(localSnapshot.setupCompleted ||
+             (localSnapshot.primaryColor && localSnapshot.primaryColor !== DEFAULT_BRANDING.primaryColor));
+
+          const safeData: BrandConfig = (isServerDefault && hasLocalCustomization)
+            ? {
+                ...DEFAULT_BRANDING,
+                ...data,
+                propertyName: localSnapshot.propertyName || data.propertyName || DEFAULT_BRANDING.propertyName,
+                propertyTagline: localSnapshot.propertyTagline || data.propertyTagline || DEFAULT_BRANDING.propertyTagline,
+                rentalArchetype: localSnapshot.rentalArchetype || data.rentalArchetype || DEFAULT_BRANDING.rentalArchetype,
+                primaryColor: localSnapshot.primaryColor || DEFAULT_BRANDING.primaryColor,
+                secondaryColor: localSnapshot.secondaryColor || DEFAULT_BRANDING.secondaryColor,
+                logoUrl: localSnapshot.logoUrl !== undefined ? localSnapshot.logoUrl : data.logoUrl,
+                bannerUrl: localSnapshot.bannerUrl !== undefined ? localSnapshot.bannerUrl : data.bannerUrl,
+                setupCompleted: localSnapshot.setupCompleted ?? false,
+                setupCompletedAt: localSnapshot.setupCompletedAt ?? null,
+              }
+            : {
+                ...DEFAULT_BRANDING,
+                ...data,
+                primaryColor: data?.primaryColor || DEFAULT_BRANDING.primaryColor,
+                secondaryColor: data?.secondaryColor || DEFAULT_BRANDING.secondaryColor,
+              };
+
           setBranding(safeData);
           applyBrandCssVariables(safeData.primaryColor, safeData.secondaryColor);
           OfflineStorage.set("brand_configuration", safeData, null, "branding");

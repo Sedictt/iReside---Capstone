@@ -5,7 +5,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { DEFAULT_BRANDING, BrandConfig } from "@/context/BrandContext";
 import { generateSecurityKey, encryptSecurityKey } from "@/lib/security/recovery-keys";
 import { logUserActivity } from "@/lib/audit/audit-logger";
-import { setupLaunchSchema } from "@/lib/validation/brand-setup";
+import { setupLaunchSchema, DISALLOWED_PRESEEDED_DATA, isPreseededPhone } from "@/lib/validation/brand-setup";
 
 interface SetupLaunchPayload {
   branding: {
@@ -118,27 +118,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 2. Account Profile Updates: Name, Phone & Business Name
+    // 2. Account Profile Updates: Name, Phone, Business Name & Brand Configuration
     const adminFullName = body.admin?.fullName?.trim();
     const adminPhone = body.admin?.phone?.trim();
-
-    const profileUpdates: Record<string, unknown> = {
-      business_name: propertyName,
-      has_changed_password: true,
-      updated_at: timestamp,
-    };
-    if (adminFullName) profileUpdates.full_name = adminFullName;
-    if (adminPhone) profileUpdates.phone = adminPhone;
-    if (newEmail) profileUpdates.email = newEmail;
-
-    const { error: profileError } = await adminClient
-      .from("profiles")
-      .update(profileUpdates as any)
-      .eq("id", userId);
-
-    if (profileError) {
-      console.warn("[Setup Launch] Failed updating profile record:", profileError.message);
-    }
 
     // 3. Brand & Setup Completion Metadata
     const brandingMeta = {
@@ -152,6 +134,104 @@ export async function POST(request: NextRequest) {
       setup_completed: true,
       setup_completed_at: timestamp,
     };
+
+    // Fetch existing profile socials to preserve any preexisting social handles
+    let existingSocials: Record<string, unknown> = {};
+    try {
+      const { data: currentProfile } = await adminClient
+        .from("profiles")
+        .select("socials")
+        .eq("id", userId)
+        .maybeSingle();
+      if (currentProfile?.socials && typeof currentProfile.socials === "object") {
+        existingSocials = currentProfile.socials as Record<string, unknown>;
+      }
+    } catch {
+      // Fallback safely if select query is unavailable in testing mocks
+    }
+    const updatedSocials = {
+      ...existingSocials,
+      branding: brandingMeta,
+    };
+
+    const effectiveEmail = newEmail || (
+      authContext.userEmail &&
+      !authContext.userEmail.includes("turnkey.local") &&
+      !DISALLOWED_PRESEEDED_DATA.emails.includes(authContext.userEmail.toLowerCase().trim())
+        ? authContext.userEmail.toLowerCase().trim()
+        : undefined
+    );
+
+    const effectivePhone = adminPhone && !isPreseededPhone(adminPhone) ? adminPhone : undefined;
+    let shouldClearPhone = Boolean(adminPhone && isPreseededPhone(adminPhone));
+
+    if (!adminPhone) {
+      try {
+        const { data: curProf } = await adminClient
+          .from("profiles")
+          .select("phone")
+          .eq("id", userId)
+          .maybeSingle();
+        if (isPreseededPhone(curProf?.phone)) {
+          shouldClearPhone = true;
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    const profileUpdates: Record<string, unknown> = {
+      business_name: propertyName,
+      socials: updatedSocials,
+      has_changed_password: true,
+      updated_at: timestamp,
+    };
+    if (adminFullName) profileUpdates.full_name = adminFullName;
+    if (effectivePhone) {
+      profileUpdates.phone = effectivePhone;
+    } else if (shouldClearPhone) {
+      profileUpdates.phone = null;
+    }
+    if (effectiveEmail) profileUpdates.email = effectiveEmail;
+
+    const { error: profileError } = await adminClient
+      .from("profiles")
+      .update(profileUpdates as any)
+      .eq("id", userId);
+
+    if (profileError) {
+      console.warn("[Setup Launch] Failed updating profile record, attempting resilient update:", profileError.message);
+      const fallbackUpdates: Record<string, unknown> = {
+        business_name: propertyName,
+        updated_at: timestamp,
+      };
+      if (adminFullName) fallbackUpdates.full_name = adminFullName;
+      if (effectivePhone) {
+        fallbackUpdates.phone = effectivePhone;
+      } else if (shouldClearPhone) {
+        fallbackUpdates.phone = null;
+      }
+      if (effectiveEmail) fallbackUpdates.email = effectiveEmail;
+      const { error: fallbackError } = await adminClient
+        .from("profiles")
+        .update(fallbackUpdates as any)
+        .eq("id", userId);
+      if (fallbackError) {
+        console.error("[Setup Launch] Resilient profile update failed:", fallbackError.message);
+      }
+    }
+
+    // Clean up pre-seeded phone from profile_private if needed
+    if (shouldClearPhone) {
+      try {
+        await (adminClient as any)
+          .from("profile_private")
+          .update({ phone: null, updated_at: timestamp })
+          .eq("profile_id", userId);
+      } catch {
+        // ignore
+      }
+    }
 
     // 4. Update existing property branding if landlord already has an active property, otherwise do NOT auto-create a phantom property
     const { data: existingProperty } = await adminClient
@@ -176,7 +256,7 @@ export async function POST(request: NextRequest) {
           map_decorations: newDecorations as any,
           updated_at: timestamp,
         })
-        .eq("id", existingProperty.id);
+        .eq("landlord_id", userId);
     }
 
     // Always sync business brand to landlord_business_profiles

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuthenticatedUser, requireRole } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { landlordProfilePatchSchema } from "@/lib/validation/landlord-settings";
-import { normalizeSocialUrl, type SocialPlatform } from "@/lib/validation/profile";
+import { DISALLOWED_PRESEEDED_DATA, isPreseededPhone } from "@/lib/validation/brand-setup";
 
 /**
  * GET /api/landlord/profile
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
         return e instanceof Response ? e : NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { userId } = authContext;
+    const { userId, userEmail } = authContext;
     const admin = createServiceRoleSupabaseClient();
 
     try {
@@ -32,11 +32,71 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "Profile not found" }, { status: 404 });
         }
 
+        // Self-heal: ensure profiles.email reflects authentic claimed login email
+        const authenticatedEmail = (userEmail || "").toLowerCase().trim();
+        const currentProfileEmail = (profile.email || "").toLowerCase().trim();
+        const isCurrentEmailDisallowed = !currentProfileEmail || 
+            DISALLOWED_PRESEEDED_DATA.emails.includes(currentProfileEmail) || 
+            currentProfileEmail.includes("turnkey.local");
+
+        if (authenticatedEmail && authenticatedEmail.includes("@")) {
+            const isAuthenticatedValid = !DISALLOWED_PRESEEDED_DATA.emails.includes(authenticatedEmail) && !authenticatedEmail.includes("turnkey.local");
+            
+            if (isCurrentEmailDisallowed || (isAuthenticatedValid && currentProfileEmail !== authenticatedEmail)) {
+                try {
+                    await admin
+                        .from("profiles")
+                        .update({
+                            email: authenticatedEmail,
+                            updated_at: new Date().toISOString(),
+                        })
+                        .eq("id", userId);
+                    profile.email = authenticatedEmail;
+                } catch (syncErr) {
+                    console.warn("[landlord/profile GET] Self-healing profile email sync note:", syncErr);
+                    profile.email = authenticatedEmail;
+                }
+            }
+        }
+
         const { data: privateProfile } = await (admin as any)
             .from("profile_private")
             .select("phone, address")
             .eq("profile_id", userId)
             .maybeSingle();
+
+        // Self-heal: ensure pre-seeded starter phone numbers are removed from database
+        const isProfilePhonePreseeded = isPreseededPhone(profile.phone);
+        const isPrivatePhonePreseeded = isPreseededPhone(privateProfile?.phone);
+
+        if (isProfilePhonePreseeded) {
+            try {
+                await admin
+                    .from("profiles")
+                    .update({ phone: null, updated_at: new Date().toISOString() })
+                    .eq("id", userId);
+                profile.phone = null;
+            } catch (err) {
+                console.warn("[landlord/profile GET] Self-healing profile phone note:", err);
+                profile.phone = null;
+            }
+        }
+
+        if (isPrivatePhonePreseeded) {
+            try {
+                await (admin as any)
+                    .from("profile_private")
+                    .update({ phone: null, updated_at: new Date().toISOString() })
+                    .eq("profile_id", userId);
+                if (privateProfile) privateProfile.phone = null;
+            } catch (err) {
+                console.warn("[landlord/profile GET] Self-healing private profile phone note:", err);
+                if (privateProfile) privateProfile.phone = null;
+            }
+        }
+
+        const rawPhone = privateProfile?.phone ?? profile.phone;
+        const resolvedPhone = isPreseededPhone(rawPhone) ? null : rawPhone;
 
         const { data: businessProfile } = await (admin as any)
             .from("landlord_business_profiles")
@@ -52,7 +112,7 @@ export async function GET(request: Request) {
             ...profile,
             emergency_contact_name: socialsRecord.emergency_contact_name || (profile as any).emergency_contact_name || null,
             emergency_contact_phone: socialsRecord.emergency_contact_phone || (profile as any).emergency_contact_phone || null,
-            phone: privateProfile?.phone ?? profile.phone,
+            phone: resolvedPhone,
             address: privateProfile?.address ?? profile.address,
             business_name: businessProfile?.business_name ?? profile.business_name,
             business_permit_url: businessProfile?.business_permit_url ?? profile.business_permit_url,
@@ -114,25 +174,10 @@ export async function PATCH(request: Request) {
             ? (currentProfile.socials as Record<string, any>)
             : {};
 
-        // Normalize social links
-        const normalizedSocialsInput: Record<string, string> = {};
-        if (body.socials && typeof body.socials === "object") {
-            const knownPlatforms: SocialPlatform[] = ["facebook", "twitter", "linkedin", "instagram", "website"];
-            for (const [platformKey, rawVal] of Object.entries(body.socials)) {
-                if (typeof rawVal === "string" && rawVal.trim()) {
-                    if (knownPlatforms.includes(platformKey as SocialPlatform)) {
-                        normalizedSocialsInput[platformKey] = normalizeSocialUrl(platformKey as SocialPlatform, rawVal);
-                    } else {
-                        normalizedSocialsInput[platformKey] = rawVal.trim();
-                    }
-                }
-            }
-        }
-
         // Merge socials and emergency contact
         const mergedSocials = {
             ...currentSocials,
-            ...normalizedSocialsInput,
+            ...(body.socials || {}),
             emergency_contact_name: body.emergency_contact_name !== undefined 
                 ? body.emergency_contact_name 
                 : (currentSocials.emergency_contact_name || ""),
@@ -152,22 +197,17 @@ export async function PATCH(request: Request) {
 
         if (body.full_name !== undefined) profileUpdates.full_name = body.full_name;
         if (body.business_name !== undefined) profileUpdates.business_name = body.business_name;
-        if (body.phone !== undefined) profileUpdates.phone = body.phone;
+        if (body.email !== undefined && body.email.trim()) {
+            profileUpdates.email = body.email.toLowerCase().trim();
+        }
+        if (body.phone !== undefined) {
+            const cleanPhone = body.phone ? body.phone.trim() : null;
+            profileUpdates.phone = cleanPhone && !isPreseededPhone(cleanPhone) ? cleanPhone : null;
+        }
         if (body.address !== undefined) profileUpdates.address = body.address;
         if (body.website !== undefined) profileUpdates.website = body.website;
         if (body.bio !== undefined) profileUpdates.bio = body.bio;
         if (body.business_permit_number !== undefined) profileUpdates.business_permit_number = body.business_permit_number;
-        if (body.email !== undefined && body.email.trim() && body.email.trim() !== currentProfile.email) {
-            const newEmail = body.email.trim();
-            profileUpdates.email = newEmail;
-            const { error: authErr } = await admin.auth.admin.updateUserById(userId, {
-                email: newEmail,
-                email_confirm: true,
-            });
-            if (authErr) {
-                console.warn("[landlord/profile PATCH] Supabase Auth email update warning:", authErr.message);
-            }
-        }
 
         // 3. Update public.profiles
         const { data: updatedProfile, error: updateError } = await (admin as any)
@@ -184,12 +224,14 @@ export async function PATCH(request: Request) {
 
         // 4. Update profile_private (phone, address)
         if (body.phone !== undefined || body.address !== undefined) {
+            const cleanPhone = body.phone !== undefined ? (body.phone && !isPreseededPhone(body.phone.trim()) ? body.phone.trim() : null) : undefined;
+            const finalPhone = cleanPhone !== undefined ? cleanPhone : (isPreseededPhone(updatedProfile.phone) ? null : updatedProfile.phone);
             const { error: privateError } = await (admin as any)
                 .from("profile_private")
                 .upsert(
                     {
                         profile_id: userId,
-                        phone: body.phone ?? updatedProfile.phone,
+                        phone: finalPhone,
                         address: body.address ?? updatedProfile.address,
                         updated_at: new Date().toISOString(),
                     },
@@ -222,24 +264,30 @@ export async function PATCH(request: Request) {
             }
         }
 
-        // 6. Update user metadata in auth.users
+        // 6. Update user metadata and email in auth.users
         try {
-            await admin.auth.admin.updateUserById(userId, {
+            const authUpdates: Record<string, any> = {
                 user_metadata: {
                     emergency_contact_name: body.emergency_contact_name,
                     emergency_contact_phone: body.emergency_contact_phone,
                     notification_preferences: body.notification_preferences,
                 }
-            });
+            };
+            if (body.email !== undefined && body.email.trim()) {
+                authUpdates.email = body.email.toLowerCase().trim();
+                authUpdates.email_confirm = true;
+            }
+            await admin.auth.admin.updateUserById(userId, authUpdates);
         } catch (metaErr) {
-            console.warn("[landlord/profile PATCH] auth metadata update note:", metaErr);
+            console.warn("[landlord/profile PATCH] auth update note:", metaErr);
         }
 
         const consolidated = {
             ...updatedProfile,
+            email: profileUpdates.email ?? updatedProfile.email,
             emergency_contact_name: mergedSocials.emergency_contact_name,
             emergency_contact_phone: mergedSocials.emergency_contact_phone,
-            phone: body.phone ?? updatedProfile.phone,
+            phone: profileUpdates.phone !== undefined ? profileUpdates.phone : (isPreseededPhone(updatedProfile.phone) ? null : updatedProfile.phone),
             address: body.address ?? updatedProfile.address,
             business_name: body.business_name ?? updatedProfile.business_name,
             business_permit_number: body.business_permit_number ?? (updatedProfile as any).business_permit_number,

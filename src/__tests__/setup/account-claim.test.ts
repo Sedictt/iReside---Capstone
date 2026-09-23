@@ -234,15 +234,36 @@ describe("POST /api/setup/account/claim (Account Claiming & Initial Credential S
         };
       }
       if (table === "profiles") {
+        let queryFields = "";
         return {
-          select: vi.fn().mockReturnThis(),
-          ilike: vi.fn().mockReturnThis(),
-          neq: vi.fn().mockReturnThis(),
-          maybeSingle: vi.fn().mockResolvedValue({
-            data: null,
-            error: null,
+          select: vi.fn().mockImplementation((fields: string) => {
+            queryFields = fields;
+            return {
+              eq: vi.fn().mockReturnThis(),
+              ilike: vi.fn().mockReturnThis(),
+              neq: vi.fn().mockReturnThis(),
+              maybeSingle: vi.fn().mockImplementation(async () => {
+                if (queryFields === "phone") {
+                  return { data: { phone: "0917-882-9912" }, error: null };
+                }
+                return { data: null, error: null };
+              }),
+            };
           }),
           update: mockProfileUpdate,
+        };
+      }
+      if (table === "profile_private") {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: { phone: "0917-882-9912" },
+            error: null,
+          }),
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null }),
+          }),
         };
       }
       return {};
@@ -279,11 +300,12 @@ describe("POST /api/setup/account/claim (Account Claiming & Initial Credential S
       })
     );
 
-    // Verify profiles table updated with is_account_claimed: true
+    // Verify profiles table updated with is_account_claimed: true and pre-seeded phone cleared to null
     expect(mockProfileUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         email: "maria.clara@realdomain.com",
         full_name: "Maria Clara",
+        phone: null,
         is_account_claimed: true,
         has_changed_password: true,
       })

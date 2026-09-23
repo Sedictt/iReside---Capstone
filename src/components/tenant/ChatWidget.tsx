@@ -23,10 +23,11 @@ import {
 } from "lucide-react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { triggerHaptic } from "@/lib/haptics";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchIrisHistory, getCachedIrisHistory, setCachedIrisHistory, type IrisHistoryMessage } from "@/lib/iris/client";
 import type { IrisCardData } from "@/lib/services/iris";
+import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
+import { isPreseededPhone, isPreseededEmail } from "@/lib/validation/brand-setup";
 
 const EMPTY_ARRAY = Object.freeze([]) as unknown as any[];
 
@@ -296,17 +297,17 @@ export function ChatWidget({
                     exit={{ opacity: 0, scale: 0.98, filter: "blur(10px)" }}
                     style={embedded ? undefined : { bottom: "max(0px, env(safe-area-inset-bottom))" }}
                     className={cn(
-                        "w-full sm:w-[380px] max-w-full sm:max-w-[380px] h-[85vh] sm:h-[580px] bg-card/95 backdrop-blur-xl rounded-t-2xl border border-b-0 border-border flex flex-col pointer-events-auto overflow-hidden",
+                        "w-[380px] h-[580px] bg-card/95 backdrop-blur-xl rounded-t-2xl border border-b-0 border-border flex flex-col pointer-events-auto overflow-hidden",
                         "shadow-[0_-18px_40px_rgba(0,0,0,0.28)]",
-                        embedded ? "" : "fixed bottom-0 inset-x-0 sm:inset-x-auto sm:left-6 z-[60]"
+                        embedded ? "" : "fixed bottom-0 left-6 z-[60]"
                     )}
                 >
                     {/* Header */}
-                    <header className="bg-primary/95 p-4 sm:p-5 text-white flex items-center justify-between backdrop-blur-md">
+                    <header className="bg-primary/95 p-5 text-white flex items-center justify-between backdrop-blur-md">
                         <div className="flex items-center gap-3">
                             <div className="relative group">
                                 <div className="absolute -inset-1 bg-white/30 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <div className="relative size-10 sm:size-11 rounded-full bg-white/20 p-0.5">
+                                <div className="relative size-11 rounded-full bg-white/20 p-0.5">
                                     <div className="h-full w-full rounded-full bg-white overflow-hidden">
                                         <Image
                                             src="/logos/favicon.png"
@@ -319,29 +320,24 @@ export function ChatWidget({
                                 </div>
                             </div>
                             <div>
-                                <h3 className="font-black text-sm sm:text-base tracking-tight">iRis Assistant</h3>
+                                <h3 className="font-black text-base tracking-tight">iRis Assistant</h3>
                                 <div className="flex items-center gap-1.5">
                                     <span className="size-1.5 rounded-full bg-white/60 animate-pulse"></span>
-                                    <p className="text-[9px] sm:text-[10px] text-white/80 uppercase tracking-widest font-black">Ask iRis</p>
+                                    <p className="text-[10px] text-white/80 uppercase tracking-widest font-black">Ask iRis</p>
                                 </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-1">
                             <Link
                                 href="/tenant/messages"
-                                onClick={() => triggerHaptic('light')}
                                 className="p-2 hover:bg-white/10 rounded-xl transition-all hover:scale-110"
                                 title="Open full chat"
                             >
                                 <Maximize2 className="size-4" />
                             </Link>
                             <button
-                                onClick={() => {
-                                    triggerHaptic('light');
-                                    onClose();
-                                }}
+                                onClick={onClose}
                                 className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90"
-                                aria-label="Close chat"
                             >
                                 <X className="size-5" />
                             </button>
@@ -408,7 +404,7 @@ export function ChatWidget({
                                                     ? "bg-primary text-primary-foreground rounded-br-none shadow-primary/20"
                                                     : "bg-card text-foreground rounded-bl-none border border-border"
                                             )}>
-                                                <p>{msg.content}</p>
+                                                <ChatMessageMarkdown content={msg.content} isUser={msg.role === "user"} />
                                                 <span className={cn(
                                                     "text-[9px] mt-1 block opacity-50 font-medium",
                                                     msg.role === "user" ? "text-right" : ""
@@ -469,7 +465,7 @@ export function ChatWidget({
                                                         </div>
                                                     </div>
                                                     <div className="divide-y divide-border text-[11px]">
-                                                        {msg.card.phone && (
+                                                        {msg.card.phone && !isPreseededPhone(msg.card.phone) && (
                                                             <div className="p-2.5 flex items-center justify-between hover:bg-muted/40 transition-colors">
                                                                 <div className="flex items-center gap-2 min-w-0 pr-2">
                                                                     <Phone className="size-3 text-muted-foreground shrink-0" />
@@ -486,7 +482,7 @@ export function ChatWidget({
                                                                 </button>
                                                             </div>
                                                         )}
-                                                        {msg.card.email && (
+                                                        {msg.card.email && !isPreseededEmail(msg.card.email) && (
                                                             <div className="p-2.5 flex items-center justify-between hover:bg-muted/40 transition-colors">
                                                                 <div className="flex items-center gap-2 min-w-0 pr-2">
                                                                     <Mail className="size-3 text-muted-foreground shrink-0" />
@@ -501,6 +497,11 @@ export function ChatWidget({
                                                                 >
                                                                     {copiedKey === `w-email-${msg.id}` ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
                                                                 </button>
+                                                            </div>
+                                                        )}
+                                                        {(!msg.card.phone || isPreseededPhone(msg.card.phone)) && (!msg.card.email || isPreseededEmail(msg.card.email)) && (
+                                                            <div className="p-2.5 text-muted-foreground text-[10px] italic">
+                                                                Direct contact details are not published yet. Please send a message via the Inquiries tab.
                                                             </div>
                                                         )}
                                                     </div>

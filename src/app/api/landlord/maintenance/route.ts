@@ -43,11 +43,7 @@ export async function PATCH(request: Request) {
     const { userId, supabase } = authContext;
 
     try {
-        const rawBody = (await request.json()) as any;
-        const patchData: UpdateLandlordMaintenanceInput = {
-            ...rawBody,
-            requestId: rawBody.requestId || rawBody.id,
-        };
+        const patchData = (await request.json()) as UpdateLandlordMaintenanceInput;
         const maintenanceService = new MaintenanceService(supabase);
         const updatedRequest = await maintenanceService.updateLandlordMaintenance(userId, patchData);
 

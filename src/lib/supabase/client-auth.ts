@@ -74,12 +74,12 @@ export async function signOut(options: SignOutOptions = {}) {
     // Clear any app-specific localStorage/sessionStorage data
     try {
         Object.keys(localStorage).forEach((key) => {
-            if (key.startsWith("supabase.") || key.includes("auth") || key.includes("session") || key.startsWith("ireside_")) {
+            if (key.startsWith("supabase.") || key.includes("auth") || key.includes("session")) {
                 localStorage.removeItem(key);
             }
         });
         Object.keys(sessionStorage).forEach((key) => {
-            if (key.startsWith("supabase.") || key.includes("auth") || key.includes("session") || key.startsWith("ireside_")) {
+            if (key.startsWith("supabase.") || key.includes("auth") || key.includes("session")) {
                 sessionStorage.removeItem(key);
             }
         });

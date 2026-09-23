@@ -78,6 +78,14 @@ export const DISALLOWED_PRESEEDED_DATA = {
     "0917-000-0000",
     "09170000000",
     "09178829912",
+    "+639178829912",
+    "+639170000000",
+    "09000000000",
+    "0900-000-0000",
+    "+639000000000",
+    "+63 900 000 0000",
+    "000-000-0000",
+    "0000000000",
   ],
 };
 
@@ -244,14 +252,45 @@ export function validateAdminEmail(value: string): { isValid: boolean; error?: s
 }
 
 /**
+ * Checks whether a phone number matches any disallowed starter/pre-seeded dummy phone.
+ */
+export function isPreseededPhone(value?: string | null): boolean {
+  if (!value) return false;
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  const digits = trimmed.replace(/\D/g, "");
+  if (!digits) return false;
+  // All zeroes or identical repeating dummy digits (e.g. 000-000-0000, 09000000000)
+  if (/^0+$/.test(digits) || /^(\d)\1{6,}$/.test(digits)) return true;
+  const localDigits = digits.startsWith("63") ? "0" + digits.slice(2) : digits;
+  return DISALLOWED_PRESEEDED_DATA.phones.some((p) => {
+    const pDigits = p.replace(/\D/g, "");
+    const pLocal = pDigits.startsWith("63") ? "0" + pDigits.slice(2) : pDigits;
+    return pLocal === localDigits || pDigits === digits;
+  });
+}
+
+/**
+ * Checks whether an email matches any known pre-seeded starter account placeholder.
+ */
+export function isPreseededEmail(email?: string | null): boolean {
+  if (!email) return false;
+  const lower = email.toLowerCase().trim();
+  return (
+    lower.includes("turnkey.local") ||
+    lower.startsWith("practice.landlord") ||
+    DISALLOWED_PRESEEDED_DATA.emails.some((e) => e.toLowerCase() === lower)
+  );
+}
+
+/**
  * Validates the Landlord Phone Number.
  * Required for setup, Philippine or international format, must not use pre-seeded dummy phone.
  */
 export function validateAdminPhone(value: string): { isValid: boolean; error?: string } {
   const base = validatePhoneNumber(value, true);
   if (!base.isValid) return base;
-  const cleanDigits = value.replace(/\D/g, "");
-  if (DISALLOWED_PRESEEDED_DATA.phones.some((p) => p.replace(/\D/g, "") === cleanDigits)) {
+  if (isPreseededPhone(value)) {
     return { isValid: false, error: "Please enter your actual phone number instead of the sample placeholder." };
   }
   return { isValid: true };

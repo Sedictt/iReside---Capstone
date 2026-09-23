@@ -9,14 +9,44 @@ export const TIME_FORMAT_CHANGE_EVENT = "ireside-time-format-change";
 
 export const DEFAULT_TIME_FORMAT: TimeFormat = "12h";
 
-function getSnapshot(): TimeFormat {
+// Module-level in-memory state so components react immediately and survive storage blocks
+let currentFormat: TimeFormat = DEFAULT_TIME_FORMAT;
+let isInitialized = false;
+
+const listeners = new Set<() => void>();
+
+function notifyListeners() {
+  listeners.forEach((listener) => {
+    try {
+      listener();
+    } catch (e) {
+      console.error("[useTimeFormat] listener error:", e);
+    }
+  });
+}
+
+function readStoredFormat(): TimeFormat {
   if (typeof window === "undefined") return DEFAULT_TIME_FORMAT;
   try {
     const stored = localStorage.getItem(TIME_FORMAT_STORAGE_KEY);
     return stored === "24h" ? "24h" : "12h";
   } catch {
-    return DEFAULT_TIME_FORMAT;
+    return currentFormat;
   }
+}
+
+function getSnapshot(): TimeFormat {
+  if (typeof window === "undefined") return DEFAULT_TIME_FORMAT;
+  try {
+    const stored = localStorage.getItem(TIME_FORMAT_STORAGE_KEY);
+    if (stored === "24h" || stored === "12h") {
+      currentFormat = stored;
+    } else if (!stored && isInitialized) {
+      currentFormat = DEFAULT_TIME_FORMAT;
+    }
+  } catch {}
+  isInitialized = true;
+  return currentFormat;
 }
 
 function getServerSnapshot(): TimeFormat {
@@ -24,13 +54,53 @@ function getServerSnapshot(): TimeFormat {
 }
 
 function subscribe(callback: () => void): () => void {
-  if (typeof window === "undefined") return () => {};
-  window.addEventListener(TIME_FORMAT_CHANGE_EVENT, callback);
-  window.addEventListener("storage", callback);
-  return () => {
-    window.removeEventListener(TIME_FORMAT_CHANGE_EVENT, callback);
-    window.removeEventListener("storage", callback);
+  listeners.add(callback);
+
+  const handleStorage = (e: StorageEvent) => {
+    if (e.key === TIME_FORMAT_STORAGE_KEY) {
+      const next: TimeFormat = e.newValue === "24h" ? "24h" : "12h";
+      if (currentFormat !== next) {
+        currentFormat = next;
+        notifyListeners();
+      }
+    }
   };
+
+  const handleCustomEvent = () => {
+    const next = readStoredFormat();
+    if (currentFormat !== next) {
+      currentFormat = next;
+      notifyListeners();
+    }
+  };
+
+  if (typeof window !== "undefined") {
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener(TIME_FORMAT_CHANGE_EVENT, handleCustomEvent);
+  }
+
+  return () => {
+    listeners.delete(callback);
+    if (typeof window !== "undefined") {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener(TIME_FORMAT_CHANGE_EVENT, handleCustomEvent);
+    }
+  };
+}
+
+export function setTimeFormatDirect(format: TimeFormat) {
+  currentFormat = format;
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(TIME_FORMAT_STORAGE_KEY, format);
+    } catch (e) {
+      console.warn("[useTimeFormat] Failed to save time format to localStorage:", e);
+    }
+    try {
+      window.dispatchEvent(new Event(TIME_FORMAT_CHANGE_EVENT));
+    } catch {}
+  }
+  notifyListeners();
 }
 
 export function useTimeFormat() {
@@ -38,19 +108,13 @@ export function useTimeFormat() {
   const is24Hour = timeFormat === "24h";
 
   const setTimeFormat = useCallback((format: TimeFormat) => {
-    if (typeof window === "undefined") return;
-    try {
-      localStorage.setItem(TIME_FORMAT_STORAGE_KEY, format);
-      window.dispatchEvent(new Event(TIME_FORMAT_CHANGE_EVENT));
-    } catch (e) {
-      console.warn("[useTimeFormat] Failed to save time format:", e);
-    }
+    setTimeFormatDirect(format);
   }, []);
 
   const toggleTimeFormat = useCallback(() => {
-    const next: TimeFormat = getSnapshot() === "12h" ? "24h" : "12h";
-    setTimeFormat(next);
-  }, [setTimeFormat]);
+    const next: TimeFormat = currentFormat === "12h" ? "24h" : "12h";
+    setTimeFormatDirect(next);
+  }, []);
 
   /**
    * Formats a given date into separated time parts respecting 12h/24h preference.

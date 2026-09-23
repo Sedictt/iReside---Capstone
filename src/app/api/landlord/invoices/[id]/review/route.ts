@@ -95,19 +95,10 @@ export async function POST(request: Request, context: RouteContext) {
     const { userId, supabase } = authContext;
 
     try {
-        let parsed: z.infer<typeof reviewSchema>;
-        let refundProofFile: File | null = null;
-
-        const contentType = request.headers.get("content-type") || "";
-        if (contentType.includes("multipart/form-data") || contentType.includes("application/x-www-form-urlencoded")) {
-            const formData = await request.formData();
-            const rawJson = formData.get("json") as string;
-            parsed = reviewSchema.parse(JSON.parse(rawJson));
-            refundProofFile = formData.get("refundProofFile") as File | null;
-        } else {
-            const jsonBody = await request.json();
-            parsed = reviewSchema.parse(jsonBody);
-        }
+        const formData = await request.formData();
+        const rawJson = formData.get("json") as string;
+        const parsed = reviewSchema.parse(JSON.parse(rawJson));
+        const refundProofFile = formData.get("refundProofFile") as File | null;
 
         const idempotencyKey = request.headers.get("idempotency-key") ?? parsed.idempotencyKey ?? null;
 

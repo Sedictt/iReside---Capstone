@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { useEffect, useState, useMemo, useReducer } from "react";
+import { useEffect, useState, useMemo, useReducer, useRef } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { DashboardBanner } from "@/components/landlord/dashboard/DashboardBanner";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -31,6 +31,7 @@ import { CommandCenter } from "@/components/landlord/dashboard/CommandCenter";
 import { VacantUnitsModal } from "@/components/landlord/dashboard/VacantUnitsModal";
 import { MobileMessagesSheet } from "@/components/landlord/dashboard/MobileMessagesSheet";
 import { LobbyFlyerModal } from "@/components/landlord/flyer/LobbyFlyerModal";
+import { TenantSetupPromptModal } from "@/components/landlord/dashboard/TenantSetupPromptModal";
 
 type PaymentCategory = "Overdue" | "Near Due" | "Paid";
 
@@ -108,8 +109,18 @@ const PAYMENT_CATEGORIES: Array<{ key: PaymentCategory; label: string; hint: str
 ];
 
 export default function LandlordDashboard() {
-    const { selectedPropertyId } = useProperty();
+    const { selectedPropertyId, properties } = useProperty();
+    const currentProperty = properties.find(p => p.id === selectedPropertyId) || properties[0];
     const [mounted, setMounted] = useState(false);
+
+    const activePropertyId = selectedPropertyId && selectedPropertyId !== "all"
+        ? selectedPropertyId
+        : (properties[0]?.id || "default");
+    const SCOPED_AWAITING_TENANT_SETUP_KEY = `ireside.onboarding_awaiting_tenant_setup.${activePropertyId}`;
+    const SCOPED_TENANT_DELAYED_KEY = `ireside.tenant_setup_delayed.${activePropertyId}`;
+    const [isTenantSetupPromptOpen, setIsTenantSetupPromptOpen] = useState(false);
+    const tenantSetupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
     const [openPaymentModal, setOpenPaymentModal] = useState<"Overdue" | "Near Due" | "Paid" | null>(null);
     const [paymentsState, dispatchPayments] = useReducer(paymentsReducer, {
         paymentsByCategory: { Overdue: [], "Near Due": [], Paid: [] },
@@ -192,6 +203,84 @@ export default function LandlordDashboard() {
             }
         }
     }, []);
+
+    useEffect(() => {
+        if (!mounted) return;
+        if (typeof window === "undefined") return;
+        try {
+            const awaiting = window.localStorage.getItem(SCOPED_AWAITING_TENANT_SETUP_KEY);
+            const delayed = window.localStorage.getItem(SCOPED_TENANT_DELAYED_KEY);
+            if (awaiting === "true" && delayed !== "true") {
+                if (tenantSetupTimeoutRef.current) {
+                    clearTimeout(tenantSetupTimeoutRef.current);
+                }
+                tenantSetupTimeoutRef.current = setTimeout(() => {
+                    setIsTenantSetupPromptOpen(true);
+                }, 3000);
+            }
+        } catch {}
+        return () => {
+            if (tenantSetupTimeoutRef.current) {
+                clearTimeout(tenantSetupTimeoutRef.current);
+                tenantSetupTimeoutRef.current = null;
+            }
+        };
+    }, [mounted, SCOPED_AWAITING_TENANT_SETUP_KEY, SCOPED_TENANT_DELAYED_KEY]);
+
+    const handleCloseTenantSetupPrompt = () => {
+        if (tenantSetupTimeoutRef.current) {
+            clearTimeout(tenantSetupTimeoutRef.current);
+            tenantSetupTimeoutRef.current = null;
+        }
+        setIsTenantSetupPromptOpen(false);
+    };
+
+    const handleSelectReusableLink = () => {
+        if (tenantSetupTimeoutRef.current) {
+            clearTimeout(tenantSetupTimeoutRef.current);
+            tenantSetupTimeoutRef.current = null;
+        }
+        setIsTenantSetupPromptOpen(false);
+        if (typeof window !== "undefined") {
+            try {
+                window.localStorage.removeItem(SCOPED_AWAITING_TENANT_SETUP_KEY);
+                window.localStorage.removeItem(SCOPED_TENANT_DELAYED_KEY);
+                window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
+            } catch {}
+        }
+        setIsInviteModalOpen(true);
+    };
+
+    const handleSelectAddManually = () => {
+        if (tenantSetupTimeoutRef.current) {
+            clearTimeout(tenantSetupTimeoutRef.current);
+            tenantSetupTimeoutRef.current = null;
+        }
+        setIsTenantSetupPromptOpen(false);
+        if (typeof window !== "undefined") {
+            try {
+                window.localStorage.removeItem(SCOPED_AWAITING_TENANT_SETUP_KEY);
+                window.localStorage.removeItem(SCOPED_TENANT_DELAYED_KEY);
+                window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
+            } catch {}
+        }
+        setIsWalkInModalOpen(true);
+    };
+
+    const handleMaybeLaterTenantSetup = () => {
+        if (tenantSetupTimeoutRef.current) {
+            clearTimeout(tenantSetupTimeoutRef.current);
+            tenantSetupTimeoutRef.current = null;
+        }
+        setIsTenantSetupPromptOpen(false);
+        if (typeof window !== "undefined") {
+            try {
+                window.localStorage.removeItem(SCOPED_AWAITING_TENANT_SETUP_KEY);
+                window.localStorage.setItem(SCOPED_TENANT_DELAYED_KEY, "true");
+                window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
+            } catch {}
+        }
+    };
 
     // Operational Power Tool Keyboard Accelerators
     useEffect(() => {
@@ -797,6 +886,15 @@ export default function LandlordDashboard() {
                     </div>
                 )}
             </AnimatePresence>
+
+            <TenantSetupPromptModal
+                isOpen={isTenantSetupPromptOpen}
+                onClose={handleCloseTenantSetupPrompt}
+                onSelectReusableLink={handleSelectReusableLink}
+                onSelectAddManually={handleSelectAddManually}
+                onMaybeLater={handleMaybeLaterTenantSetup}
+                propertyName={currentProperty?.name}
+            />
         </>
     );
 }

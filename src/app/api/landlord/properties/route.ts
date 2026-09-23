@@ -38,6 +38,15 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Property address is required." }, { status: 400 });
         }
 
+        const admin = createServiceRoleSupabaseClient();
+        const { data: landlordProf } = await admin
+            .from("profiles")
+            .select("socials")
+            .eq("id", userId)
+            .maybeSingle();
+
+        const landlordBranding = (landlordProf?.socials as Record<string, unknown>)?.branding;
+
         const insertPayload: Record<string, any> = {
             name: name.trim(),
             address: address.trim(),
@@ -51,6 +60,7 @@ export async function POST(request: Request) {
             landlord_id: userId,
             city: city || "Valenzuela",
             images: Array.isArray(images) ? images : [],
+            ...(landlordBranding ? { map_decorations: { branding: landlordBranding } } : {}),
         };
 
         if (contract_mode === "generate") {
@@ -96,8 +106,6 @@ export async function POST(request: Request) {
             equal_per_head: { mode: "mixed", split: "equal_per_head" },
         };
         const mapping = policyMapping[utility_billing] || policyMapping.fixed_charge;
-
-        const admin = createServiceRoleSupabaseClient();
         await (admin as any).from("property_environment_policies").upsert(
             {
                 property_id: propertyId,

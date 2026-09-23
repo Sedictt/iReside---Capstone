@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { m as motion, AnimatePresence } from "framer-motion";
 import {
     X,
@@ -79,8 +79,6 @@ export function QuickActionSummaryModal({
     onInsertMessage,
 }: QuickActionSummaryModalProps) {
     const router = useRouter();
-    const pathname = usePathname();
-    const isMobile = pathname?.startsWith("/mobile");
     const [loading, setLoading] = useState(false);
     const [leaseData, setLeaseData] = useState<LeaseSummaryData | null>(null);
     const [paymentData, setPaymentData] = useState<PaymentSummaryData | null>(null);
@@ -251,22 +249,6 @@ export function QuickActionSummaryModal({
 
     const handleNavigate = (path: string) => {
         onClose();
-        if (isMobile) {
-            if (path.startsWith("/mobile")) {
-                router.push(path);
-                return;
-            }
-            if (path.includes("/payments") || path.includes("/invoices")) {
-                router.push(currentUserRole === "landlord" ? "/mobile/landlord/payments" : "/mobile/tenant/pay");
-                return;
-            }
-            if (path.includes("/maintenance") || path.includes("/tickets")) {
-                router.push(currentUserRole === "landlord" ? "/mobile/landlord/tickets" : "/mobile/tenant/maintenance");
-                return;
-            }
-            // Do not navigate to desktop paths on mobile
-            return;
-        }
         router.push(path);
     };
 
@@ -280,10 +262,6 @@ export function QuickActionSummaryModal({
     const handleSendSystemReminder = async () => {
         if (!contact) return;
         if (!paymentData?.invoiceId) {
-            if (isMobile) {
-                setReminderError("No pending invoice found for this resident.");
-                return;
-            }
             handleNavigate(`/landlord/invoices?search=${encodeURIComponent(contact.name || "")}`);
             return;
         }
@@ -313,7 +291,7 @@ export function QuickActionSummaryModal({
     return (
         <AnimatePresence>
             {canRender && contact && (
-                <div key="quick-action-modal-wrapper" className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+                <div key="quick-action-modal-wrapper" className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     {/* Backdrop */}
                     <motion.div
                         key="quick-action-modal-backdrop"
@@ -407,28 +385,26 @@ export function QuickActionSummaryModal({
                                             </div>
                                         </div>
 
-                                        {!isMobile && (
-                                            <div className="pt-2 flex flex-col gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        if (currentUserRole === "landlord") {
-                                                            if (contact.participantUserId) {
-                                                                handleNavigate(`/landlord/tenants?view=profile&tenantId=${contact.participantUserId}`);
-                                                            } else {
-                                                                handleNavigate(`/landlord/tenants?search=${encodeURIComponent(contact.name)}`);
-                                                            }
+                                        <div className="pt-2 flex flex-col gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (currentUserRole === "landlord") {
+                                                        if (contact.participantUserId) {
+                                                            handleNavigate(`/landlord/tenants?view=profile&tenantId=${contact.participantUserId}`);
                                                         } else {
-                                                            handleNavigate("/tenant/lease");
+                                                            handleNavigate(`/landlord/tenants?search=${encodeURIComponent(contact.name)}`);
                                                         }
-                                                    }}
-                                                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
-                                                >
-                                                    <span>{currentUserRole === "landlord" ? "View Full Profile & Lease" : "View Full Lease Agreement"}</span>
-                                                    <ArrowUpRight className="size-4" />
-                                                </button>
-                                            </div>
-                                        )}
+                                                    } else {
+                                                        handleNavigate("/tenant/lease");
+                                                    }
+                                                }}
+                                                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
+                                            >
+                                                <span>{currentUserRole === "landlord" ? "View Full Profile & Lease" : "View Full Lease Agreement"}</span>
+                                                <ArrowUpRight className="size-4" />
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
 
@@ -537,25 +513,23 @@ export function QuickActionSummaryModal({
                                                         </div>
                                                     ) : null}
 
-                                                    {!isMobile && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                handleNavigate(`/landlord/invoices?search=${encodeURIComponent(contact.name)}`);
-                                                            }}
-                                                            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-inset-card text-high hover:text-primary text-xs font-black uppercase tracking-widest transition-all"
-                                                        >
-                                                            <span>View Invoices & Billing Details</span>
-                                                            <ArrowUpRight className="size-4" />
-                                                        </button>
-                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            handleNavigate(`/landlord/invoices?search=${encodeURIComponent(contact.name)}`);
+                                                        }}
+                                                        className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-inset-card text-high hover:text-primary text-xs font-black uppercase tracking-widest transition-all"
+                                                    >
+                                                        <span>View Invoices & Billing Details</span>
+                                                        <ArrowUpRight className="size-4" />
+                                                    </button>
                                                 </>
                                             ) : (
                                                 <>
                                                     {paymentData?.pendingAmount && paymentData.pendingAmount > 0 ? (
                                                         <button
                                                             type="button"
-                                                            onClick={() => handleNavigate(isMobile ? "/mobile/tenant/pay" : (paymentData.invoiceId ? `/tenant/payments/${paymentData.invoiceId}/checkout` : "/tenant/payments?action=pay"))}
+                                                            onClick={() => handleNavigate(paymentData.invoiceId ? `/tenant/payments/${paymentData.invoiceId}/checkout` : "/tenant/payments?action=pay")}
                                                             className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
                                                         >
                                                             <span>Pay Outstanding Balance (₱{paymentData.pendingAmount.toLocaleString()})</span>
@@ -563,16 +537,14 @@ export function QuickActionSummaryModal({
                                                         </button>
                                                     ) : null}
 
-                                                    {!isMobile && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleNavigate("/tenant/payments")}
-                                                            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-inset-card text-high hover:text-primary text-xs font-black uppercase tracking-widest transition-all"
-                                                        >
-                                                            <span>View Payment History & Receipts</span>
-                                                            <ArrowUpRight className="size-4" />
-                                                        </button>
-                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleNavigate("/tenant/payments")}
+                                                        className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-inset-card text-high hover:text-primary text-xs font-black uppercase tracking-widest transition-all"
+                                                    >
+                                                        <span>View Payment History & Receipts</span>
+                                                        <ArrowUpRight className="size-4" />
+                                                    </button>
                                                 </>
                                             )}
                                         </div>
@@ -605,10 +577,6 @@ export function QuickActionSummaryModal({
                                             <button
                                                 type="button"
                                                 onClick={() => {
-                                                    if (isMobile) {
-                                                        handleNavigate(currentUserRole === "landlord" ? "/mobile/landlord/tickets" : "/mobile/tenant/maintenance");
-                                                        return;
-                                                    }
                                                     if (currentUserRole === "landlord") {
                                                         handleNavigate(`/landlord/maintenance?search=${encodeURIComponent(contact.name)}`);
                                                     } else {
@@ -617,7 +585,7 @@ export function QuickActionSummaryModal({
                                                 }}
                                                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
                                             >
-                                                <span>{currentUserRole === "landlord" ? (isMobile ? "View Maintenance Tickets" : "Open in Maintenance Dashboard") : (isMobile ? "Open Maintenance Requests" : "Create New Repair Request")}</span>
+                                                <span>{currentUserRole === "landlord" ? "Open in Maintenance Dashboard" : "Create New Repair Request"}</span>
                                                 <ArrowUpRight className="size-4" />
                                             </button>
                                         </div>
@@ -692,18 +660,16 @@ export function QuickActionSummaryModal({
                                             </div>
                                         </div>
 
-                                        {!isMobile && (
-                                            <div className="pt-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleNavigate(`/landlord/applications?search=${encodeURIComponent(contact.name)}`)}
-                                                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
-                                                >
-                                                    <span>Open Application for Review</span>
-                                                    <ArrowUpRight className="size-4" />
-                                                </button>
-                                            </div>
-                                        )}
+                                        <div className="pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleNavigate(`/landlord/applications?search=${encodeURIComponent(contact.name)}`)}
+                                                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
+                                            >
+                                                <span>Open Application for Review</span>
+                                                <ArrowUpRight className="size-4" />
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
 
@@ -789,18 +755,16 @@ export function QuickActionSummaryModal({
                                             </p>
                                         </div>
 
-                                        {!isMobile && (
-                                            <div className="pt-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleNavigate("/landlord/properties")}
-                                                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
-                                                >
-                                                    <span>Browse Property Listings</span>
-                                                    <ArrowUpRight className="size-4" />
-                                                </button>
-                                            </div>
-                                        )}
+                                        <div className="pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleNavigate("/landlord/properties")}
+                                                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
+                                            >
+                                                <span>Browse Property Listings</span>
+                                                <ArrowUpRight className="size-4" />
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
 
@@ -826,24 +790,22 @@ export function QuickActionSummaryModal({
                                             </div>
                                         </div>
 
-                                        {!isMobile && (
-                                            <div className="pt-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        if (contact.participantUserId) {
-                                                            handleNavigate(`/visitor/${contact.participantUserId}`);
-                                                        } else {
-                                                            handleNavigate(`/landlord/tenants?search=${encodeURIComponent(contact.name)}`);
-                                                        }
-                                                    }}
-                                                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
-                                                >
-                                                    <span>Open Full Profile</span>
-                                                    <ArrowUpRight className="size-4" />
-                                                </button>
-                                            </div>
-                                        )}
+                                        <div className="pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (contact.participantUserId) {
+                                                        handleNavigate(`/visitor/${contact.participantUserId}`);
+                                                    } else {
+                                                        handleNavigate(`/landlord/tenants?search=${encodeURIComponent(contact.name)}`);
+                                                    }
+                                                }}
+                                                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl neumorphic-primary text-white text-xs font-black uppercase tracking-widest shadow-md transition-all active:scale-95"
+                                            >
+                                                <span>Open Full Profile</span>
+                                                <ArrowUpRight className="size-4" />
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </>

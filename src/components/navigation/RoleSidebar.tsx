@@ -12,7 +12,8 @@ import {
     PanelLeftClose, 
     PanelLeftOpen,
     Menu,
-    Lock
+    Lock,
+    AlertTriangle
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,8 @@ export interface SidebarNavItem {
     badge?: number;
     urgent?: boolean;
     tourId?: string;
+    warning?: boolean;
+    warningTooltip?: string;
 }
 
 export interface SidebarNavSection {
@@ -60,7 +63,15 @@ interface RoleSidebarProps {
     lockStage?: SidebarLockStage;
 }
 
-function LogoLink({ children }: { children: React.ReactNode }) {
+function LogoLink({ 
+    children, 
+    isLocked = false, 
+    lockToastText 
+}: { 
+    children: React.ReactNode; 
+    isLocked?: boolean; 
+    lockToastText?: string;
+}) {
     const { push } = useRouter();
     const { user, loading } = useAuth();
 
@@ -79,11 +90,24 @@ function LogoLink({ children }: { children: React.ReactNode }) {
 
     const handleLogoNavigation = (e: React.MouseEvent) => {
         e.preventDefault();
+        if (isLocked) {
+            if (lockToastText) {
+                toast.warning(lockToastText);
+            }
+            return;
+        }
         push(getRedirectPath());
     };
 
     return (
-        <a href={getRedirectPath()} onClick={handleLogoNavigation} className="cursor-pointer flex items-center min-w-0 flex-1 overflow-hidden">
+        <a 
+            href={isLocked ? undefined : getRedirectPath()} 
+            onClick={handleLogoNavigation} 
+            className={cn(
+                "flex items-center min-w-0 flex-1 overflow-hidden",
+                isLocked ? "cursor-not-allowed opacity-75" : "cursor-pointer"
+            )}
+        >
             {children}
         </a>
     );
@@ -140,11 +164,7 @@ export function RoleSidebar({
             lockTooltipText = "Register your first property to unlock this section.";
             lockToastText = "Property setup required. Please complete your property setup first to unlock portal operations.";
         } else if (stage === "no_unit_map") {
-            isItemLocked = Boolean(
-                item.href !== "/landlord/unit-map" && 
-                item.href !== "/landlord/properties" && 
-                item.href !== "/landlord/properties/new"
-            );
+            isItemLocked = Boolean(item.href !== "/landlord/unit-map");
             resolvedHref = item.href;
             lockBadgeText = "Unit Map Required";
             lockTooltipText = "Configure your unit map to unlock this section.";
@@ -155,7 +175,12 @@ export function RoleSidebar({
             <div className="flex flex-col gap-1 max-w-[220px] text-left py-0.5">
                 <div className="flex items-center gap-1.5">
                     <span className="font-black text-xs text-foreground tracking-tight">{item.label}</span>
-                    {isItemLocked ? (
+                    {item.warning ? (
+                        <span className="flex items-center gap-1 text-[9px] font-bold text-amber-500 uppercase tracking-wider">
+                            <AlertTriangle className="size-2.5" />
+                            Action Needed
+                        </span>
+                    ) : isItemLocked ? (
                         <span className="flex items-center gap-1 text-[9px] font-bold text-amber-500 uppercase tracking-wider">
                             <Lock className="size-2.5" />
                             {lockBadgeText}
@@ -164,7 +189,11 @@ export function RoleSidebar({
                         <span className="size-1.5 rounded-full bg-red-500 animate-ping" />
                     ) : null}
                 </div>
-                {isItemLocked ? (
+                {item.warning ? (
+                    <span className="text-[11px] font-medium text-amber-500/90 leading-snug">
+                        {item.warningTooltip || "Begin setting up your tenants."}
+                    </span>
+                ) : isItemLocked ? (
                     <span className="text-[11px] font-medium text-amber-500/90 leading-snug">
                         {lockTooltipText}
                     </span>
@@ -179,7 +208,7 @@ export function RoleSidebar({
         return (
             <Tooltip
                 key={item.href}
-                content={isCollapsed || isItemLocked ? tooltipContent : undefined}
+                content={isCollapsed || isItemLocked || Boolean(item.warning) ? tooltipContent : undefined}
                 side="right"
                 align="center"
                 sideOffset={18}
@@ -242,14 +271,27 @@ export function RoleSidebar({
                         </span>
                     )}
 
-                    {!isItemLocked && !isCollapsed && item.badge ? (
+                    {!isItemLocked && item.warning && (
+                        <span
+                            data-testid={`warning-icon-${item.label.toLowerCase()}`}
+                            className={cn(
+                                "flex items-center justify-center text-amber-500 shrink-0",
+                                isCollapsed ? "absolute right-2 top-2" : "ml-auto"
+                            )}
+                            title={item.warningTooltip || "Action needed: Begin setting up your tenants"}
+                        >
+                            <AlertTriangle className="size-4 text-amber-500 animate-pulse" />
+                        </span>
+                    )}
+
+                    {!isItemLocked && !isCollapsed && item.badge && !item.warning ? (
                         <span className={cn(
                             "flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-foreground shadow-[inset_2px_2px_4px_rgba(255,255,255,0.4),inset_-2px_-2px_4px_rgba(0,0,0,0.2)]",
                             item.urgent && "animate-pulse shadow-lg shadow-red-500/40"
                         )}>
                             {item.badge > 99 ? '99+' : item.badge}
                         </span>
-                    ) : !isItemLocked && isCollapsed && item.badge ? (
+                    ) : !isItemLocked && isCollapsed && item.badge && !item.warning ? (
                         <span className={cn(
                             "absolute right-2 top-2 size-2.5 rounded-full bg-red-500 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.4),0_0_6px_rgba(239,68,68,0.5)]",
                             item.urgent && "animate-ping"
@@ -273,7 +315,14 @@ export function RoleSidebar({
                 <div className={cn("flex h-20 items-center justify-between px-4 transition-all duration-300 mb-2 gap-2", isCollapsed ? "justify-center" : "justify-between")}>
                     {!isCollapsed && (
                         <div className="flex items-center min-w-0 flex-1 overflow-hidden pr-1">
-                            <LogoLink>
+                            <LogoLink 
+                                isLocked={Boolean(isLocked || lockStage)} 
+                                lockToastText={
+                                    lockStage === "no_unit_map" 
+                                        ? "Unit map setup required. Please configure your property's unit layout first to unlock portal operations."
+                                        : "Property setup required. Please complete your property setup first to unlock portal operations."
+                                }
+                            >
                                 <BrandLogo size="md" className="w-full min-w-0" />
                             </LogoLink>
                         </div>

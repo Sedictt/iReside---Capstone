@@ -1880,8 +1880,9 @@ IMPORTANT INSTRUCTIONS:
                                 setupCompleted: true,
                                 setupCompletedAt: new Date().toISOString(),
                               },
-                              false
+                              true
                             );
+                            applyBrandCssVariables(primaryColor, secondaryColor);
                             router.push("/landlord/dashboard");
                           }}
                           className={cn(
@@ -2260,8 +2261,9 @@ IMPORTANT INSTRUCTIONS:
                     setupCompleted: true,
                     setupCompletedAt: new Date().toISOString(),
                   },
-                  false
+                  true
                 );
+                applyBrandCssVariables(primaryColor, secondaryColor);
                 router.push("/landlord/dashboard");
               }}
               className={cn(

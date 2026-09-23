@@ -261,17 +261,17 @@
 /* Accessibility: Dynamic Font Size & Display Scaling Tiers */
 html[data-font-size="normal"],
 :root[data-font-size="normal"] {
-  font-size: 100%;
+  font-size: 100% !important;
 }
 
 html[data-font-size="large"],
 :root[data-font-size="large"] {
-  font-size: 110%;
+  font-size: 112% !important;
 }
 
 html[data-font-size="larger"],
 :root[data-font-size="larger"] {
-  font-size: 120%;
+  font-size: 124% !important;
 }
 
 /* Guardrails against clipping on interactive items when font size is enlarged */

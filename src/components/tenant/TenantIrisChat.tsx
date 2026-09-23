@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchIrisHistory, getCachedIrisHistory, setCachedIrisHistory, type IrisHistoryMessage } from "@/lib/iris/client";
 import type { IrisCardData } from "@/lib/services/iris";
+import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
+import { isPreseededPhone, isPreseededEmail } from "@/lib/validation/brand-setup";
 
 interface Message {
     id: string;
@@ -339,7 +341,7 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                                 ? "bg-primary text-primary-foreground rounded-br-sm font-medium shadow-[0_10px_24px_-16px_rgba(109,152,56,0.55)]"
                                                 : "bg-card text-foreground rounded-bl-sm border border-border"
                                         )}>
-                                            <p>{msg.content}</p>
+                                            <ChatMessageMarkdown content={msg.content} isUser={msg.role === "user"} />
                                         </div>
 
                                         {/* Wi-Fi Card */}
@@ -396,7 +398,7 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                                     </div>
                                                 </div>
                                                 <div className="divide-y divide-border text-xs">
-                                                    {msg.card.phone && (
+                                                    {msg.card.phone && !isPreseededPhone(msg.card.phone) && (
                                                         <div className="p-3 flex items-center justify-between hover:bg-muted/40 transition-colors">
                                                             <div className="flex items-center gap-2.5 min-w-0 pr-2">
                                                                 <Phone className="size-3.5 text-muted-foreground shrink-0" />
@@ -414,7 +416,7 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                                             </button>
                                                         </div>
                                                     )}
-                                                    {msg.card.email && (
+                                                    {msg.card.email && !isPreseededEmail(msg.card.email) && (
                                                         <div className="p-3 flex items-center justify-between hover:bg-muted/40 transition-colors">
                                                             <div className="flex items-center gap-2.5 min-w-0 pr-2">
                                                                 <Mail className="size-3.5 text-muted-foreground shrink-0" />
@@ -430,6 +432,11 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                                             >
                                                                 {copiedKey === `email-${msg.id}` ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
                                                             </button>
+                                                        </div>
+                                                    )}
+                                                    {(!msg.card.phone || isPreseededPhone(msg.card.phone)) && (!msg.card.email || isPreseededEmail(msg.card.email)) && (
+                                                        <div className="p-3 text-muted-foreground text-xs italic">
+                                                            Direct contact details are not published yet. Please send a message via the Inquiries tab.
                                                         </div>
                                                     )}
                                                 </div>

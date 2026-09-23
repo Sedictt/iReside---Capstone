@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { LeaseDocument } from "@/components/lease/LeaseDocument";
 import { useProperty } from "@/context/PropertyContext";
+import { isPreseededPhone } from "@/lib/validation/brand-setup";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { 
     UserCircle2, 
@@ -519,7 +520,7 @@ export default function DocumentsPage() {
                                         full_name: landlordProfile?.full_name || "Landlord",
                                         avatar_url: landlordProfile?.avatar_url || "",
                                         avatar_bg_color: landlordProfile?.avatar_bg_color || "#10B981",
-                                        phone: landlordProfile?.phone || "000-000-0000"
+                                        phone: (landlordProfile?.phone && !isPreseededPhone(landlordProfile.phone)) ? landlordProfile.phone : ""
                                     }}
                                     tenant={{
                                         full_name: "Prospective Tenant"

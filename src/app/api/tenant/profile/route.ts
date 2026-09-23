@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
-import { tenantProfilePatchSchema } from "@/lib/validation/profile";
 import type { Database } from "@/types/database";
 
 /**
@@ -30,7 +29,7 @@ export async function GET(request: Request) {
 /**
  * PATCH /api/tenant/profile
  * Update the current tenant's profile
- * Used to update personal details, security settings, and normalized profile contacts.
+ * Used to mark account as claimed in user_security_settings.
  */
 export async function PATCH(request: Request) {
     const authContext = await requireAuthenticatedUser(request);
@@ -39,62 +38,21 @@ export async function PATCH(request: Request) {
 
     try {
         const body = await request.json();
+        const { has_changed_password, ...otherFields } = body;
 
-        // 0. Server-side Input Validation
-        const validation = tenantProfilePatchSchema.safeParse(body);
-        if (!validation.success) {
-            const firstError = validation.error.issues[0]?.message || "Invalid input data";
-            return NextResponse.json({
-                error: firstError,
-                details: validation.error.flatten().fieldErrors,
-            }, { status: 400 });
-        }
-
-        const validData = validation.data;
-        const shouldUpdateClaimState = typeof validData.has_changed_password === "boolean";
-
-        // Build update payload - only allow validated fields
+        // Build update payload - only allow certain fields to be updated
         const updates: Database["public"]["Tables"]["profiles"]["Update"] = {
             updated_at: new Date().toISOString(),
         };
 
-        if (validData.full_name !== undefined) updates.full_name = validData.full_name;
-        if (validData.bio !== undefined) updates.bio = validData.bio;
-        if (validData.email !== undefined && validData.email.trim()) {
-            const newEmail = validData.email.trim();
-            updates.email = newEmail;
-            const admin = createServiceRoleSupabaseClient();
-            const { error: authErr } = await admin.auth.admin.updateUserById(userId, {
-                email: newEmail,
-                email_confirm: true,
-            });
-            if (authErr) {
-                console.warn("[tenant/profile PATCH] Supabase Auth email update warning:", authErr.message);
+        const shouldUpdateClaimState = typeof has_changed_password === "boolean";
+
+        // Allow other safe public profile fields to be updated
+        const allowedFields = ["full_name", "bio"] as const;
+        for (const field of allowedFields) {
+            if (field in otherFields) {
+                updates[field] = otherFields[field];
             }
-        }
-
-        // Merge socials and emergency contacts if provided
-        if (validData.socials || validData.emergency_contact_name !== undefined || validData.emergency_contact_phone !== undefined) {
-            const { data: currentProfile } = await supabase
-                .from("profiles")
-                .select("socials")
-                .eq("id", userId)
-                .maybeSingle();
-
-            const currentSocials = (currentProfile?.socials && typeof currentProfile.socials === "object")
-                ? (currentProfile.socials as Record<string, any>)
-                : {};
-
-            updates.socials = {
-                ...currentSocials,
-                ...(validData.socials || {}),
-                emergency_contact_name: validData.emergency_contact_name !== undefined
-                    ? validData.emergency_contact_name
-                    : (currentSocials.emergency_contact_name || ""),
-                emergency_contact_phone: validData.emergency_contact_phone !== undefined
-                    ? validData.emergency_contact_phone
-                    : (currentSocials.emergency_contact_phone || ""),
-            };
         }
 
         const { data: updatedProfile, error: updateError } = await supabase
@@ -116,7 +74,7 @@ export async function PATCH(request: Request) {
                 .upsert(
                     {
                         profile_id: userId,
-                        has_changed_password: validData.has_changed_password,
+                        has_changed_password,
                         updated_at: new Date().toISOString(),
                     },
                     { onConflict: "profile_id" }
@@ -128,15 +86,15 @@ export async function PATCH(request: Request) {
             }
         }
 
-        const shouldUpdatePrivateProfile = validData.phone !== undefined || validData.address !== undefined;
+        const shouldUpdatePrivateProfile = "phone" in otherFields || "address" in otherFields;
         if (shouldUpdatePrivateProfile) {
             const { error: privateError } = await (supabase as any)
                 .from("profile_private")
                 .upsert(
                     {
                         profile_id: userId,
-                        phone: validData.phone !== undefined ? validData.phone : updatedProfile.phone,
-                        address: validData.address !== undefined ? validData.address : updatedProfile.address,
+                        phone: "phone" in otherFields ? otherFields.phone : updatedProfile.phone,
+                        address: "address" in otherFields ? otherFields.address : updatedProfile.address,
                         updated_at: new Date().toISOString(),
                     },
                     { onConflict: "profile_id" }

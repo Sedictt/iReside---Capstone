@@ -21,7 +21,7 @@ import {
     BookOpen,
     Download
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signOut } from "@/lib/supabase/client-auth";
 import { RoleSidebar, type SidebarNavSection } from "@/components/navigation/RoleSidebar";
 import { PropertySelector } from "@/components/landlord/PropertySelector";
@@ -42,17 +42,50 @@ export function Sidebar({
     className?: string;
 }) {
     const { counts, importantNotifications } = useNotifications();
-    const { properties, loading: propertyLoading } = useProperty();
+    const { properties, loading: propertyLoading, selectedPropertyId } = useProperty();
+    const activePropertyId = selectedPropertyId && selectedPropertyId !== "all" 
+        ? selectedPropertyId 
+        : (properties[0]?.id || "default");
+    const SCOPED_TENANT_DELAYED_KEY = `ireside.tenant_setup_delayed.${activePropertyId}`;
+
+    const [isTenantSetupDelayed, setIsTenantSetupDelayed] = useState(false);
+    const [isGuidanceSessionActive, setIsGuidanceSessionActive] = useState(false);
+
+    useEffect(() => {
+        const checkDelayed = () => {
+            if (typeof window === "undefined") return;
+            try {
+                const val = window.localStorage.getItem(SCOPED_TENANT_DELAYED_KEY);
+                setIsTenantSetupDelayed(val === "true");
+
+                const guidVal = window.sessionStorage.getItem(`ireside.unit_map_guidance_in_progress.${activePropertyId}`);
+                setIsGuidanceSessionActive(guidVal === "true");
+            } catch {
+                setIsTenantSetupDelayed(false);
+                setIsGuidanceSessionActive(false);
+            }
+        };
+        checkDelayed();
+        window.addEventListener("tenant-setup-delayed-changed", checkDelayed);
+        window.addEventListener("unit-map-guidance-changed", checkDelayed);
+        window.addEventListener("storage", checkDelayed);
+        return () => {
+            window.removeEventListener("tenant-setup-delayed-changed", checkDelayed);
+            window.removeEventListener("unit-map-guidance-changed", checkDelayed);
+            window.removeEventListener("storage", checkDelayed);
+        };
+    }, [SCOPED_TENANT_DELAYED_KEY, activePropertyId]);
+
     const hasZeroProperties = !propertyLoading && properties.length === 0;
     const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete);
-    const hasPendingUnitMap = !propertyLoading && properties.length > 0 && !hasConfiguredMap;
+    const hasPendingUnitMap = !propertyLoading && properties.length > 0 && (!hasConfiguredMap || isGuidanceSessionActive);
     const isLocked = hasZeroProperties || hasPendingUnitMap;
     const lockStage = hasZeroProperties
         ? ("no_property" as const)
         : hasPendingUnitMap
             ? ("no_unit_map" as const)
             : null;
-    
+
     const isUrgent = (type: string) => importantNotifications.some(n => n.type === type);
 
     const NAV_ITEMS: SidebarNavSection[] = [
@@ -133,6 +166,8 @@ export function Sidebar({
                     href: "/landlord/tenants", 
                     icon: Users, 
                     tourId: "nav-tenant-hub",
+                    warning: isTenantSetupDelayed,
+                    warningTooltip: "Action needed: Begin setting up your tenants to occupy units and activate lease tracking.",
                     description: "Active resident profiles, occupancy records & emergency contacts"
                 },
                 { 

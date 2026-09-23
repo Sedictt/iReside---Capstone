@@ -1,6 +1,6 @@
 import { z } from "zod";
-import rawFilipinoLexicon from "@/lib/messages/moderation/filipino-profanity.json";
-import rawEnglishLexicon from "@/lib/messages/moderation/english-profanity.json";
+import rawFilipinoLexicon from "./moderation/filipino-profanity.json";
+import rawEnglishLexicon from "./moderation/english-profanity.json";
 
 const lexiconSchema = z.object({
     version: z.number().int().positive(),

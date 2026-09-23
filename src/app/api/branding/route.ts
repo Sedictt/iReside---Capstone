@@ -108,6 +108,20 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // 3. Fallback to primary landlord profile if property is not yet created
+    if (!property && !landlordProfile) {
+      const { data: primaryLandlord } = await admin
+        .from("profiles")
+        .select("business_name, full_name, socials")
+        .eq("role", "landlord")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (primaryLandlord) {
+        landlordProfile = primaryLandlord;
+      }
+    }
+
     if (!property && !landlordProfile) {
       return NextResponse.json(DEFAULT_BRANDING);
     }
@@ -120,9 +134,20 @@ export async function GET(request: NextRequest) {
       | Partial<BrandConfig>
       | undefined);
 
+    const cleanObject = (obj: any): Record<string, unknown> => {
+      if (!obj || typeof obj !== "object") return {};
+      const res: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(obj)) {
+        if (v !== undefined && v !== null && v !== "") {
+          res[k] = v;
+        }
+      }
+      return res;
+    };
+
     const customTheme: Partial<BrandConfig> = {
-      ...(profileTheme || {}),
-      ...(propertyTheme || {}),
+      ...cleanObject(profileTheme),
+      ...cleanObject(propertyTheme),
     };
 
     const brandingPayload: BrandConfig = {
@@ -139,8 +164,16 @@ export async function GET(request: NextRequest) {
         customTheme?.rentalArchetype ||
         (property?.type as BrandConfig["rentalArchetype"]) ||
         DEFAULT_BRANDING.rentalArchetype,
-      primaryColor: customTheme?.primaryColor || DEFAULT_BRANDING.primaryColor,
-      secondaryColor: customTheme?.secondaryColor || DEFAULT_BRANDING.secondaryColor,
+      primaryColor:
+        customTheme?.primaryColor ||
+        profileTheme?.primaryColor ||
+        propertyTheme?.primaryColor ||
+        DEFAULT_BRANDING.primaryColor,
+      secondaryColor:
+        customTheme?.secondaryColor ||
+        profileTheme?.secondaryColor ||
+        propertyTheme?.secondaryColor ||
+        DEFAULT_BRANDING.secondaryColor,
       logoUrl: customTheme?.logoUrl !== undefined ? customTheme.logoUrl : (property?.images?.[0] ? property.images[0] : null),
       bannerUrl: customTheme?.bannerUrl !== undefined ? customTheme.bannerUrl : (property?.images?.[0] ? property.images[0] : null),
       setupCompleted: (customTheme as any)?.setup_completed ?? (customTheme as any)?.setupCompleted ?? false,

@@ -7,6 +7,7 @@ import {
   validateAdminEmail,
   validateAdminPassword,
   validateConfirmPassword,
+  isPreseededPhone,
 } from "@/lib/validation/brand-setup";
 import { z } from "zod";
 
@@ -150,20 +151,66 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Update Profile in database
-    const { error: profileUpdateErr } = await adminClient
+    // 4. Update Profile in database: remove any pre-seeded starter phone number
+    const { data: existingProfileForPhone } = await adminClient
       .from("profiles")
-      .update({
-        email: normalizedEmail,
-        full_name: fullName.trim(),
-        is_account_claimed: true,
-        has_changed_password: true,
-        updated_at: new Date().toISOString(),
-      })
+      .select("phone")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const shouldClearPhone = isPreseededPhone(existingProfileForPhone?.phone);
+
+    const fullProfilePayload: Record<string, any> = {
+      email: normalizedEmail,
+      full_name: fullName.trim(),
+      is_account_claimed: true,
+      has_changed_password: true,
+      updated_at: new Date().toISOString(),
+    };
+    if (shouldClearPhone) {
+      fullProfilePayload.phone = null;
+    }
+
+    const { error: profileUpdateErr } = await (adminClient as any)
+      .from("profiles")
+      .update(fullProfilePayload)
       .eq("id", userId);
 
     if (profileUpdateErr) {
-      console.warn("[Account Claim] Failed updating profiles table:", profileUpdateErr.message);
+      console.warn("[Account Claim] Failed updating profiles table with full fields, retrying essential fields:", profileUpdateErr.message);
+      const retryPayload: Record<string, any> = {
+        email: normalizedEmail,
+        full_name: fullName.trim(),
+        updated_at: new Date().toISOString(),
+      };
+      if (shouldClearPhone) {
+        retryPayload.phone = null;
+      }
+      const { error: retryErr } = await (adminClient as any)
+        .from("profiles")
+        .update(retryPayload)
+        .eq("id", userId);
+      if (retryErr) {
+        console.error("[Account Claim] Essential profile fields update also failed:", retryErr.message);
+      }
+    }
+
+    // Also strip pre-seeded phone from profile_private
+    try {
+      const { data: privateProfile } = await (adminClient as any)
+        .from("profile_private")
+        .select("phone")
+        .eq("profile_id", userId)
+        .maybeSingle();
+
+      if (isPreseededPhone(privateProfile?.phone)) {
+        await (adminClient as any)
+          .from("profile_private")
+          .update({ phone: null, updated_at: new Date().toISOString() })
+          .eq("profile_id", userId);
+      }
+    } catch (privatePhoneErr) {
+      console.warn("[Account Claim] Note: profile_private phone cleanup:", privatePhoneErr);
     }
 
     // 5. Clear OTP and mark password changed in user_security_settings

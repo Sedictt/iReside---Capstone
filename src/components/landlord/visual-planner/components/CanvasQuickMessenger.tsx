@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { m as motion } from "framer-motion";
+import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
 
 interface MessageItem {
     id: string;
@@ -251,7 +252,7 @@ export const CanvasQuickMessenger: React.FC<CanvasQuickMessengerProps> = ({
                                     }`}
                                     style={isMe ? { backgroundColor: primaryColor, color: "#ffffff" } : undefined}
                                 >
-                                    {msg.content}
+                                    <ChatMessageMarkdown content={msg.content} isUser={isMe} className="text-xs font-semibold leading-relaxed" />
                                 </div>
                             </div>
                         );

@@ -86,7 +86,6 @@ import { useBrand, DEFAULT_BRANDING } from "@/context/BrandContext";
 import { applyBrandCssVariables } from "@/lib/branding/colors";
 import { SecurityKeyManagementCard } from "@/components/auth/SecurityKeyManagementCard";
 import Link from "next/link";
-import { MobileSettingsCategoryDropdown } from "@/components/mobile/shared/MobileSettingsCategoryDropdown";
 import {
     validateFullName,
     validateBusinessName,
@@ -106,6 +105,7 @@ import {
     REGEX_NAME,
 } from "@/lib/validation/landlord-settings";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { DISALLOWED_PRESEEDED_DATA, isPreseededPhone } from "@/lib/validation/brand-setup";
 
 export function normalizeRentalArchetype(val?: string | null): "apartment" | "dormitory" | "boarding_house" {
     if (!val) return "apartment";
@@ -369,7 +369,7 @@ export function saveCachedSettings(settings: CachedLandlordSettings, userId?: st
 
 // --- Main Component ---
 
-export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = {}) {
+export function LandlordSettings() {
     const router = useRouter();
     const { user, profile, loading, refreshProfile } = useAuth();
     // UI State
@@ -444,7 +444,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
         Security: ["Account", "Protection", "Sessions"],
         Notifications: ["Alerts"],
         AuditLogs: ["Activity Logs"],
-        Data: ["Export", "Tour"],
+        Data: ["Export", "Tour", "Danger"],
     };
 
     // Reset sub-tab when main tab changes (skip if restoring from URL)
@@ -726,7 +726,19 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
 
     const [formData, setFormData] = useState(() => {
         const cached = getCachedSettings();
-        if (cached?.formData) return cached.formData;
+        if (cached?.formData) {
+            const cachedEmail = (cached.formData.email || "").toLowerCase().trim();
+            const isDisallowed = !cachedEmail || 
+                DISALLOWED_PRESEEDED_DATA.emails.includes(cachedEmail) || 
+                cachedEmail.includes("turnkey.local");
+            const cachedPhone = cached.formData.phone || "";
+            const isPhoneDisallowed = isPreseededPhone(cachedPhone);
+            return {
+                ...cached.formData,
+                email: isDisallowed ? "" : cached.formData.email,
+                phone: isPhoneDisallowed ? "" : cachedPhone,
+            };
+        }
         return {
             full_name: "",
             business_name: "",
@@ -934,16 +946,36 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 }
             }
 
+            const rawFreshEmail = (freshProfile?.email || "").toLowerCase().trim();
+            const rawUserEmail = (user?.email || "").toLowerCase().trim();
+            const isFreshEmailDisallowed = !rawFreshEmail || 
+                DISALLOWED_PRESEEDED_DATA.emails.includes(rawFreshEmail) || 
+                rawFreshEmail.includes("turnkey.local");
+            const isUserEmailDisallowed = !rawUserEmail || 
+                DISALLOWED_PRESEEDED_DATA.emails.includes(rawUserEmail) || 
+                rawUserEmail.includes("turnkey.local");
+
+            let resolvedEmail = "";
+            if (!isFreshEmailDisallowed) {
+                resolvedEmail = freshProfile?.email || "";
+            } else if (!isUserEmailDisallowed) {
+                resolvedEmail = user?.email || "";
+            } else {
+                resolvedEmail = freshProfile?.email || user?.email || "";
+            }
+
             const syncedForm = {
                 full_name: freshProfile?.full_name || "",
                 business_name: freshProfile?.business_name || businessProfile?.business_name || "",
-                email: freshProfile?.email || "",
-                phone: freshProfile?.phone || "",
+                email: resolvedEmail,
+                phone: isPreseededPhone(freshProfile?.phone) ? "" : (freshProfile?.phone || ""),
                 website: freshProfile?.website || businessProfile?.website || "",
                 address: freshProfile?.address || businessProfile?.address || "",
                 bio: freshProfile?.bio || "",
                 emergency_contact_name: freshProfile?.emergency_contact_name || privateProfile?.emergency_contact_name || (freshProfile?.socials as any)?.emergency_contact_name || "",
-                emergency_contact_phone: freshProfile?.emergency_contact_phone || privateProfile?.emergency_contact_phone || (freshProfile?.socials as any)?.emergency_contact_phone || "",
+                emergency_contact_phone: isPreseededPhone(freshProfile?.emergency_contact_phone || privateProfile?.emergency_contact_phone || (freshProfile?.socials as any)?.emergency_contact_phone)
+                    ? ""
+                    : (freshProfile?.emergency_contact_phone || privateProfile?.emergency_contact_phone || (freshProfile?.socials as any)?.emergency_contact_phone || ""),
                 business_permit_number: freshProfile?.business_permit_number || businessProfile?.business_permit_number || "",
                 socials: typeof freshProfile?.socials === 'object' && freshProfile?.socials !== null 
                     ? {
@@ -1104,6 +1136,26 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
     useEffect(() => {
         syncSettingsWithDatabase();
     }, [syncSettingsWithDatabase]);
+
+    // Reconcile pre-seeded placeholder emails and phone numbers with authenticated identity
+    useEffect(() => {
+        if (!user?.email) return;
+        const currentEmail = (formData.email || "").toLowerCase().trim();
+        const userEmail = user.email.toLowerCase().trim();
+        const isCurrentDisallowed = !currentEmail || 
+            DISALLOWED_PRESEEDED_DATA.emails.includes(currentEmail) || 
+            currentEmail.includes("turnkey.local");
+        const isUserValid = !DISALLOWED_PRESEEDED_DATA.emails.includes(userEmail) && !userEmail.includes("turnkey.local");
+        if (isCurrentDisallowed && isUserValid) {
+            setFormData(prev => ({ ...prev, email: user.email! }));
+        }
+        if (formData.phone && isPreseededPhone(formData.phone)) {
+            setFormData(prev => ({ ...prev, phone: "" }));
+        }
+        if (formData.emergency_contact_phone && isPreseededPhone(formData.emergency_contact_phone)) {
+            setFormData(prev => ({ ...prev, emergency_contact_phone: "" }));
+        }
+    }, [user?.email, formData.email, formData.phone, formData.emergency_contact_phone]);
 
     const isDirty = useMemo(() => {
         if (isFinanceDirty) return true;
@@ -2345,20 +2397,19 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 case "Themes & Contrast":
                     return (
                         <div className="space-y-8">
-                            <GlassCard title="Visual Theme" description="Choose how iReside renders across all screens. Default is light mode.">
+                            <GlassCard 
+                                title="Visual Theme" 
+                                description="Choose how iReside renders across all screens. Default is light mode."
+                            >
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 p-4 rounded-2xl bg-surface-2 border border-border/60">
                                     <div className="flex items-start gap-4">
                                         <div className={cn(
                                             "size-12 rounded-xl flex items-center justify-center shrink-0 border transition-all",
-                                            resolvedTheme === "dark" 
-                                                ? "bg-primary/10 text-primary border-primary/30" 
-                                                : "bg-surface-3 text-muted-foreground border-border"
+                                            resolvedTheme === "dark"
+                                                ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
+                                                : "bg-amber-500/10 text-amber-500 border-amber-500/20"
                                         )}>
-                                            {resolvedTheme === "dark" ? (
-                                                <Moon className="size-6 text-primary" />
-                                            ) : (
-                                                <Sun className="size-6 text-amber-500" />
-                                            )}
+                                            {resolvedTheme === "dark" ? <Moon className="size-6" /> : <Sun className="size-6" />}
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
@@ -3952,8 +4003,8 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
 
     return (
         <div className="space-y-6 sm:space-y-10">
-            {/* Top Navigation Bar (Desktop only) */}
-            <div className="hidden lg:flex items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-border/40">
+            {/* Top Navigation Bar */}
+            <div className="flex items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-border/40">
                 <button
                     type="button"
                     onClick={handleRequestExit}
@@ -4056,17 +4107,106 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
             )}
 
             <div className="min-h-[80vh] flex flex-col lg:flex-row gap-6 lg:gap-12">
-                {/* Mobile / Tablet Category Dropdown (< lg) */}
-                <div className="block lg:hidden mb-2">
-                    <MobileSettingsCategoryDropdown
-                        items={SIDEBAR_ITEMS}
-                        activeTab={activeTab}
-                        onSelectTab={(id) => {
-                            handleTabChange(id as SettingsCategory);
-                            const firstSubTab = SUB_TABS[id as SettingsCategory]?.[0];
-                            if (firstSubTab) setActiveSubTab(firstSubTab);
-                        }}
-                    />
+                {/* Mobile / Tablet Horizontal Navigation (< lg) */}
+                <div className="block lg:hidden space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                        <div className="flex items-center gap-2.5">
+                            <div className="flex size-9 items-center justify-center rounded-xl bg-primary/20 text-primary border border-primary/20">
+                                <Layout className="size-4.5" />
+                            </div>
+                            <div>
+                                <h1 className="text-base font-black text-foreground leading-tight">Settings</h1>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                    {SIDEBAR_ITEMS.find(i => i.id === activeTab)?.label}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Swipe / Slide affordance hint */}
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-full border border-border/40 select-none">
+                            <SlidersHorizontal className="size-3 text-primary/70" />
+                            <span>Swipe to reveal</span>
+                            <ChevronRight className="size-3 text-primary animate-pulse" />
+                        </div>
+                    </div>
+
+                    <div className="relative group/rail">
+                        {/* Left Fade Gradient & Scroll Arrow */}
+                        <AnimatePresence>
+                            {canScrollLeft && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="absolute left-0 top-0 bottom-0 z-10 flex items-center pr-3 pl-0.5 bg-gradient-to-r from-background via-background/95 to-transparent pointer-events-none"
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollMobileTabs("left")}
+                                        aria-label="Scroll tabs left"
+                                        className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto"
+                                    >
+                                        <ChevronLeft className="size-3.5" />
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Scrollable Pills Container */}
+                        <div 
+                            ref={mobileTabRailRef}
+                            className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-1 scrollbar-hide -mx-1 px-1 scroll-smooth"
+                        >
+                            {SIDEBAR_ITEMS.map((item) => {
+                                const Icon = item.icon;
+                                const isActive = activeTab === item.id;
+                                return (
+                                    <button
+                                        key={item.id}
+                                        data-tab-id={item.id}
+                                        type="button"
+                                        onClick={() => handleMobileTabClick(item.id)}
+                                        className={cn(
+                                            "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black whitespace-nowrap transition-all duration-300 cursor-pointer shrink-0",
+                                            isActive
+                                                ? "neumorphic-panel text-primary font-black shadow-sm border-primary/30 ring-1 ring-primary/20"
+                                                : "neumorphic-extruded text-muted-foreground hover:text-foreground font-bold"
+                                        )}
+                                    >
+                                        <Icon className={cn("size-4 transition-transform", isActive ? "scale-110 text-primary" : "text-muted-foreground")} />
+                                        <span>{item.label}</span>
+                                        {isActive && (
+                                            <span className="size-1.5 rounded-full bg-primary" />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Right Fade Gradient & Scroll Arrow */}
+                        <AnimatePresence>
+                            {canScrollRight && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="absolute right-0 top-0 bottom-0 z-10 flex items-center pl-3 pr-0.5 bg-gradient-to-l from-background via-background/95 to-transparent pointer-events-none"
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollMobileTabs("right")}
+                                        aria-label="Scroll tabs right"
+                                        title="Slide to view more tabs"
+                                        className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto animate-pulse hover:animate-none"
+                                    >
+                                        <ChevronRight className="size-3.5" />
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
 
                 {/* Desktop Collapsible Sidebar (lg+) */}

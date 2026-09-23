@@ -143,8 +143,36 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                             View Timeline & Checklist
                         </button>
                     </div>
+                ) : variant === "quickAction" ? (
+                    /* QuickAction Variant for Existing Request */
+                    <button
+                        onClick={() => setIsOpen(true)}
+                        className="neumorphic-extruded rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 flex flex-col items-center justify-center gap-3 transition-all hover:-translate-y-1 group w-full"
+                    >
+                        <div className={cn(
+                            "size-12 sm:size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 neumorphic-inset-card",
+                            existingRequest.status === "pending" ? "text-amber-500" :
+                            existingRequest.status === "approved" ? "text-blue-500" :
+                            existingRequest.status === "denied" ? "text-red-500" :
+                            "text-emerald-500"
+                        )}>
+                            {existingRequest.status === "pending" ? <Clock className="size-6 sm:size-7" /> :
+                             existingRequest.status === "approved" ? <CheckCircle2 className="size-6 sm:size-7" /> :
+                             existingRequest.status === "denied" ? <XCircle className="size-6 sm:size-7" /> :
+                             <LogOut className="size-6 sm:size-7" />}
+                        </div>
+                        <span className={cn(
+                            "text-[10px] sm:text-xs font-black text-center transition-colors uppercase tracking-wider truncate max-w-full",
+                            existingRequest.status === "pending" ? "text-amber-500 group-hover:text-amber-400" :
+                            existingRequest.status === "approved" ? "text-blue-500 group-hover:text-blue-400" :
+                            existingRequest.status === "denied" ? "text-red-500 group-hover:text-red-400" :
+                            "text-emerald-500 group-hover:text-emerald-400"
+                        )}>
+                            Move Out
+                        </span>
+                    </button>
                 ) : (
-                    /* Sidebar/QuickAction Variant for Existing Request */
+                    /* Sidebar Variant for Existing Request */
                     <div className="neumorphic-panel rounded-[2rem] p-8 relative overflow-hidden group flex-shrink-0">
                         <div className="flex items-center gap-3 mb-4">
                             <div className={cn(
@@ -217,12 +245,12 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                 /* Quick Action Trigger */
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="neumorphic-extruded rounded-[2rem] p-6 flex flex-col items-center justify-center gap-4 transition-all hover:-translate-y-1 group"
+                    className="neumorphic-extruded rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 flex flex-col items-center justify-center gap-3 transition-all hover:-translate-y-1 group w-full"
                 >
-                    <div className="size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 text-red-500 neumorphic-inset-card">
-                        <LogOut className="size-7" />
+                    <div className="size-12 sm:size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 text-red-500 neumorphic-inset-card">
+                        <LogOut className="size-6 sm:size-7" />
                     </div>
-                    <span className="text-[10px] font-black text-center group-hover:text-red-500 transition-colors uppercase tracking-widest">Move Out</span>
+                    <span className="text-[10px] sm:text-xs font-black text-center group-hover:text-red-500 transition-colors uppercase tracking-wider truncate max-w-full">Move Out</span>
                 </button>
             )}
 
