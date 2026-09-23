@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuthenticatedUser, requireRole } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { landlordProfilePatchSchema } from "@/lib/validation/landlord-settings";
-import { DISALLOWED_PRESEEDED_DATA } from "@/lib/validation/brand-setup";
+import { DISALLOWED_PRESEEDED_DATA, isPreseededPhone } from "@/lib/validation/brand-setup";
 
 /**
  * GET /api/landlord/profile
@@ -75,11 +75,30 @@ export async function GET(request: Request) {
             ? (profile.socials as Record<string, any>) 
             : {};
 
+        const rawPhone = privateProfile?.phone ?? profile.phone;
+        const isPhonePlaceholder = isPreseededPhone(rawPhone);
+        const resolvedPhone = isPhonePlaceholder ? null : rawPhone;
+
+        if (isPhonePlaceholder && rawPhone) {
+            try {
+                await admin
+                    .from("profiles")
+                    .update({ phone: null, updated_at: new Date().toISOString() })
+                    .eq("id", userId);
+                await (admin as any)
+                    .from("profile_private")
+                    .update({ phone: null, updated_at: new Date().toISOString() })
+                    .eq("profile_id", userId);
+            } catch (pErr) {
+                console.warn("[landlord/profile GET] Self-healing profile phone clear note:", pErr);
+            }
+        }
+
         const fullProfile = {
             ...profile,
             emergency_contact_name: socialsRecord.emergency_contact_name || (profile as any).emergency_contact_name || null,
             emergency_contact_phone: socialsRecord.emergency_contact_phone || (profile as any).emergency_contact_phone || null,
-            phone: privateProfile?.phone ?? profile.phone,
+            phone: resolvedPhone,
             address: privateProfile?.address ?? profile.address,
             business_name: businessProfile?.business_name ?? profile.business_name,
             business_permit_url: businessProfile?.business_permit_url ?? profile.business_permit_url,

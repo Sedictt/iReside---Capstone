@@ -75,11 +75,38 @@ export const DISALLOWED_PRESEEDED_DATA = {
   ],
   phones: [
     "0917-882-9912",
+    "0917-888-1234",
+    "0918-555-4321",
     "0917-000-0000",
     "09170000000",
     "09178829912",
+    "09178881234",
+    "09185554321",
   ],
 };
+
+/**
+ * Checks whether a phone number matches any known pre-seeded starter account placeholder.
+ */
+export function isPreseededPhone(phone?: string | null): boolean {
+  if (!phone) return false;
+  const cleanDigits = phone.replace(/\D/g, "");
+  if (!cleanDigits) return false;
+  return DISALLOWED_PRESEEDED_DATA.phones.some((p) => p.replace(/\D/g, "") === cleanDigits);
+}
+
+/**
+ * Checks whether an email matches any known pre-seeded starter account placeholder.
+ */
+export function isPreseededEmail(email?: string | null): boolean {
+  if (!email) return false;
+  const lower = email.toLowerCase().trim();
+  return (
+    lower.includes("turnkey.local") ||
+    lower.startsWith("practice.landlord") ||
+    DISALLOWED_PRESEEDED_DATA.emails.some((e) => e.toLowerCase() === lower)
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Field-Level Validation Functions

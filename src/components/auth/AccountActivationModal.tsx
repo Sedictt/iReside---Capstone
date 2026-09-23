@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Send,
   Check,
+  Phone,
 } from "lucide-react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -22,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { evaluatePasswordStrength } from "@/lib/validation/landlord-settings";
 import {
   validateAdminFullName,
+  validateAdminPhone,
   validateAdminEmail,
   validateAdminPassword,
   validateConfirmPassword,
@@ -38,6 +40,7 @@ export function AccountActivationModal({
 }: AccountActivationModalProps) {
   const [step, setStep] = useState<1 | 2>(1);
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -150,6 +153,12 @@ export function AccountActivationModal({
         return;
       }
 
+      const phoneCheck = validateAdminPhone(phone);
+      if (!phoneCheck.isValid) {
+        setError(phoneCheck.error || "Please enter your mobile number first.");
+        return;
+      }
+
       const emailCheck = validateAdminEmail(newEmail);
       if (!emailCheck.isValid) {
         setError(emailCheck.error || "Please enter a valid email address first.");
@@ -171,6 +180,12 @@ export function AccountActivationModal({
     const nameCheck = validateAdminFullName(fullName);
     if (!nameCheck.isValid) {
       setError(nameCheck.error || "Please provide your full name.");
+      return;
+    }
+
+    const phoneCheck = validateAdminPhone(phone);
+    if (!phoneCheck.isValid) {
+      setError(phoneCheck.error || "Please provide your mobile number.");
       return;
     }
 
@@ -219,6 +234,7 @@ export function AccountActivationModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fullName: fullName.trim(),
+          phone: phone.trim(),
           newEmail: newEmail.trim(),
           otp: otpCode.trim(),
           newPassword,
@@ -374,6 +390,28 @@ export function AccountActivationModal({
                           if (error) setError(null);
                         }}
                         placeholder="e.g. Roberto Reyes"
+                        className="h-10.5 w-full rounded-xl border border-border bg-background pl-10 pr-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Mobile Number */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-foreground select-none">
+                      Mobile Number
+                    </label>
+                    <div className="relative">
+                      <Phone className="size-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="tel"
+                        required
+                        value={phone}
+                        onChange={(e) => {
+                          setPhone(e.target.value);
+                          if (error) setError(null);
+                        }}
+                        placeholder="e.g. 0917 123 4567"
+                        maxLength={20}
                         className="h-10.5 w-full rounded-xl border border-border bg-background pl-10 pr-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                       />
                     </div>

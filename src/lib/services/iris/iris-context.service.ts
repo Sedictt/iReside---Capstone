@@ -7,6 +7,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import type { BuildingWifiInfo, TenantAiContext, TenantLandlordInfo } from "./iris.types";
+import { isPreseededPhone, isPreseededEmail } from "@/lib/validation/brand-setup";
 
 export class IrisContextService {
   constructor(private readonly supabase: SupabaseClient<Database>) {}
@@ -147,8 +148,8 @@ export class IrisContextService {
       systemPrompt += `LANDLORD & PROPERTY MANAGEMENT:\n`;
       if (landlord.full_name) systemPrompt += `- Landlord / Property Manager: ${landlord.full_name}\n`;
       if (landlord.business_name) systemPrompt += `- Management / Business Name: ${landlord.business_name}\n`;
-      if (landlord.phone) systemPrompt += `- Contact Phone: ${landlord.phone}\n`;
-      if (landlord.email) systemPrompt += `- Contact Email: ${landlord.email}\n`;
+      if (landlord.phone && !isPreseededPhone(landlord.phone)) systemPrompt += `- Contact Phone: ${landlord.phone}\n`;
+      if (landlord.email && !isPreseededEmail(landlord.email)) systemPrompt += `- Contact Email: ${landlord.email}\n`;
       if (landlord.address) systemPrompt += `- Office Address: ${landlord.address}\n`;
       systemPrompt += `\n`;
     }

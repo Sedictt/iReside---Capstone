@@ -728,12 +728,16 @@ export function LandlordSettings() {
         const cached = getCachedSettings();
         if (cached?.formData) {
             const cachedEmail = (cached.formData.email || "").toLowerCase().trim();
-            const isDisallowed = !cachedEmail || 
+            const isEmailDisallowed = !cachedEmail || 
                 DISALLOWED_PRESEEDED_DATA.emails.includes(cachedEmail) || 
                 cachedEmail.includes("turnkey.local");
+            const cleanPhoneDigits = (cached.formData.phone || "").replace(/\D/g, "");
+            const isPhoneDisallowed = cleanPhoneDigits && 
+                DISALLOWED_PRESEEDED_DATA.phones.some(p => p.replace(/\D/g, "") === cleanPhoneDigits);
             return {
                 ...cached.formData,
-                email: isDisallowed ? "" : cached.formData.email,
+                email: isEmailDisallowed ? "" : cached.formData.email,
+                phone: isPhoneDisallowed ? "" : (cached.formData.phone || ""),
             };
         }
         return {
@@ -961,11 +965,17 @@ export function LandlordSettings() {
                 resolvedEmail = freshProfile?.email || user?.email || "";
             }
 
+            const rawPhone = (freshProfile?.phone || privateProfile?.phone || "").trim();
+            const cleanPhoneDigits = rawPhone.replace(/\D/g, "");
+            const isPhoneDisallowed = cleanPhoneDigits && 
+                DISALLOWED_PRESEEDED_DATA.phones.some(p => p.replace(/\D/g, "") === cleanPhoneDigits);
+            const resolvedPhone = isPhoneDisallowed ? "" : rawPhone;
+
             const syncedForm = {
                 full_name: freshProfile?.full_name || "",
                 business_name: freshProfile?.business_name || businessProfile?.business_name || "",
                 email: resolvedEmail,
-                phone: freshProfile?.phone || "",
+                phone: resolvedPhone,
                 website: freshProfile?.website || businessProfile?.website || "",
                 address: freshProfile?.address || businessProfile?.address || "",
                 bio: freshProfile?.bio || "",
@@ -1132,19 +1142,24 @@ export function LandlordSettings() {
         syncSettingsWithDatabase();
     }, [syncSettingsWithDatabase]);
 
-    // Reconcile pre-seeded placeholder emails with the authenticated login email
+    // Reconcile pre-seeded placeholder emails & phones with clean state
     useEffect(() => {
-        if (!user?.email) return;
-        const currentEmail = (formData.email || "").toLowerCase().trim();
-        const userEmail = user.email.toLowerCase().trim();
-        const isCurrentDisallowed = !currentEmail || 
-            DISALLOWED_PRESEEDED_DATA.emails.includes(currentEmail) || 
-            currentEmail.includes("turnkey.local");
-        const isUserValid = !DISALLOWED_PRESEEDED_DATA.emails.includes(userEmail) && !userEmail.includes("turnkey.local");
-        if (isCurrentDisallowed && isUserValid) {
-            setFormData(prev => ({ ...prev, email: user.email! }));
+        if (user?.email) {
+            const currentEmail = (formData.email || "").toLowerCase().trim();
+            const userEmail = user.email.toLowerCase().trim();
+            const isCurrentDisallowed = !currentEmail || 
+                DISALLOWED_PRESEEDED_DATA.emails.includes(currentEmail) || 
+                currentEmail.includes("turnkey.local");
+            const isUserValid = !DISALLOWED_PRESEEDED_DATA.emails.includes(userEmail) && !userEmail.includes("turnkey.local");
+            if (isCurrentDisallowed && isUserValid) {
+                setFormData(prev => ({ ...prev, email: user.email! }));
+            }
         }
-    }, [user?.email, formData.email]);
+        const currentPhoneDigits = (formData.phone || "").replace(/\D/g, "");
+        if (currentPhoneDigits && DISALLOWED_PRESEEDED_DATA.phones.some(p => p.replace(/\D/g, "") === currentPhoneDigits)) {
+            setFormData(prev => ({ ...prev, phone: "" }));
+        }
+    }, [user?.email, formData.email, formData.phone]);
 
     const isDirty = useMemo(() => {
         if (isFinanceDirty) return true;
