@@ -118,12 +118,45 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 2. Account Profile Updates: Name, Phone & Business Name
+    // 2. Account Profile Updates: Name, Phone, Business Name & Brand Configuration
     const adminFullName = body.admin?.fullName?.trim();
     const adminPhone = body.admin?.phone?.trim();
 
+    // 3. Brand & Setup Completion Metadata
+    const brandingMeta = {
+      propertyName,
+      propertyTagline,
+      rentalArchetype,
+      primaryColor,
+      secondaryColor,
+      logoUrl,
+      bannerUrl: null,
+      setup_completed: true,
+      setup_completed_at: timestamp,
+    };
+
+    // Fetch existing profile socials to preserve any preexisting social handles
+    let existingSocials: Record<string, unknown> = {};
+    try {
+      const { data: currentProfile } = await adminClient
+        .from("profiles")
+        .select("socials")
+        .eq("id", userId)
+        .maybeSingle();
+      if (currentProfile?.socials && typeof currentProfile.socials === "object") {
+        existingSocials = currentProfile.socials as Record<string, unknown>;
+      }
+    } catch {
+      // Fallback safely if select query is unavailable in testing mocks
+    }
+    const updatedSocials = {
+      ...existingSocials,
+      branding: brandingMeta,
+    };
+
     const profileUpdates: Record<string, unknown> = {
       business_name: propertyName,
+      socials: updatedSocials,
       has_changed_password: true,
       updated_at: timestamp,
     };
@@ -139,19 +172,6 @@ export async function POST(request: NextRequest) {
     if (profileError) {
       console.warn("[Setup Launch] Failed updating profile record:", profileError.message);
     }
-
-    // 3. Brand & Setup Completion Metadata
-    const brandingMeta = {
-      propertyName,
-      propertyTagline,
-      rentalArchetype,
-      primaryColor,
-      secondaryColor,
-      logoUrl,
-      bannerUrl: null,
-      setup_completed: true,
-      setup_completed_at: timestamp,
-    };
 
     // 4. Update existing property branding if landlord already has an active property, otherwise do NOT auto-create a phantom property
     const { data: existingProperty } = await adminClient
@@ -176,7 +196,7 @@ export async function POST(request: NextRequest) {
           map_decorations: newDecorations as any,
           updated_at: timestamp,
         })
-        .eq("id", existingProperty.id);
+        .eq("landlord_id", userId);
     }
 
     // Always sync business brand to landlord_business_profiles

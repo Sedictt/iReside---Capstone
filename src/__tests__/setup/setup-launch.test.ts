@@ -56,6 +56,12 @@ describe("POST /api/setup/launch (Turnkey Setup Claiming & Locking)", () => {
 
     // Mock profiles update
     const mockProfilesChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { socials: { existing_key: "preserved" } },
+        error: null,
+      }),
       update: vi.fn().mockReturnValue({
         eq: vi.fn().mockResolvedValue({ error: null }),
       }),
@@ -129,12 +135,21 @@ describe("POST /api/setup/launch (Turnkey Setup Claiming & Locking)", () => {
       })
     );
 
-    // Verify profile updating
+    // Verify profile updating includes brand color palette and completion status in socials
     expect(mockProfilesChain.update).toHaveBeenCalledWith(
       expect.objectContaining({
         full_name: "Juan Dela Cruz",
         phone: "0918-123-4567",
         business_name: "Pinecrest Residences",
+        socials: expect.objectContaining({
+          existing_key: "preserved",
+          branding: expect.objectContaining({
+            propertyName: "Pinecrest Residences",
+            primaryColor: "#8b5cf6",
+            secondaryColor: "#06b6d4",
+            setup_completed: true,
+          }),
+        }),
       })
     );
   });
