@@ -29,7 +29,7 @@ import {
 
 interface AccountActivationModalProps {
   isOpen: boolean;
-  onComplete: (newEmail: string) => void;
+  onComplete: (newEmail: string, newPassword?: string) => Promise<void> | void;
 }
 
 export function AccountActivationModal({
@@ -60,6 +60,25 @@ export function AccountActivationModal({
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [claimedEmail, setClaimedEmail] = useState("");
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  const handleProceed = async () => {
+    if (isAuthenticating) return;
+    setIsAuthenticating(true);
+    try {
+      await onComplete(claimedEmail || newEmail.trim(), newPassword);
+    } catch {
+      setIsAuthenticating(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isSuccess) return;
+    const timer = setTimeout(() => {
+      handleProceed();
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [isSuccess, claimedEmail, newPassword]);
 
   // Cooldown timer effect
   useEffect(() => {
@@ -266,18 +285,30 @@ export function AccountActivationModal({
               <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
                 Your workspace is now securely linked to{" "}
                 <span className="font-semibold text-foreground">{claimedEmail}</span>.
-                Please sign in with your new password to access your dashboard.
+                {isAuthenticating
+                  ? " Signing in and directing you into the system..."
+                  : " Please wait while we sign you in, or click below to proceed immediately."}
               </p>
             </div>
 
             <div className="pt-2">
               <button
                 type="button"
-                onClick={() => onComplete(claimedEmail)}
-                className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm transition-all hover:bg-primary/90 active:scale-[0.99] flex items-center justify-center gap-2 shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                disabled={isAuthenticating}
+                onClick={handleProceed}
+                className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm transition-all hover:bg-primary/90 active:scale-[0.99] flex items-center justify-center gap-2 shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-75 disabled:cursor-not-allowed"
               >
-                <span>Proceed to Sign In</span>
-                <ArrowRight className="size-4" />
+                {isAuthenticating ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    <span>Signing in...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Proceed to Sign In</span>
+                    <ArrowRight className="size-4" />
+                  </>
+                )}
               </button>
             </div>
           </div>

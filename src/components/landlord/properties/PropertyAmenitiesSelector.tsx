@@ -1,11 +1,110 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { Plus, X, Layers, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCustomAmenities } from "@/hooks/useCustomAmenities";
 import { DEFAULT_PROPERTY_AMENITIES } from "@/lib/constants/amenities";
 import { toast } from "sonner";
+import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
+
+interface AmenityChipProps {
+    amenity: string;
+    isSelected: boolean;
+    isDarkVariant?: boolean;
+    isCustom?: boolean;
+    onToggle: () => void;
+    onRemove?: (e: React.MouseEvent) => void;
+}
+
+function AmenityChip({
+    amenity,
+    isSelected,
+    isDarkVariant,
+    isCustom = false,
+    onToggle,
+    onRemove,
+}: AmenityChipProps) {
+    const textRef = useRef<HTMLSpanElement>(null);
+    const [isTruncated, setIsTruncated] = useState(false);
+
+    const checkTruncation = useCallback(() => {
+        if (textRef.current) {
+            const hasOverflow = textRef.current.scrollWidth > textRef.current.clientWidth + 1;
+            setIsTruncated(hasOverflow);
+        }
+    }, []);
+
+    useEffect(() => {
+        checkTruncation();
+        window.addEventListener("resize", checkTruncation);
+        if (typeof document !== "undefined" && document.fonts?.ready) {
+            document.fonts.ready.then(checkTruncation).catch(() => {});
+        }
+        return () => window.removeEventListener("resize", checkTruncation);
+    }, [checkTruncation, amenity]);
+
+    const button = (
+        <button
+            type="button"
+            onClick={onToggle}
+            onMouseEnter={checkTruncation}
+            aria-pressed={isSelected}
+            title={isTruncated ? amenity : undefined}
+            className={cn(
+                isCustom
+                    ? "w-full px-4 py-3 pr-8 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all text-left truncate flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+                    : "w-full px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all text-center flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer",
+                isSelected
+                    ? "bg-primary text-black border-primary shadow-md shadow-primary/20 font-black"
+                    : isDarkVariant
+                    ? "bg-white/5 border-white/5 text-white/40 hover:text-white/80 hover:border-white/20"
+                    : "neumorphic-inset-card border-border/40 text-muted-foreground hover:text-foreground hover:border-border"
+            )}
+        >
+            {isSelected && <Check className="size-3 shrink-0 stroke-[3]" />}
+            <span ref={textRef} className="truncate">
+                {amenity}
+            </span>
+        </button>
+    );
+
+    const wrappedButton = isTruncated ? (
+        <Tooltip content={amenity} side="top" sideOffset={6}>
+            {button}
+        </Tooltip>
+    ) : (
+        button
+    );
+
+    if (isCustom) {
+        return (
+            <div className="relative group flex items-center">
+                {wrappedButton}
+                {onRemove && (
+                    <button
+                        type="button"
+                        onClick={onRemove}
+                        title={`Delete "${amenity}" from choices`}
+                        aria-label={`Delete custom amenity choice ${amenity}`}
+                        className={cn(
+                            "absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full opacity-60 hover:opacity-100 transition-opacity cursor-pointer",
+                            isSelected
+                                ? "text-black/60 hover:text-black hover:bg-black/10"
+                                : isDarkVariant
+                                ? "text-white/40 hover:text-rose-400 hover:bg-white/10"
+                                : "text-muted-foreground hover:text-rose-500 hover:bg-muted"
+                        )}
+                    >
+                        <X className="size-3.5" />
+                    </button>
+                )}
+            </div>
+        );
+    }
+
+    return wrappedButton;
+}
 
 interface PropertyAmenitiesSelectorProps {
     selectedAmenities: string[];
@@ -80,15 +179,16 @@ export function PropertyAmenitiesSelector({
     };
 
     return (
-        <div
-            className={cn(
-                "rounded-[2rem] p-7 space-y-6 border transition-all",
-                isDarkVariant
-                    ? "bg-white/[0.02] border-white/10"
-                    : "neumorphic-panel border-border/60",
-                className
-            )}
-        >
+        <TooltipProvider delayDuration={300}>
+            <div
+                className={cn(
+                    "rounded-[2rem] p-7 space-y-6 border transition-all",
+                    isDarkVariant
+                        ? "bg-white/[0.02] border-white/10"
+                        : "neumorphic-panel border-border/60",
+                    className
+                )}
+            >
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -118,30 +218,17 @@ export function PropertyAmenitiesSelector({
                     Standard Amenities
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {defaultAmenities.map((amenity) => {
-                        const isSelected = selectedAmenities.some(
-                            (a) => a.toLowerCase() === amenity.toLowerCase()
-                        );
-                        return (
-                            <button
-                                key={amenity}
-                                type="button"
-                                onClick={() => toggleAmenity(amenity)}
-                                aria-pressed={isSelected}
-                                className={cn(
-                                    "px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all text-center flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-primary/40",
-                                    isSelected
-                                        ? "bg-primary text-black border-primary shadow-md shadow-primary/20 font-black"
-                                        : isDarkVariant
-                                        ? "bg-white/5 border-white/5 text-white/40 hover:text-white/80 hover:border-white/20"
-                                        : "neumorphic-inset-card border-border/40 text-muted-foreground hover:text-foreground hover:border-border"
-                                )}
-                            >
-                                {isSelected && <Check className="size-3 shrink-0 stroke-[3]" />}
-                                <span className="truncate">{amenity}</span>
-                            </button>
-                        );
-                    })}
+                    {defaultAmenities.map((amenity) => (
+                        <AmenityChip
+                            key={amenity}
+                            amenity={amenity}
+                            isSelected={selectedAmenities.some(
+                                (a) => a.toLowerCase() === amenity.toLowerCase()
+                            )}
+                            isDarkVariant={isDarkVariant}
+                            onToggle={() => toggleAmenity(amenity)}
+                        />
+                    ))}
                 </div>
             </div>
 
@@ -167,50 +254,19 @@ export function PropertyAmenitiesSelector({
                         </span>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {customAmenities.map((amenity) => {
-                            const isSelected = selectedAmenities.some(
-                                (a) => a.toLowerCase() === amenity.toLowerCase()
-                            );
-                            return (
-                                <div
-                                    key={amenity}
-                                    className="relative group flex items-center"
-                                >
-                                    <button
-                                        type="button"
-                                        onClick={() => toggleAmenity(amenity)}
-                                        aria-pressed={isSelected}
-                                        className={cn(
-                                            "w-full px-4 py-3 pr-8 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all text-left truncate flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-primary/40",
-                                            isSelected
-                                                ? "bg-primary text-black border-primary shadow-md shadow-primary/20 font-black"
-                                                : isDarkVariant
-                                                ? "bg-white/5 border-white/5 text-white/40 hover:text-white/80 hover:border-white/20"
-                                                : "neumorphic-inset-card border-border/40 text-muted-foreground hover:text-foreground hover:border-border"
-                                        )}
-                                    >
-                                        {isSelected && <Check className="size-3 shrink-0 stroke-[3]" />}
-                                        <span className="truncate">{amenity}</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={(e) => handleRemoveCustomChoice(amenity, e)}
-                                        title={`Delete "${amenity}" from choices`}
-                                        aria-label={`Delete custom amenity choice ${amenity}`}
-                                        className={cn(
-                                            "absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full opacity-60 hover:opacity-100 transition-opacity",
-                                            isSelected
-                                                ? "text-black/60 hover:text-black hover:bg-black/10"
-                                                : isDarkVariant
-                                                ? "text-white/40 hover:text-rose-400 hover:bg-white/10"
-                                                : "text-muted-foreground hover:text-rose-500 hover:bg-muted"
-                                        )}
-                                    >
-                                        <X className="size-3.5" />
-                                    </button>
-                                </div>
-                            );
-                        })}
+                        {customAmenities.map((amenity) => (
+                            <AmenityChip
+                                key={amenity}
+                                amenity={amenity}
+                                isSelected={selectedAmenities.some(
+                                    (a) => a.toLowerCase() === amenity.toLowerCase()
+                                )}
+                                isDarkVariant={isDarkVariant}
+                                isCustom
+                                onToggle={() => toggleAmenity(amenity)}
+                                onRemove={(e) => handleRemoveCustomChoice(amenity, e)}
+                            />
+                        ))}
                     </div>
                 </div>
             )}
@@ -265,5 +321,6 @@ export function PropertyAmenitiesSelector({
                 </p>
             </div>
         </div>
+        </TooltipProvider>
     );
 }
