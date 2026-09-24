@@ -276,10 +276,18 @@ export async function updateSession(request: NextRequest) {
 
     // Role-based portal protection: prevent unconfigured/unclaimed landlords from bypassing setup into dashboard
     if (user && (role === "admin" || role === "landlord")) {
+        const isSetupCookie = request.cookies.get("ireside_setup_completed")?.value === "true";
+        if (isSetupCookie) {
+            // Already finalized setup, permit dashboard access immediately
+            return supabaseResponse;
+        }
+
         let isSetupCompleted = user?.user_metadata?.is_setup_completed;
         let isAccountClaimed = user?.user_metadata?.is_account_claimed;
+        const userEmail = (user.email || "").toLowerCase().trim();
+        const isDefaultStarter = userEmail.includes("turnkey.local") || userEmail.startsWith("practice.landlord");
 
-        if ((isSetupCompleted === false || isAccountClaimed === false) && !request.nextUrl.pathname.startsWith("/setup")) {
+        if ((isSetupCompleted === false || isAccountClaimed === false || isDefaultStarter) && !request.nextUrl.pathname.startsWith("/setup")) {
             // Check database profile in case user_metadata in token cookie is stale
             try {
                 const { data: prof } = await supabase
@@ -301,7 +309,7 @@ export async function updateSession(request: NextRequest) {
                 // Ignore DB error, proceed with metadata check
             }
 
-            if (isSetupCompleted === false || isAccountClaimed === false) {
+            if (isSetupCompleted === false || (isDefaultStarter && isAccountClaimed === false)) {
                 const url = request.nextUrl.clone();
                 url.pathname = "/setup";
                 return NextResponse.redirect(url);

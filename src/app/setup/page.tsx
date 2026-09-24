@@ -168,13 +168,17 @@ function WizardContent() {
       !isReconfigure &&
       !isLaunched
     ) {
+      if (typeof document !== "undefined") {
+        document.cookie = "ireside_setup_completed=true; path=/; max-age=31536000; SameSite=Lax";
+      }
       toast.info("Setup already finalized", {
         description:
           "Your property portal is already operational. You can update your brand in Settings.",
       });
-      router.replace("/landlord/dashboard");
       if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
         window.location.href = "/landlord/dashboard";
+      } else {
+        router.replace("/landlord/dashboard");
       }
     }
   }, [
@@ -585,14 +589,19 @@ function WizardContent() {
         // ignore
       }
 
+      if (typeof document !== "undefined") {
+        document.cookie = "ireside_setup_completed=true; path=/; max-age=31536000; SameSite=Lax";
+      }
+
       setIsLaunched(true);
       toast.success("Property Portal Initialized", {
         description: `Branded as ${propertyName}. Opening your dashboard...`,
       });
 
-      router.push("/landlord/dashboard");
       if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
         window.location.href = "/landlord/dashboard";
+      } else {
+        router.push("/landlord/dashboard");
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
