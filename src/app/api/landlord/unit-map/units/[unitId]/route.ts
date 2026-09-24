@@ -54,7 +54,7 @@ export async function DELETE(
         .from("leases")
         .select("id")
         .eq("unit_id", unitId)
-        .in("status", ["active", "pending", "pending_signature", "approved"])
+        .in("status", ["active", "pending_signature", "pending_tenant_signature", "pending_landlord_signature"])
         .limit(1);
 
     if (activeLeases && activeLeases.length > 0) {
