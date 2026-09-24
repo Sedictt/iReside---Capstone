@@ -3,12 +3,32 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import React from "react";
 import { AccountActivationModal } from "@/components/auth/AccountActivationModal";
 
+const mockSignOut = vi.fn().mockResolvedValue({ error: null });
+const mockSignInWithPassword = vi.fn().mockResolvedValue({
+  data: { session: { user: { id: "test-user" } } },
+  error: null,
+});
+
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({
+    auth: {
+      signOut: mockSignOut,
+      signInWithPassword: mockSignInWithPassword,
+    },
+  }),
+}));
+
 describe("AccountActivationModal Component", () => {
   const mockOnComplete = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     global.fetch = vi.fn();
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: vi.fn().mockResolvedValue(undefined),
+      },
+    });
   });
 
   it("does not render when isOpen is false", () => {
@@ -16,7 +36,7 @@ describe("AccountActivationModal Component", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("completes claim flow and triggers onComplete with email and password when clicking Proceed to Sign In", async () => {
+  it("completes claim flow, displays Security Recovery Key modal, and triggers onComplete when clicking Proceed to Property Setup", async () => {
     (global.fetch as any).mockImplementation((url: string) => {
       if (url.includes("/api/setup/email/send-otp")) {
         return Promise.resolve({
@@ -33,7 +53,11 @@ describe("AccountActivationModal Component", () => {
       if (url.includes("/api/setup/account/claim")) {
         return Promise.resolve({
           ok: true,
-          json: async () => ({ success: true, email: "eduardo@santosproperties.ph" }),
+          json: async () => ({
+            success: true,
+            email: "eduardo@santosproperties.ph",
+            securityKey: "SEC-KEY-RECOVERY-9999",
+          }),
         });
       }
       return Promise.reject(new Error(`Unhandled URL: ${url}`));
@@ -75,16 +99,25 @@ describe("AccountActivationModal Component", () => {
     const claimButton = screen.getByRole("button", { name: /Claim Account/i });
     fireEvent.click(claimButton);
 
-    // Success Screen
+    // Security Recovery Code & Success Screen
     await waitFor(() => {
       expect(screen.getByText(/Account Claimed Successfully/i)).toBeInTheDocument();
+      expect(screen.getByText(/Landlord Security Recovery Key/i)).toBeInTheDocument();
       expect(screen.getByText("eduardo@santosproperties.ph")).toBeInTheDocument();
     });
 
-    const proceedButton = screen.getByRole("button", { name: /Proceed to Sign In/i });
+    const proceedButton = screen.getByRole("button", { name: /Proceed to Property Setup/i });
     expect(proceedButton).toBeInTheDocument();
 
-    // Click Proceed
+    // Copy or download key
+    const copyButton = screen.getByRole("button", { name: /Copy Key/i });
+    fireEvent.click(copyButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Copied to Clipboard/i)).toBeInTheDocument();
+    });
+
+    // Click Proceed to Property Setup
     fireEvent.click(proceedButton);
 
     await waitFor(() => {
@@ -92,7 +125,7 @@ describe("AccountActivationModal Component", () => {
     });
   });
 
-  it("automatically calls onComplete via timer if user does not click Proceed", async () => {
+  it("allows proceeding to setup after acknowledging security recovery key checkbox", async () => {
     (global.fetch as any).mockImplementation((url: string) => {
       if (url.includes("/api/setup/email/send-otp")) {
         return Promise.resolve({ ok: true, json: async () => ({ success: true }) });
@@ -101,15 +134,22 @@ describe("AccountActivationModal Component", () => {
         return Promise.resolve({ ok: true, json: async () => ({ success: true }) });
       }
       if (url.includes("/api/setup/account/claim")) {
-        return Promise.resolve({ ok: true, json: async () => ({ success: true, email: "auto@example.ph" }) });
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            email: "ack@example.ph",
+            securityKey: "SEC-KEY-RECOVERY-ACK",
+          }),
+        });
       }
       return Promise.reject(new Error(`Unhandled URL: ${url}`));
     });
 
     render(<AccountActivationModal isOpen={true} onComplete={mockOnComplete} />);
 
-    fireEvent.change(screen.getByPlaceholderText("e.g. Roberto Reyes"), { target: { value: "Auto Landlord" } });
-    fireEvent.change(screen.getByPlaceholderText("landlord@example.com"), { target: { value: "auto@example.ph" } });
+    fireEvent.change(screen.getByPlaceholderText("e.g. Roberto Reyes"), { target: { value: "Ack Landlord" } });
+    fireEvent.change(screen.getByPlaceholderText("landlord@example.com"), { target: { value: "ack@example.ph" } });
     fireEvent.click(screen.getByRole("button", { name: /Send Code/i }));
 
     await waitFor(() => {
@@ -129,11 +169,18 @@ describe("AccountActivationModal Component", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Account Claimed Successfully/i)).toBeInTheDocument();
+      expect(screen.getByText(/Landlord Security Recovery Key/i)).toBeInTheDocument();
     });
 
-    // Wait for the 2-second auto-proceed timer to trigger onComplete without any user click
+    // Check acknowledgment checkbox
+    const checkbox = screen.getByRole("checkbox");
+    fireEvent.click(checkbox);
+
+    const proceedButton = screen.getByRole("button", { name: /Proceed to Property Setup/i });
+    fireEvent.click(proceedButton);
+
     await waitFor(() => {
-      expect(mockOnComplete).toHaveBeenCalledWith("auto@example.ph", "SecurePass123!");
-    }, { timeout: 3500 });
+      expect(mockOnComplete).toHaveBeenCalledWith("ack@example.ph", "SecurePass123!");
+    });
   });
 });

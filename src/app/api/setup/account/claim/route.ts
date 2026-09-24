@@ -9,6 +9,7 @@ import {
   validateConfirmPassword,
   isPreseededPhone,
 } from "@/lib/validation/brand-setup";
+import { generateSecurityKey, encryptSecurityKey } from "@/lib/security/recovery-keys";
 import { z } from "zod";
 
 const accountClaimSchema = z.object({
@@ -215,19 +216,42 @@ export async function POST(request: NextRequest) {
       console.warn("[Account Claim] Note: profile_private phone cleanup:", privatePhoneErr);
     }
 
-    // 5. Clear OTP and mark password changed in user_security_settings
+    // 5. Generate and encrypt initial single-use security recovery key for Landlord
+    const plaintextSecurityKey = generateSecurityKey();
+    const encryptedKey = encryptSecurityKey(plaintextSecurityKey);
+    const timestamp = new Date().toISOString();
+
     await (adminClient as any)
       .from("user_security_settings")
-      .update({
-        has_changed_password: true,
-        otp_code: null,
-        otp_expiry: null,
-        two_factor_email: null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("profile_id", userId);
+      .upsert(
+        {
+          profile_id: userId,
+          has_changed_password: true,
+          otp_code: null,
+          otp_expiry: null,
+          two_factor_email: null,
+          security_key_encrypted: encryptedKey.encrypted,
+          security_key_iv: encryptedKey.iv,
+          security_key_auth_tag: encryptedKey.authTag,
+          security_key_updated_at: timestamp,
+          security_key_failed_attempts: 0,
+          security_key_locked_until: null,
+          updated_at: timestamp,
+        },
+        { onConflict: "profile_id" }
+      );
 
     // 6. Audit logging
+    await logUserActivity({
+      userId,
+      userRole: "landlord",
+      action: "security_key_generated",
+      category: "security",
+      title: "Security Recovery Key Generated",
+      description: `Initial single-use security recovery key generated during account claiming for ${normalizedEmail}.`,
+      severity: "info",
+    });
+
     await logUserActivity({
       userId,
       userRole: "landlord",
@@ -240,8 +264,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Account claimed successfully. Please sign in with your updated credentials.",
+      message: "Account claimed successfully. Save your security recovery key safely.",
       email: normalizedEmail,
+      securityKey: plaintextSecurityKey,
     });
   } catch (err: any) {
     console.error("[POST /api/setup/account/claim] Unexpected error:", err);
