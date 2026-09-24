@@ -18,6 +18,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { AccountActivationModal } from "@/components/auth/AccountActivationModal";
+import { SecurityKeyRecoveryModal } from "@/components/auth/SecurityKeyRecoveryModal";
 import { DISALLOWED_PRESEEDED_DATA } from "@/lib/validation/brand-setup";
 
 
@@ -29,6 +30,12 @@ function LoginContent() {
     const [showActivationModal, setShowActivationModal] = useState(false);
     const [prefilledEmail, setPrefilledEmail] = useState("");
     const [mounted, setMounted] = useState(false);
+    const [pendingRecovery, setPendingRecovery] = useState<{
+        securityKey: string;
+        email: string;
+        password?: string;
+    } | null>(null);
+    const [isRecoveryRedirecting, setIsRecoveryRedirecting] = useState(false);
 
     const passwordInputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
@@ -37,7 +44,72 @@ function LoginContent() {
 
     useEffect(() => {
         setMounted(true);
+
+        // Check if there is a pending recovery key from account claiming after page refresh
+        try {
+            const raw = typeof window !== "undefined"
+                ? (sessionStorage.getItem("ireside_pending_recovery_key") || localStorage.getItem("ireside_pending_recovery_key"))
+                : null;
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed?.securityKey && parsed?.email) {
+                    setPendingRecovery(parsed);
+                    setPrefilledEmail(parsed.email);
+                }
+            }
+        } catch {
+            // best-effort
+        }
     }, []);
+
+    const handleRecoveryProceed = async () => {
+        if (!pendingRecovery) return;
+        setIsRecoveryRedirecting(true);
+        const { email, password } = pendingRecovery;
+
+        // Clear pending recovery key so modal does not reappear on future loads
+        try {
+            sessionStorage.removeItem("ireside_pending_recovery_key");
+            localStorage.removeItem("ireside_pending_recovery_key");
+        } catch {
+            // best-effort
+        }
+
+        if (password) {
+            try {
+                const supabase = createClient();
+                const { data, error: signInErr } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+
+                if (!signInErr && data?.session) {
+                    if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+                        window.location.href = "/setup";
+                        return;
+                    }
+                    router.push("/setup");
+                    return;
+                }
+            } catch (err) {
+                console.error("[Login] Sign in error after recovery key:", err);
+            }
+        }
+
+        // Fallback: close modal, prefill email, set banner, focus password
+        setIsRecoveryRedirecting(false);
+        setPendingRecovery(null);
+        setPrefilledEmail(email);
+        setActivationBanner(
+            `Account claimed successfully! Please sign in with your new credentials as ${email} to proceed to setup.`
+        );
+        setTimeout(() => {
+            if (passwordInputRef.current) {
+                passwordInputRef.current.value = "";
+                passwordInputRef.current.focus();
+            }
+        }, 150);
+    };
 
     const handleActivationComplete = async (newEmail: string, _newPassword?: string) => {
         // After account claiming, the password was changed server-side which
@@ -610,6 +682,15 @@ function LoginContent() {
             <AccountActivationModal
                 isOpen={showActivationModal}
                 onComplete={handleActivationComplete}
+            />
+
+            {/* Security Recovery Key Lightbox Modal (rendered after refresh) */}
+            <SecurityKeyRecoveryModal
+                isOpen={!!pendingRecovery}
+                securityKey={pendingRecovery?.securityKey || ""}
+                accountEmail={pendingRecovery?.email || ""}
+                onProceed={handleRecoveryProceed}
+                isRedirecting={isRecoveryRedirecting}
             />
 
             {/* Bottom Footer */}

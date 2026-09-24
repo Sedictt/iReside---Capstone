@@ -450,4 +450,53 @@ describe("LoginPage - Account Activation (No Auto Sign-In)", () => {
             expect(screen.getByText(/Account claimed successfully!/i)).toBeInTheDocument();
         });
     });
+
+    it("renders Security Recovery Key Lightbox on refreshed login page when pending recovery key is in storage and proceeds to setup", async () => {
+        const mockPush = vi.fn();
+        mockRouter(mockPush as any);
+        mockSearchParams();
+
+        const mockSignIn = vi.fn().mockResolvedValue({
+            data: { session: { user: { id: "user-123" } } },
+            error: null,
+        });
+
+        const supabase = {
+            auth: {
+                signInWithPassword: mockSignIn,
+                signInWithOAuth: vi.fn(),
+            },
+            from: vi.fn(),
+        };
+        (createClient as Mock).mockReturnValue(supabase);
+
+        sessionStorage.setItem(
+            "ireside_pending_recovery_key",
+            JSON.stringify({
+                securityKey: "RECOVERY-KEY-REFRESH-TEST",
+                email: "claimed@example.ph",
+                password: "MyCleanPassword123!",
+            })
+        );
+
+        render(<LoginPage />);
+
+        await waitFor(() => {
+            expect(screen.getByText(/Account Claimed Successfully/i)).toBeInTheDocument();
+            expect(screen.getByText(/Landlord Security Recovery Key/i)).toBeInTheDocument();
+            expect(screen.getByText("claimed@example.ph")).toBeInTheDocument();
+        });
+
+        const proceedBtn = screen.getByRole("button", { name: /Proceed to Property Setup/i });
+        fireEvent.click(proceedBtn);
+
+        await waitFor(() => {
+            expect(mockSignIn).toHaveBeenCalledWith({
+                email: "claimed@example.ph",
+                password: "MyCleanPassword123!",
+            });
+            expect(mockPush).toHaveBeenCalledWith("/setup");
+            expect(sessionStorage.getItem("ireside_pending_recovery_key")).toBeNull();
+        });
+    });
 });
