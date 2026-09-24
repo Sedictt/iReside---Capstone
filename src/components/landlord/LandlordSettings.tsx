@@ -726,6 +726,13 @@ export function LandlordSettings() {
 
     const [formData, setFormData] = useState(() => {
         const cached = getCachedSettings();
+        const storedPropName = typeof window !== "undefined" ? (localStorage.getItem("ireside_property_name") || "") : "";
+        const whiteLabelFallback = (
+            (storedPropName.trim() && !DISALLOWED_PRESEEDED_DATA.propertyNames.includes(storedPropName.toLowerCase().trim()) && storedPropName.trim()) ||
+            (brand.propertyName?.trim() && !DISALLOWED_PRESEEDED_DATA.propertyNames.includes(brand.propertyName.toLowerCase().trim()) && brand.propertyName.trim()) ||
+            ""
+        );
+
         if (cached?.formData) {
             const cachedEmail = (cached.formData.email || "").toLowerCase().trim();
             const isDisallowed = !cachedEmail || 
@@ -733,15 +740,19 @@ export function LandlordSettings() {
                 cachedEmail.includes("turnkey.local");
             const cachedPhone = cached.formData.phone || "";
             const isPhoneDisallowed = isPreseededPhone(cachedPhone);
+            const rawCachedBiz = (cached.formData.business_name || "").trim();
+            const isCachedBizDisallowed = !rawCachedBiz || DISALLOWED_PRESEEDED_DATA.propertyNames.includes(rawCachedBiz.toLowerCase());
+
             return {
                 ...cached.formData,
+                business_name: !isCachedBizDisallowed ? rawCachedBiz : whiteLabelFallback,
                 email: isDisallowed ? "" : cached.formData.email,
                 phone: isPhoneDisallowed ? "" : cachedPhone,
             };
         }
         return {
             full_name: "",
-            business_name: "",
+            business_name: whiteLabelFallback,
             email: "",
             phone: "",
             website: "",
@@ -964,9 +975,24 @@ export function LandlordSettings() {
                 resolvedEmail = freshProfile?.email || user?.email || "";
             }
 
+            const rawProfileBiz = (freshProfile?.business_name || businessProfile?.business_name || "").trim();
+            const isProfileBizDisallowed = !rawProfileBiz || DISALLOWED_PRESEEDED_DATA.propertyNames.includes(rawProfileBiz.toLowerCase());
+
+            const whiteLabelCandidates = [
+                serverBranding?.propertyName,
+                typeof window !== "undefined" ? localStorage.getItem("ireside_property_name") : null,
+                brand.propertyName,
+                propertyTradeName,
+            ];
+            const resolvedWhiteLabel = whiteLabelCandidates.find(
+                (c) => c && typeof c === "string" && c.trim() && !DISALLOWED_PRESEEDED_DATA.propertyNames.includes(c.toLowerCase().trim())
+            )?.trim() || "";
+
+            const resolvedBizName = !isProfileBizDisallowed ? rawProfileBiz : resolvedWhiteLabel;
+
             const syncedForm = {
                 full_name: freshProfile?.full_name || "",
-                business_name: freshProfile?.business_name || businessProfile?.business_name || "",
+                business_name: resolvedBizName,
                 email: resolvedEmail,
                 phone: isPreseededPhone(freshProfile?.phone) ? "" : (freshProfile?.phone || ""),
                 website: freshProfile?.website || businessProfile?.website || "",
@@ -1191,6 +1217,17 @@ export function LandlordSettings() {
             setPropertyTagline(nextTagline);
             if (brand.logoUrl !== undefined) setPropertyLogoUrl(nextLogo);
             if (brand.bannerUrl) setBannerUrl(nextBanner);
+
+            // Keep business_name populated from white labeling if currently empty or disallowed
+            if (nextName && !DISALLOWED_PRESEEDED_DATA.propertyNames.includes(nextName.toLowerCase().trim())) {
+                setFormData((prev) => {
+                    const currentBiz = (prev.business_name || "").trim();
+                    if (!currentBiz || DISALLOWED_PRESEEDED_DATA.propertyNames.includes(currentBiz.toLowerCase())) {
+                        return { ...prev, business_name: nextName };
+                    }
+                    return prev;
+                });
+            }
 
             setInitialSnapshot((prev) => prev ? {
                 ...prev,
@@ -1581,7 +1618,7 @@ export function LandlordSettings() {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         full_name: formData.full_name,
-                        business_name: formData.business_name,
+                        business_name: formData.business_name || (!DISALLOWED_PRESEEDED_DATA.propertyNames.includes((propertyTradeName || "").toLowerCase().trim()) ? propertyTradeName : "") || brand.propertyName || "",
                         email: formData.email,
                         phone: formData.phone,
                         website: formData.website,
@@ -1828,38 +1865,86 @@ export function LandlordSettings() {
                                     />
                                 </SettingField>
 
-                                <SettingField 
-                                    label="Business Name" 
-                                    icon={Building2} 
-                                    description="Registered entity or enterprise business name."
-                                    error={touchedFields.business_name ? fieldErrors.business_name : undefined}
-                                >
-                                    <input
-                                        type="text"
-                                        value={formData.business_name}
-                                        maxLength={100}
-                                        onBlur={() => {
-                                            markFieldTouched("business_name");
-                                            const check = validateBusinessName(formData.business_name);
-                                            setFieldError("business_name", check.error);
-                                        }}
-                                        onChange={(e) => {
-                                            updateFormData({ business_name: e.target.value });
-                                            if (touchedFields.business_name) {
-                                                const check = validateBusinessName(e.target.value);
-                                                setFieldError("business_name", check.error);
-                                            }
-                                        }}
-                                        placeholder="e.g. Acme Residences LLC"
-                                        className={cn(
-                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
-                                            touchedFields.business_name && fieldErrors.business_name 
-                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
-                                                : "focus:ring-primary/20"
-                                        )}
-                                        aria-invalid={!!(touchedFields.business_name && fieldErrors.business_name)}
-                                    />
-                                </SettingField>
+                                {(() => {
+                                    const whiteLabelName = (propertyTradeName || brand.propertyName || "").trim();
+                                    const hasWhiteLabel = Boolean(whiteLabelName && !DISALLOWED_PRESEEDED_DATA.propertyNames.includes(whiteLabelName.toLowerCase()));
+
+                                    return (
+                                        <SettingField 
+                                            label="Business Name" 
+                                            icon={Building2} 
+                                            description="Registered entity or enterprise business name."
+                                            error={touchedFields.business_name ? fieldErrors.business_name : undefined}
+                                        >
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    value={formData.business_name}
+                                                    maxLength={100}
+                                                    onBlur={() => {
+                                                        markFieldTouched("business_name");
+                                                        const check = validateBusinessName(formData.business_name);
+                                                        setFieldError("business_name", check.error);
+                                                    }}
+                                                    onChange={(e) => {
+                                                        updateFormData({ business_name: e.target.value });
+                                                        if (touchedFields.business_name) {
+                                                            const check = validateBusinessName(e.target.value);
+                                                            setFieldError("business_name", check.error);
+                                                        }
+                                                    }}
+                                                    placeholder={hasWhiteLabel ? whiteLabelName : "e.g. Acme Residences LLC"}
+                                                    className={cn(
+                                                        "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
+                                                        touchedFields.business_name && fieldErrors.business_name 
+                                                            ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
+                                                            : "focus:ring-primary/20",
+                                                        hasWhiteLabel && !formData.business_name ? "pr-32" : ""
+                                                    )}
+                                                    aria-invalid={!!(touchedFields.business_name && fieldErrors.business_name)}
+                                                />
+                                                {hasWhiteLabel && !formData.business_name && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            updateFormData({ business_name: whiteLabelName });
+                                                            setFieldError("business_name", undefined);
+                                                            toast.info("Applied white-label name", {
+                                                                description: `Business name set to "${whiteLabelName}".`,
+                                                            });
+                                                        }}
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1 text-[11px] font-bold rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors cursor-pointer"
+                                                        title={`Fill with white-label property name: ${whiteLabelName}`}
+                                                    >
+                                                        Use White-Label
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {hasWhiteLabel && (
+                                                 <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+                                                     <span>
+                                                         White-label brand name: <strong className="text-foreground font-semibold">{whiteLabelName}</strong>
+                                                     </span>
+                                                     {formData.business_name && formData.business_name !== whiteLabelName && (
+                                                         <button
+                                                             type="button"
+                                                             onClick={() => {
+                                                                 updateFormData({ business_name: whiteLabelName });
+                                                                 setFieldError("business_name", undefined);
+                                                                 toast.info("Synced with white-label name", {
+                                                                     description: `Business name updated to "${whiteLabelName}".`,
+                                                                 });
+                                                             }}
+                                                             className="text-primary hover:underline font-bold text-[10px] cursor-pointer"
+                                                         >
+                                                             Sync with White-Label
+                                                         </button>
+                                                     )}
+                                                 </div>
+                                            )}
+                                        </SettingField>
+                                    );
+                                })()}
 
                                 <SettingField 
                                     label="Contact Email" 
@@ -2675,11 +2760,25 @@ export function LandlordSettings() {
                                             }}
                                             onChange={(e) => {
                                                 setHasUserEdited(true);
-                                                setPropertyTradeName(e.target.value);
+                                                const newTradeName = e.target.value;
+                                                const previousTradeName = propertyTradeName;
+                                                setPropertyTradeName(newTradeName);
                                                 if (touchedFields.propertyTradeName) {
-                                                    const check = validatePropertyTradeName(e.target.value);
+                                                    const check = validatePropertyTradeName(newTradeName);
                                                     setFieldError("propertyTradeName", check.error);
                                                 }
+                                                // Automatically propagate to business_name if it was previously empty, preseeded, or matched previous trade name
+                                                setFormData((prev) => {
+                                                    const currentBiz = (prev.business_name || "").trim();
+                                                    if (
+                                                        !currentBiz ||
+                                                        DISALLOWED_PRESEEDED_DATA.propertyNames.includes(currentBiz.toLowerCase()) ||
+                                                        currentBiz === previousTradeName.trim()
+                                                    ) {
+                                                        return { ...prev, business_name: newTradeName };
+                                                    }
+                                                    return prev;
+                                                });
                                             }}
                                             placeholder="e.g., Skyline Lofts"
                                             className={cn(

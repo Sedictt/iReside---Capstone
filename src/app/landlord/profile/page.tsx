@@ -139,7 +139,7 @@ export default async function LandlordProfilePage() {
         await Promise.all([
             supabase
                 .from('profiles')
-                .select('id, full_name, email, role, avatar_url, avatar_bg_color, phone, bio, website, address, created_at, cover_url, socials')
+                .select('id, full_name, email, role, avatar_url, avatar_bg_color, phone, bio, website, address, created_at, cover_url, socials, business_name')
                 .eq('id', user.id)
                 .maybeSingle(),
             (supabase as any)
@@ -174,10 +174,11 @@ export default async function LandlordProfilePage() {
                 .maybeSingle(),
         ]);
 
+    const whiteLabelName = (profileRes.data?.socials as any)?.branding?.propertyName || propertiesRes.data?.[0]?.name || null;
     const profile = profileRes.data
         ? {
             ...profileRes.data,
-            business_name: businessProfileRes.data?.business_name ?? null,
+            business_name: businessProfileRes.data?.business_name || profileRes.data?.business_name || whiteLabelName || null,
             business_permit_url: businessProfileRes.data?.business_permit_url ?? null,
             business_permit_number: businessProfileRes.data?.business_permit_number ?? null,
             business_permits: businessProfileRes.data?.business_permits ?? [],
