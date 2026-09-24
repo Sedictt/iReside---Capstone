@@ -37,6 +37,7 @@ export interface PropertyWithUnits extends PropertySummary {
   units: UnitSummary[];
   isMapSetupComplete?: boolean;
   placedCount?: number;
+  hasTenants?: boolean;
 }
 
 export interface UnitSummary {

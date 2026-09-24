@@ -213,11 +213,24 @@ export class PropertyService {
     }
 
     const placedUnitIds = new Set<string>();
+    const leasedUnitIds = new Set<string>();
     if (unitIds.length > 0) {
-      const { data: positions } = await (this.supabase as any)
-        .from("unit_map_positions")
-        .select("unit_id, floor_key, x, y, w, h")
-        .in("unit_id", unitIds);
+      const [{ data: positions }, { data: activeLeases }] = await Promise.all([
+        (this.supabase as any)
+          .from("unit_map_positions")
+          .select("unit_id, floor_key, x, y, w, h")
+          .in("unit_id", unitIds),
+        this.supabase
+          .from("leases")
+          .select("unit_id")
+          .in("unit_id", unitIds)
+          .in("status", [
+            "active",
+            "pending_signature",
+            "pending_tenant_signature",
+            "pending_landlord_signature",
+          ]),
+      ]);
 
       if (positions) {
         for (const pos of positions as any[]) {
@@ -235,6 +248,14 @@ export class PropertyService {
             pos.h > 0
           ) {
             placedUnitIds.add(pos.unit_id);
+          }
+        }
+      }
+
+      if (activeLeases) {
+        for (const lease of activeLeases) {
+          if (lease.unit_id) {
+            leasedUnitIds.add(lease.unit_id);
           }
         }
       }
@@ -260,11 +281,15 @@ export class PropertyService {
       const propUnits = unitsByPropertyId.get(property.id) ?? [];
       const placedCount = propUnits.filter((u) => placedUnitIds.has(u.id)).length;
       const isMapSetupComplete = propUnits.length === 0 || placedCount > 0;
+      const hasTenants = propUnits.some(
+        (u) => leasedUnitIds.has(u.id) || (u.status || "").toLowerCase() === "occupied"
+      );
       return {
         ...property,
         units: propUnits,
         placedCount,
         isMapSetupComplete,
+        hasTenants,
       };
     });
   }

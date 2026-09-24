@@ -46,7 +46,7 @@ export interface SidebarNavSection {
     dividerBefore?: boolean;
 }
 
-export type SidebarLockStage = "no_property" | "no_unit_map" | null;
+export type SidebarLockStage = "no_property" | "no_unit_map" | "no_tenant" | null;
 
 interface RoleSidebarProps {
     sections: SidebarNavSection[];
@@ -169,6 +169,13 @@ export function RoleSidebar({
             lockBadgeText = "Unit Map Required";
             lockTooltipText = "Configure your unit map to unlock this section.";
             lockToastText = "Unit map setup required. Please configure your property's unit layout first to unlock portal operations.";
+        } else if (stage === "no_tenant") {
+            const allowedHrefs = ["/landlord/dashboard", "/landlord/unit-map", "/landlord/tenants"];
+            isItemLocked = !allowedHrefs.includes(item.href);
+            resolvedHref = item.href;
+            lockBadgeText = "Tenant Setup Required";
+            lockTooltipText = "Complete property setup and register your first tenant to unlock portal operations.";
+            lockToastText = "Complete property setup and register your first tenant to unlock portal operations.";
         }
 
         const tooltipContent = (
@@ -316,7 +323,7 @@ export function RoleSidebar({
                     {!isCollapsed && (
                         <div className="flex items-center min-w-0 flex-1 overflow-hidden pr-1">
                             <LogoLink 
-                                isLocked={Boolean(isLocked || lockStage)} 
+                                isLocked={Boolean((isLocked || lockStage) && lockStage !== "no_tenant")} 
                                 lockToastText={
                                     lockStage === "no_unit_map" 
                                         ? "Unit map setup required. Please configure your property's unit layout first to unlock portal operations."

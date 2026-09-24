@@ -21,6 +21,7 @@ export interface Property {
     image: string | null
     isMapSetupComplete?: boolean
     placedCount?: number
+    hasTenants?: boolean
     units: Array<{
         id: string
         name: string

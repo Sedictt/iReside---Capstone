@@ -42,7 +42,11 @@ function TenantsContent() {
  } = useInstantData<Tenant[]>({
      key: `landlord_tenants_${selectedPropertyId || "all"}`,
      fetcher: async (signal) => {
-         const params = new URLSearchParams({ propertyId: selectedPropertyId });
+         const params = new URLSearchParams(
+             selectedPropertyId && selectedPropertyId !== "all"
+                 ? { propertyId: selectedPropertyId }
+                 : {}
+         );
          const response = await fetch(`/api/landlord/tenants?${params.toString()}`, {
              method: "GET",
              signal,
@@ -152,6 +156,7 @@ function TenantsContent() {
  error={error}
  onViewProfile={handleViewProfile}
  onMessage={handleMessageTenant}
+ onAddTenant={() => setIsModalOpen(true)}
  />
  )
  ) : (
