@@ -224,6 +224,67 @@ describe("Landlord Profile API (/api/landlord/profile)", () => {
         expect.objectContaining({ phone: null })
       );
     });
+
+    it("self-heals missing or preseeded business_name from white-label branding in socials", async () => {
+      mockRequireAuthenticatedUser.mockResolvedValue({
+        userId: "landlord-user-1",
+        userEmail: "owner@customdomain.ph",
+        userRole: "landlord",
+      });
+
+      const mockProfilesUpdate = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      });
+
+      mockAdminFrom.mockImplementation((table: string) => {
+        if (table === "profiles") {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: {
+                    id: "landlord-user-1",
+                    email: "owner@customdomain.ph",
+                    full_name: "Brand Landlord",
+                    business_name: null, // Missing business name in DB
+                    socials: {
+                      branding: {
+                        propertyName: "Solaria Residences",
+                      },
+                    },
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+            update: mockProfilesUpdate,
+          };
+        }
+        if (table === "profile_private" || table === "landlord_business_profiles") {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      const req = new NextRequest("http://localhost:3000/api/landlord/profile", {
+        method: "GET",
+      });
+
+      const res = await GET(req);
+      expect(res.status).toBe(200);
+      const json = await res.json();
+
+      expect(json.profile.business_name).toBe("Solaria Residences");
+      expect(mockProfilesUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ business_name: "Solaria Residences" })
+      );
+    });
   });
 
   describe("PATCH /api/landlord/profile", () => {

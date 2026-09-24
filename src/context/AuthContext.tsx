@@ -242,7 +242,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             emergency_contact_phone: (profile as any)?.emergency_contact_phone || socialsRecord?.emergency_contact_phone || null,
             phone: cleanPhone,
             address: privateProfile?.address ?? profile.address,
-            business_name: businessProfile?.business_name ?? profile.business_name,
+            business_name: businessProfile?.business_name ?? profile.business_name ?? (socialsRecord?.branding as any)?.propertyName ?? null,
             business_permit_url: businessProfile?.business_permit_url ?? profile.business_permit_url,
             business_permit_number: businessProfile?.business_permit_number ?? profile.business_permit_number,
             business_permits: businessProfile?.business_permits ?? profile.business_permits,

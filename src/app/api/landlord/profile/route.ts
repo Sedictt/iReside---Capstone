@@ -108,13 +108,53 @@ export async function GET(request: Request) {
             ? (profile.socials as Record<string, any>) 
             : {};
 
+        // Self-heal: ensure business_name reflects authentic white-label brand name if empty or preseeded
+        const rawBusinessName = (businessProfile?.business_name ?? profile.business_name ?? "").trim();
+        const isBusinessNameDisallowed = !rawBusinessName || DISALLOWED_PRESEEDED_DATA.propertyNames.includes(rawBusinessName.toLowerCase());
+
+        let resolvedBusinessName = !isBusinessNameDisallowed ? rawBusinessName : null;
+
+        if (!resolvedBusinessName) {
+            const whiteLabelBrandName = ((socialsRecord?.branding as any)?.propertyName || "").trim();
+            if (whiteLabelBrandName && !DISALLOWED_PRESEEDED_DATA.propertyNames.includes(whiteLabelBrandName.toLowerCase())) {
+                resolvedBusinessName = whiteLabelBrandName;
+            } else {
+                try {
+                    const { data: landlordProp } = await admin
+                        .from("properties")
+                        .select("name")
+                        .eq("landlord_id", userId)
+                        .order("created_at", { ascending: true })
+                        .limit(1)
+                        .maybeSingle();
+                    if (landlordProp?.name && !DISALLOWED_PRESEEDED_DATA.propertyNames.includes(landlordProp.name.toLowerCase().trim())) {
+                        resolvedBusinessName = landlordProp.name.trim();
+                    }
+                } catch {
+                    // Non-critical property lookup fallback
+                }
+            }
+
+            if (resolvedBusinessName && resolvedBusinessName !== profile.business_name) {
+                try {
+                    await admin
+                        .from("profiles")
+                        .update({ business_name: resolvedBusinessName, updated_at: new Date().toISOString() })
+                        .eq("id", userId);
+                    profile.business_name = resolvedBusinessName;
+                } catch (bizSyncErr) {
+                    console.warn("[landlord/profile GET] Self-healing business_name sync note:", bizSyncErr);
+                }
+            }
+        }
+
         const fullProfile = {
             ...profile,
             emergency_contact_name: socialsRecord.emergency_contact_name || (profile as any).emergency_contact_name || null,
             emergency_contact_phone: socialsRecord.emergency_contact_phone || (profile as any).emergency_contact_phone || null,
             phone: resolvedPhone,
             address: privateProfile?.address ?? profile.address,
-            business_name: businessProfile?.business_name ?? profile.business_name,
+            business_name: resolvedBusinessName,
             business_permit_url: businessProfile?.business_permit_url ?? profile.business_permit_url,
             business_permit_number: businessProfile?.business_permit_number ?? profile.business_permit_number,
             business_permits: businessProfile?.business_permits ?? profile.business_permits,
