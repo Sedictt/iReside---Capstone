@@ -216,6 +216,7 @@ describe("POST /api/setup/account/claim (Account Claiming & Initial Credential S
     const mockSecuritySettingsUpdate = vi.fn().mockReturnValue({
       eq: vi.fn().mockResolvedValue({ error: null }),
     });
+    const mockSecuritySettingsUpsert = vi.fn().mockResolvedValue({ error: null });
 
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === "user_security_settings") {
@@ -231,6 +232,7 @@ describe("POST /api/setup/account/claim (Account Claiming & Initial Credential S
             error: null,
           }),
           update: mockSecuritySettingsUpdate,
+          upsert: mockSecuritySettingsUpsert,
         };
       }
       if (table === "profiles") {
@@ -285,6 +287,8 @@ describe("POST /api/setup/account/claim (Account Claiming & Initial Credential S
     const json = await res.json();
     expect(json.success).toBe(true);
     expect(json.email).toBe("maria.clara@realdomain.com");
+    expect(json.securityKey).toBeDefined();
+    expect(typeof json.securityKey).toBe("string");
 
     // Verify auth.admin.updateUserById called with confirmed email and new password
     expect(mockUpdateUserById).toHaveBeenCalledWith(
@@ -313,14 +317,18 @@ describe("POST /api/setup/account/claim (Account Claiming & Initial Credential S
       })
     );
 
-    // Verify security settings cleared OTP
-    expect(mockSecuritySettingsUpdate).toHaveBeenCalledWith(
+    // Verify security settings upserted with encrypted security key and cleared OTP
+    expect(mockSecuritySettingsUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
         has_changed_password: true,
         otp_code: null,
         otp_expiry: null,
         two_factor_email: null,
-      })
+        security_key_encrypted: expect.any(String),
+        security_key_iv: expect.any(String),
+        security_key_auth_tag: expect.any(String),
+      }),
+      { onConflict: "profile_id" }
     );
 
     // Verify audit log recorded

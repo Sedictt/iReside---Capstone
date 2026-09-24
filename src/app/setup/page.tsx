@@ -43,7 +43,6 @@ import {
 } from "@/lib/branding/colors";
 import { useAuth } from "@/hooks/useAuth";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
-import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
 import {
   DISALLOWED_PRESEEDED_DATA,
   validatePropertyTradeName,
@@ -102,6 +101,8 @@ const PALETTE_PRESETS: PalettePreset[] = [
   },
 ];
 
+const SETUP_STORAGE_KEY = "ireside_setup_inputs_draft";
+
 function WizardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -112,19 +113,14 @@ function WizardContent() {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const brand = useBrand();
 
-  // Launch State & Security Recovery Key Modal
+  // Launch State
   const [isLaunching, setIsLaunching] = useState(false);
   const [isLaunched, setIsLaunched] = useState(false);
-  const [launchedSecurityKey, setLaunchedSecurityKey] = useState<string | null>(null);
-  const [isSecurityKeyAcknowledged, setIsSecurityKeyAcknowledged] = useState(false);
-  const [hasCopiedKey, setHasCopiedKey] = useState(false);
-  const [hasDownloadedKey, setHasDownloadedKey] = useState(false);
-  const [isKeyVisible, setIsKeyVisible] = useState(false);
 
   // ── System Lock: prevent navigating away from mandatory setup ──
   // Active only during first-time setup (not reconfigure/troubleshoot).
   // Blocks: browser back/forward, tab/window close, and in-page logo link.
-  // Unlocked once setup is launched (security key step reached).
+  // Unlocked once setup is launched (setup completion reached).
   const isSystemLocked = !isReconfigure && !isLaunched && !brand?.setupCompleted;
 
   useEffect(() => {
@@ -169,8 +165,7 @@ function WizardContent() {
       brand &&
       brand.setupCompleted &&
       !isReconfigure &&
-      !isLaunched &&
-      !launchedSecurityKey
+      !isLaunched
     ) {
       toast.info("Setup already finalized", {
         description:
@@ -185,7 +180,6 @@ function WizardContent() {
     brand.setupCompleted,
     isReconfigure,
     isLaunched,
-    launchedSecurityKey,
     router,
   ]);
 
@@ -231,55 +225,81 @@ function WizardContent() {
     setLightness(hsl.l);
   }, [brand.primaryColor]);
 
-  const handleDownloadSecurityKey = (key: string, email?: string) => {
+  // ── 1. Restore setup inputs draft from localStorage (for connection loss or page refresh) ──
+  useEffect(() => {
+    if (isReconfigure) return;
     try {
-      const timestamp = new Date().toLocaleString("en-US", {
-        dateStyle: "full",
-        timeStyle: "medium",
-      });
-
-      const fileContent = `=======================================================
-iReside Landlord Security Recovery Key
-=======================================================
-Generated On : ${timestamp}
-${email ? `Landlord Email: ${email}\n` : ""}
-SECURITY RECOVERY KEY:
-${key}
-
-IMPORTANT INSTRUCTIONS:
-- This key is your ultimate failsafe to recover your landlord account if you lose access to your email.
-- This key is encrypted by the system and will not be displayed again.
-- Each key is single-use. Once used, a new key will be generated.
-- Store this file in a safe location (e.g. encrypted vault, password manager, or secure offline drive).
-- Never share this key with anyone. iReside staff will never ask for your key.
-=======================================================`;
-
-      const blob = new Blob([fileContent], { type: "text/plain;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = `ireside-security-recovery-key-${new Date().toISOString().split("T")[0]}.txt`;
-      document.body.appendChild(anchor);
-      anchor.click();
-      document.body.removeChild(anchor);
-      URL.revokeObjectURL(url);
-
-      setHasDownloadedKey(true);
-      toast.success("Security key downloaded successfully.");
+      const raw = localStorage.getItem(SETUP_STORAGE_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      if (typeof draft.propertyName === "string" && draft.propertyName.trim()) {
+        setPropertyName(draft.propertyName);
+      }
+      if (typeof draft.tagline === "string") {
+        setTagline(draft.tagline);
+      }
+      if (typeof draft.landlordName === "string" && draft.landlordName.trim()) {
+        setLandlordName(draft.landlordName);
+      }
+      if (draft.logoUrl !== undefined) {
+        setLogoUrl(draft.logoUrl);
+      }
+      if (draft.modePreference === "dark" || draft.modePreference === "light") {
+        setModePreference(draft.modePreference);
+      }
+      if (typeof draft.primaryColor === "string" && draft.primaryColor.startsWith("#")) {
+        setPrimaryColor(draft.primaryColor);
+        const hsl = hexToHsl(draft.primaryColor);
+        setHue(hsl.h);
+        setSaturation(hsl.s);
+        setLightness(hsl.l);
+        applyBrandCssVariables(draft.primaryColor, draft.secondaryColor || secondaryColor);
+      }
+      if (typeof draft.secondaryColor === "string" && draft.secondaryColor.startsWith("#")) {
+        setSecondaryColor(draft.secondaryColor);
+      }
+      if (draft.currentStep && [1, 2, 3].includes(draft.currentStep)) {
+        setCurrentStep(draft.currentStep);
+      }
     } catch {
-      toast.error("Failed to download security key file.");
+      // Storage unavailable or invalid JSON
     }
-  };
+  }, [isReconfigure]);
 
-  const handleCopySecurityKey = async (key: string) => {
+  // ── 2. Persist setup inputs draft to localStorage on any change ──
+  useEffect(() => {
+    if (isReconfigure || isLaunched || brand?.setupCompleted) return;
     try {
-      await navigator.clipboard.writeText(key);
-      setHasCopiedKey(true);
-      toast.success("Security key copied to clipboard.");
+      // Only persist if user has started editing
+      if (propertyName || tagline || landlordName || logoUrl || primaryColor !== "#8b5cf6") {
+        const draft = {
+          propertyName,
+          tagline,
+          landlordName,
+          logoUrl,
+          modePreference,
+          primaryColor,
+          secondaryColor,
+          currentStep,
+        };
+        localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify(draft));
+      }
     } catch {
-      toast.error("Failed to copy security key.");
+      // Storage quota or disabled
     }
-  };
+  }, [
+    propertyName,
+    tagline,
+    landlordName,
+    logoUrl,
+    modePreference,
+    primaryColor,
+    secondaryColor,
+    currentStep,
+    isReconfigure,
+    isLaunched,
+    brand?.setupCompleted,
+  ]);
 
   // Field Validation & Interaction State
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -536,21 +556,33 @@ IMPORTANT INSTRUCTIONS:
           primaryColor,
           secondaryColor,
           logoUrl,
-          setupCompleted: false,
+          setupCompleted: true,
+          setupCompletedAt: new Date().toISOString(),
         },
-        false
+        true
       );
+
+      applyBrandCssVariables(primaryColor, secondaryColor);
+
+      try {
+        localStorage.removeItem(SETUP_STORAGE_KEY);
+      } catch {
+        // Storage cleanup is best-effort
+      }
 
       if (refreshProfile) {
         await refreshProfile();
       }
-      if (json.securityKey) {
-        setLaunchedSecurityKey(json.securityKey);
-      }
+
       setIsLaunched(true);
       toast.success("Property Portal Initialized", {
-        description: `Branded as ${propertyName}. Landlord account active.`,
+        description: `Branded as ${propertyName}. Opening your dashboard...`,
       });
+
+      router.push("/landlord/dashboard");
+      if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+        window.location.href = "/landlord/dashboard";
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
       toast.error("Failed to save setup: " + message);
@@ -1873,87 +1905,37 @@ IMPORTANT INSTRUCTIONS:
                     <motion.div
                       initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="space-y-4"
+                      className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                     >
-                      {launchedSecurityKey && (
-                        <SecurityKeyDisplayCard
-                          securityKey={launchedSecurityKey}
-                          isAcknowledged={isSecurityKeyAcknowledged}
-                          onToggleAcknowledge={setIsSecurityKeyAcknowledged}
-                          onDownload={() => setHasDownloadedKey(true)}
-                          onCopy={() => {
-                            setHasCopiedKey(true);
-                            setHasDownloadedKey(true);
-                          }}
-                          title="Landlord Security Recovery Key"
-                          description="Your workspace is initialized. Save your single-use recovery key now in case you ever lose access to your email."
-                          accountEmail={profile?.email || user?.email || undefined}
-                        />
-                      )}
-
-                      <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5">
-                          <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                          <div>
-                            <h4 className="text-xs font-bold uppercase tracking-wide text-foreground">
-                              Portal Activated Successfully
-                            </h4>
-                            <p className="text-[11px] text-muted-foreground">
-                              {launchedSecurityKey && !isSecurityKeyAcknowledged
-                                ? "Confirm saving your security key above to open your dashboard."
-                                : "Your workspace is ready for operational management."}
-                            </p>
-                          </div>
+                      <div className="flex items-center gap-2.5">
+                        <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wide text-foreground">
+                            Portal Activated Successfully
+                          </h4>
+                          <p className="text-[11px] text-muted-foreground">
+                            Your workspace is ready. Redirecting to your dashboard...
+                          </p>
                         </div>
-
-                        <button
-                          type="button"
-                          disabled={
-                            launchedSecurityKey
-                              ? !hasDownloadedKey || !isSecurityKeyAcknowledged
-                              : false
-                          }
-                          onClick={async () => {
-                            if (
-                              launchedSecurityKey &&
-                              (!hasDownloadedKey || !isSecurityKeyAcknowledged)
-                            ) {
-                              toast.error(
-                                "Please download and confirm saving your security recovery key before proceeding."
-                              );
-                              return;
-                            }
-                            await brand.updateBranding(
-                              {
-                                propertyName: propertyName.trim(),
-                                propertyTagline: tagline.trim(),
-                                primaryColor,
-                                secondaryColor,
-                                logoUrl,
-                                setupCompleted: true,
-                                setupCompletedAt: new Date().toISOString(),
-                              },
-                              true
-                            );
-                            applyBrandCssVariables(primaryColor, secondaryColor);
-                            router.push("/landlord/dashboard");
-                          }}
-                          className={cn(
-                            "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-xs focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
-                            !launchedSecurityKey ||
-                              (hasDownloadedKey && isSecurityKeyAcknowledged)
-                              ? "cursor-pointer active:scale-95"
-                              : "opacity-40 cursor-not-allowed"
-                          )}
-                          style={{
-                            backgroundColor: primaryColor,
-                            color: primaryTextColor,
-                          }}
-                        >
-                          <span>Open Dashboard</span>
-                          <ArrowRight className="size-3.5" />
-                        </button>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          router.push("/landlord/dashboard");
+                          if (typeof window !== "undefined") {
+                            window.location.href = "/landlord/dashboard";
+                          }
+                        }}
+                        className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-xs cursor-pointer active:scale-95"
+                        style={{
+                          backgroundColor: primaryColor,
+                          color: primaryTextColor,
+                        }}
+                      >
+                        <span>Open Dashboard</span>
+                        <ArrowRight className="size-3.5" />
+                      </button>
                     </motion.div>
                   )}
                 </motion.section>
@@ -2111,232 +2093,6 @@ IMPORTANT INSTRUCTIONS:
         </div>
       </main>
 
-      {/* Mandatory Security Recovery Key Modal */}
-      {isLaunched && launchedSecurityKey && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="security-key-modal-title"
-          aria-describedby="security-key-modal-desc"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200"
-        >
-          <div
-            className="w-full max-w-xl bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-2xl space-y-5 my-auto animate-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-start gap-4">
-              <div className="size-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                <KeyRound className="size-6" />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <h2
-                    id="security-key-modal-title"
-                    className="text-lg font-bold tracking-tight text-foreground"
-                  >
-                    Security Recovery Key
-                  </h2>
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                    Mandatory Backup
-                  </span>
-                </div>
-                <p id="security-key-modal-desc" className="text-xs text-muted-foreground leading-relaxed">
-                  Your portal setup is complete. To safeguard your account, download and confirm your
-                  single-use recovery key before accessing your dashboard.
-                </p>
-              </div>
-            </div>
-
-            {/* Key Box */}
-            <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Your Single-Use Recovery Key
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setIsKeyVisible((prev) => !prev)}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded cursor-pointer"
-                >
-                  {isKeyVisible ? (
-                    <>
-                      <EyeOff className="size-3.5" />
-                      <span>Hide</span>
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="size-3.5" />
-                      <span>Show</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              <div className="py-2.5 px-4 rounded-xl bg-background border border-border font-mono text-sm sm:text-base font-bold tracking-widest text-foreground text-center select-all">
-                {isKeyVisible ? launchedSecurityKey : "••••-••••-••••-••••"}
-              </div>
-
-              {/* Action Buttons: Copy & Download */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                <button
-                  type="button"
-                  onClick={() => handleCopySecurityKey(launchedSecurityKey)}
-                  className={cn(
-                    "flex items-center justify-center gap-2 h-10 px-4 rounded-xl border text-xs font-semibold transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer",
-                    hasCopiedKey
-                      ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
-                      : "bg-background border-border hover:bg-muted text-foreground"
-                  )}
-                >
-                  {hasCopiedKey ? (
-                    <>
-                      <Check className="size-4 text-emerald-500 stroke-[3]" />
-                      <span>Key Copied ✓</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="size-4 text-muted-foreground" />
-                      <span>Copy Key</span>
-                    </>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleDownloadSecurityKey(
-                      launchedSecurityKey,
-                      profile?.email || undefined
-                    )
-                  }
-                  className={cn(
-                    "flex items-center justify-center gap-2 h-10 px-4 rounded-xl border text-xs font-semibold transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer",
-                    hasDownloadedKey
-                      ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
-                      : "bg-background border-border hover:bg-muted text-foreground"
-                  )}
-                >
-                  {hasDownloadedKey ? (
-                    <>
-                      <Check className="size-4 text-emerald-500 stroke-[3]" />
-                      <span>Downloaded (.txt) ✓</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download className="size-4 text-muted-foreground" />
-                      <span>Download (.txt)</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Security Notice */}
-            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs leading-relaxed">
-              <ShieldAlert className="size-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-              <p>
-                <span className="font-semibold">This key will never be shown again.</span> Once you leave
-                this screen, the key is permanently encrypted and cannot be retrieved by support.
-              </p>
-            </div>
-
-            {/* Acknowledgment Checkbox */}
-            <label
-              htmlFor="ack-recovery-checkbox"
-              className="flex items-start gap-3 p-3 rounded-xl border border-border bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors select-none"
-            >
-              <input
-                id="ack-recovery-checkbox"
-                type="checkbox"
-                checked={isSecurityKeyAcknowledged}
-                onChange={(e) => setIsSecurityKeyAcknowledged(e.target.checked)}
-                className="size-4 mt-0.5 rounded border-border text-primary focus:ring-primary cursor-pointer shrink-0"
-              />
-              <span className="text-xs text-foreground leading-snug">
-                I have downloaded and safely stored my security recovery key in a secure location.
-              </span>
-            </label>
-
-            {/* Checklist Requirements */}
-            <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-muted-foreground">
-              <span
-                className={cn(
-                  "flex items-center gap-1",
-                  hasDownloadedKey
-                    ? "text-emerald-600 dark:text-emerald-400 font-semibold"
-                    : "text-muted-foreground"
-                )}
-              >
-                <Check
-                  className={cn("size-3.5", hasDownloadedKey ? "stroke-[3]" : "opacity-40")}
-                />
-                1. Downloaded
-              </span>
-              <span>•</span>
-              <span
-                className={cn(
-                  "flex items-center gap-1",
-                  isSecurityKeyAcknowledged
-                    ? "text-emerald-600 dark:text-emerald-400 font-semibold"
-                    : "text-muted-foreground"
-                )}
-              >
-                <Check
-                  className={cn(
-                    "size-3.5",
-                    isSecurityKeyAcknowledged ? "stroke-[3]" : "opacity-40"
-                  )}
-                />
-                2. Acknowledged
-              </span>
-            </div>
-
-            {/* Action: Proceed to Dashboard */}
-            <button
-              type="button"
-              disabled={!hasDownloadedKey || !isSecurityKeyAcknowledged}
-              aria-disabled={!hasDownloadedKey || !isSecurityKeyAcknowledged}
-              onClick={async () => {
-                if (!hasDownloadedKey || !isSecurityKeyAcknowledged) {
-                  toast.error(
-                    "Please download and confirm saving your security recovery key before proceeding."
-                  );
-                  return;
-                }
-                await brand.updateBranding(
-                  {
-                    propertyName: propertyName.trim(),
-                    propertyTagline: tagline.trim(),
-                    primaryColor,
-                    secondaryColor,
-                    logoUrl,
-                    setupCompleted: true,
-                    setupCompletedAt: new Date().toISOString(),
-                  },
-                  true
-                );
-                applyBrandCssVariables(primaryColor, secondaryColor);
-                router.push("/landlord/dashboard");
-              }}
-              className={cn(
-                "w-full h-11 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 shadow-xs focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
-                hasDownloadedKey && isSecurityKeyAcknowledged
-                  ? "cursor-pointer active:scale-98 text-white hover:brightness-105"
-                  : "opacity-40 cursor-not-allowed text-muted-foreground bg-muted"
-              )}
-              style={
-                hasDownloadedKey && isSecurityKeyAcknowledged
-                  ? { backgroundColor: primaryColor, color: primaryTextColor }
-                  : undefined
-              }
-            >
-              <span>Proceed to Dashboard</span>
-              <ArrowRight className="size-4" />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

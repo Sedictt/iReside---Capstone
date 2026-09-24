@@ -26,6 +26,8 @@ import {
   validateAdminPassword,
   validateConfirmPassword,
 } from "@/lib/validation/brand-setup";
+import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
+import { createClient } from "@/lib/supabase/client";
 
 interface AccountActivationModalProps {
   isOpen: boolean;
@@ -62,24 +64,57 @@ export function AccountActivationModal({
   const [claimedEmail, setClaimedEmail] = useState("");
   const [isRedirecting, setIsRedirecting] = useState(false);
 
-  const handleProceed = () => {
+  // Security Recovery Key States
+  const [securityKey, setSecurityKey] = useState<string | null>(null);
+  const [isSecurityKeyAcknowledged, setIsSecurityKeyAcknowledged] = useState(false);
+  const [hasSavedKey, setHasSavedKey] = useState(false);
+
+  const handleProceedToSetup = async () => {
     if (isRedirecting) return;
+    if (securityKey && !isSecurityKeyAcknowledged && !hasSavedKey) {
+      toast.warning("Please Save Your Recovery Key", {
+        description: "Copy or download your single-use security recovery key before proceeding to setup.",
+        id: "save-recovery-key-warning",
+      });
+      return;
+    }
+
     setIsRedirecting(true);
-    // Force a full page reload to /login to clear stale in-memory auth state.
-    // The password change invalidated existing tokens, so the user must
-    // sign in fresh with their new credentials.
+    try {
+      const supabase = createClient();
+      try {
+        await supabase.auth.signOut({ scope: "local" });
+      } catch {
+        // ignore
+      }
+
+      if (newPassword) {
+        const { data, error: signInErr } = await supabase.auth.signInWithPassword({
+          email: claimedEmail,
+          password: newPassword,
+        });
+
+        if (!signInErr && data?.session) {
+          if (onComplete) {
+            await onComplete(claimedEmail, newPassword);
+          }
+          if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+            window.location.href = "/setup";
+          }
+          return;
+        }
+      }
+    } catch (err) {
+      console.error("[Account Claim] Auto sign-in to setup error:", err);
+    }
+
+    if (onComplete) {
+      await onComplete(claimedEmail, newPassword);
+    }
     if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-      window.location.href = "/login";
+      window.location.href = "/setup";
     }
   };
-
-  useEffect(() => {
-    if (!isSuccess) return;
-    const timer = setTimeout(() => {
-      handleProceed();
-    }, 2500);
-    return () => clearTimeout(timer);
-  }, [isSuccess, claimedEmail]);
 
   // Cooldown timer effect
   useEffect(() => {
@@ -252,6 +287,9 @@ export function AccountActivationModal({
         return;
       }
 
+      if (data.securityKey) {
+        setSecurityKey(data.securityKey);
+      }
       setClaimedEmail(newEmail.trim());
       setIsSuccess(true);
     } catch {
@@ -269,44 +307,70 @@ export function AccountActivationModal({
       aria-labelledby="activation-modal-title"
     >
       <div
-        className="w-full max-w-[460px] bg-card border border-border/80 rounded-2xl sm:rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 my-auto text-foreground"
+        className={cn(
+          "w-full bg-card border border-border/80 rounded-2xl sm:rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 my-auto text-foreground transition-all duration-200",
+          isSuccess && securityKey ? "max-w-[540px]" : "max-w-[460px]"
+        )}
         onClick={(e) => e.stopPropagation()}
       >
         {isSuccess ? (
-          /* Success Screen */
-          <div className="text-center space-y-4 py-2 animate-in zoom-in-95 duration-200">
-            <div className="size-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mx-auto shadow-xs">
-              <CheckCircle2 className="size-7" />
+          /* Security Recovery Code & Success Screen */
+          <div className="space-y-4 py-1 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 pb-3 border-b border-border/60">
+              <div className="size-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 shadow-xs">
+                <CheckCircle2 className="size-6" />
+              </div>
+              <div className="space-y-0.5">
+                <h2 className="text-base font-bold tracking-tight text-foreground">
+                  Account Claimed Successfully
+                </h2>
+                <p className="text-xs text-muted-foreground leading-snug">
+                  Workspace linked to <span className="font-semibold text-foreground">{claimedEmail}</span>
+                </p>
+              </div>
             </div>
 
-            <div className="space-y-1.5">
-              <h2 className="text-xl font-bold tracking-tight text-foreground">
-                Account Claimed Successfully
-              </h2>
-              <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                Your workspace is now securely linked to{" "}
-                <span className="font-semibold text-foreground">{claimedEmail}</span>.
-                {isRedirecting
-                  ? " Redirecting to sign in..."
-                  : " You will be redirected to sign in with your new credentials."}
-              </p>
-            </div>
+            {securityKey ? (
+              <SecurityKeyDisplayCard
+                securityKey={securityKey}
+                isAcknowledged={isSecurityKeyAcknowledged}
+                onToggleAcknowledge={setIsSecurityKeyAcknowledged}
+                onDownload={() => {
+                  setHasSavedKey(true);
+                  setIsSecurityKeyAcknowledged(true);
+                }}
+                onCopy={() => {
+                  setHasSavedKey(true);
+                  setIsSecurityKeyAcknowledged(true);
+                }}
+                title="Landlord Security Recovery Key"
+                description="Save your single-use recovery key now in case you ever lose access to your email. You will need this to regain access to your property portal."
+                accountEmail={claimedEmail}
+              />
+            ) : (
+              <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-xs text-muted-foreground">
+                Your credentials are saved. Proceed to property setup to configure your portal branding and units.
+              </div>
+            )}
 
             <div className="pt-2">
               <button
                 type="button"
                 disabled={isRedirecting}
-                onClick={handleProceed}
-                className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm transition-all hover:bg-primary/90 active:scale-[0.99] flex items-center justify-center gap-2 shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-75 disabled:cursor-not-allowed"
+                onClick={handleProceedToSetup}
+                className={cn(
+                  "w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm transition-all hover:bg-primary/90 active:scale-[0.99] flex items-center justify-center gap-2 shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                  isRedirecting && "opacity-75 cursor-wait"
+                )}
               >
                 {isRedirecting ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    <span>Redirecting...</span>
+                    <span>Connecting to Setup...</span>
                   </>
                 ) : (
                   <>
-                    <span>Sign In Now</span>
+                    <span>Proceed to Property Setup</span>
                     <ArrowRight className="size-4" />
                   </>
                 )}

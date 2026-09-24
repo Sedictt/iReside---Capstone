@@ -271,36 +271,53 @@ export async function POST(request: NextRequest) {
         { onConflict: "profile_id" }
       );
 
-    // 5. Generate and encrypt initial single-use security recovery key for Landlord
-    const plaintextSecurityKey = generateSecurityKey();
-    const encryptedKey = encryptSecurityKey(plaintextSecurityKey);
+    // 5. Generate and encrypt initial single-use security recovery key for Landlord if not already present
+    let plaintextSecurityKey: string | null = null;
+    let hasExistingKey = false;
+    try {
+      const { data: existingSecSettings } = await (adminClient as any)
+        .from("user_security_settings")
+        .select("security_key_encrypted")
+        .eq("profile_id", userId)
+        .maybeSingle();
+      if (existingSecSettings?.security_key_encrypted) {
+        hasExistingKey = true;
+      }
+    } catch {
+      // ignore
+    }
 
-    await (adminClient as any)
-      .from("user_security_settings")
-      .upsert(
-        {
-          profile_id: userId,
-          security_key_encrypted: encryptedKey.encrypted,
-          security_key_iv: encryptedKey.iv,
-          security_key_auth_tag: encryptedKey.authTag,
-          security_key_updated_at: timestamp,
-          security_key_failed_attempts: 0,
-          security_key_locked_until: null,
-          has_changed_password: true,
-          updated_at: timestamp,
-        },
-        { onConflict: "profile_id" }
-      );
+    if (!hasExistingKey) {
+      plaintextSecurityKey = generateSecurityKey();
+      const encryptedKey = encryptSecurityKey(plaintextSecurityKey);
 
-    await logUserActivity({
-      userId,
-      userRole: "landlord",
-      action: "security_key_generated",
-      category: "security",
-      title: "Security Recovery Key Created",
-      description: "Landlord initial security recovery key generated during workspace launch.",
-      severity: "info",
-    });
+      await (adminClient as any)
+        .from("user_security_settings")
+        .upsert(
+          {
+            profile_id: userId,
+            security_key_encrypted: encryptedKey.encrypted,
+            security_key_iv: encryptedKey.iv,
+            security_key_auth_tag: encryptedKey.authTag,
+            security_key_updated_at: timestamp,
+            security_key_failed_attempts: 0,
+            security_key_locked_until: null,
+            has_changed_password: true,
+            updated_at: timestamp,
+          },
+          { onConflict: "profile_id" }
+        );
+
+      await logUserActivity({
+        userId,
+        userRole: "landlord",
+        action: "security_key_generated",
+        category: "security",
+        title: "Security Recovery Key Created",
+        description: "Landlord initial security recovery key generated during workspace launch.",
+        severity: "info",
+      });
+    }
 
     return NextResponse.json({
       success: true,
