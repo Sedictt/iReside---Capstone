@@ -43,6 +43,7 @@ import {
 } from "@/lib/branding/colors";
 import { useAuth } from "@/hooks/useAuth";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
+import { createClient } from "@/lib/supabase/client";
 import {
   DISALLOWED_PRESEEDED_DATA,
   validatePropertyTradeName,
@@ -172,6 +173,9 @@ function WizardContent() {
           "Your property portal is already operational. You can update your brand in Settings.",
       });
       router.replace("/landlord/dashboard");
+      if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+        window.location.href = "/landlord/dashboard";
+      }
     }
   }, [
     loading,
@@ -572,6 +576,13 @@ function WizardContent() {
 
       if (refreshProfile) {
         await refreshProfile();
+      }
+
+      try {
+        const supabase = createClient();
+        await supabase.auth.refreshSession();
+      } catch {
+        // ignore
       }
 
       setIsLaunched(true);

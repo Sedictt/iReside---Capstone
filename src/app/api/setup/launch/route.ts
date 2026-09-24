@@ -80,21 +80,36 @@ export async function POST(request: NextRequest) {
 
 
     // 1. Account Claiming: Update Supabase Auth Credentials if requested
-    const updatesToAuth: { password?: string; email?: string } = {};
+    const adminFullName = body.admin?.fullName?.trim();
+    const adminPhone = body.admin?.phone?.trim();
+
     const newPassword = body.admin?.password?.trim();
-    if (newPassword && newPassword.length >= 6 && !newPassword.includes("•")) {
-      updatesToAuth.password = newPassword;
-    }
-
     const newEmail = body.admin?.email?.trim();
-    if (newEmail && newEmail.includes("@") && !newEmail.includes("turnkey.local") && newEmail !== authContext.userEmail) {
-      updatesToAuth.email = newEmail;
-    }
 
-    if (Object.keys(updatesToAuth).length > 0) {
+    const hasPasswordUpdate = Boolean(newPassword && newPassword.length >= 6 && !newPassword.includes("•"));
+    const hasEmailUpdate = Boolean(newEmail && newEmail.includes("@") && !newEmail.includes("turnkey.local") && newEmail !== authContext.userEmail);
+
+    if (hasPasswordUpdate || hasEmailUpdate) {
+      const authUpdates: { password?: string; email?: string; user_metadata: Record<string, any> } = {
+        user_metadata: {
+          role: "landlord",
+          is_account_claimed: true,
+          is_setup_completed: true,
+          setup_completed: true,
+          ...(adminFullName ? { full_name: adminFullName } : {}),
+        },
+      };
+
+      if (hasPasswordUpdate && newPassword) {
+        authUpdates.password = newPassword;
+      }
+      if (hasEmailUpdate && newEmail) {
+        authUpdates.email = newEmail;
+      }
+
       const { error: authUpdateError } = await adminClient.auth.admin.updateUserById(
         userId,
-        updatesToAuth
+        authUpdates
       );
       if (authUpdateError) {
         console.warn("[Setup Launch] Failed updating auth credentials:", authUpdateError.message);
@@ -102,7 +117,7 @@ export async function POST(request: NextRequest) {
           { error: `Failed to update account email: ${authUpdateError.message}` },
           { status: 400 }
         );
-      } else if (newPassword) {
+      } else if (hasPasswordUpdate && newPassword) {
         const targetEmail = newEmail || authContext.userEmail;
         if (targetEmail) {
           try {
@@ -117,10 +132,6 @@ export async function POST(request: NextRequest) {
         }
       }
     }
-
-    // 2. Account Profile Updates: Name, Phone, Business Name & Brand Configuration
-    const adminFullName = body.admin?.fullName?.trim();
-    const adminPhone = body.admin?.phone?.trim();
 
     // 3. Brand & Setup Completion Metadata
     const brandingMeta = {
