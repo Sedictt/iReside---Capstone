@@ -330,7 +330,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: "Workspace personalization claimed and finalized successfully.",
       securityKey: plaintextSecurityKey,
@@ -345,6 +345,14 @@ export async function POST(request: NextRequest) {
         setupCompletedAt: timestamp,
       },
     });
+
+    response.cookies.set("ireside_setup_completed", "true", {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+    });
+
+    return response;
   } catch (error: any) {
     console.error("[POST /api/setup/launch] Error:", error);
     return NextResponse.json(
