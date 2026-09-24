@@ -26,7 +26,8 @@ import {
     Hash,
     Eye,
     Save,
-    Loader2
+    Loader2,
+    HelpCircle
 } from "lucide-react";
 import { PropertyAmenitiesSelector } from "@/components/landlord/properties/PropertyAmenitiesSelector";
 import { PropertyRulesSelector } from "@/components/landlord/properties/PropertyRulesSelector";
@@ -34,6 +35,8 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import { generateUnitList } from "@/lib/unit-naming";
 import { cn } from "@/lib/utils";
 import { SmartContractPreviewModal } from "@/components/landlord/properties/SmartContractPreviewModal";
+import { BillingStrategyModal } from "@/components/landlord/properties/BillingStrategyModal";
+import { AssetClassModal } from "@/components/landlord/properties/AssetClassModal";
 import ClickSpark from "@/components/ui/ClickSpark";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -95,6 +98,10 @@ function NewAssetContent() {
     const [coverExistingUrl, setCoverExistingUrl] = useState<string | null>(null);
     const [coverNewIndex, setCoverNewIndex] = useState<number | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [billingGuideOpen, setBillingGuideOpen] = useState(false);
+    const [billingGuideInitialTab, setBillingGuideInitialTab] = useState<string>("fixed_charge");
+    const [assetClassGuideOpen, setAssetClassGuideOpen] = useState(false);
+    const [assetClassGuideInitialTab, setAssetClassGuideInitialTab] = useState<string>("apartment");
     
     const [formData, setFormData] = useState({
         propertyName: "",
@@ -602,9 +609,22 @@ function NewAssetContent() {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                     <div className="neumorphic-panel border border-border/60 rounded-[2rem] p-8 space-y-8">
-                                        <div className="flex items-center gap-2">
-                                            <Home className="size-4 text-primary" />
-                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Asset Class</h3>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <Home className="size-4 text-primary" />
+                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Asset Class</h3>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setAssetClassGuideInitialTab(formData.propertyType || "apartment");
+                                                    setAssetClassGuideOpen(true);
+                                                }}
+                                                className="flex items-center gap-1.5 text-[10px] font-bold text-primary/80 hover:text-primary transition-colors cursor-pointer group"
+                                            >
+                                                <HelpCircle className="size-3.5 group-hover:scale-110 transition-transform" />
+                                                <span>Class Guide</span>
+                                            </button>
                                         </div>
                                         <div className="grid gap-3">
                                             {[
@@ -612,20 +632,44 @@ function NewAssetContent() {
                                                 { id: "dormitory", label: "Dormitory", desc: "Student housing / Shared rooms" },
                                                 { id: "boarding_house", label: "Boarding House", desc: "Individual room rentals" },
                                             ].map((opt) => (
-                                                <button
+                                                <div
                                                     key={opt.id}
+                                                    role="button"
+                                                    tabIndex={0}
                                                     onClick={() => handleInputChange("propertyType", opt.id)}
-                                                    className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all text-left ${formData.propertyType === opt.id ? "bg-primary/10 border-primary/50 shadow-sm" : "neumorphic-inset-card border-border/40 hover:border-border"}`}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter" || e.key === " ") {
+                                                            e.preventDefault();
+                                                            handleInputChange("propertyType", opt.id);
+                                                        }
+                                                    }}
+                                                    className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all text-left group cursor-pointer ${
+                                                        formData.propertyType === opt.id
+                                                            ? "bg-primary/10 border-primary/50 shadow-sm ring-1 ring-primary/20"
+                                                            : "neumorphic-inset-card border-border/40 hover:border-border"
+                                                    }`}
                                                 >
-                                                    <div className="flex items-center gap-4">
-                                                        <div className={`size-2.5 rounded-full ${formData.propertyType === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-border"}`} />
-                                                        <div>
-                                                            <p className={`text-sm font-black tracking-tight ${formData.propertyType === opt.id ? "text-primary" : "text-foreground"}`}>{opt.label}</p>
-                                                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{opt.desc}</p>
+                                                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                                                        <div className={`size-2.5 rounded-full shrink-0 ${
+                                                            formData.propertyType === opt.id
+                                                                ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]"
+                                                                : "bg-border group-hover:bg-muted-foreground/50 transition-colors"
+                                                        }`} />
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className={`text-sm font-black tracking-tight ${
+                                                                formData.propertyType === opt.id ? "text-primary" : "text-foreground"
+                                                            }`}>
+                                                                {opt.label}
+                                                            </p>
+                                                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                                                                {opt.desc}
+                                                            </p>
                                                         </div>
                                                     </div>
-                                                    {formData.propertyType === opt.id && <CheckCircle2 className="size-5 text-primary" />}
-                                                </button>
+                                                    {formData.propertyType === opt.id && (
+                                                        <CheckCircle2 className="size-5 text-primary shrink-0 ml-3" />
+                                                    )}
+                                                </div>
                                             ))}
                                         </div>
                                     </div>
@@ -817,48 +861,62 @@ function NewAssetContent() {
 
                                         <div className="grid gap-6">
                                             <div className="grid gap-3">
-                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground px-1">Utility Management</label>
+                                                <div className="flex items-center justify-between px-1">
+                                                    <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Utility Management</label>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setBillingGuideInitialTab(formData.utilityBilling || "fixed_charge");
+                                                            setBillingGuideOpen(true);
+                                                        }}
+                                                        className="flex items-center gap-1.5 text-[10px] font-bold text-primary/80 hover:text-primary transition-colors cursor-pointer group"
+                                                    >
+                                                        <HelpCircle className="size-3 group-hover:scale-110 transition-transform" />
+                                                        <span>Strategy Guide</span>
+                                                    </button>
+                                                </div>
                                                 <div className="grid gap-2.5">
                                                     {[
                                                         {
                                                             id: "fixed_charge",
                                                             label: "Bundled Utilities",
                                                             desc: "All-inclusive monthly rate",
-                                                            hint: "Water & electricity are already covered in the rent. Tenants pay one flat monthly rate—no meter logging or extra utility invoices.",
-                                                            bestFor: "Best for: High-end rentals, units without sub-meters, or hassle-free flat billing."
                                                         },
                                                         {
                                                             id: "individual_meter",
                                                             label: "Metered Consumption",
                                                             desc: "Pay-per-use direct billing",
-                                                            hint: "Units have dedicated sub-meters. Tenants are billed each month based on their exact water and electricity meter readings.",
-                                                            bestFor: "Best for: Apartments or rooms with individual sub-meters to ensure fair usage billing."
                                                         },
                                                         {
                                                             id: "equal_per_head",
                                                             label: "Hybrid Strategy",
                                                             desc: "Fixed base + usage overhead",
-                                                            hint: "Combines a fixed base fee with variable utility costs. Covers common area utilities while splitting shared expenses among tenants.",
-                                                            bestFor: "Best for: Dormitories, boarding houses, and shared living spaces with common facilities."
                                                         },
                                                     ].map((opt) => (
-                                                        <button
+                                                        <div
                                                             key={opt.id}
-                                                            type="button"
+                                                            role="button"
+                                                            tabIndex={0}
                                                             onClick={() => handleInputChange("utilityBilling", opt.id)}
-                                                            className={`w-full flex items-start justify-between p-4 sm:p-5 rounded-2xl border transition-all text-left group cursor-pointer ${
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === "Enter" || e.key === " ") {
+                                                                    e.preventDefault();
+                                                                    handleInputChange("utilityBilling", opt.id);
+                                                                }
+                                                            }}
+                                                            className={`w-full flex items-center justify-between p-4 sm:p-5 rounded-2xl border transition-all text-left group cursor-pointer ${
                                                                 formData.utilityBilling === opt.id
                                                                     ? "bg-primary/10 border-primary/50 shadow-sm ring-1 ring-primary/20"
                                                                     : "neumorphic-inset-card border-border/40 hover:border-border"
                                                             }`}
                                                         >
-                                                            <div className="flex items-start gap-3.5 min-w-0 flex-1">
-                                                                <div className={`size-2.5 rounded-full mt-1.5 shrink-0 ${
+                                                            <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                                                                <div className={`size-2.5 rounded-full shrink-0 ${
                                                                     formData.utilityBilling === opt.id
                                                                         ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]"
                                                                         : "bg-border group-hover:bg-muted-foreground/50 transition-colors"
                                                                 }`} />
-                                                                <div className="space-y-1 min-w-0 flex-1 pr-2">
+                                                                <div className="min-w-0 flex-1 pr-2">
                                                                     <div className="flex flex-wrap items-center gap-2">
                                                                         <p className={`text-sm font-black tracking-tight ${
                                                                             formData.utilityBilling === opt.id ? "text-primary" : "text-foreground"
@@ -869,18 +927,12 @@ function NewAssetContent() {
                                                                             {opt.desc}
                                                                         </span>
                                                                     </div>
-                                                                    <p className="text-xs text-muted-foreground font-medium leading-relaxed">
-                                                                        {opt.hint}
-                                                                    </p>
-                                                                    <p className="text-[11px] text-muted-foreground/75 font-semibold pt-0.5">
-                                                                        {opt.bestFor}
-                                                                    </p>
                                                                 </div>
                                                             </div>
                                                             {formData.utilityBilling === opt.id && (
-                                                                <CheckCircle2 className="size-5 text-primary shrink-0 ml-2 mt-0.5" />
+                                                                <CheckCircle2 className="size-5 text-primary shrink-0 ml-2" />
                                                             )}
-                                                        </button>
+                                                        </div>
                                                     ))}
                                                 </div>
                                             </div>
@@ -1144,6 +1196,22 @@ function NewAssetContent() {
                     amenities: formData.amenities,
                     buildingRules: formData.buildingRules
                 }}
+            />
+
+            <BillingStrategyModal
+                isOpen={billingGuideOpen}
+                onClose={() => setBillingGuideOpen(false)}
+                selectedStrategy={formData.utilityBilling}
+                onSelectStrategy={(id) => handleInputChange("utilityBilling", id)}
+                initialStrategyId={billingGuideInitialTab}
+            />
+
+            <AssetClassModal
+                isOpen={assetClassGuideOpen}
+                onClose={() => setAssetClassGuideOpen(false)}
+                selectedClass={formData.propertyType}
+                onSelectClass={(classId) => handleInputChange("propertyType", classId)}
+                initialClassId={assetClassGuideInitialTab}
             />
         </div>
     );
