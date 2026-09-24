@@ -268,10 +268,14 @@ export function AccountActivationModal({
     }
 
     setIsSubmitting(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
+
     try {
       const res = await fetch("/api/setup/account/claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           fullName: fullName.trim(),
           newEmail: newEmail.trim(),
@@ -281,6 +285,7 @@ export function AccountActivationModal({
         }),
       });
 
+      clearTimeout(timeoutId);
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Failed to complete account setup. Please try again.");
@@ -302,16 +307,48 @@ export function AccountActivationModal({
         }
       }
 
-      // Sign out stale local session to clear invalidated Supabase auth tokens
+      // Synchronously clear client auth cookies and tokens so stale tokens are wiped immediately
+      if (typeof document !== "undefined") {
+        document.cookie.split(";").forEach((c) => {
+          const name = c.split("=")[0].trim();
+          if (name.startsWith("sb-") || name.includes("auth-token") || name.includes("session")) {
+            document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0;`;
+            if (typeof window !== "undefined" && window.location.hostname) {
+              document.cookie = `${name}=; path=/; domain=${window.location.hostname}; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0;`;
+            }
+          }
+        });
+      }
+      if (typeof localStorage !== "undefined") {
+        try {
+          Object.keys(localStorage).forEach((key) => {
+            if (key.startsWith("sb-") || key.includes("supabase.auth.token")) {
+              localStorage.removeItem(key);
+            }
+          });
+        } catch {}
+      }
+
+      // Best effort non-blocking signOut with strict 300ms timeout
       try {
         const supabase = createClient();
-        await supabase.auth.signOut({ scope: "local" });
+        await Promise.race([
+          supabase.auth.signOut({ scope: "local" }).catch(() => null),
+          new Promise((resolve) => setTimeout(resolve, 300)),
+        ]);
       } catch {
         // ignore
       }
 
       if (onComplete) {
-        await onComplete(newEmail.trim(), newPassword);
+        try {
+          await Promise.race([
+            onComplete(newEmail.trim(), newPassword),
+            new Promise((resolve) => setTimeout(resolve, 300)),
+          ]);
+        } catch {
+          // ignore
+        }
       }
 
       // CRITICAL: The page must first refresh before showing the security key lightbox
@@ -328,8 +365,13 @@ export function AccountActivationModal({
       }
       setClaimedEmail(newEmail.trim());
       setIsSuccess(true);
-    } catch {
-      setError("An unexpected network error occurred while updating your account.");
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      if (err?.name === "AbortError") {
+        setError("Request timed out. Please check your connection and try again.");
+      } else {
+        setError("An unexpected network error occurred while updating your account.");
+      }
     } finally {
       setIsSubmitting(false);
     }

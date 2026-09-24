@@ -119,7 +119,10 @@ function LoginContent() {
         try {
             const supabase = createClient();
             try {
-                await supabase.auth.signOut({ scope: "local" });
+                await Promise.race([
+                    supabase.auth.signOut({ scope: "local" }).catch(() => null),
+                    new Promise((resolve) => setTimeout(resolve, 300)),
+                ]);
             } catch {
                 // Ignore signout errors — session may already be invalid
             }
@@ -152,7 +155,7 @@ function LoginContent() {
         // Force a full page reload to clear any stale in-memory auth state.
         // This guarantees a completely clean session for the fresh login.
         if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-            window.location.href = "/login";
+            window.location.href = "/login?claimed=true";
             return;
         }
 
