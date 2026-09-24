@@ -818,25 +818,68 @@ function NewAssetContent() {
                                         <div className="grid gap-6">
                                             <div className="grid gap-3">
                                                 <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground px-1">Utility Management</label>
-                                                <div className="grid gap-2">
+                                                <div className="grid gap-2.5">
                                                     {[
-                                                        { id: "fixed_charge", label: "Bundled Utilities", desc: "All-inclusive monthly rate" },
-                                                        { id: "individual_meter", label: "Metered Consumption", desc: "Pay-per-use direct billing" },
-                                                        { id: "equal_per_head", label: "Hybrid Strategy", desc: "Fixed base + usage overhead" },
+                                                        {
+                                                            id: "fixed_charge",
+                                                            label: "Bundled Utilities",
+                                                            desc: "All-inclusive monthly rate",
+                                                            hint: "Water & electricity are already covered in the rent. Tenants pay one flat monthly rate—no meter logging or extra utility invoices.",
+                                                            bestFor: "Best for: High-end rentals, units without sub-meters, or hassle-free flat billing."
+                                                        },
+                                                        {
+                                                            id: "individual_meter",
+                                                            label: "Metered Consumption",
+                                                            desc: "Pay-per-use direct billing",
+                                                            hint: "Units have dedicated sub-meters. Tenants are billed each month based on their exact water and electricity meter readings.",
+                                                            bestFor: "Best for: Apartments or rooms with individual sub-meters to ensure fair usage billing."
+                                                        },
+                                                        {
+                                                            id: "equal_per_head",
+                                                            label: "Hybrid Strategy",
+                                                            desc: "Fixed base + usage overhead",
+                                                            hint: "Combines a fixed base fee with variable utility costs. Covers common area utilities while splitting shared expenses among tenants.",
+                                                            bestFor: "Best for: Dormitories, boarding houses, and shared living spaces with common facilities."
+                                                        },
                                                     ].map((opt) => (
                                                         <button
                                                             key={opt.id}
+                                                            type="button"
                                                             onClick={() => handleInputChange("utilityBilling", opt.id)}
-                                                            className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all text-left ${formData.utilityBilling === opt.id ? "bg-primary/10 border-primary/50 shadow-sm" : "neumorphic-inset-card border-border/40 hover:border-border"}`}
+                                                            className={`w-full flex items-start justify-between p-4 sm:p-5 rounded-2xl border transition-all text-left group cursor-pointer ${
+                                                                formData.utilityBilling === opt.id
+                                                                    ? "bg-primary/10 border-primary/50 shadow-sm ring-1 ring-primary/20"
+                                                                    : "neumorphic-inset-card border-border/40 hover:border-border"
+                                                            }`}
                                                         >
-                                                            <div className="flex items-center gap-4">
-                                                                <div className={`size-2.5 rounded-full ${formData.utilityBilling === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-border"}`} />
-                                                                <div>
-                                                                    <p className={`text-sm font-black tracking-tight ${formData.utilityBilling === opt.id ? "text-primary" : "text-foreground"}`}>{opt.label}</p>
-                                                                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{opt.desc}</p>
+                                                            <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                                                                <div className={`size-2.5 rounded-full mt-1.5 shrink-0 ${
+                                                                    formData.utilityBilling === opt.id
+                                                                        ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]"
+                                                                        : "bg-border group-hover:bg-muted-foreground/50 transition-colors"
+                                                                }`} />
+                                                                <div className="space-y-1 min-w-0 flex-1 pr-2">
+                                                                    <div className="flex flex-wrap items-center gap-2">
+                                                                        <p className={`text-sm font-black tracking-tight ${
+                                                                            formData.utilityBilling === opt.id ? "text-primary" : "text-foreground"
+                                                                        }`}>
+                                                                            {opt.label}
+                                                                        </p>
+                                                                        <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">
+                                                                            {opt.desc}
+                                                                        </span>
+                                                                    </div>
+                                                                    <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                                                                        {opt.hint}
+                                                                    </p>
+                                                                    <p className="text-[11px] text-muted-foreground/75 font-semibold pt-0.5">
+                                                                        {opt.bestFor}
+                                                                    </p>
                                                                 </div>
                                                             </div>
-                                                            {formData.utilityBilling === opt.id && <CheckCircle2 className="size-5 text-primary" />}
+                                                            {formData.utilityBilling === opt.id && (
+                                                                <CheckCircle2 className="size-5 text-primary shrink-0 ml-2 mt-0.5" />
+                                                            )}
                                                         </button>
                                                     ))}
                                                 </div>
