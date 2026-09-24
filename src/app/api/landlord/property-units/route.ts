@@ -25,6 +25,7 @@ export async function GET(request: Request) {
             image: property.images?.[0] ?? null,
             isMapSetupComplete: property.isMapSetupComplete ?? false,
             placedCount: property.placedCount ?? 0,
+            hasTenants: property.hasTenants ?? false,
             units: property.units.map((unit) => ({
                 id: unit.id,
                 name: unit.name,

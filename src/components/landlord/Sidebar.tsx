@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { signOut } from "@/lib/supabase/client-auth";
-import { RoleSidebar, type SidebarNavSection } from "@/components/navigation/RoleSidebar";
+import { RoleSidebar, type SidebarNavSection, type SidebarLockStage } from "@/components/navigation/RoleSidebar";
 import { PropertySelector } from "@/components/landlord/PropertySelector";
 import { LogoutConfirmationModal } from "@/components/ui/LogoutConfirmationModal";
 import { useNotifications } from "@/context/NotificationContext";
@@ -79,12 +79,22 @@ export function Sidebar({
     const hasZeroProperties = !propertyLoading && properties.length === 0;
     const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete);
     const hasPendingUnitMap = !propertyLoading && properties.length > 0 && (!hasConfiguredMap || isGuidanceSessionActive);
-    const isLocked = hasZeroProperties || hasPendingUnitMap;
-    const lockStage = hasZeroProperties
+    
+    // Check if at least one tenant or occupied unit exists across the portfolio
+    const hasAtLeastOneTenant = properties.some((p) => 
+        Boolean(p.hasTenants) || 
+        p.units?.some((u) => (u.status || "").toLowerCase() === "occupied")
+    );
+    const hasPendingTenantSetup = !propertyLoading && properties.length > 0 && hasConfiguredMap && !isGuidanceSessionActive && !hasAtLeastOneTenant;
+
+    const isLocked = hasZeroProperties || hasPendingUnitMap || hasPendingTenantSetup;
+    const lockStage: SidebarLockStage = hasZeroProperties
         ? ("no_property" as const)
         : hasPendingUnitMap
             ? ("no_unit_map" as const)
-            : null;
+            : hasPendingTenantSetup
+                ? ("no_tenant" as const)
+                : null;
 
     const isUrgent = (type: string) => importantNotifications.some(n => n.type === type);
 

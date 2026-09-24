@@ -20,6 +20,7 @@ import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 import { AnimatePresence, m as motion } from "framer-motion";
+import { toast } from "sonner";
 
 function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -37,6 +38,17 @@ function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }
     const hasPendingUnitMap = isReady && isLandlord && properties.length > 0 && !hasConfiguredMap;
     const isAllowedUnitMapRoute = pathname?.startsWith("/landlord/unit-map");
 
+    // Stage 3: Property registered & unit map configured, but 0 tenants registered
+    const hasAtLeastOneTenant = properties.some((p) => 
+        Boolean(p.hasTenants) || 
+        p.units?.some((u) => (u.status || "").toLowerCase() === "occupied")
+    );
+    const hasPendingTenantSetup = isReady && isLandlord && properties.length > 0 && hasConfiguredMap && !hasAtLeastOneTenant;
+    const isAllowedStage3Route = 
+        pathname === "/landlord/dashboard" || 
+        pathname?.startsWith("/landlord/unit-map") || 
+        pathname?.startsWith("/landlord/tenants");
+
     useEffect(() => {
         if (hasZeroProperties && !isAllowedCreationRoute) {
             // When zero properties and not on properties/new, keep user routed toward property setup
@@ -48,8 +60,13 @@ function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }
             if (pathname !== "/landlord/dashboard") {
                 router.replace("/landlord/unit-map");
             }
+        } else if (hasPendingTenantSetup && !isAllowedStage3Route) {
+            // When property registered and map configured, but no tenants yet registered,
+            // restrict navigation to Dashboard, Unit Map, and Tenants only
+            toast.warning("Complete property setup and register your first tenant to unlock portal operations.");
+            router.replace("/landlord/dashboard");
         }
-    }, [hasZeroProperties, hasPendingUnitMap, isAllowedCreationRoute, isAllowedUnitMapRoute, pathname, router]);
+    }, [hasZeroProperties, hasPendingUnitMap, hasPendingTenantSetup, isAllowedCreationRoute, isAllowedUnitMapRoute, isAllowedStage3Route, pathname, router]);
 
     return (
         <>

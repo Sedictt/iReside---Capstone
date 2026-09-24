@@ -79,9 +79,20 @@ export function useInstantData<T>({
     const [error, setError] = useState<Error | null>(null);
     const [isRevalidating, setIsRevalidating] = useState(false);
 
-    // Has data check: true if cache exists and has content
-    const hasData = cachedData !== undefined && (Array.isArray(cachedData) ? cachedData.length > 0 : true);
+    // Has data check: true if cache exists
+    const hasData = cachedData !== undefined;
     const [isLoading, setIsLoading] = useState<boolean>(!hasData && enabled && Boolean(key));
+
+    const prevKeyRef = useRef(key);
+    useEffect(() => {
+        if (prevKeyRef.current !== key) {
+            prevKeyRef.current = key;
+            const hasCacheForKey = key ? memoryCache.has(key) : false;
+            if (!hasCacheForKey && enabled && Boolean(key)) {
+                setIsLoading(true);
+            }
+        }
+    }, [key, enabled]);
 
     const fetcherRef = useRef(fetcher);
     fetcherRef.current = fetcher;
@@ -93,6 +104,7 @@ export function useInstantData<T>({
             setIsRevalidating(true);
             try {
                 const result = await fetcherRef.current(signal);
+                if (signal?.aborted) return;
                 memoryCache.set(key, result);
                 if (typeof window !== "undefined") {
                     try {
@@ -102,14 +114,12 @@ export function useInstantData<T>({
                 notifyCacheChange();
                 setError(null);
             } catch (err: any) {
-                if (err?.name === "AbortError") return;
+                if (err?.name === "AbortError" || signal?.aborted) return;
                 console.error(`[useInstantData] Error fetching ${key}:`, err);
                 setError(err instanceof Error ? err : new Error(String(err)));
             } finally {
-                if (!signal?.aborted) {
-                    setIsLoading(false);
-                    setIsRevalidating(false);
-                }
+                setIsRevalidating(false);
+                setIsLoading(false);
             }
         },
         [key, enabled]
