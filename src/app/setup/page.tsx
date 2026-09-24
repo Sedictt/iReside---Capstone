@@ -121,6 +121,43 @@ function WizardContent() {
   const [hasDownloadedKey, setHasDownloadedKey] = useState(false);
   const [isKeyVisible, setIsKeyVisible] = useState(false);
 
+  // ── System Lock: prevent navigating away from mandatory setup ──
+  // Active only during first-time setup (not reconfigure/troubleshoot).
+  // Blocks: browser back/forward, tab/window close, and in-page logo link.
+  // Unlocked once setup is launched (security key step reached).
+  const isSystemLocked = !isReconfigure && !isLaunched && !brand?.setupCompleted;
+
+  useEffect(() => {
+    if (!isSystemLocked) return;
+
+    // 1. Trap browser back/forward buttons
+    const trapHistory = () => {
+      window.history.pushState(null, "", window.location.href);
+    };
+    // Push an extra history entry so the back button pops back to here
+    trapHistory();
+
+    const handlePopState = () => {
+      trapHistory();
+      toast.warning("Setup Required", {
+        description: "Please complete your property setup before navigating away.",
+        id: "setup-lock-popstate", // deduplicate
+      });
+    };
+    window.addEventListener("popstate", handlePopState);
+
+    // 2. Warn on tab/window close or hard refresh
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isSystemLocked]);
+
   useEffect(() => {
     if (!loading && profile && profile.role === "tenant") {
       router.replace("/tenant/dashboard");
@@ -547,13 +584,29 @@ IMPORTANT INSTRUCTIONS:
         className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between bg-card/95 backdrop-blur-md border-b border-border/80 px-4 sm:px-8 shadow-xs"
       >
         <div className="flex items-center gap-3">
-          <Link
-            href="/"
-            aria-label="Go to iReside home"
-            className="flex items-center transition-transform hover:opacity-85 active:scale-95 shrink-0 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-md"
-          >
-            <Logo className="h-8 w-26 sm:h-9 sm:w-28" />
-          </Link>
+          {isSystemLocked ? (
+            <button
+              type="button"
+              onClick={() => {
+                toast.warning("Setup Required", {
+                  description: "Please complete your property setup before navigating away.",
+                  id: "setup-lock-logo",
+                });
+              }}
+              aria-label="Setup must be completed first"
+              className="flex items-center transition-transform hover:opacity-85 active:scale-95 shrink-0 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-md cursor-not-allowed"
+            >
+              <Logo className="h-8 w-26 sm:h-9 sm:w-28" />
+            </button>
+          ) : (
+            <Link
+              href="/"
+              aria-label="Go to iReside home"
+              className="flex items-center transition-transform hover:opacity-85 active:scale-95 shrink-0 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-md"
+            >
+              <Logo className="h-8 w-26 sm:h-9 sm:w-28" />
+            </Link>
+          )}
           <span className="text-muted-foreground/40 hidden sm:inline" aria-hidden="true">
             /
           </span>
