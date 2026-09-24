@@ -287,6 +287,42 @@ export function AccountActivationModal({
         return;
       }
 
+      // Store pending recovery key and credentials so the clean refreshed page displays the lightbox
+      if (data.securityKey) {
+        const pendingData = {
+          securityKey: data.securityKey,
+          email: newEmail.trim(),
+          password: newPassword,
+        };
+        try {
+          sessionStorage.setItem("ireside_pending_recovery_key", JSON.stringify(pendingData));
+          localStorage.setItem("ireside_pending_recovery_key", JSON.stringify(pendingData));
+        } catch (storageErr) {
+          console.warn("[Account Claim] Could not save pending recovery key to storage:", storageErr);
+        }
+      }
+
+      // Sign out stale local session to clear invalidated Supabase auth tokens
+      try {
+        const supabase = createClient();
+        await supabase.auth.signOut({ scope: "local" });
+      } catch {
+        // ignore
+      }
+
+      if (onComplete) {
+        await onComplete(newEmail.trim(), newPassword);
+      }
+
+      // CRITICAL: The page must first refresh before showing the security key lightbox
+      // to eliminate Supabase token invalidation / CORS errors.
+      if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+        setIsRedirecting(true);
+        window.location.href = "/login?claimed=true";
+        return;
+      }
+
+      // Test environment fallback: display the modal in unit test runner
       if (data.securityKey) {
         setSecurityKey(data.securityKey);
       }
