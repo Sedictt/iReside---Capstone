@@ -60,18 +60,16 @@ export function AccountActivationModal({
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [claimedEmail, setClaimedEmail] = useState("");
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
-  const handleProceed = async () => {
-    if (isAuthenticating) return;
-    setIsAuthenticating(true);
-    try {
-      await onComplete(claimedEmail || newEmail.trim(), newPassword);
-      if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-        window.location.href = "/setup";
-      }
-    } catch {
-      setIsAuthenticating(false);
+  const handleProceed = () => {
+    if (isRedirecting) return;
+    setIsRedirecting(true);
+    // Force a full page reload to /login to clear stale in-memory auth state.
+    // The password change invalidated existing tokens, so the user must
+    // sign in fresh with their new credentials.
+    if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+      window.location.href = "/login";
     }
   };
 
@@ -79,9 +77,9 @@ export function AccountActivationModal({
     if (!isSuccess) return;
     const timer = setTimeout(() => {
       handleProceed();
-    }, 2000);
+    }, 2500);
     return () => clearTimeout(timer);
-  }, [isSuccess, claimedEmail, newPassword]);
+  }, [isSuccess, claimedEmail]);
 
   // Cooldown timer effect
   useEffect(() => {
@@ -288,27 +286,27 @@ export function AccountActivationModal({
               <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
                 Your workspace is now securely linked to{" "}
                 <span className="font-semibold text-foreground">{claimedEmail}</span>.
-                {isAuthenticating
-                  ? " Signing in and redirecting to setup..."
-                  : " Please wait while we sign you in, or click below to proceed to setup."}
+                {isRedirecting
+                  ? " Redirecting to sign in..."
+                  : " You will be redirected to sign in with your new credentials."}
               </p>
             </div>
 
             <div className="pt-2">
               <button
                 type="button"
-                disabled={isAuthenticating}
+                disabled={isRedirecting}
                 onClick={handleProceed}
                 className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm transition-all hover:bg-primary/90 active:scale-[0.99] flex items-center justify-center gap-2 shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-75 disabled:cursor-not-allowed"
               >
-                {isAuthenticating ? (
+                {isRedirecting ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    <span>Redirecting to Setup...</span>
+                    <span>Redirecting...</span>
                   </>
                 ) : (
                   <>
-                    <span>Proceed to Sign In & Setup</span>
+                    <span>Sign In Now</span>
                     <ArrowRight className="size-4" />
                   </>
                 )}

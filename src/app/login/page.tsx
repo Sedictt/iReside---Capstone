@@ -19,7 +19,7 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { AccountActivationModal } from "@/components/auth/AccountActivationModal";
 import { DISALLOWED_PRESEEDED_DATA } from "@/lib/validation/brand-setup";
-import { toast } from "sonner";
+
 
 function LoginContent() {
     const [error, setError] = useState<string | null>(null);
@@ -39,52 +39,20 @@ function LoginContent() {
         setMounted(true);
     }, []);
 
-    const handleActivationComplete = async (newEmail: string, newPassword?: string) => {
-        if (!newPassword) {
-            setShowActivationModal(false);
-            const supabase = createClient();
-            await supabase.auth.signOut();
-            setPrefilledEmail(newEmail);
-            setActivationBanner(`Account successfully claimed! Please enter your password to sign in as ${newEmail}.`);
-            setTimeout(() => {
-                if (passwordInputRef.current) {
-                    passwordInputRef.current.value = "";
-                    passwordInputRef.current.focus();
-                }
-            }, 150);
-            return;
-        }
-
+    const handleActivationComplete = async (newEmail: string, _newPassword?: string) => {
+        // After account claiming, the password was changed server-side which
+        // invalidates all existing Supabase auth tokens. Attempting auto sign-in
+        // on the same session causes a perpetual loading state. Instead, sign out
+        // the stale session entirely and let the user log in fresh.
         try {
             const supabase = createClient();
-            // Clear any lingering session from the temporary credentials first to avoid session conflicts
             try {
                 await supabase.auth.signOut({ scope: "local" });
             } catch {
-                // Ignore signout errors
+                // Ignore signout errors — session may already be invalid
             }
 
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email: newEmail.trim().toLowerCase(),
-                password: newPassword,
-            });
-
-            if (error) {
-                console.error("[Account Activation] Auto sign-in failed:", error.message);
-                setShowActivationModal(false);
-                setPrefilledEmail(newEmail);
-                setActivationBanner(`Account successfully claimed! Please enter your password to sign in as ${newEmail}.`);
-                toast.error("Auto sign-in failed. Please sign in with your new password.");
-                setTimeout(() => {
-                    if (passwordInputRef.current) {
-                        passwordInputRef.current.value = "";
-                        passwordInputRef.current.focus();
-                    }
-                }, 150);
-                return;
-            }
-
-            // Stale setup / brand flags should be cleared from client storage so setup starts fresh
+            // Clear stale branding/setup flags so the fresh login starts clean
             try {
                 if (typeof window !== "undefined") {
                     localStorage.removeItem("ireside_setup_completed");
@@ -96,42 +64,33 @@ function LoginContent() {
                     localStorage.removeItem("ireside_brand_primary");
                     localStorage.removeItem("ireside_brand_secondary");
                 }
-            } catch (storageErr) {
-                console.warn("[Account Activation] Storage clean up error:", storageErr);
+            } catch {
+                // Storage cleanup is best-effort
             }
-
-            let destination = "/setup";
-            try {
-                const brandRes = await fetch("/api/branding");
-                if (brandRes.ok) {
-                    const brandData = await brandRes.json();
-                    if (brandData.setupCompleted) {
-                        destination = redirectUrl || "/landlord/dashboard";
-                    }
-                }
-            } catch (err) {
-                console.warn("[Account Activation] Failed to fetch branding setup status:", err);
-            }
-
-            setShowActivationModal(false);
-            router.push(destination);
-
-            // Force refresh page and redirect to setup so the user is never stuck in a loading screen
-            if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-                window.location.href = destination;
-            }
-        } catch (err) {
-            console.error("[Account Activation] Unexpected error during auto sign-in:", err);
-            setShowActivationModal(false);
-            setPrefilledEmail(newEmail);
-            setActivationBanner(`Account successfully claimed! Please enter your password to sign in as ${newEmail}.`);
-            setTimeout(() => {
-                if (passwordInputRef.current) {
-                    passwordInputRef.current.value = "";
-                    passwordInputRef.current.focus();
-                }
-            }, 150);
+        } catch {
+            // If signout itself fails, still proceed to show login form
         }
+
+        setShowActivationModal(false);
+        setPrefilledEmail(newEmail);
+        setActivationBanner(
+            `Account claimed successfully! Please sign in with your new credentials as ${newEmail}.`
+        );
+
+        // Force a full page reload to clear any stale in-memory auth state.
+        // This guarantees a completely clean session for the fresh login.
+        if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+            window.location.href = "/login";
+            return;
+        }
+
+        // Fallback for test environments: focus the password field
+        setTimeout(() => {
+            if (passwordInputRef.current) {
+                passwordInputRef.current.value = "";
+                passwordInputRef.current.focus();
+            }
+        }, 150);
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
