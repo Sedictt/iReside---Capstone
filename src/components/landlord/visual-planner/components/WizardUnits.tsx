@@ -31,7 +31,17 @@ const floorDisplayName = (fc: FloorConfig) => {
     return `Floor ${fc.floor_number}`;
 };
 
-function SortableUnit({ unit, isOverlay = false }: { unit: DbUnit; isOverlay?: boolean }) {
+function SortableUnit({
+    unit,
+    isOverlay = false,
+    onRemove,
+    canRemove = true,
+}: {
+    unit: DbUnit;
+    isOverlay?: boolean;
+    onRemove?: (unit: DbUnit) => void;
+    canRemove?: boolean;
+}) {
     const {
         attributes,
         listeners,
@@ -47,6 +57,7 @@ function SortableUnit({ unit, isOverlay = false }: { unit: DbUnit; isOverlay?: b
     };
 
     const bedLabel = unit.beds === 0 ? "Studio" : `${unit.beds} Bed`;
+    const isDeletable = canRemove && unit.status?.toLowerCase() !== "occupied";
 
     return (
         <div
@@ -76,6 +87,22 @@ function SortableUnit({ unit, isOverlay = false }: { unit: DbUnit; isOverlay?: b
                 <span className="text-[10px] font-semibold text-muted-foreground bg-muted/70 px-2 py-0.5 rounded-md border border-border/50">
                     {bedLabel}
                 </span>
+                {onRemove && isDeletable && !isOverlay && (
+                    <button
+                        type="button"
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            onRemove(unit);
+                        }}
+                        className="size-6 flex items-center justify-center rounded-lg text-muted-foreground/40 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer opacity-80 sm:opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        title={`Remove ${unit.name}`}
+                        aria-label={`Remove ${unit.name}`}
+                    >
+                        <Trash2 className="size-3.5" />
+                    </button>
+                )}
             </div>
         </div>
     );
@@ -86,11 +113,15 @@ function FloorLane({
     units,
     onRemove,
     canRemove = true,
+    onRemoveUnit,
+    canRemoveUnit = true,
 }: {
     floor: FloorConfig;
     units: DbUnit[];
     onRemove: () => void;
     canRemove?: boolean;
+    onRemoveUnit?: (unit: DbUnit) => void;
+    canRemoveUnit?: boolean;
 }) {
     const { setNodeRef, isOver } = useSortable({
         id: `floor-${floor.floor_number}`,
@@ -183,7 +214,12 @@ function FloorLane({
                 <SortableContext items={units.map((u) => u.id)} strategy={rectSortingStrategy}>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         {units.map((unit) => (
-                            <SortableUnit key={unit.id} unit={unit} />
+                            <SortableUnit
+                                key={unit.id}
+                                unit={unit}
+                                onRemove={onRemoveUnit}
+                                canRemove={canRemoveUnit}
+                            />
                         ))}
                     </div>
                 </SortableContext>

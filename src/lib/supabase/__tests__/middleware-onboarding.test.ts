@@ -74,6 +74,10 @@ describe("middleware public routes", () => {
 
     it("allows public access to other public routes", () => {
         expect(isPublicRoute("/")).toBe(true);
+        expect(isPublicRoute("/sw.js")).toBe(true);
+        expect(isPublicRoute("/manifest.json")).toBe(true);
+        expect(isPublicRoute("/robots.txt")).toBe(true);
+        expect(isPublicRoute("/favicon.ico")).toBe(true);
         expect(isPublicRoute("/login")).toBe(true);
         expect(isPublicRoute("/signup")).toBe(true);
         expect(isPublicRoute("/docs")).toBe(true);

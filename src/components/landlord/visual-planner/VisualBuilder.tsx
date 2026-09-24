@@ -3518,6 +3518,189 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         setIsMaintenanceModalOpen(true);
     }, [selectedUnit, selectedProperty]);
 
+    const handleSaveUnitConfig = useCallback(async (
+        config: { areaSqm: number; bedrooms: number; baths: number },
+        applyToAll: boolean
+    ): Promise<{ success: boolean; error?: string }> => {
+        if (!selectedUnit) return { success: false, error: "No unit selected" };
+
+        const targetUnitId = selectedUnit.id;
+        const targetDbId = selectedUnit.dbId ?? selectedUnit.id;
+        const beds = Math.max(0, Math.round(config.bedrooms));
+        const baths = Math.max(0, config.baths);
+        const areaSqm = Math.max(0, Math.round(config.areaSqm));
+        const sqft = areaSqm > 0 ? Math.round(areaSqm / 0.092903) : null;
+        const unitType = unitTypeFromBeds(beds);
+
+        // 1. Snapshot previous state for rollback
+        const prevUnits = [...units];
+        const prevFloorLayouts = { ...floorLayouts };
+        const prevDbUnits = [...dbUnits];
+        const prevUnplacedDbUnits = [...unplacedDbUnits];
+        const cacheKey = `ireside.mapCache.${selectedPropertyId}`;
+        const prevCache = typeof window !== "undefined"
+            ? (window.sessionStorage.getItem(cacheKey) || window.localStorage.getItem(cacheKey))
+            : null;
+
+        // 2. Perform optimistic updates
+        if (applyToAll) {
+            setUnits((prev) =>
+                prev.map((u) => ({
+                    ...u,
+                    areaSqm,
+                    bedrooms: beds,
+                    baths,
+                    type: unitType,
+                }))
+            );
+            setFloorLayouts((prev) => {
+                const next: Record<string, FloorLayout> = {};
+                for (const [fKey, fLayout] of Object.entries(prev)) {
+                    next[fKey] = {
+                        ...fLayout,
+                        units: (fLayout.units || []).map((u) => ({
+                            ...u,
+                            areaSqm,
+                            bedrooms: beds,
+                            baths,
+                            type: unitType,
+                        })),
+                    };
+                }
+                return next;
+            });
+            setDbUnits((prev) =>
+                prev.map((u) => ({
+                    ...u,
+                    beds,
+                    baths,
+                    sqft,
+                }))
+            );
+            setUnplacedDbUnits((prev) =>
+                prev.map((u) => ({
+                    ...u,
+                    beds,
+                    baths,
+                    sqft,
+                }))
+            );
+        } else {
+            setUnits((prev) =>
+                prev.map((u) =>
+                    u.id === targetUnitId
+                        ? { ...u, areaSqm, bedrooms: beds, baths, type: unitType }
+                        : u
+                )
+            );
+            setFloorLayouts((prev) => {
+                const next: Record<string, FloorLayout> = {};
+                for (const [fKey, fLayout] of Object.entries(prev)) {
+                    next[fKey] = {
+                        ...fLayout,
+                        units: (fLayout.units || []).map((u) =>
+                            u.id === targetUnitId
+                                ? { ...u, areaSqm, bedrooms: beds, baths, type: unitType }
+                                : u
+                        ),
+                    };
+                }
+                return next;
+            });
+            setDbUnits((prev) =>
+                prev.map((u) =>
+                    u.id === targetDbId ? { ...u, beds, baths, sqft } : u
+                )
+            );
+            setUnplacedDbUnits((prev) =>
+                prev.map((u) =>
+                    u.id === targetDbId ? { ...u, beds, baths, sqft } : u
+                )
+            );
+        }
+
+        // Optimistically update instant cache
+        if (typeof window !== "undefined") {
+            try {
+                if (prevCache) {
+                    const parsed = JSON.parse(prevCache);
+                    if (parsed && Array.isArray(parsed.units)) {
+                        parsed.units = parsed.units.map((u: DbUnit) => {
+                            if (applyToAll || u.id === targetDbId) {
+                                return { ...u, beds, baths, sqft };
+                            }
+                            return u;
+                        });
+                        const serialized = JSON.stringify(parsed);
+                        window.sessionStorage.setItem(cacheKey, serialized);
+                        window.localStorage.setItem(cacheKey, serialized);
+                    }
+                }
+            } catch {}
+        }
+
+        // In demo mode or if no real property ID, resolve immediately after brief delay
+        if (demoMode || !selectedPropertyId || selectedPropertyId === "all") {
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            return { success: true };
+        }
+
+        // 3. Persist to server
+        try {
+            const res = await fetch("/api/landlord/unit-map/config", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    propertyId: selectedPropertyId,
+                    unitId: targetDbId,
+                    applyToAll,
+                    beds,
+                    baths,
+                    sqft,
+                    areaSqm,
+                }),
+            });
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.error || "Failed to save unit configuration");
+            }
+
+            // Real-time broadcast to keep all devices/tabs synced
+            if (realtimeChannelRef.current) {
+                try {
+                    realtimeChannelRef.current.send({
+                        type: "broadcast",
+                        event: "unitmap-updated",
+                        payload: {
+                            propertyId: selectedPropertyId,
+                            senderId: builderInstanceId.current,
+                            timestamp: Date.now(),
+                        },
+                    });
+                } catch (bcErr) {
+                    console.warn("[VisualBuilder] Failed to broadcast config update:", bcErr);
+                }
+            }
+
+            return { success: true };
+        } catch (err: any) {
+            console.error("Failed to save unit configuration:", err);
+            // Rollback optimistic state
+            setUnits(prevUnits);
+            setFloorLayouts(prevFloorLayouts);
+            setDbUnits(prevDbUnits);
+            setUnplacedDbUnits(prevUnplacedDbUnits);
+            if (typeof window !== "undefined" && prevCache) {
+                try {
+                    window.sessionStorage.setItem(cacheKey, prevCache);
+                    window.localStorage.setItem(cacheKey, prevCache);
+                } catch {}
+            }
+            return { success: false, error: err.message || "Failed to save configuration" };
+        }
+    }, [selectedUnit, units, floorLayouts, dbUnits, unplacedDbUnits, selectedPropertyId, demoMode]);
+
     if (isLoadingMap && !demoMode) {
         return <VisualPlannerSkeleton propertyName={selectedProperty?.name} />;
     }
@@ -5138,6 +5321,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 });
                                             }
                                         }}
+                                        onSaveConfig={handleSaveUnitConfig}
                                         onDelete={() => {
                                             deleteCanvasItem({ kind: "unit", id: selectedUnit.id });
                                             setSelectedItem(null);
@@ -5357,6 +5541,7 @@ const StructureDetailsPanel = ({
 const UnitDetailsPanel = ({
     unit,
     onUpdate,
+    onSaveConfig,
     onDelete,
     onClose,
     notesOpen,
@@ -5370,6 +5555,10 @@ const UnitDetailsPanel = ({
 }: {
     unit: Unit;
     onUpdate: (updates: Partial<Unit>) => void;
+    onSaveConfig?: (
+        config: { areaSqm: number; bedrooms: number; baths: number },
+        applyToAll: boolean
+    ) => Promise<{ success: boolean; error?: string }>;
     onDelete: () => void;
     onClose: () => void;
     notesOpen: boolean;
@@ -5407,6 +5596,85 @@ const UnitDetailsPanel = ({
     const beds = unit.bedrooms !== undefined ? unit.bedrooms : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 3 : 0);
     const baths = unit.baths !== undefined ? unit.baths : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 2.5 : 1);
     const unitLayoutLabel = unit.type === 'Studio' && beds === 0 ? `Studio - ${baths} Bath` : `${beds} Bed - ${baths} Bath`;
+
+    const initialBedrooms = unit.bedrooms !== undefined ? unit.bedrooms : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 3 : 0);
+    const initialBaths = unit.baths !== undefined ? unit.baths : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 2.5 : 1);
+    const initialAreaSqm = unit.areaSqm !== undefined ? unit.areaSqm : unitAreaSqm;
+
+    const [draftAreaSqm, setDraftAreaSqm] = useState<number | string>(initialAreaSqm);
+    const [draftBedrooms, setDraftBedrooms] = useState<number | string>(initialBedrooms);
+    const [draftBaths, setDraftBaths] = useState<number | string>(initialBaths);
+
+    const [isAskingApplyToAll, setIsAskingApplyToAll] = useState(false);
+    const [isSavingConfig, setIsSavingConfig] = useState(false);
+    const [savingScope, setSavingScope] = useState<"all" | "single" | null>(null);
+    const [configFeedback, setConfigFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+    useEffect(() => {
+        setDraftAreaSqm(unit.areaSqm !== undefined ? unit.areaSqm : unitAreaSqm);
+        setDraftBedrooms(unit.bedrooms !== undefined ? unit.bedrooms : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 3 : 0));
+        setDraftBaths(unit.baths !== undefined ? unit.baths : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 2.5 : 1));
+        setIsAskingApplyToAll(false);
+    }, [unit.id, unit.areaSqm, unit.bedrooms, unit.baths, unit.type, unitAreaSqm]);
+
+    const numDraftAreaSqm = draftAreaSqm === "" ? 0 : Number(draftAreaSqm);
+    const numDraftBedrooms = draftBedrooms === "" ? 0 : Number(draftBedrooms);
+    const numDraftBaths = draftBaths === "" ? 0 : Number(draftBaths);
+
+    const hasConfigChanges =
+        numDraftAreaSqm !== initialAreaSqm ||
+        numDraftBedrooms !== initialBedrooms ||
+        numDraftBaths !== initialBaths;
+
+    const handleExecuteSave = async (applyToAll: boolean) => {
+        const areaSqmVal = Math.max(0, numDraftAreaSqm);
+        const bedroomsVal = Math.max(0, Math.round(numDraftBedrooms));
+        const bathsVal = Math.max(0, numDraftBaths);
+
+        setIsAskingApplyToAll(false);
+        setIsSavingConfig(true);
+        setSavingScope(applyToAll ? "all" : "single");
+        setConfigFeedback(null);
+
+        try {
+            if (onSaveConfig) {
+                const res = await onSaveConfig(
+                    { areaSqm: areaSqmVal, bedrooms: bedroomsVal, baths: bathsVal },
+                    applyToAll
+                );
+                if (res.success) {
+                    setConfigFeedback({
+                        type: "success",
+                        message: applyToAll
+                            ? "Applied configuration to all units!"
+                            : `Configuration saved for ${unit.name}!`,
+                    });
+                    setTimeout(() => {
+                        setConfigFeedback((prev) => (prev?.type === "success" ? null : prev));
+                    }, 3500);
+                } else {
+                    setConfigFeedback({
+                        type: "error",
+                        message: res.error || "Failed to save configuration.",
+                    });
+                }
+            } else {
+                onUpdate({ areaSqm: areaSqmVal, bedrooms: bedroomsVal, baths: bathsVal });
+                setConfigFeedback({
+                    type: "success",
+                    message: "Configuration updated.",
+                });
+            }
+        } catch (err: any) {
+            setConfigFeedback({
+                type: "error",
+                message: err?.message || "An unexpected error occurred.",
+            });
+        } finally {
+            setIsSavingConfig(false);
+            setSavingScope(null);
+        }
+    };
 
     // Status configuration for consistent styling
     const statusConfig = {
@@ -5607,22 +5875,169 @@ const UnitDetailsPanel = ({
                 >
                     {/* Residence Configuration (Always Editable) */}
                     <section className="space-y-4">
-                        <h3 className="px-1 text-[10px] font-black uppercase tracking-[0.25em] text-zinc-400">RESIDENCE CONFIGURATION</h3>
-                        <div className="space-y-4 rounded-[24px] border border-zinc-200 bg-white p-6 dark:border-white/5 dark:bg-zinc-900/40">
+                        <div className="flex items-center justify-between px-1">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-400">RESIDENCE CONFIGURATION</h3>
+                            {hasConfigChanges && !isAskingApplyToAll && !isSavingConfig && (
+                                <span className="flex items-center gap-1.5 text-[10px] font-bold text-amber-500 dark:text-amber-400">
+                                    <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                    Unsaved
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="space-y-4 rounded-[24px] border border-zinc-200 bg-white p-6 shadow-sm dark:border-white/5 dark:bg-zinc-900/40">
                             <div>
                                 <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500">Area (sqm)</label>
-                                <input type="number" value={unit.areaSqm || ""} onChange={(e) => onUpdate({ areaSqm: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800" />
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    disabled={isSavingConfig}
+                                    value={draftAreaSqm}
+                                    onChange={(e) => {
+                                        setDraftAreaSqm(e.target.value);
+                                        if (configFeedback) setConfigFeedback(null);
+                                    }}
+                                    className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
+                                />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500">Bedrooms</label>
-                                    <input type="number" value={unit.bedrooms || ""} onChange={(e) => onUpdate({ bedrooms: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800" />
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="1"
+                                        disabled={isSavingConfig}
+                                        value={draftBedrooms}
+                                        onChange={(e) => {
+                                            setDraftBedrooms(e.target.value);
+                                            if (configFeedback) setConfigFeedback(null);
+                                        }}
+                                        className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
+                                    />
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500">Baths</label>
-                                    <input type="number" value={unit.baths || ""} onChange={(e) => onUpdate({ baths: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800" />
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.5"
+                                        disabled={isSavingConfig}
+                                        value={draftBaths}
+                                        onChange={(e) => {
+                                            setDraftBaths(e.target.value);
+                                            if (configFeedback) setConfigFeedback(null);
+                                        }}
+                                        className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
+                                    />
                                 </div>
                             </div>
+
+                            {/* Action buttons when changes exist */}
+                            {hasConfigChanges && !isAskingApplyToAll && !isSavingConfig && (
+                                <div className="flex items-center gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800/60">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAskingApplyToAll(true)}
+                                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-primary text-white text-xs font-black uppercase tracking-wider transition-all hover:bg-primary/90 active:scale-95 shadow-md shadow-primary/20"
+                                    >
+                                        <span className="material-icons-round text-base">save</span>
+                                        Save Changes
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setDraftAreaSqm(initialAreaSqm);
+                                            setDraftBedrooms(initialBedrooms);
+                                            setDraftBaths(initialBaths);
+                                            setIsAskingApplyToAll(false);
+                                        }}
+                                        className="py-2.5 px-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-black uppercase tracking-wider transition-all active:scale-95"
+                                        title="Reset to current values"
+                                    >
+                                        Reset
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Inline confirmation prompt */}
+                            {isAskingApplyToAll && !isSavingConfig && (
+                                <div className="p-4 rounded-2xl border border-primary/20 bg-primary/5 dark:bg-primary/10 space-y-3 transition-all">
+                                    <div className="flex items-start gap-2.5">
+                                        <span className="material-icons-round text-primary text-lg mt-0.5">help_outline</span>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-black text-zinc-900 dark:text-zinc-100">Apply to all units?</p>
+                                            <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5 leading-relaxed">
+                                                Would you like to apply this new configuration ({draftAreaSqm} sqm &middot; {draftBedrooms} bed &middot; {draftBaths} bath) to all units in this property, or only <span className="font-bold text-zinc-900 dark:text-zinc-200">{unit.name}</span>?
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2 pt-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleExecuteSave(false)}
+                                            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-750 text-zinc-900 dark:text-zinc-100 text-[11px] font-black uppercase tracking-wider transition-all shadow-sm active:scale-95"
+                                        >
+                                            <span className="material-icons-round text-sm text-zinc-500">meeting_room</span>
+                                            This Unit Only
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleExecuteSave(true)}
+                                            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-black uppercase tracking-wider transition-all shadow-md shadow-primary/20 active:scale-95"
+                                        >
+                                            <span className="material-icons-round text-sm">done_all</span>
+                                            All Units
+                                        </button>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAskingApplyToAll(false)}
+                                        className="w-full text-center text-[10px] font-black text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-wider py-0.5"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Optimistic saving indicator */}
+                            {isSavingConfig && (
+                                <div className="p-3.5 rounded-2xl border border-primary/20 bg-primary/5 dark:bg-primary/10 flex items-center gap-3">
+                                    <span className="material-icons-round animate-spin text-primary text-lg">sync</span>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-black text-primary truncate">
+                                            {savingScope === "all" ? "Applying to all units..." : `Saving configuration for ${unit.name}...`}
+                                        </p>
+                                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                                            Updating database and canvas layout
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Inline Feedback Banner */}
+                            {configFeedback && !isSavingConfig && !isAskingApplyToAll && (
+                                <div className={`p-3 rounded-xl flex items-center gap-2 text-xs font-black ${
+                                    configFeedback.type === "success"
+                                        ? "border border-emerald-500/20 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400"
+                                        : "border border-rose-500/20 bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-400"
+                                }`}>
+                                    <span className="material-icons-round text-base">
+                                        {configFeedback.type === "success" ? "check_circle" : "error"}
+                                    </span>
+                                    <span className="flex-1">{configFeedback.message}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setConfigFeedback(null)}
+                                        className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                                    >
+                                        <span className="material-icons-round text-sm">close</span>
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </section>
 

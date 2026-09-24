@@ -71,7 +71,13 @@ const PUBLIC_ROUTE_PREFIXES = [
     "/terms",
     "/privacy",
 ];
-const PUBLIC_EXACT_ROUTES = ["/"];
+const PUBLIC_EXACT_ROUTES = [
+    "/",
+    "/sw.js",
+    "/manifest.json",
+    "/robots.txt",
+    "/favicon.ico",
+];
 
 export const isPublicRoute = (pathname: string, request?: NextRequest) => {
     if (request && (
@@ -232,11 +238,28 @@ export async function updateSession(request: NextRequest) {
     if (user && (request.nextUrl.pathname.startsWith("/login") || request.nextUrl.pathname.startsWith("/signup") || request.nextUrl.pathname.startsWith("/forgot-password"))) {
         const url = request.nextUrl.clone();
         if (role === "admin" || role === "landlord") {
-            url.pathname = "/landlord/dashboard";
+            const isSetupCompleted = user?.user_metadata?.is_setup_completed;
+            const isAccountClaimed = user?.user_metadata?.is_account_claimed;
+            if (isSetupCompleted === false || isAccountClaimed === false) {
+                url.pathname = "/setup";
+            } else {
+                url.pathname = "/landlord/dashboard";
+            }
         } else {
             url.pathname = "/tenant/dashboard";
         }
         return NextResponse.redirect(url);
+    }
+
+    // Role-based portal protection: prevent unconfigured/unclaimed landlords from bypassing setup into dashboard
+    if (user && (role === "admin" || role === "landlord")) {
+        const isSetupCompleted = user?.user_metadata?.is_setup_completed;
+        const isAccountClaimed = user?.user_metadata?.is_account_claimed;
+        if ((isSetupCompleted === false || isAccountClaimed === false) && !request.nextUrl.pathname.startsWith("/setup")) {
+            const url = request.nextUrl.clone();
+            url.pathname = "/setup";
+            return NextResponse.redirect(url);
+        }
     }
 
     // If user is not signed in and the current path is not /login, /signup, or /auth, redirect to /login.

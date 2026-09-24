@@ -137,7 +137,9 @@ export async function POST(request: NextRequest) {
         password: newPassword,
         email_confirm: true,
         user_metadata: {
+          role: "landlord",
           is_account_claimed: true,
+          is_setup_completed: false,
           full_name: fullName.trim(),
         },
       }

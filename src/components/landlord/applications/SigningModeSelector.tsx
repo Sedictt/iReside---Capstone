@@ -134,7 +134,7 @@ export function SigningModeSelector({
 
               {/* Lock indicator */}
               {disabled && (
-                <div className="absolute inset-0 rounded-2xl bg-black/30 backdrop-blur-[1px] flex items-center justify-center">
+                <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center">
                   <div className="text-xs font-black text-white/60 uppercase tracking-wider">
                     Locked
                   </div>

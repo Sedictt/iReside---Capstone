@@ -113,7 +113,7 @@ export function SignaturePad({
         </button>
       ) : (
         <>
-          <div className="relative group rounded-[2rem] border border-white/[0.1] bg-neutral-900/40 overflow-hidden backdrop-blur-md transition-all hover:border-primary/30">
+          <div className="relative group rounded-[2rem] border border-border bg-neutral-950 dark:bg-neutral-900 overflow-hidden transition-all hover:border-primary/30">
             <canvas
               ref={canvasRef}
               className="w-full h-[200px] md:h-[300px] cursor-crosshair touch-none"

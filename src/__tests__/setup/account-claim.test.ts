@@ -294,7 +294,9 @@ describe("POST /api/setup/account/claim (Account Claiming & Initial Credential S
         password: "SuperSecurePassword2026!",
         email_confirm: true,
         user_metadata: expect.objectContaining({
+          role: "landlord",
           is_account_claimed: true,
+          is_setup_completed: false,
           full_name: "Maria Clara",
         }),
       })

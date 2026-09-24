@@ -153,7 +153,7 @@ function ConfirmationModal({
             <motion.button 
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+                className="absolute inset-0 bg-black/70" 
             aria-label="Close Confirmation" />
             <motion.div 
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -218,14 +218,7 @@ function ConfirmationModal({
     );
 }
 
-const Noise = () => null;
 
-const BackgroundGlow = () => (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute left-[-12%] top-[-14%] h-[45%] w-[45%] rounded-full bg-primary/12 blur-[90px]" />
-        <div className="absolute bottom-[-12%] right-[-12%] h-[42%] w-[42%] rounded-full bg-sky-500/10 blur-[90px] dark:bg-blue-500/15" />
-    </div>
-);
 
 interface GlassInputProps extends InputHTMLAttributes<HTMLInputElement> {
     icon: ElementType;
@@ -282,11 +275,10 @@ interface CardFrameProps {
 
 const CardFrame = ({ children, className, glow = true }: CardFrameProps) => (
     <div className={cn(
-        "relative overflow-hidden rounded-[2.5rem] border border-border bg-card/92 backdrop-blur-2xl transition-all shadow-sm",
+        "relative overflow-hidden rounded-[2.5rem] border border-border bg-card transition-all shadow-sm",
         glow && "hover:border-primary/20 hover:shadow-[0_18px_38px_-28px_rgba(15,23,42,0.35)]",
         className
     )}>
-        <Noise />
         <div className="relative z-10 p-8 sm:p-10 h-full flex flex-col">
             {children}
         </div>
@@ -826,7 +818,7 @@ export function WalkInApplicationModal({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="absolute inset-0 bg-black/60 backdrop-blur-xl"
+                className="absolute inset-0 bg-black/70"
             aria-label="Close Modal" />
 
             {currentUnit?.property_id && step !== 3 ? <ToolAccessBar propertyId={currentUnit.property_id} /> : null}
@@ -838,11 +830,9 @@ export function WalkInApplicationModal({
                 transition={{ type: "spring", damping: 25, stiffness: 150 }}
                 className={cn(
                     "relative w-full max-w-5xl h-[90vh] flex flex-col sm:flex-row z-10",
-                    "overflow-hidden rounded-[2.5rem] border border-border bg-card/98 shadow-[0_0_80px_rgba(0,0,0,0.4)]",
-                    "backdrop-blur-[60px]"
+                    "overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-[0_0_80px_rgba(0,0,0,0.4)]"
                 )}
             >
-                <Noise />
 
                 {/* Left Rails / Navigation */}
                 <aside className="relative z-20 hidden w-full shrink-0 flex-col overflow-hidden border-b border-border bg-background/80 p-8 sm:flex sm:w-80 sm:border-b-0 sm:border-r">
@@ -893,7 +883,7 @@ export function WalkInApplicationModal({
 
                 {/* Primary Content Container */}
                 <div className="flex-1 flex flex-col relative overflow-hidden">
-                     <div className="relative border-b border-border bg-card/95 backdrop-blur-md sm:hidden">
+                     <div className="relative border-b border-border bg-card sm:hidden">
                         <div className="p-6 flex items-center justify-between">
                             <div>
                                 <h2 className="text-xl font-black uppercase tracking-tighter text-foreground">{STEPS[step].label}</h2>
@@ -924,7 +914,7 @@ export function WalkInApplicationModal({
 
                              {/* Relocated Payment Progress Indicator */}
                              {step === 4 && (
-                                <div className="pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-2xl bg-card/40 border border-border/50 shadow-sm backdrop-blur-sm animate-in fade-in slide-in-from-left-4 duration-700">
+                                <div className="pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-2xl bg-muted/50 border border-border shadow-sm animate-in fade-in slide-in-from-left-4 duration-700">
                                     <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mr-1">Ledger Page</p>
                                     {[0, 1].map((idx) => (
                                         <button 
@@ -960,7 +950,7 @@ export function WalkInApplicationModal({
                                 className="h-full"
                             >
                                 {error && (
-                                    <div className="mb-10 flex items-center gap-4 rounded-2xl border border-red-500/20 bg-red-500/5 p-5 text-sm font-black text-red-700 backdrop-blur-sm animate-shake dark:text-red-400">
+                                    <div className="mb-10 flex items-center gap-4 rounded-2xl border border-red-500/20 bg-red-500/5 p-5 text-sm font-black text-red-700 animate-shake dark:text-red-400">
                                         <AlertCircle size={20} /> {error}
                                     </div>
                                 )}
@@ -1376,8 +1366,7 @@ export function WalkInApplicationModal({
                                     <div className="space-y-8 max-w-4xl mx-auto">
                                         {/* Verification Header Section - Scaled Down */}
                                         <div className="relative group">
-                                            <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 to-primary/20 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-                                            <div className="relative p-7 rounded-[2rem] bg-card/40 border border-border/50 backdrop-blur-md flex flex-col md:flex-row gap-6 items-center">
+                                            <div className="relative p-7 rounded-[2rem] bg-card border border-border flex flex-col md:flex-row gap-6 items-center">
                                                 <div className="shrink-0 size-16 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20 shadow-inner">
                                                     <ShieldCheck className="text-amber-500" size={30} strokeWidth={1.5} />
                                                 </div>
@@ -1467,7 +1456,7 @@ export function WalkInApplicationModal({
 
                                 {step === 3 && (
                                     <div className="space-y-10 max-w-4xl">
-                                        <div className="p-8 rounded-[2.5rem] bg-purple-500/5 border border-purple-500/10 text-purple-200 text-xs font-black leading-relaxed flex gap-6 items-center shadow-[0_15px_30px_rgba(168,85,247,0.05)] backdrop-blur-sm">
+                                        <div className="p-8 rounded-[2.5rem] bg-purple-500/5 border border-purple-500/10 text-purple-200 text-xs font-black leading-relaxed flex gap-6 items-center shadow-[0_15px_30px_rgba(168,85,247,0.05)]">
                                             <div className="shrink-0 size-14 bg-purple-500/10 rounded-2xl flex items-center justify-center border border-purple-500/20">
                                                 <PenTool className="text-purple-500" size={28} />
                                             </div>
@@ -1821,7 +1810,6 @@ export function WalkInApplicationModal({
                                                      allRequirementsMet ? "bg-emerald-500/10 border-emerald-500 text-emerald-500" : "bg-amber-500/10 border-amber-500 text-amber-500"
                                                  )}>
                                                      {allRequirementsMet ? <CheckCircle2 size={32} strokeWidth={2.5}/> : <AlertCircle size={32} strokeWidth={2.5} />}
-                                                     <div className={cn("absolute inset-0 rounded-[2rem] border-inherit blur-xl opacity-35", allRequirementsMet ? "bg-emerald-500" : "bg-amber-500")} />
                                                  </div>
                                                  <div className="text-center sm:text-left space-y-2">
                                                      <div className="flex items-center gap-3 justify-center sm:justify-start">
@@ -1922,7 +1910,7 @@ export function WalkInApplicationModal({
                     </div>
 
                     {/* Footer / Unified Action Bridge */}
-                    <div className="relative z-30 flex items-center justify-between gap-6 border-t border-border bg-card/95 p-8 backdrop-blur-3xl sm:px-12">
+                    <div className="relative z-30 flex items-center justify-between gap-6 border-t border-border bg-card p-8 sm:px-12">
                         <div className="flex gap-4 w-full sm:w-auto">
                             {step > 0 && (
                                 <button

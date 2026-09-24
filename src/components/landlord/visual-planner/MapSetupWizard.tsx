@@ -16,7 +16,8 @@ import {
     Layers,
     Hash,
     X,
-    Move
+    Move,
+    Trash2
 } from "lucide-react";
 import {
     DndContext,
@@ -35,7 +36,7 @@ import {
     sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { cn } from "@/lib/utils";
-import { generateUnitList, type NumberingStyle } from "@/lib/unit-naming";
+import { generateUnitList, renumberUnitsList, type NumberingStyle } from "@/lib/unit-naming";
 import { useAppToast } from "@/hooks/useAppToast";
 
 import { SortableUnit, FloorLane, floorDisplayName } from "./components/WizardUnits";
@@ -86,6 +87,8 @@ export function MapSetupWizard({
     const [renumberStyle, setRenumberStyle] = useState<NumberingStyle>("floor_based");
     const [renumberStartingNumber, setRenumberStartingNumber] = useState(101);
     const [isRenumbering, setIsRenumbering] = useState(false);
+    const [unitToDelete, setUnitToDelete] = useState<DbUnit | null>(null);
+    const [isDeletingUnit, setIsDeletingUnit] = useState(false);
 
     // Sync state if initial data arrives later
     useEffect(() => {
@@ -313,15 +316,76 @@ export function MapSetupWizard({
     };
 
     const handleUpdateUnitFloor = async (unitId: string, newFloor: number) => {
-        setUnits(prev => prev.map(u => u.id === unitId ? { ...u, floor: newFloor } : u));
+        const previousUnits = [...units];
+
+        // Place the dragged unit onto the new floor at the end and auto-renumber sequence
+        const otherUnits = units.filter(u => u.id !== unitId);
+        const movedUnit = units.find(u => u.id === unitId);
+        const updatedList: DbUnit[] = [...otherUnits];
+        if (movedUnit) {
+            updatedList.push({ ...movedUnit, floor: newFloor });
+        }
+
+        const optimisticUnits = renumberUnitsList(updatedList);
+        setUnits(optimisticUnits);
+
+        if (previewEmptyFloors) return;
+
         try {
-            await fetch(`/api/landlord/unit-map/units/${unitId}/floor`, {
+            const res = await fetch(`/api/landlord/unit-map/units/${unitId}/floor`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ floor: newFloor }),
+                body: JSON.stringify({ floor: newFloor, autoRenumber: true }),
             });
-        } catch {
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Failed to update floor");
+            if (data.units) {
+                setUnits(data.units);
+            }
+        } catch (err: any) {
+            setUnits(previousUnits);
             setError("Failed to save changes. Please check your connection.");
+            toast.error(err.message || "Failed to save floor change.");
+        }
+    };
+
+    const handleConfirmDeleteUnit = async () => {
+        if (!unitToDelete) return;
+        setIsDeletingUnit(true);
+        const deletingId = unitToDelete.id;
+        const deletingName = unitToDelete.name;
+
+        if (previewEmptyFloors) {
+            const remaining = units.filter(u => u.id !== deletingId);
+            setUnits(renumberUnitsList(remaining));
+            setUnitToDelete(null);
+            setIsDeletingUnit(false);
+            toast.success(`Unit ${deletingName} removed.`);
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/landlord/unit-map/units/${deletingId}`, {
+                method: "DELETE",
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || "Failed to remove unit");
+            }
+
+            if (data.units) {
+                setUnits(data.units);
+            } else {
+                const remaining = units.filter(u => u.id !== deletingId);
+                setUnits(renumberUnitsList(remaining));
+            }
+
+            setUnitToDelete(null);
+            toast.success(`Unit ${deletingName} removed and numbering updated.`);
+        } catch (err: any) {
+            toast.error(err.message || "Failed to remove unit");
+        } finally {
+            setIsDeletingUnit(false);
         }
     };
 
@@ -734,6 +798,8 @@ export function MapSetupWizard({
                                             units={sortUnitsSequential(units.filter(u => u.floor === -1))}
                                             onRemove={() => {}}
                                             canRemove={false}
+                                            onRemoveUnit={(u) => setUnitToDelete(u)}
+                                            canRemoveUnit={units.length > 1}
                                         />
                                     </div>
                                 )}
@@ -802,6 +868,8 @@ export function MapSetupWizard({
                                                 units={sortUnitsSequential(units.filter((u) => u.floor === fc.floor_number))}
                                                 onRemove={() => handleRemoveFloor(fc.floor_key)}
                                                 canRemove={floorConfigs.length > 1}
+                                                onRemoveUnit={(u) => setUnitToDelete(u)}
+                                                canRemoveUnit={units.length > 1}
                                             />
                                         ))}
                                     </div>
@@ -1059,6 +1127,65 @@ export function MapSetupWizard({
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Remove Unit Confirmation Modal */}
+            <AnimatePresence>
+                {unitToDelete && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-200">
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-5 text-card-foreground"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex size-10 items-center justify-center rounded-xl bg-destructive/10 text-destructive border border-destructive/20">
+                                        <Trash2 className="size-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-base font-bold text-foreground">Remove Unit</h3>
+                                        <p className="text-xs text-muted-foreground">{unitToDelete.name}</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => !isDeletingUnit && setUnitToDelete(null)}
+                                    disabled={isDeletingUnit}
+                                    className="flex size-8 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-all disabled:opacity-50"
+                                    aria-label="Close dialog"
+                                >
+                                    <X className="size-4" />
+                                </button>
+                            </div>
+
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                Are you sure you want to remove <span className="font-bold text-foreground">{unitToDelete.name}</span> from this property? The remaining units will automatically adapt their numbers sequentially.
+                            </p>
+
+                            <div className="flex items-center justify-end gap-2.5 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setUnitToDelete(null)}
+                                    disabled={isDeletingUnit}
+                                    className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-all disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleConfirmDeleteUnit}
+                                    disabled={isDeletingUnit}
+                                    className="inline-flex items-center gap-2 rounded-xl bg-destructive px-5 py-2 text-xs font-semibold text-destructive-foreground hover:bg-destructive/90 transition-all active:scale-95 disabled:opacity-50 shadow-sm"
+                                >
+                                    {isDeletingUnit ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+                                    <span>{isDeletingUnit ? "Removing..." : "Remove Unit"}</span>
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
+
