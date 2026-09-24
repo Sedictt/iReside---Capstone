@@ -19,6 +19,7 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { AccountActivationModal } from "@/components/auth/AccountActivationModal";
 import { DISALLOWED_PRESEEDED_DATA } from "@/lib/validation/brand-setup";
+import { toast } from "sonner";
 
 function LoginContent() {
     const [error, setError] = useState<string | null>(null);
@@ -38,18 +39,71 @@ function LoginContent() {
         setMounted(true);
     }, []);
 
-    const handleActivationComplete = async (newEmail: string) => {
-        setShowActivationModal(false);
-        const supabase = createClient();
-        await supabase.auth.signOut();
-        setPrefilledEmail(newEmail);
-        setActivationBanner(`Account successfully claimed! Please enter your password to sign in as ${newEmail}.`);
-        setTimeout(() => {
-            if (passwordInputRef.current) {
-                passwordInputRef.current.value = "";
-                passwordInputRef.current.focus();
+    const handleActivationComplete = async (newEmail: string, newPassword?: string) => {
+        if (!newPassword) {
+            setShowActivationModal(false);
+            const supabase = createClient();
+            await supabase.auth.signOut();
+            setPrefilledEmail(newEmail);
+            setActivationBanner(`Account successfully claimed! Please enter your password to sign in as ${newEmail}.`);
+            setTimeout(() => {
+                if (passwordInputRef.current) {
+                    passwordInputRef.current.value = "";
+                    passwordInputRef.current.focus();
+                }
+            }, 150);
+            return;
+        }
+
+        try {
+            const supabase = createClient();
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: newEmail,
+                password: newPassword,
+            });
+
+            if (error) {
+                console.error("[Account Activation] Auto sign-in failed:", error.message);
+                setShowActivationModal(false);
+                setPrefilledEmail(newEmail);
+                setActivationBanner(`Account successfully claimed! Please enter your password to sign in as ${newEmail}.`);
+                toast.error("Auto sign-in failed. Please sign in with your new password.");
+                setTimeout(() => {
+                    if (passwordInputRef.current) {
+                        passwordInputRef.current.value = "";
+                        passwordInputRef.current.focus();
+                    }
+                }, 150);
+                return;
             }
-        }, 150);
+
+            let destination = "/landlord/dashboard";
+            try {
+                const brandRes = await fetch("/api/branding");
+                if (brandRes.ok) {
+                    const brandData = await brandRes.json();
+                    if (!brandData.setupCompleted) {
+                        destination = "/setup";
+                    }
+                }
+            } catch (err) {
+                console.warn("[Account Activation] Failed to fetch branding setup status:", err);
+            }
+
+            setShowActivationModal(false);
+            router.push(redirectUrl || destination);
+        } catch (err) {
+            console.error("[Account Activation] Unexpected error during auto sign-in:", err);
+            setShowActivationModal(false);
+            setPrefilledEmail(newEmail);
+            setActivationBanner(`Account successfully claimed! Please enter your password to sign in as ${newEmail}.`);
+            setTimeout(() => {
+                if (passwordInputRef.current) {
+                    passwordInputRef.current.value = "";
+                    passwordInputRef.current.focus();
+                }
+            }, 150);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

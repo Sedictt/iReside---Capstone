@@ -39,6 +39,7 @@ import { LeaseData } from "@/types/lease";
 import { generateLeasePdf } from "@/lib/lease-pdf";
 import { AvatarPicker } from "@/components/profile/AvatarPicker";
 import { PropertyAmenitiesSelector } from "@/components/landlord/properties/PropertyAmenitiesSelector";
+import { PropertyRulesSelector } from "@/components/landlord/properties/PropertyRulesSelector";
 import html2canvas from "html2canvas";
 import { LucideIcon } from "lucide-react";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
@@ -98,7 +99,6 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     const [onboardingStartDate, setOnboardingStartDate] = useState("");
     const [onboardingEndDate, setOnboardingEndDate] = useState("");
     const [buildingRules, setBuildingRules] = useState<string[]>(["No Smoking", "No Pets", "No Loud Music after 10PM"]);
-    const [newRule, setNewRule] = useState("");
     
     // Profile Identity
     const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -862,64 +862,12 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
 
                                 {/* Building Rules - Spans 12 columns */}
                                 <div className="lg:col-span-12">
-                                    <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <ShieldCheck className="size-4 text-primary" />
-                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Building Rules & Conduct</h3>
-                                            </div>
-                                            <span className="text-[10px] font-black text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{buildingRules.length} Defined</span>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <div className="flex gap-2">
-                                                <label htmlFor="new-rule-input" className="sr-only">Define a new property rule</label>
-                                                <input 
-                                                    id="new-rule-input"
-                                                    type="text"
-                                                    value={newRule}
-                                                    onChange={(e) => setNewRule(e.target.value)}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter' && newRule.trim()) {
-                                                            setBuildingRules([...buildingRules, newRule.trim()]);
-                                                            setNewRule("");
-                                                        }
-                                                    }}
-                                                    placeholder="Define a new property rule..."
-                                                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm text-white focus:border-primary/50 transition-all placeholder:text-white/10 outline-none focus:ring-2 focus:ring-primary/40"
-                                                />
-                                                <button 
-                                                    onClick={() => {
-                                                        if (newRule.trim()) {
-                                                            setBuildingRules([...buildingRules, newRule.trim()]);
-                                                            setNewRule("");
-                                                        }
-                                                    }}
-                                                    className="px-6 py-2 bg-primary text-black rounded-xl font-black hover:scale-[1.02] active:scale-[0.98] transition-all focus:outline-none focus:ring-2 focus:ring-primary"
-                                                >
-                                                    Add Rule
-                                                </button>
-                                            </div>
-
-                                            <div className="flex flex-wrap gap-3">
-                                                {buildingRules.map((rule, index) => (
-                                                    <div 
-                                                        key={rule}
-                                                        className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-2 group hover:border-primary/30 transition-all"
-                                                    >
-                                                        <span className="text-xs font-black text-white/80">{rule}</span>
-                                                        <button 
-                                                            onClick={() => setBuildingRules(buildingRules.filter((_, i) => i !== index))}
-                                                            aria-label={`Remove rule: ${rule}`}
-                                                            className="text-white/20 hover:text-red-400 transition-colors focus:outline-none focus:text-red-400"
-                                                        >
-                                                            <X className="size-4" />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <PropertyRulesSelector
+                                        selectedRules={buildingRules}
+                                        onChange={setBuildingRules}
+                                        landlordId={null}
+                                        variant="dark"
+                                    />
                                 </div>
 
                                 {/* Contract Preview - Span 5 */}

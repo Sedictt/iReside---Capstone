@@ -29,6 +29,7 @@ import {
     Loader2
 } from "lucide-react";
 import { PropertyAmenitiesSelector } from "@/components/landlord/properties/PropertyAmenitiesSelector";
+import { PropertyRulesSelector } from "@/components/landlord/properties/PropertyRulesSelector";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { generateUnitList } from "@/lib/unit-naming";
 import { cn } from "@/lib/utils";
@@ -88,7 +89,6 @@ function NewAssetContent() {
     const [saveWarning, setSaveWarning] = useState<string | null>(null);
     const [reloadPropertyKey, setReloadPropertyKey] = useState(0);
     const [isContractBuilderOpen, setIsContractBuilderOpen] = useState(false);
-    const [newRule, setNewRule] = useState("");
     const [mediaFiles, setMediaFiles] = useState<File[]>([]);
     const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
     const [mediaPreviewUrls, setMediaPreviewUrls] = useState<string[]>([]);
@@ -886,61 +886,11 @@ function NewAssetContent() {
                                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                                     {/* Building Rules - Spans 12 columns */}
                                     <div className="lg:col-span-12">
-                                        <div className="neumorphic-panel border border-border/60 rounded-[2rem] p-7 space-y-6">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <ShieldCheck className="size-4 text-primary" />
-                                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Building Rules & Conduct</h3>
-                                                </div>
-                                                <span className="text-[10px] font-black text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{formData.buildingRules.length} Defined</span>
-                                            </div>
-
-                                            <div className="space-y-4">
-                                                <div className="flex gap-2">
-                                                    <input 
-                                                        type="text"
-                                                        value={newRule}
-                                                        onChange={(e) => setNewRule(e.target.value)}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === 'Enter' && newRule.trim()) {
-                                                                handleInputChange("buildingRules", [...formData.buildingRules, newRule.trim()]);
-                                                                setNewRule("");
-                                                            }
-                                                        }}
-                                                        placeholder="Define a new property rule…"
-                                                        className="flex-1 neumorphic-inset rounded-xl p-4 text-sm text-foreground focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/50 outline-none"
-                                                    />
-                                                    <button 
-                                                        onClick={() => {
-                                                            if (newRule.trim()) {
-                                                                handleInputChange("buildingRules", [...formData.buildingRules, newRule.trim()]);
-                                                                setNewRule("");
-                                                            }
-                                                        }}
-                                                        className="px-6 py-2 bg-primary text-black rounded-xl font-black hover:scale-[1.02] active:scale-[0.98] transition-all shadow-sm"
-                                                    >
-                                                        Add Rule
-                                                    </button>
-                                                </div>
-
-                                                <div className="flex flex-wrap gap-3">
-                                                    {formData.buildingRules.map((rule, index) => (
-                                                        <div 
-                                                            key={rule}
-                                                            className="flex items-center gap-3 neumorphic-inset-card border border-border/60 rounded-xl px-4 py-2 group hover:border-primary/40 transition-all"
-                                                        >
-                                                            <span className="text-xs font-black text-foreground">{rule}</span>
-                                                            <button 
-                                                                onClick={() => handleInputChange("buildingRules", formData.buildingRules.filter((_, i) => i !== index))}
-                                                                className="text-muted-foreground/60 hover:text-rose-500 transition-colors"
-                                                            >
-                                                                <X className="size-3.5" />
-                                                            </button>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <PropertyRulesSelector
+                                            selectedRules={formData.buildingRules}
+                                            onChange={(rules) => handleInputChange("buildingRules", rules)}
+                                            landlordId={user?.id}
+                                        />
                                     </div>
 
                                     {/* Contract Preview - Span 5 */}
@@ -1092,9 +1042,9 @@ function NewAssetContent() {
                 </div>
             </div>
 
-            {/* Floating Save Action Bar (visible on steps 1, 2, and 3; disappears on step 4) */}
+            {/* Floating Save Action Bar (visible in edit mode on steps 1, 2, and 3; disappears on step 4 or in new property setup) */}
             <AnimatePresence>
-                {step < 4 && (
+                {isEditMode && step < 4 && (
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -1111,9 +1061,7 @@ function NewAssetContent() {
                                 <span className="text-[11px] sm:text-xs font-bold text-foreground truncate max-w-[140px] sm:max-w-none">
                                     {mediaFiles.length > 0 
                                         ? "New cover photo staged" 
-                                        : isEditMode 
-                                            ? `Editing: ${formData.propertyName || "Asset"}` 
-                                            : `Step ${step} of 4: ${STEPS[step - 1]?.label}`}
+                                        : `Editing: ${formData.propertyName || "Asset"}`}
                                 </span>
                             </div>
 

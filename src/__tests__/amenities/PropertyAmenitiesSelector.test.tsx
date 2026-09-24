@@ -139,4 +139,98 @@ describe("PropertyAmenitiesSelector Component", () => {
         );
         expect(stored).toEqual([]);
     });
+
+    it("does not show tooltip or title when amenity text fits without truncation", async () => {
+        const handleChange = vi.fn();
+        await act(async () => {
+            render(
+                <PropertyAmenitiesSelector
+                    selectedAmenities={[]}
+                    onChange={handleChange}
+                    landlordId="test-landlord"
+                />
+            );
+        });
+
+        const gymButton = screen.getByRole("button", { name: /Gym/i });
+        expect(gymButton).not.toHaveAttribute("title");
+        expect(gymButton).not.toHaveAttribute("data-state");
+    });
+
+    it("displays full text via tooltip and title when amenity text is truncated", async () => {
+        const longAmenity = "FUNCTION ROOM & EVENT HALL";
+        localStorage.setItem(
+            "ireside_custom_amenities_test-landlord",
+            JSON.stringify([longAmenity])
+        );
+
+        // Mock scrollWidth and clientWidth to simulate truncation on the long amenity span
+        const originalScrollWidth = Object.getOwnPropertyDescriptor(
+            HTMLElement.prototype,
+            "scrollWidth"
+        );
+        const originalClientWidth = Object.getOwnPropertyDescriptor(
+            HTMLElement.prototype,
+            "clientWidth"
+        );
+
+        Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
+            configurable: true,
+            get() {
+                if (this.textContent?.includes("FUNCTION ROOM")) {
+                    return 200;
+                }
+                return 50;
+            },
+        });
+
+        Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+            configurable: true,
+            get() {
+                if (this.textContent?.includes("FUNCTION ROOM")) {
+                    return 60;
+                }
+                return 50;
+            },
+        });
+
+        try {
+            const handleChange = vi.fn();
+            await act(async () => {
+                render(
+                    <PropertyAmenitiesSelector
+                        selectedAmenities={[]}
+                        onChange={handleChange}
+                        landlordId="test-landlord"
+                    />
+                );
+            });
+
+            const chipButton = screen.getByRole("button", {
+                name: longAmenity,
+            });
+
+            // Trigger mouseEnter to guarantee truncation check fires
+            await act(async () => {
+                fireEvent.mouseEnter(chipButton);
+            });
+
+            // Expect accessible title with the full amenity text
+            expect(chipButton).toHaveAttribute("title", longAmenity);
+            // Expect Radix tooltip trigger attribute indicating it is wrapped in Tooltip
+            expect(chipButton).toHaveAttribute("data-state");
+        } finally {
+            if (originalScrollWidth) {
+                Object.defineProperty(HTMLElement.prototype, "scrollWidth", originalScrollWidth);
+            } else {
+                delete (HTMLElement.prototype as any).scrollWidth;
+            }
+            if (originalClientWidth) {
+                Object.defineProperty(HTMLElement.prototype, "clientWidth", originalClientWidth);
+            } else {
+                delete (HTMLElement.prototype as any).clientWidth;
+            }
+        }
+    });
 });
+

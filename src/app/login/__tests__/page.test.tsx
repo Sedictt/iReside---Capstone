@@ -17,6 +17,28 @@ vi.mock("@/lib/supabase/client", () => ({
     createClient: vi.fn(),
 }));
 
+vi.mock("@/components/auth/AccountActivationModal", () => ({
+    AccountActivationModal: ({ isOpen, onComplete }: any) => {
+        if (!isOpen) return null;
+        return (
+            <div data-testid="activation-modal">
+                <button
+                    data-testid="claim-and-proceed-btn"
+                    onClick={() => onComplete("claimed.landlord@example.com", "NewPassword123!")}
+                >
+                    Proceed to Sign In
+                </button>
+                <button
+                    data-testid="claim-no-pass-btn"
+                    onClick={() => onComplete("claimed.landlord@example.com")}
+                >
+                    Proceed No Pass
+                </button>
+            </div>
+        );
+    },
+}));
+
 // ---------------------------------------------------------------------------
 // Test Fixtures
 // ---------------------------------------------------------------------------
@@ -265,6 +287,293 @@ describe("LoginPage - Authentication", () => {
 
         await waitFor(() => {
             expect(screen.getByText(/Invalid login credentials/i)).toBeInTheDocument();
+        });
+    });
+});
+
+describe("LoginPage - Account Activation Auto-SignIn", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it("auto-authenticates and directs newly claimed landlord to /setup when branding setup is not complete", async () => {
+        const mockPush = vi.fn();
+        mockRouter(mockPush as any);
+        mockSearchParams();
+
+        const mockSignInWithPassword = vi.fn()
+            .mockResolvedValueOnce({
+                data: {
+                    user: { id: "starter-user-id", email: "admin@turnkey.local", user_metadata: { role: "landlord", is_account_claimed: false } },
+                    session: { access_token: "token1", refresh_token: "refresh1" },
+                },
+                error: null,
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    user: { id: "starter-user-id", email: "claimed.landlord@example.com", user_metadata: { role: "landlord", is_account_claimed: true } },
+                    session: { access_token: "token2", refresh_token: "refresh2" },
+                },
+                error: null,
+            });
+
+        const supabase = {
+            auth: {
+                signInWithPassword: mockSignInWithPassword,
+                signInWithOAuth: vi.fn(),
+                signOut: vi.fn(),
+            },
+            from: vi.fn(() => ({
+                select: vi.fn(() => ({
+                    eq: vi.fn(() => ({
+                        single: vi.fn().mockResolvedValue({ data: { role: "landlord", is_account_claimed: false }, error: null }),
+                    })),
+                })),
+            })),
+        };
+        (createClient as Mock).mockReturnValue(supabase);
+
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ setupCompleted: false }),
+        } as any);
+
+        render(<LoginPage />);
+
+        fireEvent.change(getEmailInput(), { target: { value: "admin@turnkey.local" } });
+        fireEvent.change(getPasswordInput(), { target: { value: "TurnkeyPass123!" } });
+        fireEvent.click(screen.getByRole("button", { name: "Sign In" }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId("activation-modal")).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByTestId("claim-and-proceed-btn"));
+
+        await waitFor(() => {
+            expect(mockSignInWithPassword).toHaveBeenCalledTimes(2);
+            expect(mockSignInWithPassword).toHaveBeenLastCalledWith({
+                email: "claimed.landlord@example.com",
+                password: "NewPassword123!",
+            });
+            expect(mockPush).toHaveBeenCalledWith("/setup");
+        });
+    });
+
+    it("auto-authenticates and directs claimed landlord to /landlord/dashboard when branding setup is already complete", async () => {
+        const mockPush = vi.fn();
+        mockRouter(mockPush as any);
+        mockSearchParams();
+
+        const mockSignInWithPassword = vi.fn()
+            .mockResolvedValueOnce({
+                data: {
+                    user: { id: "starter-user-id", email: "admin@turnkey.local", user_metadata: { role: "landlord", is_account_claimed: false } },
+                    session: { access_token: "token1", refresh_token: "refresh1" },
+                },
+                error: null,
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    user: { id: "starter-user-id", email: "claimed.landlord@example.com", user_metadata: { role: "landlord", is_account_claimed: true } },
+                    session: { access_token: "token2", refresh_token: "refresh2" },
+                },
+                error: null,
+            });
+
+        const supabase = {
+            auth: {
+                signInWithPassword: mockSignInWithPassword,
+                signInWithOAuth: vi.fn(),
+                signOut: vi.fn(),
+            },
+            from: vi.fn(() => ({
+                select: vi.fn(() => ({
+                    eq: vi.fn(() => ({
+                        single: vi.fn().mockResolvedValue({ data: { role: "landlord", is_account_claimed: false }, error: null }),
+                    })),
+                })),
+            })),
+        };
+        (createClient as Mock).mockReturnValue(supabase);
+
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ setupCompleted: true }),
+        } as any);
+
+        render(<LoginPage />);
+
+        fireEvent.change(getEmailInput(), { target: { value: "admin@turnkey.local" } });
+        fireEvent.change(getPasswordInput(), { target: { value: "TurnkeyPass123!" } });
+        fireEvent.click(screen.getByRole("button", { name: "Sign In" }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId("activation-modal")).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByTestId("claim-and-proceed-btn"));
+
+        await waitFor(() => {
+            expect(mockPush).toHaveBeenCalledWith("/landlord/dashboard");
+        });
+    });
+
+    it("respects redirect query param when auto-authenticating", async () => {
+        const mockPush = vi.fn();
+        mockRouter(mockPush as any);
+        mockSearchParams("/landlord/properties");
+
+        const mockSignInWithPassword = vi.fn()
+            .mockResolvedValueOnce({
+                data: {
+                    user: { id: "starter-user-id", email: "admin@turnkey.local", user_metadata: { role: "landlord", is_account_claimed: false } },
+                    session: { access_token: "token1", refresh_token: "refresh1" },
+                },
+                error: null,
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    user: { id: "starter-user-id", email: "claimed.landlord@example.com", user_metadata: { role: "landlord", is_account_claimed: true } },
+                    session: { access_token: "token2", refresh_token: "refresh2" },
+                },
+                error: null,
+            });
+
+        const supabase = {
+            auth: {
+                signInWithPassword: mockSignInWithPassword,
+                signInWithOAuth: vi.fn(),
+                signOut: vi.fn(),
+            },
+            from: vi.fn(() => ({
+                select: vi.fn(() => ({
+                    eq: vi.fn(() => ({
+                        single: vi.fn().mockResolvedValue({ data: { role: "landlord", is_account_claimed: false }, error: null }),
+                    })),
+                })),
+            })),
+        };
+        (createClient as Mock).mockReturnValue(supabase);
+
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ setupCompleted: true }),
+        } as any);
+
+        render(<LoginPage />);
+
+        fireEvent.change(getEmailInput(), { target: { value: "admin@turnkey.local" } });
+        fireEvent.change(getPasswordInput(), { target: { value: "TurnkeyPass123!" } });
+        fireEvent.click(screen.getByRole("button", { name: "Sign In" }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId("activation-modal")).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByTestId("claim-and-proceed-btn"));
+
+        await waitFor(() => {
+            expect(mockPush).toHaveBeenCalledWith("/landlord/properties");
+        });
+    });
+
+    it("gracefully falls back to manual login if auto sign-in fails", async () => {
+        mockRouter(vi.fn() as any);
+        mockSearchParams();
+
+        const mockSignInWithPassword = vi.fn()
+            .mockResolvedValueOnce({
+                data: {
+                    user: { id: "starter-user-id", email: "admin@turnkey.local", user_metadata: { role: "landlord", is_account_claimed: false } },
+                    session: { access_token: "token1", refresh_token: "refresh1" },
+                },
+                error: null,
+            })
+            .mockResolvedValueOnce({
+                data: null,
+                error: { message: "Auto sign-in network error" },
+            });
+
+        const supabase = {
+            auth: {
+                signInWithPassword: mockSignInWithPassword,
+                signInWithOAuth: vi.fn(),
+                signOut: vi.fn(),
+            },
+            from: vi.fn(() => ({
+                select: vi.fn(() => ({
+                    eq: vi.fn(() => ({
+                        single: vi.fn().mockResolvedValue({ data: { role: "landlord", is_account_claimed: false }, error: null }),
+                    })),
+                })),
+            })),
+        };
+        (createClient as Mock).mockReturnValue(supabase);
+
+        render(<LoginPage />);
+
+        fireEvent.change(getEmailInput(), { target: { value: "admin@turnkey.local" } });
+        fireEvent.change(getPasswordInput(), { target: { value: "TurnkeyPass123!" } });
+        fireEvent.click(screen.getByRole("button", { name: "Sign In" }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId("activation-modal")).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByTestId("claim-and-proceed-btn"));
+
+        await waitFor(() => {
+            expect(screen.getByText(/Account successfully claimed! Please enter your password to sign in as claimed.landlord@example.com./i)).toBeInTheDocument();
+        });
+    });
+
+    it("falls back to manual login if password is not provided to onComplete", async () => {
+        mockRouter(vi.fn() as any);
+        mockSearchParams();
+
+        const mockSignInWithPassword = vi.fn()
+            .mockResolvedValueOnce({
+                data: {
+                    user: { id: "starter-user-id", email: "admin@turnkey.local", user_metadata: { role: "landlord", is_account_claimed: false } },
+                    session: { access_token: "token1", refresh_token: "refresh1" },
+                },
+                error: null,
+            });
+
+        const mockSignOut = vi.fn().mockResolvedValue({ error: null });
+
+        const supabase = {
+            auth: {
+                signInWithPassword: mockSignInWithPassword,
+                signInWithOAuth: vi.fn(),
+                signOut: mockSignOut,
+            },
+            from: vi.fn(() => ({
+                select: vi.fn(() => ({
+                    eq: vi.fn(() => ({
+                        single: vi.fn().mockResolvedValue({ data: { role: "landlord", is_account_claimed: false }, error: null }),
+                    })),
+                })),
+            })),
+        };
+        (createClient as Mock).mockReturnValue(supabase);
+
+        render(<LoginPage />);
+
+        fireEvent.change(getEmailInput(), { target: { value: "admin@turnkey.local" } });
+        fireEvent.change(getPasswordInput(), { target: { value: "TurnkeyPass123!" } });
+        fireEvent.click(screen.getByRole("button", { name: "Sign In" }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId("activation-modal")).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByTestId("claim-no-pass-btn"));
+
+        await waitFor(() => {
+            expect(mockSignOut).toHaveBeenCalled();
+            expect(screen.getByText(/Account successfully claimed! Please enter your password to sign in as claimed.landlord@example.com./i)).toBeInTheDocument();
         });
     });
 });
