@@ -42,8 +42,10 @@ const TARGET = {
   role: 'landlord'
 };
 
+const customEmailArg = process.argv.slice(2).find(arg => arg.includes('@'))?.trim().toLowerCase();
+
 async function findTargetUserId() {
-  // 1. Check by known fixed ID
+  // 1. Check by known fixed ID (Supabase Auth preserves this ID even after email/password changes)
   try {
     const { data: user, error } = await adminClient.auth.admin.getUserById(TARGET.fixedId);
     if (!error && user?.user) {
@@ -51,14 +53,20 @@ async function findTargetUserId() {
     }
   } catch (_) {}
 
-  // 2. Fallback: Search by emails
+  // 2. Fallback: Search by emails or metadata in auth users list
   const { data: listData, error: listErr } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
   if (!listErr && listData?.users) {
-    const matched = listData.users.find(u => 
-      u.id === TARGET.fixedId ||
-      u.email?.toLowerCase() === TARGET.email.toLowerCase() ||
-      u.email?.toLowerCase() === TARGET.claimedEmailFallback.toLowerCase()
-    );
+    const matched = listData.users.find(u => {
+      const email = u.email?.toLowerCase();
+      return (
+        u.id === TARGET.fixedId ||
+        (customEmailArg && email === customEmailArg) ||
+        email === TARGET.email.toLowerCase() ||
+        email === TARGET.claimedEmailFallback.toLowerCase() ||
+        u.user_metadata?.full_name?.toLowerCase() === TARGET.fullName.toLowerCase() ||
+        u.user_metadata?.phone === TARGET.phone
+      );
+    });
     if (matched) return matched.id;
   }
 

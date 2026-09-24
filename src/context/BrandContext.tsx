@@ -115,8 +115,8 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
                 secondaryColor: localSnapshot.secondaryColor || DEFAULT_BRANDING.secondaryColor,
                 logoUrl: localSnapshot.logoUrl !== undefined ? localSnapshot.logoUrl : data.logoUrl,
                 bannerUrl: localSnapshot.bannerUrl !== undefined ? localSnapshot.bannerUrl : data.bannerUrl,
-                setupCompleted: localSnapshot.setupCompleted ?? false,
-                setupCompletedAt: localSnapshot.setupCompletedAt ?? null,
+                setupCompleted: data.setupCompleted ?? false,
+                setupCompletedAt: data.setupCompletedAt ?? null,
               }
             : {
                 ...DEFAULT_BRANDING,

@@ -63,3 +63,82 @@ export function generateUnitList(
 
     return result;
 }
+
+export function detectPrefixFromUnits(units: Array<{ name: string }>): string {
+    const counts: Record<string, number> = {};
+    for (const u of units) {
+        if (!u.name) continue;
+        const trimmed = u.name.trim();
+        const match = trimmed.match(/^(.*?)(?:[\s\-_]*)(?:[A-Za-z]?\d+)$/);
+        if (match && match[1] !== undefined) {
+            const prefix = match[1].trim();
+            counts[prefix] = (counts[prefix] || 0) + 1;
+        }
+    }
+    let bestPrefix = "";
+    let maxCount = 0;
+    for (const [p, c] of Object.entries(counts)) {
+        if (c > maxCount) {
+            maxCount = c;
+            bestPrefix = p;
+        }
+    }
+    return maxCount > 0 ? bestPrefix : "Unit";
+}
+
+export function renumberUnitsList<T extends { id: string; floor: number; name: string }>(
+    unitsList: T[],
+    options?: {
+        prefix?: string;
+        numberingStyle?: NumberingStyle;
+        startingNumber?: number;
+    }
+): T[] {
+    const prefix = options?.prefix ?? detectPrefixFromUnits(unitsList);
+    const style = options?.numberingStyle ?? "floor_based";
+    const startNum = options?.startingNumber ?? 101;
+
+    // Group units by floor, preserving existing relative order within each floor
+    const floorGroups = new Map<number, T[]>();
+    for (const u of unitsList) {
+        const f = u.floor;
+        const group = floorGroups.get(f) ?? [];
+        group.push(u);
+        floorGroups.set(f, group);
+    }
+
+    // Sort assigned floors: 0, 1, 2, ...
+    const sortedFloors = Array.from(floorGroups.keys())
+        .filter(f => f >= 0)
+        .sort((a, b) => a - b);
+
+    let overallIndex = 0;
+    const renumberedMap = new Map<string, string>();
+
+    for (const floorNum of sortedFloors) {
+        const floorUnits = floorGroups.get(floorNum) || [];
+        let unitIndexOnFloor = 1;
+
+        for (const unit of floorUnits) {
+            const newName = generateUnitName(overallIndex, floorNum, unitIndexOnFloor, {
+                prefix,
+                numberingStyle: style,
+                startingNumber: startNum,
+            });
+            renumberedMap.set(unit.id, newName);
+            unitIndexOnFloor++;
+            overallIndex++;
+        }
+    }
+
+    // Unassigned units (-1) keep their names
+    const unassignedUnits = floorGroups.get(-1) || [];
+    for (const unit of unassignedUnits) {
+        renumberedMap.set(unit.id, unit.name);
+    }
+
+    return unitsList.map(u => ({
+        ...u,
+        name: renumberedMap.get(u.id) ?? u.name,
+    }));
+}

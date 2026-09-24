@@ -57,8 +57,15 @@ function LoginContent() {
 
         try {
             const supabase = createClient();
+            // Clear any lingering session from the temporary credentials first to avoid session conflicts
+            try {
+                await supabase.auth.signOut({ scope: "local" });
+            } catch {
+                // Ignore signout errors
+            }
+
             const { data, error } = await supabase.auth.signInWithPassword({
-                email: newEmail,
+                email: newEmail.trim().toLowerCase(),
                 password: newPassword,
             });
 
@@ -77,13 +84,29 @@ function LoginContent() {
                 return;
             }
 
-            let destination = "/landlord/dashboard";
+            // Stale setup / brand flags should be cleared from client storage so setup starts fresh
+            try {
+                if (typeof window !== "undefined") {
+                    localStorage.removeItem("ireside_setup_completed");
+                    localStorage.removeItem("ireside_setup_completed_at");
+                    localStorage.removeItem("brand_configuration");
+                    localStorage.removeItem("ireside_property_name");
+                    localStorage.removeItem("ireside_property_tagline");
+                    localStorage.removeItem("ireside_rental_archetype");
+                    localStorage.removeItem("ireside_brand_primary");
+                    localStorage.removeItem("ireside_brand_secondary");
+                }
+            } catch (storageErr) {
+                console.warn("[Account Activation] Storage clean up error:", storageErr);
+            }
+
+            let destination = "/setup";
             try {
                 const brandRes = await fetch("/api/branding");
                 if (brandRes.ok) {
                     const brandData = await brandRes.json();
-                    if (!brandData.setupCompleted) {
-                        destination = "/setup";
+                    if (brandData.setupCompleted) {
+                        destination = redirectUrl || "/landlord/dashboard";
                     }
                 }
             } catch (err) {
@@ -91,7 +114,12 @@ function LoginContent() {
             }
 
             setShowActivationModal(false);
-            router.push(redirectUrl || destination);
+            router.push(destination);
+
+            // Force refresh page and redirect to setup so the user is never stuck in a loading screen
+            if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+                window.location.href = destination;
+            }
         } catch (err) {
             console.error("[Account Activation] Unexpected error during auto sign-in:", err);
             setShowActivationModal(false);
@@ -165,12 +193,24 @@ function LoginContent() {
 
             // For claimed landlords, check if workspace setup is complete
             if (role === "landlord" || role === "admin") {
+                const isSetupCompleted = data.user?.user_metadata?.is_setup_completed;
+                if (isSetupCompleted === false) {
+                    router.push(redirectUrl || "/setup");
+                    if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+                        window.location.href = redirectUrl || "/setup";
+                    }
+                    return;
+                }
+
                 try {
                     const brandRes = await fetch("/api/branding");
                     if (brandRes.ok) {
                         const brandData = await brandRes.json();
                         if (!brandData.setupCompleted) {
                             router.push(redirectUrl || "/setup");
+                            if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+                                window.location.href = redirectUrl || "/setup";
+                            }
                             return;
                         }
                     }

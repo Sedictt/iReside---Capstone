@@ -67,6 +67,9 @@ export function AccountActivationModal({
     setIsAuthenticating(true);
     try {
       await onComplete(claimedEmail || newEmail.trim(), newPassword);
+      if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+        window.location.href = "/setup";
+      }
     } catch {
       setIsAuthenticating(false);
     }
@@ -286,8 +289,8 @@ export function AccountActivationModal({
                 Your workspace is now securely linked to{" "}
                 <span className="font-semibold text-foreground">{claimedEmail}</span>.
                 {isAuthenticating
-                  ? " Signing in and directing you into the system..."
-                  : " Please wait while we sign you in, or click below to proceed immediately."}
+                  ? " Signing in and redirecting to setup..."
+                  : " Please wait while we sign you in, or click below to proceed to setup."}
               </p>
             </div>
 
@@ -301,11 +304,11 @@ export function AccountActivationModal({
                 {isAuthenticating ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    <span>Signing in...</span>
+                    <span>Redirecting to Setup...</span>
                   </>
                 ) : (
                   <>
-                    <span>Proceed to Sign In</span>
+                    <span>Proceed to Sign In & Setup</span>
                     <ArrowRight className="size-4" />
                   </>
                 )}

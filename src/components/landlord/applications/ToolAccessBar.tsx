@@ -3,7 +3,7 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import {
   FileText,
   ShieldCheck,
-  Sparkles,
+  LayoutGrid,
   X,
   Loader2,
   AlertCircle,
@@ -53,7 +53,7 @@ const tools = [
   {
     key: "amenities",
     label: "Amenities",
-    icon: Sparkles,
+    icon: LayoutGrid,
   },
 ] as const;
 
@@ -69,34 +69,7 @@ const TOOL_ACCENTS: Record<(typeof tools)[number]["key"], { iconBg: string, icon
   amenities: { iconBg: "bg-emerald-500/20", iconBorder: "border-emerald-500/30" },
 };
 
-const Noise = () => (
-    <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 mix-blend-soft-light" 
-         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2003/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} 
-    />
-);
 
-const BackgroundGlow = ({ color1, color2 }: { color1: string, color2: string }) => (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <motion.div 
-            animate={{ 
-                x: [0, 50, -50, 0], 
-                y: [0, -30, 30, 0],
-                scale: [1, 1.2, 0.8, 1],
-            }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-            className={cn("absolute top-[-10%] left-[-10%] w-[50%] h-[50%] blur-[100px] rounded-full", color1)}
-        />
-        <motion.div 
-            animate={{ 
-                x: [0, -40, 40, 0], 
-                y: [0, 50, -50, 0],
-                scale: [1, 0.9, 1.1, 1],
-            }}
-            transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-            className={cn("absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] blur-[100px] rounded-full", color2)}
-        />
-    </div>
-);
 
 export function ToolAccessBar({ propertyId, className, variant = "default", direction = "horizontal" }: ToolAccessBarProps) {
   const disabled = !propertyId;
@@ -168,7 +141,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card/95 px-8 py-6 shadow-sm backdrop-blur-md"
+            className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card px-8 py-6 shadow-sm"
           >
             <Loader2 className="size-8 animate-spin text-primary" />
             <span className="text-sm font-black uppercase tracking-widest text-muted-foreground">Loading property data...</span>
@@ -183,7 +156,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-md w-full rounded-3xl border border-red-500/20 bg-red-500/10 backdrop-blur-md p-8 flex flex-col items-center gap-4 text-center shadow-2xl"
+            className="max-w-md w-full rounded-3xl border border-red-500/20 bg-red-500/10 p-8 flex flex-col items-center gap-4 text-center shadow-2xl"
           >
             <div className="size-14 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center">
               <AlertCircle className="size-7 text-red-400" />
@@ -214,14 +187,14 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
         if (n.includes("lobby") || n.includes("front")) return { icon: DoorOpen, color: "text-amber-400", bg: "bg-amber-500/10" };
         if (n.includes("roof") || n.includes("deck")) return { icon: Cloud, color: "text-blue-400", bg: "bg-blue-500/10" };
         if (n.includes("kitchen") || n.includes("dining")) return { icon: Utensils, color: "text-rose-400", bg: "bg-rose-500/10" };
-        return { icon: Sparkles, color: "text-primary", bg: "bg-primary/10" };
+        return { icon: LayoutGrid, color: "text-primary", bg: "bg-primary/10" };
       };
 
       return (
         <div className="h-full overflow-y-auto p-6 sm:p-10 lg:p-14 relative z-10 custom-scrollbar">
           {propertyData.amenities.length === 0 ? (
             <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/20 p-20 text-center">
-              <Sparkles className="mx-auto size-10 text-muted-foreground/20 mb-4" />
+              <LayoutGrid className="mx-auto size-10 text-muted-foreground/20 mb-4" />
               <p className="text-sm font-black tracking-tight text-muted-foreground/50">No amenities configured for this property.</p>
             </div>
           ) : (
@@ -438,7 +411,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                 key={tool.key}
                 type="button"
                 className={cn(
-                  "group relative flex size-10 items-center justify-center rounded-xl border border-border/50 backdrop-blur-xl transition-all duration-300",
+                  "group relative flex size-10 items-center justify-center rounded-xl border border-border transition-all duration-300",
                   disabled
                     ? "cursor-not-allowed bg-muted/20 text-muted-foreground opacity-50"
                     : "cursor-pointer bg-card/60 text-foreground hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card hover:shadow-lg active:scale-95"
@@ -486,7 +459,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
               transition={{ duration: 0.3 }}
               type="button"
               aria-label="Close tool modal backdrop"
-              className="absolute inset-0 cursor-default bg-black/60 backdrop-blur-xl"
+              className="absolute inset-0 cursor-default bg-black/70"
               onClick={() => setActiveTool(null)}
             />
 
@@ -495,16 +468,14 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 150 }}
-              className="relative z-10 flex h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-[2.5rem] border border-border bg-card/98 shadow-[0_0_80px_rgba(15,23,42,0.16)] backdrop-blur-[60px]"
+              className="relative z-10 flex h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-2xl"
             >
-              <Noise />
-
-              <div className="relative z-20 flex h-24 shrink-0 items-center justify-between border-b border-border bg-card/92 px-6 backdrop-blur-md sm:px-10">
+              <div className="relative z-20 flex h-24 shrink-0 items-center justify-between border-b border-border bg-card px-6 sm:px-10">
                 <div className="flex items-center gap-5 min-w-0">
                   <div className={cn("size-14 rounded-[1.2rem] flex items-center justify-center shrink-0 border shadow-inner", TOOL_ACCENTS[activeTool.key].iconBorder, TOOL_ACCENTS[activeTool.key].iconBg)}>
                     {activeTool.key === "templates" && <FileText className="size-6 text-violet-300" />}
                     {activeTool.key === "policies" && <ClipboardList className="size-6 text-blue-300" />}
-                    {activeTool.key === "amenities" && <Sparkles className="size-6 text-emerald-300" />}
+                    {activeTool.key === "amenities" && <LayoutGrid className="size-6 text-emerald-300" />}
                   </div>
                   <div className="min-w-0">
                     <p className="text-[10px] font-black text-primary uppercase tracking-[0.25em] opacity-80 mb-1">Property Configuration</p>
@@ -542,11 +513,10 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
     <>
       <div
         className={cn(
-          "relative mb-6 w-full max-w-5xl overflow-hidden rounded-[1.5rem] border border-border bg-card/95 p-2.5 shadow-sm backdrop-blur-2xl",
+          "relative mb-6 w-full max-w-5xl overflow-hidden rounded-[1.5rem] border border-border bg-card p-2.5 shadow-sm",
           className
         )}
       >
-        <Noise />
         <div className="relative z-10 flex items-center justify-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
           {tools.map((tool) => {
             const Icon = tool.icon;
