@@ -238,8 +238,31 @@ export async function updateSession(request: NextRequest) {
     if (user && (request.nextUrl.pathname.startsWith("/login") || request.nextUrl.pathname.startsWith("/signup") || request.nextUrl.pathname.startsWith("/forgot-password"))) {
         const url = request.nextUrl.clone();
         if (role === "admin" || role === "landlord") {
-            const isSetupCompleted = user?.user_metadata?.is_setup_completed;
-            const isAccountClaimed = user?.user_metadata?.is_account_claimed;
+            let isSetupCompleted = user?.user_metadata?.is_setup_completed;
+            let isAccountClaimed = user?.user_metadata?.is_account_claimed;
+
+            if (isSetupCompleted === false || isAccountClaimed === false) {
+                try {
+                    const { data: prof } = await supabase
+                        .from("profiles")
+                        .select("is_account_claimed, socials, business_name")
+                        .eq("id", user.id)
+                        .maybeSingle();
+
+                    if (prof) {
+                        const branding = (prof.socials as any)?.branding;
+                        if (branding?.setup_completed === true || (prof.business_name && prof.business_name.trim().length > 0)) {
+                            isSetupCompleted = true;
+                        }
+                        if (prof.is_account_claimed === true) {
+                            isAccountClaimed = true;
+                        }
+                    }
+                } catch {
+                    // Fallback
+                }
+            }
+
             if (isSetupCompleted === false || isAccountClaimed === false) {
                 url.pathname = "/setup";
             } else {
@@ -253,12 +276,36 @@ export async function updateSession(request: NextRequest) {
 
     // Role-based portal protection: prevent unconfigured/unclaimed landlords from bypassing setup into dashboard
     if (user && (role === "admin" || role === "landlord")) {
-        const isSetupCompleted = user?.user_metadata?.is_setup_completed;
-        const isAccountClaimed = user?.user_metadata?.is_account_claimed;
+        let isSetupCompleted = user?.user_metadata?.is_setup_completed;
+        let isAccountClaimed = user?.user_metadata?.is_account_claimed;
+
         if ((isSetupCompleted === false || isAccountClaimed === false) && !request.nextUrl.pathname.startsWith("/setup")) {
-            const url = request.nextUrl.clone();
-            url.pathname = "/setup";
-            return NextResponse.redirect(url);
+            // Check database profile in case user_metadata in token cookie is stale
+            try {
+                const { data: prof } = await supabase
+                    .from("profiles")
+                    .select("is_account_claimed, socials, business_name")
+                    .eq("id", user.id)
+                    .maybeSingle();
+
+                if (prof) {
+                    const branding = (prof.socials as any)?.branding;
+                    if (branding?.setup_completed === true || (prof.business_name && prof.business_name.trim().length > 0)) {
+                        isSetupCompleted = true;
+                    }
+                    if (prof.is_account_claimed === true) {
+                        isAccountClaimed = true;
+                    }
+                }
+            } catch {
+                // Ignore DB error, proceed with metadata check
+            }
+
+            if (isSetupCompleted === false || isAccountClaimed === false) {
+                const url = request.nextUrl.clone();
+                url.pathname = "/setup";
+                return NextResponse.redirect(url);
+            }
         }
     }
 
