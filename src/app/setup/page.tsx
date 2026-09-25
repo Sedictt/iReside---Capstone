@@ -557,6 +557,7 @@ function WizardContent() {
         throw new Error(json.error || "Failed to launch workspace");
       }
 
+      // Update client brand context locally without redundant backend POST
       await brand.updateBranding(
         {
           propertyName: propertyName.trim(),
@@ -567,7 +568,7 @@ function WizardContent() {
           setupCompleted: true,
           setupCompletedAt: new Date().toISOString(),
         },
-        true
+        false // false: /api/setup/launch already persisted all data to database
       );
 
       applyBrandCssVariables(primaryColor, secondaryColor);
@@ -578,19 +579,20 @@ function WizardContent() {
         // Storage cleanup is best-effort
       }
 
+      if (typeof document !== "undefined") {
+        document.cookie = "ireside_setup_completed=true; path=/; max-age=31536000; SameSite=Lax";
+      }
+
+      // Non-blocking background sync - do not block portal launch navigation
       if (refreshProfile) {
-        await refreshProfile();
+        void refreshProfile().catch(() => {});
       }
 
       try {
         const supabase = createClient();
-        await supabase.auth.refreshSession();
+        void supabase.auth.refreshSession().catch(() => {});
       } catch {
         // ignore
-      }
-
-      if (typeof document !== "undefined") {
-        document.cookie = "ireside_setup_completed=true; path=/; max-age=31536000; SameSite=Lax";
       }
 
       setIsLaunched(true);
@@ -598,11 +600,17 @@ function WizardContent() {
         description: `Branded as ${propertyName}. Opening your dashboard...`,
       });
 
-      if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-        window.location.href = "/landlord/dashboard";
-      } else {
-        router.push("/landlord/dashboard");
-      }
+      // Smoothly navigate to dashboard
+      const navigateToDashboard = () => {
+        if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+          window.location.href = "/landlord/dashboard";
+        } else {
+          router.push("/landlord/dashboard");
+        }
+      };
+
+      // Brief delay so user sees the success state card before page unload
+      setTimeout(navigateToDashboard, 400);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
       toast.error("Failed to save setup: " + message);
