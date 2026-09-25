@@ -2901,7 +2901,7 @@ export function LandlordSettings() {
                                 }
                             >
                                 <div className="p-2 text-xs text-muted-foreground leading-relaxed">
-                                    The 4-step personalization wizard guides you through property identity, WCAG contrast verification, and master administrator claiming. Running it in reconfiguration mode updates your branding and operational settings without affecting active leases or units.
+                                    The 3-step personalization wizard guides you through property identity, WCAG contrast verification, and theme setup. Running it in reconfiguration mode updates your branding and operational settings without affecting active leases or units.
                                 </div>
                             </GlassCard>
                         </div>

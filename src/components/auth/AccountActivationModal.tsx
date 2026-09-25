@@ -67,13 +67,13 @@ export function AccountActivationModal({
   // Security Recovery Key States
   const [securityKey, setSecurityKey] = useState<string | null>(null);
   const [isSecurityKeyAcknowledged, setIsSecurityKeyAcknowledged] = useState(false);
-  const [hasSavedKey, setHasSavedKey] = useState(false);
+  const [hasDownloadedKey, setHasDownloadedKey] = useState(false);
 
   const handleProceedToSetup = async () => {
     if (isRedirecting) return;
-    if (securityKey && !isSecurityKeyAcknowledged && !hasSavedKey) {
-      toast.warning("Please Save Your Recovery Key", {
-        description: "Copy or download your single-use security recovery key before proceeding to setup.",
+    if (securityKey && (!hasDownloadedKey || !isSecurityKeyAcknowledged)) {
+      toast.warning("Please Download Your Recovery Key", {
+        description: "Download your single-use security recovery key before proceeding to setup.",
         id: "save-recovery-key-warning",
       });
       return;
@@ -414,11 +414,7 @@ export function AccountActivationModal({
                 isAcknowledged={isSecurityKeyAcknowledged}
                 onToggleAcknowledge={setIsSecurityKeyAcknowledged}
                 onDownload={() => {
-                  setHasSavedKey(true);
-                  setIsSecurityKeyAcknowledged(true);
-                }}
-                onCopy={() => {
-                  setHasSavedKey(true);
+                  setHasDownloadedKey(true);
                   setIsSecurityKeyAcknowledged(true);
                 }}
                 title="Landlord Security Recovery Key"
@@ -434,10 +430,13 @@ export function AccountActivationModal({
             <div className="pt-2">
               <button
                 type="button"
-                disabled={isRedirecting}
+                disabled={Boolean(securityKey && (!hasDownloadedKey || !isSecurityKeyAcknowledged)) || isRedirecting}
                 onClick={handleProceedToSetup}
                 className={cn(
-                  "w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm transition-all hover:bg-primary/90 active:scale-[0.99] flex items-center justify-center gap-2 shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                  "w-full h-11 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-xs",
+                  Boolean(securityKey && (!hasDownloadedKey || !isSecurityKeyAcknowledged))
+                    ? "bg-muted text-muted-foreground/60 cursor-not-allowed border border-border/60"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.99] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                   isRedirecting && "opacity-75 cursor-wait"
                 )}
               >
@@ -453,6 +452,11 @@ export function AccountActivationModal({
                   </>
                 )}
               </button>
+              {securityKey && !hasDownloadedKey && (
+                <p className="mt-2 text-center text-[11px] text-muted-foreground">
+                  Please download your recovery key file to proceed.
+                </p>
+              )}
             </div>
           </div>
         ) : (
