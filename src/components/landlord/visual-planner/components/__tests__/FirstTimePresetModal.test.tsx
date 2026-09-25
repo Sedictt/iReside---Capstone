@@ -25,9 +25,9 @@ describe("FirstTimePresetModal", () => {
             />
         );
 
-        expect(screen.getByText("Choose a Floor Plan Layout")).toBeDefined();
+        expect(screen.getByText("Choose a Unit-map Layout")).toBeDefined();
         expect(
-            screen.getByText(/Your units are on the canvas but haven't been organized into a final floor plan yet/i)
+            screen.getByText(/Your units are on the canvas but haven't been organized into a final unit-map layout yet/i)
         ).toBeDefined();
         expect(
             screen.getByText(/drag and dropping the units themselves and add elements such as stairs from the sidebar/i)

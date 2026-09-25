@@ -73,7 +73,7 @@ export function AccountActivationModal({
     if (isRedirecting) return;
     if (securityKey && (!hasDownloadedKey || !isSecurityKeyAcknowledged)) {
       toast.warning("Please Download Your Recovery Key", {
-        description: "Download your single-use security recovery key before proceeding to setup.",
+        description: "Download your single-use security recovery key before proceeding to sign in.",
         id: "save-recovery-key-warning",
       });
       return;
@@ -87,32 +87,12 @@ export function AccountActivationModal({
       } catch {
         // ignore
       }
-
-      if (newPassword) {
-        const { data, error: signInErr } = await supabase.auth.signInWithPassword({
-          email: claimedEmail,
-          password: newPassword,
-        });
-
-        if (!signInErr && data?.session) {
-          if (onComplete) {
-            await onComplete(claimedEmail, newPassword);
-          }
-          if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-            window.location.href = "/setup";
-          }
-          return;
-        }
-      }
     } catch (err) {
-      console.error("[Account Claim] Auto sign-in to setup error:", err);
+      console.error("[Account Claim] Sign out error:", err);
     }
 
     if (onComplete) {
       await onComplete(claimedEmail, newPassword);
-    }
-    if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-      window.location.href = "/setup";
     }
   };
 
@@ -423,7 +403,7 @@ export function AccountActivationModal({
               />
             ) : (
               <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-xs text-muted-foreground">
-                Your credentials are saved. Proceed to property setup to configure your portal branding and units.
+                Your credentials are saved. Please sign in with your updated credentials to start property setup.
               </div>
             )}
 
@@ -443,18 +423,18 @@ export function AccountActivationModal({
                 {isRedirecting ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    <span>Connecting to Setup...</span>
+                    <span>Connecting to Sign In...</span>
                   </>
                 ) : (
                   <>
-                    <span>Proceed to Property Setup</span>
+                    <span>Proceed to Sign In</span>
                     <ArrowRight className="size-4" />
                   </>
                 )}
               </button>
               {securityKey && !hasDownloadedKey && (
                 <p className="mt-2 text-center text-[11px] text-muted-foreground">
-                  Please download your recovery key file to proceed.
+                  Please download your recovery key file to proceed to sign in.
                 </p>
               )}
             </div>

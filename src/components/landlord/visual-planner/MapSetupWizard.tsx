@@ -599,11 +599,11 @@ export function MapSetupWizard({
                         <div className="flex items-center gap-2">
                             <h1 className="text-sm font-bold tracking-tight text-foreground">{propertyName}</h1>
                             <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground border border-border/60">
-                                Floor Plan Setup
+                                Unit Map Setup
                             </span>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                            Step 2 of Onboarding • Arrange units before generating architectural canvas
+                            Step 2 of Onboarding • Arrange units before generating unit-map canvas
                         </p>
                     </div>
                 </div>
@@ -662,7 +662,7 @@ export function MapSetupWizard({
                             ) : (
                                 <ArrowRight className="size-3.5 group-hover:translate-x-0.5 transition-transform" />
                             )}
-                            <span>Generate Floor Plan</span>
+                            <span>Generate Unit-map</span>
                         </button>
                     </div>
                 </div>
@@ -834,8 +834,8 @@ export function MapSetupWizard({
                                             </div>
                                             <div className="rounded-xl border border-border/70 bg-card p-4 shadow-xs">
                                                 <div className="flex size-6 items-center justify-center rounded-lg bg-muted text-muted-foreground text-[11px] font-bold mb-2">3</div>
-                                                <p className="text-xs font-bold text-foreground">Generate Plan</p>
-                                                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">Auto-build your architectural blueprint layout.</p>
+                                                <p className="text-xs font-bold text-foreground">Generate Unit-map</p>
+                                                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">Auto-build your architectural unit-map layout.</p>
                                             </div>
                                         </div>
 
@@ -945,7 +945,7 @@ export function MapSetupWizard({
                                             ) : (
                                                 <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
                                             )}
-                                            <span>Generate Floor Plan</span>
+                                            <span>Generate Unit-map</span>
                                         </button>
                                     </div>
                                 </div>

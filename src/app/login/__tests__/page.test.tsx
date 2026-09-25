@@ -487,7 +487,7 @@ describe("LoginPage - Account Activation (No Auto Sign-In)", () => {
             expect(screen.getByText("claimed@example.ph")).toBeInTheDocument();
         });
 
-        const proceedBtn = screen.getByRole("button", { name: /Proceed to Property Setup/i });
+        const proceedBtn = screen.getByRole("button", { name: /Proceed to Sign In/i });
         expect(proceedBtn).toBeDisabled();
 
         const downloadBtn = screen.getByRole("button", { name: /Download/i });
@@ -500,11 +500,7 @@ describe("LoginPage - Account Activation (No Auto Sign-In)", () => {
         fireEvent.click(proceedBtn);
 
         await waitFor(() => {
-            expect(mockSignIn).toHaveBeenCalledWith({
-                email: "claimed@example.ph",
-                password: "MyCleanPassword123!",
-            });
-            expect(mockPush).toHaveBeenCalledWith("/setup");
+            expect(screen.getByText(/Account claimed successfully! Please sign in with your new credentials/i)).toBeInTheDocument();
             expect(sessionStorage.getItem("ireside_pending_recovery_key")).toBeNull();
         });
     });

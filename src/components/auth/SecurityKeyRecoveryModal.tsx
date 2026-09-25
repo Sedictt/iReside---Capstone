@@ -85,18 +85,18 @@ export function SecurityKeyRecoveryModal({
             {isRedirecting ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                <span>Connecting to Setup...</span>
+                <span>Connecting to Sign In...</span>
               </>
             ) : (
               <>
-                <span>Proceed to Property Setup</span>
+                <span>Proceed to Sign In</span>
                 <ArrowRight className="size-4" />
               </>
             )}
           </button>
           {!hasDownloaded && (
             <p className="mt-2 text-center text-[11px] text-muted-foreground">
-              Please download your recovery key file to proceed.
+              Please download your recovery key file to proceed to sign in.
             </p>
           )}
         </div>

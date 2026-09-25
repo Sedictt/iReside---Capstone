@@ -38,7 +38,7 @@ export async function GET(request: Request) {
 
         return NextResponse.json(
             { properties: formatted },
-            { headers: { "Cache-Control": "private, max-age=10, stale-while-revalidate=60" } }
+            { headers: { "Cache-Control": "private, no-cache, no-store, must-revalidate" } }
         );
     } catch (error: any) {
         console.error("[property-units GET] Error:", error);

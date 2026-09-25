@@ -65,9 +65,9 @@ function LoginContent() {
     const handleRecoveryProceed = async () => {
         if (!pendingRecovery) return;
         setIsRecoveryRedirecting(true);
-        const { email, password } = pendingRecovery;
+        const { email } = pendingRecovery;
 
-        // Clear pending recovery key so modal does not reappear on future loads
+        // Clear pending recovery key and temporary stored credentials
         try {
             sessionStorage.removeItem("ireside_pending_recovery_key");
             localStorage.removeItem("ireside_pending_recovery_key");
@@ -75,28 +75,15 @@ function LoginContent() {
             // best-effort
         }
 
-        if (password) {
-            try {
-                const supabase = createClient();
-                const { data, error: signInErr } = await supabase.auth.signInWithPassword({
-                    email,
-                    password,
-                });
-
-                if (!signInErr && data?.session) {
-                    if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-                        window.location.href = "/setup";
-                        return;
-                    }
-                    router.push("/setup");
-                    return;
-                }
-            } catch (err) {
-                console.error("[Login] Sign in error after recovery key:", err);
-            }
+        // Cleanly terminate any stale session so the user starts with a fresh session
+        try {
+            const supabase = createClient();
+            await supabase.auth.signOut({ scope: "local" }).catch(() => null);
+        } catch {
+            // best-effort
         }
 
-        // Fallback: close modal, prefill email, set banner, focus password
+        // Close modal, prefill email, set instructional banner, and focus password field for manual login
         setIsRecoveryRedirecting(false);
         setPendingRecovery(null);
         setPrefilledEmail(email);

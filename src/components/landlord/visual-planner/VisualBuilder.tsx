@@ -647,10 +647,14 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         const targetCorridors = newFloorLayouts[targetFloorKey]?.corridors ?? [];
         const targetStructures = newFloorLayouts[targetFloorKey]?.structures ?? [];
 
+        const isLocallyComplete = typeof window !== "undefined" && window.localStorage.getItem(`ireside_map_setup_complete_${selectedPropertyId}`) === "true";
+        const finalSetupComplete = data.isSetupComplete || isLocallyComplete;
+        const finalPlacedCount = isLocallyComplete && data.placedCount === 0 ? data.totalUnits : data.placedCount;
+
         setDbUnits(data.units);
         setFloorConfigs(data.floorConfigs);
-        setIsSetupComplete(data.isSetupComplete);
-        setPlacedCount(data.placedCount);
+        setIsSetupComplete(finalSetupComplete);
+        setPlacedCount(finalPlacedCount);
         setTotalDbUnits(data.totalUnits);
         setUnplacedDbUnits(unplaced);
         setFloorLayouts(newFloorLayouts);
@@ -712,7 +716,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             }
         }
 
-        if (!hasCache) {
+        const isLocallyComplete = typeof window !== "undefined" && window.localStorage.getItem(`ireside_map_setup_complete_${selectedPropertyId}`) === "true";
+        if (!hasCache && !isLocallyComplete && units.length === 0) {
             setIsLoadingMap(true);
         }
         setMapLoadError(null);
@@ -2870,9 +2875,12 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 window.localStorage.setItem(SCOPED_AWAITING_TENANT_SETUP_KEY, "true");
                 window.localStorage.setItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY, "true");
                 window.localStorage.setItem(SCOPED_PRESET_PROMPT_KEY, "true");
+                window.localStorage.setItem(`ireside_map_setup_complete_${selectedPropertyId}`, "true");
                 window.dispatchEvent(new Event("unit-map-guidance-changed"));
+                window.dispatchEvent(new Event("unit-map-setup-completed"));
             } catch {}
         }
+        void propertyContext?.refreshProperties();
         router.push("/landlord/dashboard");
     };
 
@@ -2885,9 +2893,12 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 window.localStorage.setItem(SCOPED_AWAITING_TENANT_SETUP_KEY, "true");
                 window.localStorage.setItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY, "true");
                 window.localStorage.setItem(SCOPED_PRESET_PROMPT_KEY, "true");
+                window.localStorage.setItem(`ireside_map_setup_complete_${selectedPropertyId}`, "true");
                 window.dispatchEvent(new Event("unit-map-guidance-changed"));
+                window.dispatchEvent(new Event("unit-map-setup-completed"));
             } catch {}
         }
+        void propertyContext?.refreshProperties();
         toast.info("You can continue customizing your layout. Return to the dashboard anytime to configure tenants.");
     };
 
@@ -2900,9 +2911,12 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 window.localStorage.setItem(SCOPED_PRESET_PROMPT_KEY, "true");
                 window.localStorage.setItem(SCOPED_AWAITING_TENANT_SETUP_KEY, "true");
                 window.localStorage.setItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY, "true");
+                window.localStorage.setItem(`ireside_map_setup_complete_${selectedPropertyId}`, "true");
                 window.dispatchEvent(new Event("unit-map-guidance-changed"));
+                window.dispatchEvent(new Event("unit-map-setup-completed"));
             } catch {}
         }
+        void propertyContext?.refreshProperties();
         setIsSidebarVisible(true);
         toast.info("Manual layout active. Drag units and add stairs or corridors from the sidebar.");
     };
@@ -3714,18 +3728,25 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     initialUnits={dbUnits}
                     initialFloorConfigs={floorConfigs}
                     onSetupComplete={() => {
-                        setIsSetupComplete(true);
-                        setRefreshKey((prev) => prev + 1);
-                        void propertyContext?.refreshProperties();
+                        const cacheKey = `ireside.mapCache.${selectedPropertyId}`;
                         if (typeof window !== "undefined") {
                             try {
+                                window.sessionStorage.removeItem(cacheKey);
+                                window.localStorage.removeItem(cacheKey);
+                                window.localStorage.setItem(`ireside_map_setup_complete_${selectedPropertyId}`, "true");
                                 window.sessionStorage.setItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`, "true");
                                 window.dispatchEvent(new Event("unit-map-guidance-changed"));
-                                if (window.localStorage.getItem(SCOPED_PRESET_PROMPT_KEY) !== "true") {
-                                    setIsFirstTimePresetModalOpen(true);
-                                }
+                                window.dispatchEvent(new Event("unit-map-setup-completed"));
                             } catch {}
                         }
+                        setIsSetupComplete(true);
+                        setPlacedCount(totalDbUnits > 0 ? totalDbUnits : (dbUnits?.length ?? 1));
+                        setUnplacedDbUnits([]);
+                        if (typeof window !== "undefined" && window.localStorage.getItem(SCOPED_PRESET_PROMPT_KEY) !== "true") {
+                            setIsFirstTimePresetModalOpen(true);
+                        }
+                        setRefreshKey((prev) => prev + 1);
+                        void propertyContext?.refreshProperties();
                     }}
                 />
             </div>

@@ -87,7 +87,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
         }
 
         try {
-            const res = await fetch('/api/landlord/property-units')
+            const res = await fetch('/api/landlord/property-units', { cache: 'no-store' })
             if (!res.ok) throw new Error('Failed to fetch properties')
             
             const data = await res.json()

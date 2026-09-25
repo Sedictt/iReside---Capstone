@@ -26,7 +26,37 @@ function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }
     const pathname = usePathname();
     const router = useRouter();
     const { profile, loading: authLoading } = useAuth();
-    const { properties, loading: propertyLoading } = useProperty();
+    const { properties, loading: propertyLoading, selectedPropertyId } = useProperty();
+
+    const [localMapCompleted, setLocalMapCompleted] = useState(false);
+
+    useEffect(() => {
+        const checkLocal = () => {
+            if (typeof window === "undefined") return;
+            try {
+                const activeId = selectedPropertyId && selectedPropertyId !== "all" 
+                    ? selectedPropertyId 
+                    : (properties[0]?.id || "default");
+                const isCompleted = 
+                    window.localStorage.getItem(`ireside_map_setup_complete_${activeId}`) === "true" ||
+                    window.localStorage.getItem(`ireside.explore_modal_shown.${activeId}`) === "true" ||
+                    window.localStorage.getItem(`ireside.awaiting_tenant_setup.${activeId}`) === "true" ||
+                    properties.some((p) => window.localStorage.getItem(`ireside_map_setup_complete_${p.id}`) === "true");
+                setLocalMapCompleted(Boolean(isCompleted));
+            } catch {
+                setLocalMapCompleted(false);
+            }
+        };
+        checkLocal();
+        window.addEventListener("unit-map-setup-completed", checkLocal);
+        window.addEventListener("unit-map-guidance-changed", checkLocal);
+        window.addEventListener("storage", checkLocal);
+        return () => {
+            window.removeEventListener("unit-map-setup-completed", checkLocal);
+            window.removeEventListener("unit-map-guidance-changed", checkLocal);
+            window.removeEventListener("storage", checkLocal);
+        };
+    }, [selectedPropertyId, properties]);
 
     const isLandlord = profile?.role === "landlord" || profile?.role === "admin";
     const isReady = !authLoading && !propertyLoading;
@@ -34,7 +64,7 @@ function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }
     const isAllowedCreationRoute = pathname === "/landlord/properties/new";
 
     // Stage 2: Landlord has registered a property, but unit map is not yet configured
-    const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete);
+    const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete) || localMapCompleted;
     const hasPendingUnitMap = isReady && isLandlord && properties.length > 0 && !hasConfiguredMap;
     const isAllowedUnitMapRoute = pathname?.startsWith("/landlord/unit-map");
 

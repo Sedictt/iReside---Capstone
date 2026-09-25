@@ -47,9 +47,13 @@ export function Sidebar({
         ? selectedPropertyId 
         : (properties[0]?.id || "default");
     const SCOPED_TENANT_DELAYED_KEY = `ireside.tenant_setup_delayed.${activePropertyId}`;
+    const SCOPED_MAP_SETUP_COMPLETE_KEY = `ireside_map_setup_complete_${activePropertyId}`;
+    const SCOPED_EXPLORE_MODAL_SHOWN_KEY = `ireside.explore_modal_shown.${activePropertyId}`;
+    const SCOPED_AWAITING_TENANT_SETUP_KEY = `ireside.awaiting_tenant_setup.${activePropertyId}`;
 
     const [isTenantSetupDelayed, setIsTenantSetupDelayed] = useState(false);
     const [isGuidanceSessionActive, setIsGuidanceSessionActive] = useState(false);
+    const [localMapCompleted, setLocalMapCompleted] = useState(false);
 
     useEffect(() => {
         const checkDelayed = () => {
@@ -60,32 +64,42 @@ export function Sidebar({
 
                 const guidVal = window.sessionStorage.getItem(`ireside.unit_map_guidance_in_progress.${activePropertyId}`);
                 setIsGuidanceSessionActive(guidVal === "true");
+
+                const isCompletedLocally = 
+                    window.localStorage.getItem(SCOPED_MAP_SETUP_COMPLETE_KEY) === "true" ||
+                    window.localStorage.getItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY) === "true" ||
+                    window.localStorage.getItem(SCOPED_AWAITING_TENANT_SETUP_KEY) === "true" ||
+                    properties.some((p) => window.localStorage.getItem(`ireside_map_setup_complete_${p.id}`) === "true");
+                setLocalMapCompleted(Boolean(isCompletedLocally));
             } catch {
                 setIsTenantSetupDelayed(false);
                 setIsGuidanceSessionActive(false);
+                setLocalMapCompleted(false);
             }
         };
         checkDelayed();
         window.addEventListener("tenant-setup-delayed-changed", checkDelayed);
         window.addEventListener("unit-map-guidance-changed", checkDelayed);
+        window.addEventListener("unit-map-setup-completed", checkDelayed);
         window.addEventListener("storage", checkDelayed);
         return () => {
             window.removeEventListener("tenant-setup-delayed-changed", checkDelayed);
             window.removeEventListener("unit-map-guidance-changed", checkDelayed);
+            window.removeEventListener("unit-map-setup-completed", checkDelayed);
             window.removeEventListener("storage", checkDelayed);
         };
-    }, [SCOPED_TENANT_DELAYED_KEY, activePropertyId]);
+    }, [SCOPED_TENANT_DELAYED_KEY, SCOPED_MAP_SETUP_COMPLETE_KEY, SCOPED_EXPLORE_MODAL_SHOWN_KEY, SCOPED_AWAITING_TENANT_SETUP_KEY, activePropertyId, properties]);
 
     const hasZeroProperties = !propertyLoading && properties.length === 0;
-    const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete);
-    const hasPendingUnitMap = !propertyLoading && properties.length > 0 && (!hasConfiguredMap || isGuidanceSessionActive);
+    const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete) || localMapCompleted;
+    const hasPendingUnitMap = !propertyLoading && properties.length > 0 && !hasConfiguredMap;
     
     // Check if at least one tenant or occupied unit exists across the portfolio
     const hasAtLeastOneTenant = properties.some((p) => 
         Boolean(p.hasTenants) || 
         p.units?.some((u) => (u.status || "").toLowerCase() === "occupied")
     );
-    const hasPendingTenantSetup = !propertyLoading && properties.length > 0 && hasConfiguredMap && !isGuidanceSessionActive && !hasAtLeastOneTenant;
+    const hasPendingTenantSetup = !propertyLoading && properties.length > 0 && hasConfiguredMap && !hasAtLeastOneTenant;
 
     const isLocked = hasZeroProperties || hasPendingUnitMap || hasPendingTenantSetup;
     const lockStage: SidebarLockStage = hasZeroProperties
