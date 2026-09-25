@@ -21,9 +21,11 @@ export function SecurityKeyRecoveryModal({
   isRedirecting = false,
 }: SecurityKeyRecoveryModalProps) {
   const [isSecurityKeyAcknowledged, setIsSecurityKeyAcknowledged] = useState(false);
-  const [_hasSavedKey, setHasSavedKey] = useState(false);
+  const [hasDownloaded, setHasDownloaded] = useState(false);
 
   if (!isOpen || !securityKey) return null;
+
+  const isProceedDisabled = !hasDownloaded || !isSecurityKeyAcknowledged || isRedirecting;
 
   return (
     <div
@@ -59,11 +61,7 @@ export function SecurityKeyRecoveryModal({
           isAcknowledged={isSecurityKeyAcknowledged}
           onToggleAcknowledge={setIsSecurityKeyAcknowledged}
           onDownload={() => {
-            setHasSavedKey(true);
-            setIsSecurityKeyAcknowledged(true);
-          }}
-          onCopy={() => {
-            setHasSavedKey(true);
+            setHasDownloaded(true);
             setIsSecurityKeyAcknowledged(true);
           }}
           title="Landlord Security Recovery Key"
@@ -74,10 +72,13 @@ export function SecurityKeyRecoveryModal({
         <div className="pt-2">
           <button
             type="button"
-            disabled={isRedirecting}
+            disabled={isProceedDisabled}
             onClick={onProceed}
             className={cn(
-              "w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm transition-all hover:bg-primary/90 active:scale-[0.99] flex items-center justify-center gap-2 shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+              "w-full h-11 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-xs",
+              isProceedDisabled
+                ? "bg-muted text-muted-foreground/60 cursor-not-allowed border border-border/60"
+                : "bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.99] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
               isRedirecting && "opacity-75 cursor-wait"
             )}
           >
@@ -93,6 +94,11 @@ export function SecurityKeyRecoveryModal({
               </>
             )}
           </button>
+          {!hasDownloaded && (
+            <p className="mt-2 text-center text-[11px] text-muted-foreground">
+              Please download your recovery key file to proceed.
+            </p>
+          )}
         </div>
       </div>
     </div>

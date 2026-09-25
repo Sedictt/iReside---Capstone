@@ -49,7 +49,6 @@ import {
   validatePropertyTradeName,
   validatePropertyTagline,
   validateBrandColor,
-  validateAdminFullName,
   validateStep1Identity,
   validateStep2Theme,
 } from "@/lib/validation/brand-setup";
@@ -155,14 +154,28 @@ function WizardContent() {
     };
   }, [isSystemLocked]);
 
+  // Track whether the initial setup-completion check has already run.
+  // This prevents async BrandContext refreshes (window focus, realtime broadcast,
+  // background /api/branding fetch) from redirecting the user away from the wizard
+  // while they are actively typing. Only the first evaluation after auth loading
+  // completes is allowed to redirect.
+  const hasCheckedSetupRef = useRef(false);
+
   useEffect(() => {
-    if (!loading && profile && profile.role === "tenant") {
+    if (loading) return; // Wait for auth to resolve
+
+    if (profile && profile.role === "tenant") {
       router.replace("/tenant/dashboard");
       return;
     }
 
+    // Only check setup completion once on initial load.
+    // Subsequent brand context updates (from refreshBranding on focus, realtime
+    // broadcasts, etc.) must NOT trigger a redirect — the user may be mid-typing.
+    if (hasCheckedSetupRef.current) return;
+    hasCheckedSetupRef.current = true;
+
     if (
-      !loading &&
       brand &&
       brand.setupCompleted &&
       !isReconfigure &&
@@ -202,7 +215,6 @@ function WizardContent() {
     const raw = brand.propertyTagline?.trim() || "";
     return raw && !DISALLOWED_PRESEEDED_DATA.taglines.includes(raw.toLowerCase()) ? raw : "";
   });
-  const [landlordName, setLandlordName] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(brand.logoUrl);
 
   // Step 2: Light / Dark Mode & Modern HSL Palette
@@ -246,9 +258,6 @@ function WizardContent() {
       if (typeof draft.tagline === "string") {
         setTagline(draft.tagline);
       }
-      if (typeof draft.landlordName === "string" && draft.landlordName.trim()) {
-        setLandlordName(draft.landlordName);
-      }
       if (draft.logoUrl !== undefined) {
         setLogoUrl(draft.logoUrl);
       }
@@ -279,11 +288,10 @@ function WizardContent() {
     if (isReconfigure || isLaunched || brand?.setupCompleted) return;
     try {
       // Only persist if user has started editing
-      if (propertyName || tagline || landlordName || logoUrl || primaryColor !== "#8b5cf6") {
+      if (propertyName || tagline || logoUrl || primaryColor !== "#8b5cf6") {
         const draft = {
           propertyName,
           tagline,
-          landlordName,
           logoUrl,
           modePreference,
           primaryColor,
@@ -298,7 +306,6 @@ function WizardContent() {
   }, [
     propertyName,
     tagline,
-    landlordName,
     logoUrl,
     modePreference,
     primaryColor,
@@ -333,7 +340,6 @@ function WizardContent() {
     const check = validateStep1Identity({
       propertyName,
       tagline,
-      landlordName,
     });
 
     if (!check.isValid) {
@@ -342,7 +348,6 @@ function WizardContent() {
         ...prev,
         propertyName: true,
         tagline: true,
-        landlordName: true,
       }));
       const firstMsg = Object.values(check.errors)[0];
       toast.error(firstMsg || "Please fix the errors in Step 1 before continuing.");
@@ -501,7 +506,6 @@ function WizardContent() {
     const s1 = validateStep1Identity({
       propertyName,
       tagline,
-      landlordName,
     });
     if (!s1.isValid) {
       setFieldErrors((prev) => ({ ...prev, ...s1.errors }));
@@ -509,7 +513,6 @@ function WizardContent() {
         ...prev,
         propertyName: true,
         tagline: true,
-        landlordName: true,
       }));
       toast.error(Object.values(s1.errors)[0] || "Please correct errors in Step 1.");
       setCurrentStep(1);
@@ -541,9 +544,6 @@ function WizardContent() {
             primaryColor,
             secondaryColor,
             logoUrl,
-          },
-          admin: {
-            fullName: landlordName.trim() || undefined,
           },
         }),
       });
@@ -780,7 +780,6 @@ function WizardContent() {
                         const s1 = validateStep1Identity({
                           propertyName,
                           tagline,
-                          landlordName,
                         });
                         if (!s1.isValid) {
                           setFieldErrors((prev) => ({ ...prev, ...s1.errors }));
@@ -788,7 +787,6 @@ function WizardContent() {
                             ...prev,
                             propertyName: true,
                             tagline: true,
-                            landlordName: true,
                           }));
                           toast.error(
                             Object.values(s1.errors)[0] || "Please complete Step 1 first."
@@ -890,165 +888,87 @@ function WizardContent() {
                         Property Details
                       </h2>
                       <p className="text-[11px] text-muted-foreground">
-                        Set your property name, landlord identity, and official logo
+                        Set your property name, brand tagline, and official logo
                       </p>
                     </div>
                   </div>
 
                   <div className="space-y-3.5">
-                    {/* Property Name & Landlord Name Row */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label
-                            htmlFor="property-name-input"
-                            className="text-xs font-medium text-foreground cursor-pointer"
-                          >
-                            Property Name <span className="text-rose-500" aria-hidden="true">*</span>
-                          </label>
-                          {propertyName.length > 50 && (
-                            <span
-                              className={cn(
-                                "text-[9px] font-mono",
-                                propertyName.length > 80
-                                  ? "text-rose-500 font-bold"
-                                  : "text-muted-foreground"
-                              )}
-                            >
-                              {propertyName.length}/80
-                            </span>
-                          )}
-                        </div>
-                        <div
-                          className={cn(
-                            "bg-background border rounded-xl px-3 py-2 transition-all focus-within:ring-2 focus-within:ring-primary/20",
-                            touchedFields.propertyName && fieldErrors.propertyName
-                              ? "border-rose-500 ring-1 ring-rose-500"
-                              : "border-border hover:border-border/80"
-                          )}
+                    {/* Property Name */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label
+                          htmlFor="property-name-input"
+                          className="text-xs font-medium text-foreground cursor-pointer"
                         >
-                          <input
-                            id="property-name-input"
-                            type="text"
-                            value={propertyName}
-                            maxLength={80}
-                            autoComplete="organization"
-                            aria-required="true"
-                            aria-invalid={
-                              !!(touchedFields.propertyName && fieldErrors.propertyName)
-                            }
-                            aria-describedby={
-                              touchedFields.propertyName && fieldErrors.propertyName
-                                ? "property-name-error"
-                                : undefined
-                            }
-                            onChange={(e) => {
-                              setPropertyName(e.target.value);
-                              if (touchedFields.propertyName) {
-                                setFieldError(
-                                  "propertyName",
-                                  validatePropertyTradeName(e.target.value).error
-                                );
-                              }
-                            }}
-                            onBlur={() => {
-                              markFieldTouched("propertyName");
+                          Property Name <span className="text-rose-500" aria-hidden="true">*</span>
+                        </label>
+                        {propertyName.length > 50 && (
+                          <span
+                            className={cn(
+                              "text-[9px] font-mono",
+                              propertyName.length > 80
+                                ? "text-rose-500 font-bold"
+                                : "text-muted-foreground"
+                            )}
+                          >
+                            {propertyName.length}/80
+                          </span>
+                        )}
+                      </div>
+                      <div
+                        className={cn(
+                          "bg-background border rounded-xl px-3 py-2 transition-all focus-within:ring-2 focus-within:ring-primary/20",
+                          touchedFields.propertyName && fieldErrors.propertyName
+                            ? "border-rose-500 ring-1 ring-rose-500"
+                            : "border-border hover:border-border/80"
+                        )}
+                      >
+                        <input
+                          id="property-name-input"
+                          type="text"
+                          value={propertyName}
+                          maxLength={80}
+                          autoComplete="organization"
+                          aria-required="true"
+                          aria-invalid={
+                            !!(touchedFields.propertyName && fieldErrors.propertyName)
+                          }
+                          aria-describedby={
+                            touchedFields.propertyName && fieldErrors.propertyName
+                              ? "property-name-error"
+                              : undefined
+                          }
+                          onChange={(e) => {
+                            setPropertyName(e.target.value);
+                            if (touchedFields.propertyName) {
                               setFieldError(
                                 "propertyName",
-                                validatePropertyTradeName(propertyName).error
+                                validatePropertyTradeName(e.target.value).error
                               );
-                            }}
-                            placeholder="e.g. Pinecrest Residences"
-                            className="bg-transparent border-none outline-none w-full text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:ring-0"
-                          />
-                        </div>
-                        {touchedFields.propertyName && fieldErrors.propertyName && (
-                          <p
-                            id="property-name-error"
-                            role="alert"
-                            className="mt-1 text-[11px] font-medium text-rose-500 flex items-center gap-1"
-                          >
-                            <AlertCircle className="size-3 shrink-0" />
-                            <span>{fieldErrors.propertyName}</span>
-                          </p>
-                        )}
+                            }
+                          }}
+                          onBlur={() => {
+                            markFieldTouched("propertyName");
+                            setFieldError(
+                              "propertyName",
+                              validatePropertyTradeName(propertyName).error
+                            );
+                          }}
+                          placeholder="e.g. Pinecrest Residences"
+                          className="bg-transparent border-none outline-none w-full text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:ring-0"
+                        />
                       </div>
-
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label
-                            htmlFor="landlord-name-input"
-                            className="text-xs font-medium text-foreground cursor-pointer"
-                          >
-                            Landlord Name <span className="text-rose-500" aria-hidden="true">*</span>
-                          </label>
-                          {landlordName.length > 40 && (
-                            <span
-                              className={cn(
-                                "text-[9px] font-mono",
-                                landlordName.length > 70
-                                  ? "text-rose-500 font-bold"
-                                  : "text-muted-foreground"
-                              )}
-                            >
-                              {landlordName.length}/70
-                            </span>
-                          )}
-                        </div>
-                        <div
-                          className={cn(
-                            "bg-background border rounded-xl px-3 py-2 transition-all focus-within:ring-2 focus-within:ring-primary/20",
-                            touchedFields.landlordName && fieldErrors.landlordName
-                              ? "border-rose-500 ring-1 ring-rose-500"
-                              : "border-border hover:border-border/80"
-                          )}
+                      {touchedFields.propertyName && fieldErrors.propertyName && (
+                        <p
+                          id="property-name-error"
+                          role="alert"
+                          className="mt-1 text-[11px] font-medium text-rose-500 flex items-center gap-1"
                         >
-                          <input
-                            id="landlord-name-input"
-                            type="text"
-                            value={landlordName}
-                            maxLength={70}
-                            autoComplete="name"
-                            aria-required="true"
-                            aria-invalid={
-                              !!(touchedFields.landlordName && fieldErrors.landlordName)
-                            }
-                            aria-describedby={
-                              touchedFields.landlordName && fieldErrors.landlordName
-                                ? "landlord-name-error"
-                                : undefined
-                            }
-                            onChange={(e) => {
-                              setLandlordName(e.target.value);
-                              if (touchedFields.landlordName) {
-                                setFieldError(
-                                  "landlordName",
-                                  validateAdminFullName(e.target.value).error
-                                );
-                              }
-                            }}
-                            onBlur={() => {
-                              markFieldTouched("landlordName");
-                              setFieldError(
-                                "landlordName",
-                                validateAdminFullName(landlordName).error
-                              );
-                            }}
-                            placeholder="e.g. Roberto Reyes"
-                            className="bg-transparent border-none outline-none w-full text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:ring-0"
-                          />
-                        </div>
-                        {touchedFields.landlordName && fieldErrors.landlordName && (
-                          <p
-                            id="landlord-name-error"
-                            role="alert"
-                            className="mt-1 text-[11px] font-medium text-rose-500 flex items-center gap-1"
-                          >
-                            <AlertCircle className="size-3 shrink-0" />
-                            <span>{fieldErrors.landlordName}</span>
-                          </p>
-                        )}
-                      </div>
+                          <AlertCircle className="size-3 shrink-0" />
+                          <span>{fieldErrors.propertyName}</span>
+                        </p>
+                      )}
                     </div>
 
                     {/* Tagline */}
@@ -1827,15 +1747,6 @@ function WizardContent() {
                               <Check className="size-3 stroke-[3]" />
                               <span>Active</span>
                             </span>
-                            <button
-                              type="button"
-                              onClick={() => setCurrentStep(1)}
-                              aria-label="Edit landlord details"
-                              className="text-xs font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded cursor-pointer"
-                            >
-                              <Edit3 className="size-3" />
-                              <span>Edit</span>
-                            </button>
                           </div>
                         </div>
 
@@ -1845,24 +1756,44 @@ function WizardContent() {
                             <span
                               className="text-xs font-medium text-foreground truncate max-w-[180px]"
                               title={
-                                landlordName ||
                                 (profile?.full_name &&
                                 !DISALLOWED_PRESEEDED_DATA.adminNames.includes(
                                   profile.full_name.toLowerCase()
                                 )
                                   ? profile.full_name
                                   : "") ||
-                                "Not configured"
+                                (user?.user_metadata?.full_name &&
+                                !DISALLOWED_PRESEEDED_DATA.adminNames.includes(
+                                  String(user.user_metadata.full_name).toLowerCase()
+                                )
+                                  ? user.user_metadata.full_name
+                                  : "") ||
+                                "Landlord"
                               }
                             >
-                              {landlordName ||
-                                (profile?.full_name &&
+                              {(profile?.full_name &&
+                              !DISALLOWED_PRESEEDED_DATA.adminNames.includes(
+                                profile.full_name.toLowerCase()
+                              )
+                                ? profile.full_name
+                                : "") ||
+                                (user?.user_metadata?.full_name &&
                                 !DISALLOWED_PRESEEDED_DATA.adminNames.includes(
-                                  profile.full_name.toLowerCase()
+                                  String(user.user_metadata.full_name).toLowerCase()
                                 )
-                                  ? profile.full_name
+                                  ? user.user_metadata.full_name
                                   : "") ||
-                                "Not configured"}
+                                "Landlord"}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-[11px] text-muted-foreground">Email</span>
+                            <span
+                              className="text-xs font-medium text-foreground truncate max-w-[180px]"
+                              title={profile?.email || user?.email || ""}
+                            >
+                              {profile?.email || user?.email || "—"}
                             </span>
                           </div>
 

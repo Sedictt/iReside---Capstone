@@ -29,6 +29,7 @@ export function SecurityKeyDisplayCard({
     className,
 }: SecurityKeyDisplayCardProps) {
     const [copied, setCopied] = useState(false);
+    const [downloaded, setDownloaded] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
 
     const handleCopy = async () => {
@@ -66,16 +67,19 @@ IMPORTANT INSTRUCTIONS:
 - Never share this key with anyone. iReside staff will never ask for your key.
 =======================================================`;
 
-            const blob = new Blob([fileContent], { type: "text/plain;charset=utf-8" });
-            const url = URL.createObjectURL(blob);
-            const anchor = document.createElement("a");
-            anchor.href = url;
-            anchor.download = `ireside-security-key-${new Date().toISOString().split("T")[0]}.txt`;
-            document.body.appendChild(anchor);
-            anchor.click();
-            document.body.removeChild(anchor);
-            URL.revokeObjectURL(url);
+            if (typeof window !== "undefined" && typeof window.URL?.createObjectURL === "function") {
+                const blob = new Blob([fileContent], { type: "text/plain;charset=utf-8" });
+                const url = window.URL.createObjectURL(blob);
+                const anchor = document.createElement("a");
+                anchor.href = url;
+                anchor.download = `ireside-security-key-${new Date().toISOString().split("T")[0]}.txt`;
+                document.body.appendChild(anchor);
+                anchor.click();
+                document.body.removeChild(anchor);
+                window.URL.revokeObjectURL(url);
+            }
 
+            setDownloaded(true);
             onDownload?.();
             toast.success("Security key file downloaded");
         } catch {
@@ -149,10 +153,24 @@ IMPORTANT INSTRUCTIONS:
                     <button
                         type="button"
                         onClick={handleDownload}
-                        className="flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-border/70 hover:border-primary/50 bg-surface-1 hover:bg-surface-3 text-xs font-bold text-foreground transition-all active:scale-98"
+                        className={cn(
+                            "flex items-center justify-center gap-2 h-10 px-4 rounded-xl border text-xs font-bold transition-all active:scale-98 cursor-pointer",
+                            downloaded
+                                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                : "border-border/70 hover:border-primary/50 bg-surface-1 hover:bg-surface-3 text-foreground"
+                        )}
                     >
-                        <Download className="size-3.5 text-muted-foreground" />
-                        <span>Download (.txt)</span>
+                        {downloaded ? (
+                            <>
+                                <Check className="size-3.5 text-emerald-500" />
+                                <span>File Downloaded</span>
+                            </>
+                        ) : (
+                            <>
+                                <Download className="size-3.5 text-muted-foreground" />
+                                <span>Download (.txt)</span>
+                            </>
+                        )}
                     </button>
                 </div>
             </div>

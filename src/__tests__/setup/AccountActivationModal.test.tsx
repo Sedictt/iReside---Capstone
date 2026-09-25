@@ -108,13 +108,24 @@ describe("AccountActivationModal Component", () => {
 
     const proceedButton = screen.getByRole("button", { name: /Proceed to Property Setup/i });
     expect(proceedButton).toBeInTheDocument();
+    expect(proceedButton).toBeDisabled();
 
-    // Copy or download key
+    // Copying key does not enable proceed button
     const copyButton = screen.getByRole("button", { name: /Copy Key/i });
     fireEvent.click(copyButton);
 
     await waitFor(() => {
       expect(screen.getByText(/Copied to Clipboard/i)).toBeInTheDocument();
+    });
+    expect(proceedButton).toBeDisabled();
+
+    // Downloading key enables proceed button
+    const downloadButton = screen.getByRole("button", { name: /Download/i });
+    fireEvent.click(downloadButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/File Downloaded/i)).toBeInTheDocument();
+      expect(proceedButton).not.toBeDisabled();
     });
 
     // Click Proceed to Property Setup
@@ -125,7 +136,7 @@ describe("AccountActivationModal Component", () => {
     });
   });
 
-  it("allows proceeding to setup after acknowledging security recovery key checkbox", async () => {
+  it("enforces downloading recovery key before allowing proceeding to setup", async () => {
     (global.fetch as any).mockImplementation((url: string) => {
       if (url.includes("/api/setup/email/send-otp")) {
         return Promise.resolve({ ok: true, json: async () => ({ success: true }) });
@@ -172,11 +183,22 @@ describe("AccountActivationModal Component", () => {
       expect(screen.getByText(/Landlord Security Recovery Key/i)).toBeInTheDocument();
     });
 
-    // Check acknowledgment checkbox
+    const proceedButton = screen.getByRole("button", { name: /Proceed to Property Setup/i });
+    expect(proceedButton).toBeDisabled();
+
+    // Toggling acknowledgment checkbox alone without downloading does not enable proceed
     const checkbox = screen.getByRole("checkbox");
     fireEvent.click(checkbox);
+    expect(proceedButton).toBeDisabled();
 
-    const proceedButton = screen.getByRole("button", { name: /Proceed to Property Setup/i });
+    // Downloading key enables proceed
+    const downloadButton = screen.getByRole("button", { name: /Download/i });
+    fireEvent.click(downloadButton);
+
+    await waitFor(() => {
+      expect(proceedButton).not.toBeDisabled();
+    });
+
     fireEvent.click(proceedButton);
 
     await waitFor(() => {

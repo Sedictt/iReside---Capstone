@@ -488,6 +488,15 @@ describe("LoginPage - Account Activation (No Auto Sign-In)", () => {
         });
 
         const proceedBtn = screen.getByRole("button", { name: /Proceed to Property Setup/i });
+        expect(proceedBtn).toBeDisabled();
+
+        const downloadBtn = screen.getByRole("button", { name: /Download/i });
+        fireEvent.click(downloadBtn);
+
+        await waitFor(() => {
+            expect(proceedBtn).not.toBeDisabled();
+        });
+
         fireEvent.click(proceedBtn);
 
         await waitFor(() => {
