@@ -68,7 +68,7 @@ export function UnitMapExploreOrReturnModal({
                             id="explore-or-return-title"
                             className="text-xl sm:text-2xl font-black tracking-tight leading-tight"
                         >
-                            Floor Plan Ready
+                            Unit Map Ready
                         </h2>
                     </div>
                 </div>

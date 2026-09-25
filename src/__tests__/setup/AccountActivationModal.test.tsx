@@ -106,7 +106,7 @@ describe("AccountActivationModal Component", () => {
       expect(screen.getByText("eduardo@santosproperties.ph")).toBeInTheDocument();
     });
 
-    const proceedButton = screen.getByRole("button", { name: /Proceed to Property Setup/i });
+    const proceedButton = screen.getByRole("button", { name: /Proceed to Sign In/i });
     expect(proceedButton).toBeInTheDocument();
     expect(proceedButton).toBeDisabled();
 
@@ -128,7 +128,7 @@ describe("AccountActivationModal Component", () => {
       expect(proceedButton).not.toBeDisabled();
     });
 
-    // Click Proceed to Property Setup
+    // Click Proceed to Sign In
     fireEvent.click(proceedButton);
 
     await waitFor(() => {
@@ -183,7 +183,7 @@ describe("AccountActivationModal Component", () => {
       expect(screen.getByText(/Landlord Security Recovery Key/i)).toBeInTheDocument();
     });
 
-    const proceedButton = screen.getByRole("button", { name: /Proceed to Property Setup/i });
+    const proceedButton = screen.getByRole("button", { name: /Proceed to Sign In/i });
     expect(proceedButton).toBeDisabled();
 
     // Toggling acknowledgment checkbox alone without downloading does not enable proceed

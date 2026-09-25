@@ -14,7 +14,7 @@ describe("UnitMapExploreOrReturnModal", () => {
             />
         );
 
-        expect(screen.getByText("Floor Plan Ready")).toBeDefined();
+        expect(screen.getByText("Unit Map Ready")).toBeDefined();
         expect(screen.getByText("Layout Saved")).toBeDefined();
         expect(screen.getByText("Pinecrest Residences")).toBeDefined();
         expect(screen.getByText("Return to Dashboard")).toBeDefined();

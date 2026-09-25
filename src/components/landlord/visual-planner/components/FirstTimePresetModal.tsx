@@ -209,7 +209,7 @@ export const FirstTimePresetModal = ({
                             <div className="flex items-center gap-2 mb-3">
                                 <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
                                     <Layers className="size-3.5" />
-                                    Step 2 of Onboarding • Floor Plan Setup
+                                    Step 2 of Onboarding • Unit Map Setup
                                 </span>
                                 {unitCount > 0 && (
                                     <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
@@ -222,10 +222,10 @@ export const FirstTimePresetModal = ({
                                 id="layout-preset-modal-title"
                                 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground"
                             >
-                                Choose a Floor Plan Layout
+                                Choose a Unit-map Layout
                             </h2>
                             <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-3xl font-medium">
-                                Your units are on the canvas but haven&apos;t been organized into a final floor plan yet. Choose a preset to automatically organize units and hallways, or lay them out manually by dragging and dropping units and adding elements like stairs from the sidebar.
+                                Your units are on the canvas but haven&apos;t been organized into a final unit-map layout yet. Choose a preset to automatically organize units and hallways, or lay them out manually by dragging and dropping units and adding elements like stairs from the sidebar.
                             </p>
                         </div>
 
