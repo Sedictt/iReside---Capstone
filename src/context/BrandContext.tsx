@@ -270,31 +270,35 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
 
       // 2. Save locally
       if (typeof window !== "undefined") {
-        OfflineStorage.set("brand_configuration", merged, null, "branding");
-        localStorage.setItem("ireside_property_name", merged.propertyName);
-        if (merged.rentalArchetype) {
-          localStorage.setItem("ireside_rental_archetype", merged.rentalArchetype);
-        } else {
-          localStorage.removeItem("ireside_rental_archetype");
-        }
-        localStorage.setItem("ireside_brand_primary", merged.primaryColor);
-        localStorage.setItem("ireside_brand_secondary", merged.secondaryColor);
-        if (merged.logoUrl) {
-          localStorage.setItem("ireside_property_logo", merged.logoUrl);
-        } else {
-          localStorage.removeItem("ireside_property_logo");
-        }
-        if (merged.bannerUrl) {
-          localStorage.setItem("ireside_landlord_custom_banner_url", merged.bannerUrl);
-        } else {
-          localStorage.removeItem("ireside_landlord_custom_banner_url");
-        }
-        if (merged.setupCompleted) {
-          localStorage.setItem("ireside_setup_completed", "true");
-          if (merged.setupCompletedAt) localStorage.setItem("ireside_setup_completed_at", merged.setupCompletedAt);
-        } else {
-          localStorage.removeItem("ireside_setup_completed");
-          localStorage.removeItem("ireside_setup_completed_at");
+        try {
+          OfflineStorage.set("brand_configuration", merged, null, "branding");
+          localStorage.setItem("ireside_property_name", merged.propertyName);
+          if (merged.rentalArchetype) {
+            localStorage.setItem("ireside_rental_archetype", merged.rentalArchetype);
+          } else {
+            localStorage.removeItem("ireside_rental_archetype");
+          }
+          localStorage.setItem("ireside_brand_primary", merged.primaryColor);
+          localStorage.setItem("ireside_brand_secondary", merged.secondaryColor);
+          if (merged.logoUrl) {
+            localStorage.setItem("ireside_property_logo", merged.logoUrl);
+          } else {
+            localStorage.removeItem("ireside_property_logo");
+          }
+          if (merged.bannerUrl) {
+            localStorage.setItem("ireside_landlord_custom_banner_url", merged.bannerUrl);
+          } else {
+            localStorage.removeItem("ireside_landlord_custom_banner_url");
+          }
+          if (merged.setupCompleted) {
+            localStorage.setItem("ireside_setup_completed", "true");
+            if (merged.setupCompletedAt) localStorage.setItem("ireside_setup_completed_at", merged.setupCompletedAt);
+          } else {
+            localStorage.removeItem("ireside_setup_completed");
+            localStorage.removeItem("ireside_setup_completed_at");
+          }
+        } catch (storageErr) {
+          console.warn("[BrandProvider] Failed to save branding to local storage:", storageErr);
         }
         window.dispatchEvent(new CustomEvent("property-branding-updated", { detail: merged }));
       }
@@ -302,10 +306,20 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
       // 3. Broadcast to other connected devices via Realtime channel
       if (realtimeChannelRef.current) {
         try {
-          realtimeChannelRef.current.send({
-            type: "broadcast",
-            event: "brand-updated",
-            payload: merged,
+          // If logoUrl or bannerUrl is a large data URI, omit it from the realtime broadcast to avoid WebSocket size limits
+          const broadcastPayload = {
+            ...merged,
+            logoUrl: merged.logoUrl?.startsWith("data:") ? null : merged.logoUrl,
+            bannerUrl: merged.bannerUrl?.startsWith("data:") ? null : merged.bannerUrl,
+          };
+          Promise.resolve(
+            realtimeChannelRef.current.send({
+              type: "broadcast",
+              event: "brand-updated",
+              payload: broadcastPayload,
+            })
+          ).catch((broadcastErr: any) => {
+            console.warn("[BrandProvider] Realtime broadcast error:", broadcastErr);
           });
         } catch (broadcastErr) {
           console.warn("[BrandProvider] Realtime broadcast error:", broadcastErr);
