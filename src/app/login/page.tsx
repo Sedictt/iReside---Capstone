@@ -20,6 +20,48 @@ import { cn } from "@/lib/utils";
 import { AccountActivationModal } from "@/components/auth/AccountActivationModal";
 import { SecurityKeyRecoveryModal } from "@/components/auth/SecurityKeyRecoveryModal";
 import { DISALLOWED_PRESEEDED_DATA } from "@/lib/validation/brand-setup";
+import { OfflineStorage } from "@/lib/offline/offlineStorage";
+
+function clearStaleLandlordData() {
+    try {
+        if (typeof document !== "undefined") {
+            document.cookie = "ireside_setup_completed=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+        }
+        if (typeof window !== "undefined") {
+            const keysToRemove = [
+                "ireside_setup_completed",
+                "ireside_setup_completed_at",
+                "brand_configuration",
+                "iReside_cached_properties",
+                "iReside_selected_property",
+                "ireside_property_name",
+                "ireside_property_tagline",
+                "ireside_rental_archetype",
+                "ireside_brand_primary",
+                "ireside_brand_secondary",
+                "ireside_setup_inputs_draft",
+                "ireside.onboarding_completed",
+                "ireside.billing_rails_complete",
+                "ireside.billing_rails_delayed",
+                "ireside.unit_map.tour_completed",
+                "ireside.utility_billing.tour_completed",
+                "ireside.dashboard.tour_completed",
+            ];
+            keysToRemove.forEach((k) => localStorage.removeItem(k));
+
+            // Clean any dynamic prefix keys (e.g. ireside_map_setup_complete_*, ireside.billing_rails_complete.*)
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                const key = localStorage.key(i);
+                if (key && (key.startsWith("ireside_map_setup_complete_") || key.startsWith("ireside.") || key.startsWith("iReside_"))) {
+                    localStorage.removeItem(key);
+                }
+            }
+            OfflineStorage.remove("brand_configuration");
+        }
+    } catch {
+        // Storage cleanup is best-effort
+    }
+}
 
 
 function LoginContent() {
@@ -168,20 +210,7 @@ function LoginContent() {
             }
 
             // Clear stale branding/setup flags so the fresh login starts clean
-            try {
-                if (typeof window !== "undefined") {
-                    localStorage.removeItem("ireside_setup_completed");
-                    localStorage.removeItem("ireside_setup_completed_at");
-                    localStorage.removeItem("brand_configuration");
-                    localStorage.removeItem("ireside_property_name");
-                    localStorage.removeItem("ireside_property_tagline");
-                    localStorage.removeItem("ireside_rental_archetype");
-                    localStorage.removeItem("ireside_brand_primary");
-                    localStorage.removeItem("ireside_brand_secondary");
-                }
-            } catch {
-                // Storage cleanup is best-effort
-            }
+            clearStaleLandlordData();
         } catch {
             // If signout itself fails, still proceed to show login form
         }
@@ -275,6 +304,7 @@ function LoginContent() {
 
             // Intercept initial setup/default accounts for landlord/admin
             if ((role === "landlord" || role === "admin") && (isClaimed === false || isDefaultAccount)) {
+                clearStaleLandlordData();
                 setShowActivationModal(true);
                 setLoading(false);
                 return;
@@ -284,6 +314,7 @@ function LoginContent() {
             if (role === "landlord" || role === "admin") {
                 const isSetupCompleted = data.user?.user_metadata?.is_setup_completed;
                 if (isSetupCompleted === false) {
+                    clearStaleLandlordData();
                     const dest = redirectUrl || "/setup";
                     if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
                         window.location.replace(dest);

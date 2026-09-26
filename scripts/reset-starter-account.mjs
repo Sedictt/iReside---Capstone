@@ -123,30 +123,109 @@ async function resetStarterAccount() {
     // Delete storage files
     await cleanStorage(userId, propIds);
 
-    // Clean dependent records
+    // Clean dependent records in strict relational dependency order
     console.log('Cleaning dependent records for properties...');
+
+    // A. Identify all child units
+    const { data: units } = await adminClient
+      .from('units')
+      .select('id')
+      .in('property_id', propIds);
+    const unitIds = (units || []).map(u => u.id);
+
+    // B. Identify all child leases (by landlord_id and by unit_id)
+    const { data: leasesByLandlord } = await adminClient
+      .from('leases')
+      .select('id')
+      .eq('landlord_id', userId);
+    let leaseIds = (leasesByLandlord || []).map(l => l.id);
+    if (unitIds.length > 0) {
+      const { data: leasesByUnits } = await adminClient
+        .from('leases')
+        .select('id')
+        .in('unit_id', unitIds);
+      (leasesByUnits || []).forEach(l => {
+        if (!leaseIds.includes(l.id)) leaseIds.push(l.id);
+      });
+    }
+
+    // C. Identify all payments
+    let paymentIds = [];
+    if (propIds.length > 0) {
+      const { data: pmts } = await adminClient.from('payments').select('id').in('property_id', propIds);
+      (pmts || []).forEach(p => paymentIds.push(p.id));
+    }
+    if (leaseIds.length > 0) {
+      const { data: pmts } = await adminClient.from('payments').select('id').in('lease_id', leaseIds);
+      (pmts || []).forEach(p => {
+        if (!paymentIds.includes(p.id)) paymentIds.push(p.id);
+      });
+    }
+
+    // 1. Delete payment dependents
+    if (paymentIds.length > 0) {
+      await adminClient.from('payment_receipts').delete().in('payment_id', paymentIds);
+      await adminClient.from('payment_workflow_audit_events').delete().in('payment_id', paymentIds);
+      await adminClient.from('payment_items').delete().in('payment_id', paymentIds);
+      await adminClient.from('payments').delete().in('id', paymentIds);
+    }
+    await adminClient.from('payments').delete().eq('landlord_id', userId);
+
+    // 2. Delete lease dependents
+    if (leaseIds.length > 0) {
+      await adminClient.from('renewal_requests').delete().in('current_lease_id', leaseIds);
+      await adminClient.from('renewal_requests').delete().in('new_lease_id', leaseIds);
+      await adminClient.from('lease_signing_audit').delete().in('lease_id', leaseIds);
+      await adminClient.from('leases').delete().in('id', leaseIds);
+    }
+    await adminClient.from('renewal_requests').delete().eq('landlord_id', userId);
+    await adminClient.from('leases').delete().eq('landlord_id', userId);
+
+    // 3. Delete unit dependents
+    if (unitIds.length > 0) {
+      await adminClient.from('unit_map_positions').delete().in('unit_id', unitIds);
+      await adminClient.from('unit_environment_overrides').delete().in('unit_id', unitIds);
+      await adminClient.from('unit_transfer_requests').delete().in('current_unit_id', unitIds);
+      await adminClient.from('move_out_requests').delete().in('unit_id', unitIds);
+      await adminClient.from('applications').delete().in('unit_id', unitIds);
+      await adminClient.from('utility_readings').delete().in('unit_id', unitIds);
+      await adminClient.from('maintenance_requests').delete().in('unit_id', unitIds);
+      await adminClient.from('tenant_invitations').delete().in('unit_id', unitIds);
+    }
+
+    // 4. Delete property dependents
     await adminClient.from('tenant_invitations').delete().in('property_id', propIds);
     await adminClient.from('utility_readings').delete().in('property_id', propIds);
-    
+    await adminClient.from('utility_configs').delete().in('property_id', propIds);
+    await adminClient.from('property_environment_policies').delete().in('property_id', propIds);
+    await adminClient.from('property_floor_configs').delete().in('property_id', propIds);
+    await adminClient.from('property_settings').delete().in('property_id', propIds);
+    await adminClient.from('property_members').delete().in('property_id', propIds);
+    await adminClient.from('amenities').delete().in('property_id', propIds);
+    await adminClient.from('expenses').delete().in('property_id', propIds);
+    await adminClient.from('applications').delete().in('property_id', propIds);
+
     const { data: requests } = await adminClient.from('maintenance_requests').select('id').in('property_id', propIds);
     if (requests && requests.length > 0) {
       const reqIds = requests.map(r => r.id);
       await adminClient.from('maintenance_updates').delete().in('maintenance_request_id', reqIds);
     }
     await adminClient.from('maintenance_requests').delete().in('property_id', propIds);
-    await adminClient.from('payments').delete().in('property_id', propIds);
-    await adminClient.from('invoices').delete().in('property_id', propIds);
-    await adminClient.from('leases').delete().in('property_id', propIds);
-    await adminClient.from('units').delete().in('property_id', propIds);
-    await adminClient.from('property_settings').delete().in('property_id', propIds);
-    await adminClient.from('property_members').delete().in('property_id', propIds);
 
-    // Delete properties
+    // 5. Delete units
+    if (unitIds.length > 0) {
+      const { error: unitDelErr } = await adminClient.from('units').delete().in('property_id', propIds);
+      if (unitDelErr) {
+        console.warn('  \x1b[33m!\x1b[0m Warning deleting units:', unitDelErr.message);
+      }
+    }
+
+    // 6. Delete properties
     const { error: delErr } = await adminClient.from('properties').delete().in('id', propIds);
     if (delErr) {
       console.warn('  \x1b[33m!\x1b[0m Warning deleting properties:', delErr.message);
     } else {
-      console.log('  \x1b[32m✓\x1b[0m Deleted properties and all child units');
+      console.log('  \x1b[32m✓\x1b[0m Deleted properties, units, and all dependent records');
     }
   } else {
     console.log('  \x1b[32m✓\x1b[0m No properties to clean up');
@@ -158,6 +237,10 @@ async function resetStarterAccount() {
   await adminClient.from('landlord_business_profiles').delete().eq('profile_id', userId);
   await adminClient.from('notifications').delete().eq('user_id', userId);
   await adminClient.from('announcements').delete().eq('landlord_id', userId);
+  await adminClient.from('landlord_reviews').delete().eq('landlord_id', userId);
+  await adminClient.from('landlord_payment_destinations').delete().eq('landlord_id', userId);
+  await adminClient.from('landlord_statistics_exports').delete().eq('landlord_id', userId);
+  await adminClient.from('landlord_inquiry_actions').delete().eq('landlord_id', userId);
   console.log('  \x1b[32m✓\x1b[0m Cleared security settings, business profiles, and notifications');
 
   // 3. Reset public.profiles
@@ -209,7 +292,8 @@ async function resetStarterAccount() {
       full_name: TARGET.fullName,
       phone: TARGET.phone,
       role: TARGET.role,
-      is_account_claimed: false
+      is_account_claimed: false,
+      is_setup_completed: false
     }
   });
 
