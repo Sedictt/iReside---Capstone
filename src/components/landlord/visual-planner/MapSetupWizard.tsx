@@ -17,7 +17,8 @@ import {
     Hash,
     X,
     Move,
-    Trash2
+    Trash2,
+    Compass
 } from "lucide-react";
 import {
     DndContext,
@@ -42,6 +43,7 @@ import { useAppToast } from "@/hooks/useAppToast";
 import { SortableUnit, FloorLane, floorDisplayName } from "./components/WizardUnits";
 import type { DbUnit, FloorConfig } from "./components/WizardUnits";
 import { BulkOrganizerPanel } from "./components/BulkOrganizerPanel";
+import { UnitMapTourSpotlight } from "./UnitMapTourSpotlight";
 import { getUnitDimensions } from "./utils";
 
 interface MapSetupWizardProps {
@@ -89,6 +91,21 @@ export function MapSetupWizard({
     const [isRenumbering, setIsRenumbering] = useState(false);
     const [unitToDelete, setUnitToDelete] = useState<DbUnit | null>(null);
     const [isDeletingUnit, setIsDeletingUnit] = useState(false);
+
+    // --- Guided Tour Spotlight State ---
+    const [isTourOpen, setIsTourOpen] = useState(true);
+    const [tourStepIndex, setTourStepIndex] = useState(0);
+
+    const handleTourNext = () => setTourStepIndex((prev) => Math.min(prev + 1, 2));
+    const handleTourPrev = () => setTourStepIndex((prev) => Math.max(prev - 1, 0));
+    const handleTourClose = () => setIsTourOpen(false);
+
+    // Auto-scroll when tour opens or step changes
+    useEffect(() => {
+        if (isTourOpen) {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+    }, [isTourOpen, tourStepIndex]);
 
     // Sync state if initial data arrives later
     useEffect(() => {
@@ -633,12 +650,30 @@ export function MapSetupWizard({
 
                     <div className="flex items-center gap-2">
                         <button
+                            type="button"
+                            onClick={() => {
+                                setIsTourOpen(true);
+                                setTourStepIndex(0);
+                            }}
+                            title="Open Guided Tour"
+                            className={cn(
+                                "inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border text-xs font-semibold transition-all active:scale-95 cursor-pointer",
+                                isTourOpen
+                                    ? "bg-primary/10 border-primary/30 text-primary shadow-xs"
+                                    : "bg-card border-border hover:bg-muted text-muted-foreground hover:text-foreground"
+                            )}
+                        >
+                            <Compass className="size-3.5" />
+                            <span className="hidden sm:inline">Guided Tour</span>
+                        </button>
+
+                        <button
                             data-tour-id="tour-wizard-bulk"
                             onClick={() => setIsBulkOrganizerOpen(!isBulkOrganizerOpen)}
                             disabled={isSaving}
                             title="Open bulk unit distribution"
                             className={cn(
-                                "inline-flex items-center gap-2 h-9 px-3 rounded-xl border text-xs font-semibold transition-all active:scale-95 disabled:opacity-50",
+                                "inline-flex items-center gap-2 h-9 px-3 rounded-xl border text-xs font-semibold transition-all active:scale-95 disabled:opacity-50 cursor-pointer",
                                 isBulkOrganizerOpen 
                                     ? "bg-primary border-primary text-primary-foreground shadow-xs" 
                                     : "bg-card border-border hover:bg-muted text-foreground"
@@ -653,10 +688,17 @@ export function MapSetupWizard({
                             onClick={handleAutoPlace}
                             disabled={isSaving || floorConfigs.length === 0 || totalUnits === 0}
                             className={cn(
-                                "group relative inline-flex items-center gap-2 h-9 rounded-xl px-4 text-xs font-semibold transition-all duration-200 shadow-sm active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed bg-primary text-primary-foreground hover:brightness-105",
-                                isAllAssigned && "ring-2 ring-primary/30"
+                                "group relative inline-flex items-center gap-2 h-9 rounded-xl px-4 text-xs font-semibold transition-all duration-200 shadow-sm active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed bg-primary text-primary-foreground hover:brightness-105 cursor-pointer",
+                                isAllAssigned && "ring-2 ring-primary/30",
+                                isTourOpen && tourStepIndex === 2 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_35px_rgba(155,119,255,0.95)] animate-pulse scale-105 brightness-110 font-black z-30"
                             )}
                         >
+                            {isTourOpen && tourStepIndex === 2 && (
+                                <span className="relative flex size-2 shrink-0">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-90"></span>
+                                    <span className="relative inline-flex rounded-full size-2 bg-white"></span>
+                                </span>
+                            )}
                             {isSaving ? (
                                 <Loader2 className="size-3.5 animate-spin" />
                             ) : (
@@ -738,12 +780,21 @@ export function MapSetupWizard({
 
                                 <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
                                     {/* Action Group */}
-                                    <div className="flex items-center rounded-xl border border-border bg-card p-1 shadow-xs">
+                                    <div className={cn(
+                                        "flex items-center rounded-xl border border-border bg-card p-1 shadow-xs transition-all relative",
+                                        isTourOpen && tourStepIndex === 0 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-102 border-primary z-30"
+                                    )}>
+                                        {isTourOpen && tourStepIndex === 0 && (
+                                            <span className="relative flex size-2 shrink-0 ml-1.5 mr-0.5">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full size-2 bg-primary"></span>
+                                            </span>
+                                        )}
                                         <button
                                             type="button"
                                             onClick={() => setIsRenumberModalOpen(true)}
                                             disabled={isSaving || units.length === 0}
-                                            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all active:scale-95 disabled:opacity-40"
+                                            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
                                         >
                                             <Hash className="size-3.5 text-primary" />
                                             <span>Renumber</span>
@@ -756,7 +807,7 @@ export function MapSetupWizard({
                                                     type="button"
                                                     onClick={handleDistributeEvenly}
                                                     disabled={isSaving}
-                                                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all active:scale-95 disabled:opacity-40"
+                                                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
                                                 >
                                                     <Equal className="size-3.5 text-primary" />
                                                     <span>Distribute Evenly</span>
@@ -769,7 +820,7 @@ export function MapSetupWizard({
                                             type="button"
                                             onClick={() => setIsBulkOrganizerOpen(true)}
                                             disabled={isSaving}
-                                            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all active:scale-95 disabled:opacity-40"
+                                            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
                                         >
                                             <SlidersHorizontal className="size-3.5 text-primary" />
                                             <span>Bulk Distribute</span>
@@ -780,8 +831,17 @@ export function MapSetupWizard({
                                         data-tour-id="tour-wizard-add-floor"
                                         onClick={() => handleAddFloor()}
                                         disabled={isSaving}
-                                        className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3.5 py-2 text-xs font-semibold text-primary hover:bg-primary hover:text-primary-foreground transition-all active:scale-95 shadow-xs disabled:opacity-50"
+                                        className={cn(
+                                            "inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3.5 py-2 text-xs font-semibold text-primary hover:bg-primary hover:text-primary-foreground transition-all active:scale-95 shadow-xs disabled:opacity-50 relative cursor-pointer",
+                                            isTourOpen && tourStepIndex === 1 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-105 bg-primary/20 border-primary font-bold z-30"
+                                        )}
                                     >
+                                        {isTourOpen && tourStepIndex === 1 && (
+                                            <span className="relative flex size-2 shrink-0">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full size-2 bg-primary"></span>
+                                            </span>
+                                        )}
                                         <Plus className="size-3.5 stroke-[2.5]" />
                                         <span>Add Floor</span>
                                     </button>
@@ -1167,6 +1227,18 @@ export function MapSetupWizard({
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Guided Tour Spotlight */}
+            <UnitMapTourSpotlight
+                isOpen={isTourOpen}
+                currentStepIndex={tourStepIndex}
+                onNext={handleTourNext}
+                onPrev={handleTourPrev}
+                onClose={handleTourClose}
+                onGenerate={handleAutoPlace}
+                isGenerating={isSaving}
+                isAllAssigned={isAllAssigned}
+            />
         </div>
     );
 }

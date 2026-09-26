@@ -49,3 +49,14 @@ When an onboarding stage remains incomplete:
 - Visiting the dashboard MUST surface a prompt/greeting after a 1.2–1.5s delay.
 - Visiting the stage's dedicated workspace MUST show the greeting on every fresh page mount.
 - Dismissing via "Maybe Later" sets a visit-scoped dismissal flag (`dismissedThisVisit = true`), so the user can freely interact with the page during that session without nagging, but is greeted again on their next visit.
+
+## 6. Interactive Guided Tour & Target Highlighting Invariant
+When an onboarding stage features a hands-on guided tutorial (e.g., Utility Billing, Unit Map visual planner):
+- **Floating Spotlight Card**: Positioned persistently at bottom-right (`fixed bottom-6 right-6 z-[250]`) with step indicators (`Tour: Step X of Y`), concise instructions, and Next/Back/Action buttons.
+- **Visual Target Highlighting**: The specific UI element/button explained by the current step MUST be visually spotlighted:
+  - Strong pulsing ring & glow: `ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-105 z-30`.
+  - Live ping beacon dot: `animate-ping` pinging beacon placed directly on the active control.
+  - Indicator pill: Inside the spotlight card, an indicator pill (`Highlighted: [Element Label]`) with a synchronized beacon dot confirms what control is being targeted.
+  - Smooth auto-scroll: Advancing steps or opening the tour automatically smooth-scrolls the viewport to bring the targeted element into view.
+- **Reopen Capability**: Every guided tour page MUST provide an easily discoverable "Guided Tour" trigger button in its action bar or header, allowing users who dismissed the spotlight card to reopen the tour at any time.
+
