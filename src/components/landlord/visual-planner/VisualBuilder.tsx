@@ -318,6 +318,7 @@ export default function VisualBuilder({
     const SCOPED_PRESET_PROMPT_KEY = getScopedKey("ireside.unit_map_preset_prompt_dismissed");
     const SCOPED_AWAITING_TENANT_SETUP_KEY = getScopedKey("ireside.onboarding_awaiting_tenant_setup");
     const SCOPED_EXPLORE_MODAL_SHOWN_KEY = getScopedKey("ireside.unit_map_explore_modal_shown");
+    const SCOPED_UNPLACED_UNITS_KEY = getScopedKey("ireside.unplacedUnits");
     const [isFirstTimePresetModalOpen, setIsFirstTimePresetModalOpen] = useState(false);
     const [isExploreOrReturnModalOpen, setIsExploreOrReturnModalOpen] = useState(false);
     const exploreModalTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -624,7 +625,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             const layout = newFloorLayouts[floorKey];
             return Boolean(layout) && (layout.units.length > 0 || layout.corridors.length > 0 || layout.structures.length > 0);
         });
-        const currentFloorKey = activeFloorRef.current || activeFloor;
+        const currentFloorKey = activeFloorRef.current || "floor1";
 
         // If currentUnitId is provided (e.g. for tenant), prioritize their assigned unit's floor
         const assignedUnit = currentUnitId ? data.units.find(u => u.id === currentUnitId) : null;
@@ -656,7 +657,28 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         setIsSetupComplete(finalSetupComplete);
         setPlacedCount(finalPlacedCount);
         setTotalDbUnits(data.totalUnits);
-        setUnplacedDbUnits(unplaced);
+
+        // Preserve unplaced units across cache and remote revalidations
+        setUnplacedDbUnits((prev) => {
+            const dataPlacedIds = new Set(data.units.filter((u: DbUnit) => u.position !== null).map((u) => u.id));
+            let localList = prev;
+            if (localList.length === 0 && typeof window !== "undefined") {
+                try {
+                    const rawStored = window.localStorage.getItem(SCOPED_UNPLACED_UNITS_KEY);
+                    if (rawStored) {
+                        const parsedStored = JSON.parse(rawStored);
+                        if (Array.isArray(parsedStored)) {
+                            localList = parsedStored;
+                        }
+                    }
+                } catch {}
+            }
+            const existingUnplaced = localList.filter((u) => !dataPlacedIds.has(u.id));
+            const existingIds = new Set(existingUnplaced.map((u) => u.id));
+            const incoming = unplaced.filter((u) => !existingIds.has(u.id));
+            return [...existingUnplaced, ...incoming];
+        });
+
         setFloorLayouts(newFloorLayouts);
         setActiveFloor(targetFloorKey);
         setUnits(targetUnits);
@@ -686,7 +708,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         }];
         historyIndexRef.current = 0;
         setUndoAvailable(false);
-    }, [SCOPED_ACTIVE_FLOOR_KEY, SCOPED_PRESET_PROMPT_KEY, activeFloor, currentUnitId, demoMode, readOnly, selectedPropertyId]);
+    }, [SCOPED_ACTIVE_FLOOR_KEY, SCOPED_PRESET_PROMPT_KEY, SCOPED_UNPLACED_UNITS_KEY, currentUnitId, demoMode, readOnly, selectedPropertyId]);
 
     // ---------------------------------------------------------------
     // Load real data from DB when a property is selected (SWR Instant Cache)
@@ -766,7 +788,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         void load();
         return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedPropertyId, refreshKey, demoMode, applyMapData]);
+    }, [selectedPropertyId, refreshKey, demoMode]);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -883,7 +905,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             }
             realtimeChannelRef.current = null;
         };
-    }, [selectedPropertyId, demoMode, readOnly, applyMapData, activeDragItem]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedPropertyId, demoMode, readOnly, activeDragItem]);
 
     // Revalidate when user returns to or focuses the window/tab
     useEffect(() => {
@@ -907,7 +930,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
         window.addEventListener("focus", handleFocus);
         return () => window.removeEventListener("focus", handleFocus);
-    }, [selectedPropertyId, demoMode, readOnly, applyMapData, activeDragItem]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedPropertyId, demoMode, readOnly, activeDragItem]);
 
     // Tenant transfer request state
     const [transferModalUnit, setTransferModalUnit] = useState<Unit | null>(null);
@@ -2081,14 +2105,47 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
         const targetIds = new Set(unitIds);
         const matchingDbUnits = dbUnits.filter((dbUnit) => targetIds.has(dbUnit.id));
-        if (matchingDbUnits.length === 0) return;
+        
+        // Fallback for canvas units not present in dbUnits
+        const fallbackUnits: DbUnit[] = [];
+        units.forEach(u => {
+            const uId = u.dbId || u.id;
+            if (targetIds.has(uId) && !matchingDbUnits.some(m => m.id === uId)) {
+                fallbackUnits.push({
+                    id: uId,
+                    name: u.name,
+                    floor: u.floor ?? 1,
+                    status: u.status,
+                    beds: u.bedrooms ?? 1,
+                    baths: u.baths ?? 1,
+                    rent_amount: u.rentAmount ?? 0,
+                    sqft: u.areaSqm ? Math.round(u.areaSqm / 0.092903) : null,
+                    position: null,
+                });
+            }
+        });
 
+        const allRestored = [...matchingDbUnits, ...fallbackUnits];
+        if (allRestored.length === 0) return;
+
+        // Mark position as null in dbUnits
+        setDbUnits((prev) => prev.map((u) => targetIds.has(u.id) ? { ...u, position: null } : u));
+
+        // Add to unplaced list with position null
         setUnplacedDbUnits((prev) => {
             const existingIds = new Set(prev.map((unit) => unit.id));
-            const nextUnits = matchingDbUnits.filter((unit) => !existingIds.has(unit.id));
-            return nextUnits.length > 0 ? [...prev, ...nextUnits] : prev;
+            const nextUnits = allRestored
+                .filter((unit) => !existingIds.has(unit.id))
+                .map((unit) => ({ ...unit, position: null }));
+            const merged = nextUnits.length > 0 ? [...prev, ...nextUnits] : prev;
+            if (typeof window !== "undefined") {
+                try {
+                    window.localStorage.setItem(SCOPED_UNPLACED_UNITS_KEY, JSON.stringify(merged));
+                } catch {}
+            }
+            return merged;
         });
-    }, [dbUnits, cancelExploreModalTimer]);
+    }, [dbUnits, units, cancelExploreModalTimer, SCOPED_UNPLACED_UNITS_KEY]);
 
     const deleteCanvasItem = (item: SelectedCanvasItem) => {
         if (item.kind === "unit") {
@@ -2096,8 +2153,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             setUnits(prev => prev.filter(unit => unit.id !== item.id));
             
             // If it was a DB unit, return it to unplaced list
-            if (unitToDelete?.dbId) {
-                restoreUnitsToUnplaced([unitToDelete.dbId]);
+            const dbId = unitToDelete?.dbId || unitToDelete?.id;
+            if (dbId) {
+                restoreUnitsToUnplaced([dbId]);
             }
         } else if (item.kind === "corridor") {
             setCorridors(prev => prev.filter(corridor => corridor.id !== item.id));
@@ -2360,7 +2418,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
         window.localStorage.setItem(SCOPED_FLOOR_LAYOUTS_KEY, JSON.stringify(layoutsToPersist));
         window.localStorage.setItem(SCOPED_ACTIVE_FLOOR_KEY, activeFloor);
-    }, [hasHydratedFloorState, floorLayouts, activeFloor, units, corridors, structures, readOnly, SCOPED_FLOOR_LAYOUTS_KEY, SCOPED_ACTIVE_FLOOR_KEY]);
+        window.localStorage.setItem(SCOPED_UNPLACED_UNITS_KEY, JSON.stringify(unplacedDbUnits));
+    }, [hasHydratedFloorState, floorLayouts, activeFloor, units, corridors, structures, readOnly, unplacedDbUnits, SCOPED_FLOOR_LAYOUTS_KEY, SCOPED_ACTIVE_FLOOR_KEY, SCOPED_UNPLACED_UNITS_KEY]);
     // ---------------------------------------------------------------
     // Auto-save positions + decorations to DB (debounced 1.5s)
     // ---------------------------------------------------------------
@@ -2423,6 +2482,33 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 if (res.ok) {
                     setSaveStatus("saved");
                     setTimeout(() => setSaveStatus("idle"), 3000);
+
+                    // Update cached mapData so future cache reads have accurate position null/values
+                    if (typeof window !== "undefined") {
+                        try {
+                            const cacheKey = `ireside.mapCache.${selectedPropertyId}`;
+                            const raw = window.sessionStorage.getItem(cacheKey) || window.localStorage.getItem(cacheKey);
+                            if (raw) {
+                                const cached = JSON.parse(raw);
+                                if (cached && Array.isArray(cached.units)) {
+                                    const placedPosMap = new Map(allPositions.map(p => [p.unitId, p]));
+                                    cached.units = cached.units.map((u: any) => ({
+                                        ...u,
+                                        position: placedPosMap.has(u.id) ? {
+                                            floor_key: placedPosMap.get(u.id)!.floorKey,
+                                            x: placedPosMap.get(u.id)!.x,
+                                            y: placedPosMap.get(u.id)!.y,
+                                            w: placedPosMap.get(u.id)!.w,
+                                            h: placedPosMap.get(u.id)!.h,
+                                        } : null,
+                                    }));
+                                    cached.placedCount = allPositions.length;
+                                    window.sessionStorage.setItem(cacheKey, JSON.stringify(cached));
+                                    window.localStorage.setItem(cacheKey, JSON.stringify(cached));
+                                }
+                            }
+                        } catch {}
+                    }
 
                     // Broadcast real-time update to all other connected tabs / devices
                     if (realtimeChannelRef.current) {
@@ -2544,6 +2630,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             x += 40;
             y += 40;
         }
+        const activeFloorConfig = floorConfigs.find(fc => fc.floor_key === activeFloor);
+        const activeFloorNum = activeFloorConfig ? activeFloorConfig.floor_number : (parseFloorNumber(activeFloor) ?? 1);
         setUnits(prev => [
             ...prev,
             {
@@ -2553,11 +2641,15 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 type: unitTypeFromBeds(dbUnit.beds),
                 status: (dbUnit.status as Unit["status"]) ?? "vacant",
                 x, y, w, h,
-                floor: dbUnit.floor,
+                floor: activeFloorNum,
             },
         ]);
+        setDbUnits(prev => prev.map(u => u.id === dbUnit.id ? { ...u, floor: activeFloorNum, position: { unit_id: u.id, floor_key: activeFloor, x, y, w, h } } : u));
         setUnplacedDbUnits(prev => {
             const next = prev.filter(u => u.id !== dbUnit.id);
+            if (typeof window !== "undefined") {
+                try { window.localStorage.setItem(SCOPED_UNPLACED_UNITS_KEY, JSON.stringify(next)); } catch {}
+            }
             if (next.length === 0 && dbUnits.length > 0) {
                 scheduleExploreModalAfterDelay(3000);
             }
@@ -2697,8 +2789,10 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         if (parsed.blockType === "studio" || parsed.blockType === "1br" || parsed.blockType === "2br" || parsed.blockType === "3br") {
             // If we have a specific DB unit being placed
             if (parsed.dbUnitId) {
-                const dbUnit = dbUnits.find(u => u.id === parsed.dbUnitId);
+                const dbUnit = dbUnits.find(u => u.id === parsed.dbUnitId) ?? unplacedDbUnits.find(u => u.id === parsed.dbUnitId);
                 if (dbUnit) {
+                    const activeFloorConfig = floorConfigs.find(fc => fc.floor_key === activeFloor);
+                    const activeFloorNum = activeFloorConfig ? activeFloorConfig.floor_number : (parseFloorNumber(activeFloor) ?? 1);
                     setUnits(prev => [
                         ...prev,
                         {
@@ -2711,12 +2805,16 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                             y: clampedY,
                             w: blockWidth,
                             h: blockHeight,
-                            floor: dbUnit.floor,
+                            floor: activeFloorNum,
                         },
                     ]);
+                    setDbUnits(prev => prev.map(u => u.id === dbUnit.id ? { ...u, floor: activeFloorNum, position: { unit_id: u.id, floor_key: activeFloor, x: clampedX, y: clampedY, w: blockWidth, h: blockHeight } } : u));
                     // Remove from unplaced list
                     setUnplacedDbUnits(prev => {
                         const next = prev.filter(u => u.id !== parsed.dbUnitId);
+                        if (typeof window !== "undefined") {
+                            try { window.localStorage.setItem(SCOPED_UNPLACED_UNITS_KEY, JSON.stringify(next)); } catch {}
+                        }
                         if (next.length === 0 && dbUnits.length > 0) {
                             scheduleExploreModalAfterDelay(3000);
                         }
@@ -6551,7 +6649,7 @@ const UnitNotesPanel = ({
 };
 
 /* Extracted Sidebar Library Component for cleaner main render */
-const SidebarBlockLibrary = ({
+export const SidebarBlockLibrary = ({
     onDragStart,
     onDragEnd,
     onUnitClick,
