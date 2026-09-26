@@ -96,15 +96,36 @@ export function MapSetupWizard({
     const [isTourOpen, setIsTourOpen] = useState(true);
     const [tourStepIndex, setTourStepIndex] = useState(0);
 
-    const handleTourNext = () => setTourStepIndex((prev) => Math.min(prev + 1, 2));
+    const handleTourNext = () => setTourStepIndex((prev) => Math.min(prev + 1, 3));
     const handleTourPrev = () => setTourStepIndex((prev) => Math.max(prev - 1, 0));
     const handleTourClose = () => setIsTourOpen(false);
 
+    // Dynamic tour target IDs for Step 2 (Drag & Drop)
+    const tourDraggableUnitId = useMemo(() => {
+        if (!isTourOpen || tourStepIndex !== 1) return undefined;
+        const unassigned = units.find((u) => u.floor === -1);
+        return unassigned?.id || units[0]?.id;
+    }, [isTourOpen, tourStepIndex, units]);
+
+    const tourDestinationFloorNumber = useMemo(() => {
+        if (!isTourOpen || tourStepIndex !== 1) return undefined;
+        const targetUnit = units.find((u) => u.id === tourDraggableUnitId);
+        const currentFloor = targetUnit?.floor ?? -1;
+        const destination = floorConfigs.find((fc) => fc.floor_number !== currentFloor) || floorConfigs[0];
+        return destination?.floor_number;
+    }, [isTourOpen, tourStepIndex, units, tourDraggableUnitId, floorConfigs]);
+
     // Auto-scroll when tour opens or step changes
     useEffect(() => {
-        if (isTourOpen) {
-            window.scrollTo({ top: 0, behavior: "smooth" });
+        if (!isTourOpen) return;
+        if (tourStepIndex === 1) {
+            const el = document.querySelector('[data-tour-id="tour-wizard-draggable-unit"]');
+            if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+            }
         }
+        window.scrollTo({ top: 0, behavior: "smooth" });
     }, [isTourOpen, tourStepIndex]);
 
     // Sync state if initial data arrives later
@@ -690,10 +711,10 @@ export function MapSetupWizard({
                             className={cn(
                                 "group relative inline-flex items-center gap-2 h-9 rounded-xl px-4 text-xs font-semibold transition-all duration-200 shadow-sm active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed bg-primary text-primary-foreground hover:brightness-105 cursor-pointer",
                                 isAllAssigned && "ring-2 ring-primary/30",
-                                isTourOpen && tourStepIndex === 2 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_35px_rgba(155,119,255,0.95)] animate-pulse scale-105 brightness-110 font-black z-30"
+                                isTourOpen && tourStepIndex === 3 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_35px_rgba(155,119,255,0.95)] animate-pulse scale-105 brightness-110 font-black z-30"
                             )}
                         >
-                            {isTourOpen && tourStepIndex === 2 && (
+                            {isTourOpen && tourStepIndex === 3 && (
                                 <span className="relative flex size-2 shrink-0">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-90"></span>
                                     <span className="relative inline-flex rounded-full size-2 bg-white"></span>
@@ -833,10 +854,10 @@ export function MapSetupWizard({
                                         disabled={isSaving}
                                         className={cn(
                                             "inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3.5 py-2 text-xs font-semibold text-primary hover:bg-primary hover:text-primary-foreground transition-all active:scale-95 shadow-xs disabled:opacity-50 relative cursor-pointer",
-                                            isTourOpen && tourStepIndex === 1 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-105 bg-primary/20 border-primary font-bold z-30"
+                                            isTourOpen && tourStepIndex === 2 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-105 bg-primary/20 border-primary font-bold z-30"
                                         )}
                                     >
-                                        {isTourOpen && tourStepIndex === 1 && (
+                                        {isTourOpen && tourStepIndex === 2 && (
                                             <span className="relative flex size-2 shrink-0">
                                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                                                 <span className="relative inline-flex rounded-full size-2 bg-primary"></span>
@@ -860,6 +881,8 @@ export function MapSetupWizard({
                                             canRemove={false}
                                             onRemoveUnit={(u) => setUnitToDelete(u)}
                                             canRemoveUnit={units.length > 1}
+                                            highlightedUnitId={tourDraggableUnitId}
+                                            isDropHighlighted={tourDestinationFloorNumber === -1}
                                         />
                                     </div>
                                 )}
@@ -930,6 +953,8 @@ export function MapSetupWizard({
                                                 canRemove={floorConfigs.length > 1}
                                                 onRemoveUnit={(u) => setUnitToDelete(u)}
                                                 canRemoveUnit={units.length > 1}
+                                                highlightedUnitId={tourDraggableUnitId}
+                                                isDropHighlighted={tourDestinationFloorNumber === fc.floor_number}
                                             />
                                         ))}
                                     </div>
