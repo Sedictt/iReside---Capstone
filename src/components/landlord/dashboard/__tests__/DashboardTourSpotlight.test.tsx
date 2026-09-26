@@ -18,7 +18,7 @@ describe("DashboardTourSpotlight", () => {
         expect(container.firstChild).toBeNull();
     });
 
-    it("renders Step 1: Operational Action Launchpad", () => {
+    it("renders Step 1: Quick Actions", () => {
         render(
             <DashboardTourSpotlight
                 isOpen={true}
@@ -31,12 +31,12 @@ describe("DashboardTourSpotlight", () => {
         );
 
         expect(screen.getByText("Tour: Step 1 of 4")).toBeDefined();
-        expect(screen.getByText("Step 1: Operational Action Launchpad")).toBeDefined();
-        expect(screen.getByText(/Quick Action Launchpad/i)).toBeDefined();
+        expect(screen.getByRole("heading", { name: "Step 1: Quick Actions" })).toBeDefined();
+        expect(screen.getByText(/Highlighted: Quick Actions/i)).toBeDefined();
         expect(screen.getByText("Next")).toBeDefined();
     });
 
-    it("renders Step 2: Real-Time Command Pulse", () => {
+    it("renders Step 2: Intelligence Hub", () => {
         render(
             <DashboardTourSpotlight
                 isOpen={true}
@@ -49,13 +49,13 @@ describe("DashboardTourSpotlight", () => {
         );
 
         expect(screen.getByText("Tour: Step 2 of 4")).toBeDefined();
-        expect(screen.getByText("Step 2: Real-Time Command Pulse")).toBeDefined();
-        expect(screen.getByText(/Command Center Pulse/i)).toBeDefined();
+        expect(screen.getByRole("heading", { name: "Step 2: Intelligence Hub" })).toBeDefined();
+        expect(screen.getByText(/Highlighted: Intelligence Hub/i)).toBeDefined();
         expect(screen.getByText("Previous")).toBeDefined();
         expect(screen.getByText("Next")).toBeDefined();
     });
 
-    it("renders Step 3: Revenue Stream & Direct Settlement", () => {
+    it("renders Step 3: Cash Flow Ledger", () => {
         render(
             <DashboardTourSpotlight
                 isOpen={true}
@@ -68,11 +68,11 @@ describe("DashboardTourSpotlight", () => {
         );
 
         expect(screen.getByText("Tour: Step 3 of 4")).toBeDefined();
-        expect(screen.getByText("Step 3: Revenue Stream & Direct Settlement")).toBeDefined();
-        expect(screen.getByText(/Cash Flow Ledger/i)).toBeDefined();
+        expect(screen.getByRole("heading", { name: "Step 3: Cash Flow Ledger" })).toBeDefined();
+        expect(screen.getByText(/Highlighted: Cash Flow Ledger/i)).toBeDefined();
     });
 
-    it("renders Step 4: Portfolio Switcher & Hub with Complete Tour CTA", () => {
+    it("renders Step 4: Property Selector & Navigation with Complete Tour CTA", () => {
         const handleComplete = vi.fn();
         render(
             <DashboardTourSpotlight
@@ -86,7 +86,7 @@ describe("DashboardTourSpotlight", () => {
         );
 
         expect(screen.getByText("Tour: Step 4 of 4")).toBeDefined();
-        expect(screen.getByText("Step 4: Portfolio Switcher & Operations Hub")).toBeDefined();
+        expect(screen.getByText("Step 4: Property Selector & Navigation")).toBeDefined();
         const finishBtn = screen.getByText("Finish Tour");
         expect(finishBtn).toBeDefined();
 
