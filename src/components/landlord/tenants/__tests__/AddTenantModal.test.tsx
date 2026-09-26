@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { AddTenantModal } from "../AddTenantModal";
 
@@ -289,5 +289,127 @@ describe("AddTenantModal", () => {
         expect(nameInput.value).toBe("");
         fireEvent.blur(nameInput);
         expect(screen.getByText("Full name is required.")).toBeDefined();
+    });
+
+    it("renders Move-In Payment Terms with Advance Rent and Security Deposit in Invite Link tab", () => {
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSuccess={vi.fn()}
+                initialTab="invite"
+            />
+        );
+
+        expect(screen.getByText("Self-Onboarding Link")).toBeDefined();
+        expect(screen.getByText("Move-In Payment Terms")).toBeDefined();
+        expect(screen.getByText("Advance Rent")).toBeDefined();
+        expect(screen.getByText("Security Deposit")).toBeDefined();
+        expect(screen.getByText("Total Move-In Settlement Preview")).toBeDefined();
+    });
+
+    it("allows configuring advance rent and security deposit directly and via presets in Invite Link tab", () => {
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSuccess={vi.fn()}
+                initialTab="invite"
+            />
+        );
+
+        const advanceInput = screen.getByLabelText("Advance Rent Amount") as HTMLInputElement;
+        const depositInput = screen.getByLabelText("Security Deposit Amount") as HTMLInputElement;
+
+        expect(advanceInput).toBeDefined();
+        expect(depositInput).toBeDefined();
+
+        // Rent is 12000 from unit 101 mock
+        // Direct custom configuration
+        fireEvent.change(advanceInput, { target: { value: "24000" } });
+        fireEvent.change(depositInput, { target: { value: "12000" } });
+        expect(advanceInput.value).toBe("24000");
+        expect(depositInput.value).toBe("12000");
+        expect(screen.getByText("₱36,000")).toBeDefined();
+
+        // Preset chip test
+        const noneButtons = screen.getAllByRole("button", { name: "None" });
+        fireEvent.click(noneButtons[0]); // Advance None
+        expect(advanceInput.value).toBe("0");
+        expect(screen.getByText("₱12,000")).toBeDefined();
+
+        const twoMoButtons = screen.getAllByRole("button", { name: "2 Mo" });
+        fireEvent.click(twoMoButtons[1]); // Deposit 2 Mo (2 * 12,000 = 24,000)
+        expect(depositInput.value).toBe("24000");
+        expect(screen.getByText("₱24,000")).toBeDefined();
+    });
+
+    it("sanitizes financial amounts by stripping letters in Invite Link tab", () => {
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSuccess={vi.fn()}
+                initialTab="invite"
+            />
+        );
+
+        const advanceInput = screen.getByLabelText("Advance Rent Amount") as HTMLInputElement;
+        const depositInput = screen.getByLabelText("Security Deposit Amount") as HTMLInputElement;
+
+        fireEvent.change(advanceInput, { target: { value: "15000abc" } });
+        fireEvent.change(depositInput, { target: { value: "25000xyz" } });
+
+        expect(advanceInput.value).toBe("15000");
+        expect(depositInput.value).toBe("25000");
+        expect(screen.getByText("₱40,000")).toBeDefined();
+    });
+
+    it("submits paymentTerms payload when generating an onboarding link", async () => {
+        const fetchMock = vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({
+                invite: {
+                    shareUrl: "http://localhost:3000/apply/test-token",
+                    qrUrl: "http://localhost:3000/api/qr/test-token",
+                },
+            }),
+        });
+        global.fetch = fetchMock;
+
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSuccess={vi.fn()}
+                initialTab="invite"
+            />
+        );
+
+        const advanceInput = screen.getByLabelText("Advance Rent Amount") as HTMLInputElement;
+        const depositInput = screen.getByLabelText("Security Deposit Amount") as HTMLInputElement;
+
+        fireEvent.change(advanceInput, { target: { value: "15000" } });
+        fireEvent.change(depositInput, { target: { value: "15000" } });
+
+        const generateBtn = screen.getByRole("button", { name: "Generate Onboarding Link" });
+        fireEvent.click(generateBtn);
+
+        await waitFor(() => {
+            expect(fetchMock).toHaveBeenCalledWith("/api/landlord/invites", expect.objectContaining({
+                method: "POST",
+                body: expect.stringContaining('"paymentTerms"'),
+            }));
+        });
+
+        const requestBody = JSON.parse(fetchMock.mock.calls[0][1].body);
+        expect(requestBody.paymentTerms).toEqual({
+            advanceMonths: -1,
+            securityDepositMonths: -1,
+            customAdvanceAmount: 15000,
+            customSecurityDepositAmount: 15000,
+        });
+        expect(requestBody.propertyId).toBe("prop-1");
+        expect(requestBody.previewUnitId).toBe("u-1");
     });
 });

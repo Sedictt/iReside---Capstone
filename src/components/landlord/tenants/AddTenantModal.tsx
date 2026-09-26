@@ -112,6 +112,18 @@ export function AddTenantModal({
     expiresAt: '',
   })
 
+  // Invite Link Payment Terms State
+  const [inviteAdvanceMonths, setInviteAdvanceMonths] = useState<number>(1)
+  const [inviteAdvanceAmount, setInviteAdvanceAmount] = useState<string>('0')
+  const [inviteSecurityDepositMonths, setInviteSecurityDepositMonths] = useState<number>(1)
+  const [inviteSecurityDepositAmount, setInviteSecurityDepositAmount] = useState<string>('0')
+  const [inviteFieldErrors, setInviteFieldErrors] = useState<{
+    propertyId?: string
+    unitId?: string
+    advanceAmount?: string
+    securityDepositAmount?: string
+  }>({})
+
   // Walk-in Application State
   const [walkInPropertyId, setWalkInPropertyId] = useState('')
   const [walkInUnitId, setWalkInUnitId] = useState('')
@@ -150,6 +162,11 @@ export function AddTenantModal({
         propertyId: firstProp?.id || '',
         expiresAt: '',
       })
+      setInviteAdvanceMonths(1)
+      setInviteAdvanceAmount(rentStr || '0')
+      setInviteSecurityDepositMonths(1)
+      setInviteSecurityDepositAmount(rentStr || '0')
+      setInviteFieldErrors({})
     }
   }, [isOpen, initialTab])
 
@@ -171,6 +188,8 @@ export function AddTenantModal({
         ...prev,
         propertyId: firstProp.id
       }))
+      setInviteAdvanceAmount(rentStr || '0')
+      setInviteSecurityDepositAmount(rentStr || '0')
     }
   }, [properties, formData.propertyId])
 
@@ -211,6 +230,19 @@ export function AddTenantModal({
   const currentRent = Number(formData.monthlyRent) || 0
   const currentAdvanceAmount = parseFloat(advanceAmount) || 0
   const currentDepositAmount = parseFloat(securityDepositAmount) || 0
+
+  // Computed values for Invite Link
+  const selectedInviteProperty = properties.find(p => p.id === inviteData.propertyId) || properties[0]
+  const inviteAvailableUnits = selectedInviteProperty?.units || []
+  const inviteVacantUnits = inviteAvailableUnits.filter(u => (u.status ?? 'vacant') === 'vacant')
+  const effectiveInviteUnit = (isInviteAdvanced && inviteScope === 'unit' && inviteUnitId)
+    ? (inviteAvailableUnits.find(u => u.id === inviteUnitId) || inviteVacantUnits[0] || inviteAvailableUnits[0])
+    : (inviteVacantUnits[0] || inviteAvailableUnits[0])
+  const effectiveInviteRent = Number(effectiveInviteUnit?.rentAmount || 0)
+
+  const currentInviteAdvanceAmount = parseFloat(inviteAdvanceAmount) || 0
+  const currentInviteDepositAmount = parseFloat(inviteSecurityDepositAmount) || 0
+  const currentInviteTotalSettlement = currentInviteAdvanceAmount + currentInviteDepositAmount
 
   const handlePropertyChange = (propertyId: string) => {
     const prop = properties.find(p => p.id === propertyId)
@@ -401,6 +433,87 @@ export function AddTenantModal({
     }
   }
 
+  // Invite Link Handlers
+  const handleInvitePropertyChange = (propertyId: string) => {
+    setInviteData(prev => ({ ...prev, propertyId }))
+    setInviteUnitId('')
+    const prop = properties.find(p => p.id === propertyId)
+    const defUnit = prop?.units.find(u => (u.status ?? 'vacant') === 'vacant') || prop?.units[0]
+    const rent = Number(defUnit?.rentAmount || 0)
+    if (inviteAdvanceMonths >= 0) {
+      setInviteAdvanceAmount(String(inviteAdvanceMonths * rent))
+    }
+    if (inviteSecurityDepositMonths >= 0) {
+      setInviteSecurityDepositAmount(String(inviteSecurityDepositMonths * rent))
+    }
+    setInviteFieldErrors(prev => ({ ...prev, propertyId: undefined, unitId: undefined }))
+  }
+
+  const handleInviteUnitChange = (unitId: string) => {
+    setInviteUnitId(unitId)
+    const unit = inviteAvailableUnits.find(u => u.id === unitId)
+    const rent = Number(unit?.rentAmount || 0)
+    if (inviteAdvanceMonths >= 0) {
+      setInviteAdvanceAmount(String(inviteAdvanceMonths * rent))
+    }
+    if (inviteSecurityDepositMonths >= 0) {
+      setInviteSecurityDepositAmount(String(inviteSecurityDepositMonths * rent))
+    }
+    setInviteFieldErrors(prev => ({ ...prev, unitId: undefined }))
+  }
+
+  const handleInviteAdvanceAmountChange = (valStr: string) => {
+    const sanitized = sanitizeNumericInput(valStr)
+    setInviteAdvanceAmount(sanitized)
+    const val = parseFloat(sanitized) || 0
+    if (effectiveInviteRent > 0 && val === effectiveInviteRent) {
+      setInviteAdvanceMonths(1)
+    } else if (effectiveInviteRent > 0 && val === effectiveInviteRent * 2) {
+      setInviteAdvanceMonths(2)
+    } else if (val === 0 && sanitized !== '') {
+      setInviteAdvanceMonths(0)
+    } else {
+      setInviteAdvanceMonths(-1)
+    }
+    if (sanitized !== '' && !isNaN(val) && val >= 0) {
+      setInviteFieldErrors(prev => ({ ...prev, advanceAmount: undefined }))
+    }
+  }
+
+  const handleInviteAdvanceAmountBlur = () => {
+    if (inviteAdvanceAmount === '' || isNaN(parseFloat(inviteAdvanceAmount)) || parseFloat(inviteAdvanceAmount) < 0) {
+      setInviteFieldErrors(prev => ({ ...prev, advanceAmount: 'Please enter a valid advance rent amount.' }))
+    } else {
+      setInviteFieldErrors(prev => ({ ...prev, advanceAmount: undefined }))
+    }
+  }
+
+  const handleInviteSecurityDepositAmountChange = (valStr: string) => {
+    const sanitized = sanitizeNumericInput(valStr)
+    setInviteSecurityDepositAmount(sanitized)
+    const val = parseFloat(sanitized) || 0
+    if (effectiveInviteRent > 0 && val === effectiveInviteRent) {
+      setInviteSecurityDepositMonths(1)
+    } else if (effectiveInviteRent > 0 && val === effectiveInviteRent * 2) {
+      setInviteSecurityDepositMonths(2)
+    } else if (val === 0 && sanitized !== '') {
+      setInviteSecurityDepositMonths(0)
+    } else {
+      setInviteSecurityDepositMonths(-1)
+    }
+    if (sanitized !== '' && !isNaN(val) && val >= 0) {
+      setInviteFieldErrors(prev => ({ ...prev, securityDepositAmount: undefined }))
+    }
+  }
+
+  const handleInviteSecurityDepositAmountBlur = () => {
+    if (inviteSecurityDepositAmount === '' || isNaN(parseFloat(inviteSecurityDepositAmount)) || parseFloat(inviteSecurityDepositAmount) < 0) {
+      setInviteFieldErrors(prev => ({ ...prev, securityDepositAmount: 'Please enter a valid security deposit amount.' }))
+    } else {
+      setInviteFieldErrors(prev => ({ ...prev, securityDepositAmount: undefined }))
+    }
+  }
+
   const handleStartDateChange = (val: string) => {
     setFormData(prev => {
       const updated = { ...prev, startDate: val }
@@ -567,6 +680,18 @@ export function AddTenantModal({
       toast.error('Please select a unit')
       return
     }
+    if (isInviteAdvanced && inviteAppType === 'online' && inviteRequirements.length === 0) {
+      toast.error('Select at least one required document for online applications')
+      return
+    }
+    if (inviteAdvanceAmount === '' || isNaN(currentInviteAdvanceAmount) || currentInviteAdvanceAmount < 0) {
+      toast.error('Please enter a valid advance rent amount.')
+      return
+    }
+    if (inviteSecurityDepositAmount === '' || isNaN(currentInviteDepositAmount) || currentInviteDepositAmount < 0) {
+      toast.error('Please enter a valid security deposit amount.')
+      return
+    }
 
     try {
       setLoading(true)
@@ -575,6 +700,13 @@ export function AddTenantModal({
         applicationType: isInviteAdvanced ? inviteAppType : 'existing_tenant',
         propertyId: inviteData.propertyId,
         unitId: (isInviteAdvanced && inviteScope === 'unit') ? inviteUnitId : null,
+        previewUnitId: (isInviteAdvanced && inviteScope === 'unit') ? inviteUnitId : (effectiveInviteUnit?.id || null),
+        paymentTerms: {
+          advanceMonths: inviteAdvanceMonths,
+          securityDepositMonths: inviteSecurityDepositMonths,
+          customAdvanceAmount: inviteAdvanceMonths === -1 ? currentInviteAdvanceAmount : null,
+          customSecurityDepositAmount: inviteSecurityDepositMonths === -1 ? currentInviteDepositAmount : null,
+        },
         requiredRequirements: (isInviteAdvanced && inviteAppType === 'online') ? inviteRequirements : undefined,
         expiresAt: inviteData.expiresAt ? new Date(inviteData.expiresAt).toISOString() : null,
       }
@@ -1343,11 +1475,7 @@ export function AddTenantModal({
                               id="invitePropertyId"
                               required
                               value={inviteData.propertyId}
-                              onChange={(e) => {
-                                const pId = e.target.value
-                                setInviteData(prev => ({ ...prev, propertyId: pId }))
-                                setInviteUnitId('')
-                              }}
+                              onChange={(e) => handleInvitePropertyChange(e.target.value)}
                               className="w-full appearance-none rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                             >
                               <option value="" disabled>Select Property</option>
@@ -1367,17 +1495,190 @@ export function AddTenantModal({
                                 id="inviteUnitId"
                                 required
                                 value={inviteUnitId}
-                                onChange={(e) => setInviteUnitId(e.target.value)}
+                                onChange={(e) => handleInviteUnitChange(e.target.value)}
                                 className="w-full appearance-none rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                               >
                                 <option value="" disabled>Select Unit</option>
-                                {availableUnits.map(u => (
+                                {inviteAvailableUnits.map(u => (
                                   <option key={u.id} value={u.id}>{u.name} (₱{Number(u.rentAmount || 0).toLocaleString()})</option>
                                 ))}
                               </select>
                             </div>
                           </div>
                         )}
+
+                        {/* Move-In Payment Terms Configuration for Invite Link */}
+                        <div className="space-y-4 pt-4 border-t border-white/5">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                            <h4 className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-2">
+                              <Coins className="size-4 text-primary" />
+                              Move-In Payment Terms
+                            </h4>
+                            <p className="text-[11px] text-muted-foreground">
+                              Configure upfront advance rent and security deposit required from residents.
+                            </p>
+                          </div>
+
+                          <div className="grid gap-4 md:grid-cols-2">
+                            {/* Advance Rent */}
+                            <div className="rounded-2xl neumorphic-inset p-4 space-y-3.5 border border-white/5">
+                              <div className="flex items-center justify-between gap-2">
+                                <div>
+                                  <span className="text-[11px] font-black uppercase tracking-wider text-foreground">
+                                    Advance Rent
+                                  </span>
+                                  <p className="text-[10px] text-muted-foreground">Applied towards first month(s)</p>
+                                </div>
+                                <div className="inline-flex rounded-xl bg-background/50 p-1 border border-border/50">
+                                  {[
+                                    { label: "None", months: 0 },
+                                    { label: "1 Mo", months: 1 },
+                                    { label: "2 Mo", months: 2 },
+                                  ].map((opt) => (
+                                    <button
+                                      key={opt.label}
+                                      type="button"
+                                      onClick={() => {
+                                        setInviteAdvanceMonths(opt.months)
+                                        setInviteAdvanceAmount(String(opt.months * effectiveInviteRent))
+                                        setInviteFieldErrors(prev => ({ ...prev, advanceAmount: undefined }))
+                                      }}
+                                      className={cn(
+                                        "rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer",
+                                        inviteAdvanceMonths === opt.months
+                                          ? "bg-primary text-primary-foreground shadow-xs"
+                                          : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                                      )}
+                                    >
+                                      {opt.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div className="space-y-1.5">
+                                <label htmlFor="inviteAdvanceAmount" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                  Advance Rent Amount
+                                </label>
+                                <div className="relative">
+                                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
+                                  <input
+                                    id="inviteAdvanceAmount"
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={inviteAdvanceAmount}
+                                    onChange={(e) => handleInviteAdvanceAmountChange(e.target.value)}
+                                    onBlur={handleInviteAdvanceAmountBlur}
+                                    placeholder="0"
+                                    className={cn(
+                                      "w-full rounded-2xl neumorphic-inset py-3 pl-8 pr-4 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
+                                      inviteFieldErrors.advanceAmount && "border border-red-500/50 ring-2 ring-red-500/20"
+                                    )}
+                                  />
+                                </div>
+                                {inviteFieldErrors.advanceAmount && (
+                                  <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
+                                    <AlertCircle className="size-3 shrink-0" />
+                                    <span>{inviteFieldErrors.advanceAmount}</span>
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Security Deposit */}
+                            <div className="rounded-2xl neumorphic-inset p-4 space-y-3.5 border border-white/5">
+                              <div className="flex items-center justify-between gap-2">
+                                <div>
+                                  <span className="text-[11px] font-black uppercase tracking-wider text-foreground">
+                                    Security Deposit
+                                  </span>
+                                  <p className="text-[10px] text-muted-foreground">Held for damages & contingencies</p>
+                                </div>
+                                <div className="inline-flex rounded-xl bg-background/50 p-1 border border-border/50">
+                                  {[
+                                    { label: "None", months: 0 },
+                                    { label: "1 Mo", months: 1 },
+                                    { label: "2 Mo", months: 2 },
+                                  ].map((opt) => (
+                                    <button
+                                      key={opt.label}
+                                      type="button"
+                                      onClick={() => {
+                                        setInviteSecurityDepositMonths(opt.months)
+                                        setInviteSecurityDepositAmount(String(opt.months * effectiveInviteRent))
+                                        setInviteFieldErrors(prev => ({ ...prev, securityDepositAmount: undefined }))
+                                      }}
+                                      className={cn(
+                                        "rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer",
+                                        inviteSecurityDepositMonths === opt.months
+                                          ? "bg-primary text-primary-foreground shadow-xs"
+                                          : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                                      )}
+                                    >
+                                      {opt.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div className="space-y-1.5">
+                                <label htmlFor="inviteSecurityDepositAmount" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                  Security Deposit Amount
+                                </label>
+                                <div className="relative">
+                                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
+                                  <input
+                                    id="inviteSecurityDepositAmount"
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={inviteSecurityDepositAmount}
+                                    onChange={(e) => handleInviteSecurityDepositAmountChange(e.target.value)}
+                                    onBlur={handleInviteSecurityDepositAmountBlur}
+                                    placeholder="0"
+                                    className={cn(
+                                      "w-full rounded-2xl neumorphic-inset py-3 pl-8 pr-4 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
+                                      inviteFieldErrors.securityDepositAmount && "border border-red-500/50 ring-2 ring-red-500/20"
+                                    )}
+                                  />
+                                </div>
+                                {inviteFieldErrors.securityDepositAmount && (
+                                  <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
+                                    <AlertCircle className="size-3 shrink-0" />
+                                    <span>{inviteFieldErrors.securityDepositAmount}</span>
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Settlement Summary */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-primary/10 border border-primary/20 p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="size-10 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
+                                <ShieldCheck className="size-5 text-primary" />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-black uppercase tracking-wider text-foreground">
+                                    Total Move-In Settlement Preview
+                                  </span>
+                                  <span className="sr-only">Total Inception Settlement</span>
+                                </div>
+                                <p className="text-[11px] text-muted-foreground">
+                                  Advance: ₱{currentInviteAdvanceAmount.toLocaleString()} + Deposit: ₱{currentInviteDepositAmount.toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-left sm:text-right flex sm:flex-col items-center sm:items-end justify-between">
+                              <span className="text-base sm:text-lg font-black text-primary">
+                                ₱{currentInviteTotalSettlement.toLocaleString()}
+                              </span>
+                              <span className="text-[10px] font-bold text-muted-foreground">
+                                Required upon applicant approval
+                              </span>
+                            </div>
+                          </div>
+                        </div>
 
                         <div className="space-y-2">
                           <label htmlFor="expiresAt" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Expiration (Optional)</label>
