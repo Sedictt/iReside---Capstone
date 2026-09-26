@@ -72,6 +72,14 @@ export async function POST(request: Request) {
         );
     }
 
+    // Full name cannot contain digits
+    if (/\d/.test(normalizedName)) {
+        return NextResponse.json(
+            { error: "Resident full name cannot contain numbers." },
+            { status: 400 }
+        );
+    }
+
     // Email format
     if (!EMAIL_REGEX.test(normalizedEmail)) {
         return NextResponse.json(

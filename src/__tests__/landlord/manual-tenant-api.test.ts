@@ -201,4 +201,28 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
         expect(data.leaseId).toBe("lease-999");
         expect(mockInsertPayment).toHaveBeenCalledTimes(2); // advance rent + security deposit
     });
+
+    it("rejects request if full name contains digits", async () => {
+        const req = new Request("http://localhost:3000/api/landlord/tenants/manual", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                fullName: "Lyle Cannon 123",
+                email: "lyle@example.com",
+                phone: "09123456789",
+                propertyId: "prop-1",
+                unitId: "unit-1",
+                startDate: "2026-10-09",
+                endDate: "2027-10-09",
+                monthlyRent: 20000,
+                securityDeposit: 20000,
+            }),
+        });
+
+        const res = await POST(req);
+        const data = await res.json();
+
+        expect(res.status).toBe(400);
+        expect(data.error).toBe("Resident full name cannot contain numbers.");
+    });
 });

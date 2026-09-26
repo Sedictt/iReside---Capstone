@@ -251,6 +251,10 @@ export function AddTenantModal({
   }
 
   // Sanitization helpers
+  const sanitizeNameInput = (val: string) => {
+    return val.replace(/[0-9]/g, '')
+  }
+
   const sanitizeNumericInput = (val: string) => {
     return val.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1')
   }
@@ -260,8 +264,9 @@ export function AddTenantModal({
   }
 
   const handleFullNameChange = (val: string) => {
-    setFormData(prev => ({ ...prev, fullName: val }))
-    if (fieldErrors.fullName && val.trim().length >= 2) {
+    const sanitized = sanitizeNameInput(val)
+    setFormData(prev => ({ ...prev, fullName: sanitized }))
+    if (fieldErrors.fullName && sanitized.trim().length >= 2 && !/\d/.test(sanitized)) {
       setFieldErrors(prev => ({ ...prev, fullName: undefined }))
     }
   }
@@ -272,6 +277,8 @@ export function AddTenantModal({
       setFieldErrors(prev => ({ ...prev, fullName: 'Full name is required.' }))
     } else if (name.length < 2) {
       setFieldErrors(prev => ({ ...prev, fullName: 'Full name must be at least 2 characters.' }))
+    } else if (/\d/.test(name)) {
+      setFieldErrors(prev => ({ ...prev, fullName: 'Full name cannot contain numbers.' }))
     } else {
       setFieldErrors(prev => ({ ...prev, fullName: undefined }))
     }
@@ -434,6 +441,8 @@ export function AddTenantModal({
     const name = formData.fullName.trim()
     if (!name || name.length < 2) {
       errs.fullName = 'Full name must be at least 2 characters.'
+    } else if (/\d/.test(name)) {
+      errs.fullName = 'Full name cannot contain numbers.'
     }
 
     const email = formData.email.trim()
