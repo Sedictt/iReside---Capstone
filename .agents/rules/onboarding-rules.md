@@ -1,0 +1,51 @@
+---
+trigger: always_on
+---
+
+# Onboarding Architecture & Flow Rules
+
+## 1. 4-Stage Onboarding Sequence & Numbering
+The canonical onboarding sequence for landlords is strictly 4 steps:
+- **Step 1 of 4**: Property Setup (`/landlord/properties/new`)
+- **Step 2 of 4**: Unit Map Layout (`/landlord/unit-map`)
+- **Step 3 of 4**: Utility & Billing Rails (`/landlord/utility-billing`)
+- **Step 4 of 4**: Tenant Onboarding (`/landlord/tenants`)
+
+All step badges, headers, modals, cards, and test assertions MUST strictly reference these canonical step numbers. Never refer to Tenant Setup as "Step 3".
+
+## 2. Greeting Lightbox & Modal Invariants
+Every onboarding stage MUST feature a greeting modal adhering to a single, consistent visual language:
+- **Header**: Domain icon (Building2, Map, Zap, Users) in `size-12` or `size-14` container with `bg-primary/10 text-primary border border-primary/20`.
+- **Badge**: Step indicator (e.g. `Step X of Onboarding`) + Stage tag (e.g. `Mandatory Setup`, `Financial Rails`).
+- **Body**: Concise heading + max 2-sentence description.
+- **3-Point Architecture**: Exactly 3 concise benefit/feature points in a subtle container (`bg-muted/20 border border-border/70`). Avoid verbose wall-of-text blocks or AI slop.
+- **Single Primary Action**: A single primary proceed button (e.g. "Proceed to Guided Tour", "Start Setup") that automatically triggers the interactive setup or tour. Avoid competing primary buttons (e.g., don't offer "Tour" AND "Configure Rates" AND "Finish Step" in the same initial greeting).
+- **Graceful Dismissal**: An explicit "Maybe Later" or "Explore First" button that postpones or dismisses the greeting for the current visit.
+
+## 3. Step Completion & Choice Dialog Invariant
+Completing an onboarding step (whether via wizard, canvas generator, or floating tour card) MUST NEVER force an immediate, jarring redirect to another route.
+Instead, completion MUST:
+1. Mark local completion state in `localStorage` and dispatch the corresponding window event (`*-setup-completed`).
+2. Refresh context (`PropertyContext.refreshProperties()`).
+3. Display a Completion Choice Dialog (e.g. `UnitMapExploreOrReturnModal`, `UtilityBillingCompletionModal`) with 3 clear options:
+   - **Proceed to Next Step** (primary button with arrow icon, navigating to the subsequent onboarding stage)
+   - **Continue Exploring [Current Feature]** (secondary button that closes the modal and keeps the user on the current workspace with immediate navigation unlock)
+   - **Return to Dashboard** (secondary button navigating to `/landlord/dashboard`)
+
+## 4. Sidebar Lock Invariants per Stage
+Navigation locking in `RoleSidebar` and `layout.tsx` must strictly enforce the following visibility matrix:
+
+| Stage | Identifier | Accessible Routes | Locked Routes |
+|---|---|---|---|
+| 1. No Property | `no_property` | `/landlord/properties`, `/landlord/properties/new` | All other sidebar items |
+| 2. No Unit Map | `no_unit_map` | `/landlord/unit-map` | All other sidebar items |
+| 3. No Billing Rails | `no_billing_rails` | `/landlord/dashboard`, `/landlord/properties`, `/landlord/properties/new`, `/landlord/unit-map`, `/landlord/utility-billing` | Finance Hub (`/landlord/invoices`), Tenants, Leases, Maintenance, etc. |
+| 4. No Tenants | `no_tenant` | Dashboard, Properties, Unit Map, Utility Billing, Tenants, Applications, Finance Hub | In-depth operational sub-pages |
+
+Finance Hub (`/landlord/invoices`) MUST be locked during Stage 3 (`no_billing_rails`). It deals with tenant payments, receipts, and rental ledgers which are invalid prior to tenant onboarding.
+
+## 5. Re-occurring Prompts until Complete
+When an onboarding stage remains incomplete:
+- Visiting the dashboard MUST surface a prompt/greeting after a 1.2–1.5s delay.
+- Visiting the stage's dedicated workspace MUST show the greeting on every fresh page mount.
+- Dismissing via "Maybe Later" sets a visit-scoped dismissal flag (`dismissedThisVisit = true`), so the user can freely interact with the page during that session without nagging, but is greeted again on their next visit.
