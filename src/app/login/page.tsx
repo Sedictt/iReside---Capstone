@@ -45,6 +45,24 @@ function LoginContent() {
     useEffect(() => {
         setMounted(true);
 
+        const isActivated = searchParams.get("activated") === "true";
+        const emailParam = searchParams.get("email");
+        if (isActivated) {
+            if (emailParam) {
+                setPrefilledEmail(emailParam);
+            }
+            setActivationBanner(
+                `Account claimed successfully! Please sign in with your new credentials${emailParam ? ` as ${emailParam}` : ""} to proceed to setup.`
+            );
+            setTimeout(() => {
+                if (passwordInputRef.current) {
+                    passwordInputRef.current.value = "";
+                    passwordInputRef.current.focus();
+                }
+            }, 150);
+            return;
+        }
+
         // Check if there is a pending recovery key from account claiming after page refresh
         try {
             const raw = typeof window !== "undefined"
@@ -56,11 +74,15 @@ function LoginContent() {
                     setPendingRecovery(parsed);
                     setPrefilledEmail(parsed.email);
                 }
+            } else if (searchParams.get("claimed") === "true") {
+                setActivationBanner(
+                    "Account claimed successfully! Please sign in with your new credentials to proceed to setup."
+                );
             }
         } catch {
             // best-effort
         }
-    }, []);
+    }, [searchParams]);
 
     const handleRecoveryProceed = async () => {
         if (!pendingRecovery) return;
@@ -78,12 +100,43 @@ function LoginContent() {
         // Cleanly terminate any stale session so the user starts with a fresh session
         try {
             const supabase = createClient();
-            await supabase.auth.signOut({ scope: "local" }).catch(() => null);
+            await Promise.race([
+                supabase.auth.signOut({ scope: "local" }).catch(() => null),
+                new Promise((resolve) => setTimeout(resolve, 300)),
+            ]);
         } catch {
             // best-effort
         }
 
-        // Close modal, prefill email, set instructional banner, and focus password field for manual login
+        // Clear auth cookies and tokens synchronously to eliminate stale session cache
+        if (typeof document !== "undefined") {
+            document.cookie.split(";").forEach((c) => {
+                const name = c.split("=")[0].trim();
+                if (name.startsWith("sb-") || name.includes("auth-token") || name.includes("session")) {
+                    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0;`;
+                    if (typeof window !== "undefined" && window.location.hostname) {
+                        document.cookie = `${name}=; path=/; domain=${window.location.hostname}; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0;`;
+                    }
+                }
+            });
+        }
+        if (typeof localStorage !== "undefined") {
+            try {
+                Object.keys(localStorage).forEach((k) => {
+                    if (k.startsWith("sb-") || k.includes("auth.token") || k.startsWith("ireside_setup_")) {
+                        localStorage.removeItem(k);
+                    }
+                });
+            } catch {}
+        }
+
+        // Force browser refresh so there are no stale cache or auth locks before logging in
+        if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+            window.location.replace(`/login?activated=true&email=${encodeURIComponent(email)}`);
+            return;
+        }
+
+        // Fallback for test environments: close modal, prefill email, set banner, and focus password field
         setIsRecoveryRedirecting(false);
         setPendingRecovery(null);
         setPrefilledEmail(email);
@@ -142,7 +195,7 @@ function LoginContent() {
         // Force a full page reload to clear any stale in-memory auth state.
         // This guarantees a completely clean session for the fresh login.
         if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-            window.location.href = "/login?claimed=true";
+            window.location.replace(`/login?activated=true&email=${encodeURIComponent(newEmail)}`);
             return;
         }
 
@@ -167,10 +220,17 @@ function LoginContent() {
             const password = (formData.get("password") as string | null) ?? "";
 
             const supabase = createClient();
-            const { data, error } = await supabase.auth.signInWithPassword({
+
+            // Timeout protection on signInWithPassword to prevent perpetual loading
+            const signInPromise = supabase.auth.signInWithPassword({
                 email,
                 password,
             });
+            const timeoutPromise = new Promise<{ data: any; error: any }>((_, reject) =>
+                setTimeout(() => reject(new Error("Authentication request timed out. Please check your network and try again.")), 12000)
+            );
+
+            const { data, error } = await Promise.race([signInPromise, timeoutPromise]);
 
             if (error) {
                 if (error.message?.toLowerCase().includes("schema")) {
@@ -185,14 +245,22 @@ function LoginContent() {
             let isClaimed = data.user?.user_metadata?.is_account_claimed;
 
             if (data.user?.id) {
-                const { data: profile } = await supabase
-                    .from("profiles")
-                    .select("role, is_account_claimed")
-                    .eq("id", data.user.id)
-                    .single();
-                if (profile) {
-                    if (!role) role = profile.role;
-                    if (isClaimed === undefined) isClaimed = (profile as any).is_account_claimed;
+                try {
+                    const profileQuery = supabase
+                        .from("profiles")
+                        .select("role, is_account_claimed")
+                        .eq("id", data.user.id)
+                        .single();
+                    const profileTimeout = new Promise<{ data: any; error: any }>((resolve) =>
+                        setTimeout(() => resolve({ data: null, error: null }), 3000)
+                    );
+                    const { data: profile } = await Promise.race([profileQuery, profileTimeout]);
+                    if (profile) {
+                        if (!role) role = profile.role;
+                        if (isClaimed === undefined) isClaimed = (profile as any).is_account_claimed;
+                    }
+                } catch {
+                    // Profile query timeout should not block login
                 }
             }
 
@@ -216,21 +284,32 @@ function LoginContent() {
             if (role === "landlord" || role === "admin") {
                 const isSetupCompleted = data.user?.user_metadata?.is_setup_completed;
                 if (isSetupCompleted === false) {
-                    router.push(redirectUrl || "/setup");
+                    const dest = redirectUrl || "/setup";
                     if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-                        window.location.href = redirectUrl || "/setup";
+                        window.location.replace(dest);
+                    } else {
+                        router.push(dest);
                     }
                     return;
                 }
 
                 try {
-                    const brandRes = await fetch("/api/branding");
+                    const controller = new AbortController();
+                    const brandTimeout = setTimeout(() => controller.abort(), 2500);
+                    const brandRes = await fetch("/api/branding", {
+                        signal: controller.signal,
+                        cache: "no-store",
+                        headers: { "Cache-Control": "no-cache" },
+                    });
+                    clearTimeout(brandTimeout);
                     if (brandRes.ok) {
                         const brandData = await brandRes.json();
                         if (!brandData.setupCompleted) {
-                            router.push(redirectUrl || "/setup");
+                            const dest = redirectUrl || "/setup";
                             if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-                                window.location.href = redirectUrl || "/setup";
+                                window.location.replace(dest);
+                            } else {
+                                router.push(dest);
                             }
                             return;
                         }
@@ -241,7 +320,12 @@ function LoginContent() {
             }
 
             const target = role === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard";
-            router.push(redirectUrl || target);
+            const finalDest = redirectUrl || target;
+            if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+                window.location.replace(finalDest);
+            } else {
+                router.push(finalDest);
+            }
         } catch (err) {
             console.error('[Login] Unexpected error:', err);
             setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
@@ -543,7 +627,7 @@ function LoginContent() {
                                             autoComplete="email"
                                             autoCapitalize="none"
                                             spellCheck={false}
-                                            value={prefilledEmail || undefined}
+                                            value={prefilledEmail}
                                             onChange={(e) => setPrefilledEmail(e.target.value)}
                                             placeholder="name@example.com"
                                             className="h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
