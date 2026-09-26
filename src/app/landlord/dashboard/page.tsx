@@ -36,6 +36,9 @@ import { LobbyFlyerModal } from "@/components/landlord/flyer/LobbyFlyerModal";
 import { TenantSetupPromptModal } from "@/components/landlord/dashboard/TenantSetupPromptModal";
 import { BillingSetupPromptModal } from "@/components/landlord/dashboard/BillingSetupPromptModal";
 import { AddTenantModal } from "@/components/landlord/tenants/AddTenantModal";
+import { DashboardGreetingModal } from "@/components/landlord/dashboard/DashboardGreetingModal";
+import { DashboardTourSpotlight, DASHBOARD_TOUR_STEPS } from "@/components/landlord/dashboard/DashboardTourSpotlight";
+import { DashboardTourCompletionModal } from "@/components/landlord/dashboard/DashboardTourCompletionModal";
 import { toast } from "sonner";
 
 type PaymentCategory = "Overdue" | "Near Due" | "Paid";
@@ -126,6 +129,8 @@ export default function LandlordDashboard() {
     const SCOPED_TENANT_DELAYED_KEY = `ireside.tenant_setup_delayed.${activePropertyId}`;
     const SCOPED_BILLING_RAILS_COMPLETE_KEY = `ireside.billing_rails_complete.${activePropertyId}`;
     const SCOPED_BILLING_RAILS_DELAYED_KEY = `ireside.billing_rails_delayed.${activePropertyId}`;
+    const SCOPED_DASHBOARD_TOUR_COMPLETE_KEY = `ireside.dashboard_tour_complete.${activePropertyId}`;
+    const GLOBAL_DASHBOARD_TOUR_COMPLETE_KEY = "ireside.dashboard_tour_complete";
     const [, setBillingVersion] = useState(0);
 
     useEffect(() => {
@@ -146,9 +151,17 @@ export default function LandlordDashboard() {
     const [dismissedBillingThisVisit, setDismissedBillingThisVisit] = useState(false);
     const billingSetupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    const [isDashboardGreetingOpen, setIsDashboardGreetingOpen] = useState(false);
+    const [isDashboardTourOpen, setIsDashboardTourOpen] = useState(false);
+    const [currentTourStep, setCurrentTourStep] = useState(0);
+    const [isTourCompletionOpen, setIsTourCompletionOpen] = useState(false);
+    const [dismissedDashboardTourThisVisit, setDismissedDashboardTourThisVisit] = useState(false);
+    const dashboardTourTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
     useEffect(() => {
         setDismissedThisVisit(false);
         setDismissedBillingThisVisit(false);
+        setDismissedDashboardTourThisVisit(false);
     }, [activePropertyId]);
 
     const [openPaymentModal, setOpenPaymentModal] = useState<"Overdue" | "Near Due" | "Paid" | null>(null);
@@ -233,6 +246,11 @@ export default function LandlordDashboard() {
             if (urlParams.get("action") === "collect-payment") {
                 setIsCollectPaymentModalOpen(true);
             }
+            if (urlParams.get("tour") === "dashboard" || urlParams.get("startTour") === "dashboard") {
+                setIsDashboardGreetingOpen(false);
+                setIsDashboardTourOpen(true);
+                setCurrentTourStep(0);
+            }
         }
     }, []);
 
@@ -264,6 +282,14 @@ export default function LandlordDashboard() {
             window.localStorage.getItem("ireside.billing_rails_delayed") === "true" ||
             window.localStorage.getItem(SCOPED_BILLING_RAILS_DELAYED_KEY) === "true" ||
             properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true")
+        )
+    );
+
+    const hasCompletedDashboardTour = Boolean(
+        typeof window !== "undefined" && (
+            window.localStorage.getItem(SCOPED_DASHBOARD_TOUR_COMPLETE_KEY) === "true" ||
+            window.localStorage.getItem(GLOBAL_DASHBOARD_TOUR_COMPLETE_KEY) === "true" ||
+            window.localStorage.getItem("ireside.onboarding_completed") === "true"
         )
     );
 
@@ -417,6 +443,115 @@ export default function LandlordDashboard() {
                 window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
             } catch {}
         }
+    };
+
+    useEffect(() => {
+        if (!mounted || loadingUnits) return;
+        if (typeof window === "undefined") return;
+
+        const isTenantStageSatisfied = hasAtLeastOneTenant || window.localStorage.getItem(SCOPED_TENANT_DELAYED_KEY) === "true";
+        const readyForDashboardTour = 
+            properties.length > 0 &&
+            hasConfiguredMap &&
+            hasConfiguredBilling &&
+            isTenantStageSatisfied &&
+            !hasCompletedDashboardTour &&
+            !dismissedDashboardTourThisVisit &&
+            !isDashboardTourOpen &&
+            !isTourCompletionOpen &&
+            !isTenantSetupPromptOpen &&
+            !isBillingSetupPromptOpen;
+
+        if (readyForDashboardTour) {
+            if (dashboardTourTimeoutRef.current) {
+                clearTimeout(dashboardTourTimeoutRef.current);
+            }
+            dashboardTourTimeoutRef.current = setTimeout(() => {
+                setIsDashboardGreetingOpen(true);
+            }, 1500);
+        } else {
+            if (dashboardTourTimeoutRef.current) {
+                clearTimeout(dashboardTourTimeoutRef.current);
+                dashboardTourTimeoutRef.current = null;
+            }
+        }
+
+        return () => {
+            if (dashboardTourTimeoutRef.current) {
+                clearTimeout(dashboardTourTimeoutRef.current);
+                dashboardTourTimeoutRef.current = null;
+            }
+        };
+    }, [
+        mounted,
+        loadingUnits,
+        properties.length,
+        hasConfiguredMap,
+        hasConfiguredBilling,
+        hasAtLeastOneTenant,
+        hasCompletedDashboardTour,
+        dismissedDashboardTourThisVisit,
+        isDashboardTourOpen,
+        isTourCompletionOpen,
+        isTenantSetupPromptOpen,
+        isBillingSetupPromptOpen,
+        SCOPED_TENANT_DELAYED_KEY
+    ]);
+
+    const handleStartTourFromGreeting = () => {
+        if (dashboardTourTimeoutRef.current) {
+            clearTimeout(dashboardTourTimeoutRef.current);
+            dashboardTourTimeoutRef.current = null;
+        }
+        setIsDashboardGreetingOpen(false);
+        setIsDashboardTourOpen(true);
+        setCurrentTourStep(0);
+    };
+
+    const handleDismissGreeting = () => {
+        if (dashboardTourTimeoutRef.current) {
+            clearTimeout(dashboardTourTimeoutRef.current);
+            dashboardTourTimeoutRef.current = null;
+        }
+        setIsDashboardGreetingOpen(false);
+        setDismissedDashboardTourThisVisit(true);
+    };
+
+    const handleTourNext = () => {
+        if (currentTourStep < DASHBOARD_TOUR_STEPS.length - 1) {
+            setCurrentTourStep((prev) => prev + 1);
+        } else {
+            handleTourComplete();
+        }
+    };
+
+    const handleTourPrev = () => {
+        setCurrentTourStep((prev) => Math.max(0, prev - 1));
+    };
+
+    const handleTourClose = () => {
+        setIsDashboardTourOpen(false);
+        setDismissedDashboardTourThisVisit(true);
+    };
+
+    const handleTourComplete = () => {
+        setIsDashboardTourOpen(false);
+        if (typeof window !== "undefined") {
+            try {
+                window.localStorage.setItem(SCOPED_DASHBOARD_TOUR_COMPLETE_KEY, "true");
+                window.localStorage.setItem(GLOBAL_DASHBOARD_TOUR_COMPLETE_KEY, "true");
+                window.localStorage.setItem("ireside.onboarding_completed", "true");
+                window.dispatchEvent(new CustomEvent("dashboard-tour-completed"));
+                window.dispatchEvent(new CustomEvent("onboarding-completed"));
+            } catch {}
+        }
+        setIsTourCompletionOpen(true);
+    };
+
+    const handleManualStartTour = () => {
+        setIsDashboardGreetingOpen(false);
+        setIsDashboardTourOpen(true);
+        setCurrentTourStep(0);
     };
 
     // Operational Power Tool Keyboard Accelerators
@@ -591,6 +726,7 @@ export default function LandlordDashboard() {
                     onCollectPayment={() => setIsCollectPaymentModalOpen(true)}
                     onCreateInvite={() => setIsInviteModalOpen(true)}
                     onOpenFlyer={() => setIsFlyerModalOpen(true)}
+                    onStartTour={handleManualStartTour}
                 />
 
                 {/* Stage 3 Onboarding: Payment & Utility Rails Card */}
@@ -604,7 +740,7 @@ export default function LandlordDashboard() {
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                                            Onboarding Step 3 of 4
+                                            Onboarding Step 3 of 5
                                         </span>
                                     </div>
                                     <h3 className="text-lg font-black text-foreground tracking-tight">
@@ -639,7 +775,13 @@ export default function LandlordDashboard() {
 
 
                 {/* Primary Hub */}
-                <div className="relative">
+                <div 
+                    data-tour-id="tour-command-center"
+                    className={cn(
+                        "relative transition-all duration-300 rounded-[2.5rem]",
+                        isDashboardTourOpen && currentTourStep === 1 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-[1.01] z-30"
+                    )}
+                >
                     <CommandCenter
                         overdueCount={overdueCount}
                         nearDueCount={nearDueCount}
@@ -656,7 +798,15 @@ export default function LandlordDashboard() {
                 </div>
 
                 {/* Payments Section */}
-                <section className="relative z-0 h-auto w-full rounded-[2.5rem] p-4 sm:p-6 md:p-8 neumorphic-panel focus-within:ring-2 focus-within:ring-primary/20 transition-all outline-none" tabIndex={-1} aria-labelledby="cash-flow-heading">
+                <section 
+                    data-tour-id="tour-cash-flow"
+                    className={cn(
+                        "relative z-0 h-auto w-full rounded-[2.5rem] p-4 sm:p-6 md:p-8 neumorphic-panel focus-within:ring-2 focus-within:ring-primary/20 transition-all outline-none",
+                        isDashboardTourOpen && currentTourStep === 2 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-[1.01] z-30"
+                    )}
+                    tabIndex={-1} 
+                    aria-labelledby="cash-flow-heading"
+                >
                     <div className="mb-10 flex flex-wrap items-center justify-between gap-4 px-2">
                         <div className="flex min-w-0 items-center gap-4">
                             <div className="flex size-14 items-center justify-center rounded-[1.25rem] neumorphic-inset-card text-primary shrink-0 transition-transform hover:scale-105">
@@ -1112,6 +1262,32 @@ export default function LandlordDashboard() {
                         } catch {}
                     }
                 }}
+            />
+
+            <DashboardGreetingModal
+                isOpen={isDashboardGreetingOpen}
+                onClose={handleDismissGreeting}
+                onStartTour={handleStartTourFromGreeting}
+                propertyName={currentProperty?.name}
+            />
+
+            <DashboardTourSpotlight
+                isOpen={isDashboardTourOpen}
+                currentStepIndex={currentTourStep}
+                onNext={handleTourNext}
+                onPrev={handleTourPrev}
+                onClose={handleTourClose}
+                onCompleteTour={handleTourComplete}
+            />
+
+            <DashboardTourCompletionModal
+                isOpen={isTourCompletionOpen}
+                onClose={() => setIsTourCompletionOpen(false)}
+                onNavigate={(href) => {
+                    setIsTourCompletionOpen(false);
+                    router.push(href);
+                }}
+                propertyName={currentProperty?.name}
             />
         </>
     );
