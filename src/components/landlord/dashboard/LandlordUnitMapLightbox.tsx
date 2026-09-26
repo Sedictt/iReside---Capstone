@@ -9,33 +9,68 @@ import { cn } from "@/lib/utils";
 export function LandlordUnitMapLightbox() {
     const router = useRouter();
     const pathname = usePathname();
-    const { properties, loading, setSelectedPropertyId } = useProperty();
+    const { properties, loading, selectedPropertyId, setSelectedPropertyId } = useProperty();
     const [hasMounted, setHasMounted] = useState(false);
+    const [isDismissed, setIsDismissed] = useState(false);
+
+    const activePropertyId = selectedPropertyId && selectedPropertyId !== "all" 
+        ? selectedPropertyId 
+        : (properties.find((p) => !p.isMapSetupComplete)?.id || properties[0]?.id || "default");
 
     useEffect(() => {
         setHasMounted(true);
-    }, []);
+        if (typeof window !== "undefined") {
+            try {
+                const dismissed = window.sessionStorage.getItem(`ireside.unit_map_intro_dismissed.${activePropertyId}`);
+                setIsDismissed(dismissed === "true");
+            } catch {
+                setIsDismissed(false);
+            }
+        }
+    }, [activePropertyId]);
 
-    const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete);
-    // Display when client mounted, properties loaded, at least 1 property exists, but no unit map configured,
-    // and user is NOT already on the unit-map page or property creation wizard
+    const isLocallyComplete = typeof window !== "undefined" && (
+        window.localStorage.getItem(`ireside_map_setup_complete_${activePropertyId}`) === "true" ||
+        window.localStorage.getItem(`ireside.explore_modal_shown.${activePropertyId}`) === "true" ||
+        window.localStorage.getItem(`ireside.awaiting_tenant_setup.${activePropertyId}`) === "true" ||
+        properties.some((p) => window.localStorage.getItem(`ireside_map_setup_complete_${p.id}`) === "true")
+    );
+    const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete) || isLocallyComplete;
+
+    const isUnitMapPage = Boolean(pathname?.startsWith("/landlord/unit-map"));
+
+    // Display when client mounted, properties loaded, at least 1 property exists, but unit map is not configured,
+    // and user is NOT on the property creation wizard.
+    // If on /landlord/unit-map, show greeting until the user clicks "Start Unit Map Setup".
     const isVisible =
         hasMounted &&
         !loading &&
         properties.length > 0 &&
         !hasConfiguredMap &&
-        !pathname?.startsWith("/landlord/unit-map") &&
-        pathname !== "/landlord/properties/new";
+        pathname !== "/landlord/properties/new" &&
+        (!isUnitMapPage || !isDismissed);
 
     if (!isVisible) return null;
 
-    const unconfiguredProperty = properties.find((p) => !p.isMapSetupComplete) || properties[0];
+    const unconfiguredProperty = 
+        properties.find((p) => p.id === activePropertyId && !p.isMapSetupComplete) ||
+        properties.find((p) => !p.isMapSetupComplete) || 
+        properties[0];
 
     const handleConfigureUnitMap = () => {
         if (unconfiguredProperty) {
             setSelectedPropertyId(unconfiguredProperty.id);
         }
-        router.push("/landlord/unit-map");
+        if (isUnitMapPage) {
+            setIsDismissed(true);
+            if (typeof window !== "undefined") {
+                try {
+                    window.sessionStorage.setItem(`ireside.unit_map_intro_dismissed.${activePropertyId}`, "true");
+                } catch {}
+            }
+        } else {
+            router.push("/landlord/unit-map");
+        }
     };
 
     return (
@@ -77,7 +112,7 @@ export function LandlordUnitMapLightbox() {
                         Configure Your Unit Map
                     </h1>
                     <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                        Your property <span className="font-bold text-foreground">"{unconfiguredProperty?.name || "Primary Property"}"</span> has been registered! Before you can invite residents, collect rent, or assign maintenance tickets, you must place your units on the floor plan.
+                        Your property <span className="font-bold text-foreground">"{unconfiguredProperty?.name || "Primary Property"}"</span> has been registered! Before you can invite residents, collect rent, or assign maintenance tickets, you must place your units on the unit map.
                     </p>
                 </div>
 
@@ -103,10 +138,10 @@ export function LandlordUnitMapLightbox() {
                         </div>
                         <div>
                             <h3 className="text-xs font-black text-foreground">
-                                2. Visual Blueprint Generation
+                                2. One-Click Unit Map Generation
                             </h3>
                             <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Generate your 2D interactive architectural blueprint with one-click automatic unit placement.
+                                Auto-generate your interactive 2D unit-map layout with automatic unit placement.
                             </p>
                         </div>
                     </div>
@@ -134,7 +169,7 @@ export function LandlordUnitMapLightbox() {
                         className="group relative w-full flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-primary px-6 py-4 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-105 active:scale-98 cursor-pointer"
                     >
                         <span className="text-xs sm:text-sm font-black uppercase tracking-wider relative z-10">
-                            Configure Unit Map Now
+                            {isUnitMapPage ? "Start Unit Map Setup" : "Configure Unit Map Now"}
                         </span>
                         <ArrowRight className="size-4 relative z-10 transition-transform group-hover:translate-x-1" />
                     </button>
