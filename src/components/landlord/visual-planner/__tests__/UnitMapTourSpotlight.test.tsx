@@ -72,16 +72,15 @@ describe("UnitMapTourSpotlight", () => {
         expect(screen.getByText("Highlighted: + Add Floor Button")).toBeDefined();
     });
 
-    it("renders Step 4: Generate Interactive Unit Map as the final step with generate button", () => {
-        const handleGenerate = vi.fn();
+    it("renders Step 4: Generate Interactive Unit Map as the final step with finish tour button", () => {
+        const handleClose = vi.fn();
         render(
             <UnitMapTourSpotlight
                 isOpen={true}
                 currentStepIndex={3}
                 onNext={vi.fn()}
                 onPrev={vi.fn()}
-                onClose={vi.fn()}
-                onGenerate={handleGenerate}
+                onClose={handleClose}
             />
         );
 
@@ -89,11 +88,11 @@ describe("UnitMapTourSpotlight", () => {
         expect(screen.getByText("Step 4: Generate Interactive Unit Map")).toBeDefined();
         expect(screen.getByText("Highlighted: Generate Unit-map Button")).toBeDefined();
         
-        const generateBtn = screen.getByRole("button", { name: /generate unit-map/i });
-        expect(generateBtn).toBeDefined();
+        const finishBtn = screen.getByRole("button", { name: /finish tour/i });
+        expect(finishBtn).toBeDefined();
 
-        fireEvent.click(generateBtn);
-        expect(handleGenerate).toHaveBeenCalledTimes(1);
+        fireEvent.click(finishBtn);
+        expect(handleClose).toHaveBeenCalledTimes(1);
     });
 
     it("calls onNext and onPrev when navigation buttons are clicked", () => {
