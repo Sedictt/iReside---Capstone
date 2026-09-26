@@ -24,11 +24,12 @@ vi.mock("@/context/PropertyContext", () => ({
                 ],
             },
         ],
+        refreshProperties: vi.fn(),
     }),
 }));
 
 describe("AddTenantModal", () => {
-    it("renders manual tab by default when isOpen is true", () => {
+    it("renders quick_add tab by default when isOpen is true", () => {
         render(
             <AddTenantModal
                 isOpen={true}
@@ -38,8 +39,9 @@ describe("AddTenantModal", () => {
         );
 
         expect(screen.getByText("Onboard Residents")).toBeDefined();
-        expect(screen.getByText("Manual Entry")).toBeDefined();
+        expect(screen.getByText("Quick Add")).toBeDefined();
         expect(screen.getByText("Invite Link")).toBeDefined();
+        expect(screen.getByText("Walk-in Application")).toBeDefined();
         expect(screen.getByText("Resident Profile")).toBeDefined();
     });
 
@@ -56,9 +58,26 @@ describe("AddTenantModal", () => {
         expect(screen.getByText("Onboard Residents")).toBeDefined();
         expect(screen.getByText("Self-Onboarding Link")).toBeDefined();
         expect(screen.getByText("Generate Onboarding Link")).toBeDefined();
+        expect(screen.getByText("Simple")).toBeDefined();
+        expect(screen.getByText("Advanced")).toBeDefined();
     });
 
-    it("switches tabs between manual and invite on user click", () => {
+    it("renders walk_in tab directly when initialTab is set to 'walk_in'", () => {
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSuccess={vi.fn()}
+                initialTab="walk_in"
+            />
+        );
+
+        expect(screen.getByText("In-Person Walk-in Application")).toBeDefined();
+        expect(screen.getByText("4-Step Intake Process")).toBeDefined();
+        expect(screen.getByText("Start Walk-in Application")).toBeDefined();
+    });
+
+    it("switches across all 3 modes on tab clicks", () => {
         render(
             <AddTenantModal
                 isOpen={true}
@@ -67,15 +86,61 @@ describe("AddTenantModal", () => {
             />
         );
 
-        // Initially in Manual tab
+        // Initially in Quick Add
         expect(screen.getByText("Resident Profile")).toBeDefined();
 
-        // Switch to Invite tab
+        // Switch to Invite Link
         fireEvent.click(screen.getByText("Invite Link"));
         expect(screen.getByText("Self-Onboarding Link")).toBeDefined();
 
-        // Switch back to Manual tab
-        fireEvent.click(screen.getByText("Manual Entry"));
+        // Switch to Walk-in
+        fireEvent.click(screen.getByText("Walk-in Application"));
+        expect(screen.getByText("In-Person Walk-in Application")).toBeDefined();
+
+        // Switch back to Quick Add
+        fireEvent.click(screen.getByText("Quick Add"));
         expect(screen.getByText("Resident Profile")).toBeDefined();
+    });
+
+    it("toggles simple and advanced mode in the invite tab", () => {
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSuccess={vi.fn()}
+                initialTab="invite"
+            />
+        );
+
+        // Default is simple mode
+        expect(screen.queryByText("Invite Scope")).toBeNull();
+
+        // Toggle advanced
+        fireEvent.click(screen.getByText("Advanced"));
+        expect(screen.getByText("Invite Scope")).toBeDefined();
+        expect(screen.getByText("Screening Mode")).toBeDefined();
+
+        // Toggle back to simple
+        fireEvent.click(screen.getByText("Simple"));
+        expect(screen.queryByText("Invite Scope")).toBeNull();
+    });
+
+    it("triggers onOpenWalkIn when walk-in is started", () => {
+        const handleOpenWalkIn = vi.fn();
+        const handleClose = vi.fn();
+
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={handleClose}
+                onSuccess={vi.fn()}
+                initialTab="walk_in"
+                onOpenWalkIn={handleOpenWalkIn}
+            />
+        );
+
+        fireEvent.click(screen.getByText("Start Walk-in Application"));
+        expect(handleOpenWalkIn).toHaveBeenCalledWith("prop-1", "u-1");
+        expect(handleClose).toHaveBeenCalledTimes(1);
     });
 });

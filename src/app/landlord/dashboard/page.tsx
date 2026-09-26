@@ -32,6 +32,7 @@ import { VacantUnitsModal } from "@/components/landlord/dashboard/VacantUnitsMod
 import { MobileMessagesSheet } from "@/components/landlord/dashboard/MobileMessagesSheet";
 import { LobbyFlyerModal } from "@/components/landlord/flyer/LobbyFlyerModal";
 import { TenantSetupPromptModal } from "@/components/landlord/dashboard/TenantSetupPromptModal";
+import { AddTenantModal } from "@/components/landlord/tenants/AddTenantModal";
 
 type PaymentCategory = "Overdue" | "Near Due" | "Paid";
 
@@ -137,6 +138,8 @@ export default function LandlordDashboard() {
     const [isVacantUnitsModalOpen, setIsVacantUnitsModalOpen] = useState(false);
     const [selectedWalkInUnitId, setSelectedWalkInUnitId] = useState<string | undefined>(undefined);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+    const [isAddTenantModalOpen, setIsAddTenantModalOpen] = useState(false);
+    const [addTenantModalTab, setAddTenantModalTab] = useState<'quick_add' | 'manual' | 'invite' | 'walk_in'>('quick_add');
     const [isFlyerModalOpen, setIsFlyerModalOpen] = useState(false);
     const [isCollectPaymentModalOpen, setIsCollectPaymentModalOpen] = useState(false);
     const [loadingUnits, setLoadingUnits] = useState(true);
@@ -272,6 +275,17 @@ export default function LandlordDashboard() {
         }
     };
 
+    const handleSelectQuickAdd = () => {
+        if (tenantSetupTimeoutRef.current) {
+            clearTimeout(tenantSetupTimeoutRef.current);
+            tenantSetupTimeoutRef.current = null;
+        }
+        setDismissedThisVisit(true);
+        setIsTenantSetupPromptOpen(false);
+        setAddTenantModalTab('quick_add');
+        setIsAddTenantModalOpen(true);
+    };
+
     const handleSelectReusableLink = () => {
         if (tenantSetupTimeoutRef.current) {
             clearTimeout(tenantSetupTimeoutRef.current);
@@ -282,7 +296,7 @@ export default function LandlordDashboard() {
         setIsInviteModalOpen(true);
     };
 
-    const handleSelectAddManually = () => {
+    const handleSelectWalkIn = () => {
         if (tenantSetupTimeoutRef.current) {
             clearTimeout(tenantSetupTimeoutRef.current);
             tenantSetupTimeoutRef.current = null;
@@ -290,6 +304,10 @@ export default function LandlordDashboard() {
         setDismissedThisVisit(true);
         setIsTenantSetupPromptOpen(false);
         setIsWalkInModalOpen(true);
+    };
+
+    const handleSelectAddManually = () => {
+        handleSelectQuickAdd();
     };
 
     const handleMaybeLaterTenantSetup = () => {
@@ -925,8 +943,31 @@ export default function LandlordDashboard() {
                 onClose={handleCloseTenantSetupPrompt}
                 onSelectReusableLink={handleSelectReusableLink}
                 onSelectAddManually={handleSelectAddManually}
+                onSelectQuickAdd={handleSelectQuickAdd}
+                onSelectWalkIn={handleSelectWalkIn}
                 onMaybeLater={handleMaybeLaterTenantSetup}
                 propertyName={currentProperty?.name}
+            />
+
+            <AddTenantModal
+                isOpen={isAddTenantModalOpen}
+                initialTab={addTenantModalTab}
+                onClose={() => setIsAddTenantModalOpen(false)}
+                onOpenWalkIn={(propertyId, unitId) => {
+                    setSelectedWalkInUnitId(unitId);
+                    setIsWalkInModalOpen(true);
+                }}
+                onSuccess={() => {
+                    setIsAddTenantModalOpen(false);
+                    void refreshProperties();
+                    if (typeof window !== "undefined") {
+                        try {
+                            window.localStorage.removeItem(SCOPED_TENANT_DELAYED_KEY);
+                            window.localStorage.removeItem(SCOPED_AWAITING_TENANT_SETUP_KEY);
+                            window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
+                        } catch {}
+                    }
+                }}
             />
         </>
     );
