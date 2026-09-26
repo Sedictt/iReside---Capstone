@@ -20,6 +20,7 @@ import {
     FolderOpen,
     RefreshCw,
     Zap,
+    ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
 import { PaymentModal } from "@/components/landlord/dashboard/PaymentModal";
@@ -33,6 +34,7 @@ import { MobileMessagesSheet } from "@/components/landlord/dashboard/MobileMessa
 import { LobbyFlyerModal } from "@/components/landlord/flyer/LobbyFlyerModal";
 import { TenantSetupPromptModal } from "@/components/landlord/dashboard/TenantSetupPromptModal";
 import { AddTenantModal } from "@/components/landlord/tenants/AddTenantModal";
+import { toast } from "sonner";
 
 type PaymentCategory = "Overdue" | "Near Due" | "Paid";
 
@@ -119,6 +121,20 @@ export default function LandlordDashboard() {
         : (properties[0]?.id || "default");
     const SCOPED_AWAITING_TENANT_SETUP_KEY = `ireside.onboarding_awaiting_tenant_setup.${activePropertyId}`;
     const SCOPED_TENANT_DELAYED_KEY = `ireside.tenant_setup_delayed.${activePropertyId}`;
+    const SCOPED_BILLING_RAILS_COMPLETE_KEY = `ireside.billing_rails_complete.${activePropertyId}`;
+    const SCOPED_BILLING_RAILS_DELAYED_KEY = `ireside.billing_rails_delayed.${activePropertyId}`;
+    const [, setBillingVersion] = useState(0);
+
+    useEffect(() => {
+        const handleBillingChange = () => setBillingVersion((v) => v + 1);
+        window.addEventListener("billing-rails-setup-completed", handleBillingChange);
+        window.addEventListener("billing-rails-delayed-changed", handleBillingChange);
+        return () => {
+            window.removeEventListener("billing-rails-setup-completed", handleBillingChange);
+            window.removeEventListener("billing-rails-delayed-changed", handleBillingChange);
+        };
+    }, []);
+
     const [isTenantSetupPromptOpen, setIsTenantSetupPromptOpen] = useState(false);
     const [dismissedThisVisit, setDismissedThisVisit] = useState(false);
     const tenantSetupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -233,11 +249,34 @@ export default function LandlordDashboard() {
         properties.some(p => p.hasTenants)
     );
 
+    const hasConfiguredBilling = Boolean(
+        typeof window !== "undefined" && (
+            window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
+            window.localStorage.getItem(SCOPED_BILLING_RAILS_COMPLETE_KEY) === "true" ||
+            window.localStorage.getItem("ireside.billing_rails_delayed") === "true" ||
+            window.localStorage.getItem(SCOPED_BILLING_RAILS_DELAYED_KEY) === "true" ||
+            properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true")
+        )
+    );
+
+    const hasPendingBillingRails = !loadingUnits && properties.length > 0 && hasConfiguredMap && !hasConfiguredBilling;
+
+    const handleDelayBillingSetup = () => {
+        if (typeof window !== "undefined") {
+            try {
+                window.localStorage.setItem("ireside.billing_rails_delayed", "true");
+                window.localStorage.setItem(SCOPED_BILLING_RAILS_DELAYED_KEY, "true");
+                window.dispatchEvent(new Event("billing-rails-delayed-changed"));
+                toast.info("Billing setup postponed. Tenant management is now unlocked.");
+            } catch {}
+        }
+    };
+
     useEffect(() => {
         if (!mounted || loadingUnits) return;
         if (typeof window === "undefined") return;
 
-        if (hasConfiguredMap && !hasAtLeastOneTenant && !dismissedThisVisit) {
+        if (hasConfiguredMap && hasConfiguredBilling && !hasAtLeastOneTenant && !dismissedThisVisit) {
             if (tenantSetupTimeoutRef.current) {
                 clearTimeout(tenantSetupTimeoutRef.current);
             }
@@ -258,7 +297,7 @@ export default function LandlordDashboard() {
                 tenantSetupTimeoutRef.current = null;
             }
         };
-    }, [mounted, loadingUnits, hasConfiguredMap, hasAtLeastOneTenant, dismissedThisVisit]);
+    }, [mounted, loadingUnits, hasConfiguredMap, hasConfiguredBilling, hasAtLeastOneTenant, dismissedThisVisit]);
 
     const handleCloseTenantSetupPrompt = () => {
         if (tenantSetupTimeoutRef.current) {
@@ -498,6 +537,48 @@ export default function LandlordDashboard() {
                     onCreateInvite={() => setIsInviteModalOpen(true)}
                     onOpenFlyer={() => setIsFlyerModalOpen(true)}
                 />
+
+                {/* Stage 3 Onboarding: Payment & Utility Rails Card */}
+                {hasPendingBillingRails && (
+                    <div className="relative rounded-[2rem] p-6 sm:p-7 neumorphic-panel border border-primary/20 bg-primary/[0.03] space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shrink-0">
+                                    <Zap className="size-6" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                                            Onboarding Step 3 of 4
+                                        </span>
+                                    </div>
+                                    <h3 className="text-lg font-black text-foreground tracking-tight">
+                                        Activate Your Payment & Utility Rails
+                                    </h3>
+                                    <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 max-w-2xl">
+                                        Set up your GCash QR code and water/electricity tariffs so lease generation and rent billing have valid payment details ready.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 w-full sm:w-auto shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={handleDelayBillingSetup}
+                                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground border border-border/60 hover:bg-muted/50 transition-all active:scale-95"
+                                >
+                                    Configure Later
+                                </button>
+                                <Link
+                                    href="/landlord/utility-billing"
+                                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:brightness-105 transition-all active:scale-95"
+                                >
+                                    <span>Set Up Billing</span>
+                                    <ArrowRight className="size-3.5" />
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
 
 

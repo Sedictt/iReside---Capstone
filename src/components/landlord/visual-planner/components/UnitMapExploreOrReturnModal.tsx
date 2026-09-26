@@ -8,6 +8,7 @@ interface UnitMapExploreOrReturnModalProps {
     isOpen: boolean;
     onReturnToDashboard: () => void;
     onContinueExploring: () => void;
+    onProceedToBilling?: () => void;
     isDark?: boolean;
     propertyName?: string;
 }
@@ -16,6 +17,7 @@ export function UnitMapExploreOrReturnModal({
     isOpen,
     onReturnToDashboard,
     onContinueExploring,
+    onProceedToBilling,
     isDark = false,
     propertyName,
 }: UnitMapExploreOrReturnModalProps) {
@@ -77,33 +79,53 @@ export function UnitMapExploreOrReturnModal({
                 <p className={cn("text-xs sm:text-sm leading-relaxed", isDark ? "text-zinc-300" : "text-zinc-600")}>
                     Your units and hallways have been organized on the canvas
                     {propertyName ? <> for <span className="font-bold">{propertyName}</span></> : ""}.
-                    Would you like to return to the dashboard to proceed with onboarding, or continue exploring and customizing your unit map?
+                    Next up in onboarding: Configure your payment channels (GCash) and utility tariffs so your invoices and leases are ready.
                 </p>
 
                 {/* Choice Actions */}
-                <div className="flex w-full flex-col-reverse sm:flex-row gap-3 pt-2">
-                    <button
-                        type="button"
-                        onClick={onContinueExploring}
-                        className={cn(
-                            "flex-1 inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-5 rounded-xl text-sm font-semibold transition-all cursor-pointer active:scale-[0.98]",
-                            isDark
-                                ? "bg-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700/60"
-                                : "bg-muted/70 hover:bg-muted text-zinc-700 hover:text-zinc-950 border border-border/70"
-                        )}
-                    >
-                        <Compass className="size-4" />
-                        <span>Continue Exploring Map</span>
-                    </button>
+                <div className="flex w-full flex-col gap-2.5 pt-2">
+                    {onProceedToBilling ? (
+                        <button
+                            type="button"
+                            onClick={onProceedToBilling}
+                            className="w-full group inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer"
+                        >
+                            <span>Set Up Billing & Utilities</span>
+                            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                        </button>
+                    ) : null}
 
-                    <button
-                        type="button"
-                        onClick={onReturnToDashboard}
-                        className="flex-1 group inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer"
-                    >
-                        <span>Return to Dashboard</span>
-                        <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-                    </button>
+                    <div className="flex w-full flex-col-reverse sm:flex-row gap-2.5">
+                        <button
+                            type="button"
+                            onClick={onContinueExploring}
+                            className={cn(
+                                "flex-1 inline-flex items-center justify-center gap-2 h-10 sm:h-11 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer active:scale-[0.98]",
+                                isDark
+                                    ? "bg-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700/60"
+                                    : "bg-muted/70 hover:bg-muted text-zinc-700 hover:text-zinc-950 border border-border/70"
+                            )}
+                        >
+                            <Compass className="size-3.5" />
+                            <span>Continue Exploring Map</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={onReturnToDashboard}
+                            className={cn(
+                                "flex-1 group inline-flex items-center justify-center gap-2 h-10 sm:h-11 px-4 rounded-xl font-semibold text-xs sm:text-sm transition-all cursor-pointer active:scale-[0.98]",
+                                onProceedToBilling
+                                    ? isDark
+                                        ? "bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 border border-zinc-700/60"
+                                        : "bg-background hover:bg-muted/80 text-zinc-700 border border-border/70"
+                                    : "bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:brightness-105"
+                            )}
+                        >
+                            <span>Return to Dashboard</span>
+                            <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Footer hint */}

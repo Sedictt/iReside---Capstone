@@ -2884,6 +2884,24 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         router.push("/landlord/dashboard");
     };
 
+    const handleProceedToBillingFromMap = () => {
+        cancelExploreModalTimer();
+        setIsExploreOrReturnModalOpen(false);
+        if (typeof window !== "undefined") {
+            try {
+                window.sessionStorage.removeItem(`ireside.unit_map_guidance_in_progress.${selectedPropertyId}`);
+                window.localStorage.setItem(SCOPED_AWAITING_TENANT_SETUP_KEY, "true");
+                window.localStorage.setItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY, "true");
+                window.localStorage.setItem(SCOPED_PRESET_PROMPT_KEY, "true");
+                window.localStorage.setItem(`ireside_map_setup_complete_${selectedPropertyId}`, "true");
+                window.dispatchEvent(new Event("unit-map-guidance-changed"));
+                window.dispatchEvent(new Event("unit-map-setup-completed"));
+            } catch {}
+        }
+        void propertyContext?.refreshProperties();
+        router.push("/landlord/utility-billing");
+    };
+
     const handleContinueExploringMap = () => {
         cancelExploreModalTimer();
         setIsExploreOrReturnModalOpen(false);
@@ -2899,7 +2917,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             } catch {}
         }
         void propertyContext?.refreshProperties();
-        toast.info("You can continue customizing your layout. Return to the dashboard anytime to configure tenants.");
+        toast.info("You can continue customizing your layout. Next up in onboarding is configuring your billing and utility rates.");
     };
 
     const handleChooseManualLayout = () => {
@@ -5318,6 +5336,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         isOpen={isExploreOrReturnModalOpen}
                         onReturnToDashboard={handleReturnToDashboardFromMap}
                         onContinueExploring={handleContinueExploringMap}
+                        onProceedToBilling={handleProceedToBillingFromMap}
                         isDark={isDark}
                         propertyName={activePropertyName}
                     />

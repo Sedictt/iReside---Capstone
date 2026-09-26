@@ -59,6 +59,42 @@ function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }
         };
     }, [selectedPropertyId, properties]);
 
+    const [localBillingCompleted, setLocalBillingCompleted] = useState(false);
+    const [isBillingDelayed, setIsBillingDelayed] = useState(false);
+
+    useEffect(() => {
+        const checkBilling = () => {
+            if (typeof window === "undefined") return;
+            try {
+                const activeId = selectedPropertyId && selectedPropertyId !== "all" 
+                    ? selectedPropertyId 
+                    : (properties[0]?.id || "default");
+                const isBillingDone = 
+                    window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
+                    window.localStorage.getItem(`ireside.billing_rails_complete.${activeId}`) === "true" ||
+                    properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true");
+                setLocalBillingCompleted(Boolean(isBillingDone));
+
+                const isDelay = 
+                    window.localStorage.getItem("ireside.billing_rails_delayed") === "true" ||
+                    window.localStorage.getItem(`ireside.billing_rails_delayed.${activeId}`) === "true";
+                setIsBillingDelayed(Boolean(isDelay));
+            } catch {
+                setLocalBillingCompleted(false);
+                setIsBillingDelayed(false);
+            }
+        };
+        checkBilling();
+        window.addEventListener("billing-rails-setup-completed", checkBilling);
+        window.addEventListener("billing-rails-delayed-changed", checkBilling);
+        window.addEventListener("storage", checkBilling);
+        return () => {
+            window.removeEventListener("billing-rails-setup-completed", checkBilling);
+            window.removeEventListener("billing-rails-delayed-changed", checkBilling);
+            window.removeEventListener("storage", checkBilling);
+        };
+    }, [selectedPropertyId, properties]);
+
     const isLandlord = profile?.role === "landlord" || profile?.role === "admin";
     const isReady = !authLoading && !propertyLoading;
     const hasZeroProperties = isReady && isLandlord && properties.length === 0;
@@ -69,16 +105,30 @@ function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }
     const hasPendingUnitMap = isReady && isLandlord && properties.length > 0 && !hasConfiguredMap;
     const isAllowedUnitMapRoute = pathname?.startsWith("/landlord/unit-map");
 
-    // Stage 3: Property registered & unit map configured, but 0 tenants registered
+    // Stage 3: Property & Unit map configured, but billing rails pending
+    const hasConfiguredBilling = localBillingCompleted || isBillingDelayed;
+    const hasPendingBillingRails = isReady && isLandlord && properties.length > 0 && hasConfiguredMap && !hasConfiguredBilling;
+    const isAllowedStage3Route = 
+        pathname === "/landlord/dashboard" || 
+        pathname?.startsWith("/landlord/properties") || 
+        pathname?.startsWith("/landlord/unit-map") || 
+        pathname?.startsWith("/landlord/utility-billing") || 
+        pathname?.startsWith("/landlord/invoices");
+
+    // Stage 4: Financial rails configured/acknowledged, but 0 tenants registered
     const hasAtLeastOneTenant = properties.some((p) => 
         Boolean(p.hasTenants) || 
         p.units?.some((u) => (u.status || "").toLowerCase() === "occupied")
     );
-    const hasPendingTenantSetup = isReady && isLandlord && properties.length > 0 && hasConfiguredMap && !hasAtLeastOneTenant;
-    const isAllowedStage3Route = 
+    const hasPendingTenantSetup = isReady && isLandlord && properties.length > 0 && hasConfiguredMap && hasConfiguredBilling && !hasAtLeastOneTenant;
+    const isAllowedStage4Route = 
         pathname === "/landlord/dashboard" || 
+        pathname?.startsWith("/landlord/properties") || 
         pathname?.startsWith("/landlord/unit-map") || 
-        pathname?.startsWith("/landlord/tenants");
+        pathname?.startsWith("/landlord/utility-billing") || 
+        pathname?.startsWith("/landlord/invoices") || 
+        pathname?.startsWith("/landlord/tenants") || 
+        pathname?.startsWith("/landlord/applications");
 
     useEffect(() => {
         if (hasZeroProperties && !isAllowedCreationRoute) {
@@ -91,13 +141,16 @@ function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }
             if (pathname !== "/landlord/dashboard") {
                 router.replace("/landlord/unit-map");
             }
-        } else if (hasPendingTenantSetup && !isAllowedStage3Route) {
-            // When property registered and map configured, but no tenants yet registered,
-            // restrict navigation to Dashboard, Unit Map, and Tenants only
+        } else if (hasPendingBillingRails && !isAllowedStage3Route) {
+            // Restrict navigation in Stage 3
+            toast.warning("Configure your payment channels and utility tariffs to unlock operations.");
+            router.replace("/landlord/dashboard");
+        } else if (hasPendingTenantSetup && !isAllowedStage4Route) {
+            // Restrict navigation in Stage 4
             toast.warning("Complete property setup and register your first tenant to unlock portal operations.");
             router.replace("/landlord/dashboard");
         }
-    }, [hasZeroProperties, hasPendingUnitMap, hasPendingTenantSetup, isAllowedCreationRoute, isAllowedUnitMapRoute, isAllowedStage3Route, pathname, router]);
+    }, [hasZeroProperties, hasPendingUnitMap, hasPendingBillingRails, hasPendingTenantSetup, isAllowedCreationRoute, isAllowedUnitMapRoute, isAllowedStage3Route, isAllowedStage4Route, pathname, router]);
 
     return (
         <>
