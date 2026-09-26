@@ -46,6 +46,7 @@ export function Sidebar({
     const activePropertyId = selectedPropertyId && selectedPropertyId !== "all" 
         ? selectedPropertyId 
         : (properties[0]?.id || "default");
+    const currentProperty = properties.find(p => p.id === activePropertyId) || properties[0];
     const SCOPED_TENANT_DELAYED_KEY = `ireside.tenant_setup_delayed.${activePropertyId}`;
     const SCOPED_MAP_SETUP_COMPLETE_KEY = `ireside_map_setup_complete_${activePropertyId}`;
     const SCOPED_EXPLORE_MODAL_SHOWN_KEY = `ireside.explore_modal_shown.${activePropertyId}`;
@@ -59,8 +60,12 @@ export function Sidebar({
         const checkDelayed = () => {
             if (typeof window === "undefined") return;
             try {
+                const hasAnyTenants = Boolean(
+                    currentProperty?.hasTenants ||
+                    properties.some((p) => p.hasTenants)
+                );
                 const val = window.localStorage.getItem(SCOPED_TENANT_DELAYED_KEY);
-                setIsTenantSetupDelayed(val === "true");
+                setIsTenantSetupDelayed(val === "true" && !hasAnyTenants);
 
                 const guidVal = window.sessionStorage.getItem(`ireside.unit_map_guidance_in_progress.${activePropertyId}`);
                 setIsGuidanceSessionActive(guidVal === "true");
@@ -69,6 +74,7 @@ export function Sidebar({
                     window.localStorage.getItem(SCOPED_MAP_SETUP_COMPLETE_KEY) === "true" ||
                     window.localStorage.getItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY) === "true" ||
                     window.localStorage.getItem(SCOPED_AWAITING_TENANT_SETUP_KEY) === "true" ||
+                    window.localStorage.getItem(`ireside.onboarding_awaiting_tenant_setup.${activePropertyId}`) === "true" ||
                     properties.some((p) => window.localStorage.getItem(`ireside_map_setup_complete_${p.id}`) === "true");
                 setLocalMapCompleted(Boolean(isCompletedLocally));
             } catch {

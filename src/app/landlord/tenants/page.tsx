@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useRef, useCallback, Suspense } from "react";
 import { Clock, UserPlus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProperty } from "@/context/PropertyContext";
 import { useSearchParams, useRouter } from "next/navigation";
 import { LazyMotion, domAnimation, m } from "framer-motion";
 import { AddTenantModal } from "@/components/landlord/tenants/AddTenantModal";
+import { TenantSetupPromptModal } from "@/components/landlord/dashboard/TenantSetupPromptModal";
 import LandlordRenewalReview from "@/components/landlord/leases/RenewalReview";
 import { TenantDirectory } from "@/components/landlord/tenants/TenantDirectory";
 import { TenantProfileView } from "@/components/landlord/tenants/TenantProfileView";
@@ -33,7 +34,7 @@ function TenantsContent() {
  }
  }, [searchParams, rawTenantId, push]);
 
- const { selectedPropertyId } = useProperty();
+ const { selectedPropertyId, properties, loading: propertyLoading, refreshProperties } = useProperty();
  const {
      data: tenantsData,
      isLoading: loading,
@@ -60,6 +61,116 @@ function TenantsContent() {
  const tenants = tenantsData ?? [];
  const error = fetchError?.message ?? null;
  const [isModalOpen, setIsModalOpen] = useState(false);
+ const [isTenantSetupPromptOpen, setIsTenantSetupPromptOpen] = useState(false);
+ const [dismissedThisVisit, setDismissedThisVisit] = useState(false);
+ const [addTenantModalTab, setAddTenantModalTab] = useState<'manual' | 'invite'>('manual');
+ const tenantSetupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+ const activePropertyId = selectedPropertyId && selectedPropertyId !== "all"
+  ? selectedPropertyId
+  : (properties[0]?.id || "default");
+ const currentProperty = properties.find(p => p.id === activePropertyId) || properties[0];
+ const SCOPED_TENANT_DELAYED_KEY = `ireside.tenant_setup_delayed.${activePropertyId}`;
+
+ useEffect(() => {
+  setDismissedThisVisit(false);
+ }, [activePropertyId]);
+
+ const hasConfiguredMap = Boolean(
+  currentProperty?.isMapSetupComplete ||
+  (currentProperty && (currentProperty.placedCount ?? 0) > 0) ||
+  (typeof window !== "undefined" && (
+   window.localStorage.getItem(`ireside_map_setup_complete_${activePropertyId}`) === "true" ||
+   window.localStorage.getItem(`ireside.onboarding_awaiting_tenant_setup.${activePropertyId}`) === "true" ||
+   window.localStorage.getItem(`ireside.awaiting_tenant_setup.${activePropertyId}`) === "true" ||
+   window.localStorage.getItem(`ireside.tenant_setup_delayed.${activePropertyId}`) === "true"
+  ))
+ );
+
+ const hasAtLeastOneTenant = Boolean(
+  (tenants && tenants.length > 0) ||
+  currentProperty?.hasTenants ||
+  properties.some(p => p.hasTenants)
+ );
+
+ useEffect(() => {
+  if (loading || propertyLoading) return;
+  if (typeof window === "undefined") return;
+
+  if (hasConfiguredMap && !hasAtLeastOneTenant && !dismissedThisVisit) {
+   if (tenantSetupTimeoutRef.current) {
+    clearTimeout(tenantSetupTimeoutRef.current);
+   }
+   tenantSetupTimeoutRef.current = setTimeout(() => {
+    setIsTenantSetupPromptOpen(true);
+   }, 1200);
+  } else {
+   if (tenantSetupTimeoutRef.current) {
+    clearTimeout(tenantSetupTimeoutRef.current);
+    tenantSetupTimeoutRef.current = null;
+   }
+   setIsTenantSetupPromptOpen(false);
+  }
+
+  return () => {
+   if (tenantSetupTimeoutRef.current) {
+    clearTimeout(tenantSetupTimeoutRef.current);
+    tenantSetupTimeoutRef.current = null;
+   }
+  };
+ }, [loading, propertyLoading, hasConfiguredMap, hasAtLeastOneTenant, dismissedThisVisit]);
+
+ const handleCloseTenantSetupPrompt = () => {
+  if (tenantSetupTimeoutRef.current) {
+   clearTimeout(tenantSetupTimeoutRef.current);
+   tenantSetupTimeoutRef.current = null;
+  }
+  setDismissedThisVisit(true);
+  setIsTenantSetupPromptOpen(false);
+  if (typeof window !== "undefined") {
+   try {
+    window.localStorage.setItem(SCOPED_TENANT_DELAYED_KEY, "true");
+    window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
+   } catch {}
+  }
+ };
+
+ const handleMaybeLaterTenantSetup = () => {
+  if (tenantSetupTimeoutRef.current) {
+   clearTimeout(tenantSetupTimeoutRef.current);
+   tenantSetupTimeoutRef.current = null;
+  }
+  setDismissedThisVisit(true);
+  setIsTenantSetupPromptOpen(false);
+  if (typeof window !== "undefined") {
+   try {
+    window.localStorage.setItem(SCOPED_TENANT_DELAYED_KEY, "true");
+    window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
+   } catch {}
+  }
+ };
+
+ const handleSelectReusableLink = () => {
+  if (tenantSetupTimeoutRef.current) {
+   clearTimeout(tenantSetupTimeoutRef.current);
+   tenantSetupTimeoutRef.current = null;
+  }
+  setDismissedThisVisit(true);
+  setIsTenantSetupPromptOpen(false);
+  setAddTenantModalTab('invite');
+  setIsModalOpen(true);
+ };
+
+ const handleSelectAddManually = () => {
+  if (tenantSetupTimeoutRef.current) {
+   clearTimeout(tenantSetupTimeoutRef.current);
+   tenantSetupTimeoutRef.current = null;
+  }
+  setDismissedThisVisit(true);
+  setIsTenantSetupPromptOpen(false);
+  setAddTenantModalTab('manual');
+  setIsModalOpen(true);
+ };
 
  const setTab = (tab: string) => {
  const params = new URLSearchParams(searchParams.toString());
@@ -94,9 +205,30 @@ function TenantsContent() {
  <LazyMotion features={domAnimation}>
  <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 md:px-8">
  <AddTenantModal 
- isOpen={isModalOpen}
- onClose={() => setIsModalOpen(false)}
- onSuccess={() => void loadTenants()}
+  isOpen={isModalOpen}
+  initialTab={addTenantModalTab}
+  onClose={() => setIsModalOpen(false)}
+  onSuccess={() => {
+   if (typeof window !== "undefined") {
+    try {
+     window.localStorage.removeItem(SCOPED_TENANT_DELAYED_KEY);
+     window.localStorage.removeItem(`ireside.onboarding_awaiting_tenant_setup.${activePropertyId}`);
+     window.localStorage.removeItem(`ireside.awaiting_tenant_setup.${activePropertyId}`);
+     window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
+    } catch {}
+   }
+   void loadTenants();
+   void refreshProperties();
+  }}
+ />
+
+ <TenantSetupPromptModal
+  isOpen={isTenantSetupPromptOpen}
+  onClose={handleCloseTenantSetupPrompt}
+  onSelectReusableLink={handleSelectReusableLink}
+  onSelectAddManually={handleSelectAddManually}
+  onMaybeLater={handleMaybeLaterTenantSetup}
+  propertyName={currentProperty?.name}
  />
 
  {/* Header Block */}
@@ -107,8 +239,11 @@ function TenantsContent() {
  </div>
  <div className="flex items-center gap-3">
  <button 
- onClick={() => setIsModalOpen(true)}
- className="inline-flex items-center gap-2 rounded-xl neumorphic-primary px-5 py-2.5 text-sm font-black transition-all hover:bg-primary/90 active:scale-95"
+  onClick={() => {
+   setAddTenantModalTab('manual');
+   setIsModalOpen(true);
+  }}
+  className="inline-flex items-center gap-2 rounded-xl neumorphic-primary px-5 py-2.5 text-sm font-black transition-all hover:bg-primary/90 active:scale-95"
  >
  <UserPlus className="size-4" />
  <span>Add New Tenant</span>
@@ -156,7 +291,10 @@ function TenantsContent() {
  error={error}
  onViewProfile={handleViewProfile}
  onMessage={handleMessageTenant}
- onAddTenant={() => setIsModalOpen(true)}
+ onAddTenant={() => {
+  setAddTenantModalTab('manual');
+  setIsModalOpen(true);
+ }}
  />
  )
  ) : (
