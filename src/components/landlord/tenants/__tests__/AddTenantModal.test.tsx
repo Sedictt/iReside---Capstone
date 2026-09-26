@@ -178,4 +178,41 @@ describe("AddTenantModal", () => {
 
         expect(screen.getByText("End date must be after start date.")).toBeDefined();
     });
+
+    it("allows configuring advance rent and security deposit directly and via presets", () => {
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSuccess={vi.fn()}
+                initialTab="quick_add"
+            />
+        );
+
+        // Rent is auto-set to 12000 from unit 101 mock
+        const advanceInput = screen.getByLabelText("Advance Rent Amount") as HTMLInputElement;
+        const depositInput = screen.getByLabelText("Security Deposit Amount") as HTMLInputElement;
+
+        expect(advanceInput).not.toBeNull();
+        expect(depositInput).not.toBeNull();
+
+        // Custom amount configuration
+        fireEvent.change(advanceInput, { target: { value: "25000" } });
+        fireEvent.change(depositInput, { target: { value: "15000" } });
+
+        expect(advanceInput.value).toBe("25000");
+        expect(depositInput.value).toBe("15000");
+        expect(screen.getByText("₱40,000")).toBeDefined();
+
+        // Preset chip test
+        const noneButtons = screen.getAllByRole("button", { name: "None" });
+        fireEvent.click(noneButtons[0]); // Advance None
+        expect(advanceInput.value).toBe("0");
+        expect(screen.getByText("₱15,000")).toBeDefined();
+
+        const twoMoButtons = screen.getAllByRole("button", { name: "2 Mo" });
+        fireEvent.click(twoMoButtons[0]); // Advance 2 Mo (2 * 12,000 = 24,000)
+        expect(advanceInput.value).toBe("24000");
+        expect(screen.getByText("₱39,000")).toBeDefined();
+    });
 });
