@@ -17,8 +17,7 @@ import {
  Loader2,
  Link as LinkIcon,
  QrCode,
- Share2,
- Sparkles
+ Share2
 } from 'lucide-react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
@@ -29,11 +28,12 @@ interface AddTenantModalProps {
  isOpen: boolean
  onClose: () => void
  onSuccess: () => void
+ initialTab?: 'manual' | 'invite'
 }
 
-export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalProps) {
+export function AddTenantModal({ isOpen, onClose, onSuccess, initialTab = 'manual' }: AddTenantModalProps) {
  const { properties } = useProperty()
- const [activeTab, setActiveTab] = useState<'manual' | 'invite'>('manual')
+ const [activeTab, setActiveTab] = useState<'manual' | 'invite'>(initialTab)
  const [loading, setLoading] = useState(false)
  const [successData, setSuccessData] = useState<{ tempPassword: string | null; email: string } | null>(null)
  const [inviteResult, setInviteResult] = useState<{ shareUrl: string; qrUrl: string } | null>(null)
@@ -58,7 +58,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
  // Reset state when modal opens
  useEffect(() => {
  if (isOpen) {
- setActiveTab('manual')
+ setActiveTab(initialTab)
  setLoading(false)
  setSuccessData(null)
  setInviteResult(null)
@@ -452,7 +452,7 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
  <div className="space-y-8">
  <div className="rounded-[2rem] border border-primary/20 bg-primary/5 p-6 text-center">
  <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
- <Sparkles className="size-6" />
+ <LinkIcon className="size-6" />
  </div>
  <h3 className="text-lg font-black text-foreground">Self-Onboarding Link</h3>
  <p className="mt-1 text-sm text-muted-foreground">Residents can register their current lease details via this link.</p>

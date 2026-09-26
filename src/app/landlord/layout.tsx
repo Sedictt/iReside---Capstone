@@ -41,6 +41,7 @@ function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }
                     window.localStorage.getItem(`ireside_map_setup_complete_${activeId}`) === "true" ||
                     window.localStorage.getItem(`ireside.explore_modal_shown.${activeId}`) === "true" ||
                     window.localStorage.getItem(`ireside.awaiting_tenant_setup.${activeId}`) === "true" ||
+                    window.localStorage.getItem(`ireside.onboarding_awaiting_tenant_setup.${activeId}`) === "true" ||
                     properties.some((p) => window.localStorage.getItem(`ireside_map_setup_complete_${p.id}`) === "true");
                 setLocalMapCompleted(Boolean(isCompleted));
             } catch {

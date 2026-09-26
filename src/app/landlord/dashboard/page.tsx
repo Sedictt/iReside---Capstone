@@ -109,7 +109,7 @@ const PAYMENT_CATEGORIES: Array<{ key: PaymentCategory; label: string; hint: str
 ];
 
 export default function LandlordDashboard() {
-    const { selectedPropertyId, properties } = useProperty();
+    const { selectedPropertyId, properties, refreshProperties } = useProperty();
     const currentProperty = properties.find(p => p.id === selectedPropertyId) || properties[0];
     const [mounted, setMounted] = useState(false);
 
@@ -119,7 +119,12 @@ export default function LandlordDashboard() {
     const SCOPED_AWAITING_TENANT_SETUP_KEY = `ireside.onboarding_awaiting_tenant_setup.${activePropertyId}`;
     const SCOPED_TENANT_DELAYED_KEY = `ireside.tenant_setup_delayed.${activePropertyId}`;
     const [isTenantSetupPromptOpen, setIsTenantSetupPromptOpen] = useState(false);
+    const [dismissedThisVisit, setDismissedThisVisit] = useState(false);
     const tenantSetupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        setDismissedThisVisit(false);
+    }, [activePropertyId]);
 
     const [openPaymentModal, setOpenPaymentModal] = useState<"Overdue" | "Near Due" | "Paid" | null>(null);
     const [paymentsState, dispatchPayments] = useReducer(paymentsReducer, {
@@ -204,35 +209,67 @@ export default function LandlordDashboard() {
         }
     }, []);
 
+    const hasConfiguredMap = Boolean(
+        currentProperty?.isMapSetupComplete ||
+        (currentProperty && (currentProperty.placedCount ?? 0) > 0) ||
+        (typeof window !== "undefined" && (
+            window.localStorage.getItem(`ireside_map_setup_complete_${activePropertyId}`) === "true" ||
+            window.localStorage.getItem(`ireside.onboarding_awaiting_tenant_setup.${activePropertyId}`) === "true" ||
+            window.localStorage.getItem(`ireside.awaiting_tenant_setup.${activePropertyId}`) === "true" ||
+            window.localStorage.getItem(`ireside.tenant_setup_delayed.${activePropertyId}`) === "true"
+        ))
+    );
+
+    const hasAtLeastOneTenant = Boolean(
+        currentProperty?.hasTenants ||
+        availableUnits.some(u => {
+            if (selectedPropertyId && selectedPropertyId !== "all" && u.property_id !== selectedPropertyId) return false;
+            const st = (u.status || "").toLowerCase();
+            return st === "occupied" || st === "leased";
+        }) ||
+        properties.some(p => p.hasTenants)
+    );
+
     useEffect(() => {
-        if (!mounted) return;
+        if (!mounted || loadingUnits) return;
         if (typeof window === "undefined") return;
-        try {
-            const awaiting = window.localStorage.getItem(SCOPED_AWAITING_TENANT_SETUP_KEY);
-            const delayed = window.localStorage.getItem(SCOPED_TENANT_DELAYED_KEY);
-            if (awaiting === "true" && delayed !== "true") {
-                if (tenantSetupTimeoutRef.current) {
-                    clearTimeout(tenantSetupTimeoutRef.current);
-                }
-                tenantSetupTimeoutRef.current = setTimeout(() => {
-                    setIsTenantSetupPromptOpen(true);
-                }, 3000);
+
+        if (hasConfiguredMap && !hasAtLeastOneTenant && !dismissedThisVisit) {
+            if (tenantSetupTimeoutRef.current) {
+                clearTimeout(tenantSetupTimeoutRef.current);
             }
-        } catch {}
+            tenantSetupTimeoutRef.current = setTimeout(() => {
+                setIsTenantSetupPromptOpen(true);
+            }, 1500);
+        } else {
+            if (tenantSetupTimeoutRef.current) {
+                clearTimeout(tenantSetupTimeoutRef.current);
+                tenantSetupTimeoutRef.current = null;
+            }
+            setIsTenantSetupPromptOpen(false);
+        }
+
         return () => {
             if (tenantSetupTimeoutRef.current) {
                 clearTimeout(tenantSetupTimeoutRef.current);
                 tenantSetupTimeoutRef.current = null;
             }
         };
-    }, [mounted, SCOPED_AWAITING_TENANT_SETUP_KEY, SCOPED_TENANT_DELAYED_KEY]);
+    }, [mounted, loadingUnits, hasConfiguredMap, hasAtLeastOneTenant, dismissedThisVisit]);
 
     const handleCloseTenantSetupPrompt = () => {
         if (tenantSetupTimeoutRef.current) {
             clearTimeout(tenantSetupTimeoutRef.current);
             tenantSetupTimeoutRef.current = null;
         }
+        setDismissedThisVisit(true);
         setIsTenantSetupPromptOpen(false);
+        if (typeof window !== "undefined") {
+            try {
+                window.localStorage.setItem(SCOPED_TENANT_DELAYED_KEY, "true");
+                window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
+            } catch {}
+        }
     };
 
     const handleSelectReusableLink = () => {
@@ -240,14 +277,8 @@ export default function LandlordDashboard() {
             clearTimeout(tenantSetupTimeoutRef.current);
             tenantSetupTimeoutRef.current = null;
         }
+        setDismissedThisVisit(true);
         setIsTenantSetupPromptOpen(false);
-        if (typeof window !== "undefined") {
-            try {
-                window.localStorage.removeItem(SCOPED_AWAITING_TENANT_SETUP_KEY);
-                window.localStorage.removeItem(SCOPED_TENANT_DELAYED_KEY);
-                window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
-            } catch {}
-        }
         setIsInviteModalOpen(true);
     };
 
@@ -256,14 +287,8 @@ export default function LandlordDashboard() {
             clearTimeout(tenantSetupTimeoutRef.current);
             tenantSetupTimeoutRef.current = null;
         }
+        setDismissedThisVisit(true);
         setIsTenantSetupPromptOpen(false);
-        if (typeof window !== "undefined") {
-            try {
-                window.localStorage.removeItem(SCOPED_AWAITING_TENANT_SETUP_KEY);
-                window.localStorage.removeItem(SCOPED_TENANT_DELAYED_KEY);
-                window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
-            } catch {}
-        }
         setIsWalkInModalOpen(true);
     };
 
@@ -272,10 +297,10 @@ export default function LandlordDashboard() {
             clearTimeout(tenantSetupTimeoutRef.current);
             tenantSetupTimeoutRef.current = null;
         }
+        setDismissedThisVisit(true);
         setIsTenantSetupPromptOpen(false);
         if (typeof window !== "undefined") {
             try {
-                window.localStorage.removeItem(SCOPED_AWAITING_TENANT_SETUP_KEY);
                 window.localStorage.setItem(SCOPED_TENANT_DELAYED_KEY, "true");
                 window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
             } catch {}
@@ -640,6 +665,14 @@ export default function LandlordDashboard() {
                 selectedUnitId={selectedWalkInUnitId}
                 onSuccess={() => {
                     setSelectedWalkInUnitId(undefined);
+                    void refreshProperties();
+                    if (typeof window !== "undefined") {
+                        try {
+                            window.localStorage.removeItem(SCOPED_TENANT_DELAYED_KEY);
+                            window.localStorage.removeItem(SCOPED_AWAITING_TENANT_SETUP_KEY);
+                            window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
+                        } catch {}
+                    }
                 }}
             />
 
