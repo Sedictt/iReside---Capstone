@@ -731,6 +731,13 @@ export function UtilityBillingDashboard() {
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [tourStepIndex, isTourOpen]);
 
+	// Smooth scroll to top when tour opens or steps advance so target buttons are visible
+	useEffect(() => {
+		if (isTourOpen) {
+			window.scrollTo({ top: 0, behavior: "smooth" });
+		}
+	}, [isTourOpen, tourStepIndex]);
+
 	const handleSaveReadings = async (postInvoices: boolean = false) => {
 		const toSave: ReadingSaveRequest[] = [];
 		const [y, m] = selectedMonth.split("-").map(Number);
@@ -1031,9 +1038,18 @@ export function UtilityBillingDashboard() {
 							<button 
 								onClick={() => handleSaveReadings(false)}
 								disabled={saving}
-								className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-card/60 px-4 text-xs font-semibold text-foreground transition-all hover:bg-muted active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm"
+								className={cn(
+									"inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-card/60 px-4 text-xs font-semibold text-foreground transition-all hover:bg-muted active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm relative",
+									isTourOpen && tourStepIndex === 1 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-105 bg-primary/10 border-primary font-bold z-30"
+								)}
 								title="Save submeter readings without issuing invoices yet"
 							>
+								{isTourOpen && tourStepIndex === 1 && (
+									<span className="relative flex size-2 shrink-0">
+										<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+										<span className="relative inline-flex rounded-full size-2 bg-primary"></span>
+									</span>
+								)}
 								<Save className="size-3.5 text-muted-foreground" />
 								<span>Save Draft</span>
 							</button>
@@ -1041,9 +1057,18 @@ export function UtilityBillingDashboard() {
 							<button 
 								onClick={() => handleSaveReadings(true)}
 								disabled={saving}
-								className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-5 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 cursor-pointer"
+								className={cn(
+									"inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-5 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 cursor-pointer relative",
+									isTourOpen && tourStepIndex === 2 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_35px_rgba(155,119,255,0.95)] animate-pulse scale-105 brightness-110 font-black z-30"
+								)}
 								title="Save readings and immediately post itemized invoices to tenants"
 							>
+								{isTourOpen && tourStepIndex === 2 && (
+									<span className="relative flex size-2 shrink-0">
+										<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-90"></span>
+										<span className="relative inline-flex rounded-full size-2 bg-white"></span>
+									</span>
+								)}
 								{saving ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
 								<span>Post & Bill Invoices</span>
 							</button>
@@ -1082,17 +1107,30 @@ export function UtilityBillingDashboard() {
 							label: "Billing Archive", 
 							icon: History 
 						}
-					].map((tab) => (
+					].map((tab) => {
+						const isTabHighlighted = isTourOpen && (
+							(tourStepIndex === 0 && tab.id === "rates") ||
+							((tourStepIndex === 1 || tourStepIndex === 2) && tab.id === "readings")
+						);
+
+						return (
 						<button
 							key={tab.id}
 							onClick={() => setActiveTab(tab.id as any)}
 							className={cn(
-								"flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 sm:px-3.5 sm:py-2 text-xs font-medium transition-all whitespace-nowrap cursor-pointer",
+								"flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 sm:px-3.5 sm:py-2 text-xs font-medium transition-all whitespace-nowrap cursor-pointer relative",
 								activeTab === tab.id
 									? "bg-card text-foreground font-semibold shadow-sm border border-border/80"
-									: "text-muted-foreground hover:text-foreground hover:bg-card/40"
+									: "text-muted-foreground hover:text-foreground hover:bg-card/40",
+								isTabHighlighted && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_25px_rgba(155,119,255,0.8)] animate-pulse font-bold z-20"
 							)}
 						>
+							{isTabHighlighted && (
+								<span className="relative flex size-2 shrink-0">
+									<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+									<span className="relative inline-flex rounded-full size-2 bg-primary"></span>
+								</span>
+							)}
 							<tab.icon className={cn("size-3.5 shrink-0", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
 							<span>{tab.label}</span>
 							{tab.badge && (
@@ -1108,7 +1146,8 @@ export function UtilityBillingDashboard() {
 								</span>
 							)}
 						</button>
-					))}
+						);
+					})}
 				</div>
 
 				{/* Search & Cycle Filter */}
@@ -1522,6 +1561,8 @@ export function UtilityBillingDashboard() {
 						<BillingOperationsPanel 
 							propertyId={selectedPropertyId} 
 							viewMode="rates" 
+							isTourActive={isTourOpen}
+							tourStepIndex={tourStepIndex}
 							onDirtyChange={setIsRatesDirty}
 							onSaved={() => {
 								setIsRatesDirty(false);

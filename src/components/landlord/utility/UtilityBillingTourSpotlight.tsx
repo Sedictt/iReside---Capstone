@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Zap, Settings2, Send, ArrowRight, ArrowLeft, CheckCircle2, X } from "lucide-react";
+import { ArrowRight, ArrowLeft, CheckCircle2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface UtilityTourStep {
@@ -9,15 +9,17 @@ export interface UtilityTourStep {
     title: string;
     description: string;
     targetTab?: "readings" | "rates";
+    targetElementLabel: string;
     tip?: string;
 }
 
-const TOUR_STEPS: UtilityTourStep[] = [
+export const TOUR_STEPS: UtilityTourStep[] = [
     {
         id: 1,
         title: "Step 1: Configure Utility Rates",
         description: "Click the Utility Rates tab to configure your property's electricity (₱/kWh) and water (₱/m³) tariffs. You can also customize individual unit rates if specific rooms have higher baseline consumption.",
         targetTab: "rates",
+        targetElementLabel: "Utility Rates Tab & Unit-Specific Rules",
         tip: "Pro-tip: If utilities are already included in your flat rent, keep the default rates or set them to zero.",
     },
     {
@@ -25,6 +27,7 @@ const TOUR_STEPS: UtilityTourStep[] = [
         title: "Step 2: Log Room Submeters",
         description: "In the Meter Readings tab, enter the current meter values for each room. iReside automatically carries over the previous readings month-to-month and calculates the exact consumption delta.",
         targetTab: "readings",
+        targetElementLabel: "Save Draft Button & Meter Readings Tab",
         tip: "Pro-tip: You can click 'Save Draft' at any time while walking the building without issuing bills.",
     },
     {
@@ -32,6 +35,7 @@ const TOUR_STEPS: UtilityTourStep[] = [
         title: "Step 3: Post & Bill Monthly Invoices",
         description: "When readings are recorded for your billing cycle, click 'Post & Bill Invoices'. iReside bundles the base rent and submeter totals into itemized digital invoices sent to your residents.",
         targetTab: "readings",
+        targetElementLabel: "Post & Bill Invoices Button",
         tip: "Tenants receive transparent breakdown receipts showing previous and current meter numbers.",
     },
 ];
@@ -61,7 +65,7 @@ export function UtilityBillingTourSpotlight({
 
     return (
         <div 
-            className="fixed bottom-6 right-6 z-[250] max-w-[420px] w-full"
+            className="fixed bottom-6 right-6 z-[250] max-w-[420px] w-full pointer-events-auto"
             role="dialog"
             aria-modal="false"
             aria-labelledby="utility-tour-title"
@@ -86,6 +90,17 @@ export function UtilityBillingTourSpotlight({
                         <X className="size-4" />
                     </button>
                 </div>
+
+                {/* Target Highlight Beacon Pill */}
+                {step.targetElementLabel && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-[11px] font-bold text-primary">
+                        <span className="relative flex size-2 shrink-0">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span className="relative inline-flex rounded-full size-2 bg-primary"></span>
+                        </span>
+                        <span className="truncate">Highlighted: {step.targetElementLabel}</span>
+                    </div>
+                )}
 
                 {/* Content */}
                 <div className="space-y-1.5">
@@ -124,7 +139,7 @@ export function UtilityBillingTourSpotlight({
                             <button
                                 type="button"
                                 onClick={onNext}
-                                className="h-9 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 hover:bg-primary/90 transition-all cursor-pointer shadow-xs"
+                                className="h-9 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 hover:bg-primary/90 transition-all cursor-pointer shadow-xs active:scale-95"
                             >
                                 <span>Next</span>
                                 <ArrowRight className="size-3" />
@@ -133,7 +148,7 @@ export function UtilityBillingTourSpotlight({
                             <button
                                 type="button"
                                 onClick={onCompleteStep}
-                                className="h-9 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 hover:bg-primary/90 transition-all cursor-pointer shadow-md shadow-primary/25"
+                                className="h-9 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 hover:bg-primary/90 transition-all cursor-pointer shadow-md shadow-primary/25 active:scale-95"
                             >
                                 <CheckCircle2 className="size-3.5" />
                                 <span>Complete Step</span>
