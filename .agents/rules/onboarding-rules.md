@@ -78,3 +78,10 @@ Stage 5 completes the onboarding pipeline by guiding the landlord through high-f
   4. **Portfolio Switcher & Operations Hub** (`tour-dashboard-navigation`): Multi-property context switching and operational sub-pages.
 - **Replay Trigger**: Provide an on-demand "Guided Tour" trigger button with a `Compass` icon on the dashboard banner.
 - **Final Completion**: Dispatch `dashboard-tour-completed` and mark `ireside.onboarding_completed` in `localStorage`, displaying a celebration choice dialog directing the landlord to the dashboard, 2D unit map, or resident directory.
+
+## 8. Non-Blocking Launch & Transition Invariant
+In workspace initialization (`/setup`), wizard launches, and onboarding stage transitions:
+- **Never Block Navigation on Client-Side Auth Sync**: Client-side SDK calls like `supabase.auth.refreshSession()`, `refreshProfile()`, or token re-fetches must NEVER be directly `await`ed on the critical path prior to navigation. In browser environments, `refreshSession()` can hang indefinitely due to client lock contention (`navigator.locks`) or token synchronization stalls.
+- **Fire-and-Forget or Bounded Race**: All client-side auth refresh calls preceding navigation must be executed in a non-blocking background manner (`void supabase.auth.refreshSession().catch(() => {})`) or wrapped in `Promise.race` with an aggressive timeout (max 1.5s).
+- **Server Ground Truth & Cookie Signal**: Finalization state (e.g. `is_setup_completed`, `setupCompleted`) must be persisted directly on the server (via service role `/api/setup/launch`) and signaled to middleware via local cookie/storage (`ireside_setup_completed=true`), allowing immediate navigation without waiting on client JWT regeneration.
+- **Replace Over Push on Finalization**: Use `window.location.replace` or `router.replace` when transitioning out of single-use setup wizards to prevent browser history back-loops.
