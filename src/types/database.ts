@@ -1914,6 +1914,8 @@ export interface Database {
 export type Profile = Database['public']['Tables']['profiles']['Row'] & {
     emergency_contact_name?: string | null
     emergency_contact_phone?: string | null
+    first_name?: string | null
+    last_name?: string | null
 }
 export type Property = Database['public']['Tables']['properties']['Row']
 export type Unit = Database['public']['Tables']['units']['Row']
