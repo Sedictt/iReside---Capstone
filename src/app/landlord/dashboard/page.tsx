@@ -23,6 +23,7 @@ import {
     ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PaymentModal } from "@/components/landlord/dashboard/PaymentModal";
 import { CollectPaymentModal } from "@/components/landlord/dashboard/CollectPaymentModal";
 import { ActionRequired } from "@/components/landlord/dashboard/ActionRequired";
@@ -33,6 +34,7 @@ import { VacantUnitsModal } from "@/components/landlord/dashboard/VacantUnitsMod
 import { MobileMessagesSheet } from "@/components/landlord/dashboard/MobileMessagesSheet";
 import { LobbyFlyerModal } from "@/components/landlord/flyer/LobbyFlyerModal";
 import { TenantSetupPromptModal } from "@/components/landlord/dashboard/TenantSetupPromptModal";
+import { BillingSetupPromptModal } from "@/components/landlord/dashboard/BillingSetupPromptModal";
 import { AddTenantModal } from "@/components/landlord/tenants/AddTenantModal";
 import { toast } from "sonner";
 
@@ -112,6 +114,7 @@ const PAYMENT_CATEGORIES: Array<{ key: PaymentCategory; label: string; hint: str
 ];
 
 export default function LandlordDashboard() {
+    const router = useRouter();
     const { selectedPropertyId, properties, refreshProperties } = useProperty();
     const currentProperty = properties.find(p => p.id === selectedPropertyId) || properties[0];
     const [mounted, setMounted] = useState(false);
@@ -139,8 +142,13 @@ export default function LandlordDashboard() {
     const [dismissedThisVisit, setDismissedThisVisit] = useState(false);
     const tenantSetupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    const [isBillingSetupPromptOpen, setIsBillingSetupPromptOpen] = useState(false);
+    const [dismissedBillingThisVisit, setDismissedBillingThisVisit] = useState(false);
+    const billingSetupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
     useEffect(() => {
         setDismissedThisVisit(false);
+        setDismissedBillingThisVisit(false);
     }, [activePropertyId]);
 
     const [openPaymentModal, setOpenPaymentModal] = useState<"Overdue" | "Near Due" | "Paid" | null>(null);
@@ -270,6 +278,53 @@ export default function LandlordDashboard() {
                 toast.info("Billing setup postponed. Tenant management is now unlocked.");
             } catch {}
         }
+    };
+
+    useEffect(() => {
+        if (!mounted || loadingUnits) return;
+        if (typeof window === "undefined") return;
+
+        if (hasPendingBillingRails && !dismissedBillingThisVisit) {
+            if (billingSetupTimeoutRef.current) {
+                clearTimeout(billingSetupTimeoutRef.current);
+            }
+            billingSetupTimeoutRef.current = setTimeout(() => {
+                setIsBillingSetupPromptOpen(true);
+            }, 1500);
+        } else {
+            if (billingSetupTimeoutRef.current) {
+                clearTimeout(billingSetupTimeoutRef.current);
+                billingSetupTimeoutRef.current = null;
+            }
+            setIsBillingSetupPromptOpen(false);
+        }
+
+        return () => {
+            if (billingSetupTimeoutRef.current) {
+                clearTimeout(billingSetupTimeoutRef.current);
+                billingSetupTimeoutRef.current = null;
+            }
+        };
+    }, [mounted, loadingUnits, hasPendingBillingRails, dismissedBillingThisVisit]);
+
+    const handleCloseBillingSetupPrompt = () => {
+        if (billingSetupTimeoutRef.current) {
+            clearTimeout(billingSetupTimeoutRef.current);
+            billingSetupTimeoutRef.current = null;
+        }
+        setDismissedBillingThisVisit(true);
+        setIsBillingSetupPromptOpen(false);
+        handleDelayBillingSetup();
+    };
+
+    const handleConfigureBillingNow = () => {
+        if (billingSetupTimeoutRef.current) {
+            clearTimeout(billingSetupTimeoutRef.current);
+            billingSetupTimeoutRef.current = null;
+        }
+        setDismissedBillingThisVisit(true);
+        setIsBillingSetupPromptOpen(false);
+        router.push("/landlord/utility-billing");
     };
 
     useEffect(() => {
@@ -1018,6 +1073,14 @@ export default function LandlordDashboard() {
                     </div>
                 )}
             </AnimatePresence>
+
+            <BillingSetupPromptModal
+                isOpen={isBillingSetupPromptOpen}
+                onClose={handleCloseBillingSetupPrompt}
+                onConfigureNow={handleConfigureBillingNow}
+                onMaybeLater={handleCloseBillingSetupPrompt}
+                propertyName={currentProperty?.name}
+            />
 
             <TenantSetupPromptModal
                 isOpen={isTenantSetupPromptOpen}

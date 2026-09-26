@@ -93,11 +93,21 @@ function TenantsContent() {
   properties.some(p => p.hasTenants)
  );
 
+ const hasConfiguredBilling = Boolean(
+  typeof window !== "undefined" && (
+   window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
+   window.localStorage.getItem(`ireside.billing_rails_complete.${activePropertyId}`) === "true" ||
+   window.localStorage.getItem("ireside.billing_rails_delayed") === "true" ||
+   window.localStorage.getItem(`ireside.billing_rails_delayed.${activePropertyId}`) === "true" ||
+   properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true")
+  )
+ );
+
  useEffect(() => {
   if (loading || propertyLoading) return;
   if (typeof window === "undefined") return;
 
-  if (hasConfiguredMap && !hasAtLeastOneTenant && !dismissedThisVisit) {
+  if (hasConfiguredMap && hasConfiguredBilling && !hasAtLeastOneTenant && !dismissedThisVisit) {
    if (tenantSetupTimeoutRef.current) {
     clearTimeout(tenantSetupTimeoutRef.current);
    }
@@ -118,7 +128,7 @@ function TenantsContent() {
     tenantSetupTimeoutRef.current = null;
    }
   };
- }, [loading, propertyLoading, hasConfiguredMap, hasAtLeastOneTenant, dismissedThisVisit]);
+ }, [loading, propertyLoading, hasConfiguredMap, hasConfiguredBilling, hasAtLeastOneTenant, dismissedThisVisit]);
 
  const handleCloseTenantSetupPrompt = () => {
   if (tenantSetupTimeoutRef.current) {

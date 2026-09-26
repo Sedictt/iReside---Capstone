@@ -102,7 +102,7 @@ export function TenantSetupPromptModal({
                                 <Users className="size-6" />
                             </div>
                             <span className="inline-flex items-center text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/25">
-                                Step 3 of Onboarding
+                                Step 4 of Onboarding
                             </span>
                         </div>
 
@@ -115,7 +115,7 @@ export function TenantSetupPromptModal({
                                 Configure Your Tenants
                             </h2>
                             <p id="tenant-setup-modal-desc" className="text-sm text-muted-foreground leading-relaxed">
-                                Your unit map{propertyName ? <> for <span className="font-semibold text-foreground">{propertyName}</span></> : ""} is ready! Do you want to configure your tenants and add them to the system now?
+                                Your property and utility billing rails{propertyName ? <> for <span className="font-semibold text-foreground">{propertyName}</span></> : ""} are ready! Do you want to configure your tenants and add them to the system now?
                             </p>
                         </div>
 
