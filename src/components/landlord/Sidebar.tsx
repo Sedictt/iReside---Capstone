@@ -51,8 +51,12 @@ export function Sidebar({
     const SCOPED_MAP_SETUP_COMPLETE_KEY = `ireside_map_setup_complete_${activePropertyId}`;
     const SCOPED_EXPLORE_MODAL_SHOWN_KEY = `ireside.explore_modal_shown.${activePropertyId}`;
     const SCOPED_AWAITING_TENANT_SETUP_KEY = `ireside.awaiting_tenant_setup.${activePropertyId}`;
+    const SCOPED_BILLING_RAILS_COMPLETE_KEY = `ireside.billing_rails_complete.${activePropertyId}`;
+    const SCOPED_BILLING_RAILS_DELAYED_KEY = `ireside.billing_rails_delayed.${activePropertyId}`;
 
     const [isTenantSetupDelayed, setIsTenantSetupDelayed] = useState(false);
+    const [isBillingDelayed, setIsBillingDelayed] = useState(false);
+    const [localBillingCompleted, setLocalBillingCompleted] = useState(false);
     const [isGuidanceSessionActive, setIsGuidanceSessionActive] = useState(false);
     const [localMapCompleted, setLocalMapCompleted] = useState(false);
 
@@ -67,6 +71,17 @@ export function Sidebar({
                 const val = window.localStorage.getItem(SCOPED_TENANT_DELAYED_KEY);
                 setIsTenantSetupDelayed(val === "true" && !hasAnyTenants);
 
+                const isBillingDone = 
+                    window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
+                    window.localStorage.getItem(SCOPED_BILLING_RAILS_COMPLETE_KEY) === "true" ||
+                    properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true");
+                setLocalBillingCompleted(Boolean(isBillingDone));
+
+                const isBillingDelayVal = 
+                    window.localStorage.getItem("ireside.billing_rails_delayed") === "true" ||
+                    window.localStorage.getItem(SCOPED_BILLING_RAILS_DELAYED_KEY) === "true";
+                setIsBillingDelayed(Boolean(isBillingDelayVal));
+
                 const guidVal = window.sessionStorage.getItem(`ireside.unit_map_guidance_in_progress.${activePropertyId}`);
                 setIsGuidanceSessionActive(guidVal === "true");
 
@@ -79,42 +94,53 @@ export function Sidebar({
                 setLocalMapCompleted(Boolean(isCompletedLocally));
             } catch {
                 setIsTenantSetupDelayed(false);
+                setIsBillingDelayed(false);
+                setLocalBillingCompleted(false);
                 setIsGuidanceSessionActive(false);
                 setLocalMapCompleted(false);
             }
         };
         checkDelayed();
         window.addEventListener("tenant-setup-delayed-changed", checkDelayed);
+        window.addEventListener("billing-rails-setup-completed", checkDelayed);
+        window.addEventListener("billing-rails-delayed-changed", checkDelayed);
         window.addEventListener("unit-map-guidance-changed", checkDelayed);
         window.addEventListener("unit-map-setup-completed", checkDelayed);
         window.addEventListener("storage", checkDelayed);
         return () => {
             window.removeEventListener("tenant-setup-delayed-changed", checkDelayed);
+            window.removeEventListener("billing-rails-setup-completed", checkDelayed);
+            window.removeEventListener("billing-rails-delayed-changed", checkDelayed);
             window.removeEventListener("unit-map-guidance-changed", checkDelayed);
             window.removeEventListener("unit-map-setup-completed", checkDelayed);
             window.removeEventListener("storage", checkDelayed);
         };
-    }, [SCOPED_TENANT_DELAYED_KEY, SCOPED_MAP_SETUP_COMPLETE_KEY, SCOPED_EXPLORE_MODAL_SHOWN_KEY, SCOPED_AWAITING_TENANT_SETUP_KEY, activePropertyId, properties]);
+    }, [SCOPED_TENANT_DELAYED_KEY, SCOPED_MAP_SETUP_COMPLETE_KEY, SCOPED_EXPLORE_MODAL_SHOWN_KEY, SCOPED_AWAITING_TENANT_SETUP_KEY, SCOPED_BILLING_RAILS_COMPLETE_KEY, SCOPED_BILLING_RAILS_DELAYED_KEY, activePropertyId, properties]);
 
     const hasZeroProperties = !propertyLoading && properties.length === 0;
     const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete) || localMapCompleted;
     const hasPendingUnitMap = !propertyLoading && properties.length > 0 && !hasConfiguredMap;
+
+    const hasConfiguredBilling = localBillingCompleted || isBillingDelayed;
+    const hasPendingBillingRails = !propertyLoading && properties.length > 0 && hasConfiguredMap && !hasConfiguredBilling;
     
     // Check if at least one tenant or occupied unit exists across the portfolio
     const hasAtLeastOneTenant = properties.some((p) => 
         Boolean(p.hasTenants) || 
         p.units?.some((u) => (u.status || "").toLowerCase() === "occupied")
     );
-    const hasPendingTenantSetup = !propertyLoading && properties.length > 0 && hasConfiguredMap && !hasAtLeastOneTenant;
+    const hasPendingTenantSetup = !propertyLoading && properties.length > 0 && hasConfiguredMap && hasConfiguredBilling && !hasAtLeastOneTenant;
 
-    const isLocked = hasZeroProperties || hasPendingUnitMap || hasPendingTenantSetup;
+    const isLocked = hasZeroProperties || hasPendingUnitMap || hasPendingBillingRails || hasPendingTenantSetup;
     const lockStage: SidebarLockStage = hasZeroProperties
         ? ("no_property" as const)
         : hasPendingUnitMap
             ? ("no_unit_map" as const)
-            : hasPendingTenantSetup
-                ? ("no_tenant" as const)
-                : null;
+            : hasPendingBillingRails
+                ? ("no_billing_rails" as const)
+                : hasPendingTenantSetup
+                    ? ("no_tenant" as const)
+                    : null;
 
     const isUrgent = (type: string) => importantNotifications.some(n => n.type === type);
 
@@ -241,6 +267,8 @@ export function Sidebar({
                     label: "Utility Billing", 
                     href: "/landlord/utility-billing", 
                     icon: Zap,
+                    warning: isBillingDelayed && !localBillingCompleted,
+                    warningTooltip: "Action needed: Configure your payment channels and utility tariffs to automate billing.",
                     description: "Calculate, allocate and bill electricity, water & submeter charges"
                 },
             ]

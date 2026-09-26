@@ -585,7 +585,19 @@ export function BillingOperationsPanel({
 			});
 			dispatch({ type: "SET_SHOW_BREAKDOWN", payload: false });
 			const successMsg = viewMode === "gcash" ? "GCash settings saved successfully." : "Utility rates saved successfully.";
-			dispatch({ type: "SET_MESSAGE", payload: { type: "success", value: successMsg } });
+			if (typeof window !== "undefined") {
+				try {
+					window.localStorage.setItem("ireside.billing_rails_complete", "true");
+					if (Array.isArray(payload.properties)) {
+						payload.properties.forEach((p: any) => {
+							if (p?.id) {
+								window.localStorage.setItem(`ireside.billing_rails_complete.${p.id}`, "true");
+							}
+						});
+					}
+					window.dispatchEvent(new Event("billing-rails-setup-completed"));
+				} catch {}
+			}
 			onSaved?.(payload);
 			return true;
 		} catch (error: any) {

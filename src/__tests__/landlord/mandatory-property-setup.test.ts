@@ -86,21 +86,87 @@ describe("Mandatory Property & Unit Map Setup System Lock", () => {
     expect(processed.find((i) => i.label === "Maintenance")?.isItemLocked).toBe(true);
   });
 
-  it("locks navigation items in no_tenant stage except Dashboard, Unit Map, and Tenants", () => {
+  it("locks navigation items in no_billing_rails stage except Dashboard, Properties, Unit Map, Utility Billing, and Finance Hub", () => {
+    const lockStage = "no_billing_rails";
+    const items = [
+      { href: "/landlord/dashboard", label: "Dashboard" },
+      { href: "/landlord/properties", label: "Properties" },
+      { href: "/landlord/properties/new", label: "New Property" },
+      { href: "/landlord/unit-map", label: "Unit Map" },
+      { href: "/landlord/utility-billing", label: "Utility Billing" },
+      { href: "/landlord/invoices", label: "Finance Hub" },
+      { href: "/landlord/tenants", label: "Tenants" },
+      { href: "/landlord/applications", label: "Applications" },
+      { href: "/landlord/analytics", label: "Analytics" },
+      { href: "/landlord/maintenance", label: "Maintenance" },
+    ];
+
+    const allowedHrefs = [
+      "/landlord/dashboard",
+      "/landlord/properties",
+      "/landlord/properties/new",
+      "/landlord/unit-map",
+      "/landlord/utility-billing",
+      "/landlord/invoices",
+    ];
+
+    const processed = items.map((item) => {
+      const isItemLocked = lockStage === "no_billing_rails" ? !allowedHrefs.includes(item.href) : false;
+      const lockBadgeText = isItemLocked ? "Billing Setup Required" : "";
+      const lockTooltipText = isItemLocked
+        ? "Currently completing onboarding. Configure payment methods and utility rates to unlock resident management."
+        : "";
+
+      return {
+        ...item,
+        isItemLocked,
+        lockBadgeText,
+        lockTooltipText,
+      };
+    });
+
+    expect(processed.find((i) => i.label === "Dashboard")?.isItemLocked).toBe(false);
+    expect(processed.find((i) => i.label === "Properties")?.isItemLocked).toBe(false);
+    expect(processed.find((i) => i.label === "Unit Map")?.isItemLocked).toBe(false);
+    expect(processed.find((i) => i.label === "Utility Billing")?.isItemLocked).toBe(false);
+    expect(processed.find((i) => i.label === "Finance Hub")?.isItemLocked).toBe(false);
+
+    expect(processed.find((i) => i.label === "Tenants")?.isItemLocked).toBe(true);
+    expect(processed.find((i) => i.label === "Applications")?.isItemLocked).toBe(true);
+    expect(processed.find((i) => i.label === "Analytics")?.isItemLocked).toBe(true);
+    expect(processed.find((i) => i.label === "Maintenance")?.isItemLocked).toBe(true);
+
+    const lockedTenant = processed.find((i) => i.label === "Tenants");
+    expect(lockedTenant?.lockBadgeText).toBe("Billing Setup Required");
+  });
+
+  it("locks navigation items in no_tenant stage except Dashboard, Properties, Unit Map, Billing, and Tenants/Applications", () => {
     const lockStage = "no_tenant";
     const items = [
       { href: "/landlord/dashboard", label: "Dashboard" },
       { href: "/landlord/properties", label: "Properties" },
+      { href: "/landlord/properties/new", label: "New Property" },
       { href: "/landlord/unit-map", label: "Unit Map" },
-      { href: "/landlord/tenants", label: "Tenants" },
+      { href: "/landlord/utility-billing", label: "Utility Billing" },
       { href: "/landlord/invoices", label: "Finance Hub" },
+      { href: "/landlord/tenants", label: "Tenants" },
+      { href: "/landlord/applications", label: "Applications" },
       { href: "/landlord/analytics", label: "Analytics" },
       { href: "/landlord/messages", label: "Messaging" },
       { href: "/landlord/maintenance", label: "Maintenance" },
       { href: "/landlord/settings", label: "Settings" },
     ];
 
-    const allowedHrefs = ["/landlord/dashboard", "/landlord/unit-map", "/landlord/tenants"];
+    const allowedHrefs = [
+      "/landlord/dashboard",
+      "/landlord/properties",
+      "/landlord/properties/new",
+      "/landlord/unit-map",
+      "/landlord/utility-billing",
+      "/landlord/invoices",
+      "/landlord/tenants",
+      "/landlord/applications",
+    ];
 
     const processed = items.map((item) => {
       const isItemLocked = lockStage === "no_tenant" ? !allowedHrefs.includes(item.href) : false;
@@ -117,20 +183,22 @@ describe("Mandatory Property & Unit Map Setup System Lock", () => {
       };
     });
 
-    // Dashboard, Unit Map, and Tenants must NOT be locked
+    // Operational foundation routes must NOT be locked
     expect(processed.find((i) => i.label === "Dashboard")?.isItemLocked).toBe(false);
+    expect(processed.find((i) => i.label === "Properties")?.isItemLocked).toBe(false);
     expect(processed.find((i) => i.label === "Unit Map")?.isItemLocked).toBe(false);
+    expect(processed.find((i) => i.label === "Utility Billing")?.isItemLocked).toBe(false);
+    expect(processed.find((i) => i.label === "Finance Hub")?.isItemLocked).toBe(false);
     expect(processed.find((i) => i.label === "Tenants")?.isItemLocked).toBe(false);
+    expect(processed.find((i) => i.label === "Applications")?.isItemLocked).toBe(false);
 
-    // Other operational sections must be locked
-    expect(processed.find((i) => i.label === "Properties")?.isItemLocked).toBe(true);
-    expect(processed.find((i) => i.label === "Finance Hub")?.isItemLocked).toBe(true);
+    // Other post-resident operational sections must be locked
     expect(processed.find((i) => i.label === "Analytics")?.isItemLocked).toBe(true);
     expect(processed.find((i) => i.label === "Messaging")?.isItemLocked).toBe(true);
     expect(processed.find((i) => i.label === "Maintenance")?.isItemLocked).toBe(true);
     expect(processed.find((i) => i.label === "Settings")?.isItemLocked).toBe(true);
 
-    const lockedItem = processed.find((i) => i.label === "Finance Hub");
+    const lockedItem = processed.find((i) => i.label === "Analytics");
     expect(lockedItem?.lockBadgeText).toBe("Tenant Setup Required");
     expect(lockedItem?.lockTooltipText).toBe(
       "Complete property setup and register your first tenant to unlock portal operations."
@@ -165,7 +233,8 @@ describe("Mandatory Property & Unit Map Setup System Lock", () => {
   it("evaluates mandatory property setup guard route redirection across all stages", () => {
     const guardEvaluate = (
       pathname: string,
-      properties: Array<{ id: string; isMapSetupComplete?: boolean; hasTenants?: boolean; units?: Array<{ status: string }> }>
+      properties: Array<{ id: string; isMapSetupComplete?: boolean; hasTenants?: boolean; units?: Array<{ status: string }> }>,
+      isBillingConfigured = false
     ) => {
       const isReady = true;
       const isLandlord = true;
@@ -176,15 +245,23 @@ describe("Mandatory Property & Unit Map Setup System Lock", () => {
       const hasPendingUnitMap = isReady && isLandlord && properties.length > 0 && !hasConfiguredMap;
       const isAllowedUnitMapRoute = pathname.startsWith("/landlord/unit-map");
 
+      const hasPendingBillingRails = isReady && isLandlord && properties.length > 0 && hasConfiguredMap && !isBillingConfigured;
+      const isAllowedStage3Route =
+        pathname === "/landlord/dashboard" ||
+        pathname.startsWith("/landlord/properties") ||
+        pathname.startsWith("/landlord/unit-map") ||
+        pathname.startsWith("/landlord/utility-billing") ||
+        pathname.startsWith("/landlord/invoices");
+
       const hasAtLeastOneTenant = properties.some((p) =>
         Boolean(p.hasTenants) ||
         p.units?.some((u) => (u.status || "").toLowerCase() === "occupied")
       );
-      const hasPendingTenantSetup = isReady && isLandlord && properties.length > 0 && hasConfiguredMap && !hasAtLeastOneTenant;
-      const isAllowedStage3Route =
-        pathname === "/landlord/dashboard" ||
-        pathname.startsWith("/landlord/unit-map") ||
-        pathname.startsWith("/landlord/tenants");
+      const hasPendingTenantSetup = isReady && isLandlord && properties.length > 0 && hasConfiguredMap && isBillingConfigured && !hasAtLeastOneTenant;
+      const isAllowedStage4Route =
+        isAllowedStage3Route ||
+        pathname.startsWith("/landlord/tenants") ||
+        pathname.startsWith("/landlord/applications");
 
       if (hasZeroProperties && !isAllowedCreationRoute) {
         if (pathname !== "/landlord/dashboard") {
@@ -200,7 +277,11 @@ describe("Mandatory Property & Unit Map Setup System Lock", () => {
         return { shouldRedirect: false, redirectTo: null, showWelcomeLightbox: false, showUnitMapLightbox: true };
       }
 
-      if (hasPendingTenantSetup && !isAllowedStage3Route) {
+      if (hasPendingBillingRails && !isAllowedStage3Route) {
+        return { shouldRedirect: true, redirectTo: "/landlord/dashboard", showWelcomeLightbox: false, showUnitMapLightbox: false };
+      }
+
+      if (hasPendingTenantSetup && !isAllowedStage4Route) {
         return { shouldRedirect: true, redirectTo: "/landlord/dashboard", showWelcomeLightbox: false, showUnitMapLightbox: false };
       }
 
@@ -255,44 +336,50 @@ describe("Mandatory Property & Unit Map Setup System Lock", () => {
       showUnitMapLightbox: false,
     });
 
-    // Stage 3: Map configured, 0 tenants, visiting locked route /landlord/analytics -> redirect to /landlord/dashboard
-    expect(guardEvaluate("/landlord/analytics", [{ id: "prop-1", isMapSetupComplete: true, hasTenants: false }])).toEqual({
+    // Stage 3: Map configured, billing pending, visiting locked route /landlord/analytics -> redirect to /landlord/dashboard
+    expect(guardEvaluate("/landlord/analytics", [{ id: "prop-1", isMapSetupComplete: true, hasTenants: false }], false)).toEqual({
       shouldRedirect: true,
       redirectTo: "/landlord/dashboard",
       showWelcomeLightbox: false,
       showUnitMapLightbox: false,
     });
 
-    // Stage 3: Map configured, 0 tenants, visiting locked route /landlord/invoices -> redirect to /landlord/dashboard
-    expect(guardEvaluate("/landlord/invoices", [{ id: "prop-1", isMapSetupComplete: true, hasTenants: false }])).toEqual({
-      shouldRedirect: true,
-      redirectTo: "/landlord/dashboard",
-      showWelcomeLightbox: false,
-      showUnitMapLightbox: false,
-    });
-
-    // Stage 3: Map configured, 0 tenants, visiting allowed routes -> no redirect
-    expect(guardEvaluate("/landlord/dashboard", [{ id: "prop-1", isMapSetupComplete: true, hasTenants: false }])).toEqual({
+    // Stage 3: Map configured, billing pending, visiting allowed routes -> no redirect
+    expect(guardEvaluate("/landlord/dashboard", [{ id: "prop-1", isMapSetupComplete: true, hasTenants: false }], false)).toEqual({
       shouldRedirect: false,
       redirectTo: null,
       showWelcomeLightbox: false,
       showUnitMapLightbox: false,
     });
-    expect(guardEvaluate("/landlord/unit-map", [{ id: "prop-1", isMapSetupComplete: true, hasTenants: false }])).toEqual({
+    expect(guardEvaluate("/landlord/unit-map", [{ id: "prop-1", isMapSetupComplete: true, hasTenants: false }], false)).toEqual({
       shouldRedirect: false,
       redirectTo: null,
       showWelcomeLightbox: false,
       showUnitMapLightbox: false,
     });
-    expect(guardEvaluate("/landlord/tenants", [{ id: "prop-1", isMapSetupComplete: true, hasTenants: false }])).toEqual({
+    expect(guardEvaluate("/landlord/utility-billing", [{ id: "prop-1", isMapSetupComplete: true, hasTenants: false }], false)).toEqual({
+      shouldRedirect: false,
+      redirectTo: null,
+      showWelcomeLightbox: false,
+      showUnitMapLightbox: false,
+    });
+    expect(guardEvaluate("/landlord/invoices", [{ id: "prop-1", isMapSetupComplete: true, hasTenants: false }], false)).toEqual({
       shouldRedirect: false,
       redirectTo: null,
       showWelcomeLightbox: false,
       showUnitMapLightbox: false,
     });
 
-    // Stage 4: Fully unlocked (1 property, map configured, tenant registered) -> all routes accessible
-    expect(guardEvaluate("/landlord/invoices", [{ id: "prop-1", isMapSetupComplete: true, hasTenants: true }])).toEqual({
+    // Stage 4: Map & Billing configured, 0 tenants, visiting /landlord/tenants -> allowed
+    expect(guardEvaluate("/landlord/tenants", [{ id: "prop-1", isMapSetupComplete: true, hasTenants: false }], true)).toEqual({
+      shouldRedirect: false,
+      redirectTo: null,
+      showWelcomeLightbox: false,
+      showUnitMapLightbox: false,
+    });
+
+    // Stage 5: Fully unlocked (1 property, map configured, tenant registered) -> all routes accessible
+    expect(guardEvaluate("/landlord/maintenance", [{ id: "prop-1", isMapSetupComplete: true, hasTenants: true }], true)).toEqual({
       shouldRedirect: false,
       redirectTo: null,
       showWelcomeLightbox: false,

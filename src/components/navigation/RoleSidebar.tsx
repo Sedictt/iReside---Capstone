@@ -46,7 +46,7 @@ export interface SidebarNavSection {
     dividerBefore?: boolean;
 }
 
-export type SidebarLockStage = "no_property" | "no_unit_map" | "no_tenant" | null;
+export type SidebarLockStage = "no_property" | "no_unit_map" | "no_billing_rails" | "no_tenant" | null;
 
 interface RoleSidebarProps {
     sections: SidebarNavSection[];
@@ -169,8 +169,31 @@ export function RoleSidebar({
             lockBadgeText = "Onboarding in Progress";
             lockTooltipText = "Currently completing onboarding. Complete property setup to unlock this section.";
             lockToastText = "Onboarding in progress. Complete your property setup first to unlock portal operations.";
+        } else if (stage === "no_billing_rails") {
+            const allowedHrefs = [
+                "/landlord/dashboard", 
+                "/landlord/properties", 
+                "/landlord/properties/new", 
+                "/landlord/unit-map", 
+                "/landlord/utility-billing", 
+                "/landlord/invoices"
+            ];
+            isItemLocked = !allowedHrefs.includes(item.href);
+            resolvedHref = item.href;
+            lockBadgeText = "Billing Setup Required";
+            lockTooltipText = "Currently completing onboarding. Configure payment methods and utility rates to unlock resident management.";
+            lockToastText = "Configure your payment channels and utility tariffs to unlock resident management.";
         } else if (stage === "no_tenant") {
-            const allowedHrefs = ["/landlord/dashboard", "/landlord/unit-map", "/landlord/tenants"];
+            const allowedHrefs = [
+                "/landlord/dashboard", 
+                "/landlord/properties", 
+                "/landlord/properties/new", 
+                "/landlord/unit-map", 
+                "/landlord/utility-billing", 
+                "/landlord/invoices", 
+                "/landlord/tenants", 
+                "/landlord/applications"
+            ];
             isItemLocked = !allowedHrefs.includes(item.href);
             resolvedHref = item.href;
             lockBadgeText = "Tenant Setup Required";
