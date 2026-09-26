@@ -49,11 +49,12 @@ function mockRouter(push: Mock) {
     return router;
 }
 
-function mockSearchParams(redirectUrl: string | null = null) {
+function mockSearchParams(redirectUrl: string | null = null, extraParams: Record<string, string> = {}) {
     const searchParams = new URLSearchParams();
     if (redirectUrl) {
         searchParams.set("redirect", redirectUrl);
     }
+    Object.entries(extraParams).forEach(([k, v]) => searchParams.set(k, v));
     (useSearchParams as Mock).mockReturnValue({
         get: vi.fn((key: string) => searchParams.get(key)),
     });
@@ -503,5 +504,69 @@ describe("LoginPage - Account Activation (No Auto Sign-In)", () => {
             expect(screen.getByText(/Account claimed successfully! Please sign in with your new credentials/i)).toBeInTheDocument();
             expect(sessionStorage.getItem("ireside_pending_recovery_key")).toBeNull();
         });
+    });
+
+    it("displays activation banner and prefills email when mounted with ?activated=true&email=...", async () => {
+        mockRouter(vi.fn() as any);
+        mockSearchParams(null, { activated: "true", email: "fresh.landlord@example.ph" });
+        mockSupabaseClient({ data: null, error: null });
+
+        render(<LoginPage />);
+
+        await waitFor(() => {
+            expect(screen.getByText(/Account claimed successfully! Please sign in with your new credentials as fresh.landlord@example.ph to proceed to setup./i)).toBeInTheDocument();
+            expect(getEmailInput()).toHaveValue("fresh.landlord@example.ph");
+        });
+    });
+
+    it("triggers window.location.replace to reload the page with activated=true when proceeding from recovery modal in browser environment", async () => {
+        const originalEnv = process.env.NODE_ENV;
+        const replaceSpy = vi.fn();
+        Object.defineProperty(window, "location", {
+            writable: true,
+            value: { ...window.location, replace: replaceSpy, href: "http://localhost:3000/login" },
+        });
+
+        try {
+            // Simulate browser environment where NODE_ENV is production
+            (process.env as any).NODE_ENV = "production";
+
+            mockRouter(vi.fn() as any);
+            mockSearchParams();
+            const supabase = mockSupabaseClient();
+            supabase.auth.signOut = vi.fn().mockResolvedValue({ error: null });
+
+            sessionStorage.setItem(
+                "ireside_pending_recovery_key",
+                JSON.stringify({
+                    securityKey: "RECOVERY-KEY-BROWSER-REPLACE-TEST",
+                    email: "browser.refresh@example.ph",
+                    password: "SecretPassword123!",
+                })
+            );
+
+            render(<LoginPage />);
+
+            await waitFor(() => {
+                expect(screen.getByText(/Account Claimed Successfully/i)).toBeInTheDocument();
+            });
+
+            const downloadBtn = screen.getByRole("button", { name: /Download/i });
+            fireEvent.click(downloadBtn);
+
+            const proceedBtn = screen.getByRole("button", { name: /Proceed to Sign In/i });
+            await waitFor(() => {
+                expect(proceedBtn).not.toBeDisabled();
+            });
+
+            fireEvent.click(proceedBtn);
+
+            await waitFor(() => {
+                expect(replaceSpy).toHaveBeenCalledWith("/login?activated=true&email=browser.refresh%40example.ph");
+                expect(sessionStorage.getItem("ireside_pending_recovery_key")).toBeNull();
+            });
+        } finally {
+            (process.env as any).NODE_ENV = originalEnv;
+        }
     });
 });
