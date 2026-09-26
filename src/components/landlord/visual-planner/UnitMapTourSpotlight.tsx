@@ -154,12 +154,11 @@ export function UnitMapTourSpotlight({
                         ) : (
                             <button
                                 type="button"
-                                onClick={onGenerate}
-                                disabled={isGenerating}
-                                className="h-9 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 hover:bg-primary/90 transition-all cursor-pointer shadow-md shadow-primary/25 active:scale-95 disabled:opacity-50"
+                                onClick={onClose}
+                                className="h-9 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 hover:bg-primary/90 transition-all cursor-pointer shadow-md shadow-primary/25 active:scale-95"
                             >
                                 <CheckCircle2 className="size-3.5" />
-                                <span>{isGenerating ? "Generating..." : "Generate Unit-map"}</span>
+                                <span>Finish Tour</span>
                             </button>
                         )}
                     </div>
