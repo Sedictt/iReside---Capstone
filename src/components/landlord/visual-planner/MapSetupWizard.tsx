@@ -911,7 +911,7 @@ export function MapSetupWizard({
                                             </div>
                                             <p className="text-xs text-muted-foreground mt-0.5">
                                                 {isAllAssigned
-                                                    ? "Your floor assignments are complete. Click below to automatically build your interactive architectural canvas."
+                                                    ? "Your floor assignments are complete. Click Generate Unit-map in the header to automatically build your interactive architectural canvas."
                                                     : "Drag remaining units to their respective floors or use quick actions to finish organizing."
                                                 }
                                             </p>
@@ -929,24 +929,6 @@ export function MapSetupWizard({
                                                 Distribute Evenly
                                             </button>
                                         )}
-                                        <button
-                                            data-tour-id="tour-wizard-generate-bottom"
-                                            onClick={handleAutoPlace}
-                                            disabled={isSaving || floorConfigs.length === 0 || totalUnits === 0}
-                                            className={cn(
-                                                "group inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed",
-                                                isAllAssigned 
-                                                    ? "bg-primary text-primary-foreground hover:brightness-105 shadow-primary/25 cursor-pointer ring-2 ring-primary/20" 
-                                                    : "bg-muted text-muted-foreground border border-border"
-                                            )}
-                                        >
-                                            {isSaving ? (
-                                                <Loader2 className="size-4 animate-spin" />
-                                            ) : (
-                                                <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
-                                            )}
-                                            <span>Generate Unit-map</span>
-                                        </button>
                                     </div>
                                 </div>
                             </div>

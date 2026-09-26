@@ -17,7 +17,7 @@ describe("TenantSetupPromptModal", () => {
         );
 
         expect(screen.getByText("Configure Your Tenants")).toBeDefined();
-        expect(screen.getByText("Step 3 of Onboarding")).toBeDefined();
+        expect(screen.getByText("Step 4 of Onboarding")).toBeDefined();
         expect(screen.getByText("Pinecrest Residences")).toBeDefined();
         expect(screen.getByText("Yes, Configure Tenants")).toBeDefined();
         expect(screen.getByText("Maybe Later")).toBeDefined();

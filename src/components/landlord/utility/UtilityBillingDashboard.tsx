@@ -45,6 +45,7 @@ import { mutationQueue } from "@/lib/offline/mutationQueue";
 import { MonthPicker } from "@/components/ui/MonthPicker";
 import { UtilityBillingOnboardingModal } from "@/components/landlord/utility/UtilityBillingOnboardingModal";
 import { UtilityBillingTourSpotlight } from "@/components/landlord/utility/UtilityBillingTourSpotlight";
+import { UtilityBillingCompletionModal } from "@/components/landlord/utility/UtilityBillingCompletionModal";
 
 type ReadingDraft = {
 	unitId: string;
@@ -367,6 +368,7 @@ export function UtilityBillingDashboard() {
 	const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
 	const [isTourOpen, setIsTourOpen] = useState(false);
 	const [tourStepIndex, setTourStepIndex] = useState(0);
+	const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
 
 	// Persist the billing rails completion state
 	const activePropertyId = (selectedPropertyId && selectedPropertyId !== "all")
@@ -661,7 +663,7 @@ export function UtilityBillingDashboard() {
 
 	// --- Onboarding Handlers ---
 
-	/** Marks billing rails as complete, emits event, and navigates to tenant setup */
+	/** Marks billing rails as complete, emits event, and prompts the choice dialog */
 	const handleCompleteOnboardingStep = () => {
 		try {
 			if (typeof window !== "undefined") {
@@ -679,9 +681,22 @@ export function UtilityBillingDashboard() {
 		setIsOnboardingModalOpen(false);
 		setIsTourOpen(false);
 		setDismissedThisVisit(true);
-		toast.success("Billing & utility setup confirmed! You can now add your first tenant.", { duration: 4000 });
-		// Route to tenant setup (next onboarding stage)
-		setTimeout(() => router.push("/landlord/tenants"), 1200);
+		setIsCompletionModalOpen(true);
+	};
+
+	const handleProceedToTenantsFromBilling = () => {
+		setIsCompletionModalOpen(false);
+		router.push("/landlord/tenants");
+	};
+
+	const handleContinueExploringBilling = () => {
+		setIsCompletionModalOpen(false);
+		toast.info("You can continue exploring your utility billing workspace. Next up: Configure your tenants.");
+	};
+
+	const handleReturnToDashboardFromBilling = () => {
+		setIsCompletionModalOpen(false);
+		router.push("/landlord/dashboard");
 	};
 
 	const handleDismissOnboarding = () => {
@@ -694,12 +709,6 @@ export function UtilityBillingDashboard() {
 		setDismissedThisVisit(true);
 		setTourStepIndex(0);
 		setIsTourOpen(true);
-	};
-
-	const handleGoToRates = () => {
-		setIsOnboardingModalOpen(false);
-		setDismissedThisVisit(true);
-		setActiveTab("rates");
 	};
 
 	const handleTourNext = () => setTourStepIndex((i) => Math.min(i + 1, 2));
@@ -947,8 +956,6 @@ export function UtilityBillingDashboard() {
 				isOpen={isOnboardingModalOpen}
 				onClose={handleDismissOnboarding}
 				onStartTour={handleStartTour}
-				onGoToRates={handleGoToRates}
-				onCompleteStep={handleCompleteOnboardingStep}
 				propertyName={properties.find((p) => p.id === activePropertyId)?.name}
 			/>
 
@@ -960,6 +967,15 @@ export function UtilityBillingDashboard() {
 				onPrev={handleTourPrev}
 				onClose={handleTourClose}
 				onCompleteStep={handleCompleteOnboardingStep}
+			/>
+
+			{/* Step Completion Choice Modal */}
+			<UtilityBillingCompletionModal
+				isOpen={isCompletionModalOpen}
+				onContinueExploring={handleContinueExploringBilling}
+				onProceedToTenants={handleProceedToTenantsFromBilling}
+				onReturnToDashboard={handleReturnToDashboardFromBilling}
+				propertyName={properties.find((p) => p.id === activePropertyId)?.name}
 			/>
 
 		<div className="flex flex-col space-y-8 pb-20 w-full">

@@ -112,8 +112,7 @@ function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }
         pathname === "/landlord/dashboard" || 
         pathname?.startsWith("/landlord/properties") || 
         pathname?.startsWith("/landlord/unit-map") || 
-        pathname?.startsWith("/landlord/utility-billing") || 
-        pathname?.startsWith("/landlord/invoices");
+        pathname?.startsWith("/landlord/utility-billing");
 
     // Stage 4: Financial rails configured/acknowledged, but 0 tenants registered
     const hasAtLeastOneTenant = properties.some((p) => 

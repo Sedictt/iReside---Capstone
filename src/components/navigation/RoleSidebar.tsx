@@ -175,8 +175,7 @@ export function RoleSidebar({
                 "/landlord/properties", 
                 "/landlord/properties/new", 
                 "/landlord/unit-map", 
-                "/landlord/utility-billing", 
-                "/landlord/invoices"
+                "/landlord/utility-billing"
             ];
             isItemLocked = !allowedHrefs.includes(item.href);
             resolvedHref = item.href;
