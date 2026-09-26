@@ -96,6 +96,8 @@ export function AddTenantModal({
     startDate?: string
     endDate?: string
     monthlyRent?: string
+    advanceAmount?: string
+    securityDepositAmount?: string
   }>({})
 
   // Invite Link State
@@ -248,45 +250,147 @@ export function AddTenantModal({
     setFieldErrors(prev => ({ ...prev, unitId: undefined }))
   }
 
+  // Sanitization helpers
+  const sanitizeNumericInput = (val: string) => {
+    return val.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1')
+  }
+
+  const sanitizePhoneInput = (val: string) => {
+    return val.replace(/[^0-9+\-()\s]/g, '')
+  }
+
+  const handleFullNameChange = (val: string) => {
+    setFormData(prev => ({ ...prev, fullName: val }))
+    if (fieldErrors.fullName && val.trim().length >= 2) {
+      setFieldErrors(prev => ({ ...prev, fullName: undefined }))
+    }
+  }
+
+  const handleFullNameBlur = () => {
+    const name = formData.fullName.trim()
+    if (!name) {
+      setFieldErrors(prev => ({ ...prev, fullName: 'Full name is required.' }))
+    } else if (name.length < 2) {
+      setFieldErrors(prev => ({ ...prev, fullName: 'Full name must be at least 2 characters.' }))
+    } else {
+      setFieldErrors(prev => ({ ...prev, fullName: undefined }))
+    }
+  }
+
+  const handleEmailChange = (val: string) => {
+    setFormData(prev => ({ ...prev, email: val }))
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (fieldErrors.email && EMAIL_REGEX.test(val.trim())) {
+      setFieldErrors(prev => ({ ...prev, email: undefined }))
+    }
+  }
+
+  const handleEmailBlur = () => {
+    const email = formData.email.trim()
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email) {
+      setFieldErrors(prev => ({ ...prev, email: 'Email address is required.' }))
+    } else if (!EMAIL_REGEX.test(email)) {
+      setFieldErrors(prev => ({ ...prev, email: 'Please enter a valid email address.' }))
+    } else {
+      setFieldErrors(prev => ({ ...prev, email: undefined }))
+    }
+  }
+
+  const handlePhoneChange = (val: string) => {
+    const sanitized = sanitizePhoneInput(val)
+    setFormData(prev => ({ ...prev, phone: sanitized }))
+    const digits = sanitized.replace(/\D/g, '')
+    if (fieldErrors.phone && digits.length >= 10 && digits.length <= 15) {
+      setFieldErrors(prev => ({ ...prev, phone: undefined }))
+    }
+  }
+
+  const handlePhoneBlur = () => {
+    const phone = formData.phone.trim()
+    const digits = phone.replace(/\D/g, '')
+    if (!phone) {
+      setFieldErrors(prev => ({ ...prev, phone: 'Phone number is required.' }))
+    } else if (digits.length < 10 || digits.length > 15) {
+      setFieldErrors(prev => ({ ...prev, phone: 'Please enter a valid phone number (10–15 digits).' }))
+    } else {
+      setFieldErrors(prev => ({ ...prev, phone: undefined }))
+    }
+  }
+
   const handleRentChange = (val: string) => {
-    setFormData(prev => ({ ...prev, monthlyRent: val }))
-    const numRent = parseFloat(val) || 0
+    const sanitized = sanitizeNumericInput(val)
+    setFormData(prev => ({ ...prev, monthlyRent: sanitized }))
+    const numRent = parseFloat(sanitized) || 0
     if (advanceMonths >= 0) {
       setAdvanceAmount(String(advanceMonths * numRent))
     }
     if (securityDepositMonths >= 0) {
       setSecurityDepositAmount(String(securityDepositMonths * numRent))
     }
-    if (fieldErrors.monthlyRent) {
+    if (numRent > 0) {
+      setFieldErrors(prev => ({ ...prev, monthlyRent: undefined }))
+    }
+  }
+
+  const handleRentBlur = () => {
+    const num = parseFloat(formData.monthlyRent) || 0
+    if (!formData.monthlyRent || num <= 0) {
+      setFieldErrors(prev => ({ ...prev, monthlyRent: 'Monthly rent must be greater than ₱0.' }))
+    } else {
       setFieldErrors(prev => ({ ...prev, monthlyRent: undefined }))
     }
   }
 
   const handleAdvanceAmountChange = (valStr: string) => {
-    setAdvanceAmount(valStr)
-    const val = parseFloat(valStr) || 0
+    const sanitized = sanitizeNumericInput(valStr)
+    setAdvanceAmount(sanitized)
+    const val = parseFloat(sanitized) || 0
     if (currentRent > 0 && val === currentRent) {
       setAdvanceMonths(1)
     } else if (currentRent > 0 && val === currentRent * 2) {
       setAdvanceMonths(2)
-    } else if (val === 0 && valStr !== '') {
+    } else if (val === 0 && sanitized !== '') {
       setAdvanceMonths(0)
     } else {
       setAdvanceMonths(-1)
     }
+    if (sanitized !== '' && !isNaN(val) && val >= 0) {
+      setFieldErrors(prev => ({ ...prev, advanceAmount: undefined }))
+    }
+  }
+
+  const handleAdvanceAmountBlur = () => {
+    if (advanceAmount === '' || isNaN(parseFloat(advanceAmount)) || parseFloat(advanceAmount) < 0) {
+      setFieldErrors(prev => ({ ...prev, advanceAmount: 'Please enter a valid advance rent amount.' }))
+    } else {
+      setFieldErrors(prev => ({ ...prev, advanceAmount: undefined }))
+    }
   }
 
   const handleSecurityDepositAmountChange = (valStr: string) => {
-    setSecurityDepositAmount(valStr)
-    const val = parseFloat(valStr) || 0
+    const sanitized = sanitizeNumericInput(valStr)
+    setSecurityDepositAmount(sanitized)
+    const val = parseFloat(sanitized) || 0
     if (currentRent > 0 && val === currentRent) {
       setSecurityDepositMonths(1)
     } else if (currentRent > 0 && val === currentRent * 2) {
       setSecurityDepositMonths(2)
-    } else if (val === 0 && valStr !== '') {
+    } else if (val === 0 && sanitized !== '') {
       setSecurityDepositMonths(0)
     } else {
       setSecurityDepositMonths(-1)
+    }
+    if (sanitized !== '' && !isNaN(val) && val >= 0) {
+      setFieldErrors(prev => ({ ...prev, securityDepositAmount: undefined }))
+    }
+  }
+
+  const handleSecurityDepositAmountBlur = () => {
+    if (securityDepositAmount === '' || isNaN(parseFloat(securityDepositAmount)) || parseFloat(securityDepositAmount) < 0) {
+      setFieldErrors(prev => ({ ...prev, securityDepositAmount: 'Please enter a valid security deposit amount.' }))
+    } else {
+      setFieldErrors(prev => ({ ...prev, securityDepositAmount: undefined }))
     }
   }
 
@@ -374,6 +478,14 @@ export function AddTenantModal({
 
     if (!currentRent || currentRent <= 0) {
       errs.monthlyRent = 'Monthly rent must be greater than ₱0.'
+    }
+
+    if (advanceAmount === '' || isNaN(parseFloat(advanceAmount)) || parseFloat(advanceAmount) < 0) {
+      errs.advanceAmount = 'Please enter a valid advance rent amount.'
+    }
+
+    if (securityDepositAmount === '' || isNaN(parseFloat(securityDepositAmount)) || parseFloat(securityDepositAmount) < 0) {
+      errs.securityDepositAmount = 'Please enter a valid security deposit amount.'
     }
 
     setFieldErrors(errs)
@@ -573,7 +685,7 @@ export function AddTenantModal({
                 <div className="max-h-[min(820px,80vh)] overflow-y-auto p-6 sm:p-8">
                   {/* Mode 1: Quick Add */}
                   {activeTab === 'quick_add' && (
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} noValidate className="space-y-6">
                       <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs font-medium text-muted-foreground flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2.5">
                           <UserPlus className="size-4 text-primary shrink-0" />
@@ -603,14 +715,11 @@ export function AddTenantModal({
                               <User className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                               <input
                                 id="fullName"
-                                required
                                 type="text"
                                 placeholder="Juan Dela Cruz"
                                 value={formData.fullName}
-                                onChange={(e) => {
-                                  setFormData(prev => ({ ...prev, fullName: e.target.value }))
-                                  if (fieldErrors.fullName) setFieldErrors(prev => ({ ...prev, fullName: undefined }))
-                                }}
+                                onChange={(e) => handleFullNameChange(e.target.value)}
+                                onBlur={handleFullNameBlur}
                                 className={cn(
                                   "w-full rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
                                   fieldErrors.fullName && "border border-red-500/50 ring-2 ring-red-500/20"
@@ -634,14 +743,11 @@ export function AddTenantModal({
                               <Mail className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                               <input
                                 id="email"
-                                required
                                 type="email"
                                 placeholder="juan@example.com"
                                 value={formData.email}
-                                onChange={(e) => {
-                                  setFormData(prev => ({ ...prev, email: e.target.value }))
-                                  if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: undefined }))
-                                }}
+                                onChange={(e) => handleEmailChange(e.target.value)}
+                                onBlur={handleEmailBlur}
                                 className={cn(
                                   "w-full rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
                                   fieldErrors.email && "border border-red-500/50 ring-2 ring-red-500/20"
@@ -665,14 +771,12 @@ export function AddTenantModal({
                               <Phone className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                               <input
                                 id="phone"
-                                required
                                 type="tel"
+                                inputMode="tel"
                                 placeholder="0912 345 6789"
                                 value={formData.phone}
-                                onChange={(e) => {
-                                  setFormData(prev => ({ ...prev, phone: e.target.value }))
-                                  if (fieldErrors.phone) setFieldErrors(prev => ({ ...prev, phone: undefined }))
-                                }}
+                                onChange={(e) => handlePhoneChange(e.target.value)}
+                                onBlur={handlePhoneBlur}
                                 className={cn(
                                   "w-full rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
                                   fieldErrors.phone && "border border-red-500/50 ring-2 ring-red-500/20"
@@ -707,7 +811,6 @@ export function AddTenantModal({
                                 <Building2 className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40 pointer-events-none" />
                                 <select
                                   id="propertyId"
-                                  required
                                   value={formData.propertyId}
                                   onChange={(e) => handlePropertyChange(e.target.value)}
                                   className={cn(
@@ -737,7 +840,6 @@ export function AddTenantModal({
                                 <Home className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40 pointer-events-none" />
                                 <select
                                   id="unitId"
-                                  required
                                   value={formData.unitId}
                                   onChange={(e) => handleUnitChange(e.target.value)}
                                   className={cn(
@@ -768,12 +870,16 @@ export function AddTenantModal({
                               </label>
                               <input
                                 id="startDate"
-                                required
                                 type="date"
                                 min="2000-01-01"
                                 max="2099-12-31"
                                 value={formData.startDate}
                                 onChange={(e) => handleStartDateChange(e.target.value)}
+                                onBlur={() => {
+                                  if (!formData.startDate) {
+                                    setFieldErrors(prev => ({ ...prev, startDate: 'Please select a start date.' }))
+                                  }
+                                }}
                                 className={cn(
                                   "w-full rounded-2xl neumorphic-inset px-3 sm:px-4 py-3.5 text-xs sm:text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
                                   fieldErrors.startDate && "border border-red-500/50 ring-2 ring-red-500/20"
@@ -792,12 +898,18 @@ export function AddTenantModal({
                               </label>
                               <input
                                 id="endDate"
-                                required
                                 type="date"
                                 min={formData.startDate || "2000-01-01"}
                                 max="2099-12-31"
                                 value={formData.endDate}
                                 onChange={(e) => handleEndDateChange(e.target.value)}
+                                onBlur={() => {
+                                  if (!formData.endDate) {
+                                    setFieldErrors(prev => ({ ...prev, endDate: 'Please select an end date.' }))
+                                  } else if (formData.startDate && new Date(formData.endDate).getTime() <= new Date(formData.startDate).getTime()) {
+                                    setFieldErrors(prev => ({ ...prev, endDate: 'End date must be after start date.' }))
+                                  }
+                                }}
                                 className={cn(
                                   "w-full rounded-2xl neumorphic-inset px-3 sm:px-4 py-3.5 text-xs sm:text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
                                   fieldErrors.endDate && "border border-red-500/50 ring-2 ring-red-500/20"
@@ -821,11 +933,12 @@ export function AddTenantModal({
                               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
                               <input
                                 id="monthlyRent"
-                                required
-                                type="number"
-                                min="1"
+                                type="text"
+                                inputMode="decimal"
                                 value={formData.monthlyRent}
                                 onChange={(e) => handleRentChange(e.target.value)}
+                                onBlur={handleRentBlur}
+                                placeholder="0"
                                 className={cn(
                                   "w-full rounded-2xl neumorphic-inset py-3.5 pl-8 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
                                   fieldErrors.monthlyRent && "border border-red-500/50 ring-2 ring-red-500/20"
@@ -876,6 +989,7 @@ export function AddTenantModal({
                                     onClick={() => {
                                       setAdvanceMonths(opt.months)
                                       setAdvanceAmount(String(opt.months * currentRent))
+                                      setFieldErrors(prev => ({ ...prev, advanceAmount: undefined }))
                                     }}
                                     className={cn(
                                       "rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer",
@@ -898,15 +1012,24 @@ export function AddTenantModal({
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
                                 <input
                                   id="advanceAmount"
-                                  type="number"
-                                  min="0"
-                                  step="100"
+                                  type="text"
+                                  inputMode="decimal"
                                   value={advanceAmount}
                                   onChange={(e) => handleAdvanceAmountChange(e.target.value)}
+                                  onBlur={handleAdvanceAmountBlur}
                                   placeholder="0"
-                                  className="w-full rounded-2xl neumorphic-inset py-3 pl-8 pr-4 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                  className={cn(
+                                    "w-full rounded-2xl neumorphic-inset py-3 pl-8 pr-4 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
+                                    fieldErrors.advanceAmount && "border border-red-500/50 ring-2 ring-red-500/20"
+                                  )}
                                 />
                               </div>
+                              {fieldErrors.advanceAmount && (
+                                <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
+                                  <AlertCircle className="size-3 shrink-0" />
+                                  <span>{fieldErrors.advanceAmount}</span>
+                                </p>
+                              )}
                             </div>
 
                             <label className="flex items-center gap-2.5 pt-1 cursor-pointer select-none">
@@ -943,6 +1066,7 @@ export function AddTenantModal({
                                     onClick={() => {
                                       setSecurityDepositMonths(opt.months)
                                       setSecurityDepositAmount(String(opt.months * currentRent))
+                                      setFieldErrors(prev => ({ ...prev, securityDepositAmount: undefined }))
                                     }}
                                     className={cn(
                                       "rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer",
@@ -965,15 +1089,24 @@ export function AddTenantModal({
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
                                 <input
                                   id="securityDepositAmount"
-                                  type="number"
-                                  min="0"
-                                  step="100"
+                                  type="text"
+                                  inputMode="decimal"
                                   value={securityDepositAmount}
                                   onChange={(e) => handleSecurityDepositAmountChange(e.target.value)}
+                                  onBlur={handleSecurityDepositAmountBlur}
                                   placeholder="0"
-                                  className="w-full rounded-2xl neumorphic-inset py-3 pl-8 pr-4 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                  className={cn(
+                                    "w-full rounded-2xl neumorphic-inset py-3 pl-8 pr-4 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
+                                    fieldErrors.securityDepositAmount && "border border-red-500/50 ring-2 ring-red-500/20"
+                                  )}
                                 />
                               </div>
+                              {fieldErrors.securityDepositAmount && (
+                                <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
+                                  <AlertCircle className="size-3 shrink-0" />
+                                  <span>{fieldErrors.securityDepositAmount}</span>
+                                </p>
+                              )}
                             </div>
 
                             <label className="flex items-center gap-2.5 pt-1 cursor-pointer select-none">

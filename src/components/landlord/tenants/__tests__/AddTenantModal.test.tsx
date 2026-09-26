@@ -215,4 +215,56 @@ describe("AddTenantModal", () => {
         expect(advanceInput.value).toBe("24000");
         expect(screen.getByText("₱39,000")).toBeDefined();
     });
+
+    it("sanitizes financial amounts by stripping letters and invalid characters", () => {
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSuccess={vi.fn()}
+                initialTab="quick_add"
+            />
+        );
+
+        const advanceInput = screen.getByLabelText("Advance Rent Amount") as HTMLInputElement;
+        const depositInput = screen.getByLabelText("Security Deposit Amount") as HTMLInputElement;
+
+        // User typed letters mixed with numbers (like in the bug screenshot)
+        fireEvent.change(advanceInput, { target: { value: "20000xasxasxaxxasxas" } });
+        fireEvent.change(depositInput, { target: { value: "20000xsax" } });
+
+        // Sanitizer strips letters immediately
+        expect(advanceInput.value).toBe("20000");
+        expect(depositInput.value).toBe("20000");
+        expect(screen.getByText("₱40,000")).toBeDefined();
+    });
+
+    it("validates email and phone formats on blur with clear error messages", () => {
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSuccess={vi.fn()}
+                initialTab="quick_add"
+            />
+        );
+
+        const emailInput = screen.getByLabelText("Email Address");
+        const phoneInput = screen.getByLabelText("Phone Number");
+
+        // Invalid email typed and blurred
+        fireEvent.change(emailInput, { target: { value: "xsaxasx" } });
+        fireEvent.blur(emailInput);
+        expect(screen.getByText("Please enter a valid email address.")).toBeDefined();
+
+        // Letters typed into phone are stripped; when blurred while empty, shows required message
+        fireEvent.change(phoneInput, { target: { value: "asxasaxas" } });
+        fireEvent.blur(phoneInput);
+        expect(screen.getByText("Phone number is required.")).toBeDefined();
+
+        // Insufficient digits
+        fireEvent.change(phoneInput, { target: { value: "091234" } });
+        fireEvent.blur(phoneInput);
+        expect(screen.getByText("Please enter a valid phone number (10–15 digits).")).toBeDefined();
+    });
 });
