@@ -71,11 +71,12 @@ When an onboarding stage features drag-and-drop canvas manipulation (such as the
 ## 7. Dashboard Overview & Operational Tour Invariant
 Stage 5 completes the onboarding pipeline by guiding the landlord through high-frequency operational controls on `/landlord/dashboard`:
 - **Auto-Greeting Trigger**: When stages 1–4 are satisfied (or tenant setup postponed) and the dashboard tour is incomplete, surface `DashboardGreetingModal` after a 1.2–1.5s delay.
-- **4 Key Spotlight Steps**:
-  1. **Quick Action Launchpad** (`tour-quick-actions`): Cash payment recording, walk-in application, invite link generation, and printable QR flyer.
-  2. **Command Center Pulse** (`tour-command-center`): Overdue rent, upcoming dues, vacant units, and active invites.
-  3. **Cash Flow Ledger** (`tour-cash-flow`): Payment tracking and manual settlement verification.
-  4. **Portfolio Switcher & Operations Hub** (`tour-dashboard-navigation`): Multi-property context switching and operational sub-pages.
+- **4 Key Spotlight Steps with 100% Visual Highlighting Parity**:
+  Every step MUST visually spotlight its target with `ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse` AND a live ping beacon dot (`animate-ping`). Tour props (`isTourOpen`, `currentTourStep`) and custom events (`dashboard-tour-state`) MUST be forwarded across nested child components:
+  1. **Quick Action Launchpad** (`tour-quick-actions` on desktop, `tour-quick-actions-mobile` on mobile): Forward tour state from `page.tsx` through `DashboardBanner` down to `DashboardMainContent` so the quick actions bar pulses and displays an active beacon dot.
+  2. **Command Center Pulse** (`tour-command-center`): Overdue rent, upcoming dues, vacant units, and active invites with pulsing ring and top-right beacon dot.
+  3. **Cash Flow Ledger** (`tour-cash-flow`): Payment tracking and manual settlement verification with pulsing ring and top-right beacon dot.
+  4. **Portfolio Switcher & Operations Hub** (`tour-dashboard-navigation`): Multi-property context switching and operational sub-pages, highlighting both header controls (`DashboardHeaderActions`) and sidebar property selector (`Sidebar.tsx`).
 - **Replay Trigger**: Provide an on-demand "Guided Tour" trigger button with a `Compass` icon on the dashboard banner.
 - **Final Completion**: Dispatch `dashboard-tour-completed` and mark `ireside.onboarding_completed` in `localStorage`, displaying a celebration choice dialog directing the landlord to the dashboard, 2D unit map, or resident directory.
 

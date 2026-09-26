@@ -18,6 +18,8 @@ interface DashboardBannerProps {
     image?: string;
     className?: string;
     simplifiedMode?: boolean;
+    isTourOpen?: boolean;
+    currentTourStep?: number;
     onNewWalkIn?: () => void;
     onCollectPayment?: () => void;
     onCreateInvite?: () => void;
@@ -31,6 +33,8 @@ export function DashboardBanner({
     image = DEFAULT_BANNER_URL,
     className,
     simplifiedMode = false,
+    isTourOpen = false,
+    currentTourStep = 0,
     onNewWalkIn,
     onCollectPayment,
     onCreateInvite,
@@ -125,9 +129,10 @@ export function DashboardBanner({
             <DashboardBackground image={activeBanner} />
 
             {/* Header Actions (Floating Controls & Dropdown with top z-index z-50) */}
-            <div data-tour-id="tour-dashboard-navigation">
-                <DashboardHeaderActions onQuestPanelOpen={handleQuestPanelOpen} />
-            </div>
+            <DashboardHeaderActions 
+                onQuestPanelOpen={handleQuestPanelOpen} 
+                isTourHighlighted={isTourOpen && currentTourStep === 3}
+            />
 
             {/* Main Content Area */}
             <div className="relative z-10 w-full px-4 py-5 sm:px-6 sm:py-8 md:px-10 md:py-10 pointer-events-none">
@@ -137,6 +142,8 @@ export function DashboardBanner({
                         title={displayTitle}
                         subtitle={displaySubtitle}
                         time={time}
+                        isTourOpen={isTourOpen}
+                        currentTourStep={currentTourStep}
                         onNewWalkIn={onNewWalkIn}
                         onCollectPayment={onCollectPayment}
                         onCreateInvite={onCreateInvite}

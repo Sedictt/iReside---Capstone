@@ -164,6 +164,24 @@ export default function LandlordDashboard() {
         setDismissedDashboardTourThisVisit(false);
     }, [activePropertyId]);
 
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("dashboard-tour-state", {
+                detail: { isOpen: isDashboardTourOpen, step: currentTourStep }
+            }));
+        }
+    }, [isDashboardTourOpen, currentTourStep]);
+
+    useEffect(() => {
+        return () => {
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("dashboard-tour-state", {
+                    detail: { isOpen: false, step: 0 }
+                }));
+            }
+        };
+    }, []);
+
     const [openPaymentModal, setOpenPaymentModal] = useState<"Overdue" | "Near Due" | "Paid" | null>(null);
     const [paymentsState, dispatchPayments] = useReducer(paymentsReducer, {
         paymentsByCategory: { Overdue: [], "Near Due": [], Paid: [] },
@@ -722,6 +740,8 @@ export default function LandlordDashboard() {
             <div className="custom-scrollbar-premium flex h-full w-full flex-col gap-10 overflow-y-auto bg-background p-4 sm:p-6 text-foreground animate-in fade-in slide-in-from-bottom-4 duration-1000 md:p-10">
                 {/* Hero Section */}
                 <DashboardBanner
+                    isTourOpen={isDashboardTourOpen}
+                    currentTourStep={currentTourStep}
                     onNewWalkIn={() => setIsWalkInModalOpen(true)}
                     onCollectPayment={() => setIsCollectPaymentModalOpen(true)}
                     onCreateInvite={() => setIsInviteModalOpen(true)}
@@ -740,7 +760,7 @@ export default function LandlordDashboard() {
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                                            Onboarding Step 3 of 5
+                                             Onboarding Step 3 of 5
                                         </span>
                                     </div>
                                     <h3 className="text-lg font-black text-foreground tracking-tight">
@@ -782,6 +802,12 @@ export default function LandlordDashboard() {
                         isDashboardTourOpen && currentTourStep === 1 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-[1.01] z-30"
                     )}
                 >
+                    {isDashboardTourOpen && currentTourStep === 1 && (
+                        <span className="absolute -top-2 -right-2 flex size-3 z-40">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span className="relative inline-flex rounded-full size-3 bg-primary"></span>
+                        </span>
+                    )}
                     <CommandCenter
                         overdueCount={overdueCount}
                         nearDueCount={nearDueCount}
@@ -807,6 +833,12 @@ export default function LandlordDashboard() {
                     tabIndex={-1} 
                     aria-labelledby="cash-flow-heading"
                 >
+                    {isDashboardTourOpen && currentTourStep === 2 && (
+                        <span className="absolute -top-2 -right-2 flex size-3 z-40">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span className="relative inline-flex rounded-full size-3 bg-primary"></span>
+                        </span>
+                    )}
                     <div className="mb-10 flex flex-wrap items-center justify-between gap-4 px-2">
                         <div className="flex min-w-0 items-center gap-4">
                             <div className="flex size-14 items-center justify-center rounded-[1.25rem] neumorphic-inset-card text-primary shrink-0 transition-transform hover:scale-105">

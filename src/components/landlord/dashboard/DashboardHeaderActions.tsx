@@ -368,9 +368,10 @@ function formatTimeAgo(value: string) {
 
 interface DashboardHeaderActionsProps {
     onQuestPanelOpen: () => void;
+    isTourHighlighted?: boolean;
 }
 
-export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActionsProps) {
+export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = false }: DashboardHeaderActionsProps) {
     const router = useRouter();
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -636,7 +637,19 @@ export function DashboardHeaderActions({ onQuestPanelOpen }: DashboardHeaderActi
 
     return (
         <>
-            <div className="absolute top-3 right-3 sm:top-4 sm:right-4 md:top-8 md:right-8 z-50 flex items-center gap-1.5 sm:gap-2 md:gap-4">
+            <div 
+                data-tour-id="tour-dashboard-navigation"
+                className={cn(
+                    "absolute top-3 right-3 sm:top-4 sm:right-4 md:top-8 md:right-8 z-50 flex items-center gap-1.5 sm:gap-2 md:gap-4 transition-all duration-300 rounded-2xl",
+                    isTourHighlighted && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse bg-background/80 backdrop-blur-md p-1.5"
+                )}
+            >
+                {isTourHighlighted && (
+                    <span className="absolute -top-2 -right-2 flex size-3 z-50">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span className="relative inline-flex rounded-full size-3 bg-primary"></span>
+                    </span>
+                )}
                 {/* Mission Control Trigger */}
                 <MissionTriggerButton onOpen={onQuestPanelOpen} />
 
