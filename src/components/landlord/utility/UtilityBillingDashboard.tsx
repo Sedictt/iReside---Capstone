@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { 
@@ -43,6 +43,8 @@ import { InvoiceModal } from "@/components/landlord/invoices/InvoiceModal";
 import { OfflineStorage } from "@/lib/offline/offlineStorage";
 import { mutationQueue } from "@/lib/offline/mutationQueue";
 import { MonthPicker } from "@/components/ui/MonthPicker";
+import { UtilityBillingOnboardingModal } from "@/components/landlord/utility/UtilityBillingOnboardingModal";
+import { UtilityBillingTourSpotlight } from "@/components/landlord/utility/UtilityBillingTourSpotlight";
 
 type ReadingDraft = {
 	unitId: string;
@@ -337,7 +339,8 @@ function buildDraftsFromWorkspace(
 
 export function UtilityBillingDashboard() {
 	const searchParams = useSearchParams();
-	const { selectedPropertyId: globalPropertyId } = useProperty();
+	const router = useRouter();
+	const { selectedPropertyId: globalPropertyId, properties } = useProperty();
 	const [activeTab, setActiveTab] = useState<"readings" | "verify" | "rates" | "history">("readings");
 	const [workspace, setWorkspace] = useState<BillingWorkspace | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -357,7 +360,25 @@ export function UtilityBillingDashboard() {
 	type MonthSummary = { totalElec: number; totalWater: number; readingCount: number };
 	const [historySummaries, setHistorySummaries] = useState<Record<string, MonthSummary>>({});
 	const [historySummariesLoading, setHistorySummariesLoading] = useState(false);
-	
+
+	// --- Onboarding & Guided Tour State ---
+	// Determines whether the setup greeting has been dismissed for THIS visit (resets on remount)
+	const [dismissedThisVisit, setDismissedThisVisit] = useState(false);
+	const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
+	const [isTourOpen, setIsTourOpen] = useState(false);
+	const [tourStepIndex, setTourStepIndex] = useState(0);
+
+	// Persist the billing rails completion state
+	const activePropertyId = (selectedPropertyId && selectedPropertyId !== "all")
+		? selectedPropertyId
+		: (properties[0]?.id || "default");
+
+	const isBillingConfigured = typeof window !== "undefined" && (
+		window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
+		window.localStorage.getItem(`ireside.billing_rails_complete.${activePropertyId}`) === "true" ||
+		properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true")
+	);
+
 	// Sync local property selection with global navbar selector
 	useEffect(() => {
 		setSelectedPropertyId(globalPropertyId);
@@ -394,6 +415,24 @@ export function UtilityBillingDashboard() {
 			console.warn("Failed to load cached monthly drafts", e);
 		}
 	}, []);
+
+	// --- Onboarding greeting mount effect ---
+	// Show the setup orientation modal on every fresh mount until billing rails are configured.
+	// 'dismissedThisVisit' resets to false on each component mount, so returning to this page always
+	// re-shows the modal until the step is explicitly completed.
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+		const isBillingDone =
+			window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
+			properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true");
+		if (!isBillingDone && !dismissedThisVisit) {
+			const timer = setTimeout(() => {
+				setIsOnboardingModalOpen(true);
+			}, 600);
+			return () => clearTimeout(timer);
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []); // Run once on mount — dismissedThisVisit reset is handled by component remount
 
 	// Helper to update both state and monthly draft cache
 	const updateDraftsAndCache = useCallback((newDrafts: ReadingDraft[]) => {
@@ -620,6 +659,69 @@ export function UtilityBillingDashboard() {
 		};
 	}, [filteredDrafts]);
 
+	// --- Onboarding Handlers ---
+
+	/** Marks billing rails as complete, emits event, and navigates to tenant setup */
+	const handleCompleteOnboardingStep = () => {
+		try {
+			if (typeof window !== "undefined") {
+				window.localStorage.setItem("ireside.billing_rails_complete", "true");
+				if (activePropertyId && activePropertyId !== "default") {
+					window.localStorage.setItem(`ireside.billing_rails_complete.${activePropertyId}`, "true");
+				}
+				// Mark all known properties
+				properties.forEach((p) => {
+					if (p.id) window.localStorage.setItem(`ireside.billing_rails_complete.${p.id}`, "true");
+				});
+				window.dispatchEvent(new Event("billing-rails-setup-completed"));
+			}
+		} catch {}
+		setIsOnboardingModalOpen(false);
+		setIsTourOpen(false);
+		setDismissedThisVisit(true);
+		toast.success("Billing & utility setup confirmed! You can now add your first tenant.", { duration: 4000 });
+		// Route to tenant setup (next onboarding stage)
+		setTimeout(() => router.push("/landlord/tenants"), 1200);
+	};
+
+	const handleDismissOnboarding = () => {
+		setIsOnboardingModalOpen(false);
+		setDismissedThisVisit(true);
+	};
+
+	const handleStartTour = () => {
+		setIsOnboardingModalOpen(false);
+		setDismissedThisVisit(true);
+		setTourStepIndex(0);
+		setIsTourOpen(true);
+	};
+
+	const handleGoToRates = () => {
+		setIsOnboardingModalOpen(false);
+		setDismissedThisVisit(true);
+		setActiveTab("rates");
+	};
+
+	const handleTourNext = () => setTourStepIndex((i) => Math.min(i + 1, 2));
+	const handleTourPrev = () => setTourStepIndex((i) => Math.max(i - 1, 0));
+	const handleTourClose = () => {
+		setIsTourOpen(false);
+		setDismissedThisVisit(true);
+	};
+
+	// Auto-switch active tab to match current tour step's target
+	const TOUR_TAB_MAP: Record<number, "readings" | "rates"> = {
+		0: "rates",
+		1: "readings",
+		2: "readings",
+	};
+	useEffect(() => {
+		if (!isTourOpen) return;
+		const targetTab = TOUR_TAB_MAP[tourStepIndex];
+		if (targetTab) setActiveTab(targetTab);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [tourStepIndex, isTourOpen]);
+
 	const handleSaveReadings = async (postInvoices: boolean = false) => {
 		const toSave: ReadingSaveRequest[] = [];
 		const [y, m] = selectedMonth.split("-").map(Number);
@@ -839,7 +941,56 @@ export function UtilityBillingDashboard() {
 	}
 
 	return (
+		<>
+			{/* Utility Billing Onboarding Greeting Modal */}
+			<UtilityBillingOnboardingModal
+				isOpen={isOnboardingModalOpen}
+				onClose={handleDismissOnboarding}
+				onStartTour={handleStartTour}
+				onGoToRates={handleGoToRates}
+				onCompleteStep={handleCompleteOnboardingStep}
+				propertyName={properties.find((p) => p.id === activePropertyId)?.name}
+			/>
+
+			{/* Step-by-step Guided Tour Spotlight */}
+			<UtilityBillingTourSpotlight
+				isOpen={isTourOpen}
+				currentStepIndex={tourStepIndex}
+				onNext={handleTourNext}
+				onPrev={handleTourPrev}
+				onClose={handleTourClose}
+				onCompleteStep={handleCompleteOnboardingStep}
+			/>
+
 		<div className="flex flex-col space-y-8 pb-20 w-full">
+			{/* Re-occurring Setup Banner (shows after dismissal until step is complete) */}
+			{!isBillingConfigured && dismissedThisVisit && (
+				<div className="rounded-2xl border border-primary/20 bg-primary/[0.03] px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+					<div className="flex items-start gap-3">
+						<div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/15 shrink-0 mt-0.5">
+							<Zap className="size-4.5" />
+						</div>
+						<div>
+							<p className="text-xs font-black text-foreground">
+								You&apos;re still setting up your billing &amp; utility configuration.
+							</p>
+							<p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+								Configure your utility tariffs and confirm your settings to proceed to tenant onboarding.
+							</p>
+						</div>
+					</div>
+					<div className="flex items-center gap-2 shrink-0">
+						<button
+							type="button"
+							onClick={() => setIsOnboardingModalOpen(true)}
+							className="h-9 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm flex items-center gap-1.5 active:scale-98"
+						>
+							<span>Resume Setup</span>
+						</button>
+					</div>
+				</div>
+			)}
+
 			{/* Page Header */}
 			<div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
 				<div className="space-y-1">
@@ -1359,6 +1510,8 @@ export function UtilityBillingDashboard() {
 							onSaved={() => {
 								setIsRatesDirty(false);
 								fetchData();
+								const alreadyDone = typeof window !== 'undefined' ? window.localStorage.getItem('ireside.billing_rails_complete') === 'true' : true;
+								if (!alreadyDone) { handleCompleteOnboardingStep(); }
 							}}
 						/>
 					</motion.div>
@@ -1529,6 +1682,7 @@ export function UtilityBillingDashboard() {
 				/>
 			)}
 		</div>
+		</>
 	);
 }
 
@@ -1940,6 +2094,6 @@ function AuditDetailModal({ isOpen, onClose, month }: { isOpen: boolean; onClose
 					</div>
 				</motion.div>
 			</div>
-		</AnimatePresence>
+	</AnimatePresence>
 	);
 }
