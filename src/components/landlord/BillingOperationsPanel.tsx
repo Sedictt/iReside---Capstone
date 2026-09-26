@@ -201,6 +201,8 @@ export function BillingOperationsPanel({
 	onRegisterSave,
 	onRegisterDiscard,
 	onSaved,
+	isTourActive = false,
+	tourStepIndex = 0,
 }: {
 	viewMode?: "rates" | "gcash";
 	propertyId?: string;
@@ -210,6 +212,8 @@ export function BillingOperationsPanel({
 	onRegisterSave?: (saveFn: () => Promise<boolean>) => void;
 	onRegisterDiscard?: (discardFn: () => void) => void;
 	onSaved?: (workspace: BillingWorkspace) => void;
+	isTourActive?: boolean;
+	tourStepIndex?: number;
 }) {
 	const [state, dispatch] = useReducer(reducer, initialState);
 	const {
@@ -1594,8 +1598,17 @@ export function BillingOperationsPanel({
  </div>
  <button
  onClick={() => addOverride(property.id, type)}
- className="group inline-flex items-center gap-2 text-xs font-black text-primary hover:text-primary/80 transition-all"
+ className={cn(
+  "group inline-flex items-center gap-2 text-xs font-black text-primary hover:text-primary/80 transition-all",
+  isTourActive && tourStepIndex === 0 && "p-1.5 px-3 rounded-2xl ring-2 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_20px_rgba(155,119,255,0.7)] animate-pulse bg-primary/10"
+ )}
  >
+ {isTourActive && tourStepIndex === 0 && (
+  <span className="relative flex size-2 shrink-0">
+   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+   <span className="relative inline-flex rounded-full size-2 bg-primary"></span>
+  </span>
+ )}
  <div className="size-8 flex items-center justify-center rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-all">
  <Plus className="size-4" />
  </div>
