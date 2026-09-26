@@ -19,7 +19,9 @@ import {
   QrCode, 
   Share2,
   DoorOpen,
-  ArrowRight
+  ArrowRight,
+  Coins,
+  ShieldCheck
 } from 'lucide-react'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
@@ -76,6 +78,26 @@ export function AddTenantModal({
     securityDeposit: '',
   })
 
+  // Advance Payment & Security Deposit State for Quick Add
+  const [advanceMonths, setAdvanceMonths] = useState<number>(1)
+  const [customAdvance, setCustomAdvance] = useState<string>('')
+  const [advancePaid, setAdvancePaid] = useState<boolean>(true)
+  const [securityDepositMonths, setSecurityDepositMonths] = useState<number>(1)
+  const [customSecurityDeposit, setCustomSecurityDeposit] = useState<string>('')
+  const [securityDepositPaid, setSecurityDepositPaid] = useState<boolean>(true)
+
+  // Field-level Validation Errors
+  const [fieldErrors, setFieldErrors] = useState<{
+    fullName?: string
+    email?: string
+    phone?: string
+    propertyId?: string
+    unitId?: string
+    startDate?: string
+    endDate?: string
+    monthlyRent?: string
+  }>({})
+
   // Invite Link State
   const [isInviteAdvanced, setIsInviteAdvanced] = useState(false)
   const [inviteScope, setInviteScope] = useState<'property' | 'unit'>('property')
@@ -112,6 +134,13 @@ export function AddTenantModal({
         monthlyRent: '',
         securityDeposit: '',
       })
+      setAdvanceMonths(1)
+      setCustomAdvance('')
+      setAdvancePaid(true)
+      setSecurityDepositMonths(1)
+      setCustomSecurityDeposit('')
+      setSecurityDepositPaid(true)
+      setFieldErrors({})
       setInviteData({
         propertyId: '',
         expiresAt: '',
@@ -170,6 +199,22 @@ export function AddTenantModal({
     )
   }, [properties])
 
+  const currentRent = Number(formData.monthlyRent) || 0
+
+  const currentAdvanceAmount = useMemo(() => {
+    if (advanceMonths === -1) {
+      return parseFloat(customAdvance.replace(/[^0-9.]/g, '')) || 0
+    }
+    return advanceMonths * currentRent
+  }, [advanceMonths, customAdvance, currentRent])
+
+  const currentDepositAmount = useMemo(() => {
+    if (securityDepositMonths === -1) {
+      return parseFloat(customSecurityDeposit.replace(/[^0-9.]/g, '')) || 0
+    }
+    return securityDepositMonths * currentRent
+  }, [securityDepositMonths, customSecurityDeposit, currentRent])
+
   const handlePropertyChange = (propertyId: string) => {
     const prop = properties.find(p => p.id === propertyId)
     setFormData(prev => ({
@@ -178,6 +223,7 @@ export function AddTenantModal({
       unitId: prop?.units[0]?.id || '',
       monthlyRent: prop?.units[0]?.rentAmount?.toString() || ''
     }))
+    setFieldErrors(prev => ({ ...prev, propertyId: undefined, unitId: undefined }))
   }
 
   const handleUnitChange = (unitId: string) => {
@@ -187,21 +233,128 @@ export function AddTenantModal({
       unitId,
       monthlyRent: unit?.rentAmount?.toString() || ''
     }))
+    setFieldErrors(prev => ({ ...prev, unitId: undefined }))
+  }
+
+  const handleStartDateChange = (val: string) => {
+    setFormData(prev => {
+      const updated = { ...prev, startDate: val }
+      if (val) {
+        const d = new Date(val)
+        if (!isNaN(d.getTime())) {
+          if (!prev.endDate || prev.endDate <= val) {
+            const nextYear = new Date(d)
+            nextYear.setFullYear(nextYear.getFullYear() + 1)
+            updated.endDate = nextYear.toISOString().split('T')[0]
+          }
+        }
+      }
+      return updated
+    })
+
+    setFieldErrors(prev => ({
+      ...prev,
+      startDate: undefined,
+      endDate: undefined,
+    }))
+  }
+
+  const handleEndDateChange = (val: string) => {
+    setFormData(prev => ({ ...prev, endDate: val }))
+    if (formData.startDate && val) {
+      if (new Date(val).getTime() <= new Date(formData.startDate).getTime()) {
+        setFieldErrors(prev => ({ ...prev, endDate: 'End date must be after start date.' }))
+      } else {
+        setFieldErrors(prev => ({ ...prev, endDate: undefined }))
+      }
+    }
+  }
+
+  const validateQuickAddForm = (): boolean => {
+    const errs: typeof fieldErrors = {}
+
+    const name = formData.fullName.trim()
+    if (!name || name.length < 2) {
+      errs.fullName = 'Full name must be at least 2 characters.'
+    }
+
+    const email = formData.email.trim()
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email || !EMAIL_REGEX.test(email)) {
+      errs.email = 'Please enter a valid email address.'
+    }
+
+    const phone = formData.phone.trim()
+    const digits = phone.replace(/\D/g, '')
+    if (!phone || digits.length < 10 || digits.length > 15) {
+      errs.phone = 'Please enter a valid phone number (10–15 digits).'
+    }
+
+    if (!formData.propertyId) {
+      errs.propertyId = 'Please select a property.'
+    }
+
+    if (!formData.unitId) {
+      errs.unitId = 'Please select a unit.'
+    }
+
+    if (!formData.startDate) {
+      errs.startDate = 'Please select a start date.'
+    } else {
+      const startYear = new Date(formData.startDate).getFullYear()
+      if (startYear < 2000 || startYear > 2099) {
+        errs.startDate = 'Please enter a valid 4-digit year (e.g., 2026).'
+      }
+    }
+
+    if (!formData.endDate) {
+      errs.endDate = 'Please select an end date.'
+    } else {
+      const endYear = new Date(formData.endDate).getFullYear()
+      if (endYear < 2000 || endYear > 2099) {
+        errs.endDate = 'Please enter a valid 4-digit year (e.g., 2026).'
+      } else if (formData.startDate && new Date(formData.endDate).getTime() <= new Date(formData.startDate).getTime()) {
+        errs.endDate = 'End date must be after start date.'
+      }
+    }
+
+    if (!currentRent || currentRent <= 0) {
+      errs.monthlyRent = 'Monthly rent must be greater than ₱0.'
+    }
+
+    setFieldErrors(errs)
+
+    if (Object.keys(errs).length > 0) {
+      const firstError = Object.values(errs)[0]
+      toast.error(firstError)
+      return false
+    }
+    return true
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.unitId) {
-      toast.error('Please select a unit')
+    if (!validateQuickAddForm()) {
       return
     }
 
     try {
       setLoading(true)
       const payload = {
-        ...formData,
-        monthlyRent: formData.monthlyRent ? Number(formData.monthlyRent) : 0,
-        securityDeposit: formData.securityDeposit ? Number(formData.securityDeposit) : 0,
+        fullName: formData.fullName.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        propertyId: formData.propertyId,
+        unitId: formData.unitId,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        monthlyRent: currentRent,
+        securityDeposit: currentDepositAmount,
+        securityDepositMonths,
+        securityDepositPaid,
+        advancePayment: currentAdvanceAmount,
+        advanceMonths,
+        advancePaid,
       }
       const response = await fetch('/api/landlord/tenants/manual', {
         method: 'POST',
@@ -220,6 +373,7 @@ export function AddTenantModal({
         email: formData.email
       })
       toast.success('Tenant added successfully')
+      refreshProperties()
       onSuccess()
     } catch (error) {
       console.error('Error adding tenant:', error)
@@ -314,7 +468,7 @@ export function AddTenantModal({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-2xl overflow-hidden rounded-[2.5rem] neumorphic-panel shadow-2xl"
+            className="relative w-full max-w-3xl overflow-hidden rounded-[2.5rem] neumorphic-panel shadow-2xl"
           >
             {!isSuccess ? (
               <>
@@ -388,10 +542,22 @@ export function AddTenantModal({
                                 type="text"
                                 placeholder="Juan Dela Cruz"
                                 value={formData.fullName}
-                                onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
-                                className="w-full rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                onChange={(e) => {
+                                  setFormData(prev => ({ ...prev, fullName: e.target.value }))
+                                  if (fieldErrors.fullName) setFieldErrors(prev => ({ ...prev, fullName: undefined }))
+                                }}
+                                className={cn(
+                                  "w-full rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
+                                  fieldErrors.fullName && "border border-red-500/50 ring-2 ring-red-500/20"
+                                )}
                               />
                             </div>
+                            {fieldErrors.fullName && (
+                              <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
+                                <AlertCircle className="size-3 shrink-0" />
+                                <span>{fieldErrors.fullName}</span>
+                              </p>
+                            )}
                           </div>
 
                           <div className="space-y-2">
@@ -404,10 +570,22 @@ export function AddTenantModal({
                                 type="email"
                                 placeholder="juan@example.com"
                                 value={formData.email}
-                                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                                className="w-full rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                onChange={(e) => {
+                                  setFormData(prev => ({ ...prev, email: e.target.value }))
+                                  if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: undefined }))
+                                }}
+                                className={cn(
+                                  "w-full rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
+                                  fieldErrors.email && "border border-red-500/50 ring-2 ring-red-500/20"
+                                )}
                               />
                             </div>
+                            {fieldErrors.email && (
+                              <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
+                                <AlertCircle className="size-3 shrink-0" />
+                                <span>{fieldErrors.email}</span>
+                              </p>
+                            )}
                           </div>
 
                           <div className="space-y-2">
@@ -420,10 +598,22 @@ export function AddTenantModal({
                                 type="tel"
                                 placeholder="0912 345 6789"
                                 value={formData.phone}
-                                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                                className="w-full rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                onChange={(e) => {
+                                  setFormData(prev => ({ ...prev, phone: e.target.value }))
+                                  if (fieldErrors.phone) setFieldErrors(prev => ({ ...prev, phone: undefined }))
+                                }}
+                                className={cn(
+                                  "w-full rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
+                                  fieldErrors.phone && "border border-red-500/50 ring-2 ring-red-500/20"
+                                )}
                               />
                             </div>
+                            {fieldErrors.phone && (
+                              <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
+                                <AlertCircle className="size-3 shrink-0" />
+                                <span>{fieldErrors.phone}</span>
+                              </p>
+                            )}
                           </div>
                         </div>
 
@@ -443,7 +633,10 @@ export function AddTenantModal({
                                 required
                                 value={formData.propertyId}
                                 onChange={(e) => handlePropertyChange(e.target.value)}
-                                className="w-full appearance-none rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                className={cn(
+                                  "w-full appearance-none rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
+                                  fieldErrors.propertyId && "border border-red-500/50 ring-2 ring-red-500/20"
+                                )}
                               >
                                 <option value="" disabled>Select Property</option>
                                 {properties.map(p => (
@@ -451,6 +644,12 @@ export function AddTenantModal({
                                 ))}
                               </select>
                             </div>
+                            {fieldErrors.propertyId && (
+                              <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
+                                <AlertCircle className="size-3 shrink-0" />
+                                <span>{fieldErrors.propertyId}</span>
+                              </p>
+                            )}
                           </div>
 
                           <div className="space-y-2">
@@ -462,7 +661,10 @@ export function AddTenantModal({
                                 required
                                 value={formData.unitId}
                                 onChange={(e) => handleUnitChange(e.target.value)}
-                                className="w-full appearance-none rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                className={cn(
+                                  "w-full appearance-none rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
+                                  fieldErrors.unitId && "border border-red-500/50 ring-2 ring-red-500/20"
+                                )}
                               >
                                 <option value="" disabled>Select Unit</option>
                                 {availableUnits.map(u => (
@@ -470,6 +672,12 @@ export function AddTenantModal({
                                 ))}
                               </select>
                             </div>
+                            {fieldErrors.unitId && (
+                              <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
+                                <AlertCircle className="size-3 shrink-0" />
+                                <span>{fieldErrors.unitId}</span>
+                              </p>
+                            )}
                           </div>
 
                           <div className="grid grid-cols-2 gap-4">
@@ -479,10 +687,21 @@ export function AddTenantModal({
                                 id="startDate"
                                 required
                                 type="date"
+                                min="2000-01-01"
+                                max="2099-12-31"
                                 value={formData.startDate}
-                                onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                                className="w-full rounded-2xl neumorphic-inset px-5 py-3.5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                onChange={(e) => handleStartDateChange(e.target.value)}
+                                className={cn(
+                                  "w-full rounded-2xl neumorphic-inset px-4 sm:px-5 py-3.5 text-xs sm:text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
+                                  fieldErrors.startDate && "border border-red-500/50 ring-2 ring-red-500/20"
+                                )}
                               />
+                              {fieldErrors.startDate && (
+                                <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
+                                  <AlertCircle className="size-3 shrink-0" />
+                                  <span>{fieldErrors.startDate}</span>
+                                </p>
+                              )}
                             </div>
                             <div className="space-y-2">
                               <label htmlFor="endDate" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">End Date</label>
@@ -490,40 +709,193 @@ export function AddTenantModal({
                                 id="endDate"
                                 required
                                 type="date"
+                                min={formData.startDate || "2000-01-01"}
+                                max="2099-12-31"
                                 value={formData.endDate}
-                                onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
-                                className="w-full rounded-2xl neumorphic-inset px-5 py-3.5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                onChange={(e) => handleEndDateChange(e.target.value)}
+                                className={cn(
+                                  "w-full rounded-2xl neumorphic-inset px-4 sm:px-5 py-3.5 text-xs sm:text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
+                                  fieldErrors.endDate && "border border-red-500/50 ring-2 ring-red-500/20"
+                                )}
                               />
+                              {fieldErrors.endDate && (
+                                <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
+                                  <AlertCircle className="size-3 shrink-0" />
+                                  <span>{fieldErrors.endDate}</span>
+                                </p>
+                              )}
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <label htmlFor="monthlyRent" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Monthly Rent</label>
-                              <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
-                                <input
-                                  id="monthlyRent"
-                                  required
-                                  type="number"
-                                  value={formData.monthlyRent}
-                                  onChange={(e) => setFormData(prev => ({ ...prev, monthlyRent: e.target.value }))}
-                                  className="w-full rounded-2xl neumorphic-inset py-3.5 pl-8 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
-                                />
+                          <div className="space-y-2">
+                            <label htmlFor="monthlyRent" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Monthly Rent</label>
+                            <div className="relative">
+                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
+                              <input
+                                id="monthlyRent"
+                                required
+                                type="number"
+                                min="1"
+                                value={formData.monthlyRent}
+                                onChange={(e) => {
+                                  setFormData(prev => ({ ...prev, monthlyRent: e.target.value }))
+                                  if (fieldErrors.monthlyRent) setFieldErrors(prev => ({ ...prev, monthlyRent: undefined }))
+                                }}
+                                className={cn(
+                                  "w-full rounded-2xl neumorphic-inset py-3.5 pl-8 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
+                                  fieldErrors.monthlyRent && "border border-red-500/50 ring-2 ring-red-500/20"
+                                )}
+                              />
+                            </div>
+                            {fieldErrors.monthlyRent && (
+                              <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
+                                <AlertCircle className="size-3 shrink-0" />
+                                <span>{fieldErrors.monthlyRent}</span>
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Move-In Payment Configuration (Advance Rent & Security Deposit) */}
+                          <div className="space-y-4 pt-2 border-t border-white/5">
+                            <div className="space-y-0.5">
+                              <h4 className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                                <Coins className="size-3.5 text-primary" />
+                                Move-In Payment Terms
+                              </h4>
+                              <p className="text-[11px] text-muted-foreground">
+                                Configure advance rent and security deposit required from this resident.
+                              </p>
+                            </div>
+
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              {/* Advance Rent */}
+                              <div className="rounded-2xl neumorphic-inset p-3.5 space-y-2.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                                    Advance Rent
+                                  </span>
+                                  <span className="text-xs font-black text-primary">
+                                    ₱{currentAdvanceAmount.toLocaleString()}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-4 gap-1">
+                                  {[
+                                    { value: 0, label: "None" },
+                                    { value: 1, label: "1 Mo" },
+                                    { value: 2, label: "2 Mo" },
+                                    { value: -1, label: "Custom" },
+                                  ].map((opt) => (
+                                    <button
+                                      key={opt.value}
+                                      type="button"
+                                      onClick={() => setAdvanceMonths(opt.value)}
+                                      className={cn(
+                                        "rounded-xl py-1 text-[10px] font-black transition-all cursor-pointer",
+                                        advanceMonths === opt.value
+                                          ? "bg-primary text-primary-foreground shadow-xs"
+                                          : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                                      )}
+                                    >
+                                      {opt.label}
+                                    </button>
+                                  ))}
+                                </div>
+                                {advanceMonths === -1 && (
+                                  <div className="relative pt-1">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-muted-foreground">₱</span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="500"
+                                      value={customAdvance}
+                                      onChange={(e) => setCustomAdvance(e.target.value)}
+                                      placeholder="Custom advance"
+                                      className="w-full rounded-xl neumorphic-inset py-1.5 pl-7 pr-3 text-xs font-black outline-none focus:ring-2 focus:ring-primary/30"
+                                    />
+                                  </div>
+                                )}
+                                <label className="flex items-center gap-2 pt-1 cursor-pointer select-none">
+                                  <input
+                                    type="checkbox"
+                                    checked={advancePaid}
+                                    onChange={(e) => setAdvancePaid(e.target.checked)}
+                                    className="size-3.5 rounded accent-primary cursor-pointer"
+                                  />
+                                  <span className="text-[10px] font-bold text-muted-foreground">
+                                    Mark as already collected
+                                  </span>
+                                </label>
+                              </div>
+
+                              {/* Security Deposit */}
+                              <div className="rounded-2xl neumorphic-inset p-3.5 space-y-2.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                                    Security Deposit
+                                  </span>
+                                  <span className="text-xs font-black text-primary">
+                                    ₱{currentDepositAmount.toLocaleString()}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-4 gap-1">
+                                  {[
+                                    { value: 0, label: "None" },
+                                    { value: 1, label: "1 Mo" },
+                                    { value: 2, label: "2 Mo" },
+                                    { value: -1, label: "Custom" },
+                                  ].map((opt) => (
+                                    <button
+                                      key={opt.value}
+                                      type="button"
+                                      onClick={() => setSecurityDepositMonths(opt.value)}
+                                      className={cn(
+                                        "rounded-xl py-1 text-[10px] font-black transition-all cursor-pointer",
+                                        securityDepositMonths === opt.value
+                                          ? "bg-primary text-primary-foreground shadow-xs"
+                                          : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                                      )}
+                                    >
+                                      {opt.label}
+                                    </button>
+                                  ))}
+                                </div>
+                                {securityDepositMonths === -1 && (
+                                  <div className="relative pt-1">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-muted-foreground">₱</span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="500"
+                                      value={customSecurityDeposit}
+                                      onChange={(e) => setCustomSecurityDeposit(e.target.value)}
+                                      placeholder="Custom deposit"
+                                      className="w-full rounded-xl neumorphic-inset py-1.5 pl-7 pr-3 text-xs font-black outline-none focus:ring-2 focus:ring-primary/30"
+                                    />
+                                  </div>
+                                )}
+                                <label className="flex items-center gap-2 pt-1 cursor-pointer select-none">
+                                  <input
+                                    type="checkbox"
+                                    checked={securityDepositPaid}
+                                    onChange={(e) => setSecurityDepositPaid(e.target.checked)}
+                                    className="size-3.5 rounded accent-primary cursor-pointer"
+                                  />
+                                  <span className="text-[10px] font-bold text-muted-foreground">
+                                    Mark as already collected
+                                  </span>
+                                </label>
                               </div>
                             </div>
-                            <div className="space-y-2">
-                              <label htmlFor="securityDeposit" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Security Deposit</label>
-                              <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
-                                <input
-                                  id="securityDeposit"
-                                  type="number"
-                                  value={formData.securityDeposit}
-                                  onChange={(e) => setFormData(prev => ({ ...prev, securityDeposit: e.target.value }))}
-                                  className="w-full rounded-2xl neumorphic-inset py-3.5 pl-8 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
-                                />
+
+                            {/* Inception Summary */}
+                            <div className="flex items-center justify-between rounded-xl bg-primary/10 border border-primary/20 px-3.5 py-2.5">
+                              <div className="flex items-center gap-2">
+                                <ShieldCheck className="size-4 text-primary shrink-0" />
+                                <span className="text-[11px] font-bold text-foreground">Total Inception Settlement</span>
                               </div>
+                              <span className="text-sm font-black text-primary">
+                                ₱{(currentAdvanceAmount + currentDepositAmount).toLocaleString()}
+                              </span>
                             </div>
                           </div>
                         </div>

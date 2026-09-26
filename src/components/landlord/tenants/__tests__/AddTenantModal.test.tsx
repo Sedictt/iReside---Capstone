@@ -143,4 +143,39 @@ describe("AddTenantModal", () => {
         expect(handleOpenWalkIn).toHaveBeenCalledWith("prop-1", "u-1");
         expect(handleClose).toHaveBeenCalledTimes(1);
     });
+
+    it("renders Move-In Payment Terms with Advance Rent and Security Deposit in Quick Add", () => {
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSuccess={vi.fn()}
+                initialTab="quick_add"
+            />
+        );
+
+        expect(screen.getByText("Move-In Payment Terms")).toBeDefined();
+        expect(screen.getByText("Advance Rent")).toBeDefined();
+        expect(screen.getByText("Security Deposit")).toBeDefined();
+        expect(screen.getByText("Total Inception Settlement")).toBeDefined();
+    });
+
+    it("validates that end date cannot be earlier than start date in Quick Add", () => {
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSuccess={vi.fn()}
+                initialTab="quick_add"
+            />
+        );
+
+        const startDateInput = screen.getByLabelText("Start Date");
+        const endDateInput = screen.getByLabelText("End Date");
+
+        fireEvent.change(startDateInput, { target: { value: "2026-10-09" } });
+        fireEvent.change(endDateInput, { target: { value: "2026-07-31" } });
+
+        expect(screen.getByText("End date must be after start date.")).toBeDefined();
+    });
 });
