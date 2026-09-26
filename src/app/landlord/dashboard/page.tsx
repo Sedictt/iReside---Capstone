@@ -824,14 +824,12 @@ export default function LandlordDashboard() {
                 </div>
 
                 {/* Payments Section */}
-                <section 
+                <div 
                     data-tour-id="tour-cash-flow"
                     className={cn(
-                        "relative z-0 h-auto w-full rounded-[2.5rem] p-4 sm:p-6 md:p-8 neumorphic-panel focus-within:ring-2 focus-within:ring-primary/20 transition-all outline-none",
+                        "relative transition-all duration-300 rounded-[2.5rem]",
                         isDashboardTourOpen && currentTourStep === 2 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-[1.01] z-30"
                     )}
-                    tabIndex={-1} 
-                    aria-labelledby="cash-flow-heading"
                 >
                     {isDashboardTourOpen && currentTourStep === 2 && (
                         <span className="absolute -top-2 -right-2 flex size-3 z-40">
@@ -839,6 +837,11 @@ export default function LandlordDashboard() {
                             <span className="relative inline-flex rounded-full size-3 bg-primary"></span>
                         </span>
                     )}
+                    <section 
+                        className="relative z-0 h-auto w-full rounded-[2.5rem] p-4 sm:p-6 md:p-8 neumorphic-panel focus-within:ring-2 focus-within:ring-primary/20 transition-all outline-none"
+                        tabIndex={-1} 
+                        aria-labelledby="cash-flow-heading"
+                    >
                     <div className="mb-10 flex flex-wrap items-center justify-between gap-4 px-2">
                         <div className="flex min-w-0 items-center gap-4">
                             <div className="flex size-14 items-center justify-center rounded-[1.25rem] neumorphic-inset-card text-primary shrink-0 transition-transform hover:scale-105">
@@ -920,6 +923,7 @@ export default function LandlordDashboard() {
                         })}
                     </div>
                 </section>
+                </div>
 
                 {/* Monthly Utility Billing Cycle Section */}
                 <section className="relative z-0 h-auto w-full rounded-[2.5rem] p-4 sm:p-6 md:p-8 neumorphic-panel outline-none focus-within:ring-2 focus-within:ring-primary/20 transition-all" tabIndex={-1} aria-labelledby="utility-heading">
