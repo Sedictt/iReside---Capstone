@@ -162,22 +162,27 @@ function WizardContent() {
   const hasCheckedSetupRef = useRef(false);
 
   useEffect(() => {
-    if (loading) return; // Wait for auth to resolve
+    if (loading || brand.isLoading) return; // Wait for auth and live brand context to resolve
 
     if (profile && profile.role === "tenant") {
       router.replace("/tenant/dashboard");
       return;
     }
 
-    // Only check setup completion once on initial load.
+    // Only check setup completion once on initial load after loading completes.
     // Subsequent brand context updates (from refreshBranding on focus, realtime
     // broadcasts, etc.) must NOT trigger a redirect — the user may be mid-typing.
     if (hasCheckedSetupRef.current) return;
     hasCheckedSetupRef.current = true;
 
+    const isMetadataUnfinished =
+      user?.user_metadata?.is_setup_completed === false ||
+      user?.user_metadata?.is_account_claimed === false;
+
     if (
       brand &&
       brand.setupCompleted &&
+      !isMetadataUnfinished &&
       !isReconfigure &&
       !isLaunched
     ) {
@@ -196,6 +201,8 @@ function WizardContent() {
     }
   }, [
     loading,
+    brand.isLoading,
+    user,
     profile,
     brand,
     brand.setupCompleted,
