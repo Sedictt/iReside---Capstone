@@ -86,7 +86,7 @@ export function LeaseFormFields({
                         className="text-xs font-black uppercase tracking-wide text-neutral-300 flex items-center gap-2"
                     >
                         <Banknote className="size-3.5" />
-                        Advance Invoice
+                        Advance Rent
                     </label>
                     <input
                         id="advance-invoice"

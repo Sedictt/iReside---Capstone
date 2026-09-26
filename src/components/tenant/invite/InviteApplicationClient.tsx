@@ -48,6 +48,11 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/ui/Logo";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import {
+    calculatePaymentPreview,
+    type InvitePaymentTerms,
+    type PaymentPreview,
+} from "@/lib/tenant-invite-payment-terms";
 
 type InvitePayload = {
     id: string;
@@ -60,6 +65,8 @@ type InvitePayload = {
     selectedUnit: WalkInUnit | null;
     units: WalkInUnit[];
     expiresAt: string | null;
+    paymentTerms?: InvitePaymentTerms | null;
+    paymentPreview?: PaymentPreview | null;
 };
 
 type UploadedRequirementDocument = {
@@ -136,6 +143,15 @@ export function InviteApplicationClient({ token }: { token: string }) {
         () => invite?.units.find((u) => u.id === selectedUnit),
         [invite?.units, selectedUnit]
     );
+
+    const currentPaymentPreview = useMemo(() => {
+        if (!invite) return null;
+        const rent = currentUnit?.rent_amount ?? (currentUnit as any)?.rentAmount ?? 0;
+        if (rent > 0) {
+            return calculatePaymentPreview(rent, invite.paymentTerms);
+        }
+        return invite.paymentPreview ?? null;
+    }, [invite, currentUnit]);
     const isOnlineInvite = invite?.applicationType === "online";
     const requiredRequirementKeys = useMemo(() => {
         if (!invite || !isOnlineInvite) return [] as string[];
@@ -584,6 +600,35 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                     {isOnlineInvite ? "Online Document Processing" : "Face-to-face Document Checking"}
                                 </p>
                             </div>
+
+                            {currentPaymentPreview && (
+                                <div className="pt-3 border-t border-border/60 space-y-2">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+                                        Move-in Payment Terms
+                                    </p>
+                                    <div className="space-y-1.5 text-xs">
+                                        <div className="flex justify-between items-center text-muted-foreground">
+                                            <span>Advance Rent</span>
+                                            <span className="font-bold text-foreground">
+                                                ₱{currentPaymentPreview.advanceAmount.toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-muted-foreground">
+                                            <span>Security Deposit</span>
+                                            <span className="font-bold text-foreground">
+                                                ₱{currentPaymentPreview.securityDepositAmount.toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center pt-1 border-t border-border/40 font-black text-foreground">
+                                            <span>Estimated Total</span>
+                                            <span className="text-primary">
+                                                ₱{currentPaymentPreview.totalMoveInAmount.toLocaleString()}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {invite.expiresAt && (
                                 <div className="pt-3 border-t border-border/60">
                                     <p className="text-[10px] font-black uppercase text-rose-500 dark:text-rose-400">Expires At</p>
@@ -766,6 +811,42 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                 <SummaryCard label="Move-in date" value={formData.move_in_date || "Not provided"} icon={Calendar} />
                                                 <SummaryCard label="Income" value={formData.employment_info.monthly_income ? `₱${Number(String(formData.employment_info.monthly_income).replace(/,/g, "")).toLocaleString()}` : "Not provided"} icon={Briefcase} />
                                             </div>
+
+                                            {currentPaymentPreview && (
+                                                <div className="rounded-3xl border border-border bg-muted/30 p-5 space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2 text-primary">
+                                                            <Shield className="size-4" />
+                                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground">
+                                                                Move-in Payment Requirements
+                                                            </p>
+                                                        </div>
+                                                        <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                                                            Due upon approval
+                                                        </span>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                                                        <div className="p-3 rounded-2xl bg-card border border-border/60">
+                                                            <p className="text-[10px] uppercase font-bold text-muted-foreground">Advance Rent</p>
+                                                            <p className="text-sm font-black text-foreground mt-0.5">
+                                                                ₱{currentPaymentPreview.advanceAmount.toLocaleString()}
+                                                            </p>
+                                                        </div>
+                                                        <div className="p-3 rounded-2xl bg-card border border-border/60">
+                                                            <p className="text-[10px] uppercase font-bold text-muted-foreground">Security Deposit</p>
+                                                            <p className="text-sm font-black text-foreground mt-0.5">
+                                                                ₱{currentPaymentPreview.securityDepositAmount.toLocaleString()}
+                                                            </p>
+                                                        </div>
+                                                        <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20">
+                                                            <p className="text-[10px] uppercase font-black text-primary">Estimated Total</p>
+                                                            <p className="text-sm font-black text-foreground mt-0.5">
+                                                                ₱{currentPaymentPreview.totalMoveInAmount.toLocaleString()}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                             
                                             <div className="rounded-3xl border border-border bg-muted/30 p-6 lg:p-8">
                                                 <div className="flex items-center gap-3 opacity-70 mb-3">

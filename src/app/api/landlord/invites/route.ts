@@ -2,11 +2,6 @@ import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
-    ADVANCE_TEMPLATE_KEYS,
-    DEPOSIT_TEMPLATE_KEYS,
-    pickTemplateAmount,
-} from "@/lib/application-payment-pending";
-import {
     buildInviteQrUrl,
     buildInviteUrl,
     generateInviteToken,
@@ -17,6 +12,12 @@ import {
     type TenantInviteMode,
     type TenantInviteRequirementKey,
 } from "@/lib/tenant-intake-invites";
+import {
+    calculatePaymentPreview,
+    sanitizePaymentTerms,
+    type InvitePaymentTerms,
+    type PaymentPreview,
+} from "@/lib/tenant-invite-payment-terms";
 
 type InviteRow = {
     id: string;
@@ -33,36 +34,8 @@ type InviteRow = {
     expires_at: string | null;
     last_used_at: string | null;
     created_at: string;
+    payment_terms?: InvitePaymentTerms | null;
 };
-
-type PaymentPreview = {
-    advanceAmount: number;
-    securityDepositAmount: number;
-    estimated: true;
-    disclaimer: string;
-};
-
-const PAYMENT_PREVIEW_DISCLAIMER =
-    "Estimate only. Final payment requests are generated after landlord review.";
-
-function buildPaymentPreview(args: {
-    contractTemplate: Record<string, unknown> | null;
-    monthlyRentFallback: number;
-}): PaymentPreview {
-    const fallback = Number(args.monthlyRentFallback ?? 0);
-    const safeFallback = Number.isFinite(fallback) && fallback > 0 ? fallback : 0;
-    const advanceAmount =
-        pickTemplateAmount(args.contractTemplate, ADVANCE_TEMPLATE_KEYS, safeFallback) ?? safeFallback;
-    const securityDepositAmount =
-        pickTemplateAmount(args.contractTemplate, DEPOSIT_TEMPLATE_KEYS, safeFallback) ?? safeFallback;
-
-    return {
-        advanceAmount,
-        securityDepositAmount,
-        estimated: true,
-        disclaimer: PAYMENT_PREVIEW_DISCLAIMER,
-    };
-}
 
 function formatInviteError(
     error: { code?: string; message?: string; details?: string | null; hint?: string | null } | null | undefined,
@@ -100,21 +73,37 @@ export async function GET(request: Request) {
     const { userId, supabase } = authContext;
     const adminClient = createAdminClient();
 
-    const { data: invites, error } = await adminClient
+    let invitesData: any = null;
+    let invitesError: any = null;
+
+    const resWithTerms = await adminClient
         .from("tenant_intake_invites" as any)
-        .select("id, landlord_id, property_id, unit_id, mode, application_type, required_requirements, public_token, status, max_uses, use_count, expires_at, last_used_at, created_at")
+        .select("id, landlord_id, property_id, unit_id, mode, application_type, required_requirements, public_token, status, max_uses, use_count, expires_at, last_used_at, created_at, payment_terms")
         .eq("landlord_id", userId)
         .order("created_at", { ascending: false });
 
-    if (error) {
-        console.error("[landlord invites GET] Failed to load invites:", error);
+    if (resWithTerms.error && (resWithTerms.error.message?.includes("payment_terms") || resWithTerms.error.code === "42703" || resWithTerms.error.code === "PGRST204")) {
+        const fallbackRes = await adminClient
+            .from("tenant_intake_invites" as any)
+            .select("id, landlord_id, property_id, unit_id, mode, application_type, required_requirements, public_token, status, max_uses, use_count, expires_at, last_used_at, created_at")
+            .eq("landlord_id", userId)
+            .order("created_at", { ascending: false });
+        invitesData = fallbackRes.data;
+        invitesError = fallbackRes.error;
+    } else {
+        invitesData = resWithTerms.data;
+        invitesError = resWithTerms.error;
+    }
+
+    if (invitesError) {
+        console.error("[landlord invites GET] Failed to load invites:", invitesError);
         return NextResponse.json(
-            { error: formatInviteError(error, "Failed to load invites.") },
+            { error: formatInviteError(invitesError, "Failed to load invites.") },
             { status: 500 }
         );
     }
 
-    const inviteRows = (invites ?? []) as unknown as InviteRow[];
+    const inviteRows = (invitesData ?? []) as unknown as InviteRow[];
     const propertyIds = [...new Set(inviteRows.map((invite) => invite.property_id))];
 
     const { data: properties } = propertyIds.length
@@ -170,6 +159,13 @@ export async function GET(request: Request) {
             const property = propertyMap.get(invite.property_id);
             const unit = invite.unit_id ? unitMap.get(invite.unit_id) : null;
             const monthlyFallback = unit?.rentAmount ?? propertyRentFallback.get(invite.property_id) ?? 0;
+            const paymentTerms = invite.payment_terms ? sanitizePaymentTerms(invite.payment_terms) : null;
+            const paymentPreview = calculatePaymentPreview({
+                monthlyRent: monthlyFallback,
+                terms: paymentTerms,
+                contractTemplate: property?.contractTemplate ?? null,
+            });
+
             return {
                 id: invite.id,
                 mode: invite.mode,
@@ -189,10 +185,8 @@ export async function GET(request: Request) {
                 maxUses: invite.max_uses,
                 lastUsedAt: invite.last_used_at,
                 createdAt: invite.created_at,
-                paymentPreview: buildPaymentPreview({
-                    contractTemplate: property?.contractTemplate ?? null,
-                    monthlyRentFallback: monthlyFallback,
-                }),
+                paymentTerms,
+                paymentPreview,
                 shareUrl,
                 qrUrl: buildInviteQrUrl(shareUrl),
             };
@@ -213,12 +207,15 @@ export async function POST(request: Request) {
         propertyId?: string;
         unitId?: string | null;
         expiresAt?: string | null;
+        paymentTerms?: InvitePaymentTerms | null;
+        previewUnitId?: string | null;
     };
 
     const mode = body.mode;
     const applicationType = body.applicationType;
     const propertyId = body.propertyId;
     const unitId = body.unitId ?? null;
+    const paymentTerms = body.paymentTerms ? sanitizePaymentTerms(body.paymentTerms) : null;
 
     if (mode !== "property" && mode !== "unit") {
         return NextResponse.json({ error: "Invalid invite mode." }, { status: 400 });
@@ -270,6 +267,32 @@ export async function POST(request: Request) {
         };
     }
 
+    let previewRentAmount = unitForPreview?.rent_amount ?? 0;
+    if (mode === "property") {
+        if (body.previewUnitId) {
+            const { data: pUnit } = await adminClient
+                .from("units")
+                .select("rent_amount")
+                .eq("id", body.previewUnitId)
+                .maybeSingle();
+            if (pUnit && Number(pUnit.rent_amount) > 0) {
+                previewRentAmount = Number(pUnit.rent_amount);
+            }
+        }
+        if (previewRentAmount === 0) {
+            const { data: firstUnit } = await adminClient
+                .from("units")
+                .select("rent_amount")
+                .eq("property_id", propertyId)
+                .eq("status", "vacant")
+                .limit(1)
+                .maybeSingle();
+            if (firstUnit && Number(firstUnit.rent_amount) > 0) {
+                previewRentAmount = Number(firstUnit.rent_amount);
+            }
+        }
+    }
+
     const expiresAt = body.expiresAt ? new Date(body.expiresAt) : null;
     if (expiresAt && Number.isNaN(expiresAt.getTime())) {
         return NextResponse.json({ error: "Invalid expiration date." }, { status: 400 });
@@ -290,7 +313,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Select at least one required document for online applications." }, { status: 400 });
     }
 
-    const { error: insertError } = await adminClient.from("tenant_intake_invites" as any).insert({
+    const insertPayload: Record<string, unknown> = {
         id: inviteId,
         landlord_id: userId,
         property_id: propertyId,
@@ -304,7 +327,16 @@ export async function POST(request: Request) {
         max_uses: 1,
         use_count: 0,
         status: "active",
-    });
+        payment_terms: paymentTerms,
+    };
+
+    let { error: insertError } = await adminClient.from("tenant_intake_invites" as any).insert(insertPayload);
+
+    if (insertError && (insertError.message?.includes("payment_terms") || insertError.code === "42703" || insertError.code === "PGRST204")) {
+        delete insertPayload.payment_terms;
+        const retryRes = await adminClient.from("tenant_intake_invites" as any).insert(insertPayload);
+        insertError = retryRes.error;
+    }
 
     if (insertError) {
         console.error("[landlord invites POST] Failed to create invite:", insertError);
@@ -323,6 +355,7 @@ export async function POST(request: Request) {
             requiredRequirements,
             propertyId,
             unitId: mode === "unit" ? unitId : null,
+            paymentTerms,
         },
     });
 
@@ -340,9 +373,10 @@ export async function POST(request: Request) {
             ? (property.contract_template as Record<string, unknown>)
             : null;
 
-    const paymentPreview = buildPaymentPreview({
+    const paymentPreview = calculatePaymentPreview({
+        monthlyRent: previewRentAmount,
+        terms: paymentTerms,
         contractTemplate: propertyTemplate,
-        monthlyRentFallback: unitForPreview?.rent_amount ?? 0,
     });
 
     return NextResponse.json({
@@ -359,6 +393,7 @@ export async function POST(request: Request) {
             maxUses: 1,
             lastUsedAt: null,
             createdAt: new Date().toISOString(),
+            paymentTerms,
             paymentPreview,
             shareUrl,
             qrUrl: buildInviteQrUrl(shareUrl),

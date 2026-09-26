@@ -18,6 +18,7 @@ import {
     Copy,
     Check,
 } from "lucide-react";
+import type { InvitePaymentTerms } from "@/lib/tenant-invite-payment-terms";
 
 type ContractTemplateLike = Record<string, unknown>;
 
@@ -31,6 +32,7 @@ interface ContractData {
     applicant_email: string;
     requested_move_in: string | null;
     monthly_rent: number;
+    invite_payment_terms?: InvitePaymentTerms | null;
 }
 
 type ApprovalResult = {
@@ -173,11 +175,29 @@ export function ContractPreviewModal({
             pickTemplateAmount(contractData.property_contract_template, DEPOSIT_TEMPLATE_KEYS, initialRent) ??
             initialRent;
 
+        const inviteTerms = contractData.invite_payment_terms;
+        let initialAdvance = templateAdvance;
+        let initialDeposit = templateDeposit;
+
+        if (inviteTerms) {
+            if (inviteTerms.customAdvanceAmount !== undefined && inviteTerms.customAdvanceAmount !== null) {
+                initialAdvance = Math.max(0, inviteTerms.customAdvanceAmount);
+            } else if (typeof inviteTerms.advanceMonths === "number") {
+                initialAdvance = Math.max(0, inviteTerms.advanceMonths * initialRent);
+            }
+
+            if (inviteTerms.customSecurityDepositAmount !== undefined && inviteTerms.customSecurityDepositAmount !== null) {
+                initialDeposit = Math.max(0, inviteTerms.customSecurityDepositAmount);
+            } else if (typeof inviteTerms.securityDepositMonths === "number") {
+                initialDeposit = Math.max(0, inviteTerms.securityDepositMonths * initialRent);
+            }
+        }
+
         setLeaseStart(initialStart);
         setLeaseEnd(addOneYear(initialStart));
         setMonthlyRent(initialRent);
-        setAdvanceAmount(templateAdvance);
-        setSecurityDeposit(templateDeposit);
+        setAdvanceAmount(initialAdvance);
+        setSecurityDeposit(initialDeposit);
         setPolicyConfirmed(false);
         setSubmitting(false);
         setError(null);
@@ -198,8 +218,8 @@ export function ContractPreviewModal({
         return (
             Boolean(leaseStart) &&
             monthlyRent > 0 &&
-            advanceAmount > 0 &&
-            securityDeposit > 0 &&
+            advanceAmount >= 0 &&
+            securityDeposit >= 0 &&
             policyConfirmed &&
             !submitting
         );
@@ -370,6 +390,12 @@ export function ContractPreviewModal({
                                 applicantName={contractData.applicant_name}
                                 applicantEmail={contractData.applicant_email}
                             />
+
+                            {contractData.invite_payment_terms && (
+                                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-primary/10 border border-primary/20 text-xs text-primary font-medium">
+                                    <span>Move-in payment terms were pre-filled from this applicant&apos;s invite link. You can adjust amounts if needed.</span>
+                                </div>
+                            )}
 
                             <LeaseFormFields
                                 leaseStart={leaseStart}
