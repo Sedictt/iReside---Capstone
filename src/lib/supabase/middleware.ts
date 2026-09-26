@@ -252,7 +252,7 @@ export async function updateSession(request: NextRequest) {
                 try {
                     const { data: prof } = await supabase
                         .from("profiles")
-                        .select("is_account_claimed, socials, business_name")
+                        .select("socials, business_name")
                         .eq("id", user.id)
                         .maybeSingle();
 
@@ -260,9 +260,6 @@ export async function updateSession(request: NextRequest) {
                         const branding = (prof.socials as any)?.branding;
                         if (branding?.setup_completed === true || (prof.business_name && prof.business_name.trim().length > 0)) {
                             isSetupCompleted = true;
-                        }
-                        if (prof.is_account_claimed === true) {
-                            isAccountClaimed = true;
                         }
                     }
                 } catch {
@@ -289,8 +286,8 @@ export async function updateSession(request: NextRequest) {
         let isAccountClaimed = user?.user_metadata?.is_account_claimed;
 
         const isSetupCookie = request.cookies.get("ireside_setup_completed")?.value === "true";
-        if (isSetupCookie && !isDefaultStarter && isAccountClaimed !== false && isSetupCompleted !== false) {
-            // Already finalized setup, permit dashboard access immediately
+        if (isSetupCookie && !isDefaultStarter && isAccountClaimed !== false) {
+            // Already finalized setup on this browser, permit dashboard access immediately
             return supabaseResponse;
         }
 
@@ -299,7 +296,7 @@ export async function updateSession(request: NextRequest) {
             try {
                 const { data: prof } = await supabase
                     .from("profiles")
-                    .select("is_account_claimed, socials, business_name")
+                    .select("socials, business_name")
                     .eq("id", user.id)
                     .maybeSingle();
 
@@ -307,9 +304,6 @@ export async function updateSession(request: NextRequest) {
                     const branding = (prof.socials as any)?.branding;
                     if (branding?.setup_completed === true || (prof.business_name && prof.business_name.trim().length > 0)) {
                         isSetupCompleted = true;
-                    }
-                    if (prof.is_account_claimed === true) {
-                        isAccountClaimed = true;
                     }
                 }
             } catch {
