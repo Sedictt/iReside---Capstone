@@ -25,18 +25,18 @@ type UnitOption = {
     status?: string;
 };
 
-type PaymentPreview = {
-    advanceAmount: number;
-    securityDepositAmount: number;
-    estimated: true;
-    disclaimer: string;
-};
+import {
+    calculatePaymentPreview,
+    type InvitePaymentTerms,
+    type PaymentPreview,
+} from "@/lib/tenant-invite-payment-terms";
 
-type InviteListItem = {
+export type InviteListItem = {
     id: string;
     mode: InviteMode;
     applicationType: InviteApplicationType;
     requiredRequirements: string[];
+    paymentTerms?: InvitePaymentTerms | null;
     status: string;
     propertyId: string;
     propertyName: string;
@@ -51,75 +51,6 @@ type InviteListItem = {
     shareUrl: string;
     qrUrl: string;
 };
-
-const ADVANCE_TEMPLATE_KEYS = [
-    "advance",
-    "advance_amount",
-    "advance_payment",
-    "advance_rent",
-    "first_month_advance",
-];
-
-const DEPOSIT_TEMPLATE_KEYS = [
-    "deposit",
-    "security_deposit",
-    "security_deposit_amount",
-];
-
-function parseAmount(value: unknown, monthlyRent: number): number | null {
-    if (typeof value === "number" && Number.isFinite(value) && value > 0) return value;
-    if (typeof value !== "string") return null;
-
-    const normalized = value.trim().toLowerCase();
-    if (!normalized) return null;
-
-    const monthMatch = normalized.match(/(\d+(?:\.\d+)?)\s*month/);
-    if (monthMatch && monthlyRent > 0) {
-        const months = Number(monthMatch[1]);
-        if (Number.isFinite(months) && months > 0) return months * monthlyRent;
-    }
-
-    if (normalized.includes("month") && monthlyRent > 0) return monthlyRent;
-
-    const numeric = Number(normalized.replace(/[^0-9.-]/g, ""));
-    return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
-}
-
-function pickTemplateAmount(template: Record<string, unknown> | null, keys: string[], monthlyRent: number) {
-    if (!template) return null;
-
-    const pools: Array<Record<string, unknown>> = [template];
-    const answers = template.answers;
-    if (answers && typeof answers === "object" && !Array.isArray(answers)) {
-        pools.push(answers as Record<string, unknown>);
-    }
-    const defaults = template.defaults;
-    if (defaults && typeof defaults === "object" && !Array.isArray(defaults)) {
-        pools.push(defaults as Record<string, unknown>);
-    }
-    const paymentDefaults = template.payment_defaults;
-    if (paymentDefaults && typeof paymentDefaults === "object" && !Array.isArray(paymentDefaults)) {
-        pools.push(paymentDefaults as Record<string, unknown>);
-    }
-
-    for (const pool of pools) {
-        for (const key of keys) {
-            const parsed = parseAmount(pool[key], monthlyRent);
-            if (parsed && parsed > 0) return parsed;
-        }
-    }
-    return null;
-}
-
-function buildPaymentPreview(template: Record<string, unknown> | null, monthlyRent: number): PaymentPreview {
-    const fallback = Number.isFinite(monthlyRent) && monthlyRent > 0 ? monthlyRent : 0;
-    return {
-        advanceAmount: pickTemplateAmount(template, ADVANCE_TEMPLATE_KEYS, fallback) ?? fallback,
-        securityDepositAmount: pickTemplateAmount(template, DEPOSIT_TEMPLATE_KEYS, fallback) ?? fallback,
-        estimated: true,
-        disclaimer: "Estimate only. Final payment requests are generated after landlord review.",
-    };
-}
 
 const REQUIREMENT_OPTIONS: Array<{ key: InviteRequirementKey; label: string }> = [
     { key: "valid_id", label: "Valid ID" },
@@ -192,6 +123,11 @@ export function TenantInviteManager({
         }
     }, [properties, propertyId]);
 
+    const [advanceMonths, setAdvanceMonths] = useState<number>(1);
+    const [securityDepositMonths, setSecurityDepositMonths] = useState<number>(1);
+    const [customAdvance, setCustomAdvance] = useState<string>("");
+    const [customDeposit, setCustomDeposit] = useState<string>("");
+
     const propertyUnits = useMemo(
         () =>
             availableUnits
@@ -200,13 +136,38 @@ export function TenantInviteManager({
         [availableUnits, propertyId]
     );
 
+    useEffect(() => {
+        if (propertyUnits.length > 0 && !previewUnitId) {
+            setPreviewUnitId(propertyUnits[0].id);
+        }
+    }, [propertyUnits, previewUnitId]);
+
+    const currentPaymentTerms = useMemo<InvitePaymentTerms>(() => {
+        return {
+            advanceMonths,
+            securityDepositMonths,
+            customAdvanceAmount:
+                advanceMonths === -1 && customAdvance
+                    ? parseFloat(customAdvance.replace(/[^0-9.]/g, "")) || 0
+                    : null,
+            customSecurityDepositAmount:
+                securityDepositMonths === -1 && customDeposit
+                    ? parseFloat(customDeposit.replace(/[^0-9.]/g, "")) || 0
+                    : null,
+        };
+    }, [advanceMonths, securityDepositMonths, customAdvance, customDeposit]);
+
     const currentPaymentPreview = useMemo(() => {
         const activePreviewUnitId = mode === "unit" ? unitId : previewUnitId;
         const unit = activePreviewUnitId ? propertyUnits.find((item) => item.id === activePreviewUnitId) : null;
         const fallback = unit?.rent_amount ?? propertyUnits[0]?.rent_amount ?? 0;
         const template = unit?.property_contract_template ?? propertyUnits[0]?.property_contract_template ?? null;
-        return buildPaymentPreview(template, Number(fallback ?? 0));
-    }, [mode, previewUnitId, propertyUnits, unitId]);
+        return calculatePaymentPreview({
+            monthlyRent: Number(fallback ?? 0),
+            terms: currentPaymentTerms,
+            contractTemplate: template,
+        });
+    }, [mode, previewUnitId, propertyUnits, unitId, currentPaymentTerms]);
 
     const showPaymentPreview =
         Boolean(propertyId) && (mode === "unit" ? Boolean(unitId) : Boolean(previewUnitId));
@@ -242,6 +203,8 @@ export function TenantInviteManager({
                     requiredRequirements,
                     propertyId,
                     unitId: mode === "unit" ? unitId : null,
+                    previewUnitId: mode === "property" ? previewUnitId : null,
+                    paymentTerms: currentPaymentTerms,
                     expiresAt: expiresAt || null,
                 }),
             });
@@ -594,25 +557,136 @@ export function TenantInviteManager({
                     )}
 
                     {isAdvanced && showPaymentPreview && (
-                        <div className="mb-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 p-4">
-                            <p className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
-                                Estimated Move-in Payment Preview
-                            </p>
-                            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                                <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 dark:border-white/5 dark:bg-black/20 p-3">
-                                    <p className="text-xs font-black uppercase tracking-wider text-amber-900/70 dark:text-amber-200">Advance Rent</p>
-                                    <p className="mt-1 text-lg font-black text-amber-900 dark:text-amber-50">
-                                        PHP {currentPaymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </p>
+                        <div className="mb-6 rounded-[1.75rem] border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 p-4 sm:p-5 space-y-4 animate-in fade-in zoom-in duration-300">
+                            <div>
+                                <p className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                                    Move-in Payment Terms
+                                </p>
+                                <p className="mt-0.5 text-xs text-muted-foreground font-medium">
+                                    Configure upfront advance rent and security deposit required from the tenant.
+                                </p>
+                            </div>
+
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                {/* Advance Rent */}
+                                <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 dark:border-white/5 dark:bg-black/20 p-3.5 space-y-2.5">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-xs font-black uppercase tracking-wider text-amber-900/80 dark:text-amber-200">Advance Rent</p>
+                                        <p className="text-sm font-black text-amber-900 dark:text-amber-50">
+                                            PHP {currentPaymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </p>
+                                    </div>
+                                    <div className="grid grid-cols-4 gap-1">
+                                        {[
+                                            { value: 0, label: "None" },
+                                            { value: 1, label: "1 Mo" },
+                                            { value: 2, label: "2 Mo" },
+                                            { value: -1, label: "Custom" },
+                                        ].map((opt) => (
+                                            <button
+                                                key={opt.value}
+                                                type="button"
+                                                onClick={() => setAdvanceMonths(opt.value)}
+                                                className={cn(
+                                                    "rounded-lg px-2 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all",
+                                                    advanceMonths === opt.value
+                                                        ? "bg-amber-700 text-white shadow-sm dark:bg-amber-500 dark:text-black"
+                                                        : "border border-amber-500/20 bg-background/60 text-muted-foreground hover:bg-background hover:text-foreground"
+                                                )}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {advanceMonths === -1 && (
+                                        <div className="relative pt-1">
+                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pt-1 text-[11px] font-black text-muted-foreground">
+                                                PHP
+                                            </span>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                step="500"
+                                                value={customAdvance}
+                                                onChange={(e) => setCustomAdvance(e.target.value)}
+                                                placeholder="Custom amount"
+                                                className="h-8 w-full rounded-lg border border-border bg-background pl-11 pr-2.5 text-xs font-black text-foreground outline-none focus:border-primary"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 dark:border-white/5 dark:bg-black/20 p-3">
-                                    <p className="text-xs font-black uppercase tracking-wider text-amber-900/70 dark:text-amber-200">Security Deposit</p>
-                                    <p className="mt-1 text-lg font-black text-amber-900 dark:text-amber-50">
-                                        PHP {currentPaymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </p>
+
+                                {/* Security Deposit */}
+                                <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 dark:border-white/5 dark:bg-black/20 p-3.5 space-y-2.5">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-xs font-black uppercase tracking-wider text-amber-900/80 dark:text-amber-200">Security Deposit</p>
+                                        <p className="text-sm font-black text-amber-900 dark:text-amber-50">
+                                            PHP {currentPaymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </p>
+                                    </div>
+                                    <div className="grid grid-cols-4 gap-1">
+                                        {[
+                                            { value: 0, label: "None" },
+                                            { value: 1, label: "1 Mo" },
+                                            { value: 2, label: "2 Mo" },
+                                            { value: -1, label: "Custom" },
+                                        ].map((opt) => (
+                                            <button
+                                                key={opt.value}
+                                                type="button"
+                                                onClick={() => setSecurityDepositMonths(opt.value)}
+                                                className={cn(
+                                                    "rounded-lg px-2 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all",
+                                                    securityDepositMonths === opt.value
+                                                        ? "bg-amber-700 text-white shadow-sm dark:bg-amber-500 dark:text-black"
+                                                        : "border border-amber-500/20 bg-background/60 text-muted-foreground hover:bg-background hover:text-foreground"
+                                                )}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {securityDepositMonths === -1 && (
+                                        <div className="relative pt-1">
+                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pt-1 text-[11px] font-black text-muted-foreground">
+                                                PHP
+                                            </span>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                step="500"
+                                                value={customDeposit}
+                                                onChange={(e) => setCustomDeposit(e.target.value)}
+                                                placeholder="Custom amount"
+                                                className="h-8 w-full rounded-lg border border-border bg-background pl-11 pr-2.5 text-xs font-black text-foreground outline-none focus:border-primary"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                            <p className="mt-3 text-xs font-semibold text-amber-950 dark:text-amber-200 leading-relaxed">{currentPaymentPreview.disclaimer}</p>
+
+                            {/* Total Move-in Preview Box */}
+                            <div className="rounded-xl border border-amber-500/20 bg-background/60 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div>
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                                        Total Estimated Move-in
+                                    </span>
+                                    <p className="text-base font-black text-foreground">
+                                        PHP {currentPaymentPreview.totalMoveInAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </p>
+                                </div>
+                                <span className="text-[11px] font-medium text-muted-foreground sm:text-right">
+                                    {mode === "unit" ? (
+                                        <>Calculated for unit: <span className="font-bold text-foreground">{propertyUnits.find(u => u.id === unitId)?.name || "Selected Unit"}</span></>
+                                    ) : (
+                                        <>Preview based on: <span className="font-bold text-foreground">{propertyUnits.find(u => u.id === previewUnitId)?.name || "vacant unit"}</span> (scales per unit)</>
+                                    )}
+                                </span>
+                            </div>
+
+                            <p className="text-[11px] font-medium text-amber-950/80 dark:text-amber-200/80 leading-relaxed">
+                                {currentPaymentPreview.disclaimer}
+                            </p>
                         </div>
                     )}
 
@@ -814,15 +888,21 @@ export function TenantInviteManager({
                                 <p className="text-sm font-medium text-foreground break-all">{freshInvite.shareUrl}</p>
                             </div>
                             {freshInvite.paymentPreview && (
-                                <div className="mb-6 w-full rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 p-4 text-left">
-                                    <p className="mb-2 text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Estimated Payment Preview</p>
-                                    <p className="text-xs font-semibold text-amber-900 dark:text-amber-50">
-                                        Advance: PHP {freshInvite.paymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </p>
-                                    <p className="text-xs font-semibold text-amber-900 dark:text-amber-50">
-                                        Security: PHP {freshInvite.paymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </p>
-                                    <p className="mt-2 text-[11px] font-medium text-amber-950 dark:text-amber-200/80 leading-relaxed">{freshInvite.paymentPreview.disclaimer}</p>
+                                <div className="mb-6 w-full rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 p-4 text-left space-y-1">
+                                    <p className="mb-2 text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Move-in Payment Terms</p>
+                                    <div className="flex items-center justify-between text-xs font-semibold text-amber-900 dark:text-amber-50">
+                                        <span>Advance Rent:</span>
+                                        <span>PHP {freshInvite.paymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-xs font-semibold text-amber-900 dark:text-amber-50">
+                                        <span>Security Deposit:</span>
+                                        <span>PHP {freshInvite.paymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div className="pt-2 mt-2 border-t border-amber-500/20 flex items-center justify-between text-xs font-black text-amber-950 dark:text-amber-100">
+                                        <span>Total Move-in:</span>
+                                        <span>PHP {(freshInvite.paymentPreview.totalMoveInAmount ?? (freshInvite.paymentPreview.advanceAmount + freshInvite.paymentPreview.securityDepositAmount)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <p className="mt-2 text-[11px] font-medium text-amber-950/80 dark:text-amber-200/80 leading-relaxed">{freshInvite.paymentPreview.disclaimer}</p>
                                 </div>
                             )}
                             <button
@@ -1025,7 +1105,7 @@ export function TenantInviteManager({
                         {/* Payment Preview */}
                         {freshInvite.paymentPreview && (
                             <div className="mb-5 w-full rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 p-3.5 text-left text-xs">
-                                <p className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Estimated Move-in Payment</p>
+                                <p className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Move-in Payment Terms</p>
                                 <div className="space-y-1 font-semibold text-amber-900 dark:text-amber-100">
                                     <div className="flex justify-between">
                                         <span>Advance Rent:</span>
@@ -1034,6 +1114,10 @@ export function TenantInviteManager({
                                     <div className="flex justify-between">
                                         <span>Security Deposit:</span>
                                         <span>PHP {freshInvite.paymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div className="pt-1.5 mt-1.5 border-t border-amber-500/20 flex justify-between font-black text-amber-950 dark:text-white">
+                                        <span>Total Move-in:</span>
+                                        <span>PHP {(freshInvite.paymentPreview.totalMoveInAmount ?? (freshInvite.paymentPreview.advanceAmount + freshInvite.paymentPreview.securityDepositAmount)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                     </div>
                                 </div>
                             </div>

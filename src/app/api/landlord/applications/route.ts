@@ -3,11 +3,13 @@ import { applyPaymentPendingExpiry } from "@/lib/application-payment-pending";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import type { ApplicationStatus, LeaseStatus } from "@/types/database";
+import type { InvitePaymentTerms } from "@/lib/tenant-invite-payment-terms";
 
 
 type ApplicationResponse = {
     id: string;
     source: "walk_in_application" | "invite_link";
+    paymentTerms?: InvitePaymentTerms | null;
     applicant: {
         name: string;
         email: string;
@@ -625,6 +627,7 @@ export async function GET(request: Request) {
                 : null,
             leaseAuditEvents: lease ? auditByLeaseId.get(lease.id) ?? [] : [],
             preApprovalPayments: paymentRequestsByApplication.get(row.id) ?? [],
+            paymentTerms: ((row.requirements_checklist as Record<string, unknown> | null)?.payment_terms as InvitePaymentTerms | null) ?? null,
         };
     });
 

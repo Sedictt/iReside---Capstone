@@ -52,7 +52,7 @@ const WalkInApplicationModal = dynamic(() => import("@/components/landlord/appli
  ssr: false,
 });
 
-import { TenantInviteManager } from "@/components/landlord/applications/TenantInviteManager";
+import { TenantInviteManager, type InviteListItem } from "@/components/landlord/applications/TenantInviteManager";
 import { ContractPreviewModal } from "@/components/landlord/lease/ContractPreviewModal";
 import { LeaseStatusBadge } from "@/components/landlord/leases/LeaseStatusBadge";
 import { LeaseAuditTrail, type LeaseAuditEvent } from "@/components/landlord/leases/LeaseAuditTrail";
@@ -65,6 +65,7 @@ import { useProperty } from "@/context/PropertyContext";
 import { generateLeasePdf } from "@/lib/lease-pdf";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
+import type { InvitePaymentTerms } from "@/lib/tenant-invite-payment-terms";
 
 // ─── Types ────────────────────────────────────────────────────────────
 type ApplicationStatus =
@@ -89,6 +90,7 @@ interface RentApplication {
  id: string;
  propertyId?: string | null;
  source?: "walk_in_application" | "invite_link";
+ paymentTerms?: InvitePaymentTerms | null;
  applicant: Applicant;
  propertyName: string;
  propertyContractTemplate?: Record<string, unknown> | null;
@@ -340,6 +342,7 @@ export function RentApplications() {
  requested_move_in: string | null;
  monthly_rent: number;
  application_status: ApplicationStatus;
+ invite_payment_terms?: InvitePaymentTerms | null;
  } | null>(null);
  const [availableUnits, setAvailableUnits] = useState<{
  id: string;
@@ -352,30 +355,7 @@ export function RentApplications() {
  has_ongoing_application?: boolean;
  ongoing_application_status?: string | null;
  }[]>([]);
- const [tenantInvites, setTenantInvites] = useState<Array<{
- id: string;
- mode: "property" | "unit";
- applicationType: "online" | "face_to_face";
- requiredRequirements: string[];
- status: string;
- propertyId: string;
- propertyName: string;
- unitId: string | null;
- unitName: string | null;
- expiresAt: string | null;
- useCount: number;
- maxUses: number;
- lastUsedAt: string | null;
- createdAt: string;
- paymentPreview?: {
- advanceAmount: number;
- securityDepositAmount: number;
- estimated: true;
- disclaimer: string;
- };
- shareUrl: string;
- qrUrl: string;
- }>>([]);
+ const [tenantInvites, setTenantInvites] = useState<InviteListItem[]>([]);
   const [reloadTrigger, setReloadTrigger] = useState(0);
   const reloadKey = useRef(0);
   const isSilentReload = useRef(false);
@@ -748,6 +728,7 @@ export function RentApplications() {
  requested_move_in: application.requestedMoveIn,
  monthly_rent: monthlyRent,
  application_status: application.status,
+ invite_payment_terms: application.paymentTerms ?? null,
  });
  setShowContractModal(true);
  };

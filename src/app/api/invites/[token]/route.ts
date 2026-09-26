@@ -13,6 +13,11 @@ import {
     type TenantInviteApplicationType,
     type TenantInviteRequirementKey,
 } from "@/lib/tenant-intake-invites";
+import {
+    calculatePaymentPreview,
+    sanitizePaymentTerms,
+    type InvitePaymentTerms,
+} from "@/lib/tenant-invite-payment-terms";
 import { sendNewApplicationReceivedEmail } from "@/lib/email";
 import type { Database } from "@/types/database";
 
@@ -30,15 +35,32 @@ type InviteRecord = {
     max_uses: number;
     use_count: number;
     expires_at: string | null;
+    payment_terms?: InvitePaymentTerms | null;
 };
 
 async function loadInviteRecord(token: string) {
     const adminClient = createAdminClient();
-    const { data, error } = await (adminClient
+    let data: any = null;
+    let error: any = null;
+
+    const resWithTerms = await (adminClient
         .from("tenant_intake_invites" as any)
-        .select("id, landlord_id, property_id, unit_id, mode, application_type, required_requirements, public_token, token_hash, status, max_uses, use_count, expires_at")
+        .select("id, landlord_id, property_id, unit_id, mode, application_type, required_requirements, public_token, token_hash, status, max_uses, use_count, expires_at, payment_terms")
         .eq("public_token", token)
         .maybeSingle() as any);
+
+    if (resWithTerms.error && (resWithTerms.error.message?.includes("payment_terms") || resWithTerms.error.code === "42703" || resWithTerms.error.code === "PGRST204")) {
+        const fallbackRes = await (adminClient
+            .from("tenant_intake_invites" as any)
+            .select("id, landlord_id, property_id, unit_id, mode, application_type, required_requirements, public_token, token_hash, status, max_uses, use_count, expires_at")
+            .eq("public_token", token)
+            .maybeSingle() as any);
+        data = fallbackRes.data;
+        error = fallbackRes.error;
+    } else {
+        data = resWithTerms.data;
+        error = resWithTerms.error;
+    }
 
     if (error) {
         throw error;
@@ -113,6 +135,8 @@ export async function GET(
                 ? (property.contract_template as Record<string, unknown>)
                 : null;
 
+        const paymentTerms = invite.payment_terms ? sanitizePaymentTerms(invite.payment_terms) : null;
+
         const eligibleUnits = (units ?? [])
             .filter((unit) => invite.mode === "property" || unit.id === invite.unit_id)
             .map((unit) => ({
@@ -121,16 +145,11 @@ export async function GET(
                 rent_amount: Number(unit.rent_amount ?? 0),
                 property_id: unit.property_id,
                 property_name: property?.name ?? "Property",
-                paymentPreview: {
-                    advanceAmount:
-                        pickTemplateAmount(contractTemplate, ADVANCE_TEMPLATE_KEYS, Number(unit.rent_amount ?? 0)) ??
-                        Number(unit.rent_amount ?? 0),
-                    securityDepositAmount:
-                        pickTemplateAmount(contractTemplate, DEPOSIT_TEMPLATE_KEYS, Number(unit.rent_amount ?? 0)) ??
-                        Number(unit.rent_amount ?? 0),
-                    estimated: true,
-                    disclaimer: "Estimate only. Final payment requests are generated after landlord review.",
-                },
+                paymentPreview: calculatePaymentPreview({
+                    monthlyRent: Number(unit.rent_amount ?? 0),
+                    terms: paymentTerms,
+                    contractTemplate,
+                }),
             }));
 
         const selectedUnit = invite.mode === "unit" ? eligibleUnits[0] ?? null : null;
@@ -152,6 +171,7 @@ export async function GET(
                         typeof item === "string" && TENANT_INVITE_REQUIREMENT_KEYS.includes(item as TenantInviteRequirementKey)
                     )
                     : [],
+                paymentTerms,
                 propertyId: invite.property_id,
                 propertyName: property?.name ?? "Property",
                 unitId: invite.unit_id,
@@ -366,6 +386,7 @@ export async function POST(
         const insertPayload = {
             unit_id: resolvedUnitId,
             landlord_id: invite.landlord_id,
+            invite_id: invite.id,
             applicant_name: applicantName,
             applicant_email: applicantEmail,
             applicant_phone: body.applicant_phone?.trim() || null,
@@ -380,7 +401,10 @@ export async function POST(
             employment_status: occupation,
             monthly_income: monthlyIncome,
             documents: submittedDocuments.map((doc) => doc.url),
-            requirements_checklist: inviteChecklist,
+            requirements_checklist: {
+                ...inviteChecklist,
+                payment_terms: invite.payment_terms ? sanitizePaymentTerms(invite.payment_terms) : null,
+            },
             message: body.message?.trim() || null,
             status: "pending",
             application_source: "invite_link",

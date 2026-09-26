@@ -202,32 +202,23 @@ async function createPaymentRecords(
         };
     }
 ) {
-    // Validate advance payment data
-    const advanceValidation = await validatePaymentData(supabase, {
-        lease_id: data.lease_id,
-        tenant_id: data.tenant_id,
-        landlord_id: data.landlord_id,
-        amount: data.advance_payment.amount,
-    });
-
-    if (!advanceValidation.valid) {
-        throw new Error(`Advance payment validation failed: ${advanceValidation.errors.join(', ')}`);
-    }
-
-    // Validate security deposit payment data
-    const depositValidation = await validatePaymentData(supabase, {
-        lease_id: data.lease_id,
-        tenant_id: data.tenant_id,
-        landlord_id: data.landlord_id,
-        amount: data.security_deposit_payment.amount,
-    });
-
-    if (!depositValidation.valid) {
-        throw new Error(`Security deposit validation failed: ${depositValidation.errors.join(', ')}`);
-    }
-
     const billingCycle = `${data.start_date.slice(0, 7)}-01`;
     const nowIso = new Date().toISOString();
+    let advancePaymentId: string | null = null;
+    let depositPaymentId: string | null = null;
+
+    if (data.advance_payment.amount > 0) {
+        // Validate advance payment data
+        const advanceValidation = await validatePaymentData(supabase, {
+            lease_id: data.lease_id,
+            tenant_id: data.tenant_id,
+            landlord_id: data.landlord_id,
+            amount: data.advance_payment.amount,
+        });
+
+        if (!advanceValidation.valid) {
+            throw new Error(`Advance payment validation failed: ${advanceValidation.errors.join(', ')}`);
+        }
 
     const advanceId = crypto.randomUUID();
     const isAdvanceCompleted = data.advance_payment.status === 'completed';
@@ -321,101 +312,120 @@ async function createPaymentRecords(
             });
     }
 
-    const depositId = crypto.randomUUID();
-    const isDepositCompleted = data.security_deposit_payment.status === 'completed';
-    const depositInvoiceNum = makeInvoiceNumber(depositId, billingCycle);
-    const depositReceiptNum = isDepositCompleted ? makeReceiptNumber(depositId, nowIso) : null;
+    advancePaymentId = advancePayment.id;
+}
 
-    // Create security deposit payment record
-    const { data: depositPayment, error: depositError } = await supabase
-        .from("payments")
-        .insert({
-            id: depositId,
+if (data.security_deposit_payment.amount > 0) {
+        // Validate security deposit payment data
+        const depositValidation = await validatePaymentData(supabase, {
             lease_id: data.lease_id,
             tenant_id: data.tenant_id,
             landlord_id: data.landlord_id,
             amount: data.security_deposit_payment.amount,
-            subtotal: data.security_deposit_payment.amount,
-            paid_amount: isDepositCompleted ? data.security_deposit_payment.amount : 0,
-            balance_remaining: isDepositCompleted ? 0 : data.security_deposit_payment.amount,
-            status: isDepositCompleted ? "completed" : "pending",
-            workflow_status: isDepositCompleted ? "receipted" : "pending",
-            method: data.security_deposit_payment.method,
-            description: "Security Deposit",
-            due_date: data.start_date,
-            paid_at: isDepositCompleted ? (data.security_deposit_payment.paid_at || nowIso) : null,
-            reference_number: data.security_deposit_payment.reference_number,
-            payment_proof_path: data.security_deposit_payment.payment_proof_path || null,
-            payment_proof_url: data.security_deposit_payment.payment_proof_url || null,
-            payment_note: data.security_deposit_payment.payment_note || null,
-            landlord_confirmed: isDepositCompleted,
-            billing_cycle: null,
-            invoice_number: depositInvoiceNum,
-            receipt_number: depositReceiptNum,
-            last_action_at: nowIso,
-            last_action_by: data.landlord_id,
-        })
-        .select()
-        .single();
-
-    if (depositError) {
-        throw new Error(`Security deposit payment creation failed: ${depositError.message}`);
-    }
-
-    // Create payment item for security deposit
-    const { error: depositItemError } = await supabase
-        .from("payment_items")
-        .insert({
-            payment_id: depositPayment.id,
-            label: "Security Deposit",
-            amount: data.security_deposit_payment.amount,
-            category: "security_deposit",
         });
 
-    if (depositItemError) {
-        throw new Error(`Security deposit payment item creation failed: ${depositItemError.message}`);
-    }
-
-    // Create receipt if deposit payment is completed
-    if (isDepositCompleted) {
-        const { error: depositReceiptError } = await supabase
-            .from("payment_receipts")
-            .insert({
-                payment_id: depositPayment.id,
-                landlord_id: data.landlord_id,
-                tenant_id: data.tenant_id,
-                receipt_number: depositReceiptNum!,
-                amount: data.security_deposit_payment.amount,
-                issued_at: nowIso,
-                issued_by: data.landlord_id,
-                notes: "Security deposit paid and confirmed upon application approval.",
-                method: data.security_deposit_payment.method,
-                amount_breakdown: {
-                    security_deposit: data.security_deposit_payment.amount,
-                },
-            });
-
-        if (depositReceiptError) {
-            console.error("[actions] Failed to insert deposit payment receipt:", depositReceiptError);
+        if (!depositValidation.valid) {
+            throw new Error(`Security deposit validation failed: ${depositValidation.errors.join(', ')}`);
         }
 
-        // Add audit event
-        await supabase
-            .from("payment_workflow_audit_events")
+        const depositId = crypto.randomUUID();
+        const isDepositCompleted = data.security_deposit_payment.status === 'completed';
+        const depositInvoiceNum = makeInvoiceNumber(depositId, billingCycle);
+        const depositReceiptNum = isDepositCompleted ? makeReceiptNumber(depositId, nowIso) : null;
+
+        // Create security deposit payment record
+        const { data: depositPayment, error: depositError } = await supabase
+            .from("payments")
+            .insert({
+                id: depositId,
+                lease_id: data.lease_id,
+                tenant_id: data.tenant_id,
+                landlord_id: data.landlord_id,
+                amount: data.security_deposit_payment.amount,
+                subtotal: data.security_deposit_payment.amount,
+                paid_amount: isDepositCompleted ? data.security_deposit_payment.amount : 0,
+                balance_remaining: isDepositCompleted ? 0 : data.security_deposit_payment.amount,
+                status: isDepositCompleted ? "completed" : "pending",
+                workflow_status: isDepositCompleted ? "receipted" : "pending",
+                method: data.security_deposit_payment.method,
+                description: "Security Deposit",
+                due_date: data.start_date,
+                paid_at: isDepositCompleted ? (data.security_deposit_payment.paid_at || nowIso) : null,
+                reference_number: data.security_deposit_payment.reference_number,
+                payment_proof_path: data.security_deposit_payment.payment_proof_path || null,
+                payment_proof_url: data.security_deposit_payment.payment_proof_url || null,
+                payment_note: data.security_deposit_payment.payment_note || null,
+                landlord_confirmed: isDepositCompleted,
+                billing_cycle: null,
+                invoice_number: depositInvoiceNum,
+                receipt_number: depositReceiptNum,
+                last_action_at: nowIso,
+                last_action_by: data.landlord_id,
+            })
+            .select()
+            .single();
+
+        if (depositError) {
+            throw new Error(`Security deposit payment creation failed: ${depositError.message}`);
+        }
+
+        // Create payment item for security deposit
+        const { error: depositItemError } = await supabase
+            .from("payment_items")
             .insert({
                 payment_id: depositPayment.id,
-                actor_id: data.landlord_id,
-                action: "receipt_issued",
-                source: "application_approval",
-                before_state: { workflow_status: "pending" },
-                after_state: { workflow_status: "receipted", status: "completed" },
-                metadata: { receipt_number: depositReceiptNum },
+                label: "Security Deposit",
+                amount: data.security_deposit_payment.amount,
+                category: "security_deposit",
             });
+
+        if (depositItemError) {
+            throw new Error(`Security deposit payment item creation failed: ${depositItemError.message}`);
+        }
+
+        // Create receipt if deposit payment is completed
+        if (isDepositCompleted) {
+            const { error: depositReceiptError } = await supabase
+                .from("payment_receipts")
+                .insert({
+                    payment_id: depositPayment.id,
+                    landlord_id: data.landlord_id,
+                    tenant_id: data.tenant_id,
+                    receipt_number: depositReceiptNum!,
+                    amount: data.security_deposit_payment.amount,
+                    issued_at: nowIso,
+                    issued_by: data.landlord_id,
+                    notes: "Security deposit paid and confirmed upon application approval.",
+                    method: data.security_deposit_payment.method,
+                    amount_breakdown: {
+                        security_deposit: data.security_deposit_payment.amount,
+                    },
+                });
+
+            if (depositReceiptError) {
+                console.error("[actions] Failed to insert deposit payment receipt:", depositReceiptError);
+            }
+
+            // Add audit event
+            await supabase
+                .from("payment_workflow_audit_events")
+                .insert({
+                    payment_id: depositPayment.id,
+                    actor_id: data.landlord_id,
+                    action: "receipt_issued",
+                    source: "application_approval",
+                    before_state: { workflow_status: "pending" },
+                    after_state: { workflow_status: "receipted", status: "completed" },
+                    metadata: { receipt_number: depositReceiptNum },
+                });
+        }
+
+        depositPaymentId = depositPayment.id;
     }
 
     return {
-        advance: advancePayment.id,
-        deposit: depositPayment.id,
+        advance: advancePaymentId,
+        deposit: depositPaymentId,
     };
 }
 
@@ -529,10 +539,10 @@ export async function POST(
         const applicantEmail = application.applicant_email?.trim();
         const applicantName = application.applicant_name?.trim() || "Applicant";
 
-        const advanceAmount = Number(body.advance_payment?.amount || body.lease_data?.monthly_rent || 0);
-        const securityAmount = Number(body.security_deposit_payment?.amount || body.lease_data?.security_deposit || 0);
+        const advanceAmount = Number(body.advance_payment?.amount ?? body.lease_data?.monthly_rent ?? 0);
+        const securityAmount = Number(body.security_deposit_payment?.amount ?? body.lease_data?.security_deposit ?? 0);
 
-        if (!advanceAmount || !securityAmount) {
+        if (Number.isNaN(advanceAmount) || Number.isNaN(securityAmount) || advanceAmount < 0 || securityAmount < 0) {
             return NextResponse.json(
                 { error: "Valid advance rent and security deposit amounts are required." },
                 { status: 400 }
@@ -584,37 +594,44 @@ export async function POST(
             .delete()
             .eq("application_id", applicationId);
 
-        const { error: insertReqErr } = await adminClient
-            .from("application_payment_requests" as any)
-            .insert([
-                {
-                    application_id: applicationId,
-                    landlord_id: (application as any).landlord_id || userId,
-                    requirement_type: "advance_rent",
-                    amount: advanceAmount,
-                    status: "pending",
-                    due_at: paymentPendingExpiresAt,
-                    metadata: {
-                        label: "Advance Rent",
-                        created_from: "contract_preview_modal",
-                    },
+        const pendingRequests = [];
+        if (advanceAmount > 0) {
+            pendingRequests.push({
+                application_id: applicationId,
+                landlord_id: (application as any).landlord_id || userId,
+                requirement_type: "advance_rent",
+                amount: advanceAmount,
+                status: "pending",
+                due_at: paymentPendingExpiresAt,
+                metadata: {
+                    label: "Advance Rent",
+                    created_from: "contract_preview_modal",
                 },
-                {
-                    application_id: applicationId,
-                    landlord_id: (application as any).landlord_id || userId,
-                    requirement_type: "security_deposit",
-                    amount: securityAmount,
-                    status: "pending",
-                    due_at: paymentPendingExpiresAt,
-                    metadata: {
-                        label: "Security Deposit",
-                        created_from: "contract_preview_modal",
-                    },
+            });
+        }
+        if (securityAmount > 0) {
+            pendingRequests.push({
+                application_id: applicationId,
+                landlord_id: (application as any).landlord_id || userId,
+                requirement_type: "security_deposit",
+                amount: securityAmount,
+                status: "pending",
+                due_at: paymentPendingExpiresAt,
+                metadata: {
+                    label: "Security Deposit",
+                    created_from: "contract_preview_modal",
                 },
-            ]);
+            });
+        }
 
-        if (insertReqErr) {
-            console.error("[actions] Failed to insert application_payment_requests:", insertReqErr);
+        if (pendingRequests.length > 0) {
+            const { error: insertReqErr } = await adminClient
+                .from("application_payment_requests" as any)
+                .insert(pendingRequests);
+
+            if (insertReqErr) {
+                console.error("[actions] Failed to insert application_payment_requests:", insertReqErr);
+            }
         }
 
         await logApplicationPaymentAudit(adminClient, {
@@ -742,7 +759,7 @@ export async function POST(
     } | null = null;
 
     let leaseId: string | null = null;
-    let paymentIds: { advance: string; deposit: string } | null = null;
+    let paymentIds: { advance: string | null; deposit: string | null } | null = null;
 
     if (body.status === "approved") {
         const tenantEmail = application.applicant_email?.trim();
