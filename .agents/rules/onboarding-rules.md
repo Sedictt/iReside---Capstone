@@ -60,3 +60,10 @@ When an onboarding stage features a hands-on guided tutorial (e.g., Utility Bill
   - Smooth auto-scroll: Advancing steps or opening the tour automatically smooth-scrolls the viewport to bring the targeted element into view.
 - **Reopen Capability**: Every guided tour page MUST provide an easily discoverable "Guided Tour" trigger button in its action bar or header, allowing users who dismissed the spotlight card to reopen the tour at any time.
 
+### 6.1 Direct-Manipulation & Drag-and-Drop Tour Invariants
+When an onboarding stage features drag-and-drop canvas manipulation (such as the Unit Map visual planner):
+- **Explicit Drag-and-Drop Step**: The guided tour must provide a dedicated step explaining direct drag-and-drop manipulation alongside batch/automation tools.
+- **Dual-Target Visual Highlighting**:
+  - The draggable source element (e.g. unit card) must display a pulsing ring (`ring-4 ring-primary`), ping beacon dot (`animate-ping`), animated grip handle, and an explicit action badge (e.g. "Drag Me").
+  - The valid destination dropzone (e.g. target floor lane tray) must simultaneously display a dashed primary border, ring glow, and drop indicator pill ("Target Drop Zone").
+- **Auto-Scroll to Draggable Target**: Navigating to the drag-and-drop tour step must automatically smooth-scroll the active draggable element into the viewport if it is outside the visible scroll area.
