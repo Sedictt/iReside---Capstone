@@ -36,11 +36,13 @@ function SortableUnit({
     isOverlay = false,
     onRemove,
     canRemove = true,
+    isHighlighted = false,
 }: {
     unit: DbUnit;
     isOverlay?: boolean;
     onRemove?: (unit: DbUnit) => void;
     canRemove?: boolean;
+    isHighlighted?: boolean;
 }) {
     const {
         attributes,
@@ -63,12 +65,15 @@ function SortableUnit({
         <div
             ref={setNodeRef}
             style={style}
+            data-tour-id={isHighlighted ? "tour-wizard-draggable-unit" : undefined}
             className={cn(
                 "group relative flex items-center justify-between gap-3 rounded-xl border p-2.5 sm:p-3 transition-all cursor-grab active:cursor-grabbing select-none",
                 isDragging ? "opacity-30 grayscale ring-2 ring-primary" : "opacity-100",
                 isOverlay
                     ? "z-50 border-primary bg-background shadow-2xl ring-2 ring-primary/40 scale-105"
-                    : "border-border/90 bg-background hover:border-primary/50 hover:bg-accent/40 hover:shadow-xs hover:-translate-y-0.5 text-foreground shadow-2xs active:scale-[0.98]"
+                    : isHighlighted
+                        ? "border-primary bg-primary/10 ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-102 z-30"
+                        : "border-border/90 bg-background hover:border-primary/50 hover:bg-accent/40 hover:shadow-xs hover:-translate-y-0.5 text-foreground shadow-2xs active:scale-[0.98]"
             )}
             {...attributes}
             {...listeners}
@@ -78,10 +83,24 @@ function SortableUnit({
             aria-label={`Drag ${unit.name} to another floor, ${bedLabel}`}
         >
             <div className="flex items-center gap-2.5 min-w-0">
-                <div className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-muted/80 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                {isHighlighted && (
+                    <span className="relative flex size-2 shrink-0">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span className="relative inline-flex rounded-full size-2 bg-primary"></span>
+                    </span>
+                )}
+                <div className={cn(
+                    "flex size-6 shrink-0 items-center justify-center rounded-lg transition-colors",
+                    isHighlighted ? "bg-primary text-primary-foreground shadow-xs animate-bounce" : "bg-muted/80 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                )}>
                     <GripVertical className="size-3.5" />
                 </div>
                 <span className="truncate text-xs font-bold text-foreground tracking-tight">{unit.name}</span>
+                {isHighlighted && (
+                    <span className="hidden sm:inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20 animate-pulse">
+                        Drag Me
+                    </span>
+                )}
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
                 <span className="text-[10px] font-semibold text-muted-foreground bg-muted/70 px-2 py-0.5 rounded-md border border-border/50">
@@ -115,6 +134,8 @@ function FloorLane({
     canRemove = true,
     onRemoveUnit,
     canRemoveUnit = true,
+    highlightedUnitId,
+    isDropHighlighted = false,
 }: {
     floor: FloorConfig;
     units: DbUnit[];
@@ -122,6 +143,8 @@ function FloorLane({
     canRemove?: boolean;
     onRemoveUnit?: (unit: DbUnit) => void;
     canRemoveUnit?: boolean;
+    highlightedUnitId?: string;
+    isDropHighlighted?: boolean;
 }) {
     const { setNodeRef, isOver } = useSortable({
         id: `floor-${floor.floor_number}`,
@@ -186,10 +209,17 @@ function FloorLane({
                 </div>
 
                 <div className="flex items-center gap-2.5">
-                    <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground/80">
-                        <Move className="size-3 text-muted-foreground/60" />
-                        <span>Drag units to move</span>
-                    </span>
+                    {isDropHighlighted ? (
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-primary bg-primary/15 px-2.5 py-1 rounded-xl border border-primary/30 animate-pulse shadow-xs">
+                            <Move className="size-3 animate-bounce" />
+                            <span>Target Drop Zone</span>
+                        </span>
+                    ) : (
+                        <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground/80">
+                            <Move className="size-3 text-muted-foreground/60" />
+                            <span>Drag units to move</span>
+                        </span>
+                    )}
                     <span className="text-muted-foreground/30 hidden sm:inline">•</span>
                     <span className={cn(
                         "text-xs font-semibold px-2.5 py-0.5 rounded-full border shadow-2xs",
@@ -205,10 +235,12 @@ function FloorLane({
             {/* Floor Lane Dropzone Tray */}
             <div
                 ref={setNodeRef}
+                data-tour-id={isDropHighlighted ? "tour-wizard-dropzone" : undefined}
                 className={cn(
                     "p-4 sm:p-5 flex-1 min-h-[160px] transition-all",
                     units.length === 0 && "flex items-center justify-center bg-muted/10 border-2 border-dashed border-border/60 m-3 rounded-xl",
-                    isOver && "bg-primary/[0.02]"
+                    isOver && "bg-primary/[0.02]",
+                    isDropHighlighted && "ring-2 ring-primary/40 border-primary/40 bg-primary/[0.03] border-dashed"
                 )}
             >
                 <SortableContext items={units.map((u) => u.id)} strategy={rectSortingStrategy}>
@@ -219,6 +251,7 @@ function FloorLane({
                                 unit={unit}
                                 onRemove={onRemoveUnit}
                                 canRemove={canRemoveUnit}
+                                isHighlighted={unit.id === highlightedUnitId}
                             />
                         ))}
                     </div>
