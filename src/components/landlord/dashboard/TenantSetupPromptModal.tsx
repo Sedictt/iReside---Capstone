@@ -9,6 +9,7 @@ import {
     Clock, 
     CheckCircle2, 
     Share2, 
+    DoorOpen,
     X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,7 +18,9 @@ interface TenantSetupPromptModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSelectReusableLink: () => void;
-    onSelectAddManually: () => void;
+    onSelectAddManually?: () => void;
+    onSelectQuickAdd?: () => void;
+    onSelectWalkIn?: () => void;
     onMaybeLater: () => void;
     propertyName?: string;
 }
@@ -27,6 +30,8 @@ export function TenantSetupPromptModal({
     onClose,
     onSelectReusableLink,
     onSelectAddManually,
+    onSelectQuickAdd,
+    onSelectWalkIn,
     onMaybeLater,
     propertyName,
 }: TenantSetupPromptModalProps) {
@@ -72,7 +77,7 @@ export function TenantSetupPromptModal({
             {/* Modal Container */}
             <div
                 className={cn(
-                    "relative z-[151] w-full max-w-[580px] pointer-events-auto",
+                    "relative z-[151] w-full max-w-[580px] max-h-[90vh] overflow-y-auto pointer-events-auto",
                     "rounded-3xl border border-border/80 bg-card text-card-foreground shadow-2xl",
                     "p-6 sm:p-8 space-y-6 animate-in zoom-in-95 fade-in duration-200"
                 )}
@@ -180,43 +185,13 @@ export function TenantSetupPromptModal({
                                 How would you like to add tenants?
                             </h2>
                             <p id="tenant-setup-modal-desc" className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                You can invite tenants remotely using a reusable link, or enter resident details manually.
+                                Choose the onboarding mode that best fits your workflow.
                             </p>
                         </div>
 
                         {/* Method Cards */}
                         <div className="grid grid-cols-1 gap-3.5 pt-1">
-                            {/* Option 1: Reusable Link */}
-                            <button
-                                type="button"
-                                onClick={onSelectReusableLink}
-                                className="group w-full text-left rounded-2xl border border-border/80 hover:border-primary/50 bg-muted/20 hover:bg-primary/5 p-4 sm:p-5 transition-all cursor-pointer shadow-2xs hover:shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                            >
-                                <div className="flex items-start gap-3.5 sm:gap-4">
-                                    <div className="flex size-11 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20 shrink-0 group-hover:scale-105 transition-transform">
-                                        <Share2 className="size-5" />
-                                    </div>
-                                    <div className="flex-1 min-w-0 space-y-1.5">
-                                        <div className="flex items-center justify-between gap-2 flex-wrap">
-                                            <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
-                                                Invite via Reusable Link
-                                            </h3>
-                                            <span className="inline-flex text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20">
-                                                Remote Onboarding
-                                            </span>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground leading-relaxed">
-                                            Generate a single reusable link or QR code to share with a single user or post in a group chat (Messenger, Viber, WhatsApp). Tenants can complete the application and onboarding process remotely from their own devices.
-                                        </p>
-                                        <div className="flex items-center gap-1.5 pt-0.5 text-xs font-semibold text-primary">
-                                            <span>Generate and share link</span>
-                                            <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </button>
-
-                            {/* Option 2: Add Manually */}
+                            {/* Option 1: Quick Add (Add Tenants Manually) */}
                             <div className="rounded-2xl border border-border/80 bg-muted/20 p-4 sm:p-5 space-y-4">
                                 <div className="flex items-start gap-3.5 sm:gap-4">
                                     <div className="flex size-11 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 shrink-0">
@@ -228,11 +203,11 @@ export function TenantSetupPromptModal({
                                                 Add Tenants Manually
                                             </h3>
                                             <span className="inline-flex text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
-                                                In-Person / Direct
+                                                Quick Add / Existing Leases
                                             </span>
                                         </div>
                                         <p className="text-xs text-muted-foreground leading-relaxed">
-                                            If you already have resident details or signed physical leases on hand, follow these steps:
+                                            Quickly add existing residents who are already living in your property before adopting iReside:
                                         </p>
                                     </div>
                                 </div>
@@ -267,13 +242,85 @@ export function TenantSetupPromptModal({
 
                                 <button
                                     type="button"
-                                    onClick={onSelectAddManually}
-                                    className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-xs sm:text-sm hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                    onClick={() => {
+                                        if (onSelectQuickAdd) {
+                                            onSelectQuickAdd();
+                                        } else if (onSelectAddManually) {
+                                            onSelectAddManually();
+                                        }
+                                    }}
+                                    className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-xs sm:text-sm hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                 >
                                     <UserPlus className="size-4" />
                                     <span>Open Manual Resident Form</span>
                                 </button>
                             </div>
+
+                            {/* Option 2: Reusable Invite Link */}
+                            <button
+                                type="button"
+                                onClick={onSelectReusableLink}
+                                className="group w-full text-left rounded-2xl border border-border/80 hover:border-primary/50 bg-muted/20 hover:bg-primary/5 p-4 sm:p-5 transition-all cursor-pointer shadow-2xs hover:shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                            >
+                                <div className="flex items-start gap-3.5 sm:gap-4">
+                                    <div className="flex size-11 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20 shrink-0 group-hover:scale-105 transition-transform">
+                                        <Share2 className="size-5" />
+                                    </div>
+                                    <div className="flex-1 min-w-0 space-y-1.5">
+                                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                                            <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                                                Invite via Reusable Link
+                                            </h3>
+                                            <span className="inline-flex text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20">
+                                                Remote Onboarding
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground leading-relaxed">
+                                            Generate a single reusable link or QR code to share with a single user or post in a group chat (Messenger, Viber, WhatsApp). Tenants can complete the application and onboarding process remotely from their own devices.
+                                        </p>
+                                        <div className="flex items-center gap-1.5 pt-0.5 text-xs font-semibold text-primary">
+                                            <span>Generate and share link</span>
+                                            <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </button>
+
+                            {/* Option 3: Walk-in Application */}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (onSelectWalkIn) {
+                                        onSelectWalkIn();
+                                    } else if (onSelectAddManually) {
+                                        onSelectAddManually();
+                                    }
+                                }}
+                                className="group w-full text-left rounded-2xl border border-border/80 hover:border-emerald-500/50 bg-muted/20 hover:bg-emerald-500/5 p-4 sm:p-5 transition-all cursor-pointer shadow-2xs hover:shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                            >
+                                <div className="flex items-start gap-3.5 sm:gap-4">
+                                    <div className="flex size-11 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shrink-0 group-hover:scale-105 transition-transform">
+                                        <DoorOpen className="size-5" />
+                                    </div>
+                                    <div className="flex-1 min-w-0 space-y-1.5">
+                                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                                            <h3 className="text-sm font-bold text-foreground group-hover:text-emerald-500 transition-colors">
+                                                Walk-in Application
+                                            </h3>
+                                            <span className="inline-flex text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                                                In-Person Leasing
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground leading-relaxed">
+                                            Process prospective walk-in applicants on-site with live document verification, instant digital contract signing, and downpayment recording.
+                                        </p>
+                                        <div className="flex items-center gap-1.5 pt-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                            <span>Start in-person intake</span>
+                                            <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </button>
                         </div>
                     </div>
                 )}

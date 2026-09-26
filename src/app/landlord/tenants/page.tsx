@@ -63,7 +63,7 @@ function TenantsContent() {
  const [isModalOpen, setIsModalOpen] = useState(false);
  const [isTenantSetupPromptOpen, setIsTenantSetupPromptOpen] = useState(false);
  const [dismissedThisVisit, setDismissedThisVisit] = useState(false);
- const [addTenantModalTab, setAddTenantModalTab] = useState<'manual' | 'invite'>('manual');
+ const [addTenantModalTab, setAddTenantModalTab] = useState<'quick_add' | 'manual' | 'invite' | 'walk_in'>('quick_add');
  const tenantSetupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
  const activePropertyId = selectedPropertyId && selectedPropertyId !== "all"
@@ -161,15 +161,30 @@ function TenantsContent() {
   setIsModalOpen(true);
  };
 
- const handleSelectAddManually = () => {
+ const handleSelectQuickAdd = () => {
   if (tenantSetupTimeoutRef.current) {
    clearTimeout(tenantSetupTimeoutRef.current);
    tenantSetupTimeoutRef.current = null;
   }
   setDismissedThisVisit(true);
   setIsTenantSetupPromptOpen(false);
-  setAddTenantModalTab('manual');
+  setAddTenantModalTab('quick_add');
   setIsModalOpen(true);
+ };
+
+ const handleSelectWalkIn = () => {
+  if (tenantSetupTimeoutRef.current) {
+   clearTimeout(tenantSetupTimeoutRef.current);
+   tenantSetupTimeoutRef.current = null;
+  }
+  setDismissedThisVisit(true);
+  setIsTenantSetupPromptOpen(false);
+  setAddTenantModalTab('walk_in');
+  setIsModalOpen(true);
+ };
+
+ const handleSelectAddManually = () => {
+  handleSelectQuickAdd();
  };
 
  const setTab = (tab: string) => {
@@ -227,6 +242,8 @@ function TenantsContent() {
   onClose={handleCloseTenantSetupPrompt}
   onSelectReusableLink={handleSelectReusableLink}
   onSelectAddManually={handleSelectAddManually}
+  onSelectQuickAdd={handleSelectQuickAdd}
+  onSelectWalkIn={handleSelectWalkIn}
   onMaybeLater={handleMaybeLaterTenantSetup}
   propertyName={currentProperty?.name}
  />
@@ -240,7 +257,7 @@ function TenantsContent() {
  <div className="flex items-center gap-3">
  <button 
   onClick={() => {
-   setAddTenantModalTab('manual');
+   setAddTenantModalTab('quick_add');
    setIsModalOpen(true);
   }}
   className="inline-flex items-center gap-2 rounded-xl neumorphic-primary px-5 py-2.5 text-sm font-black transition-all hover:bg-primary/90 active:scale-95"
@@ -292,7 +309,7 @@ function TenantsContent() {
  onViewProfile={handleViewProfile}
  onMessage={handleMessageTenant}
  onAddTenant={() => {
-  setAddTenantModalTab('manual');
+  setAddTenantModalTab('quick_add');
   setIsModalOpen(true);
  }}
  />

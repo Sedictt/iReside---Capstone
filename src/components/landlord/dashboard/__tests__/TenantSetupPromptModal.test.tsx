@@ -105,4 +105,32 @@ describe("TenantSetupPromptModal", () => {
         fireEvent.click(screen.getByText("Back"));
         expect(screen.getByText("Configure Your Tenants")).toBeDefined();
     });
+
+    it("triggers onSelectQuickAdd and onSelectWalkIn when 3 modes are rendered", () => {
+        const handleReusableLink = vi.fn();
+        const handleQuickAdd = vi.fn();
+        const handleWalkIn = vi.fn();
+
+        render(
+            <TenantSetupPromptModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSelectReusableLink={handleReusableLink}
+                onSelectQuickAdd={handleQuickAdd}
+                onSelectWalkIn={handleWalkIn}
+                onMaybeLater={vi.fn()}
+            />
+        );
+
+        fireEvent.click(screen.getByText("Yes, Configure Tenants"));
+
+        expect(screen.getByText("Walk-in Application")).toBeDefined();
+        expect(screen.getByText("In-Person Leasing")).toBeDefined();
+
+        fireEvent.click(screen.getByText("Walk-in Application"));
+        expect(handleWalkIn).toHaveBeenCalledTimes(1);
+
+        fireEvent.click(screen.getByText("Open Manual Resident Form"));
+        expect(handleQuickAdd).toHaveBeenCalledTimes(1);
+    });
 });

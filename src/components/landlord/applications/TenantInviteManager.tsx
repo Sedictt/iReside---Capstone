@@ -144,6 +144,7 @@ export function TenantInviteManager({
         "valid_id",
         "proof_of_income",
     ]);
+    const [isAdvanced, setIsAdvanced] = useState(false);
     const [propertyId, setPropertyId] = useState("");
     const [unitId, setUnitId] = useState("");
     const [previewUnitId, setPreviewUnitId] = useState("");
@@ -169,7 +170,7 @@ export function TenantInviteManager({
     const qrCodeRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (freshInvite && qrCodeRef.current) {
+        if (freshInvite && typeof qrCodeRef.current?.scrollIntoView === "function") {
             qrCodeRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
         }
     }, [freshInvite]);
@@ -184,6 +185,12 @@ export function TenantInviteManager({
         }
         return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
     }, [availableUnits]);
+
+    useEffect(() => {
+        if (properties.length > 0 && !propertyId) {
+            setPropertyId(properties[0].id);
+        }
+    }, [properties, propertyId]);
 
     const propertyUnits = useMemo(
         () =>
@@ -391,46 +398,81 @@ export function TenantInviteManager({
 
             <div className={cn("mt-6 sm:mt-8 grid gap-4 sm:gap-6 xl:grid-cols-[1fr_400px]", showHistory && "hidden md:grid")}>
                 <div className="flex flex-col sm:rounded-[1.75rem] sm:border sm:border-border sm:bg-background/50 sm:p-6 sm:shadow-sm xl:p-8">
-                    <div className="mb-4 sm:mb-6 flex flex-row items-center justify-between gap-4 border-b border-border/50 pb-4 sm:pb-5">
+                    <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-4 sm:pb-5">
                         <div>
                             <h3 className="text-lg sm:text-xl font-black text-foreground">Generator Settings</h3>
-                            <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-muted-foreground hidden sm:block">Customize how your future tenants will receive and interact with the invite.</p>
+                            <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-muted-foreground hidden sm:block">
+                                {isAdvanced ? "Configure custom scope, screening mode, and document checklist." : "Quickly create an invite link with sensible default settings."}
+                            </p>
                         </div>
-                        <div className="relative">
-                            <button
-                                type="button"
-                                onClick={() => setShowHelpTooltip(!showHelpTooltip)}
-                                onBlur={() => setTimeout(() => setShowHelpTooltip(false), 200)}
-                                aria-label="Toggle help information"
-                                title="Toggle help information"
-                                className="relative inline-flex items-center justify-center rounded-xl border border-border bg-card p-2.5 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
-                            >
-                                <CircleHelp className="size-5" />
-                            </button>
-                            {showHelpTooltip && (
-                                <div className="absolute right-0 top-12 z-30 w-72 rounded-2xl border border-border bg-background p-4 text-left text-xs font-black leading-relaxed text-foreground shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200">
-                                    <p className="font-black uppercase tracking-wider text-primary">Configuration Guide</p>
-                                    <p className="mt-3 text-muted-foreground">Scope: Choose if this link allows applicants to pick any vacant unit in the property, or if it&apos;s locked to a specific unit.</p>
-                                    <p className="mt-2 text-muted-foreground">Application Mode: Online mode requires tenants to upload documents immediately. In-person allows you to verify physical documents later.</p>
-                                </div>
-                            )}
+                        <div className="flex items-center gap-2">
+                            <div className="inline-flex rounded-xl border border-border bg-muted/40 p-1">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsAdvanced(false);
+                                        setMode("property");
+                                        setUnitId("");
+                                    }}
+                                    className={cn(
+                                        "rounded-lg px-3 py-1.5 text-xs font-black uppercase tracking-wider transition-colors",
+                                        !isAdvanced
+                                            ? "bg-background text-foreground shadow-xs"
+                                            : "text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    Simple
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsAdvanced(true)}
+                                    className={cn(
+                                        "rounded-lg px-3 py-1.5 text-xs font-black uppercase tracking-wider transition-colors",
+                                        isAdvanced
+                                            ? "bg-background text-foreground shadow-xs"
+                                            : "text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    Advanced
+                                </button>
+                            </div>
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowHelpTooltip(!showHelpTooltip)}
+                                    onBlur={() => setTimeout(() => setShowHelpTooltip(false), 200)}
+                                    aria-label="Toggle help information"
+                                    title="Toggle help information"
+                                    className="relative inline-flex items-center justify-center rounded-xl border border-border bg-card p-2.5 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                                >
+                                    <CircleHelp className="size-5" />
+                                </button>
+                                {showHelpTooltip && (
+                                    <div className="absolute right-0 top-12 z-30 w-72 rounded-2xl border border-border bg-background p-4 text-left text-xs font-black leading-relaxed text-foreground shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <p className="font-black uppercase tracking-wider text-primary">Configuration Guide</p>
+                                        <p className="mt-3 text-muted-foreground">Scope: Choose if this link allows applicants to pick any vacant unit in the property, or if it&apos;s locked to a specific unit.</p>
+                                        <p className="mt-2 text-muted-foreground">Application Mode: Online mode requires tenants to upload documents immediately. In-person allows you to verify physical documents later.</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
-                        <div className="space-y-3">
-                            <p id="scope-group-label" className="text-xs font-black uppercase tracking-wider text-muted-foreground">1. Select Scope</p>
-                            <div role="radiogroup" aria-labelledby="scope-group-label" className="grid grid-cols-2 gap-2 sm:gap-3">
-                                {scopeControls.map((control) => {
-                                    const Icon = control.icon;
-                                    const active = mode === control.key;
-                                    return (
-                                        <button
-                                            key={control.key}
-                                            type="button"
-                                            onClick={control.onClick}
-                                            role="radio"
-                                            aria-checked={active}
+                    {isAdvanced && (
+                        <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 animate-in fade-in duration-200">
+                            <div className="space-y-3">
+                                <p id="scope-group-label" className="text-xs font-black uppercase tracking-wider text-muted-foreground">1. Select Scope</p>
+                                <div role="radiogroup" aria-labelledby="scope-group-label" className="grid grid-cols-2 gap-2 sm:gap-3">
+                                    {scopeControls.map((control) => {
+                                        const Icon = control.icon;
+                                        const active = mode === control.key;
+                                        return (
+                                            <button
+                                                key={control.key}
+                                                type="button"
+                                                onClick={control.onClick}
+                                                role="radio"
+                                                aria-checked={active}
                                             className={cn(
                                                 "flex flex-col items-center justify-center gap-1.5 sm:gap-3 rounded-xl sm:rounded-2xl border p-2.5 sm:p-3.5 transition-all text-center group w-full",
                                                 active
@@ -494,8 +536,9 @@ export function TenantInviteManager({
                             </div>
                         </div>
                     </div>
+                    )}
 
-                    {applicationType === "online" && (
+                    {isAdvanced && applicationType === "online" && (
                         <div className="mb-8 rounded-[1.75rem] border border-primary/20 bg-primary/5 p-4 sm:p-5 animate-in fade-in zoom-in duration-300">
                             <p id="docs-group-label" className="text-xs font-black uppercase tracking-wider text-primary">3. Required Documents</p>
                             <p className="mt-1 text-xs text-muted-foreground font-medium">Tenant must upload these to complete their application.</p>
@@ -529,15 +572,16 @@ export function TenantInviteManager({
                                                 {option.key === "valid_id" && (
                                                     <span className="relative inline-flex items-center ml-1.5" onClick={(e) => e.stopPropagation()}>
                                                         <Tooltip content={VALID_ID_TOOLTIP} side="top" sideOffset={8}>
-                                                            <button
-                                                                type="button"
+                                                            <span
+                                                                role="button"
+                                                                tabIndex={0}
                                                                 aria-label="Valid ID Information"
-                                                                className="focus:outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-primary rounded-full"
+                                                                className="focus:outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-primary rounded-full inline-flex"
                                                             >
                                                                 <CircleHelp
                                                                     className="size-4 rounded-full border border-amber-400/40 bg-amber-400/15 p-0.5 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.35)] animate-pulse"
                                                                 />
-                                                            </button>
+                                                            </span>
                                                         </Tooltip>
                                                     </span>
                                                 )}
@@ -549,7 +593,7 @@ export function TenantInviteManager({
                         </div>
                     )}
 
-                    {showPaymentPreview && (
+                    {isAdvanced && showPaymentPreview && (
                         <div className="mb-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 p-4">
                             <p className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
                                 Estimated Move-in Payment Preview
@@ -573,13 +617,15 @@ export function TenantInviteManager({
                     )}
 
                     <div className="space-y-6">
-                        <div className="flex items-center gap-3">
-                            <div className="h-px flex-1 bg-border/50" />
-                            <span className="text-xs font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">
-                                {applicationType === "online" ? "4. Details & Expiration" : "3. Details & Expiration"}
-                            </span>
-                            <div className="h-px flex-1 bg-border/50" />
-                        </div>
+                        {isAdvanced && (
+                            <div className="flex items-center gap-3">
+                                <div className="h-px flex-1 bg-border/50" />
+                                <span className="text-xs font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                                    {applicationType === "online" ? "4. Details & Expiration" : "3. Details & Expiration"}
+                                </span>
+                                <div className="h-px flex-1 bg-border/50" />
+                            </div>
+                        )}
 
                         <div className="grid gap-6 md:grid-cols-2">
                             <div className="group space-y-2">
@@ -613,7 +659,7 @@ export function TenantInviteManager({
                             </div>
                         </div>
 
-                            {mode === "unit" && (
+                            {isAdvanced && mode === "unit" && (
                                 <div className="group space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                                     <label htmlFor="select-unit" className="text-xs font-black uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
                                         Select Vacant Unit
@@ -645,7 +691,7 @@ export function TenantInviteManager({
                             </div>
                         )}
 
-                            {mode === "property" && (
+                            {isAdvanced && mode === "property" && (
                                 <div className="group space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                                     <label htmlFor="preview-unit" className="text-xs font-black uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
                                         Rent Preview Unit
