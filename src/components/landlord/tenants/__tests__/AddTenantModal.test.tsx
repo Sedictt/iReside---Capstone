@@ -267,4 +267,27 @@ describe("AddTenantModal", () => {
         fireEvent.blur(phoneInput);
         expect(screen.getByText("Please enter a valid phone number (10–15 digits).")).toBeDefined();
     });
+
+    it("does not accept digits in full name and strips them in real time", () => {
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSuccess={vi.fn()}
+                initialTab="quick_add"
+            />
+        );
+
+        const nameInput = screen.getByLabelText("Full Name") as HTMLInputElement;
+
+        // Digits entered into name field are automatically stripped
+        fireEvent.change(nameInput, { target: { value: "Juan Dela Cruz 123" } });
+        expect(nameInput.value).toBe("Juan Dela Cruz ");
+
+        // Typing only numbers results in empty field
+        fireEvent.change(nameInput, { target: { value: "12345" } });
+        expect(nameInput.value).toBe("");
+        fireEvent.blur(nameInput);
+        expect(screen.getByText("Full name is required.")).toBeDefined();
+    });
 });
