@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Camera } from "lucide-react";
+import { Camera, Compass } from "lucide-react";
 import { LandlordQuestBoard } from "@/components/landlord/dashboard/LandlordQuestBoard";
 import { DashboardHeaderActions } from "./DashboardHeaderActions";
 import { DashboardMainContent } from "./DashboardMainContent";
@@ -22,6 +22,7 @@ interface DashboardBannerProps {
     onCollectPayment?: () => void;
     onCreateInvite?: () => void;
     onOpenFlyer?: () => void;
+    onStartTour?: () => void;
 }
 
 export function DashboardBanner({
@@ -33,7 +34,8 @@ export function DashboardBanner({
     onNewWalkIn,
     onCollectPayment,
     onCreateInvite,
-    onOpenFlyer
+    onOpenFlyer,
+    onStartTour
 }: DashboardBannerProps) {
     const brand = useBrand();
     const getManilaTime = () => new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
@@ -123,7 +125,9 @@ export function DashboardBanner({
             <DashboardBackground image={activeBanner} />
 
             {/* Header Actions (Floating Controls & Dropdown with top z-index z-50) */}
-            <DashboardHeaderActions onQuestPanelOpen={handleQuestPanelOpen} />
+            <div data-tour-id="tour-dashboard-navigation">
+                <DashboardHeaderActions onQuestPanelOpen={handleQuestPanelOpen} />
+            </div>
 
             {/* Main Content Area */}
             <div className="relative z-10 w-full px-4 py-5 sm:px-6 sm:py-8 md:px-10 md:py-10 pointer-events-none">
@@ -146,16 +150,29 @@ export function DashboardBanner({
                 </div>
             </div>
 
-            {/* Floating Banner Customizer Button (z-20 for instant clicks, layered behind z-50 dropdown) */}
-            <button
-                type="button"
-                onClick={() => setIsCustomizerOpen(true)}
-                className="absolute bottom-3 right-4 z-20 pointer-events-auto opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 px-3 py-1.5 rounded-xl bg-background/80 hover:bg-background border border-border/60 backdrop-blur-md text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-foreground flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
-                title="Customize banner image"
-            >
-                <Camera className="size-3.5 text-primary" />
-                <span>Customize Banner</span>
-            </button>
+            {/* Floating Action Controls (Guided Tour & Banner Customizer) */}
+            <div className="absolute bottom-3 right-4 z-20 pointer-events-auto flex items-center gap-2">
+                {onStartTour && (
+                    <button
+                        type="button"
+                        onClick={onStartTour}
+                        className="px-3 py-1.5 rounded-xl bg-background/80 hover:bg-background border border-primary/40 backdrop-blur-md text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer transition-all duration-300"
+                        title="Start Guided Tour"
+                    >
+                        <Compass className="size-3.5 text-primary" />
+                        <span>Guided Tour</span>
+                    </button>
+                )}
+                <button
+                    type="button"
+                    onClick={() => setIsCustomizerOpen(true)}
+                    className="opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 px-3 py-1.5 rounded-xl bg-background/80 hover:bg-background border border-border/60 backdrop-blur-md text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-foreground flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+                    title="Customize banner image"
+                >
+                    <Camera className="size-3.5 text-primary" />
+                    <span>Customize Banner</span>
+                </button>
+            </div>
 
             {/* Side Quest Panel */}
             <LandlordQuestBoard 

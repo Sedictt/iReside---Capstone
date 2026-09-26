@@ -52,7 +52,7 @@ export function DashboardMainContent({
                 </p>
 
                 {/* Navigation Actions */}
-                <div className="flex sm:flex-row sm:items-center gap-3 mt-8 w-auto flex-wrap">
+                <div data-tour-id="tour-quick-actions" className="flex sm:flex-row sm:items-center gap-3 mt-8 w-auto flex-wrap">
                     {onNewWalkIn ? (
                         <button 
                             onClick={onNewWalkIn}
@@ -163,7 +163,7 @@ export function DashboardMainContent({
                 </div>
 
                 {/* Mobile Quick Action Bar (Unified Single Row) */}
-                <div className="flex flex-row items-center gap-2 mt-2 w-full flex-wrap">
+                <div data-tour-id="tour-quick-actions-mobile" className="flex flex-row items-center gap-2 mt-2 w-full flex-wrap">
                     {onNewWalkIn ? (
                         <button 
                             onClick={onNewWalkIn}
