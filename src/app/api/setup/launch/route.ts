@@ -89,46 +89,49 @@ export async function POST(request: NextRequest) {
     const hasPasswordUpdate = Boolean(newPassword && newPassword.length >= 6 && !newPassword.includes("•"));
     const hasEmailUpdate = Boolean(newEmail && newEmail.includes("@") && !newEmail.includes("turnkey.local") && newEmail !== authContext.userEmail);
 
-    if (hasPasswordUpdate || hasEmailUpdate) {
-      const authUpdates: { password?: string; email?: string; user_metadata: Record<string, any> } = {
-        user_metadata: {
-          role: "landlord",
-          is_account_claimed: true,
-          is_setup_completed: true,
-          setup_completed: true,
-          ...(adminFullName ? { full_name: adminFullName } : {}),
-        },
-      };
+    // 1. Always update Supabase Auth User Metadata to mark workspace setup complete
+    const authMetadataUpdates: Record<string, any> = {
+      role: "landlord",
+      is_account_claimed: true,
+      is_setup_completed: true,
+      setup_completed: true,
+    };
+    if (adminFullName) {
+      authMetadataUpdates.full_name = adminFullName;
+    }
 
-      if (hasPasswordUpdate && newPassword) {
-        authUpdates.password = newPassword;
-      }
-      if (hasEmailUpdate && newEmail) {
-        authUpdates.email = newEmail;
-      }
+    const authUpdates: { password?: string; email?: string; user_metadata: Record<string, any> } = {
+      user_metadata: authMetadataUpdates,
+    };
 
-      const { error: authUpdateError } = await adminClient.auth.admin.updateUserById(
-        userId,
-        authUpdates
+    if (hasPasswordUpdate && newPassword) {
+      authUpdates.password = newPassword;
+    }
+    if (hasEmailUpdate && newEmail) {
+      authUpdates.email = newEmail;
+    }
+
+    const { error: authUpdateError } = await adminClient.auth.admin.updateUserById(
+      userId,
+      authUpdates
+    );
+    if (authUpdateError) {
+      console.warn("[Setup Launch] Failed updating auth credentials:", authUpdateError.message);
+      return NextResponse.json(
+        { error: `Failed to update account credentials: ${authUpdateError.message}` },
+        { status: 400 }
       );
-      if (authUpdateError) {
-        console.warn("[Setup Launch] Failed updating auth credentials:", authUpdateError.message);
-        return NextResponse.json(
-          { error: `Failed to update account email: ${authUpdateError.message}` },
-          { status: 400 }
-        );
-      } else if (hasPasswordUpdate && newPassword) {
-        const targetEmail = newEmail || authContext.userEmail;
-        if (targetEmail) {
-          try {
-            const authSupabase = await createServerSupabaseClient();
-            await authSupabase.auth.signInWithPassword({
-              email: targetEmail,
-              password: newPassword,
-            });
-          } catch {
-            // Non-critical session refresh; credentials already updated via admin client
-          }
+    } else if (hasPasswordUpdate && newPassword) {
+      const targetEmail = newEmail || authContext.userEmail;
+      if (targetEmail) {
+        try {
+          const authSupabase = await createServerSupabaseClient();
+          await authSupabase.auth.signInWithPassword({
+            email: targetEmail,
+            password: newPassword,
+          });
+        } catch {
+          // Non-critical session refresh; credentials already updated via admin client
         }
       }
     }

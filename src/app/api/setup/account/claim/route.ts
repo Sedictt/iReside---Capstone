@@ -166,7 +166,6 @@ export async function POST(request: NextRequest) {
     const fullProfilePayload: Record<string, any> = {
       email: normalizedEmail,
       full_name: fullName.trim(),
-      is_account_claimed: true,
       has_changed_password: true,
       updated_at: new Date().toISOString(),
     };

@@ -597,7 +597,7 @@ function WizardContent() {
 
       try {
         const supabase = createClient();
-        void supabase.auth.refreshSession().catch(() => {});
+        await supabase.auth.refreshSession().catch(() => {});
       } catch {
         // ignore
       }

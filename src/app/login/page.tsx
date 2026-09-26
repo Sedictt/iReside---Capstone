@@ -277,7 +277,7 @@ function LoginContent() {
                 try {
                     const profileQuery = supabase
                         .from("profiles")
-                        .select("role, is_account_claimed")
+                        .select("role")
                         .eq("id", data.user.id)
                         .single();
                     const profileTimeout = new Promise<{ data: any; error: any }>((resolve) =>
@@ -286,7 +286,6 @@ function LoginContent() {
                     const { data: profile } = await Promise.race([profileQuery, profileTimeout]);
                     if (profile) {
                         if (!role) role = profile.role;
-                        if (isClaimed === undefined) isClaimed = (profile as any).is_account_claimed;
                     }
                 } catch {
                     // Profile query timeout should not block login
