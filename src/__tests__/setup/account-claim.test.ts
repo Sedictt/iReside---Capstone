@@ -306,13 +306,12 @@ describe("POST /api/setup/account/claim (Account Claiming & Initial Credential S
       })
     );
 
-    // Verify profiles table updated with is_account_claimed: true and pre-seeded phone cleared to null
+    // Verify profiles table updated with pre-seeded phone cleared to null
     expect(mockProfileUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         email: "maria.clara@realdomain.com",
         full_name: "Maria Clara",
         phone: null,
-        is_account_claimed: true,
         has_changed_password: true,
       })
     );

@@ -9,6 +9,8 @@ interface DashboardMainContentProps {
     title: string;
     subtitle: string;
     time: Date;
+    isTourOpen?: boolean;
+    currentTourStep?: number;
     onNewWalkIn?: () => void;
     onCollectPayment?: () => void;
     onCreateInvite?: () => void;
@@ -19,6 +21,8 @@ export function DashboardMainContent({
     title,
     subtitle,
     time,
+    isTourOpen = false,
+    currentTourStep = 0,
     onNewWalkIn,
     onCollectPayment,
     onCreateInvite,
@@ -52,7 +56,19 @@ export function DashboardMainContent({
                 </p>
 
                 {/* Navigation Actions */}
-                <div data-tour-id="tour-quick-actions" className="flex sm:flex-row sm:items-center gap-3 mt-8 w-auto flex-wrap">
+                <div 
+                    data-tour-id="tour-quick-actions" 
+                    className={cn(
+                        "relative flex sm:flex-row sm:items-center gap-3 mt-8 w-auto flex-wrap rounded-2xl transition-all duration-300",
+                        isTourOpen && currentTourStep === 0 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse bg-primary/10 p-2 z-30"
+                    )}
+                >
+                    {isTourOpen && currentTourStep === 0 && (
+                        <span className="absolute -top-2 -right-2 flex size-3 z-40">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span className="relative inline-flex rounded-full size-3 bg-primary"></span>
+                        </span>
+                    )}
                     {onNewWalkIn ? (
                         <button 
                             onClick={onNewWalkIn}
@@ -163,7 +179,19 @@ export function DashboardMainContent({
                 </div>
 
                 {/* Mobile Quick Action Bar (Unified Single Row) */}
-                <div data-tour-id="tour-quick-actions-mobile" className="flex flex-row items-center gap-2 mt-2 w-full flex-wrap">
+                <div 
+                    data-tour-id="tour-quick-actions-mobile" 
+                    className={cn(
+                        "relative flex flex-row items-center gap-2 mt-2 w-full flex-wrap rounded-xl transition-all duration-300",
+                        isTourOpen && currentTourStep === 0 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse bg-primary/10 p-1.5 z-30"
+                    )}
+                >
+                    {isTourOpen && currentTourStep === 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 flex size-2.5 z-40">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span className="relative inline-flex rounded-full size-2.5 bg-primary"></span>
+                        </span>
+                    )}
                     {onNewWalkIn ? (
                         <button 
                             onClick={onNewWalkIn}

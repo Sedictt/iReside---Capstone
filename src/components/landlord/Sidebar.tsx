@@ -313,12 +313,39 @@ export function Sidebar({
     ];
 
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+    const [isTourActiveOnNav, setIsTourActiveOnNav] = useState(false);
+
+    useEffect(() => {
+        const handleTourState = (e: any) => {
+            if (e.detail?.isOpen && e.detail?.step === 3) {
+                setIsTourActiveOnNav(true);
+            } else {
+                setIsTourActiveOnNav(false);
+            }
+        };
+
+        window.addEventListener("dashboard-tour-state" as any, handleTourState);
+        return () => window.removeEventListener("dashboard-tour-state" as any, handleTourState);
+    }, []);
 
     return (
         <>
             <RoleSidebar
                 sections={NAV_ITEMS}
-                header={<PropertySelector isCollapsed={isCollapsed} />}
+                header={
+                    <div className={cn(
+                        "relative transition-all duration-300 rounded-2xl",
+                        isTourActiveOnNav && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse z-40"
+                    )}>
+                        {isTourActiveOnNav && (
+                            <span className="absolute -top-1.5 -right-1.5 flex size-2.5 z-50">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                <span className="relative inline-flex rounded-full size-2.5 bg-primary"></span>
+                            </span>
+                        )}
+                        <PropertySelector isCollapsed={isCollapsed} />
+                    </div>
+                }
                 onLogout={() => setIsLogoutModalOpen(true)}
                 isCollapsed={isCollapsed}
                 onToggleCollapse={onToggleCollapse}

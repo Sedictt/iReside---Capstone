@@ -72,7 +72,8 @@ export function DashboardTourSpotlight({
     // Auto-scroll target element into view smoothly when step changes
     useEffect(() => {
         if (!isOpen) return;
-        const target = document.querySelector(`[data-tour-id="${step.targetTourId}"]`);
+        const target = document.querySelector(`[data-tour-id="${step.targetTourId}"]`) ||
+            (step.targetTourId === "tour-quick-actions" ? document.querySelector('[data-tour-id="tour-quick-actions-mobile"]') : null);
         if (target) {
             target.scrollIntoView({ behavior: "smooth", block: "center" });
         }

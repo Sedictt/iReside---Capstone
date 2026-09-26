@@ -320,8 +320,16 @@ describe("POST /api/setup/launch (Turnkey Setup Claiming & Locking)", () => {
     expect(json.branding.setupCompleted).toBe(true);
     expect(json.securityKey).toBeDefined();
 
-    // Verify auth credential updating was NOT invoked since admin was omitted
-    expect(mockUpdateUserById).not.toHaveBeenCalled();
+    // Verify auth user metadata was updated with setup completion flags
+    expect(mockUpdateUserById).toHaveBeenCalledWith(
+      "landlord-turnkey-3",
+      expect.objectContaining({
+        user_metadata: expect.objectContaining({
+          is_setup_completed: true,
+          setup_completed: true,
+        }),
+      })
+    );
 
     // Verify profile updating still synced business_name
     expect(mockProfilesChain.update).toHaveBeenCalledWith(
