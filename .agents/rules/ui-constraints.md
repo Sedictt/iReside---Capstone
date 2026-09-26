@@ -12,5 +12,5 @@ trigger: always_on
   - Currency/Amount inputs must sanitize typed input in real-time (`replace(/[^0-9.]/g, '')`) and set `inputMode="decimal"` to prevent alphabetical characters from corrupting financial state or totals.
   - Phone inputs must sanitize input in real-time (`replace(/[^0-9+\-()\s]/g, '')`), set `inputMode="tel"`, and validate for valid digit length (10–15 digits).
   - Provide blur (`onBlur`) and submit validation with immediate, clear inline error indicators (`AlertCircle` icon + red caption).
-
+- Parity Across Onboarding Modes for Financial Terms: When providing multi-channel onboarding flows (Quick Add, Self-Onboarding Invite Links, Walk-ins), financial terms (Advance Rent, Security Deposit, move-in fees) must be configurable across ALL modes—including link generation modals—ensuring applicants and landlords see consistent payment terms regardless of onboarding entry point.
 
