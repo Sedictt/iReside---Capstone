@@ -106,6 +106,8 @@ import {
     validateAllLandlordSettings,
     REGEX_NAME,
 } from "@/lib/validation/landlord-settings";
+import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { DISALLOWED_PRESEEDED_DATA, isPreseededPhone } from "@/lib/validation/brand-setup";
 
 export function normalizeRentalArchetype(val?: string | null): "apartment" | "dormitory" | "boarding_house" {
     if (!val) return "apartment";
