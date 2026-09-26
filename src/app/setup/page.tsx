@@ -597,9 +597,9 @@ function WizardContent() {
 
       try {
         const supabase = createClient();
-        await supabase.auth.refreshSession().catch(() => {});
+        void supabase.auth.refreshSession().catch(() => {});
       } catch {
-        // ignore
+        // Non-blocking background sync
       }
 
       setIsLaunched(true);
@@ -610,7 +610,7 @@ function WizardContent() {
       // Smoothly navigate to dashboard
       const navigateToDashboard = () => {
         if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-          window.location.href = "/landlord/dashboard";
+          window.location.replace("/landlord/dashboard");
         } else {
           router.push("/landlord/dashboard");
         }
