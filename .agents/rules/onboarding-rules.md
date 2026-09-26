@@ -4,18 +4,19 @@ trigger: always_on
 
 # Onboarding Architecture & Flow Rules
 
-## 1. 4-Stage Onboarding Sequence & Numbering
-The canonical onboarding sequence for landlords is strictly 4 steps:
-- **Step 1 of 4**: Property Setup (`/landlord/properties/new`)
-- **Step 2 of 4**: Unit Map Layout (`/landlord/unit-map`)
-- **Step 3 of 4**: Utility & Billing Rails (`/landlord/utility-billing`)
-- **Step 4 of 4**: Tenant Onboarding (`/landlord/tenants`)
+## 1. 5-Stage Onboarding Sequence & Numbering
+The canonical onboarding sequence for landlords is strictly 5 steps:
+- **Step 1 of 5**: Property Setup (`/landlord/properties/new`)
+- **Step 2 of 5**: Unit Map Layout (`/landlord/unit-map`)
+- **Step 3 of 5**: Utility & Billing Rails (`/landlord/utility-billing`)
+- **Step 4 of 5**: Tenant Onboarding (`/landlord/tenants`)
+- **Step 5 of 5**: Dashboard Overview & Guided Tour (`/landlord/dashboard`)
 
 All step badges, headers, modals, cards, and test assertions MUST strictly reference these canonical step numbers. Never refer to Tenant Setup as "Step 3".
 
 ## 2. Greeting Lightbox & Modal Invariants
 Every onboarding stage MUST feature a greeting modal adhering to a single, consistent visual language:
-- **Header**: Domain icon (Building2, Map, Zap, Users) in `size-12` or `size-14` container with `bg-primary/10 text-primary border border-primary/20`.
+- **Header**: Domain icon (Building2, Map, Zap, Users, LayoutDashboard) in `size-12` or `size-14` container with `bg-primary/10 text-primary border border-primary/20`.
 - **Badge**: Step indicator (e.g. `Step X of Onboarding`) + Stage tag (e.g. `Mandatory Setup`, `Financial Rails`).
 - **Body**: Concise heading + max 2-sentence description.
 - **3-Point Architecture**: Exactly 3 concise benefit/feature points in a subtle container (`bg-muted/20 border border-border/70`). Avoid verbose wall-of-text blocks or AI slop.
@@ -67,3 +68,13 @@ When an onboarding stage features drag-and-drop canvas manipulation (such as the
   - The draggable source element (e.g. unit card) must display a pulsing ring (`ring-4 ring-primary`), ping beacon dot (`animate-ping`), animated grip handle, and an explicit action badge (e.g. "Drag Me").
   - The valid destination dropzone (e.g. target floor lane tray) must simultaneously display a dashed primary border, ring glow, and drop indicator pill ("Target Drop Zone").
 - **Auto-Scroll to Draggable Target**: Navigating to the drag-and-drop tour step must automatically smooth-scroll the active draggable element into the viewport if it is outside the visible scroll area.
+## 7. Dashboard Overview & Operational Tour Invariant
+Stage 5 completes the onboarding pipeline by guiding the landlord through high-frequency operational controls on `/landlord/dashboard`:
+- **Auto-Greeting Trigger**: When stages 1–4 are satisfied (or tenant setup postponed) and the dashboard tour is incomplete, surface `DashboardGreetingModal` after a 1.2–1.5s delay.
+- **4 Key Spotlight Steps**:
+  1. **Quick Action Launchpad** (`tour-quick-actions`): Cash payment recording, walk-in application, invite link generation, and printable QR flyer.
+  2. **Command Center Pulse** (`tour-command-center`): Overdue rent, upcoming dues, vacant units, and active invites.
+  3. **Cash Flow Ledger** (`tour-cash-flow`): Payment tracking and manual settlement verification.
+  4. **Portfolio Switcher & Operations Hub** (`tour-dashboard-navigation`): Multi-property context switching and operational sub-pages.
+- **Replay Trigger**: Provide an on-demand "Guided Tour" trigger button with a `Compass` icon on the dashboard banner.
+- **Final Completion**: Dispatch `dashboard-tour-completed` and mark `ireside.onboarding_completed` in `localStorage`, displaying a celebration choice dialog directing the landlord to the dashboard, 2D unit map, or resident directory.
