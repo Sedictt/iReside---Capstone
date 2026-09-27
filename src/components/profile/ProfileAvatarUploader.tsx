@@ -13,9 +13,10 @@ type ProfileAvatarUploaderProps = {
     avatarBgColor?: string | null;
     fullName: string;
     className?: string;
+    hasCustomAvatar?: boolean;
 };
 
-export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullName, className, onProfileUpdate }: ProfileAvatarUploaderProps & { onProfileUpdate?: () => void }) {
+export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullName, className, hasCustomAvatar, onProfileUpdate }: ProfileAvatarUploaderProps & { onProfileUpdate?: () => void }) {
     const router = useRouter();
     const { profile } = useAuth();
     const [isPickerOpen, setIsPickerOpen] = useState(false);
@@ -77,9 +78,18 @@ export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullNam
                 onClick={() => setIsPickerOpen(true)}
                 className="absolute bottom-1 right-1 size-10 neumorphic-extruded rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-lg z-20 cursor-pointer"
                 aria-label="Change profile appearance"
-                title="Change profile appearance"
+                title={hasCustomAvatar === false ? "Upload profile photo (Required for profile setup)" : "Change profile appearance"}
             >
                 <Camera size={18} />
+                {hasCustomAvatar === false && (
+                    <span 
+                        className="absolute -top-0.5 -right-0.5 flex size-3.5 z-30 pointer-events-none"
+                        title="Upload profile photo (Required)"
+                    >
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                        <span className="relative inline-flex rounded-full size-3.5 bg-red-500 border-2 border-background shadow-[0_0_10px_rgba(239,68,68,0.9)]" />
+                    </span>
+                )}
             </button>
 
             {/* Avatar Picker Modal */}

@@ -86,11 +86,17 @@ export default function EditableBio({
 
         return (
             <button
+                type="button"
                 onClick={() => setIsEditing(true)}
-                className="mt-2 flex items-center gap-3 text-[10px] font-black text-muted-foreground hover:text-foreground transition-all uppercase tracking-widest border border-dashed border-border rounded-2xl px-6 py-4 hover:bg-muted/40 w-full justify-center"
+                className="mt-2 flex items-center gap-3 text-[10px] font-black text-red-500 dark:text-red-400 hover:text-foreground transition-all uppercase tracking-widest border border-dashed border-red-500/30 bg-red-500/5 hover:bg-red-500/10 rounded-2xl px-6 py-4 w-full justify-center relative cursor-pointer group shadow-sm"
+                title="Add your bio (Required for profile setup)"
             >
-                <Plus size={16} />
-                Introduce yourself (Add Bio)
+                <span className="relative flex size-2 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full size-2 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.9)]" />
+                </span>
+                <Plus size={16} className="group-hover:rotate-90 transition-transform" />
+                <span>Introduce yourself (Add Bio — Required)</span>
             </button>
         );
     }
