@@ -199,34 +199,57 @@ export function AvatarPicker({
             return;
         }
 
-        if (!profile) {
-            toast.error("Profile not loaded. Please try again in a moment.");
-            return;
-        }
-
         dispatch({ type: "SET_UPDATING", payload: true });
         dispatch({ type: "SET_ERROR", payload: null });
 
         try {
-            const { error: updateError } = await supabase
-                .from("profiles")
-                .update({
-                    avatar_url: state.selectedAvatar,
-                    avatar_bg_color: state.selectedColor,
-                })
-                .eq("id", profile.id);
-
-            if (updateError) throw updateError;
-
-            // Non-blocking refresh with bounded timeout
+            // 1. Authoritative Server-side update via dedicated endpoint
+            let saved = false;
             try {
-                const refreshPromise = refreshProfile();
+                const response = await fetch("/api/profile/avatar", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        avatar_url: state.selectedAvatar,
+                        avatar_bg_color: state.selectedColor,
+                    }),
+                });
+
+                if (response.ok) {
+                    saved = true;
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    console.warn("[AvatarPicker] API route returned error:", errData);
+                }
+            } catch (fetchErr) {
+                console.warn("[AvatarPicker] Fetch error, attempting client fallback:", fetchErr);
+            }
+
+            // 2. Client fallback with strict timeout to prevent indefinite hangs
+            if (!saved) {
+                if (!profile?.id) {
+                    throw new Error("Unable to save appearance. User profile not loaded.");
+                }
+                const updatePromise = supabase
+                    .from("profiles")
+                    .update({
+                        avatar_url: state.selectedAvatar,
+                        avatar_bg_color: state.selectedColor,
+                    })
+                    .eq("id", profile.id);
+
                 const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error("Refresh timeout")), 4000)
+                    setTimeout(() => reject(new Error("Save request timed out. Please try again.")), 5000)
                 );
-                await Promise.race([refreshPromise, timeoutPromise]);
-            } catch (refreshErr) {
-                console.warn("[AvatarPicker] Profile refresh timed out:", refreshErr);
+
+                const { error: updateError } = (await Promise.race([updatePromise, timeoutPromise])) as any;
+                if (updateError) throw updateError;
+            }
+
+            // 3. Fire-and-forget non-blocking refresh
+            void refreshProfile().catch(() => {});
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("profile-updated"));
             }
 
             toast.success("Profile appearance updated");
@@ -388,10 +411,10 @@ export function AvatarPicker({
                                 <button
                                     type="button"
                                     onClick={handleSave}
-                                    disabled={state.isUpdating || loading}
+                                    disabled={state.isUpdating}
                                     className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-bold text-primary-foreground shadow-md transition-all hover:bg-primary/90 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                                 >
-                                    {state.isUpdating || (loading && !profile) ? (
+                                    {state.isUpdating ? (
                                         <>
                                             <Loader2 className="size-4 animate-spin" />
                                             <span>Saving Appearance...</span>
