@@ -251,7 +251,7 @@ async function resetStarterAccount() {
     phone: TARGET.phone,
     business_name: null,
     avatar_url: null,
-    avatar_bg_color: '#171717',
+    avatar_bg_color: '#8B5CF6',
     bio: null,
     website: null,
     address: null,

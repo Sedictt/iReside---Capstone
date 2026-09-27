@@ -34,6 +34,7 @@ import LeaseRenewalRequest from "@/components/tenant/LeaseRenewalRequest";
 import LeaseRenewalReminder from "@/components/tenant/LeaseRenewalReminder";
 import { PropertyAmenities } from "@/components/tenant/PropertyAmenities";
 import { LeaseData } from "@/types/lease";
+import { DEFAULT_AVATAR_URL, getSafeAvatarBgColor } from "@/lib/constants";
 
 type TabId = "agreement" | "property" | "services";
 
@@ -508,10 +509,10 @@ function LeaseHubContent() {
                                     <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center text-center">
                                         <div 
                                             className="size-28 rounded-full mx-auto overflow-hidden mb-8 neumorphic-inset-card"
-                                            style={{ backgroundColor: lease.landlord?.avatar_bg_color || '#171717' }}
+                                            style={{ backgroundColor: getSafeAvatarBgColor(lease.landlord?.avatar_bg_color) }}
                                         >
                                             <Image
-                                                src={lease.landlord?.avatar_url || "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=150&q=80"}
+                                                src={lease.landlord?.avatar_url || DEFAULT_AVATAR_URL}
                                                 alt="Landlord"
                                                 width={112}
                                                 height={112}

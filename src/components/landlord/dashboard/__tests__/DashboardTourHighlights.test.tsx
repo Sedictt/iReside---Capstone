@@ -85,7 +85,7 @@ describe("Dashboard Tour Highlighting Parity", () => {
         expect(navContainer?.className).toContain("animate-pulse");
 
         // Verify beacon ping dot is rendered
-        const beacon = navContainer?.querySelector(".animate-ping");
+        const beacon = navContainer?.querySelector('[data-tour-beacon="tour-dashboard-navigation"]');
         expect(beacon).not.toBeNull();
     });
 
@@ -100,6 +100,6 @@ describe("Dashboard Tour Highlighting Parity", () => {
         const navContainer = container.querySelector('[data-tour-id="tour-dashboard-navigation"]');
         expect(navContainer).not.toBeNull();
         expect(navContainer?.className).not.toContain("ring-4 ring-primary");
-        expect(navContainer?.querySelector(".animate-ping")).toBeNull();
+        expect(navContainer?.querySelector('[data-tour-beacon="tour-dashboard-navigation"]')).toBeNull();
     });
 });

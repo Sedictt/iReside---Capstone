@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Camera } from "lucide-react";
 import { AvatarPicker } from "./AvatarPicker";
 import { useAuth } from "@/hooks/useAuth";
+import { getSafeAvatarBgColor } from "@/lib/constants";
 
 type ProfileAvatarUploaderProps = {
     initialAvatarUrl: string | null;
@@ -54,7 +55,7 @@ export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullNam
             <div className="absolute inset-0 rounded-full border border-border/40 animate-pulse-slow"></div>
             <div 
                 className="absolute inset-1 rounded-full overflow-hidden border-2 border-background shadow-2xl transition-all duration-500 flex items-center justify-center"
-                style={{ backgroundColor: currentBgColor || '#8B5CF6' }}
+                style={{ backgroundColor: getSafeAvatarBgColor(currentBgColor) }}
             >
                 {currentAvatarUrl ? (
                     <Image
@@ -87,7 +88,7 @@ export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullNam
                     isOpen={isPickerOpen}
                     onClose={() => setIsPickerOpen(false)}
                     currentAvatarUrl={currentAvatarUrl}
-                    currentBgColor={currentBgColor || '#8B5CF6'}
+                    currentBgColor={getSafeAvatarBgColor(currentBgColor)}
                     onProfileUpdate={handleProfileUpdate}
                 />
             )}
