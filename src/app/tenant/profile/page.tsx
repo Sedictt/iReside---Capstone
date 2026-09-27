@@ -18,7 +18,7 @@ import {
 import { createClient } from '@/lib/supabase/server';
 import { cn } from '@/lib/utils';
 
-import EditableBio from '@/components/landlord/EditableBio';
+import { ProfileBioSection } from '@/components/profile/ProfileBioSection';
 import { ProfileAvatarUploader } from '@/components/profile/ProfileAvatarUploader';
 import { ProfileCoverUploader } from '@/components/profile/ProfileCoverUploader';
 import { RoleBadge } from '@/components/profile/RoleBadge';
@@ -261,33 +261,11 @@ export default async function TenantProfilePage() {
                 </div>
 
                 {/* Bio Section */}
-                <div id="profile-bio-section" className="neumorphic-panel rounded-[3rem] p-12">
-                    <div className="flex items-center gap-4 mb-8">
-                        <div className="relative size-12 rounded-2xl neumorphic-inset-card flex items-center justify-center">
-                            <User size={20} className="text-primary" />
-                            {!hasBio && (
-                                <span className="absolute -top-0.5 -right-0.5 flex size-3">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
-                                    <span className="relative inline-flex rounded-full size-3 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.9)]" />
-                                </span>
-                            )}
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <h2 className="text-2xl font-display font-black tracking-tight">Biography</h2>
-                            {!hasBio && (
-                                <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md bg-red-500/15 text-red-500 border border-red-500/20">
-                                    Required
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                    <div className="max-w-4xl">
-                        <EditableBio 
-                            initialBio={profile.bio || ''} 
-                            placeholder="Share a bit about yourself, your occupation, or lifestyle..."
-                        />
-                    </div>
-                </div>
+                <ProfileBioSection
+                    initialBio={profile.bio || ''}
+                    userId={profile.id}
+                    placeholder="Share a bit about yourself, your occupation, or lifestyle..."
+                />
 
                 {/* Active Residency Section */}
                 {activeLease ? (

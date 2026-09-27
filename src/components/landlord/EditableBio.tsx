@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Edit3, Check, X, Loader2, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
@@ -14,6 +15,7 @@ export default function EditableBio({
     isOwner?: boolean;
     placeholder?: string;
 }) {
+    const router = useRouter();
     const [isEditing, setIsEditing] = useState(false);
     const [bio, setBio] = useState(initialBio);
     const [tempBio, setTempBio] = useState(initialBio);
@@ -22,6 +24,7 @@ export default function EditableBio({
     const handleSave = async () => {
         if (saving) return;
         setSaving(true);
+        const cleanBio = tempBio.trim();
         try {
             const supabase = createClient();
             const { data: { user } } = await supabase.auth.getUser();
@@ -29,15 +32,19 @@ export default function EditableBio({
 
             const { error: profileError } = await supabase
                 .from("profiles")
-                .update({ bio: tempBio })
+                .update({ bio: cleanBio })
                 .eq("id", user.id);
 
             if (profileError) throw profileError;
 
-            setBio(tempBio);
+            setBio(cleanBio);
+            setTempBio(cleanBio);
             setIsEditing(false);
             toast.success("Bio updated successfully");
-            window.dispatchEvent(new CustomEvent("profile-updated"));
+            window.dispatchEvent(new CustomEvent("profile-updated", {
+                detail: { bio: cleanBio, hasBio: Boolean(cleanBio.length > 0) }
+            }));
+            router.refresh();
         } catch (e) {
             console.error("Failed to save bio:", e);
             toast.error("Failed to update bio. Please try again.");

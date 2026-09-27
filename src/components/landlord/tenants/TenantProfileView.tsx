@@ -255,7 +255,7 @@ export function TenantProfileView({ tenantId, onClose, onMessage }: TenantProfil
 							<div className="size-12 rounded-2xl neumorphic-inset-card flex items-center justify-center">
 								<User size={20} className="text-[#c4b0ff]" />
 							</div>
-							<h2 className="text-2xl font-display font-black tracking-tight">Biography</h2>
+							<h2 className="text-2xl font-display font-black tracking-tight">Bio</h2>
 						</div>
 						<div className="max-w-4xl">
 							<EditableBio initialBio={profile.bio || ''} isOwner={false} />

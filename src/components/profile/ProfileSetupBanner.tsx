@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { CheckCircle2, Camera, Phone, FileText, ArrowRight, UserCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,10 +19,51 @@ export function ProfileSetupBanner({
     role = "landlord",
     className
 }: ProfileSetupBannerProps) {
-    const isComplete = hasAvatar && hasPhone && hasBio;
+    const [localHasAvatar, setLocalHasAvatar] = useState(hasAvatar);
+    const [localHasPhone, setLocalHasPhone] = useState(hasPhone);
+    const [localHasBio, setLocalHasBio] = useState(hasBio);
+
+    useEffect(() => {
+        setLocalHasAvatar(hasAvatar);
+    }, [hasAvatar]);
+
+    useEffect(() => {
+        setLocalHasPhone(hasPhone);
+    }, [hasPhone]);
+
+    useEffect(() => {
+        setLocalHasBio(hasBio);
+    }, [hasBio]);
+
+    useEffect(() => {
+        const handleProfileUpdate = (e: any) => {
+            if (e?.detail) {
+                if (e.detail.hasBio !== undefined) {
+                    setLocalHasBio(Boolean(e.detail.hasBio));
+                } else if (e.detail.bio !== undefined) {
+                    setLocalHasBio(Boolean(e.detail.bio && e.detail.bio.trim().length > 0));
+                }
+                if (e.detail.hasPhone !== undefined) {
+                    setLocalHasPhone(Boolean(e.detail.hasPhone));
+                } else if (e.detail.phone !== undefined) {
+                    setLocalHasPhone(Boolean(e.detail.phone && e.detail.phone.trim().length > 0));
+                }
+                if (e.detail.hasAvatar !== undefined) {
+                    setLocalHasAvatar(Boolean(e.detail.hasAvatar));
+                } else if (e.detail.avatarUrl !== undefined) {
+                    setLocalHasAvatar(Boolean(e.detail.avatarUrl && e.detail.avatarUrl.trim().length > 0));
+                }
+            }
+        };
+
+        window.addEventListener("profile-updated", handleProfileUpdate as EventListener);
+        return () => window.removeEventListener("profile-updated", handleProfileUpdate as EventListener);
+    }, []);
+
+    const isComplete = localHasAvatar && localHasPhone && localHasBio;
     if (isComplete) return null;
 
-    const completedCount = (hasAvatar ? 1 : 0) + (hasPhone ? 1 : 0) + (hasBio ? 1 : 0);
+    const completedCount = (localHasAvatar ? 1 : 0) + (localHasPhone ? 1 : 0) + (localHasBio ? 1 : 0);
     const progressPercent = Math.round((completedCount / 3) * 100);
 
     const scrollToSection = (id: string) => {
@@ -35,23 +77,23 @@ export function ProfileSetupBanner({
         {
             id: "profile-avatar-section",
             label: "Profile Photo",
-            description: hasAvatar ? "Uploaded" : "Upload your photo",
+            description: localHasAvatar ? "Uploaded" : "Upload your photo",
             icon: Camera,
-            isComplete: hasAvatar,
+            isComplete: localHasAvatar,
         },
         {
             id: "profile-contact-section",
             label: "Phone Number",
-            description: hasPhone ? "Provided" : "Add contact number",
+            description: localHasPhone ? "Provided" : "Add contact number",
             icon: Phone,
-            isComplete: hasPhone,
+            isComplete: localHasPhone,
         },
         {
             id: "profile-bio-section",
-            label: "Biography",
-            description: hasBio ? "Written" : "Write a short bio",
+            label: "Bio",
+            description: localHasBio ? "Written" : "Write a short bio",
             icon: FileText,
-            isComplete: hasBio,
+            isComplete: localHasBio,
         },
     ];
 
