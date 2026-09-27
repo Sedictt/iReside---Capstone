@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, CheckCircle2, User, Phone, FileText } from "lucide-react";
+import { CheckCircle2, Camera, Phone, FileText, ArrowRight, UserCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type ProfileSetupBannerProps = {
@@ -22,6 +22,7 @@ export function ProfileSetupBanner({
     if (isComplete) return null;
 
     const completedCount = (hasAvatar ? 1 : 0) + (hasPhone ? 1 : 0) + (hasBio ? 1 : 0);
+    const progressPercent = Math.round((completedCount / 3) * 100);
 
     const scrollToSection = (id: string) => {
         const el = document.getElementById(id);
@@ -30,105 +31,134 @@ export function ProfileSetupBanner({
         }
     };
 
+    const steps = [
+        {
+            id: "profile-avatar-section",
+            label: "Profile Photo",
+            description: hasAvatar ? "Uploaded" : "Upload your photo",
+            icon: Camera,
+            isComplete: hasAvatar,
+        },
+        {
+            id: "profile-contact-section",
+            label: "Phone Number",
+            description: hasPhone ? "Provided" : "Add contact number",
+            icon: Phone,
+            isComplete: hasPhone,
+        },
+        {
+            id: "profile-bio-section",
+            label: "Biography",
+            description: hasBio ? "Written" : "Write a short bio",
+            icon: FileText,
+            isComplete: hasBio,
+        },
+    ];
+
     return (
         <div
             className={cn(
-                "relative overflow-hidden rounded-[2.5rem] border border-red-500/30 bg-gradient-to-r from-red-500/10 via-red-500/5 to-transparent p-6 sm:p-8 neumorphic-panel",
+                "relative overflow-hidden rounded-[2.5rem] border border-border/80 bg-card/90 text-card-foreground p-6 sm:p-8 shadow-sm transition-all neumorphic-panel",
                 className
             )}
         >
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            {/* Header: Title, Description, and Progress */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 pb-6 border-b border-border/60">
                 <div className="flex items-start sm:items-center gap-4">
-                    <div className="relative size-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
-                        <AlertCircle className="size-6 text-red-500" />
-                        <span className="absolute -top-1 -right-1 flex size-3">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
-                            <span className="relative inline-flex rounded-full size-3 bg-red-500" />
-                        </span>
+                    <div className="size-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 text-primary">
+                        <UserCheck className="size-6" />
                     </div>
                     <div>
-                        <div className="flex items-center gap-3">
-                            <h3 className="text-lg font-display font-black text-foreground tracking-tight">
-                                Profile Setup Incomplete
+                        <div className="flex flex-wrap items-center gap-2.5">
+                            <h3 className="text-lg font-display font-black tracking-tight text-foreground">
+                                Complete your profile
                             </h3>
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-500/15 text-red-500 border border-red-500/20">
-                                {completedCount} of 3 Completed
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
+                                {completedCount} of 3 completed
                             </span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1 max-w-xl leading-relaxed">
-                            To ensure trust and verify your account, please complete the fields marked with the glowing red dots. The attention-seeker badge will automatically dismiss once done.
+                            Complete your basic details so others can recognize and connect with you. The setup badge will automatically dismiss once done.
                         </p>
                     </div>
                 </div>
 
-                {/* Status Chips */}
-                <div className="flex flex-wrap items-center gap-2.5">
-                    {/* 1. Avatar */}
-                    <button
-                        type="button"
-                        onClick={() => scrollToSection("profile-avatar-section")}
-                        className={cn(
-                            "flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer",
-                            hasAvatar
-                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                                : "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 hover:bg-red-500/25 shadow-sm"
-                        )}
-                    >
-                        {hasAvatar ? (
-                            <CheckCircle2 size={14} className="text-emerald-500" />
-                        ) : (
-                            <span className="relative flex size-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
-                                <span className="relative inline-flex rounded-full size-2 bg-red-500" />
-                            </span>
-                        )}
-                        <span>Photo</span>
-                    </button>
-
-                    {/* 2. Phone */}
-                    <button
-                        type="button"
-                        onClick={() => scrollToSection("profile-contact-section")}
-                        className={cn(
-                            "flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer",
-                            hasPhone
-                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                                : "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 hover:bg-red-500/25 shadow-sm"
-                        )}
-                    >
-                        {hasPhone ? (
-                            <CheckCircle2 size={14} className="text-emerald-500" />
-                        ) : (
-                            <span className="relative flex size-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
-                                <span className="relative inline-flex rounded-full size-2 bg-red-500" />
-                            </span>
-                        )}
-                        <span>Phone Number</span>
-                    </button>
-
-                    {/* 3. Bio */}
-                    <button
-                        type="button"
-                        onClick={() => scrollToSection("profile-bio-section")}
-                        className={cn(
-                            "flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer",
-                            hasBio
-                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                                : "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 hover:bg-red-500/25 shadow-sm"
-                        )}
-                    >
-                        {hasBio ? (
-                            <CheckCircle2 size={14} className="text-emerald-500" />
-                        ) : (
-                            <span className="relative flex size-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
-                                <span className="relative inline-flex rounded-full size-2 bg-red-500" />
-                            </span>
-                        )}
-                        <span>Biography</span>
-                    </button>
+                {/* Progress bar */}
+                <div className="flex items-center gap-3 sm:self-center shrink-0 bg-muted/40 px-4 py-2 rounded-2xl border border-border/40">
+                    <div className="w-24 sm:w-28 h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
+                            style={{ width: `${progressPercent}%` }}
+                        />
+                    </div>
+                    <span className="text-xs font-black text-foreground tabular-nums">
+                        {progressPercent}%
+                    </span>
                 </div>
+            </div>
+
+            {/* Steps Grid: Exactly 3 balanced columns, never wrapping awkwardly */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-5">
+                {steps.map((step) => {
+                    const StepIcon = step.icon;
+                    return (
+                        <button
+                            key={step.id}
+                            type="button"
+                            onClick={() => scrollToSection(step.id)}
+                            className={cn(
+                                "group relative flex items-center justify-between p-4 rounded-2xl text-left transition-all duration-200 cursor-pointer border",
+                                step.isComplete
+                                    ? "bg-muted/20 border-border/60 hover:bg-muted/40"
+                                    : "bg-background border-primary/30 hover:border-primary hover:shadow-md hover:scale-[1.01]"
+                            )}
+                        >
+                            <div className="flex items-center gap-3.5 min-w-0">
+                                <div
+                                    className={cn(
+                                        "size-10 rounded-xl flex items-center justify-center shrink-0 transition-colors",
+                                        step.isComplete
+                                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                                            : "bg-primary/10 text-primary border border-primary/20"
+                                    )}
+                                >
+                                    {step.isComplete ? (
+                                        <CheckCircle2 className="size-5" />
+                                    ) : (
+                                        <StepIcon className="size-5" />
+                                    )}
+                                </div>
+                                <div className="min-w-0">
+                                    <p
+                                        className={cn(
+                                            "text-xs font-black tracking-tight truncate",
+                                            step.isComplete ? "text-muted-foreground line-through opacity-75" : "text-foreground"
+                                        )}
+                                    >
+                                        {step.label}
+                                    </p>
+                                    <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                                        {step.description}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {!step.isComplete ? (
+                                <div className="flex items-center gap-2 shrink-0 pl-2">
+                                    <span className="relative flex size-2.5">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                                        <span className="relative inline-flex rounded-full size-2.5 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                                    </span>
+                                    <ArrowRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                                </div>
+                            ) : (
+                                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 shrink-0 pl-2">
+                                    Done
+                                </span>
+                            )}
+                        </button>
+                    );
+                })}
             </div>
         </div>
     );
