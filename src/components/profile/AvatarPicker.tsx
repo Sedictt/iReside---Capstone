@@ -356,7 +356,7 @@ export function AvatarPicker({
                                 </span>
                             </div>
 
-                            {/* Crisp Circular Avatar Preview (No messy radial glows, no blurry pulsing rings) */}
+                            {/* Crisp Circular Avatar Preview */}
                             <div className="my-5 md:my-0 flex flex-col items-center">
                                 <div
                                     className="relative size-36 sm:size-40 rounded-full border-4 border-background shadow-lg transition-transform duration-200 overflow-hidden flex items-center justify-center"
@@ -505,7 +505,7 @@ export function AvatarPicker({
                                 </div>
                             </div>
 
-                            {/* 2. Character Illustrations Grid with Slate Contrast Surface for Light Mode */}
+                            {/* 2. Character Illustrations Grid: All 16 live-previewed in the active background color */}
                             <div className="space-y-2.5">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -525,34 +525,28 @@ export function AvatarPicker({
                                                 type="button"
                                                 onClick={() => dispatch({ type: "SET_AVATAR", payload: url })}
                                                 className={cn(
-                                                    "group relative aspect-square rounded-2xl p-1.5 transition-all duration-150 cursor-pointer border flex items-center justify-center overflow-hidden",
+                                                    "group relative aspect-square rounded-2xl p-1.5 transition-all duration-150 cursor-pointer border flex items-center justify-center",
                                                     isSelected
-                                                        ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-105 shadow-md border-primary/50"
-                                                        : "border-slate-200/90 dark:border-slate-700/80 hover:border-primary/50 hover:scale-105 shadow-xs"
+                                                        ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-105 shadow-md border-white/50 z-10"
+                                                        : "border-black/10 dark:border-white/10 opacity-85 hover:opacity-100 hover:scale-105 hover:shadow-md hover:border-white/50"
                                                 )}
-                                                style={{
-                                                    backgroundColor: isSelected ? state.selectedColor : undefined,
-                                                }}
+                                                style={{ backgroundColor: state.selectedColor }}
                                                 aria-label={`Select avatar ${idx + 1}`}
                                             >
-                                                {/* Soft slate contrast backing so white house character stands out clearly in light theme */}
-                                                {!isSelected && (
-                                                    <div className="absolute inset-0 rounded-2xl bg-slate-100 dark:bg-slate-800/90 pointer-events-none transition-colors" />
-                                                )}
-
-                                                <div className="relative w-full h-full rounded-xl overflow-hidden z-10 flex items-center justify-center">
+                                                <div className="relative w-full h-full rounded-xl overflow-hidden flex items-center justify-center">
                                                     <Image
                                                         src={url}
                                                         alt={`Avatar ${idx + 1}`}
                                                         fill
                                                         sizes="56px"
-                                                        className="object-contain p-0.5 transition-transform duration-200 group-hover:scale-110"
+                                                        className="object-cover transition-transform duration-200 group-hover:scale-110"
                                                     />
                                                 </div>
 
+                                                {/* Unclipped Badge */}
                                                 {isSelected && (
-                                                    <div className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md z-20">
-                                                        <Check className="size-3 stroke-[3]" />
+                                                    <div className="absolute -top-1 -right-1 size-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md z-20 border-2 border-background">
+                                                        <Check className="size-2.5 stroke-[3]" />
                                                     </div>
                                                 )}
                                             </button>
