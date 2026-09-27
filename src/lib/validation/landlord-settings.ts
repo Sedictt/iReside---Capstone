@@ -161,7 +161,7 @@ export function validateAddress(value: string): { isValid: boolean; error?: stri
 }
 
 /**
- * Validates short biography.
+ * Validates short bio.
  * Max 500 characters.
  */
 export function validateBio(value: string): { isValid: boolean; error?: string } {
