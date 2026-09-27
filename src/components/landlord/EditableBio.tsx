@@ -8,9 +8,11 @@ import { toast } from 'sonner';
 export default function EditableBio({
     initialBio,
     isOwner = true,
+    placeholder = "Tell others about yourself...",
 }: {
     initialBio: string;
     isOwner?: boolean;
+    placeholder?: string;
 }) {
     const [isEditing, setIsEditing] = useState(false);
     const [bio, setBio] = useState(initialBio);
@@ -52,7 +54,7 @@ export default function EditableBio({
                     onChange={(e) => setTempBio(e.target.value)}
                     className="w-full bg-background border border-border rounded-[1.5rem] p-4 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors resize-none neumorphic-inset"
                     rows={4}
-                    placeholder="Tell potential tenants about yourself and your property management style..."
+                    placeholder={placeholder}
                 />
                 <div className="flex items-center gap-3 mt-3">
                     <button

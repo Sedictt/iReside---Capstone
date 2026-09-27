@@ -1,28 +1,13 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import {
     User,
     Mail,
     Phone,
     MapPin,
-    Home,
     CheckCircle2,
     TrendingUp,
     MessageSquare,
-    Wallet,
-    ShieldCheck,
-    Star,
-    Award,
-    Building2,
-    Zap,
-    Check,
-    Facebook,
-    Twitter,
-    Linkedin,
-    Instagram,
-    Globe,
-    ExternalLink,
     ShieldAlert
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
@@ -300,6 +285,7 @@ export default async function LandlordProfilePage() {
     const socials = (profile.socials as Record<string, string>) || {};
     const emergencyContactName = (profile as any).emergency_contact_name || socials.emergency_contact_name || null;
     const emergencyContactPhone = (profile as any).emergency_contact_phone || socials.emergency_contact_phone || null;
+    const primaryLocation = profile.address || properties[0]?.city || properties[0]?.address || 'Not specified';
 
     return (
         <div className="min-h-screen bg-background text-foreground p-6 md:p-12">
@@ -334,7 +320,7 @@ export default async function LandlordProfilePage() {
                                 </h1>
                                 {verificationStatus && (
                                     <div className="neumorphic-inset-card p-2 rounded-full">
-                                        <CheckCircle2 size={20} className="text-[#c4b0ff]" />
+                                        <CheckCircle2 size={20} className="text-primary" />
                                     </div>
                                 )}
                             </div>
@@ -363,17 +349,21 @@ export default async function LandlordProfilePage() {
                         <div className={cn("grid gap-8 md:gap-12 pt-10 border-t border-black/10 dark:border-white/5 w-full max-w-4xl", emergencyContactPhone ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-4" : "grid-cols-1 md:grid-cols-3")}>
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
                                 <div className="size-12 rounded-full neumorphic-inset-card flex items-center justify-center group-hover/item:scale-110 transition-transform">
-                                    <Mail size={18} className="text-[#c4b0ff]" />
+                                    <Mail size={18} className="text-primary" />
                                 </div>
                                 <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mt-2">Email Address</p>
-                                <a href={`mailto:${profile.email}`} className="text-sm font-medium hover:text-[#c4b0ff] transition-colors">{profile.email}</a>
+                                <a href={`mailto:${profile.email}`} className="text-sm font-medium hover:text-primary transition-colors">{profile.email}</a>
                             </div>
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
                                 <div className="size-12 rounded-full neumorphic-inset-card flex items-center justify-center group-hover/item:scale-110 transition-transform">
-                                    <Phone size={18} className="text-[#c4b0ff]" />
+                                    <Phone size={18} className="text-primary" />
                                 </div>
                                 <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mt-2">Phone Number</p>
-                                <a href={`tel:${profile.phone}`} className="text-sm font-medium hover:text-[#c4b0ff] transition-colors">{profile.phone || '+63 (---) --- ----'}</a>
+                                {profile.phone ? (
+                                    <a href={`tel:${profile.phone}`} className="text-sm font-medium hover:text-primary transition-colors">{profile.phone}</a>
+                                ) : (
+                                    <span className="text-sm font-medium text-muted-foreground">Not provided</span>
+                                )}
                             </div>
                             {emergencyContactPhone && (
                                 <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
@@ -388,10 +378,10 @@ export default async function LandlordProfilePage() {
                             )}
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
                                 <div className="size-12 rounded-full neumorphic-inset-card flex items-center justify-center group-hover/item:scale-110 transition-transform">
-                                    <MapPin size={18} className="text-[#c4b0ff]" />
+                                    <MapPin size={18} className="text-primary" />
                                 </div>
                                 <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mt-2">Primary Location</p>
-                                <p className="text-sm font-medium">{properties[0]?.city || 'Valenzuela, Metro Manila'}</p>
+                                <p className="text-sm font-medium">{primaryLocation}</p>
                             </div>
                         </div>
 
@@ -404,12 +394,15 @@ export default async function LandlordProfilePage() {
                 <div className="neumorphic-panel rounded-[3rem] p-12">
                     <div className="flex items-center gap-4 mb-8">
                         <div className="size-12 rounded-2xl neumorphic-inset-card flex items-center justify-center">
-                            <User size={20} className="text-[#c4b0ff]" />
+                            <User size={20} className="text-primary" />
                         </div>
                         <h2 className="text-2xl font-display font-black tracking-tight">Biography</h2>
                     </div>
                     <div className="max-w-4xl">
-                        <EditableBio initialBio={profile.bio || ''} />
+                        <EditableBio 
+                            initialBio={profile.bio || ''} 
+                            placeholder="Tell potential tenants about yourself and your property management style..."
+                        />
                     </div>
                 </div>
 
@@ -424,7 +417,7 @@ export default async function LandlordProfilePage() {
                 <div className="neumorphic-panel rounded-[3rem] p-10">
                     <div className="flex items-center gap-4 mb-10">
                         <div className="size-12 rounded-2xl neumorphic-inset-card flex items-center justify-center">
-                            <TrendingUp size={20} className="text-[#c4b0ff]" />
+                            <TrendingUp size={20} className="text-primary" />
                         </div>
                         <h2 className="text-2xl font-display font-black tracking-tight">Portfolio Stats</h2>
                     </div>
