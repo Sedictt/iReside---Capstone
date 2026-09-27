@@ -112,3 +112,37 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "An unexpected error occurred during upload." }, { status: 500 });
     }
 }
+
+export async function DELETE(request: Request) {
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { userId } = authContext;
+
+    try {
+        const admin = createServiceRoleSupabaseClient();
+
+        const { error: profileError } = await (admin as any)
+            .from("landlord_business_profiles")
+            .update({
+                business_permit_url: null,
+                updated_at: new Date().toISOString(),
+            })
+            .eq("profile_id", userId);
+
+        if (profileError) {
+            console.error("DB Error:", profileError);
+            return NextResponse.json({ error: "Failed to remove permit document." }, { status: 500 });
+        }
+
+        try {
+            await admin.from("profiles").update({ business_permit_url: null }).eq("id", userId);
+        } catch {
+            // Optional column fallback
+        }
+
+        return NextResponse.json({ success: true }, { status: 200 });
+    } catch (error) {
+        console.error("Failed to delete permit:", error);
+        return NextResponse.json({ error: "An unexpected error occurred." }, { status: 500 });
+    }
+}

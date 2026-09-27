@@ -414,7 +414,7 @@ export default async function LandlordProfilePage() {
                     placeholder="Tell potential tenants about yourself and your property management style..."
                 />
 
-                {/* Verified Business Permit Section */}
+                {/* Business Permit Section (Optional) */}
                 <BusinessPermitCard 
                     businessName={profile.business_name || null}
                     permitUrl={profile.business_permit_url || null}

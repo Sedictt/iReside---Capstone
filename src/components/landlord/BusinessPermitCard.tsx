@@ -1,12 +1,10 @@
 "use client";
 
-import { Award, Building2, CheckCircle2, Info, ShieldCheck, Loader2, X, Maximize2 } from "lucide-react";
+import { Building2, FileText, UploadCloud, Trash2, Loader2, X, Maximize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
-
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 
 type BusinessPermitCardProps = {
@@ -17,6 +15,7 @@ type BusinessPermitCardProps = {
 
 export function BusinessPermitCard({ businessName, permitUrl, className }: BusinessPermitCardProps) {
     const [uploading, setUploading] = useState(false);
+    const [removing, setRemoving] = useState(false);
     const [showLightbox, setShowLightbox] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
@@ -43,24 +42,52 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
             });
 
             if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.error || "Failed to upload");
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.error || "Failed to upload permit document");
             }
 
-            // Smoothly refresh the server components to show the new data
+            toast.success("Business permit uploaded successfully");
             router.refresh();
             window.dispatchEvent(new CustomEvent("profile-updated"));
-        } catch (error) {
+        } catch (error: any) {
             console.error("Upload failed:", error);
-            alert("Failed to upload permit photo. Please try again.");
+            toast.error(error.message || "Failed to upload permit photo. Please try again.");
         } finally {
             setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+    };
+
+    const handleRemove = async () => {
+        if (uploading || removing) return;
+        const confirmed = window.confirm("Are you sure you want to remove your uploaded business permit?");
+        if (!confirmed) return;
+
+        setRemoving(true);
+        try {
+            const res = await fetch("/api/profile/permit", {
+                method: "DELETE",
+            });
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.error || "Failed to remove permit");
+            }
+
+            toast.success("Business permit removed successfully");
+            router.refresh();
+            window.dispatchEvent(new CustomEvent("profile-updated"));
+        } catch (error: any) {
+            console.error("Remove failed:", error);
+            toast.error(error.message || "Failed to remove permit document");
+        } finally {
+            setRemoving(false);
         }
     };
 
     if (!businessName && !permitUrl) {
         return (
-            <div className={cn("neumorphic-panel border-2 border-dashed border-border rounded-3xl p-12 text-center", className)}>
+            <div className={cn("neumorphic-panel border-2 border-dashed border-border rounded-3xl p-8 md:p-12 text-center", className)}>
                 <input 
                     type="file" 
                     ref={fileInputRef} 
@@ -71,14 +98,32 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                 <div className="size-16 neumorphic-inset rounded-full flex items-center justify-center mx-auto mb-6">
                     <Building2 className="text-primary" size={32} />
                 </div>
-                <h4 className="text-2xl font-display font-black text-foreground mb-2 tracking-tight">Business Verification</h4>
-                <p className="text-sm text-muted-foreground mb-8 max-w-sm mx-auto">Complete your professional profile by uploading your business permit to build trust with potential tenants.</p>
+                <div className="flex items-center justify-center gap-2.5 mb-2">
+                    <h4 className="text-2xl font-display font-black text-foreground tracking-tight">Business Permit</h4>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-muted text-muted-foreground border border-border">
+                        Optional
+                    </span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed">
+                    You can optionally upload a copy of your business or registration permit to display on your profile for prospective tenants.
+                </p>
                 <button 
+                    type="button"
                     onClick={handleUploadClick}
                     disabled={uploading}
-                    className="text-[11px] font-black tracking-widest uppercase px-10 py-3.5 rounded-xl neumorphic-primary transition-all disabled:opacity-50 cursor-pointer"
+                    className="inline-flex items-center justify-center gap-2.5 text-[11px] font-black tracking-widest uppercase px-10 py-3.5 rounded-xl neumorphic-primary transition-all disabled:opacity-50 cursor-pointer"
                 >
-                    {uploading ? <Loader2 size={18} className="animate-spin mx-auto" /> : "Start Verification"}
+                    {uploading ? (
+                        <>
+                            <Loader2 size={16} className="animate-spin" />
+                            <span>Uploading...</span>
+                        </>
+                    ) : (
+                        <>
+                            <UploadCloud size={16} />
+                            <span>Upload Business Permit (Optional)</span>
+                        </>
+                    )}
                 </button>
             </div>
         );
@@ -91,18 +136,27 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
             
             <div className="relative neumorphic-panel rounded-3xl p-8 md:p-12 h-full">
                 {/* Header & Action Row */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
-                    <div className="flex items-center gap-6">
-                        <div className="size-16 neumorphic-inset-card rounded-2xl flex items-center justify-center flex-shrink-0">
-                            <Building2 size={32} className="text-primary" />
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                    <div className="flex items-center gap-5">
+                        <div className="size-16 neumorphic-inset-card rounded-2xl flex items-center justify-center shrink-0">
+                            <Building2 size={30} className="text-primary" />
                         </div>
                         <div>
-                            <h3 className="text-3xl font-display font-black text-foreground mb-1 tracking-tight">{businessName || "Registered Business"}</h3>
-                            <p className="text-[11px] font-black tracking-[0.2em] uppercase text-muted-foreground">Official Business Identification</p>
+                            <div className="flex flex-wrap items-center gap-2.5 mb-1">
+                                <h3 className="text-2xl md:text-3xl font-display font-black text-foreground tracking-tight">
+                                    {businessName || "Business Permit"}
+                                </h3>
+                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-muted text-muted-foreground border border-border">
+                                    Optional
+                                </span>
+                            </div>
+                            <p className="text-[11px] font-black tracking-[0.2em] uppercase text-muted-foreground">
+                                Business Permit Document
+                            </p>
                         </div>
                     </div>
                     
-                    <div className="flex-shrink-0">
+                    <div className="flex items-center gap-3 flex-wrap">
                         <input 
                             type="file" 
                             ref={fileInputRef} 
@@ -110,15 +164,33 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                             className="hidden" 
                             accept={MEDIA_ACCEPT_STRINGS.image}
                         />
+                        {permitUrl && (
+                            <button
+                                type="button"
+                                onClick={handleRemove}
+                                disabled={uploading || removing}
+                                className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl neumorphic-extruded text-muted-foreground hover:text-red-500 text-[11px] font-black tracking-widest uppercase transition-all disabled:opacity-50 cursor-pointer"
+                                title="Remove uploaded permit"
+                            >
+                                {removing ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                                <span>Remove</span>
+                            </button>
+                        )}
                         <button 
+                            type="button"
                             onClick={handleUploadClick}
-                            disabled={uploading}
-                            className="w-full md:w-auto flex items-center justify-center gap-3 px-10 py-4 rounded-2xl neumorphic-primary text-[11px] font-black tracking-widest uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed group/btn cursor-pointer"
+                            disabled={uploading || removing}
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-2xl neumorphic-primary text-[11px] font-black tracking-widest uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed group/btn cursor-pointer"
                         >
-                            {uploading ? <Loader2 size={18} className="animate-spin" /> : (
+                            {uploading ? (
                                 <>
-                                    Update Document
-                                    <Maximize2 size={16} className="opacity-50 group-hover/btn:scale-110 transition-transform" />
+                                    <Loader2 size={16} className="animate-spin" />
+                                    <span>Uploading...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <UploadCloud size={16} />
+                                    <span>{permitUrl ? "Replace Document" : "Upload Document"}</span>
                                 </>
                             )}
                         </button>
@@ -142,25 +214,29 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                                     <Maximize2 size={32} className="text-white" />
                                 </div>
                                 <div className="absolute bottom-8 left-8">
-                                    <p className="text-xs font-black text-white tracking-widest uppercase bg-[#c4b0ff] px-4 py-1.5 rounded-full shadow-lg shadow-[#c4b0ff]/20">Authentic Document</p>
+                                    <p className="text-xs font-black text-foreground tracking-widest uppercase bg-background/90 backdrop-blur-md px-4 py-1.5 rounded-full shadow-lg border border-border/40">
+                                        Uploaded Document
+                                    </p>
                                 </div>
                             </div>
                         </div>
                     ) : (
-                        <div className="relative aspect-[21/9] neumorphic-inset border-2 border-dashed border-border rounded-[2.5rem] flex flex-col items-center justify-center p-12 text-center gap-6 group-hover:border-primary/30 transition-colors">
-                            <div className="size-20 rounded-full neumorphic-inset-card flex items-center justify-center">
-                                <Award size={40} className="text-muted-foreground" />
+                        <div className="relative aspect-[21/9] neumorphic-inset border-2 border-dashed border-border rounded-[2.5rem] flex flex-col items-center justify-center p-12 text-center gap-4 group-hover:border-primary/30 transition-colors">
+                            <div className="size-16 rounded-full neumorphic-inset-card flex items-center justify-center">
+                                <FileText size={32} className="text-muted-foreground" />
                             </div>
                             <div>
                                 <p className="text-lg font-black text-foreground">No Permit Photo Uploaded</p>
-                                <p className="text-[11px] text-muted-foreground uppercase tracking-[0.2em] mt-2">Upload a high-resolution copy for verification</p>
+                                <p className="text-[11px] text-muted-foreground uppercase tracking-[0.2em] mt-1.5">
+                                    Uploading a business permit is completely optional
+                                </p>
                             </div>
                         </div>
                     )}
                     
                     {/* Floating Decoration */}
                     <div className="absolute -bottom-6 -right-6 size-24 neumorphic-extruded border border-border rounded-full flex items-center justify-center shadow-2xl z-10 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
-                        <Award size={32} className="text-primary" />
+                        <FileText size={28} className="text-primary" />
                     </div>
                 </div>
 
@@ -177,8 +253,10 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                     onClick={() => setShowLightbox(false)}
                 >
                     <button 
+                        type="button"
                         onClick={() => setShowLightbox(false)}
-                        className="absolute top-6 right-6 size-12 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all z-20"
+                        className="absolute top-6 right-6 size-12 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all z-20 cursor-pointer"
+                        aria-label="Close Preview"
                     >
                         <X size={24} />
                     </button>
@@ -191,7 +269,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                         />
                         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent flex flex-col items-center">
                             <p className="text-white font-black text-lg">{businessName || "Business Permit"}</p>
-                            <p className="text-neutral-400 text-[10px] uppercase tracking-widest mt-1">Official Document Preview</p>
+                            <p className="text-neutral-400 text-[10px] uppercase tracking-widest mt-1">Document Preview</p>
                         </div>
                     </div>
                 </div>
@@ -199,4 +277,3 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
         </div>
     );
 }
-
