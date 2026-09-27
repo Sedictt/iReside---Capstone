@@ -53,7 +53,7 @@ export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullNam
 
     return (
         <div className={className}>
-            <div className="absolute inset-0 rounded-full border border-border/40 animate-pulse-slow"></div>
+            <div className="absolute inset-0 rounded-full border border-border/40"></div>
             <div 
                 className="absolute inset-1 rounded-full overflow-hidden border-2 border-background shadow-2xl transition-all duration-500 flex items-center justify-center"
                 style={{ backgroundColor: getSafeAvatarBgColor(currentBgColor) }}
