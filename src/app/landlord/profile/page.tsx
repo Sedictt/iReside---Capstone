@@ -84,7 +84,7 @@ function formatRelativeDate(value: string) {
     return `${Math.floor(diffMs / month)} month${Math.floor(diffMs / month) === 1 ? '' : 's'} ago`;
 }
 
-function resolveGoogleAvatarUrl(user: { user_metadata?: Record<string, unknown> | null; identities?: Array<{ identity_data?: Record<string, unknown> | null }> | null }) {
+function resolveMetadataAvatarUrl(user: { user_metadata?: Record<string, unknown> | null; identities?: Array<{ identity_data?: Record<string, unknown> | null }> | null }) {
     const metadataAvatar = typeof user.user_metadata?.avatar_url === 'string' ? user.user_metadata.avatar_url : null;
     if (metadataAvatar && metadataAvatar.trim().length > 0) {
         return metadataAvatar;
@@ -201,8 +201,8 @@ export default async function LandlordProfilePage() {
         );
     }
 
-    const googleAvatarUrl = resolveGoogleAvatarUrl(user);
-    const profileAvatarUrl = profile.avatar_url ?? googleAvatarUrl;
+    const metadataAvatarUrl = resolveMetadataAvatarUrl(user);
+    const profileAvatarUrl = profile.avatar_url ?? metadataAvatarUrl;
 
     const propertyIds = properties.map((property) => property.id);
     const units: UnitSummary[] =
