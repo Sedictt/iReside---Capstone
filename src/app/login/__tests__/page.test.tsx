@@ -106,7 +106,7 @@ describe("LoginPage - UI and Form Validation", () => {
 
         // Check buttons
         const submitButton = screen.getByRole("button", { name: "Sign In" });
-        expect(screen.getByText("Google Account")).toBeInTheDocument();
+        expect(submitButton).toBeInTheDocument();
 
         // Check forgot password link
         expect(screen.getByText(/Forgot Password\?/i)).toBeInTheDocument();

@@ -22,7 +22,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>This page walks you through setting up a landlord account so you can manage your properties and invite tenants. If you&apos;re a landlord ready to get started, read on. The setup process is straightforward and takes just a few minutes.</p>
 
         <h3 id="registration">1. Start Your Registration</h3>
-        <p>Next, you&apos;ll provide your basic information. Enter your first and last name along with your email address. You can also sign up through your Google account if you prefer a faster setup.</p>
+        <p>Next, you&apos;ll provide your basic information. Enter your first and last name along with your email address.</p>
         <p>Make sure you use an email address that you check regularly because we&apos;ll send important confirmations and updates there.</p>
         
         <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
@@ -149,7 +149,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <p>If you own properties and want to rent them out through iReside, here&apos;s how to get your account ready and start finding tenants.</p>
 
         <h4 id="landlord-step-1">Step 1: Sign Up for Your Account</h4>
-        <p>Go to the iReside website and click the sign up button. Choose &quot;I&apos;m a landlord&quot; when asked what role you play. You&apos;ll enter your email address, create a password, and give us some basic information about yourself. You can also sign up using your Google account if that&apos;s easier.</p>
+        <p>Go to the iReside website and click the sign up button. Choose &quot;I&apos;m a landlord&quot; when asked what role you play. You&apos;ll enter your email address, create a password, and give us some basic information about yourself.</p>
 
         <h4 id="landlord-step-2">Step 2: Verify Your Identity</h4>
         <p>For security and trust, we need to confirm who you are. This is a standard process that protects everyone on the platform. You&apos;ll be asked to provide some identifying information and documents. This might include things like a government ID or proof of your business. Don&apos;t worry, we keep everything secure and private.</p>
@@ -1495,7 +1495,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         <h3 id="account">Account Questions</h3>
 
         <h4 id="create-account">How do I create an account?</h4>
-        <p>Landlords can create an account by visiting the iReside website and clicking the sign up button. You will be asked to provide your email address, create a password, and enter some basic information about yourself. You can also sign up using your Google account for faster registration. After signing up, you will go through a verification process to confirm your identity.</p>
+        <p>Landlords can create an account by visiting the iReside website and clicking the sign up button. You will be asked to provide your email address, create a password, and enter some basic information about yourself. After signing up, you will go through a verification process to confirm your identity.</p>
         <p>Tenants do not typically create accounts in advance. Instead, your landlord will send you an application link when you express interest in a property. Once your application is approved and you sign the lease, your account is created automatically using the information you provided.</p>
 
         <h4 id="forgot-password">I forgot my password. What do I do?</h4>
