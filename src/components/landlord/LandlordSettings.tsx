@@ -438,7 +438,7 @@ export function LandlordSettings() {
 
     // Mapping of Sub-tabs
     const SUB_TABS: Record<SettingsCategory, string[]> = {
-        Identity: ["Profile", "Emergency Contact", "Socials", "Verification"],
+        Identity: ["Profile", "Emergency Contact", "Socials", "Business Permit"],
         Personalization: ["Themes & Contrast", "Branding & Logo", "Dashboard Banner"],
         Finance: ["GCash", "Utilities"],
         Security: ["Account", "Protection", "Sessions"],
@@ -1774,6 +1774,32 @@ export function LandlordSettings() {
         }
     };
 
+    const handlePermitRemove = async () => {
+        if (!confirm("Are you sure you want to remove your uploaded business permit?")) return;
+        
+        setIsUploadingPermit(true);
+        const loadingToast = toast.loading("Removing permit...");
+
+        try {
+            const response = await fetch("/api/profile/permit", {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.error || "Failed to remove permit");
+            }
+
+            toast.success("Business permit removed successfully", { id: loadingToast });
+            await refreshProfile();
+            window.dispatchEvent(new CustomEvent("profile-updated"));
+        } catch (error: any) {
+            toast.error(error.message || "Failed to remove permit", { id: loadingToast });
+        } finally {
+            setIsUploadingPermit(false);
+        }
+    };
+
 
     const handleHardResetTour = async () => {
         if (!confirm("Are you sure you want to reset all tour progress? This cannot be undone.")) return;
@@ -2371,12 +2397,12 @@ export function LandlordSettings() {
                             </div>
                         </GlassCard>
                     );
-                case "Verification":
+                case "Business Permit":
                     return (
-                        <GlassCard title="Business Verification" description="Upload your business permit to receive a 'Verified' badge.">
+                        <GlassCard title="Business Permit (Optional)" description="Optionally provide your business permit number and document photo.">
                             <div className="space-y-6">
                                 <SettingField 
-                                    label="Business Permit Number" 
+                                    label="Business Permit Number (Optional)" 
                                     icon={FileText}
                                     error={touchedFields.business_permit_number ? fieldErrors.business_permit_number : undefined}
                                 >
@@ -2408,7 +2434,12 @@ export function LandlordSettings() {
                                 </SettingField>
                                 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-wider text-neutral-400">Permit Document (Photo)</label>
+                                    <div className="flex items-center gap-2">
+                                        <label className="text-xs font-black uppercase tracking-wider text-neutral-400">Permit Document (Photo)</label>
+                                        <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-muted text-muted-foreground border border-border/60">
+                                            Optional
+                                        </span>
+                                    </div>
                                     <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                                         <div className="relative h-48 w-full md:w-80 overflow-hidden rounded-2xl neumorphic-inset border-dashed border-white/10 transition-all hover:opacity-80">
                                             {profile?.business_permit_url ? (
@@ -2424,16 +2455,30 @@ export function LandlordSettings() {
                                         </div>
                                         <div className="flex-1 space-y-4">
                                             <p className="text-sm text-neutral-500 leading-relaxed">
-                                                Upload a clear photo of your current business permit. Supported formats: JPG, PNG. Max size: 15MB.
+                                                Optionally upload a photo of your business permit. Supported formats: JPG, PNG. Max size: 15MB.
                                             </p>
-                                            <button 
-                                                onClick={() => permitInputRef.current?.click()}
-                                                disabled={isUploadingPermit}
-                                                className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-6 py-3 text-sm font-black text-primary transition-all hover:bg-primary/20 disabled:opacity-50"
-                                            >
-                                                <UploadCloud className="size-5" /> 
-                                                {isUploadingPermit ? "Uploading…" : profile?.business_permit_url ? "Replace Document" : "Upload Document"}
-                                            </button>
+                                            <div className="flex items-center gap-3 flex-wrap">
+                                                {profile?.business_permit_url && (
+                                                    <button 
+                                                        type="button"
+                                                        onClick={handlePermitRemove}
+                                                        disabled={isUploadingPermit}
+                                                        className="inline-flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-5 py-3 text-sm font-black text-red-500 transition-all hover:bg-red-500/20 disabled:opacity-50 cursor-pointer"
+                                                    >
+                                                        <Trash2 className="size-4" />
+                                                        Remove
+                                                    </button>
+                                                )}
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => permitInputRef.current?.click()}
+                                                    disabled={isUploadingPermit}
+                                                    className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-6 py-3 text-sm font-black text-primary transition-all hover:bg-primary/20 disabled:opacity-50 cursor-pointer"
+                                                >
+                                                    <UploadCloud className="size-5" /> 
+                                                    {isUploadingPermit ? "Uploading…" : profile?.business_permit_url ? "Replace Document" : "Upload Document (Optional)"}
+                                                </button>
+                                            </div>
                                             <input 
                                                 ref={permitInputRef}
                                                 type="file" 
