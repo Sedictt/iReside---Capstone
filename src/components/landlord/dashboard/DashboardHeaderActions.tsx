@@ -645,7 +645,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                 )}
             >
                 {isTourHighlighted && (
-                    <span className="absolute -top-2 -right-2 flex size-3 z-50">
+                    <span data-tour-beacon="tour-dashboard-navigation" className="absolute -top-2 -right-2 flex size-3 z-50">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                         <span className="relative inline-flex rounded-full size-3 bg-primary"></span>
                     </span>

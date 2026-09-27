@@ -32,7 +32,7 @@ import {
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
 import { toast } from "sonner";
-import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
+import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB, DEFAULT_AVATAR_BG_COLOR } from "@/lib/constants";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import { LeaseDocument } from "@/components/lease/LeaseDocument";
 import { LeaseData } from "@/types/lease";
@@ -102,7 +102,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     
     // Profile Identity
     const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
-    const [profileBgColor, setProfileBgColor] = useState("#171717");
+    const [profileBgColor, setProfileBgColor] = useState(DEFAULT_AVATAR_BG_COLOR);
     const [coverPhoto, setCoverPhoto] = useState<string | null>(null);
     const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
 
@@ -143,7 +143,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
             const reader = new FileReader();
             reader.onloadend = () => {
                 setProfilePhoto(reader.result as string);
-                setProfileBgColor("#171717");
+                setProfileBgColor(DEFAULT_AVATAR_BG_COLOR);
             };
             reader.readAsDataURL(file);
         }

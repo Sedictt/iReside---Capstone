@@ -32,6 +32,7 @@ import MoveOutRequest from "@/components/tenant/MoveOutRequest";
 import LeaseRenewalReminder from "@/components/tenant/LeaseRenewalReminder";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { TenantDigitalClock } from "@/components/tenant/dashboard/TenantDigitalClock";
+import { getSafeAvatarBgColor } from "@/lib/constants";
 
 type DashboardData = {
     userName: string;
@@ -780,7 +781,7 @@ export default function TenantDashboard() {
                                 id: "", // Placeholder
                                 full_name: dashboardData.lease.landlordName || "",
                                 avatar_url: dashboardData.lease.landlordAvatarUrl || "",
-                                avatar_bg_color: dashboardData.lease.landlordAvatarBgColor || "#171717",
+                                avatar_bg_color: getSafeAvatarBgColor(dashboardData.lease.landlordAvatarBgColor),
                                 phone: dashboardData.lease.landlordPhone || ""
                             },
                             tenant: {

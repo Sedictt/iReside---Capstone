@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
-import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
+import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB, getSafeAvatarBgColor, DEFAULT_AVATAR_BG_COLOR } from "@/lib/constants";
 import { handleMediaSelection } from "@/lib/validation/media-validation";
 
 interface AvatarPickerProps {
@@ -26,8 +26,8 @@ const DEFAULT_AVATARS_COUNT = 16; // 3 to 18
 const BUCKET_URL = "https://hlpgsiqyrtndqdgvttcr.supabase.co/storage/v1/object/public/profile-avatars/default_avatars/";
 
 const PRESET_COLORS = [
-    "#171717", "#ef4444", "#f97316", "#f59e0b", "#10b981", "#3b82f6", "#6366f1", "#8b5cf6", "#ec4899", "#d946ef", "#06b6d4", "#71717a",
-    "#dc2626", "#ea580c", "#d97706", "#059669", "#2563eb", "#4f46e5", "#7c3aed", "#c026d3", "#db2777", "#0891b2", "#52525b", "#262626"
+    DEFAULT_AVATAR_BG_COLOR, "#7c3aed", "#6366f1", "#3b82f6", "#06b6d4", "#10b981", "#059669", "#f59e0b", "#f97316", "#ef4444", "#ec4899", "#d946ef",
+    "#2563eb", "#4f46e5", "#0891b2", "#d97706", "#ea580c", "#dc2626", "#c026d3", "#db2777", "#71717a", "#52525b", "#262626", "#171717"
 ];
 
 interface AvatarPickerState {
@@ -67,7 +67,7 @@ function avatarPickerReducer(state: AvatarPickerState, action: AvatarPickerActio
             return {
                 ...state,
                 selectedAvatar: action.payload.avatar,
-                selectedColor: action.payload.color || "#171717"
+                selectedColor: getSafeAvatarBgColor(action.payload.color)
             };
         case "RESET_ON_CLOSE":
             return {
@@ -85,7 +85,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
     
     const [state, dispatch] = useReducer(avatarPickerReducer, {
         selectedAvatar: currentAvatarUrl,
-        selectedColor: currentBgColor || "#171717",
+        selectedColor: getSafeAvatarBgColor(currentBgColor),
         isUploading: false,
         isUpdating: false,
         error: null,

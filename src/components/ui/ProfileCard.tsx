@@ -20,6 +20,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Profile } from "@/types";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/utils";
+import { DEFAULT_AVATAR_URL, getSafeAvatarBgColor } from "@/lib/constants";
 
 interface LeaseData {
     unitName: string | null;
@@ -410,12 +411,12 @@ export function ProfileCard() {
                                 <div className="flex items-center gap-5">
                                     <div 
                                         className="relative size-20 shrink-0 rounded-full flex items-center justify-center overflow-hidden ring-2 ring-border/60 neumorphic-inset-card"
-                                        style={{ backgroundColor: profile?.avatar_bg_color || '#8B5CF6' }}
+                                        style={{ backgroundColor: getSafeAvatarBgColor(profile?.avatar_bg_color) }}
                                     >
-                                        {profile?.avatar_url && !imageError ? (
+                                        {(profile?.avatar_url || DEFAULT_AVATAR_URL) && !imageError ? (
                                             <Image 
-                                                src={profile.avatar_url} 
-                                                alt={profile.full_name || "User"} 
+                                                src={profile?.avatar_url || DEFAULT_AVATAR_URL} 
+                                                alt={profile?.full_name || "User"} 
                                                 fill 
                                                 sizes="80px" 
                                                 className="object-cover" 

@@ -11,6 +11,7 @@ import {
     type ConversationSummary,
 } from "@/lib/messages/client";
 import { RoleBadge, type BadgeRole } from "@/components/profile/RoleBadge";
+import { getSafeAvatarBgColor } from "@/lib/constants";
 
 interface ChatUser {
     id: string;
@@ -255,7 +256,7 @@ export function MobileMessagesSheet() {
                                                 <div
                                                     className="size-11 rounded-full border-2 border-background overflow-hidden"
                                                     style={{
-                                                        backgroundColor: conversation.avatarBgColor || "#171717",
+                                                        backgroundColor: getSafeAvatarBgColor(conversation.avatarBgColor),
                                                     }}
                                                 >
                                                     <Image
