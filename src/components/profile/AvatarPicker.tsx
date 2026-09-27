@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useReducer, useMemo, useEffect, useRef } from "react";
+import { useState, useReducer, useMemo, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { X, Check, Upload, Loader2, RefreshCcw, Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -129,6 +130,11 @@ export function AvatarPicker({
 }: AvatarPickerProps) {
     const { profile, loading, refreshProfile } = useAuth();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const defaultAvatars = useMemo(
         () => Array.from({ length: DEFAULT_AVATARS_COUNT }, (_, i) => `${BUCKET_URL}${i + 3}.png`),
@@ -289,17 +295,17 @@ export function AvatarPicker({
         }
     };
 
-    if (!isOpen) return null;
+    if (!isOpen || !mounted) return null;
 
-    return (
+    const modalContent = (
         <AnimatePresence>
             <div
-                className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-6 overflow-hidden"
+                className="fixed inset-0 z-[250] flex items-center justify-center p-3 sm:p-6 overflow-hidden"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="avatar-picker-dialog-title"
             >
-                {/* Backdrop */}
+                {/* Full Viewport Backdrop with Blur (covers and blurs sidebars and topbars) */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -317,7 +323,7 @@ export function AvatarPicker({
                     className="relative w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden rounded-3xl border border-border bg-card text-card-foreground shadow-2xl z-10"
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-border/60 bg-card/95 shrink-0">
+                    <div className="flex items-center justify-between px-6 py-4 border-b border-border/60 bg-card shrink-0">
                         <div className="min-w-0 pr-4">
                             <h2
                                 id="avatar-picker-dialog-title"
@@ -341,44 +347,34 @@ export function AvatarPicker({
 
                     {/* Main Split: Left Preview / Right Controls */}
                     <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-y-auto md:overflow-hidden">
-                        {/* Left Preview Pane */}
-                        <div className="w-full md:w-72 lg:w-80 shrink-0 bg-muted/20 p-6 sm:p-7 flex flex-col items-center justify-between border-b md:border-b-0 md:border-r border-border/50 relative">
-                            {/* Ambient Glow */}
-                            <div
-                                className="absolute inset-0 opacity-15 pointer-events-none transition-colors duration-500"
-                                style={{
-                                    background: `radial-gradient(circle at center, ${state.selectedColor} 0%, transparent 70%)`,
-                                }}
-                            />
-
+                        {/* Left Preview Pane: Clean, crisp, neutral container without glowing blobs */}
+                        <div className="w-full md:w-72 lg:w-80 shrink-0 bg-muted/25 p-6 sm:p-7 flex flex-col items-center justify-between border-b md:border-b-0 md:border-r border-border/60 relative">
                             {/* Section Eyebrow */}
-                            <div className="w-full text-center relative z-10">
+                            <div className="w-full text-center">
                                 <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                                     Live Preview
                                 </span>
                             </div>
 
-                            {/* Circular Avatar Preview */}
-                            <div className="relative z-10 my-4 md:my-0 flex flex-col items-center">
-                                <div className="relative size-36 sm:size-40 rounded-full p-1.5 shadow-xl ring-4 ring-border/40 transition-all duration-300">
-                                    <div
-                                        className="w-full h-full rounded-full overflow-hidden relative transition-colors duration-300 flex items-center justify-center border-2 border-background/80 shadow-inner"
-                                        style={{ backgroundColor: state.selectedColor }}
-                                    >
-                                        <Image
-                                            key={state.selectedAvatar}
-                                            src={state.selectedAvatar || DEFAULT_AVATAR_URL}
-                                            alt="Avatar preview"
-                                            fill
-                                            sizes="160px"
-                                            className="object-cover relative z-10"
-                                            priority
-                                        />
-                                    </div>
+                            {/* Crisp Circular Avatar Preview (No messy radial glows, no blurry pulsing rings) */}
+                            <div className="my-5 md:my-0 flex flex-col items-center">
+                                <div
+                                    className="relative size-36 sm:size-40 rounded-full border-4 border-background shadow-lg transition-transform duration-200 overflow-hidden flex items-center justify-center"
+                                    style={{ backgroundColor: state.selectedColor }}
+                                >
+                                    <Image
+                                        key={state.selectedAvatar}
+                                        src={state.selectedAvatar || DEFAULT_AVATAR_URL}
+                                        alt="Avatar preview"
+                                        fill
+                                        sizes="160px"
+                                        className="object-cover"
+                                        priority
+                                    />
                                 </div>
 
                                 {/* Active Hex Indicator */}
-                                <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-background border border-border/80 shadow-sm text-xs font-mono font-bold text-foreground">
+                                <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-background border border-border shadow-xs text-xs font-mono font-bold text-foreground">
                                     <span
                                         className="size-2.5 rounded-full border border-black/10 dark:border-white/10"
                                         style={{ backgroundColor: state.selectedColor }}
@@ -388,7 +384,7 @@ export function AvatarPicker({
                             </div>
 
                             {/* Actions */}
-                            <div className="w-full space-y-2 relative z-10 pt-2">
+                            <div className="w-full space-y-2 pt-2">
                                 <button
                                     type="button"
                                     onClick={handleSave}
@@ -509,7 +505,7 @@ export function AvatarPicker({
                                 </div>
                             </div>
 
-                            {/* 2. Character Illustrations Grid */}
+                            {/* 2. Character Illustrations Grid with Slate Contrast Surface for Light Mode */}
                             <div className="space-y-2.5">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -529,24 +525,33 @@ export function AvatarPicker({
                                                 type="button"
                                                 onClick={() => dispatch({ type: "SET_AVATAR", payload: url })}
                                                 className={cn(
-                                                    "group relative aspect-square rounded-2xl p-1 transition-all duration-150 cursor-pointer border",
+                                                    "group relative aspect-square rounded-2xl p-1.5 transition-all duration-150 cursor-pointer border flex items-center justify-center overflow-hidden",
                                                     isSelected
-                                                        ? "border-primary ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/10 shadow-sm scale-105"
-                                                        : "border-border/60 bg-muted/20 hover:bg-muted/50 hover:border-border hover:scale-105"
+                                                        ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-105 shadow-md border-primary/50"
+                                                        : "border-slate-200/90 dark:border-slate-700/80 hover:border-primary/50 hover:scale-105 shadow-xs"
                                                 )}
+                                                style={{
+                                                    backgroundColor: isSelected ? state.selectedColor : undefined,
+                                                }}
                                                 aria-label={`Select avatar ${idx + 1}`}
                                             >
-                                                <div className="relative w-full h-full rounded-xl overflow-hidden">
+                                                {/* Soft slate contrast backing so white house character stands out clearly in light theme */}
+                                                {!isSelected && (
+                                                    <div className="absolute inset-0 rounded-2xl bg-slate-100 dark:bg-slate-800/90 pointer-events-none transition-colors" />
+                                                )}
+
+                                                <div className="relative w-full h-full rounded-xl overflow-hidden z-10 flex items-center justify-center">
                                                     <Image
                                                         src={url}
                                                         alt={`Avatar ${idx + 1}`}
                                                         fill
                                                         sizes="56px"
-                                                        className="object-cover transition-transform duration-200 group-hover:scale-110"
+                                                        className="object-contain p-0.5 transition-transform duration-200 group-hover:scale-110"
                                                     />
                                                 </div>
+
                                                 {isSelected && (
-                                                    <div className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md">
+                                                    <div className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md z-20">
                                                         <Check className="size-3 stroke-[3]" />
                                                     </div>
                                                 )}
@@ -674,4 +679,6 @@ export function AvatarPicker({
             </div>
         </AnimatePresence>
     );
+
+    return createPortal(modalContent, document.body);
 }
