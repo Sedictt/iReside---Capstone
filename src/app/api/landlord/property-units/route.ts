@@ -8,10 +8,24 @@ import { PropertyService } from "@/lib/services/property";
  * Used by the Landlord Dashboard for Walk-ins, Invites, and context selection.
  * Replaces the retired /api/landlord/listings endpoint.
  */
+interface CachedPropertyUnits {
+    data: any;
+    expiresAt: number;
+}
+const propertyUnitsMemoryCache = new Map<string, CachedPropertyUnits>();
+
 export async function GET(request: Request) {
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
+
+    const cached = propertyUnitsMemoryCache.get(userId);
+    if (cached && Date.now() < cached.expiresAt) {
+        return NextResponse.json(
+            { properties: cached.data },
+            { headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" } }
+        );
+    }
 
     try {
         const propertyService = new PropertyService(supabase);
@@ -36,9 +50,14 @@ export async function GET(request: Request) {
             })),
         }));
 
+        propertyUnitsMemoryCache.set(userId, {
+            data: formatted,
+            expiresAt: Date.now() + 20_000,
+        });
+
         return NextResponse.json(
             { properties: formatted },
-            { headers: { "Cache-Control": "private, no-cache, no-store, must-revalidate" } }
+            { headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" } }
         );
     } catch (error: any) {
         console.error("[property-units GET] Error:", error);

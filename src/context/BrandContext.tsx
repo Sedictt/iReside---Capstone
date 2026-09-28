@@ -5,17 +5,9 @@ import { applyBrandCssVariables, getMonogramInitials } from "@/lib/branding/colo
 import { OfflineStorage } from "@/lib/offline/offlineStorage";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
-export interface BrandConfig {
-  propertyName: string;
-  propertyTagline: string;
-  rentalArchetype?: "apartment" | "dormitory" | "boarding_house" | null;
-  primaryColor: string;
-  secondaryColor: string;
-  logoUrl: string | null;
-  bannerUrl: string | null;
-  setupCompleted?: boolean;
-  setupCompletedAt?: string | null;
-}
+export type { BrandConfig } from "@/lib/branding/defaults";
+export { DEFAULT_BRANDING } from "@/lib/branding/defaults";
+import { DEFAULT_BRANDING, type BrandConfig } from "@/lib/branding/defaults";
 
 export interface BrandContextValue extends BrandConfig {
   monogramInitials: string;
@@ -25,18 +17,6 @@ export interface BrandContextValue extends BrandConfig {
   resetToDefault: () => Promise<void>;
   refreshBranding: () => Promise<void>;
 }
-
-export const DEFAULT_BRANDING: BrandConfig = {
-  propertyName: "iReside Residences",
-  propertyTagline: "Modern Property Management & Residential Operations",
-  rentalArchetype: null,
-  primaryColor: "#c4b0ff",
-  secondaryColor: "#8b5cf6",
-  logoUrl: null,
-  bannerUrl: null,
-  setupCompleted: false,
-  setupCompletedAt: null,
-};
 
 const BrandContext = createContext<BrandContextValue | null>(null);
 
@@ -89,7 +69,7 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
   const refreshBranding = useCallback(async () => {
     try {
       if (typeof navigator !== "undefined" && navigator.onLine) {
-        const res = await fetch("/api/branding", { cache: "no-store" });
+        const res = await fetch("/api/branding");
         if (res.ok) {
           const data: BrandConfig = await res.json();
           const localSnapshot = loadLocalSnapshot();
@@ -181,11 +161,7 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
 
     window.addEventListener("property-branding-updated", handleBrandingEvent);
 
-    // Revalidate when user returns to or focuses the window/tab
-    const handleFocus = () => {
-      refreshBranding();
-    };
-    window.addEventListener("focus", handleFocus);
+    // Window focus listener removed: realtime broadcast channel already handles live updates
 
     // Realtime channel subscription for instant multi-device sync
     let channel: any = null;
@@ -224,7 +200,7 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       window.removeEventListener("property-branding-updated", handleBrandingEvent);
-      window.removeEventListener("focus", handleFocus);
+
       realtimeChannelRef.current = null;
       if (channel) {
         try {

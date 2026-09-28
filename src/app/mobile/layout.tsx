@@ -4,7 +4,6 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { BottomTabBar } from '@/components/mobile/layout/BottomTabBar'
-import { AuthProvider } from '@/context/AuthContext'
 import { NotificationProvider } from '@/context/NotificationContext'
 import { PropertyProvider } from '@/context/PropertyContext'
 import { cn } from '@/lib/utils'
@@ -85,12 +84,10 @@ function MobileLayoutInner({ children }: { children: React.ReactNode }) {
 
 export default function MobileLayout({ children }: { children: React.ReactNode }) {
     return (
-        <AuthProvider>
-            <PropertyProvider>
-                <NotificationProvider>
-                    <MobileLayoutInner>{children}</MobileLayoutInner>
-                </NotificationProvider>
-            </PropertyProvider>
-        </AuthProvider>
+        <PropertyProvider>
+            <NotificationProvider>
+                <MobileLayoutInner>{children}</MobileLayoutInner>
+            </NotificationProvider>
+        </PropertyProvider>
     )
 }

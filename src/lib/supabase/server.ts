@@ -40,3 +40,11 @@ export async function createServerSupabaseClient() {
  * Kept as a backward-compatible alias during the refactoring migration.
  */
 export const createClient = createServerSupabaseClient;
+
+export async function auth() {
+    const supabase = await createServerSupabaseClient();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+    return user;
+}
