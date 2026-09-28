@@ -11,6 +11,7 @@ interface LeaseRenewalRequestProps {
     daysRemaining: number;
     leaseId?: string;
     autoOpen?: boolean;
+    onSuccess?: () => void;
     renewalSettings?: {
         base_rent_adjustment: number;
         adjustment_type: "percentage" | "fixed";
@@ -33,7 +34,7 @@ const DEFAULT_RENEWAL_TERMS = [
     { months: 24, label: "2 Years Extension", price_label: "Standard Rent" }
 ];
 
-export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining, leaseId, autoOpen = false, renewalSettings }: LeaseRenewalRequestProps) {
+export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining, leaseId, autoOpen = false, onSuccess, renewalSettings }: LeaseRenewalRequestProps) {
     const [isOpen, setIsOpen] = useState(autoOpen);
     const [step, setStep] = useState<"disclosure" | "request">("disclosure");
     const [submitting, setSubmitting] = useState(false);
@@ -74,12 +75,17 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                 description: `Landlord has been notified of your ${selectedTerm}-month renewal intent.`
             });
 
+            onSuccess?.();
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("lease-renewal-submitted", { detail: { leaseId } }));
+            }
+
             // Auto-close after 3 seconds
             setTimeout(() => {
                 setIsOpen(false);
                 setSubmitted(false);
-            }, 3500);
-} catch {
+            }, 3000);
+        } catch {
             toast.error("Renewal Request Failed", {
                 description: "Network error. Please try again."
             });

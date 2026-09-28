@@ -24,7 +24,7 @@ WHERE role IN ('landlord', 'admin')
 -- Tenants who have changed their password or completed onboarding are also marked as claimed
 UPDATE public.profiles
 SET is_account_claimed = true
-WHERE role = 'tenant' AND (has_changed_password = true OR onboarding_completed = true);
+WHERE role = 'tenant' AND has_changed_password = true;
 
 -- Create index for quick lookup
 CREATE INDEX IF NOT EXISTS idx_profiles_is_account_claimed ON public.profiles(is_account_claimed) WHERE is_account_claimed = false;
