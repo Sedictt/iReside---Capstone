@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { RenewalStatus } from "@/types/database";
 
 /**
@@ -163,16 +164,21 @@ export async function POST(
         .update({ new_lease_id: lease.id })
         .eq("id", id);
 
-      // Notify tenant
-      await supabase
-        .from("notifications")
-        .insert({
-          user_id: renewalRequest.tenant_id,
-          type: "lease_renewal_approved",
-          title: "Renewal Approved",
-          message: "Your lease renewal request has been approved. A new lease is ready for signing.",
-          data: { renewal_request_id: id, new_lease_id: lease.id }
-        });
+      // Notify tenant using admin client (cross-user notification)
+      try {
+        const adminClient = createAdminClient();
+        await adminClient
+          .from("notifications")
+          .insert({
+            user_id: renewalRequest.tenant_id,
+            type: "lease_renewal_approved",
+            title: "Renewal Approved",
+            message: "Your lease renewal request has been approved. A new lease is ready for signing.",
+            data: { renewal_request_id: id, new_lease_id: lease.id }
+          });
+      } catch (notifErr) {
+        console.error("[landlord-renewal] Non-fatal notification error:", notifErr);
+      }
 
       return NextResponse.json({
         message: "Renewal request approved. New lease created.",
@@ -201,16 +207,21 @@ export async function POST(
         );
       }
 
-      // Notify tenant
-      await supabase
-        .from("notifications")
-        .insert({
-          user_id: renewalRequest.tenant_id,
-          type: "lease_renewal_rejected",
-          title: "Renewal Rejected",
-          message: "Your lease renewal request has been rejected.",
-          data: { renewal_request_id: id, notes: landlord_notes }
-        });
+      // Notify tenant using admin client (cross-user notification)
+      try {
+        const adminClient = createAdminClient();
+        await adminClient
+          .from("notifications")
+          .insert({
+            user_id: renewalRequest.tenant_id,
+            type: "lease_renewal_rejected",
+            title: "Renewal Rejected",
+            message: "Your lease renewal request has been rejected.",
+            data: { renewal_request_id: id, notes: landlord_notes }
+          });
+      } catch (notifErr) {
+        console.error("[landlord-renewal] Non-fatal notification error:", notifErr);
+      }
 
       return NextResponse.json({
         message: "Renewal request rejected.",

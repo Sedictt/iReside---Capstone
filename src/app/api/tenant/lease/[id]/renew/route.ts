@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { RenewalStatus } from "@/types/database";
 
 /**
@@ -114,20 +115,33 @@ export async function POST(
     const proposedEndDate = new Date(proposedStartDate);
     proposedEndDate.setMonth(proposedEndDate.getMonth() + term_months);
 
-    // Create renewal request
+    // Calculate proposed monthly rent based on property renewal_settings if set
+    let proposedMonthlyRent = Number(lease.monthly_rent) || 0;
+    const renewalSettings = property?.renewal_settings as any;
+    if (renewalSettings?.base_rent_adjustment && renewalSettings.base_rent_adjustment > 0) {
+      if (renewalSettings.adjustment_type === "percentage") {
+        proposedMonthlyRent = Math.round(proposedMonthlyRent * (1 + Number(renewalSettings.base_rent_adjustment) / 100));
+      } else if (renewalSettings.adjustment_type === "fixed") {
+        proposedMonthlyRent = proposedMonthlyRent + Number(renewalSettings.base_rent_adjustment);
+      }
+    }
+
+    const adminClient = createAdminClient();
+
+    // Create renewal request using adminClient to ensure reliable creation and satisfy service permissions
     const renewalRequest = {
       current_lease_id: leaseId,
       tenant_id: user.id,
       landlord_id: lease.landlord_id,
       proposed_start_date: proposedStartDate.toISOString().split('T')[0],
       proposed_end_date: proposedEndDate.toISOString().split('T')[0],
-      proposed_monthly_rent: lease.monthly_rent,
+      proposed_monthly_rent: proposedMonthlyRent,
       proposed_security_deposit: lease.security_deposit,
       terms_json: lease.terms,
       status: "pending" as RenewalStatus,
     };
 
-    const { data: newRequest, error: createError } = await supabase
+    const { data: newRequest, error: createError } = await adminClient
       .from("renewal_requests")
       .insert(renewalRequest)
       .select()
@@ -136,21 +150,25 @@ export async function POST(
     if (createError) {
       console.error("[renew-lease] Error creating renewal request:", createError);
       return NextResponse.json(
-        { error: "Failed to create renewal request" },
+        { error: createError.message || "Failed to create renewal request" },
         { status: 500 }
       );
     }
 
-    // Notify landlord
-    await supabase
-      .from("notifications")
-      .insert({
-        user_id: lease.landlord_id,
-        type: "lease_renewal_request",
-        title: "Renewal Request Submitted",
-        message: `Tenant has requested a lease renewal for ${term_months} months.`,
-        data: { lease_id: leaseId, renewal_request_id: newRequest.id }
-      });
+    // Notify landlord using adminClient (required for cross-user notifications under RLS)
+    try {
+      await adminClient
+        .from("notifications")
+        .insert({
+          user_id: lease.landlord_id,
+          type: "lease_renewal_request",
+          title: "Renewal Request Submitted",
+          message: `Tenant has requested a lease renewal for ${term_months} months.`,
+          data: { lease_id: leaseId, renewal_request_id: newRequest.id }
+        });
+    } catch (notifErr) {
+      console.error("[renew-lease] Non-fatal notification error:", notifErr);
+    }
 
     return NextResponse.json({
       message: "Renewal request submitted successfully",
