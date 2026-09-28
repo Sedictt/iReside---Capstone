@@ -69,7 +69,9 @@ function LeaseHubContent() {
                         const renewalResponse = await fetch("/api/tenant/renewals", { cache: "no-store" });
                         if (renewalResponse.ok) {
                             const renewalRequests = await renewalResponse.json();
-                            const activeLeaseRenewal = renewalRequests?.find((renewal: { current_lease_id: string }) => renewal.current_lease_id === responseData.lease.id);
+                            const activeLeaseRenewal = renewalRequests?.find((renewal: { current_lease_id: string; status: string }) => 
+                                renewal.current_lease_id === responseData.lease.id && (renewal.status === "pending" || renewal.status === "approved")
+                            ) || renewalRequests?.find((renewal: { current_lease_id: string }) => renewal.current_lease_id === responseData.lease.id);
                             if (isMounted) setRenewalRequest(activeLeaseRenewal);
                         }
                     } catch (error) {
@@ -156,6 +158,7 @@ function LeaseHubContent() {
             <LeaseRenewalReminder 
                 daysRemaining={progressData.daysRemaining} 
                 leaseId={lease?.id}
+                hasOngoingRequest={!!(renewalRequest && (renewalRequest.status === "pending" || renewalRequest.status === "approved"))}
                 teamMembers={lease?.landlord ? [{ avatar_url: lease.landlord.avatar_url, name: lease.landlord.full_name }] : undefined}
             />
             
@@ -355,11 +358,23 @@ function LeaseHubContent() {
                                     </div>
 
                                     <div className="md:col-span-1">
-                                         <LeaseRenewalRequest 
-                                             daysRemaining={progressData.daysRemaining} 
-                                             leaseId={lease?.id} 
-                                             renewalSettings={undefined}
-                                         />
+                                        <LeaseRenewalRequest 
+                                            daysRemaining={progressData.daysRemaining} 
+                                            leaseId={lease?.id} 
+                                            existingRequest={renewalRequest}
+                                            renewalSettings={undefined}
+                                            onSuccess={() => {
+                                                fetch("/api/tenant/renewals", { cache: "no-store" })
+                                                    .then((res) => res.json())
+                                                    .then((data) => {
+                                                        const active = data?.find((r: any) => 
+                                                            r.current_lease_id === lease?.id && (r.status === "pending" || r.status === "approved")
+                                                        ) || data?.find((r: any) => r.current_lease_id === lease?.id);
+                                                        if (active) setRenewalRequest(active);
+                                                    })
+                                                    .catch(console.error);
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             </div>

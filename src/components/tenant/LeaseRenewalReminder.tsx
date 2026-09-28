@@ -10,13 +10,14 @@ import LeaseRenewalRequest from "./LeaseRenewalRequest";
 interface LeaseRenewalReminderProps {
     daysRemaining: number;
     leaseId?: string;
+    hasOngoingRequest?: boolean;
     teamMembers?: Array<{
         avatar_url?: string;
         name?: string;
     }>;
 }
 
-export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembers }: LeaseRenewalReminderProps) {
+export default function LeaseRenewalReminder({ daysRemaining, leaseId, hasOngoingRequest, teamMembers }: LeaseRenewalReminderProps) {
     const [isVisible, setIsVisible] = useState(false);
     const [showRenewalRequest, setShowRenewalRequest] = useState(false);
     const [dontShowAgain, setDontShowAgain] = useState(false);
@@ -25,10 +26,14 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembe
     const displayMembers = teamMembers && teamMembers.length > 0 ? teamMembers : null;
 
     useEffect(() => {
+        // If explicitly indicated that there is already an ongoing request, suppress reminder immediately
+        if (hasOngoingRequest) return;
+
         // Eligibility check: Within 90 days
         const isEligible = daysRemaining > 0 && daysRemaining <= 90;
-        
         if (!isEligible) return;
+
+        if (!leaseId) return;
 
         // Check for permanent dismissal
         const isPermanentlyDismissed = localStorage.getItem(`ireside_renewal_reminder_dismissed_${leaseId}`);
@@ -36,16 +41,56 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembe
 
         // Check if shown in this session to avoid spamming
         const hasBeenShown = sessionStorage.getItem(`ireside_renewal_reminder_shown_${leaseId}`);
-        
-        if (!hasBeenShown) {
-            const timer = setTimeout(() => {
-                setIsVisible(true);
-                sessionStorage.setItem(`ireside_renewal_reminder_shown_${leaseId}`, "true");
+        if (hasBeenShown) return;
+
+        let isCancelled = false;
+        let timer: NodeJS.Timeout | undefined;
+
+        const checkAndTrigger = async () => {
+            // If hasOngoingRequest is undefined, dynamically check for active renewal request
+            if (hasOngoingRequest === undefined) {
+                try {
+                    const res = await fetch("/api/tenant/renewals", { cache: "no-store" });
+                    if (res.ok) {
+                        const data = await res.json();
+                        const isOngoing = Array.isArray(data) && data.some(
+                            (r: { current_lease_id: string; status: string }) =>
+                                r.current_lease_id === leaseId && (r.status === "pending" || r.status === "approved")
+                        );
+                        if (isOngoing) {
+                            return; // Suppress reminder if renewal is pending or approved
+                        }
+                    }
+                } catch {
+                    // ignore network errors
+                }
+            }
+
+            if (isCancelled) return;
+
+            timer = setTimeout(() => {
+                if (!isCancelled) {
+                    setIsVisible(true);
+                    sessionStorage.setItem(`ireside_renewal_reminder_shown_${leaseId}`, "true");
+                }
             }, 2000); // Show after 2 seconds for better impact
-            
-            return () => clearTimeout(timer);
-        }
-    }, [daysRemaining, leaseId]);
+        };
+
+        void checkAndTrigger();
+
+        // Listen for new renewal submissions to immediately dismiss if submitted elsewhere
+        const handleRenewalSubmitted = () => {
+            setIsVisible(false);
+            setShowRenewalRequest(false);
+        };
+        window.addEventListener("lease-renewal-submitted", handleRenewalSubmitted);
+
+        return () => {
+            isCancelled = true;
+            if (timer) clearTimeout(timer);
+            window.removeEventListener("lease-renewal-submitted", handleRenewalSubmitted);
+        };
+    }, [daysRemaining, leaseId, hasOngoingRequest]);
 
     if (!isVisible && !showRenewalRequest) return null;
 
@@ -184,6 +229,13 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, teamMembe
                     daysRemaining={daysRemaining} 
                     variant="none" 
                     autoOpen={true}
+                    onClose={() => {
+                        setShowRenewalRequest(false);
+                    }}
+                    onSuccess={() => {
+                        setIsVisible(false);
+                        setShowRenewalRequest(false);
+                    }}
                 />
             )}
 
