@@ -131,11 +131,12 @@ test2.docx
 __pycache__/
 *.pyc
 
-# Desktop build artifacts
+# Desktop & Mobile build artifacts
 desktop/node_modules/
 desktop/dist/
 desktop/electron-builder.json
 public/downloads/*.exe
+output/*.apk
 # Scratch
 scratch/
 iris-3d-model/

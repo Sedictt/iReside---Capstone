@@ -20,7 +20,9 @@
     "desktop:dev": "node desktop/scripts/run-dev.mjs",
     "desktop:build": "node desktop/scripts/build-desktop.mjs",
     "desktop:build:local": "node desktop/scripts/build-desktop.mjs --url=http://localhost:3000",
-    "desktop:build:portable": "node desktop/scripts/build-desktop.mjs --portable"
+    "desktop:build:portable": "node desktop/scripts/build-desktop.mjs --portable",
+    "mobile:build": "node scripts/build-mobile.mjs",
+    "mobile:build:clean": "node scripts/build-mobile.mjs --clean"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",

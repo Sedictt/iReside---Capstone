@@ -22,6 +22,7 @@ export default function TenantDownloadPage() {
   const [activeModal, setActiveModal] = useState<"qr" | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [isWindowsDownloading, setIsWindowsDownloading] = useState(false);
+  const [isAndroidDownloading, setIsAndroidDownloading] = useState(false);
 
   const handleCopyLink = () => {
     if (typeof window !== "undefined") {
@@ -68,10 +69,43 @@ export default function TenantDownloadPage() {
     }
   };
 
-  const handleDownloadAndroid = () => {
-    toast.success("Downloading Android Package", {
-      description: "iReside-Mobile-v2.1.0.apk (Android Native Client)",
-    });
+  const handleDownloadAndroid = async () => {
+    try {
+      setIsAndroidDownloading(true);
+      const response = await fetch("/api/mobile-release", { cache: "no-store" });
+      const release = (await response.json()) as {
+        downloadUrl?: string;
+        filename?: string;
+        error?: string;
+      };
+
+      const downloadUrl = release?.downloadUrl || "/downloads/iReside-v1.0.0-release.apk";
+      const filename = release?.filename || "iReside-v1.0.0-release.apk";
+
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Downloading Android Package", {
+        description: `${filename} has started downloading.`,
+      });
+    } catch {
+      const link = document.createElement("a");
+      link.href = "/downloads/iReside-v1.0.0-release.apk";
+      link.download = "iReside-v1.0.0-release.apk";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Downloading Android Package", {
+        description: "iReside-v1.0.0-release.apk has started downloading.",
+      });
+    } finally {
+      setIsAndroidDownloading(false);
+    }
   };
 
   return (
@@ -134,10 +168,11 @@ export default function TenantDownloadPage() {
           <div className="flex flex-col sm:flex-row gap-2.5">
             <button
               onClick={handleDownloadAndroid}
-              className="flex-1 py-3.5 px-4 rounded-2xl neumorphic-primary active:scale-95 text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+              disabled={isAndroidDownloading}
+              className="flex-1 py-3.5 px-4 rounded-2xl neumorphic-primary active:scale-95 disabled:cursor-wait disabled:opacity-70 text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
             >
               <Download className="size-4" />
-              <span>Download APK</span>
+              <span>{isAndroidDownloading ? "Preparing APK..." : "Download APK (.apk)"}</span>
             </button>
 
             <button
@@ -354,12 +389,25 @@ export default function TenantDownloadPage() {
                 </p>
               </div>
 
-              <button
-                onClick={() => setActiveModal(null)}
-                className="neumorphic-primary px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest active:scale-95 transition-all w-full"
-              >
-                Close
-              </button>
+              <div className="flex flex-col gap-2 w-full">
+                <button
+                  onClick={() => {
+                    handleDownloadAndroid();
+                    setActiveModal(null);
+                  }}
+                  className="neumorphic-primary px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest active:scale-95 transition-all w-full flex items-center justify-center gap-2"
+                >
+                  <Download className="size-3.5" />
+                  <span>Download APK to this Device</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveModal(null)}
+                  className="neumorphic-extruded px-6 py-2 rounded-2xl text-xs font-black uppercase tracking-widest active:scale-95 transition-all w-full text-muted-foreground hover:text-foreground"
+                >
+                  Close
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
