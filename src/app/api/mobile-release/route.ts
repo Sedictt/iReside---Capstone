@@ -23,11 +23,12 @@ type MobileRelease = {
 export async function GET(req: NextRequest) {
   try {
     const isDirectDownload = req.nextUrl.searchParams.get("download") === "1";
+    const variant = req.nextUrl.searchParams.get("variant") === "debug" ? "debug" : "release";
     let release: MobileRelease | null = null;
 
-    // 1. Try resolving from Vercel Blob if available
+    // 1. Try resolving from Vercel Blob if available (for release builds)
     try {
-      if (process.env.BLOB_READ_WRITE_TOKEN) {
+      if (variant === "release" && process.env.BLOB_READ_WRITE_TOKEN) {
         const { blobs } = await list({ prefix: "mobile/current.json", limit: 1 });
         const manifestBlob = blobs.find((blob) => blob.pathname === "mobile/current.json");
 
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
 
     // 2. Fall back to local public download if not configured in Blob
     if (!release) {
-      const filename = "iReside-v1.0.0-release.apk";
+      const filename = variant === "debug" ? "iReside-v1.0.0-debug.apk" : "iReside-v1.0.0-release.apk";
       const publicPath = path.join(process.cwd(), "public", "downloads", filename);
       let size: number | undefined;
 

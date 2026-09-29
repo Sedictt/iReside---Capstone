@@ -1,111 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/rootContainer"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark">
+    tools:context=".MainActivity">
 
-    <!-- Swipe Refresh Layout containing WebView -->
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/swipeRefreshLayout"
+    <WebView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <WebView
-            android:id="@+id/webView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/background_dark" />
-
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-    <!-- Top Loading Progress Bar -->
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="4dp"
-        android:layout_gravity="top"
-        android:indeterminate="false"
-        android:max="100"
-        android:progress="0"
-        android:progressTint="@color/primary"
-        android:visibility="gone" />
-
-    <!-- Offline Fallback Screen -->
-    <LinearLayout
-        android:id="@+id/offlineContainer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/background_dark"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="32dp"
-        android:visibility="gone">
-
-        <!-- Offline Icon / Badge Container -->
-        <FrameLayout
-            android:layout_width="96dp"
-            android:layout_height="96dp"
-            android:layout_marginBottom="24dp"
-            android:background="@drawable/bg_offline_icon_circle">
-
-            <ImageView
-                android:id="@+id/offlineIcon"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center"
-                android:contentDescription="Offline icon"
-                android:src="@drawable/ic_wifi_off"
-                app:tint="@color/primary" />
-        </FrameLayout>
-
-        <!-- Offline Title -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:fontFamily="sans-serif-medium"
-            android:text="@string/offline_title"
-            android:textColor="@color/text_primary"
-            android:textSize="22sp" />
-
-        <!-- Offline Description -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="32dp"
-            android:gravity="center"
-            android:lineSpacingExtra="4dp"
-            android:maxWidth="320dp"
-            android:text="@string/offline_description"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp" />
-
-        <!-- Retry Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnRetry"
-            android:layout_width="220dp"
-            android:layout_height="52dp"
-            android:backgroundTint="@color/primary"
-            android:fontFamily="sans-serif-medium"
-            android:text="@string/offline_retry_button"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="15sp"
-            app:cornerRadius="14dp"
-            app:elevation="4dp" />
-
-        <!-- Retry Progress Indicator -->
-        <ProgressBar
-            android:id="@+id/retrySpinner"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_marginTop="16dp"
-            android:indeterminateTint="@color/sage_green"
-            android:visibility="gone" />
-
-    </LinearLayout>
-
-</FrameLayout>
+        android:layout_height="match_parent" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
