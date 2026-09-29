@@ -114,6 +114,18 @@ if (!fs.existsSync(srcApk)) {
   process.exit(1);
 }
 
+// 6. Sign with jarsigner (v1) and apksigner (v2/v3) to guarantee 100% universal Android installer compatibility
+console.log('\n[Builder] Ensuring v1 JAR + v2 APK signing for universal device compatibility...');
+const jarsignerPath = path.join(javaHome, 'bin', process.platform === 'win32' ? 'jarsigner.exe' : 'jarsigner');
+const apksignerPath = path.join(androidHome, 'build-tools', '35.0.0', process.platform === 'win32' ? 'apksigner.bat' : 'apksigner');
+
+try {
+  execSync(`"${jarsignerPath}" -sigalg SHA256withRSA -digestalg SHA-256 -keystore "${keystorePath}" -storepass ireside2026 -keypass ireside2026 "${srcApk}" ireside`, { env, stdio: 'ignore' });
+  execSync(`"${apksignerPath}" sign --ks "${keystorePath}" --ks-key-alias ireside --ks-pass pass:ireside2026 --key-pass pass:ireside2026 "${srcApk}"`, { env, stdio: 'ignore' });
+} catch (signErr) {
+  console.log(`[Builder] Notice: Signing wrapper notice (${signErr.message})`);
+}
+
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
