@@ -9,6 +9,7 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 const androidDir = path.join(rootDir, 'android');
 const outputDir = path.join(rootDir, 'output');
+const publicDownloadsDir = path.join(rootDir, 'public', 'downloads');
 
 // Parse CLI args: node scripts/build-mobile.mjs [--url="..."] [--clean]
 const args = process.argv.slice(2);
@@ -30,12 +31,12 @@ if (!targetUrl.endsWith('/mobile') && !targetUrl.endsWith('/mobile/')) {
 }
 
 console.log('\n======================================================');
-console.log('📱 iReside Turnkey Android APK Builder');
+console.log('📱 iReside Capacitor Android APK Builder');
 console.log('======================================================');
 console.log(`• Target Endpoint : ${targetUrl}`);
 console.log(`• Android Project : ${androidDir}`);
 console.log(`• Package Name    : ph.ireside.mobile`);
-console.log(`• Artifact Format : Release APK (Signed v2)`);
+console.log(`• Artifact Formats: Release APK (v1+v2 signed) & Debug APK`);
 console.log('======================================================\n');
 
 // 1. Detect Java JDK (Prefer Android Studio JBR if available, or JAVA_HOME)
@@ -85,7 +86,47 @@ const env = {
 console.log(`[Builder] Using JDK: ${javaHome}`);
 console.log(`[Builder] Using Android SDK: ${androidHome}`);
 
-// 4. Ensure Keystore exists
+// 4. Update Capacitor configuration with target URL
+const capacitorConfigPath = path.join(rootDir, 'capacitor.config.ts');
+if (fs.existsSync(capacitorConfigPath)) {
+  let capTs = fs.readFileSync(capacitorConfigPath, 'utf8');
+  capTs = capTs.replace(/url:\s*'[^']+'/, `url: '${targetUrl}'`);
+  fs.writeFileSync(capacitorConfigPath, capTs, 'utf8');
+}
+
+// Ensure assets/capacitor.config.json has the correct server URL
+const assetCapConfigDir = path.join(androidDir, 'app', 'src', 'main', 'assets');
+if (!fs.existsSync(assetCapConfigDir)) {
+  fs.mkdirSync(assetCapConfigDir, { recursive: true });
+}
+const assetCapConfigPath = path.join(assetCapConfigDir, 'capacitor.config.json');
+const capConfigJson = {
+  appId: 'ph.ireside.mobile',
+  appName: 'iReside',
+  webDir: 'mobile/www',
+  server: {
+    url: targetUrl,
+    cleartext: true
+  },
+  android: {
+    allowMixedContent: true,
+    captureInput: true,
+    webContentsDebuggingEnabled: false
+  }
+};
+fs.writeFileSync(assetCapConfigPath, JSON.stringify(capConfigJson, null, 2), 'utf8');
+
+// Ensure minimal web assets exist in android assets (avoid copying huge public folder)
+const assetPublicDir = path.join(assetCapConfigDir, 'public');
+if (!fs.existsSync(assetPublicDir)) {
+  fs.mkdirSync(assetPublicDir, { recursive: true });
+}
+const indexHtmlSrc = path.join(rootDir, 'mobile', 'www', 'index.html');
+if (fs.existsSync(indexHtmlSrc)) {
+  fs.copyFileSync(indexHtmlSrc, path.join(assetPublicDir, 'index.html'));
+}
+
+// 5. Ensure Keystore exists
 const keystorePath = path.join(androidDir, 'app', 'ireside-release.jks');
 if (!fs.existsSync(keystorePath)) {
   console.log('[Builder] Generating release signing keystore...');
@@ -94,10 +135,10 @@ if (!fs.existsSync(keystorePath)) {
   execSync(keygenCmd, { stdio: 'inherit' });
 }
 
-// 5. Build Release APK
+// 6. Build Release and Debug APKs via Gradle
 const gradlewCmd = process.platform === 'win32' ? 'gradlew.bat' : './gradlew';
-const buildTasks = cleanBuild ? 'clean assembleRelease' : 'assembleRelease';
-const fullCommand = `${gradlewCmd} ${buildTasks} -PtargetUrl="${targetUrl}"`;
+const buildTasks = cleanBuild ? 'clean assembleRelease assembleDebug' : 'assembleRelease assembleDebug';
+const fullCommand = `${gradlewCmd} ${buildTasks}`;
 
 console.log(`\n[Builder] Running Gradle: ${fullCommand}\n`);
 execSync(fullCommand, {
@@ -107,55 +148,63 @@ execSync(fullCommand, {
   shell: true
 });
 
-// 6. Copy output to /output folder
-const srcApk = path.join(androidDir, 'app', 'build', 'outputs', 'apk', 'release', 'app-release.apk');
-if (!fs.existsSync(srcApk)) {
-  console.error(`❌ Build finished but release APK not found at: ${srcApk}`);
+// 7. Verify and copy output APKs
+const releaseSrcApk = path.join(androidDir, 'app', 'build', 'outputs', 'apk', 'release', 'app-release.apk');
+const debugSrcApk = path.join(androidDir, 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
+
+if (!fs.existsSync(releaseSrcApk)) {
+  console.error(`❌ Build finished but release APK not found at: ${releaseSrcApk}`);
   process.exit(1);
-}
-
-// 6. Sign with jarsigner (v1) and apksigner (v2/v3) to guarantee 100% universal Android installer compatibility
-console.log('\n[Builder] Ensuring v1 JAR + v2 APK signing for universal device compatibility...');
-const jarsignerPath = path.join(javaHome, 'bin', process.platform === 'win32' ? 'jarsigner.exe' : 'jarsigner');
-const apksignerPath = path.join(androidHome, 'build-tools', '35.0.0', process.platform === 'win32' ? 'apksigner.bat' : 'apksigner');
-
-try {
-  execSync(`"${jarsignerPath}" -sigalg SHA256withRSA -digestalg SHA-256 -keystore "${keystorePath}" -storepass ireside2026 -keypass ireside2026 "${srcApk}" ireside`, { env, stdio: 'ignore' });
-  execSync(`"${apksignerPath}" sign --ks "${keystorePath}" --ks-key-alias ireside --ks-pass pass:ireside2026 --key-pass pass:ireside2026 "${srcApk}"`, { env, stdio: 'ignore' });
-} catch (signErr) {
-  console.log(`[Builder] Notice: Signing wrapper notice (${signErr.message})`);
 }
 
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
-
-const destApkName = 'iReside-v1.0.0-release.apk';
-const destApkPath = path.join(outputDir, destApkName);
-fs.copyFileSync(srcApk, destApkPath);
-
-// Also copy to public/downloads so it is directly downloadable from the web app
-const publicDownloadsDir = path.join(rootDir, 'public', 'downloads');
 if (!fs.existsSync(publicDownloadsDir)) {
   fs.mkdirSync(publicDownloadsDir, { recursive: true });
 }
-fs.copyFileSync(srcApk, path.join(publicDownloadsDir, destApkName));
-fs.copyFileSync(srcApk, path.join(publicDownloadsDir, 'iReside-release.apk'));
 
-// Calculate SHA-256 and size
-const fileBuffer = fs.readFileSync(destApkPath);
-const hashSum = crypto.createHash('sha256').update(fileBuffer).digest('hex');
-const stats = fs.statSync(destApkPath);
-const sizeMb = (stats.size / (1024 * 1024)).toFixed(2);
+// Copy Release APK
+const releaseName = 'iReside-v1.0.0-release.apk';
+const destRelease = path.join(outputDir, releaseName);
+fs.copyFileSync(releaseSrcApk, destRelease);
+fs.copyFileSync(releaseSrcApk, path.join(publicDownloadsDir, releaseName));
+fs.copyFileSync(releaseSrcApk, path.join(publicDownloadsDir, 'iReside-release.apk'));
+
+// Copy Debug APK (Direct Universal Sideload fallback)
+const debugName = 'iReside-v1.0.0-debug.apk';
+const destDebug = path.join(outputDir, debugName);
+if (fs.existsSync(debugSrcApk)) {
+  fs.copyFileSync(debugSrcApk, destDebug);
+  fs.copyFileSync(debugSrcApk, path.join(publicDownloadsDir, debugName));
+  fs.copyFileSync(debugSrcApk, path.join(publicDownloadsDir, 'iReside-debug.apk'));
+}
+
+// Calculate metadata
+const relBuffer = fs.readFileSync(destRelease);
+const relHash = crypto.createHash('sha256').update(relBuffer).digest('hex');
+const relStats = fs.statSync(destRelease);
+const relSizeMb = (relStats.size / (1024 * 1024)).toFixed(2);
 
 console.log('\n======================================================');
-console.log('✅ Android Release APK Build Complete!');
+console.log('✅ Android APK Build Complete!');
 console.log('======================================================');
-console.log(`• Destination File : ${destApkPath}`);
-console.log(`• APK Size         : ${sizeMb} MB (${stats.size.toLocaleString()} bytes)`);
-console.log(`• SHA-256 Checksum : ${hashSum}`);
+console.log(`• Release APK      : ${destRelease}`);
+console.log(`  Size             : ${relSizeMb} MB (${relStats.size.toLocaleString()} bytes)`);
+console.log(`  SHA-256 Checksum : ${relHash}`);
+
+if (fs.existsSync(destDebug)) {
+  const dbgBuffer = fs.readFileSync(destDebug);
+  const dbgHash = crypto.createHash('sha256').update(dbgBuffer).digest('hex');
+  const dbgStats = fs.statSync(destDebug);
+  const dbgSizeMb = (dbgStats.size / (1024 * 1024)).toFixed(2);
+  console.log(`• Universal Debug  : ${destDebug}`);
+  console.log(`  Size             : ${dbgSizeMb} MB (${dbgStats.size.toLocaleString()} bytes)`);
+  console.log(`  SHA-256 Checksum : ${dbgHash}`);
+}
+
 console.log(`• Package Name     : ph.ireside.mobile`);
 console.log(`• Target URL       : ${targetUrl}`);
 console.log('======================================================');
-console.log('\n📱 To install onto a connected physical Android device or emulator:');
-console.log(`   adb install "${destApkPath}"\n`);
+console.log('\n📱 To install onto a connected physical Android device:');
+console.log(`   adb install "${destRelease}"\n`);

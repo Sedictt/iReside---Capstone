@@ -23,11 +23,9 @@ import {
 import Link from "next/link";
 import { toast } from "sonner";
 import { Logo } from "@/components/ui/Logo";
-import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function AppDownloadPage() {
-  const { user, loading } = useAuth();
 
   const [activeModal, setActiveModal] = useState<"qr" | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -121,18 +119,19 @@ export default function AppDownloadPage() {
     }
   };
 
-  const handleDownloadAndroid = async () => {
+  const handleDownloadAndroid = async (variant: "release" | "debug" = "release") => {
     try {
       setIsAndroidDownloading(true);
-      const response = await fetch("/api/mobile-release", { cache: "no-store" });
+      const response = await fetch(`/api/mobile-release?variant=${variant}`, { cache: "no-store" });
       const release = (await response.json()) as {
         downloadUrl?: string;
         filename?: string;
         error?: string;
       };
 
-      const downloadUrl = release?.downloadUrl || "/downloads/iReside-v1.0.0-release.apk";
-      const filename = release?.filename || "iReside-v1.0.0-release.apk";
+      const fallbackFilename = variant === "debug" ? "iReside-v1.0.0-debug.apk" : "iReside-v1.0.0-release.apk";
+      const downloadUrl = release?.downloadUrl || `/downloads/${fallbackFilename}`;
+      const filename = release?.filename || fallbackFilename;
 
       const link = document.createElement("a");
       link.href = downloadUrl;
@@ -145,15 +144,16 @@ export default function AppDownloadPage() {
         description: `${filename} has started downloading.`,
       });
     } catch {
+      const fallbackFilename = variant === "debug" ? "iReside-v1.0.0-debug.apk" : "iReside-v1.0.0-release.apk";
       const link = document.createElement("a");
-      link.href = "/downloads/iReside-v1.0.0-release.apk";
-      link.download = "iReside-v1.0.0-release.apk";
+      link.href = `/downloads/${fallbackFilename}`;
+      link.download = fallbackFilename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
       toast.success("Downloading Android Package", {
-        description: "iReside-v1.0.0-release.apk has started downloading.",
+        description: `${fallbackFilename} has started downloading.`,
       });
     } finally {
       setIsAndroidDownloading(false);
@@ -191,15 +191,6 @@ export default function AppDownloadPage() {
           >
             Documentation
           </Link>
-
-          {!loading && !user && (
-            <Link
-              href="/login"
-              className="neumorphic-extruded hover:text-primary active:scale-95 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              Sign In
-            </Link>
-          )}
 
           <ThemeToggle
             className="rounded-xl border border-border/60 bg-background shadow-xs focus-visible:ring-2 focus-visible:ring-primary"
@@ -344,7 +335,7 @@ export default function AppDownloadPage() {
             <div className="space-y-2 pt-2">
               <div className="flex flex-col sm:flex-row gap-2.5">
                 <button
-                  onClick={handleDownloadAndroid}
+                  onClick={() => handleDownloadAndroid("release")}
                   disabled={isAndroidDownloading}
                   aria-label="Download Android APK file"
                   className="flex-1 py-3.5 px-4 rounded-2xl neumorphic-primary active:scale-95 disabled:cursor-wait disabled:opacity-70 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
@@ -371,9 +362,16 @@ export default function AppDownloadPage() {
                   <span>Scan QR</span>
                 </button>
               </div>
-              <p className="text-[11px] text-muted-foreground text-center">
-                Version 1.0.0 · Direct APK Package
-              </p>
+              <div className="flex items-center justify-between text-[11px] text-muted-foreground px-1 pt-1">
+                <span>Version 1.0.0 · Capacitor Shell (3.2 MB)</span>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadAndroid("debug")}
+                  className="text-primary hover:underline font-medium focus-visible:outline-none"
+                >
+                  Universal APK Fallback
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -479,6 +477,16 @@ export default function AppDownloadPage() {
                 The desktop client supports Windows 10 (64-bit) and Windows 11. The Android client requires Android 8.0 (Oreo) or higher with camera permissions for payment receipts.
               </p>
             </div>
+
+            <div className="neumorphic-panel rounded-2xl p-5 border border-border/40 space-y-2">
+              <h3 className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
+                <HelpCircle className="size-4 text-primary shrink-0" />
+                What if my device shows &apos;Parse Error&apos; or cannot open the package?
+              </h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Ensure the download finishes completely before tapping the notification. If your browser or device skin prevents opening, open the APK from your device&apos;s official &apos;Files&apos; or &apos;Downloads&apos; app, or tap &apos;Universal APK Fallback&apos; directly above.
+              </p>
+            </div>
           </div>
         </section>
       </main>
@@ -569,13 +577,24 @@ export default function AppDownloadPage() {
               <div className="flex flex-col gap-2 w-full pt-1">
                 <button
                   onClick={() => {
-                    handleDownloadAndroid();
+                    handleDownloadAndroid("release");
                     setActiveModal(null);
                   }}
                   className="neumorphic-primary px-4 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider active:scale-95 transition-all w-full flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   <Download className="size-3.5" />
-                  <span>Download APK to this Device</span>
+                  <span>Download Release APK</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    handleDownloadAndroid("debug");
+                    setActiveModal(null);
+                  }}
+                  className="neumorphic-extruded px-4 py-2 rounded-2xl text-xs font-semibold active:scale-95 transition-all w-full flex items-center justify-center gap-2 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  <Download className="size-3.5 text-primary" />
+                  <span>Download Universal APK (Fallback)</span>
                 </button>
 
                 <button

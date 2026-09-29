@@ -1,12 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">iReside</string>
-    <string name="offline_title">You\'re Offline</string>
-    <string name="offline_description">Cannot reach iReside server. Please check your internet connection and try again.</string>
-    <string name="offline_retry_button">Retry Connection</string>
-    <string name="offline_checking">Connecting to server…</string>
-    <string name="press_back_again_to_exit">Press back again to exit</string>
-    <string name="downloading_file">Downloading file…</string>
-    <string name="download_failed">Download failed. Please check permissions.</string>
-    <string name="camera_permission_required">Camera permission is required to capture photos.</string>
+    <string name="title_activity_main">iReside</string>
+    <string name="package_name">ph.ireside.mobile</string>
+    <string name="custom_url_scheme">ph.ireside.mobile</string>
 </resources>
