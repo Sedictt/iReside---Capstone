@@ -4,16 +4,12 @@ plugins {
 
 android {
     namespace = "ph.ireside.mobile"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "ph.ireside.mobile"
-        minSdk = 26
-        targetSdk = 36
+        minSdk = 24
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0.0"
 
@@ -27,6 +23,8 @@ android {
             storePassword = "ireside2026"
             keyAlias = "ireside"
             keyPassword = "ireside2026"
+            enableV1Signing = true
+            enableV2Signing = true
         }
     }
 

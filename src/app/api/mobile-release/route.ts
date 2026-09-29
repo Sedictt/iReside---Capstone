@@ -74,12 +74,28 @@ export async function GET(req: NextRequest) {
       };
     }
 
-    // 3. Direct download redirect if ?download=1
+    // 3. Direct download if ?download=1
     if (isDirectDownload) {
+      const filename = release.filename || "iReside-v1.0.0-release.apk";
+      const publicPath = path.join(process.cwd(), "public", "downloads", filename);
+      if (fs.existsSync(publicPath)) {
+        const fileBuffer = fs.readFileSync(publicPath);
+        return new NextResponse(fileBuffer, {
+          status: 200,
+          headers: {
+            "Content-Type": "application/vnd.android.package-archive",
+            "Content-Disposition": `attachment; filename="${filename}"`,
+            "Content-Length": fileBuffer.length.toString(),
+            "Cache-Control": "public, max-age=3600",
+          },
+        });
+      }
+
       return NextResponse.redirect(new URL(release.downloadUrl, req.url), {
         status: 302,
         headers: {
           "Content-Disposition": `attachment; filename="${release.filename}"`,
+          "Content-Type": "application/vnd.android.package-archive",
           "Cache-Control": "no-store",
         },
       });
