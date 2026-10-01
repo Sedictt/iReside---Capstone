@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Edit3, Check, X, Loader2, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
@@ -8,10 +9,13 @@ import { toast } from 'sonner';
 export default function EditableBio({
     initialBio,
     isOwner = true,
+    placeholder = "Tell others about yourself...",
 }: {
     initialBio: string;
     isOwner?: boolean;
+    placeholder?: string;
 }) {
+    const router = useRouter();
     const [isEditing, setIsEditing] = useState(false);
     const [bio, setBio] = useState(initialBio);
     const [tempBio, setTempBio] = useState(initialBio);
@@ -20,6 +24,7 @@ export default function EditableBio({
     const handleSave = async () => {
         if (saving) return;
         setSaving(true);
+        const cleanBio = tempBio.trim();
         try {
             const supabase = createClient();
             const { data: { user } } = await supabase.auth.getUser();
@@ -27,15 +32,19 @@ export default function EditableBio({
 
             const { error: profileError } = await supabase
                 .from("profiles")
-                .update({ bio: tempBio })
+                .update({ bio: cleanBio })
                 .eq("id", user.id);
 
             if (profileError) throw profileError;
 
-            setBio(tempBio);
+            setBio(cleanBio);
+            setTempBio(cleanBio);
             setIsEditing(false);
             toast.success("Bio updated successfully");
-            window.dispatchEvent(new CustomEvent("profile-updated"));
+            window.dispatchEvent(new CustomEvent("profile-updated", {
+                detail: { bio: cleanBio, hasBio: Boolean(cleanBio.length > 0) }
+            }));
+            router.refresh();
         } catch (e) {
             console.error("Failed to save bio:", e);
             toast.error("Failed to update bio. Please try again.");
@@ -52,7 +61,7 @@ export default function EditableBio({
                     onChange={(e) => setTempBio(e.target.value)}
                     className="w-full bg-background border border-border rounded-[1.5rem] p-4 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors resize-none neumorphic-inset"
                     rows={4}
-                    placeholder="Tell potential tenants about yourself and your property management style..."
+                    placeholder={placeholder}
                 />
                 <div className="flex items-center gap-3 mt-3">
                     <button
@@ -84,11 +93,17 @@ export default function EditableBio({
 
         return (
             <button
+                type="button"
                 onClick={() => setIsEditing(true)}
-                className="mt-2 flex items-center gap-3 text-[10px] font-black text-muted-foreground hover:text-foreground transition-all uppercase tracking-widest border border-dashed border-border rounded-2xl px-6 py-4 hover:bg-muted/40 w-full justify-center"
+                className="mt-2 flex items-center gap-3 text-[10px] font-black text-red-500 dark:text-red-400 hover:text-foreground transition-all uppercase tracking-widest border border-dashed border-red-500/30 bg-red-500/5 hover:bg-red-500/10 rounded-2xl px-6 py-4 w-full justify-center relative cursor-pointer group shadow-sm"
+                title="Add your bio (Required for profile setup)"
             >
-                <Plus size={16} />
-                Introduce yourself (Add Bio)
+                <span className="relative flex size-2 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full size-2 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.9)]" />
+                </span>
+                <Plus size={16} className="group-hover:rotate-90 transition-transform" />
+                <span>Introduce yourself (Add Bio — Required)</span>
             </button>
         );
     }

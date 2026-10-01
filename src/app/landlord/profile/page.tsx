@@ -1,39 +1,26 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import {
     User,
     Mail,
     Phone,
     MapPin,
-    Home,
     CheckCircle2,
     TrendingUp,
     MessageSquare,
-    Wallet,
-    ShieldCheck,
-    Star,
-    Award,
-    Building2,
-    Zap,
-    Check,
-    Facebook,
-    Twitter,
-    Linkedin,
-    Instagram,
-    Globe,
-    ExternalLink,
     ShieldAlert
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { cn } from '@/lib/utils';
 
-import EditableBio from '@/components/landlord/EditableBio';
+import { ProfileBioSection } from '@/components/profile/ProfileBioSection';
 import { ProfileAvatarUploader } from '@/components/profile/ProfileAvatarUploader';
 import { ProfileCoverUploader } from '@/components/profile/ProfileCoverUploader';
 import { BusinessPermitCard } from '@/components/landlord/BusinessPermitCard';
 import { RoleBadge } from '@/components/profile/RoleBadge';
 import { SocialsHeader } from '@/components/profile/SocialsHeader';
+import { ProfileSetupBanner } from '@/components/profile/ProfileSetupBanner';
+import { EditablePhone } from '@/components/profile/EditablePhone';
 
 type LandlordProperty = {
     id: string;
@@ -97,7 +84,7 @@ function formatRelativeDate(value: string) {
     return `${Math.floor(diffMs / month)} month${Math.floor(diffMs / month) === 1 ? '' : 's'} ago`;
 }
 
-function resolveGoogleAvatarUrl(user: { user_metadata?: Record<string, unknown> | null; identities?: Array<{ identity_data?: Record<string, unknown> | null }> | null }) {
+function resolveMetadataAvatarUrl(user: { user_metadata?: Record<string, unknown> | null; identities?: Array<{ identity_data?: Record<string, unknown> | null }> | null }) {
     const metadataAvatar = typeof user.user_metadata?.avatar_url === 'string' ? user.user_metadata.avatar_url : null;
     if (metadataAvatar && metadataAvatar.trim().length > 0) {
         return metadataAvatar;
@@ -214,8 +201,8 @@ export default async function LandlordProfilePage() {
         );
     }
 
-    const googleAvatarUrl = resolveGoogleAvatarUrl(user);
-    const profileAvatarUrl = profile.avatar_url ?? googleAvatarUrl;
+    const metadataAvatarUrl = resolveMetadataAvatarUrl(user);
+    const profileAvatarUrl = profile.avatar_url ?? metadataAvatarUrl;
 
     const propertyIds = properties.map((property) => property.id);
     const units: UnitSummary[] =
@@ -300,10 +287,23 @@ export default async function LandlordProfilePage() {
     const socials = (profile.socials as Record<string, string>) || {};
     const emergencyContactName = (profile as any).emergency_contact_name || socials.emergency_contact_name || null;
     const emergencyContactPhone = (profile as any).emergency_contact_phone || socials.emergency_contact_phone || null;
+    const primaryLocation = profile.address || properties[0]?.city || properties[0]?.address || 'Not specified';
+
+    const hasCustomAvatar = Boolean(profile.avatar_url && profile.avatar_url.trim().length > 0);
+    const hasPhone = Boolean(profile.phone && profile.phone.trim().length > 0);
+    const hasBio = Boolean(profile.bio && profile.bio.trim().length > 0);
 
     return (
         <div className="min-h-screen bg-background text-foreground p-6 md:p-12">
             <div className="mx-auto max-w-5xl space-y-8">
+                {/* Profile Setup Incomplete Checklist Banner */}
+                <ProfileSetupBanner 
+                    hasAvatar={hasCustomAvatar} 
+                    hasPhone={hasPhone} 
+                    hasBio={hasBio} 
+                    role="landlord" 
+                />
+
                 {/* Centered Profile Header Card */}
                 <div className="relative neumorphic-panel rounded-[3rem] overflow-hidden flex flex-col items-center">
                     {/* Cover Image Container */}
@@ -317,11 +317,12 @@ export default async function LandlordProfilePage() {
                     {/* Profile Content Section */}
                     <div className="relative w-full px-8 pb-12 -mt-16 md:-mt-24 flex flex-col items-center text-center">
                         {/* Overlapping Avatar */}
-                        <div className="relative size-32 md:w-44 md:h-44 mb-6 z-20 neumorphic-inset-card rounded-full p-2">
+                        <div id="profile-avatar-section" className="relative size-32 md:w-44 md:h-44 mb-6 z-20 neumorphic-inset-card rounded-full p-2">
                             <ProfileAvatarUploader 
                                 initialAvatarUrl={profileAvatarUrl} 
                                 avatarBgColor={profile.avatar_bg_color} 
                                 fullName={profile.full_name} 
+                                hasCustomAvatar={hasCustomAvatar}
                                 className="w-full h-full rounded-full"
                             />
                         </div>
@@ -334,7 +335,7 @@ export default async function LandlordProfilePage() {
                                 </h1>
                                 {verificationStatus && (
                                     <div className="neumorphic-inset-card p-2 rounded-full">
-                                        <CheckCircle2 size={20} className="text-[#c4b0ff]" />
+                                        <CheckCircle2 size={20} className="text-primary" />
                                     </div>
                                 )}
                             </div>
@@ -360,20 +361,26 @@ export default async function LandlordProfilePage() {
                         </div>
 
                         {/* Contact Info Row */}
-                        <div className={cn("grid gap-8 md:gap-12 pt-10 border-t border-black/10 dark:border-white/5 w-full max-w-4xl", emergencyContactPhone ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-4" : "grid-cols-1 md:grid-cols-3")}>
+                        <div id="profile-contact-section" className={cn("grid gap-8 md:gap-12 pt-10 border-t border-black/10 dark:border-white/5 w-full max-w-4xl", emergencyContactPhone ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-4" : "grid-cols-1 md:grid-cols-3")}>
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
                                 <div className="size-12 rounded-full neumorphic-inset-card flex items-center justify-center group-hover/item:scale-110 transition-transform">
-                                    <Mail size={18} className="text-[#c4b0ff]" />
+                                    <Mail size={18} className="text-primary" />
                                 </div>
                                 <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mt-2">Email Address</p>
-                                <a href={`mailto:${profile.email}`} className="text-sm font-medium hover:text-[#c4b0ff] transition-colors">{profile.email}</a>
+                                <a href={`mailto:${profile.email}`} className="text-sm font-medium hover:text-primary transition-colors">{profile.email}</a>
                             </div>
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
-                                <div className="size-12 rounded-full neumorphic-inset-card flex items-center justify-center group-hover/item:scale-110 transition-transform">
-                                    <Phone size={18} className="text-[#c4b0ff]" />
+                                <div className="relative size-12 rounded-full neumorphic-inset-card flex items-center justify-center group-hover/item:scale-110 transition-transform">
+                                    <Phone size={18} className="text-primary" />
+                                    {!hasPhone && (
+                                        <span className="absolute -top-0.5 -right-0.5 flex size-3">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                                            <span className="relative inline-flex rounded-full size-3 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.9)]" />
+                                        </span>
+                                    )}
                                 </div>
                                 <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mt-2">Phone Number</p>
-                                <a href={`tel:${profile.phone}`} className="text-sm font-medium hover:text-[#c4b0ff] transition-colors">{profile.phone || '+63 (---) --- ----'}</a>
+                                <EditablePhone initialPhone={profile.phone} userId={profile.id} />
                             </div>
                             {emergencyContactPhone && (
                                 <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
@@ -388,10 +395,10 @@ export default async function LandlordProfilePage() {
                             )}
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
                                 <div className="size-12 rounded-full neumorphic-inset-card flex items-center justify-center group-hover/item:scale-110 transition-transform">
-                                    <MapPin size={18} className="text-[#c4b0ff]" />
+                                    <MapPin size={18} className="text-primary" />
                                 </div>
                                 <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mt-2">Primary Location</p>
-                                <p className="text-sm font-medium">{properties[0]?.city || 'Valenzuela, Metro Manila'}</p>
+                                <p className="text-sm font-medium">{primaryLocation}</p>
                             </div>
                         </div>
 
@@ -401,19 +408,13 @@ export default async function LandlordProfilePage() {
                 </div>
 
                 {/* Bio Section */}
-                <div className="neumorphic-panel rounded-[3rem] p-12">
-                    <div className="flex items-center gap-4 mb-8">
-                        <div className="size-12 rounded-2xl neumorphic-inset-card flex items-center justify-center">
-                            <User size={20} className="text-[#c4b0ff]" />
-                        </div>
-                        <h2 className="text-2xl font-display font-black tracking-tight">Biography</h2>
-                    </div>
-                    <div className="max-w-4xl">
-                        <EditableBio initialBio={profile.bio || ''} />
-                    </div>
-                </div>
+                <ProfileBioSection
+                    initialBio={profile.bio || ''}
+                    userId={profile.id}
+                    placeholder="Tell potential tenants about yourself and your property management style..."
+                />
 
-                {/* Verified Business Permit Section */}
+                {/* Business Permit Section (Optional) */}
                 <BusinessPermitCard 
                     businessName={profile.business_name || null}
                     permitUrl={profile.business_permit_url || null}
@@ -424,7 +425,7 @@ export default async function LandlordProfilePage() {
                 <div className="neumorphic-panel rounded-[3rem] p-10">
                     <div className="flex items-center gap-4 mb-10">
                         <div className="size-12 rounded-2xl neumorphic-inset-card flex items-center justify-center">
-                            <TrendingUp size={20} className="text-[#c4b0ff]" />
+                            <TrendingUp size={20} className="text-primary" />
                         </div>
                         <h2 className="text-2xl font-display font-black tracking-tight">Portfolio Stats</h2>
                     </div>

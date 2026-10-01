@@ -1,16 +1,21 @@
-
 "use client";
 
 import Image from "next/image";
-import { useReducer, useMemo, useEffect } from "react";
+import { useState, useReducer, useMemo, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { m as motion, AnimatePresence } from "framer-motion";
-import { X, Check, Upload, Loader2, RefreshCcw, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Check, Upload, Loader2, RefreshCcw, Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
-import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
+import {
+    MAX_FILE_SIZE_MB,
+    getSafeAvatarBgColor,
+    DEFAULT_AVATAR_BG_COLOR,
+    DEFAULT_AVATAR_URL,
+} from "@/lib/constants";
 import { handleMediaSelection } from "@/lib/validation/media-validation";
 
 interface AvatarPickerProps {
@@ -22,37 +27,69 @@ interface AvatarPickerProps {
     onProfileUpdate?: () => void;
 }
 
-const DEFAULT_AVATARS_COUNT = 16; // 3 to 18
+const DEFAULT_AVATARS_COUNT = 16; // Avatars 3 to 18
 const BUCKET_URL = "https://hlpgsiqyrtndqdgvttcr.supabase.co/storage/v1/object/public/profile-avatars/default_avatars/";
 
+// Curated 24 high-contrast, accessible swatches (NO pitch-black #171717 per system invariants)
 const PRESET_COLORS = [
-    "#171717", "#ef4444", "#f97316", "#f59e0b", "#10b981", "#3b82f6", "#6366f1", "#8b5cf6", "#ec4899", "#d946ef", "#06b6d4", "#71717a",
-    "#dc2626", "#ea580c", "#d97706", "#059669", "#2563eb", "#4f46e5", "#7c3aed", "#c026d3", "#db2777", "#0891b2", "#52525b", "#262626"
+    DEFAULT_AVATAR_BG_COLOR, // #8B5CF6 (Brand Violet)
+    "#7C3AED", // Violet Dark
+    "#6366F1", // Indigo
+    "#4F46E5", // Indigo Dark
+    "#3B82F6", // Blue
+    "#2563EB", // Blue Dark
+    "#0EA5E9", // Sky
+    "#06B6D4", // Cyan
+    "#0891B2", // Cyan Dark
+    "#14B8A6", // Teal
+    "#10B981", // Emerald
+    "#059669", // Emerald Dark
+    "#84CC16", // Lime
+    "#EAB308", // Yellow
+    "#F59E0B", // Amber
+    "#D97706", // Amber Dark
+    "#F97316", // Orange
+    "#EA580C", // Orange Dark
+    "#EF4444", // Red
+    "#DC2626", // Red Dark
+    "#EC4899", // Pink
+    "#DB2777", // Pink Dark
+    "#64748B", // Slate
+    "#334155", // Slate Dark
 ];
 
 interface AvatarPickerState {
-    selectedAvatar: string | null;
+    selectedAvatar: string;
+    customAvatarUrl: string | null;
     selectedColor: string;
     isUploading: boolean;
     isUpdating: boolean;
     error: string | null;
-    currentPage: number;
 }
 
-type AvatarPickerAction = 
-    | { type: "SET_AVATAR"; payload: string | null }
+type AvatarPickerAction =
+    | { type: "SET_AVATAR"; payload: string }
+    | { type: "SET_UPLOADED_AVATAR"; payload: string }
     | { type: "SET_COLOR"; payload: string }
     | { type: "SET_UPLOADING"; payload: boolean }
     | { type: "SET_UPDATING"; payload: boolean }
     | { type: "SET_ERROR"; payload: string | null }
-    | { type: "SET_PAGE"; payload: number }
-    | { type: "RESET_FROM_PROPS"; payload: { avatar: string | null; color: string | null } }
+    | {
+          type: "RESET_FROM_PROPS";
+          payload: { avatar: string | null; color: string | null; defaultAvatars: string[] };
+      }
     | { type: "RESET_ON_CLOSE" };
 
 function avatarPickerReducer(state: AvatarPickerState, action: AvatarPickerAction): AvatarPickerState {
     switch (action.type) {
         case "SET_AVATAR":
             return { ...state, selectedAvatar: action.payload };
+        case "SET_UPLOADED_AVATAR":
+            return {
+                ...state,
+                selectedAvatar: action.payload,
+                customAvatarUrl: action.payload,
+            };
         case "SET_COLOR":
             return { ...state, selectedColor: action.payload };
         case "SET_UPLOADING":
@@ -61,81 +98,104 @@ function avatarPickerReducer(state: AvatarPickerState, action: AvatarPickerActio
             return { ...state, isUpdating: action.payload };
         case "SET_ERROR":
             return { ...state, error: action.payload };
-        case "SET_PAGE":
-            return { ...state, currentPage: action.payload };
-        case "RESET_FROM_PROPS":
+        case "RESET_FROM_PROPS": {
+            const initialAvatar = action.payload.avatar?.trim() || DEFAULT_AVATAR_URL;
+            const isCustom = !action.payload.defaultAvatars.includes(initialAvatar);
             return {
                 ...state,
-                selectedAvatar: action.payload.avatar,
-                selectedColor: action.payload.color || "#171717"
+                selectedAvatar: initialAvatar,
+                customAvatarUrl: isCustom ? initialAvatar : state.customAvatarUrl,
+                selectedColor: getSafeAvatarBgColor(action.payload.color),
             };
+        }
         case "RESET_ON_CLOSE":
             return {
                 ...state,
                 isUpdating: false,
-                error: null
+                isUploading: false,
+                error: null,
             };
         default:
             return state;
     }
 }
 
-export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor, onSelect, onProfileUpdate }: AvatarPickerProps) {
+export function AvatarPicker({
+    isOpen,
+    onClose,
+    currentAvatarUrl,
+    currentBgColor,
+    onSelect,
+    onProfileUpdate,
+}: AvatarPickerProps) {
     const { profile, loading, refreshProfile } = useAuth();
-    
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const defaultAvatars = useMemo(
+        () => Array.from({ length: DEFAULT_AVATARS_COUNT }, (_, i) => `${BUCKET_URL}${i + 3}.png`),
+        []
+    );
+
+    const initialAvatar = currentAvatarUrl?.trim() || DEFAULT_AVATAR_URL;
+    const isInitialCustom = !defaultAvatars.includes(initialAvatar);
+
     const [state, dispatch] = useReducer(avatarPickerReducer, {
-        selectedAvatar: currentAvatarUrl,
-        selectedColor: currentBgColor || "#171717",
+        selectedAvatar: initialAvatar,
+        customAvatarUrl: isInitialCustom ? initialAvatar : null,
+        selectedColor: getSafeAvatarBgColor(currentBgColor),
         isUploading: false,
         isUpdating: false,
         error: null,
-        currentPage: 0
     });
-    
+
     const supabase = createClient();
 
-    // Sync local state when modal opens or props change
+    // Sync state whenever dialog opens or props change
     useEffect(() => {
         if (isOpen) {
-            dispatch({ type: "RESET_FROM_PROPS", payload: { avatar: currentAvatarUrl, color: currentBgColor } });
+            dispatch({
+                type: "RESET_FROM_PROPS",
+                payload: {
+                    avatar: currentAvatarUrl,
+                    color: currentBgColor,
+                    defaultAvatars,
+                },
+            });
         } else {
-            // Reset state when closed to avoid "stuck" state if opened again
             dispatch({ type: "RESET_ON_CLOSE" });
         }
-    }, [isOpen, currentAvatarUrl, currentBgColor]);
+    }, [isOpen, currentAvatarUrl, currentBgColor, defaultAvatars]);
 
-    const defaultAvatars = useMemo(() => 
-        Array.from({ length: DEFAULT_AVATARS_COUNT }, (_, i) => `${BUCKET_URL}${i + 3}.png`), 
-    []);
+    // Keyboard Escape listener
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                onClose();
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isOpen, onClose]);
 
-    const totalPages = useMemo(() => {
-        const remaining = defaultAvatars.length - 3;
-        return 1 + Math.ceil(remaining / 4);
-    }, [defaultAvatars]);
-    
-    const paginatedAvatars = useMemo(() => {
-        if (state.currentPage === 0) {
-            return defaultAvatars.slice(0, 3);
-        }
-        const start = 3 + (state.currentPage - 1) * 4;
-        return defaultAvatars.slice(start, start + 4);
-    }, [state.currentPage, defaultAvatars]);
+    const isCurrentCustom = useMemo(() => {
+        return !defaultAvatars.includes(state.selectedAvatar);
+    }, [state.selectedAvatar, defaultAvatars]);
 
     const handleSave = async () => {
         if (!state.selectedAvatar) {
             toast.error("Please select an avatar first");
             return;
         }
-        
+
         if (onSelect) {
             onSelect(state.selectedAvatar, state.selectedColor);
             onClose();
-            return;
-        }
-
-        if (!profile) {
-            toast.error("Profile not loaded. Please try again in a moment.");
-            console.error("[AvatarPicker] No profile found");
             return;
         }
 
@@ -143,43 +203,60 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
         dispatch({ type: "SET_ERROR", payload: null });
 
         try {
-            console.log("[AvatarPicker] Updating profile...", { 
-                id: profile.id, 
-                avatar_url: state.selectedAvatar, 
-                avatar_bg_color: state.selectedColor 
-            });
-
-            const { error: updateError } = await supabase
-                .from("profiles")
-                .update({ 
-                    avatar_url: state.selectedAvatar,
-                    avatar_bg_color: state.selectedColor 
-                })
-                .eq("id", profile.id);
-
-            if (updateError) throw updateError;
-
-            console.log("[AvatarPicker] Profile updated in DB, refreshing context...");
-            
-            // Call refreshProfile but handle potential hangs
+            // 1. Authoritative Server-side update via dedicated endpoint
+            let saved = false;
             try {
-                // Set a timeout for refreshProfile just in case
-                const refreshPromise = refreshProfile();
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error("Refresh timeout")), 5000)
+                const response = await fetch("/api/profile/avatar", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        avatar_url: state.selectedAvatar,
+                        avatar_bg_color: state.selectedColor,
+                    }),
+                });
+
+                if (response.ok) {
+                    saved = true;
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    console.warn("[AvatarPicker] API route returned error:", errData);
+                }
+            } catch (fetchErr) {
+                console.warn("[AvatarPicker] Fetch error, attempting client fallback:", fetchErr);
+            }
+
+            // 2. Client fallback with strict timeout to prevent indefinite hangs
+            if (!saved) {
+                if (!profile?.id) {
+                    throw new Error("Unable to save appearance. User profile not loaded.");
+                }
+                const updatePromise = supabase
+                    .from("profiles")
+                    .update({
+                        avatar_url: state.selectedAvatar,
+                        avatar_bg_color: state.selectedColor,
+                    })
+                    .eq("id", profile.id);
+
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Save request timed out. Please try again.")), 5000)
                 );
-                
-                await Promise.race([refreshPromise, timeoutPromise]);
-            } catch (refreshErr) {
-                console.warn("[AvatarPicker] Profile refresh took too long or failed:", refreshErr);
-                // We still continue because the DB update was successful
+
+                const { error: updateError } = (await Promise.race([updatePromise, timeoutPromise])) as any;
+                if (updateError) throw updateError;
+            }
+
+            // 3. Fire-and-forget non-blocking refresh
+            void refreshProfile().catch(() => {});
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("profile-updated"));
             }
 
             toast.success("Profile appearance updated");
             onProfileUpdate?.();
             onClose();
         } catch (err: any) {
-            console.error("[AvatarPicker] Failed to update avatar:", err);
+            console.error("[AvatarPicker] Failed to update appearance:", err);
             const msg = err.message || "Failed to update appearance. Please try again.";
             dispatch({ type: "SET_ERROR", payload: msg });
             toast.error(msg);
@@ -190,7 +267,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file || !profile) return;
+        if (!file) return;
 
         const isValid = handleMediaSelection({
             files: file,
@@ -225,21 +302,33 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
             }
 
             const data = await response.json();
-            dispatch({ type: "SET_AVATAR", payload: data.avatarUrl });
-            await refreshProfile();
+            dispatch({ type: "SET_UPLOADED_AVATAR", payload: data.avatarUrl });
+            void refreshProfile().catch(() => {});
+            toast.success("Photo uploaded successfully");
         } catch (err: any) {
-            console.error("Upload error:", err);
-            dispatch({ type: "SET_ERROR", payload: err.message || "Failed to upload avatar" });
+            console.error("[AvatarPicker] Upload error:", err);
+            const msg = err.message || "Failed to upload avatar";
+            dispatch({ type: "SET_ERROR", payload: msg });
+            toast.error(msg);
         } finally {
             dispatch({ type: "SET_UPLOADING", payload: false });
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
         }
     };
 
-    if (!isOpen) return null;
+    if (!isOpen || !mounted) return null;
 
-    return (
+    const modalContent = (
         <AnimatePresence>
-            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+            <div
+                className="fixed inset-0 z-[250] flex items-center justify-center p-3 sm:p-6 overflow-hidden"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="avatar-picker-dialog-title"
+            >
+                {/* Full Viewport Backdrop with Blur (covers and blurs sidebars and topbars) */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -247,242 +336,366 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                     onClick={onClose}
                     className="absolute inset-0 bg-black/60 backdrop-blur-md"
                 />
-                
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                    className="relative w-full max-w-5xl h-[600px] flex flex-col md:flex-row overflow-hidden rounded-[2.5rem] border border-border bg-card text-card-foreground shadow-2xl backdrop-blur-2xl"
-                >
-                    {/* Visual Preview Pane */}
-                    <div className="w-full md:w-[300px] shrink-0 bg-muted/30 p-10 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-border/40 relative group">
-                        <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
-                             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,var(--primary)_0%,transparent_70%)] transition-colors duration-700" style={{ "--primary": state.selectedColor } as any} />
-                        </div>
-                        
-                        <div className="relative z-10 mb-8">
-                            <div 
-                                className="size-40 rounded-[2.5rem] p-1.5 shadow-xl ring-1 ring-border/40 overflow-hidden relative transition-all duration-700 ease-out group-hover:scale-105"
-                                style={{ backgroundColor: state.selectedColor }}
-                            >
-                                {state.selectedAvatar ? (
-                                    <motion.img 
-                                        key={state.selectedAvatar}
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        src={state.selectedAvatar} 
-                                        alt="Preview" 
-                                        className="h-full w-full object-cover relative z-10" 
-                                    />
-                                ) : (
-                                    <div className="h-full w-full bg-muted animate-pulse" />
-                                )}
-                                <div className="absolute inset-0 z-20 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none" />
-                            </div>
-                            
-                            <motion.div 
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-xl border border-border px-3.5 py-1 rounded-full shadow-xl flex items-center gap-2"
-                            >
-                                <div className="size-2 rounded-full shadow-sm" style={{ backgroundColor: state.selectedColor }} />
-                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-foreground font-mono">{state.selectedColor.toUpperCase()}</span>
-                            </motion.div>
-                        </div>
 
-                        <div className="w-full space-y-4 relative z-10">
-                            <button
-                                onClick={handleSave}
-                                disabled={state.isUpdating || !state.selectedAvatar || loading}
-                                className="group relative w-full flex items-center justify-center gap-3 rounded-2xl bg-primary px-6 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-primary-foreground shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 overflow-hidden cursor-pointer"
+                {/* Dialog Container */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.96, y: 16 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.96, y: 16 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="relative w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden rounded-3xl border border-border bg-card text-card-foreground shadow-2xl z-10"
+                >
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-6 py-4 border-b border-border/60 bg-card shrink-0">
+                        <div className="min-w-0 pr-4">
+                            <h2
+                                id="avatar-picker-dialog-title"
+                                className="text-base sm:text-lg font-bold text-foreground tracking-tight"
                             >
-                                {state.isUpdating || (loading && !profile) ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-                                <span>{state.isUpdating ? "Saving..." : (loading && !profile ? "Loading..." : "Save Profile")}</span>
-                            </button>
-                            <button
-                                onClick={onClose}
-                                className="w-full py-1 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                            >
-                                Cancel
-                            </button>
+                                Customize Profile Appearance
+                            </h2>
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                                Choose an illustration or upload your photo, and set your signature color.
+                            </p>
                         </div>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="size-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer border border-transparent hover:border-border/60"
+                            aria-label="Close dialog"
+                        >
+                            <X className="size-4" />
+                        </button>
                     </div>
 
-                    {/* Controls Pane */}
-                    <div className="flex-1 flex flex-col bg-background/40 min-h-0 p-8 space-y-12">
-                        {state.error && (
-                            <div className="mb-4 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-[10px] font-black text-red-400">
-                                {state.error}
+                    {/* Main Split: Left Preview / Right Controls */}
+                    <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-y-auto md:overflow-hidden">
+                        {/* Left Preview Pane: Clean, crisp, neutral container without glowing blobs */}
+                        <div className="w-full md:w-72 lg:w-80 shrink-0 bg-muted/25 p-6 sm:p-7 flex flex-col items-center justify-between border-b md:border-b-0 md:border-r border-border/60 relative">
+                            {/* Section Eyebrow */}
+                            <div className="w-full text-center">
+                                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                                    Live Preview
+                                </span>
                             </div>
-                        )}
 
-                        {/* Avatar Section */}
-                        <section className="space-y-4">
-                            <div className="flex items-center justify-between border-b border-border/40 pb-2">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">Profile Photo</h3>
-                                <div className="flex gap-1">
-                                    {Array.from({ length: totalPages }).map((_, i) => (
-                                        <button
-                                            key={`avatar-page-${i}`}
-                                            onClick={() => dispatch({ type: "SET_PAGE", payload: i })}
-                                            className={cn(
-                                                "h-1 w-2.5 rounded-full transition-all cursor-pointer",
-                                                state.currentPage === i ? "bg-primary w-5" : "bg-muted-foreground/20 hover:bg-muted-foreground/40"
-                                            )}
-                                        />
-                                    ))}
+                            {/* Crisp Circular Avatar Preview */}
+                            <div className="my-5 md:my-0 flex flex-col items-center">
+                                <div
+                                    className="relative size-36 sm:size-40 rounded-full border-4 border-background shadow-lg transition-transform duration-200 overflow-hidden flex items-center justify-center"
+                                    style={{ backgroundColor: state.selectedColor }}
+                                >
+                                    <Image
+                                        key={state.selectedAvatar}
+                                        src={state.selectedAvatar || DEFAULT_AVATAR_URL}
+                                        alt="Avatar preview"
+                                        fill
+                                        sizes="160px"
+                                        className="object-cover"
+                                        priority
+                                    />
+                                </div>
+
+                                {/* Active Hex Indicator */}
+                                <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-background border border-border shadow-xs text-xs font-mono font-bold text-foreground">
+                                    <span
+                                        className="size-2.5 rounded-full border border-black/10 dark:border-white/10"
+                                        style={{ backgroundColor: state.selectedColor }}
+                                    />
+                                    <span>{state.selectedColor.toUpperCase()}</span>
                                 </div>
                             </div>
 
-                            <div className="relative group/grid px-4">
-                                <div className="min-h-[100px]">
-                                    <AnimatePresence mode="wait">
-                                        <motion.div 
-                                            key={state.currentPage}
-                                            initial={{ opacity: 0, x: 20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: -20 }}
-                                            className="grid grid-cols-4 gap-4"
-                                        >
-                                            {state.currentPage === 0 && (
-                                                <label className="group relative aspect-square flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 transition-all hover:border-primary/40 hover:bg-primary/5 active:scale-95">
-                                                    <input type="file" className="hidden" accept="image/png,image/jpeg,image/webp,image/jpg" onChange={handleFileUpload} disabled={state.isUploading} />
-                                                    {state.isUploading ? <Loader2 className="size-5 animate-spin text-primary" /> : <Upload className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />}
-                                                </label>
-                                            )}
+                            {/* Actions */}
+                            <div className="w-full space-y-2 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={handleSave}
+                                    disabled={state.isUpdating}
+                                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-bold text-primary-foreground shadow-md transition-all hover:bg-primary/90 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                                >
+                                    {state.isUpdating ? (
+                                        <>
+                                            <Loader2 className="size-4 animate-spin" />
+                                            <span>Saving Appearance...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Check className="size-4 stroke-[2.5]" />
+                                            <span>Save Appearance</span>
+                                        </>
+                                    )}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={onClose}
+                                    className="w-full py-2.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors cursor-pointer"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
 
-                                            {paginatedAvatars.map((url, idx) => {
-                                                const isSelected = state.selectedAvatar === url;
+                        {/* Right Controls Pane */}
+                        <div className="flex-1 min-h-0 md:overflow-y-auto p-6 sm:p-7 space-y-6">
+                            {state.error && (
+                                <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3.5 text-xs font-semibold text-red-500">
+                                    {state.error}
+                                </div>
+                            )}
+
+                            {/* 1. Custom Upload Card */}
+                            <div className="space-y-2.5">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                    Profile Photo
+                                </h3>
+
+                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3.5 p-3.5 rounded-2xl border border-border/80 bg-muted/15 transition-all">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="size-11 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
+                                            {state.customAvatarUrl ? (
+                                                <div className="relative size-9 rounded-lg overflow-hidden">
+                                                    <Image
+                                                        src={state.customAvatarUrl}
+                                                        alt="Custom upload"
+                                                        fill
+                                                        sizes="36px"
+                                                        className="object-cover"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <Camera className="size-5" />
+                                            )}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-bold text-foreground truncate">
+                                                {state.customAvatarUrl
+                                                    ? isCurrentCustom
+                                                        ? "Custom Photo Active"
+                                                        : "Saved Custom Photo"
+                                                    : "Upload Custom Photo"}
+                                            </p>
+                                            <p className="text-[11px] text-muted-foreground truncate">
+                                                PNG, JPG or WebP up to 5MB
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        {state.customAvatarUrl && !isCurrentCustom && (
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    dispatch({
+                                                        type: "SET_AVATAR",
+                                                        payload: state.customAvatarUrl!,
+                                                    })
+                                                }
+                                                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-primary/10 text-primary hover:bg-primary/20 transition-colors cursor-pointer"
+                                            >
+                                                Use Custom
+                                            </button>
+                                        )}
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            className="hidden"
+                                            accept="image/png,image/jpeg,image/webp,image/jpg"
+                                            onChange={handleFileUpload}
+                                            disabled={state.isUploading}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            disabled={state.isUploading}
+                                            className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-background border border-border/80 text-foreground hover:bg-muted/50 hover:border-primary/40 transition-all flex items-center gap-2 cursor-pointer shadow-sm disabled:opacity-50"
+                                        >
+                                            {state.isUploading ? (
+                                                <>
+                                                    <Loader2 className="size-3.5 animate-spin text-primary" />
+                                                    <span>Uploading...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Upload className="size-3.5 text-muted-foreground" />
+                                                    <span>
+                                                        {state.customAvatarUrl ? "Replace" : "Browse Image"}
+                                                    </span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 2. Character Illustrations Grid: All 16 live-previewed in the active background color */}
+                            <div className="space-y-2.5">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                        Or Choose an Illustration
+                                    </h3>
+                                    <span className="text-[11px] text-muted-foreground">
+                                        16 Character Styles
+                                    </span>
+                                </div>
+
+                                <div className="grid grid-cols-4 sm:grid-cols-8 gap-2.5">
+                                    {defaultAvatars.map((url, idx) => {
+                                        const isSelected = state.selectedAvatar === url;
+                                        return (
+                                            <button
+                                                key={url}
+                                                type="button"
+                                                onClick={() => dispatch({ type: "SET_AVATAR", payload: url })}
+                                                className={cn(
+                                                    "group relative aspect-square rounded-2xl p-1.5 transition-all duration-150 cursor-pointer border flex items-center justify-center",
+                                                    isSelected
+                                                        ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-105 shadow-md border-white/50 z-10"
+                                                        : "border-black/10 dark:border-white/10 opacity-85 hover:opacity-100 hover:scale-105 hover:shadow-md hover:border-white/50"
+                                                )}
+                                                style={{ backgroundColor: state.selectedColor }}
+                                                aria-label={`Select avatar ${idx + 1}`}
+                                            >
+                                                <div className="relative w-full h-full rounded-xl overflow-hidden flex items-center justify-center">
+                                                    <Image
+                                                        src={url}
+                                                        alt={`Avatar ${idx + 1}`}
+                                                        fill
+                                                        sizes="56px"
+                                                        className="object-cover transition-transform duration-200 group-hover:scale-110"
+                                                    />
+                                                </div>
+
+                                                {/* Unclipped Badge */}
+                                                {isSelected && (
+                                                    <div className="absolute -top-1 -right-1 size-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md z-20 border-2 border-background">
+                                                        <Check className="size-2.5 stroke-[3]" />
+                                                    </div>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* 3. Background Color Section */}
+                            <div className="space-y-3 pt-2">
+                                <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                                    <div>
+                                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                            Background Color
+                                        </h3>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            dispatch({
+                                                type: "SET_COLOR",
+                                                payload: DEFAULT_AVATAR_BG_COLOR,
+                                            })
+                                        }
+                                        className="px-2.5 py-1 rounded-lg text-xs font-bold text-primary hover:bg-primary/10 transition-colors flex items-center gap-1.5 cursor-pointer"
+                                        title="Reset to default brand violet"
+                                    >
+                                        <RefreshCcw className="size-3" />
+                                        <span>Reset</span>
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                                    {/* Color Picker Box (5 cols) */}
+                                    <div className="lg:col-span-5 space-y-3">
+                                        <div className="custom-color-picker-container rounded-2xl overflow-hidden border border-border/80 p-2.5 bg-card shadow-sm">
+                                            <HexColorPicker
+                                                color={state.selectedColor}
+                                                onChange={(color) =>
+                                                    dispatch({ type: "SET_COLOR", payload: color })
+                                                }
+                                                className="!w-full !h-32"
+                                            />
+                                        </div>
+                                        <div className="h-10 w-full rounded-xl bg-background border border-border/80 flex items-center px-3 gap-2.5 focus-within:border-primary transition-colors shadow-sm">
+                                            <span className="text-[11px] font-mono font-bold text-muted-foreground">
+                                                HEX
+                                            </span>
+                                            <input
+                                                type="text"
+                                                value={state.selectedColor.toUpperCase()}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    if (/^#[0-9A-F]{0,6}$/i.test(val)) {
+                                                        dispatch({ type: "SET_COLOR", payload: val });
+                                                    }
+                                                }}
+                                                maxLength={7}
+                                                className="bg-transparent border-none outline-none text-xs font-mono font-bold text-foreground w-full uppercase"
+                                            />
+                                            <div
+                                                className="size-4 rounded-full border border-black/10 dark:border-white/10 shrink-0"
+                                                style={{ backgroundColor: state.selectedColor }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Preset Swatches (7 cols: 4 rows x 6 cols = 24 swatches) */}
+                                    <div className="lg:col-span-7">
+                                        <div className="grid grid-cols-6 gap-2">
+                                            {PRESET_COLORS.map((color) => {
+                                                const isSelected =
+                                                    state.selectedColor.toLowerCase() ===
+                                                    color.toLowerCase();
                                                 return (
                                                     <button
-                                                        key={url}
-                                                        onClick={() => dispatch({ type: "SET_AVATAR", payload: url })}
+                                                        key={color}
+                                                        type="button"
+                                                        onClick={() =>
+                                                            dispatch({ type: "SET_COLOR", payload: color })
+                                                        }
                                                         className={cn(
-                                                            "group relative aspect-square overflow-hidden rounded-2xl bg-muted/30 border border-border/40 transition-all hover:scale-[1.05] active:scale-95 cursor-pointer",
-                                                            isSelected ? "ring-2 ring-primary bg-primary/10 shadow-xl" : "hover:bg-muted/60"
+                                                            "group relative aspect-square rounded-xl transition-all duration-150 cursor-pointer border flex items-center justify-center",
+                                                            isSelected
+                                                                ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 shadow-md border-white/40 z-10"
+                                                                : "border-black/10 dark:border-white/10 hover:scale-105 hover:shadow-sm"
                                                         )}
+                                                        style={{ backgroundColor: color }}
+                                                        aria-label={`Select background color ${color}`}
                                                     >
-                                                        <Image src={url} alt="Avatar" sizes="100px" className={cn("object-cover transition-transform duration-500", isSelected ? "scale-110" : "group-hover:scale-110")} fill />
                                                         {isSelected && (
-                                                            <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                                                                <div className="bg-primary rounded-full p-1 shadow-xl border border-white/20">
-                                                                    <Check className="size-3 text-white" />
-                                                                </div>
-                                                            </div>
+                                                            <Check className="size-3.5 text-white drop-shadow stroke-[3]" />
                                                         )}
                                                     </button>
                                                 );
                                             })}
-                                        </motion.div>
-                                    </AnimatePresence>
-                                </div>
-                                
-                                <div className="absolute inset-y-0 -left-2 flex items-center">
-                                    <button 
-                                        onClick={() => dispatch({ type: "SET_PAGE", payload: Math.max(0, state.currentPage - 1) })}
-                                        disabled={state.currentPage === 0}
-                                        className="p-1.5 rounded-full bg-card border border-border hover:bg-muted disabled:opacity-0 transition-all shadow-md text-foreground cursor-pointer"
-                                    >
-                                        <ChevronLeft className="size-4" />
-                                    </button>
-                                </div>
-                                <div className="absolute inset-y-0 -right-2 flex items-center">
-                                    <button 
-                                        onClick={() => dispatch({ type: "SET_PAGE", payload: Math.min(totalPages - 1, state.currentPage + 1) })}
-                                        disabled={state.currentPage === totalPages - 1}
-                                        className="p-1.5 rounded-full bg-card border border-border hover:bg-muted disabled:opacity-0 transition-all shadow-md text-foreground cursor-pointer"
-                                    >
-                                        <ChevronRight className="size-4" />
-                                    </button>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* Color Section */}
-                        <section className="space-y-4">
-                            <div className="flex items-center justify-between border-b border-border/40 pb-2">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">Background Color</h3>
-                                <button 
-                                    onClick={() => dispatch({ type: "SET_COLOR", payload: "#8B5CF6" })}
-                                    className="text-[9px] font-black uppercase tracking-widest text-primary hover:opacity-80 transition-opacity flex items-center gap-1.5 cursor-pointer"
-                                >
-                                    <RefreshCcw className="size-2.5" />
-                                    Reset
-                                </button>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-                                <div className="lg:col-span-2 space-y-4">
-                                    <div className="custom-color-picker-container rounded-2xl overflow-hidden border border-border p-3 bg-card shadow-md">
-                                        <HexColorPicker 
-                                            color={state.selectedColor} 
-                                            onChange={(color) => dispatch({ type: "SET_COLOR", payload: color })} 
-                                            className="!w-full !h-36"
-                                        />
-                                    </div>
-                                    <div className="h-10 w-full rounded-xl bg-background border border-border flex items-center px-3 gap-2 focus-within:border-primary/40 transition-colors">
-                                        <span className="text-[9px] font-black text-muted-foreground uppercase font-mono">HEX</span>
-                                        <input 
-                                            type="text" 
-                                            value={state.selectedColor.toUpperCase()}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                if (/^#[0-9A-F]{0,6}$/i.test(val)) {
-                                                    dispatch({ type: "SET_COLOR", payload: val });
-                                                }
-                                            }}
-                                            className="bg-transparent border-none outline-none text-[10px] font-mono font-black text-foreground w-full uppercase"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="lg:col-span-3">
-                                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5">
-                                        {PRESET_COLORS.map((color) => (
-                                            <button
-                                                key={color}
-                                                onClick={() => dispatch({ type: "SET_COLOR", payload: color })}
-                                                className={cn(
-                                                    "aspect-square rounded-xl border transition-all hover:scale-110 relative cursor-pointer",
-                                                    state.selectedColor === color ? "border-primary scale-110 shadow-lg" : "border-border/40 hover:border-border"
-                                                )}
-                                                style={{ backgroundColor: color }}
-                                            >
-                                                {state.selectedColor === color && (
-                                                    <div className="absolute inset-0 flex items-center justify-center">
-                                                        <Check className="size-3 text-white drop-shadow-md" />
-                                                    </div>
-                                                )}
-                                            </button>
-                                        ))}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </section>
+                        </div>
                     </div>
                 </motion.div>
-                
-                <style>{`
+
+                <style jsx global>{`
                     .custom-color-picker-container .react-colorful {
                         width: 100% !important;
-                        height: 180px !important;
-                        border-radius: 16px !important;
+                        height: 130px !important;
+                        border-radius: 12px !important;
                     }
                     .custom-color-picker-container .react-colorful__saturation {
-                        border-bottom: none !important;
-                        border-radius: 16px 16px 0 0 !important;
+                        border-radius: 10px 10px 0 0 !important;
                     }
                     .custom-color-picker-container .react-colorful__hue {
-                        height: 14px !important;
-                        border-radius: 0 0 16px 16px !important;
+                        height: 12px !important;
+                        border-radius: 0 0 10px 10px !important;
+                        margin-top: 6px !important;
                     }
                     .custom-color-picker-container .react-colorful__pointer {
-                        width: 20px !important;
-                        height: 20px !important;
+                        width: 18px !important;
+                        height: 18px !important;
                     }
                 `}</style>
             </div>
         </AnimatePresence>
     );
-}
 
+    return createPortal(modalContent, document.body);
+}

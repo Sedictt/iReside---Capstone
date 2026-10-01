@@ -94,3 +94,50 @@ export async function POST(request: Request) {
     }
 }
 
+/**
+ * PATCH /api/profile/avatar
+ * Update avatar_url and/or avatar_bg_color for the authenticated user
+ */
+export async function PATCH(request: Request) {
+    try {
+        const authContext = await requireAuthenticatedUser(request);
+        if (!("userId" in authContext)) return authContext as Response;
+        const { userId } = authContext;
+
+        const body = await request.json().catch(() => ({}));
+        const { avatar_url, avatar_bg_color } = body;
+
+        const updates: Record<string, any> = {
+            updated_at: new Date().toISOString(),
+        };
+
+        if (avatar_url !== undefined) {
+            updates.avatar_url = typeof avatar_url === "string" ? avatar_url.trim() : null;
+        }
+
+        if (avatar_bg_color !== undefined) {
+            updates.avatar_bg_color = avatar_bg_color;
+        }
+
+        const admin = createServiceRoleSupabaseClient();
+        const { error: profileError } = await (admin as any)
+            .from("profiles")
+            .update(updates)
+            .eq("id", userId);
+
+        if (profileError) {
+            console.error("[api/profile/avatar PATCH] Error:", profileError);
+            return NextResponse.json({ error: "Failed to update profile appearance." }, { status: 500 });
+        }
+
+        return NextResponse.json({
+            success: true,
+            avatarUrl: updates.avatar_url,
+            avatarBgColor: updates.avatar_bg_color,
+        }, { status: 200 });
+    } catch (error: any) {
+        console.error("[api/profile/avatar PATCH] Unhandled error:", error);
+        return NextResponse.json({ error: error?.message || "Failed to update profile appearance." }, { status: 500 });
+    }
+}
+

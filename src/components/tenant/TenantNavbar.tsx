@@ -38,6 +38,7 @@ import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { LogoutConfirmationModal } from "@/components/ui/LogoutConfirmationModal";
 import { m as motion, AnimatePresence } from "framer-motion";
+import { DEFAULT_AVATAR_URL, getSafeAvatarBgColor, isProfileIncomplete } from "@/lib/constants";
 import type { Notification, Profile } from "@/types/database";
 
 function formatTimeAgo(value: string) {
@@ -97,7 +98,7 @@ const NAV_SECTIONS = [
             { label: "Finance Hub", href: "/tenant/payments", icon: CreditCard },
             { label: "Messages", href: "/tenant/messages", icon: MessageSquare },
             { label: "User Manual", href: "/tenant/docs", icon: BookOpen },
-            { label: "Download App", href: "/tenant/download", icon: Download },
+            { label: "Download App", href: "/download", icon: Download },
         ],
     },
 ];
@@ -197,8 +198,15 @@ export function TenantSidebar() {
     const avatarUrl =
         profile?.avatar_url ||
         user?.user_metadata?.avatar_url ||
-        "https://images.unsplash.com/photo-1529778456-9a2cf1fbe4a8?auto=format&fit=crop&w=150&q=80";
-    const avatarBgColor = profile?.avatar_bg_color || "#171717";
+        DEFAULT_AVATAR_URL;
+    const avatarBgColor = getSafeAvatarBgColor(profile?.avatar_bg_color);
+    const isIncomplete = isProfileIncomplete(profile);
+    const initials = displayName
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part: string) => part[0]?.toUpperCase() ?? "")
+        .join("") || "TN";
     const renderNav = (compact = false) => (
         <nav className={cn("space-y-8", compact && "pt-2")}>
             {NAV_SECTIONS.map((section) => (
@@ -298,10 +306,16 @@ return (
                         <button
                             type="button"
                             onClick={() => setIsMobileOpen((prev) => !prev)}
-                            className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground neumorphic-extruded"
+                            className="relative inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground neumorphic-extruded"
                             aria-label="Toggle tenant navigation"
                         >
                             {isMobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+                            {isIncomplete && (
+                                <span className="absolute -top-0.5 -right-0.5 flex size-2.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                                    <span className="relative inline-flex rounded-full size-2.5 bg-primary" />
+                                </span>
+                            )}
                         </button>
                     </div>
                 </div>
@@ -326,8 +340,22 @@ return (
                             initialData={{ full_name: displayName, avatar_url: avatarUrl, role: profile?.role as Profile["role"] }}
                             asChild
                         >
-                            <div className="relative size-10 overflow-hidden rounded-full ring-2 ring-border cursor-pointer hover:ring-primary transition-all" style={{ backgroundColor: avatarBgColor }}>
-                                <Image src={avatarUrl} alt="Profile" fill sizes="40px" className="object-cover" />
+                            <div className="relative size-10 rounded-full ring-2 ring-border cursor-pointer hover:ring-primary transition-all">
+                                <div 
+                                    className="relative size-full overflow-hidden rounded-full flex items-center justify-center" 
+                                    style={{ backgroundColor: avatarBgColor }}
+                                >
+                                    <Image src={avatarUrl} alt="Profile" fill sizes="40px" className="object-cover" />
+                                </div>
+                                {isIncomplete && (
+                                    <span 
+                                        className="absolute -top-0.5 -right-0.5 flex size-3.5 z-20 pointer-events-none" 
+                                        title="Complete your profile setup"
+                                    >
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                                        <span className="relative inline-flex rounded-full size-3.5 bg-primary border-2 border-background shadow-sm" />
+                                    </span>
+                                )}
                             </div>
                         </ProfileCardTrigger>
                         <div className="min-w-0 flex-1">
@@ -393,9 +421,16 @@ return (
                     </div>
 
                     <div className="space-y-1">
-                        <Link href="/tenant/profile" className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:text-foreground hover:neumorphic-extruded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-                            <User className="size-4" />
-                            Profile
+                        <Link href="/tenant/profile" className="flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:text-foreground hover:neumorphic-extruded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                            <div className="flex items-center gap-2">
+                                <User className="size-4" />
+                                <span>Profile</span>
+                            </div>
+                            {isIncomplete && (
+                                <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md bg-primary/15 text-primary border border-primary/20">
+                                    Set Up
+                                </span>
+                            )}
                         </Link>
                         <Link href="/tenant/settings" className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:text-foreground hover:neumorphic-extruded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                             <Settings className="size-4" />
@@ -445,9 +480,16 @@ return (
                     {renderNav(true)}
 
                     <div className="mt-6 border-t border-border pt-4 space-y-1">
-                        <Link href="/tenant/profile" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground" onClick={() => setIsMobileOpen(false)}>
-                            <User className="size-4" />
-                            Profile
+                        <Link href="/tenant/profile" className="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground" onClick={() => setIsMobileOpen(false)}>
+                            <div className="flex items-center gap-2">
+                                <User className="size-4" />
+                                <span>Profile</span>
+                            </div>
+                            {isIncomplete && (
+                                <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md bg-primary/15 text-primary border border-primary/20">
+                                    Set Up
+                                </span>
+                            )}
                         </Link>
                         <Link href="/tenant/settings" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground" onClick={() => setIsMobileOpen(false)}>
                             <Settings className="size-4" />

@@ -39,40 +39,40 @@ interface AttachInvoiceModalProps {
     onSuccess: () => void;
 }
 
-function getStatusBadge(statusTone: string, statusLabel: string) {
+function getStatusBadge(statusTone: InvoiceEntry["statusTone"], statusLabel: string) {
     switch (statusTone) {
         case "paid":
             return (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                    <CheckCircle2 className="size-3 shrink-0" />
-                    <span>{statusLabel || "Paid"}</span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                    <CheckCircle2 className="size-3" />
+                    {statusLabel || "Paid"}
                 </span>
             );
         case "pending":
             return (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                    <Clock className="size-3 shrink-0" />
-                    <span>{statusLabel || "Pending"}</span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                    <Clock className="size-3" />
+                    {statusLabel || "Pending"}
                 </span>
             );
         case "failed":
             return (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20">
-                    <AlertCircle className="size-3 shrink-0" />
-                    <span>{statusLabel || "Overdue"}</span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20">
+                    <AlertCircle className="size-3" />
+                    {statusLabel || "Failed"}
                 </span>
             );
         case "refunded":
             return (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                    <RotateCcw className="size-3 shrink-0" />
-                    <span>{statusLabel || "Refunded"}</span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                    <RotateCcw className="size-3" />
+                    {statusLabel || "Refunded"}
                 </span>
             );
         default:
             return (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-surface-3 text-medium border border-divider">
-                    <span>{statusLabel || "Status"}</span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-surface-3 text-medium border border-divider">
+                    {statusLabel || "Status"}
                 </span>
             );
     }
@@ -99,18 +99,21 @@ export function AttachInvoiceModal({
 
         const fetchInvoices = async () => {
             try {
-                const res = await fetch(`/api/landlord/messages/conversations/${conversationId}/invoices`);
-                if (!res.ok) {
-                    throw new Error("Failed to load resident invoices");
+                const res = await fetch(`/api/messages/conversations/${conversationId}/payments`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (isMounted) {
+                        setInvoices(data.payments || []);
+                    }
+                } else {
+                    if (isMounted) {
+                        setInvoices([]);
+                    }
                 }
-                const data = await res.json();
+            } catch (err) {
+                console.error("Failed to load invoices for attachment:", err);
                 if (isMounted) {
-                    setInvoices(data.invoices || []);
-                }
-            } catch (err: any) {
-                if (isMounted) {
-                    console.error("Error fetching resident invoices:", err);
-                    setError(err.message || "Failed to load invoices");
+                    setError("Could not load invoices. Please try again.");
                 }
             } finally {
                 if (isMounted) {
@@ -185,14 +188,14 @@ export function AttachInvoiceModal({
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-[140] flex items-center justify-center p-3 sm:p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                 {/* Backdrop */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={onClose}
-                    className="fixed inset-0 bg-black/70 backdrop-blur-sm cursor-pointer"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm"
                 />
 
                 {/* Modal Container */}
@@ -200,28 +203,26 @@ export function AttachInvoiceModal({
                     initial={{ opacity: 0, scale: 0.95, y: 15 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                    className="relative w-full max-w-md sm:max-w-lg overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] neumorphic-panel p-4 sm:p-6 shadow-2xl z-10 border border-white/10 bg-surface-1"
+                    className="relative w-full max-w-lg overflow-hidden rounded-[2.5rem] neumorphic-panel p-6 shadow-2xl z-10 border border-white/10 bg-surface-1"
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between pb-3.5 border-b border-divider">
-                        <div className="flex items-center gap-3 min-w-0">
-                            <div className="flex size-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500 shrink-0">
+                    <div className="flex items-center justify-between pb-4 border-b border-divider">
+                        <div className="flex items-center gap-3">
+                            <div className="flex size-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500">
                                 <Receipt className="size-5" />
                             </div>
-                            <div className="min-w-0">
-                                <h3 className="text-base sm:text-lg font-black tracking-tight text-high truncate">
+                            <div>
+                                <h3 className="text-lg font-black tracking-tight text-high">
                                     Attach Bill or Invoice
                                 </h3>
-                                <p className="text-xs font-medium text-medium truncate">
+                                <p className="text-xs font-medium text-medium">
                                     {contact?.name ? `${contact.name} (${contact.unit})` : "Resident"}
                                 </p>
                             </div>
                         </div>
                         <button
-                            type="button"
                             onClick={onClose}
-                            className="size-11 rounded-full flex items-center justify-center text-disabled hover:text-high hover:bg-surface-3 active:scale-95 transition-all cursor-pointer shrink-0"
-                            aria-label="Close modal"
+                            className="rounded-full p-2 text-disabled hover:text-high hover:bg-surface-3 transition-colors"
                         >
                             <X className="size-5" />
                         </button>
@@ -229,22 +230,22 @@ export function AttachInvoiceModal({
 
                     {/* Error Banner */}
                     {error && (
-                        <div className="mt-3.5 rounded-2xl border border-red-500/20 bg-red-500/5 p-3 text-xs text-red-500 font-medium flex items-center gap-2">
+                        <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/5 p-3 text-xs text-red-500 font-medium flex items-center gap-2">
                             <AlertCircle className="size-4 shrink-0" />
                             <span>{error}</span>
                         </div>
                     )}
 
                     {/* Content List */}
-                    <div className="mt-3.5 max-h-[60vh] sm:max-h-96 overflow-y-auto custom-scrollbar-premium space-y-3 pr-0.5">
+                    <div className="mt-4 max-h-96 overflow-y-auto custom-scrollbar-premium space-y-3">
                         {isLoading ? (
                             <div className="space-y-3 py-4">
                                 {Array.from({ length: 3 }).map((_, idx) => (
-                                    <div key={`inv-skel-${idx}`} className="h-24 w-full rounded-2xl bg-surface-2 animate-pulse" />
+                                    <div key={`inv-skel-${idx}`} className="h-20 w-full rounded-2xl bg-surface-2 animate-pulse" />
                                 ))}
                             </div>
                         ) : invoices.length === 0 ? (
-                            <div className="py-10 px-4 text-center">
+                            <div className="py-12 px-4 text-center">
                                 <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-surface-2 text-disabled mb-3">
                                     <Receipt className="size-6" />
                                 </div>
@@ -255,10 +256,10 @@ export function AttachInvoiceModal({
                                 <Link
                                     href="/landlord/invoices?action=create"
                                     onClick={onClose}
-                                    className="mt-4 inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl neumorphic-primary text-white text-xs font-black uppercase tracking-wider shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                                    className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-2xl neumorphic-primary text-white text-xs font-black shadow-md hover:scale-105 transition-all"
                                 >
-                                    <Plus className="size-4" />
-                                    <span>Create New Invoice</span>
+                                    <Plus className="size-3.5" />
+                                    Create New Invoice
                                 </Link>
                             </div>
                         ) : (
@@ -267,60 +268,52 @@ export function AttachInvoiceModal({
                                 return (
                                     <div
                                         key={invoice.id}
-                                        className="flex flex-col gap-2.5 p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl neumorphic-panel border border-divider/60 hover:border-primary/30 transition-all shadow-xs"
+                                        className="flex items-center justify-between p-4 rounded-2xl neumorphic-inset-card transition-all hover:border-primary/20"
                                     >
-                                        {/* Top Tier: Icon, Type & Date on Left, Price on Right */}
-                                        <div className="flex items-start justify-between gap-2.5">
-                                            <div className="flex items-center gap-3 min-w-0 flex-1">
-                                                <div className="flex size-10 items-center justify-center rounded-2xl bg-surface-2 dark:bg-surface-3 text-high shrink-0 shadow-inner">
-                                                    <CreditCard className="size-5 text-primary" />
-                                                </div>
-                                                <div className="flex flex-col min-w-0">
-                                                    <span className="text-xs sm:text-sm font-black text-high tracking-tight truncate">
+                                        <div className="flex items-center gap-3 min-w-0 flex-1 pr-3">
+                                            <div className="flex size-10 items-center justify-center rounded-xl bg-surface-3 text-high shrink-0">
+                                                <CreditCard className="size-5" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="text-xs font-black text-high truncate">
                                                         {invoice.typeLabel || "Monthly Rent"}
                                                     </span>
-                                                    <span className="flex items-center gap-1 text-[11px] font-medium text-disabled mt-0.5">
-                                                        <Calendar className="size-3 shrink-0" />
-                                                        <span>{invoice.dateLabel || invoice.monthLabel}</span>
+                                                    {getStatusBadge(invoice.statusTone, invoice.statusLabel)}
+                                                </div>
+                                                <div className="flex items-center gap-2 mt-1 text-[10px] text-disabled">
+                                                    <span className="flex items-center gap-1">
+                                                        <Calendar className="size-3" />
+                                                        {invoice.dateLabel || invoice.monthLabel}
                                                     </span>
                                                 </div>
-                                            </div>
-
-                                            {/* Price (Never overlaps) */}
-                                            <div className="flex flex-col items-end shrink-0 pt-0.5">
-                                                <span className="text-sm sm:text-base font-black text-high tracking-tight">
-                                                    ₱{invoice.amount.toLocaleString()}
-                                                </span>
                                             </div>
                                         </div>
 
-                                        {/* Bottom Tier: Status Badge on Left, 44px Attach Button on Right */}
-                                        <div className="flex items-center justify-between gap-2 pt-2 border-t border-divider/40">
-                                            <div className="shrink-0">
-                                                {getStatusBadge(invoice.statusTone, invoice.statusLabel)}
-                                            </div>
-
+                                        <div className="flex items-center gap-3 shrink-0">
+                                            <span className="text-sm font-black text-high">
+                                                ₱{invoice.amount.toLocaleString()}
+                                            </span>
                                             <button
                                                 type="button"
                                                 onClick={() => handleAttachInvoice(invoice)}
                                                 disabled={isAttaching || Boolean(attachingId)}
                                                 className={cn(
-                                                    "h-11 px-4 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95 shrink-0",
+                                                    "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all",
                                                     isAttaching
                                                         ? "bg-primary/20 text-primary cursor-not-allowed"
-                                                        : "neumorphic-primary text-white hover:brightness-105"
+                                                        : "neumorphic-primary text-white hover:scale-105 active:scale-95 shadow-sm"
                                                 )}
-                                                aria-label={`Attach ${invoice.typeLabel || "invoice"}`}
                                             >
                                                 {isAttaching ? (
                                                     <>
-                                                        <Loader2 className="size-4 animate-spin" />
-                                                        <span>Sending...</span>
+                                                        <Loader2 className="size-3.5 animate-spin" />
+                                                        Sending…
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <Send className="size-4" />
-                                                        <span>Attach</span>
+                                                        <Send className="size-3.5" />
+                                                        Attach
                                                     </>
                                                 )}
                                             </button>

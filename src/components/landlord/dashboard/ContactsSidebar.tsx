@@ -32,6 +32,7 @@ import { MiniChatSkeleton } from "@/components/messaging/MiniChatSkeleton";
 import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { getSafeAvatarBgColor } from "@/lib/constants";
 
 interface ChatUser {
     id: string;
@@ -1084,7 +1085,7 @@ export function ContactsSidebar() {
                                     <div className="relative shrink-0">
                                         <div 
                                             className="size-10 rounded-full border-2 border-background overflow-hidden"
-                                            style={{ backgroundColor: msg.avatarBgColor || '#171717' }}
+                                            style={{ backgroundColor: getSafeAvatarBgColor(msg.avatarBgColor) }}
                                         >
                                             <Image
                                                 src={msg.avatar}
@@ -1262,7 +1263,7 @@ export function ContactsSidebar() {
                                     <div className="relative shrink-0">
                                         <div 
                                             className="size-8 rounded-full border border-border dark:border-white/10 overflow-hidden"
-                                            style={{ backgroundColor: chat.avatarBgColor || '#171717' }}
+                                            style={{ backgroundColor: getSafeAvatarBgColor(chat.avatarBgColor) }}
                                         >
                                             <Image src={chat.avatar} alt={chat.name} width={32} height={32} className="object-cover" />
                                         </div>

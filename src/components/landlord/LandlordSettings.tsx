@@ -86,7 +86,6 @@ import { useBrand, DEFAULT_BRANDING } from "@/context/BrandContext";
 import { applyBrandCssVariables } from "@/lib/branding/colors";
 import { SecurityKeyManagementCard } from "@/components/auth/SecurityKeyManagementCard";
 import Link from "next/link";
-import { MobileSettingsCategoryDropdown } from "@/components/mobile/shared/MobileSettingsCategoryDropdown";
 import {
     validateFullName,
     validateBusinessName,
@@ -100,7 +99,6 @@ import {
     validateHexColor,
     validatePropertyTradeName,
     validatePropertyTagline,
-    validateBannerImageUrl,
     evaluatePasswordStrength,
     validatePasswordPair,
     validateAllLandlordSettings,
@@ -326,7 +324,7 @@ export interface CachedLandlordSettings {
     personalization: {
         propertyTradeName: string;
         propertyTagline: string;
-        rentalArchetype: string;
+        rentalArchetype?: string | null;
         brandPrimaryHex: string;
         brandSecondaryHex: string;
         bannerUrl: string;
@@ -371,7 +369,7 @@ export function saveCachedSettings(settings: CachedLandlordSettings, userId?: st
 
 // --- Main Component ---
 
-export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = {}) {
+export function LandlordSettings() {
     const router = useRouter();
     const { user, profile, loading, refreshProfile } = useAuth();
     // UI State
@@ -440,13 +438,13 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
 
     // Mapping of Sub-tabs
     const SUB_TABS: Record<SettingsCategory, string[]> = {
-        Identity: ["Profile", "Emergency Contact", "Socials", "Verification"],
+        Identity: ["Profile", "Emergency Contact", "Socials", "Business Permit"],
         Personalization: ["Themes & Contrast", "Branding & Logo", "Dashboard Banner"],
         Finance: ["GCash", "Utilities"],
         Security: ["Account", "Protection", "Sessions"],
         Notifications: ["Alerts"],
         AuditLogs: ["Activity Logs"],
-        Data: ["Export", "Tour"],
+        Data: ["Export", "Tour", "Danger"],
     };
 
     // Reset sub-tab when main tab changes (skip if restoring from URL)
@@ -540,7 +538,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 );
 
                 // Prefix with UTF-8 BOM (\uFEFF) so Excel displays currency and UTF-8 characters properly
-                const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+                const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\r\n");
                 const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
@@ -578,7 +576,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
         const cached = getCachedSettings();
         return cached?.personalization?.bannerUrl || (typeof window !== "undefined" ? (localStorage.getItem("ireside_landlord_custom_banner_url") || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL);
     });
-    const [customBannerInput, setCustomBannerInput] = useState<string>("");
+
     const [propertyTradeName, setPropertyTradeName] = useState<string>(() => {
         const cached = getCachedSettings();
         return cached?.personalization?.propertyTradeName || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_name") || brand.propertyName || DEFAULT_BRANDING.propertyName) : (brand.propertyName || DEFAULT_BRANDING.propertyName));
@@ -590,10 +588,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
     const [propertyLogoUrl, setPropertyLogoUrl] = useState<string | null>(() => {
         const cached = getCachedSettings();
         return cached?.personalization?.propertyLogoUrl ?? (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_logo") || brand.logoUrl || null) : (brand.logoUrl || null));
-    });
-    const [rentalArchetype, setRentalArchetype] = useState<string>(() => {
-        const cached = getCachedSettings();
-        return normalizeRentalArchetype(cached?.personalization?.rentalArchetype || (typeof window !== "undefined" ? (localStorage.getItem("ireside_rental_archetype") || brand.rentalArchetype || DEFAULT_BRANDING.rentalArchetype) : (brand.rentalArchetype || DEFAULT_BRANDING.rentalArchetype)));
     });
     const [brandPrimaryHex, setBrandPrimaryHex] = useState<string>(() => {
         const cached = getCachedSettings();
@@ -643,32 +637,15 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
         toast.info("Banner reset to default preview. Save all changes to apply permanently.");
     };
 
-    const handleApplyCustomBannerUrl = (e: React.FormEvent) => {
-        e.preventDefault();
-        const check = validateBannerImageUrl(customBannerInput);
-        if (!check.isValid) {
-            toast.error(check.error || "Please enter a valid image URL");
-            return;
-        }
-        setHasUserEdited(true);
-        setBannerUrl(customBannerInput.trim());
-        setCustomBannerInput("");
-        toast.info("Custom banner preview applied. Save all changes to apply permanently.");
-    };
+
 
     const handleBannerFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+        const file = handleMediaSelection(e, {
+            preset: "image",
+            maxSizeBytes: 8 * 1024 * 1024,
+            notify: (message, description) => toast.error(message, { description }),
+        });
         if (!file) return;
-
-        if (!file.type.startsWith("image/")) {
-            toast.error("Please upload a valid image file");
-            return;
-        }
-
-        if (file.size > 8 * 1024 * 1024) {
-            toast.error("Image file size must be less than 8MB");
-            return;
-        }
 
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -683,18 +660,12 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
     };
 
     const handleLogoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+        const file = handleMediaSelection(e, {
+            preset: "branding_logo",
+            maxSizeBytes: 5 * 1024 * 1024,
+            notify: (message, description) => toast.error(message, { description }),
+        });
         if (!file) return;
-
-        if (!file.type.startsWith("image/")) {
-            toast.error("Please upload a valid image file (PNG, JPG, SVG, WebP)");
-            return;
-        }
-
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error("Logo file size must be less than 5MB");
-            return;
-        }
 
         // 1. Instant local preview
         const reader = new FileReader();
@@ -915,7 +886,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
         notificationPreferences: NotificationPreferences;
         propertyTradeName: string;
         propertyTagline: string;
-        rentalArchetype: string;
         brandPrimaryHex: string;
         brandSecondaryHex: string;
         bannerUrl: string;
@@ -928,7 +898,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 notificationPreferences: JSON.parse(JSON.stringify(cached.notificationPreferences)),
                 propertyTradeName: cached.personalization?.propertyTradeName || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_name") || brand.propertyName || DEFAULT_BRANDING.propertyName) : DEFAULT_BRANDING.propertyName),
                 propertyTagline: cached.personalization?.propertyTagline || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_tagline") || brand.propertyTagline || DEFAULT_BRANDING.propertyTagline) : DEFAULT_BRANDING.propertyTagline),
-                rentalArchetype: normalizeRentalArchetype(cached.personalization?.rentalArchetype || (typeof window !== "undefined" ? (localStorage.getItem("ireside_rental_archetype") || brand.rentalArchetype || DEFAULT_BRANDING.rentalArchetype) : DEFAULT_BRANDING.rentalArchetype)),
                 brandPrimaryHex: cached.personalization?.brandPrimaryHex || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_primary") || brand.primaryColor || DEFAULT_BRANDING.primaryColor) : DEFAULT_BRANDING.primaryColor),
                 brandSecondaryHex: cached.personalization?.brandSecondaryHex || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_secondary") || brand.secondaryColor || DEFAULT_BRANDING.secondaryColor) : DEFAULT_BRANDING.secondaryColor),
                 bannerUrl: cached.personalization?.bannerUrl || (typeof window !== "undefined" ? (localStorage.getItem("ireside_landlord_custom_banner_url") || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL),
@@ -1030,7 +999,9 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 address: freshProfile?.address || businessProfile?.address || "",
                 bio: freshProfile?.bio || "",
                 emergency_contact_name: freshProfile?.emergency_contact_name || privateProfile?.emergency_contact_name || (freshProfile?.socials as any)?.emergency_contact_name || "",
-                emergency_contact_phone: freshProfile?.emergency_contact_phone || privateProfile?.emergency_contact_phone || (freshProfile?.socials as any)?.emergency_contact_phone || "",
+                emergency_contact_phone: isPreseededPhone(freshProfile?.emergency_contact_phone || privateProfile?.emergency_contact_phone || (freshProfile?.socials as any)?.emergency_contact_phone)
+                    ? ""
+                    : (freshProfile?.emergency_contact_phone || privateProfile?.emergency_contact_phone || (freshProfile?.socials as any)?.emergency_contact_phone || ""),
                 business_permit_number: freshProfile?.business_permit_number || businessProfile?.business_permit_number || "",
                 socials: typeof freshProfile?.socials === 'object' && freshProfile?.socials !== null 
                     ? {
@@ -1134,7 +1105,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 setPropertyLogoUrl(savedLogo);
                 setPropertyTradeName(savedName);
                 setPropertyTagline(savedTagline);
-                setRentalArchetype(savedArchetype);
                 setBrandPrimaryHex(savedPrimary);
                 setBrandSecondaryHex(savedSecondary);
 
@@ -1143,7 +1113,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                     notificationPreferences: JSON.parse(JSON.stringify(syncedNotifs)),
                     propertyTradeName: savedName,
                     propertyTagline: savedTagline,
-                    rentalArchetype: savedArchetype,
                     brandPrimaryHex: savedPrimary,
                     brandSecondaryHex: savedSecondary,
                     bannerUrl: savedBanner,
@@ -1194,6 +1163,26 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
         syncSettingsWithDatabase();
     }, [syncSettingsWithDatabase]);
 
+    // Reconcile pre-seeded placeholder emails and phone numbers with authenticated identity
+    useEffect(() => {
+        if (!user?.email) return;
+        const currentEmail = (formData.email || "").toLowerCase().trim();
+        const userEmail = user.email.toLowerCase().trim();
+        const isCurrentDisallowed = !currentEmail || 
+            DISALLOWED_PRESEEDED_DATA.emails.includes(currentEmail) || 
+            currentEmail.includes("turnkey.local");
+        const isUserValid = !DISALLOWED_PRESEEDED_DATA.emails.includes(userEmail) && !userEmail.includes("turnkey.local");
+        if (isCurrentDisallowed && isUserValid) {
+            setFormData(prev => ({ ...prev, email: user.email! }));
+        }
+        if (formData.phone && isPreseededPhone(formData.phone)) {
+            setFormData(prev => ({ ...prev, phone: "" }));
+        }
+        if (formData.emergency_contact_phone && isPreseededPhone(formData.emergency_contact_phone)) {
+            setFormData(prev => ({ ...prev, emergency_contact_phone: "" }));
+        }
+    }, [user?.email, formData.email, formData.phone, formData.emergency_contact_phone]);
+
     const isDirty = useMemo(() => {
         if (isFinanceDirty) return true;
         if (!hasUserEdited || !initialSnapshot) return false;
@@ -1202,13 +1191,12 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
             JSON.stringify(notificationPreferences) !== JSON.stringify(initialSnapshot.notificationPreferences) ||
             propertyTradeName !== initialSnapshot.propertyTradeName ||
             propertyTagline !== initialSnapshot.propertyTagline ||
-            normalizeRentalArchetype(rentalArchetype) !== normalizeRentalArchetype(initialSnapshot.rentalArchetype) ||
             brandPrimaryHex.toLowerCase() !== initialSnapshot.brandPrimaryHex.toLowerCase() ||
             brandSecondaryHex.toLowerCase() !== initialSnapshot.brandSecondaryHex.toLowerCase() ||
             bannerUrl !== initialSnapshot.bannerUrl ||
             propertyLogoUrl !== initialSnapshot.propertyLogoUrl
         );
-    }, [isFinanceDirty, hasUserEdited, formData, notificationPreferences, propertyTradeName, propertyTagline, rentalArchetype, brandPrimaryHex, brandSecondaryHex, bannerUrl, propertyLogoUrl, initialSnapshot]);
+    }, [isFinanceDirty, hasUserEdited, formData, notificationPreferences, propertyTradeName, propertyTagline, brandPrimaryHex, brandSecondaryHex, bannerUrl, propertyLogoUrl, initialSnapshot]);
 
     const isDirtyRef = useRef(false);
     isDirtyRef.current = isDirty;
@@ -1220,7 +1208,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
             const nextSecondary = brand.secondaryColor || DEFAULT_BRANDING.secondaryColor;
             const nextName = brand.propertyName || DEFAULT_BRANDING.propertyName;
             const nextTagline = brand.propertyTagline || DEFAULT_BRANDING.propertyTagline;
-            const nextArchetype = normalizeRentalArchetype(brand.rentalArchetype || DEFAULT_BRANDING.rentalArchetype);
             const nextLogo = brand.logoUrl !== undefined ? brand.logoUrl : null;
             const nextBanner = brand.bannerUrl || DEFAULT_BANNER_URL;
 
@@ -1228,7 +1215,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
             setBrandSecondaryHex(nextSecondary);
             setPropertyTradeName(nextName);
             setPropertyTagline(nextTagline);
-            setRentalArchetype(nextArchetype);
             if (brand.logoUrl !== undefined) setPropertyLogoUrl(nextLogo);
             if (brand.bannerUrl) setBannerUrl(nextBanner);
 
@@ -1249,12 +1235,11 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 brandSecondaryHex: nextSecondary,
                 propertyTradeName: nextName,
                 propertyTagline: nextTagline,
-                rentalArchetype: nextArchetype,
                 propertyLogoUrl: nextLogo,
                 bannerUrl: nextBanner,
             } : null);
         }
-    }, [brand.primaryColor, brand.secondaryColor, brand.propertyName, brand.propertyTagline, brand.rentalArchetype, brand.logoUrl, brand.bannerUrl, brand.isLoading, hasUserEdited]);
+    }, [brand.primaryColor, brand.secondaryColor, brand.propertyName, brand.propertyTagline, brand.logoUrl, brand.bannerUrl, brand.isLoading, hasUserEdited]);
 
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -1306,7 +1291,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
         setNotificationPreferences(JSON.parse(JSON.stringify(initialSnapshot.notificationPreferences)));
         setPropertyTradeName(initialSnapshot.propertyTradeName);
         setPropertyTagline(initialSnapshot.propertyTagline);
-        setRentalArchetype(initialSnapshot.rentalArchetype);
         setBrandPrimaryHex(initialSnapshot.brandPrimaryHex);
         setBrandSecondaryHex(initialSnapshot.brandSecondaryHex);
         setBannerUrl(initialSnapshot.bannerUrl);
@@ -1621,7 +1605,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 !initialSnapshot ||
                 propertyTradeName !== initialSnapshot.propertyTradeName ||
                 propertyTagline !== initialSnapshot.propertyTagline ||
-                normalizeRentalArchetype(rentalArchetype) !== normalizeRentalArchetype(initialSnapshot.rentalArchetype) ||
                 brandPrimaryHex.toLowerCase() !== initialSnapshot.brandPrimaryHex.toLowerCase() ||
                 brandSecondaryHex.toLowerCase() !== initialSnapshot.brandSecondaryHex.toLowerCase() ||
                 bannerUrl !== initialSnapshot.bannerUrl ||
@@ -1672,7 +1655,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 const brandSuccess = await brand.updateBranding({
                     propertyName: propertyTradeName,
                     propertyTagline,
-                    rentalArchetype: (rentalArchetype === "boarding_house" ? "boarding_house" : rentalArchetype === "dormitory" ? "dormitory" : "apartment"),
+                    rentalArchetype: brand.rentalArchetype,
                     primaryColor: brandPrimaryHex,
                     secondaryColor: brandSecondaryHex,
                     logoUrl: propertyLogoUrl,
@@ -1701,7 +1684,6 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 notificationPreferences: JSON.parse(JSON.stringify(notificationPreferences)),
                 propertyTradeName,
                 propertyTagline,
-                rentalArchetype: normalizeRentalArchetype(rentalArchetype),
                 brandPrimaryHex,
                 brandSecondaryHex,
                 bannerUrl,
@@ -1717,7 +1699,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 personalization: {
                     propertyTradeName,
                     propertyTagline,
-                    rentalArchetype,
+                    rentalArchetype: brand.rentalArchetype,
                     brandPrimaryHex,
                     brandSecondaryHex,
                     bannerUrl,
@@ -1759,16 +1741,11 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
     };
 
     const handlePermitUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+        const file = handleMediaSelection(e, {
+            preset: "image",
+            notify: (message, description) => toast.error(message, { description }),
+        });
         if (!file) return;
-
-        if (file.size > MAX_FILE_SIZE) {
-            toast.error("File too large", {
-                description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit. Please upload a smaller file.`
-            });
-            if (permitInputRef.current) permitInputRef.current.value = "";
-            return;
-        }
 
         setIsUploadingPermit(true);
         const loadingToast = toast.loading("Uploading permit...");
@@ -1794,6 +1771,32 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
         } finally {
             setIsUploadingPermit(false);
             if (permitInputRef.current) permitInputRef.current.value = "";
+        }
+    };
+
+    const handlePermitRemove = async () => {
+        if (!confirm("Are you sure you want to remove your uploaded business permit?")) return;
+        
+        setIsUploadingPermit(true);
+        const loadingToast = toast.loading("Removing permit...");
+
+        try {
+            const response = await fetch("/api/profile/permit", {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.error || "Failed to remove permit");
+            }
+
+            toast.success("Business permit removed successfully", { id: loadingToast });
+            await refreshProfile();
+            window.dispatchEvent(new CustomEvent("profile-updated"));
+        } catch (error: any) {
+            toast.error(error.message || "Failed to remove permit", { id: loadingToast });
+        } finally {
+            setIsUploadingPermit(false);
         }
     };
 
@@ -2394,12 +2397,12 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                             </div>
                         </GlassCard>
                     );
-                case "Verification":
+                case "Business Permit":
                     return (
-                        <GlassCard title="Business Verification" description="Upload your business permit to receive a 'Verified' badge.">
+                        <GlassCard title="Business Permit (Optional)" description="Optionally provide your business permit number and document photo.">
                             <div className="space-y-6">
                                 <SettingField 
-                                    label="Business Permit Number" 
+                                    label="Business Permit Number (Optional)" 
                                     icon={FileText}
                                     error={touchedFields.business_permit_number ? fieldErrors.business_permit_number : undefined}
                                 >
@@ -2431,7 +2434,12 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                                 </SettingField>
                                 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-wider text-neutral-400">Permit Document (Photo)</label>
+                                    <div className="flex items-center gap-2">
+                                        <label className="text-xs font-black uppercase tracking-wider text-neutral-400">Permit Document (Photo)</label>
+                                        <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-muted text-muted-foreground border border-border/60">
+                                            Optional
+                                        </span>
+                                    </div>
                                     <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                                         <div className="relative h-48 w-full md:w-80 overflow-hidden rounded-2xl neumorphic-inset border-dashed border-white/10 transition-all hover:opacity-80">
                                             {profile?.business_permit_url ? (
@@ -2447,20 +2455,34 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                                         </div>
                                         <div className="flex-1 space-y-4">
                                             <p className="text-sm text-neutral-500 leading-relaxed">
-                                                Upload a clear photo of your current business permit. Supported formats: JPG, PNG. Max size: 15MB.
+                                                Optionally upload a photo of your business permit. Supported formats: JPG, PNG. Max size: 15MB.
                                             </p>
-                                            <button 
-                                                onClick={() => permitInputRef.current?.click()}
-                                                disabled={isUploadingPermit}
-                                                className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-6 py-3 text-sm font-black text-primary transition-all hover:bg-primary/20 disabled:opacity-50"
-                                            >
-                                                <UploadCloud className="size-5" /> 
-                                                {isUploadingPermit ? "Uploading…" : profile?.business_permit_url ? "Replace Document" : "Upload Document"}
-                                            </button>
+                                            <div className="flex items-center gap-3 flex-wrap">
+                                                {profile?.business_permit_url && (
+                                                    <button 
+                                                        type="button"
+                                                        onClick={handlePermitRemove}
+                                                        disabled={isUploadingPermit}
+                                                        className="inline-flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-5 py-3 text-sm font-black text-red-500 transition-all hover:bg-red-500/20 disabled:opacity-50 cursor-pointer"
+                                                    >
+                                                        <Trash2 className="size-4" />
+                                                        Remove
+                                                    </button>
+                                                )}
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => permitInputRef.current?.click()}
+                                                    disabled={isUploadingPermit}
+                                                    className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-6 py-3 text-sm font-black text-primary transition-all hover:bg-primary/20 disabled:opacity-50 cursor-pointer"
+                                                >
+                                                    <UploadCloud className="size-5" /> 
+                                                    {isUploadingPermit ? "Uploading…" : profile?.business_permit_url ? "Replace Document" : "Upload Document (Optional)"}
+                                                </button>
+                                            </div>
                                             <input 
                                                 ref={permitInputRef}
                                                 type="file" 
-                                                accept="image/*" 
+                                                accept={MEDIA_ACCEPT_STRINGS.image} 
                                                 className="hidden" 
                                                 onChange={handlePermitUpload}
                                             />
@@ -2505,20 +2527,19 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                 case "Themes & Contrast":
                     return (
                         <div className="space-y-8">
-                            <GlassCard title="Visual Theme" description="Choose how iReside renders across all screens. Default is light mode.">
+                            <GlassCard 
+                                title="Visual Theme" 
+                                description="Choose how iReside renders across all screens. Default is light mode."
+                            >
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 p-4 rounded-2xl bg-surface-2 border border-border/60">
                                     <div className="flex items-start gap-4">
                                         <div className={cn(
                                             "size-12 rounded-xl flex items-center justify-center shrink-0 border transition-all",
-                                            resolvedTheme === "dark" 
-                                                ? "bg-primary/10 text-primary border-primary/30" 
-                                                : "bg-surface-3 text-muted-foreground border-border"
+                                            resolvedTheme === "dark"
+                                                ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
+                                                : "bg-amber-500/10 text-amber-500 border-amber-500/20"
                                         )}>
-                                            {resolvedTheme === "dark" ? (
-                                                <Moon className="size-6 text-primary" />
-                                            ) : (
-                                                <Sun className="size-6 text-amber-500" />
-                                            )}
+                                            {resolvedTheme === "dark" ? <Moon className="size-6" /> : <Sun className="size-6" />}
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
@@ -2883,7 +2904,7 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                                             <input
                                                 ref={logoFileInputRef}
                                                 type="file"
-                                                accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                                                accept={MEDIA_ACCEPT_STRINGS.branding_logo}
                                                 onChange={handleLogoFileUpload}
                                                 className="hidden"
                                             />
@@ -2911,41 +2932,9 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                                 </div>
                             </GlassCard>
 
-                            <GlassCard title="Rental Business Archetype" description="Adapts terminology and automated billing cadences to match your operation.">
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    {[
-                                        { id: "apartment", label: "Apartment Complex", desc: "Per-unit monthly leases with submeter utilities" },
-                                        { id: "dormitory", label: "Student Dormitory", desc: "Per-bed contracts with shared utility billing" },
-                                        { id: "boarding_house", label: "Boarding House", desc: "Flexible short/long-term room lodging" },
-                                    ].map((arch) => (
-                                        <button
-                                            key={arch.id}
-                                            type="button"
-                                            onClick={() => {
-                                                setHasUserEdited(true);
-                                                setRentalArchetype(arch.id);
-                                                toast.success(`Archetype set to ${arch.label}`);
-                                            }}
-                                            className={cn(
-                                                "p-4 rounded-2xl border text-left transition-all flex flex-col justify-between",
-                                                normalizeRentalArchetype(rentalArchetype) === arch.id
-                                                    ? "border-primary bg-primary/10 ring-2 ring-primary/40 text-foreground"
-                                                    : "border-border/60 hover:border-border hover:bg-surface-2 text-muted-foreground"
-                                            )}
-                                        >
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-sm font-black text-foreground">{arch.label}</span>
-                                                {normalizeRentalArchetype(rentalArchetype) === arch.id && <Check className="size-4 text-primary" />}
-                                            </div>
-                                            <span className="text-xs text-muted-foreground">{arch.desc}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </GlassCard>
-
                             <GlassCard 
                                 title="Turnkey Workspace Personalization Wizard" 
-                                description="Need to re-evaluate your property archetype, dynamic HSL color harmonies, or setup flow?"
+                                description="Need to re-evaluate your visual theme, dynamic HSL color harmonies, or setup flow?"
                                 headerExtra={
                                     <Link
                                         href="/setup?reconfigure=true"
@@ -3045,51 +3034,29 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
                                 </div>
                             </GlassCard>
 
-                            <GlassCard title="Custom Photo Upload or URL" description="Provide your property's real exterior or interior photography.">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <div className="p-6 rounded-2xl border border-dashed border-border flex flex-col items-center justify-center text-center gap-3">
-                                        <div className="size-12 rounded-2xl bg-surface-2 flex items-center justify-center text-primary border border-border">
-                                            <Upload className="size-6" />
-                                        </div>
-                                        <div>
-                                            <h4 className="text-sm font-black text-foreground">Upload Photo File</h4>
-                                            <p className="text-xs text-muted-foreground mt-1">PNG, JPG or WebP up to 8MB</p>
-                                        </div>
-                                        <input
-                                            ref={bannerFileInputRef}
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleBannerFileUpload}
-                                            className="hidden"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => bannerFileInputRef.current?.click()}
-                                            className="mt-2 px-5 py-2.5 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-wider transition-all"
-                                        >
-                                            Browse Device
-                                        </button>
+                            <GlassCard title="Custom Photo Upload" description="Upload your property's real exterior or interior photography.">
+                                <div className="p-6 rounded-2xl border border-dashed border-border flex flex-col items-center justify-center text-center gap-3">
+                                    <div className="size-12 rounded-2xl bg-surface-2 flex items-center justify-center text-primary border border-border">
+                                        <Upload className="size-6" />
                                     </div>
-
-                                    <form onSubmit={handleApplyCustomBannerUrl} className="flex flex-col justify-between p-6 rounded-2xl bg-surface-2 border border-border/60">
-                                        <div>
-                                            <h4 className="text-sm font-black text-foreground">Direct Image Link</h4>
-                                            <p className="text-xs text-muted-foreground mt-1">Paste a public Unsplash, Cloudinary, or CDN URL</p>
-                                            <input
-                                                type="url"
-                                                value={customBannerInput}
-                                                onChange={(e) => setCustomBannerInput(e.target.value)}
-                                                placeholder="https://images.unsplash.com/..."
-                                                className="mt-4 w-full rounded-xl neumorphic-inset px-4 py-3 text-xs font-medium focus:outline-none"
-                                            />
-                                        </div>
-                                        <button
-                                            type="submit"
-                                            className="mt-4 w-full py-2.5 rounded-xl neumorphic-extruded hover:text-primary text-xs font-black uppercase tracking-wider transition-all"
-                                        >
-                                            Apply Image URL
-                                        </button>
-                                    </form>
+                                    <div>
+                                        <h4 className="text-sm font-black text-foreground">Upload Photo File</h4>
+                                        <p className="text-xs text-muted-foreground mt-1">PNG, JPG or WebP up to 8MB</p>
+                                    </div>
+                                    <input
+                                        ref={bannerFileInputRef}
+                                        type="file"
+                                        accept={MEDIA_ACCEPT_STRINGS.image}
+                                        onChange={handleBannerFileUpload}
+                                        className="hidden"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => bannerFileInputRef.current?.click()}
+                                        className="mt-2 px-5 py-2.5 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-wider transition-all"
+                                    >
+                                        Browse Device
+                                    </button>
                                 </div>
                             </GlassCard>
                         </div>
@@ -4180,8 +4147,8 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
 
     return (
         <div className="space-y-6 sm:space-y-10">
-            {/* Top Navigation Bar (Desktop only) */}
-            <div className="hidden lg:flex items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-border/40">
+            {/* Top Navigation Bar */}
+            <div className="flex items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-border/40">
                 <button
                     type="button"
                     onClick={handleRequestExit}
@@ -4284,17 +4251,106 @@ export function LandlordSettings({ isMobile = false }: { isMobile?: boolean } = 
             )}
 
             <div className="min-h-[80vh] flex flex-col lg:flex-row gap-6 lg:gap-12">
-                {/* Mobile / Tablet Category Dropdown (< lg) */}
-                <div className="block lg:hidden mb-2">
-                    <MobileSettingsCategoryDropdown
-                        items={SIDEBAR_ITEMS}
-                        activeTab={activeTab}
-                        onSelectTab={(id) => {
-                            handleTabChange(id as SettingsCategory);
-                            const firstSubTab = SUB_TABS[id as SettingsCategory]?.[0];
-                            if (firstSubTab) setActiveSubTab(firstSubTab);
-                        }}
-                    />
+                {/* Mobile / Tablet Horizontal Navigation (< lg) */}
+                <div className="block lg:hidden space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                        <div className="flex items-center gap-2.5">
+                            <div className="flex size-9 items-center justify-center rounded-xl bg-primary/20 text-primary border border-primary/20">
+                                <Layout className="size-4.5" />
+                            </div>
+                            <div>
+                                <h1 className="text-base font-black text-foreground leading-tight">Settings</h1>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                    {SIDEBAR_ITEMS.find(i => i.id === activeTab)?.label}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Swipe / Slide affordance hint */}
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-full border border-border/40 select-none">
+                            <SlidersHorizontal className="size-3 text-primary/70" />
+                            <span>Swipe to reveal</span>
+                            <ChevronRight className="size-3 text-primary animate-pulse" />
+                        </div>
+                    </div>
+
+                    <div className="relative group/rail">
+                        {/* Left Fade Gradient & Scroll Arrow */}
+                        <AnimatePresence>
+                            {canScrollLeft && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="absolute left-0 top-0 bottom-0 z-10 flex items-center pr-3 pl-0.5 bg-gradient-to-r from-background via-background/95 to-transparent pointer-events-none"
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollMobileTabs("left")}
+                                        aria-label="Scroll tabs left"
+                                        className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto"
+                                    >
+                                        <ChevronLeft className="size-3.5" />
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Scrollable Pills Container */}
+                        <div 
+                            ref={mobileTabRailRef}
+                            className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-1 scrollbar-hide -mx-1 px-1 scroll-smooth"
+                        >
+                            {SIDEBAR_ITEMS.map((item) => {
+                                const Icon = item.icon;
+                                const isActive = activeTab === item.id;
+                                return (
+                                    <button
+                                        key={item.id}
+                                        data-tab-id={item.id}
+                                        type="button"
+                                        onClick={() => handleMobileTabClick(item.id)}
+                                        className={cn(
+                                            "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black whitespace-nowrap transition-all duration-300 cursor-pointer shrink-0",
+                                            isActive
+                                                ? "neumorphic-panel text-primary font-black shadow-sm border-primary/30 ring-1 ring-primary/20"
+                                                : "neumorphic-extruded text-muted-foreground hover:text-foreground font-bold"
+                                        )}
+                                    >
+                                        <Icon className={cn("size-4 transition-transform", isActive ? "scale-110 text-primary" : "text-muted-foreground")} />
+                                        <span>{item.label}</span>
+                                        {isActive && (
+                                            <span className="size-1.5 rounded-full bg-primary" />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Right Fade Gradient & Scroll Arrow */}
+                        <AnimatePresence>
+                            {canScrollRight && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="absolute right-0 top-0 bottom-0 z-10 flex items-center pl-3 pr-0.5 bg-gradient-to-l from-background via-background/95 to-transparent pointer-events-none"
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollMobileTabs("right")}
+                                        aria-label="Scroll tabs right"
+                                        title="Slide to view more tabs"
+                                        className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto animate-pulse hover:animate-none"
+                                    >
+                                        <ChevronRight className="size-3.5" />
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
 
                 {/* Desktop Collapsible Sidebar (lg+) */}

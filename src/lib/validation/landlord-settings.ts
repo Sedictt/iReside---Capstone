@@ -161,7 +161,7 @@ export function validateAddress(value: string): { isValid: boolean; error?: stri
 }
 
 /**
- * Validates short biography.
+ * Validates short bio.
  * Max 500 characters.
  */
 export function validateBio(value: string): { isValid: boolean; error?: string } {
@@ -497,7 +497,7 @@ export function validateAllLandlordSettings(
         if (!liCheck.isValid) errors["socials_linkedin"] = liCheck.error!;
     }
 
-    // 4. Identity -> Verification
+    // 4. Identity -> Business Permit
     const permitCheck = validateBusinessPermitNumber(formData.business_permit_number);
     if (!permitCheck.isValid) errors["business_permit_number"] = permitCheck.error!;
 
@@ -530,7 +530,7 @@ export function validateAllLandlordSettings(
         } else if (firstField.startsWith("socials_")) {
             firstErrorTab = { category: "Identity", subtab: "Socials", fieldName: firstField };
         } else if (firstField === "business_permit_number") {
-            firstErrorTab = { category: "Identity", subtab: "Verification", fieldName: firstField };
+            firstErrorTab = { category: "Identity", subtab: "Business Permit", fieldName: firstField };
         } else if (["brandPrimaryHex", "brandSecondaryHex"].includes(firstField)) {
             firstErrorTab = { category: "Personalization", subtab: "Themes & Contrast", fieldName: firstField };
         } else if (["propertyTradeName", "propertyTagline"].includes(firstField)) {

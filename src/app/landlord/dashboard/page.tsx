@@ -40,6 +40,7 @@ import { DashboardGreetingModal } from "@/components/landlord/dashboard/Dashboar
 import { DashboardTourSpotlight, DASHBOARD_TOUR_STEPS } from "@/components/landlord/dashboard/DashboardTourSpotlight";
 import { DashboardTourCompletionModal } from "@/components/landlord/dashboard/DashboardTourCompletionModal";
 import { toast } from "sonner";
+import { getSafeAvatarBgColor } from "@/lib/constants";
 
 type PaymentCategory = "Overdue" | "Near Due" | "Paid";
 
@@ -1345,7 +1346,7 @@ function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentLis
                 <div className="relative shrink-0">
                     <div
                         className="relative size-10 sm:size-11 rounded-full border-2 border-background/50 overflow-hidden transition-all duration-500 group-hover:scale-105 shadow-xs"
-                        style={{ backgroundColor: (payment as any).avatarBgColor || '#171717' }}
+                        style={{ backgroundColor: getSafeAvatarBgColor((payment as any).avatarBgColor) }}
                     >
                         <Image src={avatar || fallbackAvatar} alt="" fill sizes="44px" className="object-cover" aria-hidden="true" />
                     </div>

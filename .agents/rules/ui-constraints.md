@@ -13,4 +13,12 @@ trigger: always_on
   - Phone inputs must sanitize input in real-time (`replace(/[^0-9+\-()\s]/g, '')`), set `inputMode="tel"`, and validate for valid digit length (10–15 digits).
   - Provide blur (`onBlur`) and submit validation with immediate, clear inline error indicators (`AlertCircle` icon + red caption).
 - Parity Across Onboarding Modes for Financial Terms: When providing multi-channel onboarding flows (Quick Add, Self-Onboarding Invite Links, Walk-ins), financial terms (Advance Rent, Security Deposit, move-in fees) must be configurable across ALL modes—including link generation modals—ensuring applicants and landlords see consistent payment terms regardless of onboarding entry point.
+- Default Profile Avatar & Background Color Invariants:
+  - New user accounts (both landlord and tenant) MUST NEVER display a pitch-black avatar or background fallback (e.g. `#171717`, `#000000`, `#0a0a0a`, `#121212`, `#18181b`).
+  - Avatar background colors must normalize legacy dark values to the brand violet (`#8B5CF6`) via `getSafeAvatarBgColor()`.
+  - Fallback avatar images must reference the canonical system avatar (`DEFAULT_AVATAR_URL`) rather than broken blanks or external placeholders.
+- Profile Incompleteness & Attention Seeker Nudge Invariants:
+  - When a user's profile is incomplete (missing custom avatar, phone number, or bio), the profile widget and navigation avatar (both landlord and tenant) MUST display an attention seeker beacon dot (`animate-ping`) on the top-right of the avatar button.
+  - Dropdowns and navigation drawers for incomplete profiles MUST display an actionable "Complete Profile" callout banner and a concise "Set Up" badge next to the profile menu item.
+  - Once profile setup requirements are satisfied, the attention seeker badge automatically dismisses.
 

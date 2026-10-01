@@ -6,11 +6,25 @@ import { RefreshCw, Calendar, X, CheckCircle2, ArrowRight, ShieldCheck, Clock, I
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
+export interface ActiveRenewalRequestInfo {
+    id?: string;
+    status: "pending" | "approved" | "rejected" | "signed" | string;
+    proposed_start_date?: string | null;
+    proposed_end_date?: string | null;
+    proposed_monthly_rent?: number | null;
+    created_at?: string;
+    landlord_notes?: string | null;
+    current_lease_id?: string;
+}
+
 interface LeaseRenewalRequestProps {
     variant?: "sidebar" | "quickAction" | "none";
     daysRemaining: number;
     leaseId?: string;
     autoOpen?: boolean;
+    onSuccess?: () => void;
+    onClose?: () => void;
+    existingRequest?: ActiveRenewalRequestInfo | null;
     renewalSettings?: {
         base_rent_adjustment: number;
         adjustment_type: "percentage" | "fixed";
@@ -33,7 +47,18 @@ const DEFAULT_RENEWAL_TERMS = [
     { months: 24, label: "2 Years Extension", price_label: "Standard Rent" }
 ];
 
-export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining, leaseId, autoOpen = false, renewalSettings }: LeaseRenewalRequestProps) {
+function formatDisplayDate(dateStr?: string | null): string {
+    if (!dateStr) return "";
+    try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    } catch {
+        return dateStr;
+    }
+}
+
+export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining, leaseId, autoOpen = false, onSuccess, onClose, existingRequest, renewalSettings }: LeaseRenewalRequestProps) {
     const [isOpen, setIsOpen] = useState(autoOpen);
     const [step, setStep] = useState<"disclosure" | "request">("disclosure");
     const [submitting, setSubmitting] = useState(false);
@@ -41,10 +66,57 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
     const [mounted, setMounted] = useState(false);
     const [selectedTerm, setSelectedTerm] = useState<number>(12);
     const [acknowledged, setAcknowledged] = useState(false);
+    const [activeRequest, setActiveRequest] = useState<ActiveRenewalRequestInfo | null>(existingRequest ?? null);
 
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    // Sync from prop if provided
+    useEffect(() => {
+        if (existingRequest !== undefined) {
+            setActiveRequest(existingRequest);
+        }
+    }, [existingRequest]);
+
+    // Fetch existing renewal request if not passed via prop to auto-detect on-going requests
+    useEffect(() => {
+        if (existingRequest !== undefined || !leaseId) return;
+        let isMounted = true;
+        fetch("/api/tenant/renewals", { cache: "no-store" })
+            .then((res) => res.json())
+            .then((data) => {
+                if (!isMounted || !Array.isArray(data)) return;
+                const found = data.find((r: any) =>
+                    r.current_lease_id === leaseId && (r.status === "pending" || r.status === "approved")
+                ) || data.find((r: any) => r.current_lease_id === leaseId);
+                if (found) {
+                    setActiveRequest(found);
+                }
+            })
+            .catch((err) => {
+                console.error("[LeaseRenewalRequest] Error loading active renewals:", err);
+            });
+        return () => {
+            isMounted = false;
+        };
+    }, [leaseId, existingRequest]);
+
+    // Listen for custom event from other components or tabs
+    useEffect(() => {
+        const handleSubmitted = (e: Event) => {
+            const customEvent = e as CustomEvent<{ leaseId?: string }>;
+            if (!customEvent.detail?.leaseId || customEvent.detail.leaseId === leaseId) {
+                setActiveRequest((prev) =>
+                    prev
+                        ? { ...prev, status: "pending" }
+                        : { status: "pending", current_lease_id: leaseId, created_at: new Date().toISOString() }
+                );
+            }
+        };
+        window.addEventListener("lease-renewal-submitted", handleSubmitted);
+        return () => window.removeEventListener("lease-renewal-submitted", handleSubmitted);
+    }, [leaseId]);
 
     const handleSubmit = async () => {
         if (!leaseId) {
@@ -74,12 +146,18 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                 description: `Landlord has been notified of your ${selectedTerm}-month renewal intent.`
             });
 
+            onSuccess?.();
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("lease-renewal-submitted", { detail: { leaseId } }));
+            }
+
             // Auto-close after 3 seconds
             setTimeout(() => {
                 setIsOpen(false);
                 setSubmitted(false);
-            }, 3500);
-} catch {
+                onClose?.();
+            }, 3000);
+        } catch {
             toast.error("Renewal Request Failed", {
                 description: "Network error. Please try again."
             });
@@ -88,7 +166,10 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
         }
     };
 
-    const isEligible = daysRemaining <= 90;
+    const isPending = activeRequest?.status === "pending";
+    const isApproved = activeRequest?.status === "approved";
+    const hasOngoing = isPending || isApproved;
+    const isEligible = (daysRemaining <= 90) || hasOngoing;
 
     return (
         <>
@@ -96,38 +177,86 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                 /* Sidebar Card Trigger */
                 <div className={cn(
                     "rounded-[2rem] p-8 relative overflow-hidden group flex-shrink-0 backdrop-blur-sm transition-all neumorphic-panel",
-                    !isEligible && "grayscale opacity-80"
+                    isPending ? "border border-amber-500/20" : isApproved ? "border border-emerald-500/20" : (!isEligible && "grayscale opacity-80")
                 )}>
-                    {isEligible && (
+                    {isPending ? (
+                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/[0.06] via-transparent to-transparent opacity-80" />
+                    ) : isApproved ? (
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/[0.06] via-transparent to-transparent opacity-80" />
+                    ) : isEligible && (
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.08] via-transparent to-transparent opacity-80" />
                     )}
                     <div className="relative z-10">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className={cn(
-                                "flex size-10 items-center justify-center rounded-xl neumorphic-inset-card",
-                                isEligible ? "text-primary" : "text-muted-foreground"
-                            )}>
-                                <RefreshCw className={cn("size-5", isEligible && "animate-spin-slow")} />
+                        <div className="flex items-center justify-between gap-2 mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className={cn(
+                                    "flex size-10 items-center justify-center rounded-xl neumorphic-inset-card",
+                                    isPending ? "text-amber-500" : isApproved ? "text-emerald-500" : isEligible ? "text-primary" : "text-muted-foreground"
+                                )}>
+                                    {isPending ? (
+                                        <Clock className="size-5 animate-pulse" />
+                                    ) : isApproved ? (
+                                        <CheckCircle2 className="size-5" />
+                                    ) : (
+                                        <RefreshCw className={cn("size-5", isEligible && "animate-spin-slow")} />
+                                    )}
+                                </div>
+                                <h3 className="text-xl font-black text-foreground">Lease Renewal</h3>
                             </div>
-                            <h3 className="text-xl font-black text-foreground">Lease Renewal</h3>
+                            {isPending && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 border border-amber-500/20 neumorphic-inset">
+                                    <span className="size-1.5 rounded-full bg-amber-500 animate-ping" />
+                                    Under Review
+                                </span>
+                            )}
+                            {isApproved && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 neumorphic-inset">
+                                    <CheckCircle2 className="size-3 text-emerald-500" />
+                                    Approved
+                                </span>
+                            )}
                         </div>
+
                         <p className="text-sm text-muted-foreground leading-relaxed mb-8">
-                            {isEligible 
+                            {isPending
+                                ? "You have an ongoing renewal request under review by your landlord. Additional requests are paused to prevent duplicate submissions."
+                                : isApproved
+                                ? "Your renewal request has been approved! A new lease agreement is ready for you to review and sign."
+                                : isEligible 
                                 ? "Your lease is eligible for renewal. Select a term below to notify your landlord of your intent to stay."
                                 : `Renewal requests open when your lease has 90 days remaining (in ${daysRemaining - 90} days).`}
                         </p>
-                        <button
-                            onClick={() => setIsOpen(true)}
-                            disabled={!isEligible}
-                            className={cn(
-                                "w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all",
-                                isEligible 
-                                    ? "neumorphic-primary" 
-                                    : "neumorphic-extruded text-muted-foreground cursor-not-allowed opacity-50"
-                            )}
-                        >
-                            {isEligible ? "Request Renewal" : "Locked"}
-                        </button>
+
+                        {isPending ? (
+                            <button
+                                onClick={() => setIsOpen(true)}
+                                className="w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all neumorphic-extruded text-foreground hover:text-amber-600 dark:hover:text-amber-400 cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
+                            >
+                                <Clock className="size-3.5 text-amber-500" />
+                                <span>View Request Status</span>
+                            </button>
+                        ) : isApproved ? (
+                            <button
+                                onClick={() => setIsOpen(true)}
+                                className="w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all neumorphic-primary cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
+                            >
+                                <CheckCircle2 className="size-3.5" />
+                                <span>View Approved Request</span>
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => setIsOpen(true)}
+                                disabled={!isEligible}
+                                className={cn(
+                                    "w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all",
+                                    isEligible 
+                                        ? "neumorphic-primary" 
+                                        : "neumorphic-extruded text-muted-foreground cursor-not-allowed opacity-50"
+                                )}
+                            >
+                                {isEligible ? "Request Renewal" : "Locked"}
+                            </button>
+                        )}
                     </div>
                 </div>
             ) : variant === "quickAction" ? (
@@ -138,11 +267,22 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                 >
                     <div className={cn(
                         "size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 neumorphic-inset-card",
-                        isEligible ? "text-primary" : "text-muted-foreground"
+                        isPending ? "text-amber-500" : isApproved ? "text-emerald-500" : isEligible ? "text-primary" : "text-muted-foreground"
                     )}>
-                        <RefreshCw className="size-7" />
+                        {isPending ? (
+                            <Clock className="size-7 animate-pulse" />
+                        ) : isApproved ? (
+                            <CheckCircle2 className="size-7" />
+                        ) : (
+                            <RefreshCw className="size-7" />
+                        )}
                     </div>
-                    <span className="text-[10px] font-black text-center group-hover:text-primary transition-colors uppercase tracking-widest">Renew Lease</span>
+                    <span className={cn(
+                        "text-[10px] font-black text-center transition-colors uppercase tracking-widest",
+                        isPending ? "text-amber-600 dark:text-amber-400" : isApproved ? "text-emerald-600 dark:text-emerald-400" : "group-hover:text-primary"
+                    )}>
+                        {isPending ? "Renewal Pending" : isApproved ? "Renewal Ready" : "Renew Lease"}
+                    </span>
                 </button>
             ) : variant === "none" ? null : null}
 
@@ -154,17 +294,25 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                         {/* Header */}
                         <div className="p-6 flex justify-between items-center backdrop-blur-md z-10">
                             <div className="flex items-center gap-3">
-                                <div className="p-2.5 rounded-xl text-primary neumorphic-inset-card">
-                                    <RefreshCw className="size-5" />
+                                <div className={cn(
+                                    "p-2.5 rounded-xl neumorphic-inset-card",
+                                    isPending ? "text-amber-500" : isApproved ? "text-emerald-500" : "text-primary"
+                                )}>
+                                    {isPending ? <Clock className="size-5 animate-pulse" /> : isApproved ? <CheckCircle2 className="size-5" /> : <RefreshCw className="size-5" />}
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-black text-foreground tracking-tight">
-                                        {step === "disclosure" ? "Latest Property Terms" : "Lease Renewal Request"}
+                                        {hasOngoing 
+                                            ? (isPending ? "Renewal Request Under Review" : "Renewal Request Approved")
+                                            : (step === "disclosure" ? "Latest Property Terms" : "Lease Renewal Request")}
                                     </h3>
                                 </div>
                             </div>
                             <button
-                                onClick={() => setIsOpen(false)}
+                                onClick={() => {
+                                    setIsOpen(false);
+                                    onClose?.();
+                                }}
                                 className="p-2 rounded-xl transition-colors text-muted-foreground hover:text-foreground neumorphic-extruded"
                             >
                                 <X className="size-5" />
@@ -186,6 +334,75 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                     </div>
                                     <div className="inline-flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest px-4 py-2 rounded-full neumorphic-inset">
                                         <Clock className="size-3" /> Awaiting Landlord Response
+                                    </div>
+                                </div>
+                            ) : hasOngoing ? (
+                                <div className="text-center space-y-6 animate-in zoom-in-95 duration-500 w-full max-w-sm mx-auto">
+                                    <div className={cn(
+                                        "size-20 mx-auto rounded-full flex items-center justify-center neumorphic-inset-card",
+                                        isPending ? "text-amber-500" : "text-emerald-500"
+                                    )}>
+                                        {isPending ? (
+                                            <Clock className="size-10 animate-pulse" />
+                                        ) : (
+                                            <CheckCircle2 className="size-10" />
+                                        )}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h4 className="text-2xl font-black text-foreground">
+                                            {isPending ? "Request Under Review" : "Renewal Approved"}
+                                        </h4>
+                                        <p className="text-sm text-muted-foreground leading-relaxed">
+                                            {isPending 
+                                                ? "You already have an on-going lease renewal request submitted. It is currently awaiting review by your landlord."
+                                                : "Your lease renewal request was approved! A new lease agreement is ready for your signature."}
+                                        </p>
+                                    </div>
+
+                                    <div className="rounded-2xl p-4 neumorphic-inset text-left space-y-2.5">
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Status</span>
+                                            <span className={cn(
+                                                "font-black text-[11px] flex items-center gap-1.5",
+                                                isPending ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"
+                                            )}>
+                                                {isPending && <span className="size-1.5 rounded-full bg-amber-500 animate-ping" />}
+                                                {isPending ? "Pending Approval" : "Approved"}
+                                            </span>
+                                        </div>
+                                        {activeRequest?.proposed_start_date && activeRequest?.proposed_end_date && (
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Proposed Period</span>
+                                                <span className="font-semibold text-foreground text-[11px]">
+                                                    {formatDisplayDate(activeRequest.proposed_start_date)} - {formatDisplayDate(activeRequest.proposed_end_date)}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {activeRequest?.proposed_monthly_rent ? (
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Proposed Rent</span>
+                                                <span className="font-black text-primary text-[11px]">
+                                                    PHP {Number(activeRequest.proposed_monthly_rent).toLocaleString()}/mo
+                                                </span>
+                                            </div>
+                                        ) : null}
+                                        {activeRequest?.created_at && (
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Submitted On</span>
+                                                <span className="font-semibold text-muted-foreground text-[11px]">
+                                                    {formatDisplayDate(activeRequest.created_at)}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-start gap-2.5 p-3 rounded-xl neumorphic-inset text-left">
+                                        <Info className="size-4 text-muted-foreground shrink-0 mt-0.5" />
+                                        <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                            {isPending 
+                                                ? "Additional submissions are locked to prevent duplicate processing. You will receive an in-app notification when your landlord responds."
+                                                : "Navigate to your lease documents section to inspect and sign the renewed agreement."}
+                                        </p>
                                     </div>
                                 </div>
                             ) : step === "disclosure" ? (
@@ -310,7 +527,18 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                         {/* Footer */}
                         {!submitted && (
                             <div className="p-6 flex gap-3">
-                                {step === "disclosure" ? (
+                                {hasOngoing ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsOpen(false);
+                                            onClose?.();
+                                        }}
+                                        className="w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all neumorphic-extruded text-muted-foreground hover:text-foreground cursor-pointer active:scale-[0.98]"
+                                    >
+                                        Close
+                                    </button>
+                                ) : step === "disclosure" ? (
                                     <button
                                         type="button"
                                         onClick={() => setStep("request")}

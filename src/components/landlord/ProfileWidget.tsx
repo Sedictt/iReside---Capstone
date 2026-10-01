@@ -12,6 +12,7 @@ import { RoleBadge } from "@/components/profile/RoleBadge";
 import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
 import { LogoutConfirmationModal } from "@/components/ui/LogoutConfirmationModal";
 import { cn } from "@/lib/utils";
+import { DEFAULT_AVATAR_URL, getSafeAvatarBgColor, isProfileIncomplete } from "@/lib/constants";
 
 function readProviderAvatar(user: ReturnType<typeof useAuth>["user"]) {
     const identities = user?.identities;
@@ -67,7 +68,9 @@ export function ProfileWidget() {
     ];
     const displayAvatar = avatarCandidates.find(
         (value): value is string => typeof value === "string" && value.trim().length > 0
-    ) ?? null;
+    ) ?? DEFAULT_AVATAR_URL;
+    const avatarBgColor = getSafeAvatarBgColor(profile?.avatar_bg_color);
+    const isIncomplete = isProfileIncomplete(profile);
     const shouldShowAvatar = Boolean(displayAvatar) && !avatarFailed;
     const initials = displayName
         .split(" ")
@@ -100,24 +103,41 @@ export function ProfileWidget() {
             onMouseLeave={handleMouseLeave}
         >
             {/* Profile Avatar Button */}
-            <button
-                onClick={() => setIsMenuOpen((prev) => !prev)}
-                className="group relative flex size-10 items-center justify-center overflow-hidden rounded-full neumorphic-extruded active:scale-95 shrink-0 border border-white/5 transition-all"
-                style={{ backgroundColor: profile?.avatar_bg_color || '#171717' }}
-            >
-                {shouldShowAvatar ? (
-                    <Image
-                        src={displayAvatar as string}
-                        alt={displayName}
-                        fill
-                        sizes="40px"
-                        className="object-cover"
-                        onError={() => setAvatarFailed(true)}
-                    />
-                ) : (
-                    <span className="relative z-10 text-sm font-black text-text-high dark:text-white">{initials}</span>
-                )}
-            </button>
+            <div className="relative">
+                <button
+                    onClick={() => setIsMenuOpen((prev) => !prev)}
+                    className="group relative flex size-10 items-center justify-center rounded-full neumorphic-extruded active:scale-95 shrink-0 border border-white/5 transition-all"
+                    aria-label="User profile menu"
+                >
+                    <div 
+                        className="relative size-full overflow-hidden rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: avatarBgColor }}
+                    >
+                        {shouldShowAvatar ? (
+                            <Image
+                                src={displayAvatar as string}
+                                alt={displayName}
+                                fill
+                                sizes="40px"
+                                className="object-cover"
+                                onError={() => setAvatarFailed(true)}
+                            />
+                        ) : (
+                            <span className="relative z-10 text-sm font-black text-white">{initials}</span>
+                        )}
+                    </div>
+
+                    {isIncomplete && (
+                        <span 
+                            className="absolute -top-0.5 -right-0.5 flex size-3.5 z-20 pointer-events-none" 
+                            title="Complete your profile setup"
+                        >
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                            <span className="relative inline-flex rounded-full size-3.5 bg-primary border-2 border-background shadow-sm" />
+                        </span>
+                    )}
+                </button>
+            </div>
 
             {/* Dropdown Menu */}
             <AnimatePresence>
@@ -145,7 +165,7 @@ export function ProfileWidget() {
                                 >
                                     <div
                                         className="relative flex size-16 items-center justify-center overflow-hidden rounded-full neumorphic-inset-card border border-white/5 cursor-pointer shrink-0"
-                                        style={{ backgroundColor: profile?.avatar_bg_color || '#8B5CF6' }}
+                                        style={{ backgroundColor: avatarBgColor }}
                                     >
                                         {shouldShowAvatar ? (
                                             <Image
@@ -184,15 +204,46 @@ export function ProfileWidget() {
                             </div>
                         </div>
 
+                        {/* Profile Completion Nudge Banner */}
+                        {isIncomplete && (
+                            <div className="mx-3 mt-3 p-3 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                    <span className="relative flex size-2 shrink-0">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                                        <span className="relative inline-flex rounded-full size-2 bg-primary" />
+                                    </span>
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-bold text-foreground dark:text-white truncate">Complete Profile</p>
+                                        <p className="text-[11px] text-muted-foreground truncate">Set up avatar & details</p>
+                                    </div>
+                                </div>
+                                <Link 
+                                    href="/landlord/profile"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="px-2.5 py-1 text-xs font-bold rounded-lg bg-primary text-primary-foreground hover:opacity-90 active:scale-95 transition-all shrink-0"
+                                >
+                                    Set Up
+                                </Link>
+                            </div>
+                        )}
+
                         {/* Menu Items */}
                         <div className="p-3 space-y-1">
                             <Link
                                 href="/landlord/profile"
-                                className="group flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-black transition-all hover:neumorphic-inset-card active:scale-[0.98] text-muted-foreground hover:text-primary border border-transparent"
+                                className="group flex items-center justify-between gap-3 rounded-2xl px-4 py-2.5 text-sm font-black transition-all hover:neumorphic-inset-card active:scale-[0.98] text-muted-foreground hover:text-primary border border-transparent"
                             >
-                                <User className="size-4 group-hover:text-primary transition-colors" />
-                                <span>My Profile</span>
+                                <div className="flex items-center gap-3">
+                                    <User className="size-4 group-hover:text-primary transition-colors" />
+                                    <span>My Profile</span>
+                                </div>
+                                {isIncomplete && (
+                                    <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md bg-primary/15 text-primary border border-primary/20">
+                                        Set Up
+                                    </span>
+                                )}
                             </Link>
+
                             <Link
                                 href="/landlord/settings"
                                 className="group flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-black transition-all hover:neumorphic-inset-card active:scale-[0.98] text-muted-foreground hover:text-primary border border-transparent"
