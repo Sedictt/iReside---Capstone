@@ -386,7 +386,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                     initial={{ opacity: 0, scale: 0.96, y: 15 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.96, y: 15 }}
-                    className="relative w-full max-w-5xl overflow-hidden rounded-[2.25rem] border border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-[#0f1117]/95 backdrop-blur-2xl shadow-[0_25px_70px_rgba(0,0,0,0.18)] dark:shadow-[0_25px_70px_rgba(0,0,0,0.7)] z-10 my-auto"
+                    className="relative w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-[#0f1117]/95 backdrop-blur-2xl shadow-[0_25px_70px_rgba(0,0,0,0.18)] dark:shadow-[0_25px_70px_rgba(0,0,0,0.7)] z-10 my-auto"
                 >
                     {/* Top Action Bar */}
                     <div className="flex items-center justify-between px-6 sm:px-8 pt-6 pb-2">
@@ -401,7 +401,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                             <button
                                 type="button"
                                 onClick={() => window.open("/landlord/docs", "_blank")}
-                                className="flex items-center gap-1.5 px-4 py-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-xs font-semibold text-slate-600 dark:text-neutral-300 transition-colors"
+                                className="flex items-center min-h-[44px] gap-1.5 px-4 py-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-xs font-semibold text-slate-600 dark:text-neutral-300 transition-colors"
                             >
                                 <HelpCircle className="size-4 text-slate-500 dark:text-neutral-400" />
                                 <span>Need Help?</span>
@@ -409,7 +409,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="flex size-9 items-center justify-center rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white transition-colors"
+                                className="flex size-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white transition-colors"
                                 aria-label="Close"
                             >
                                 <X className="size-4" />
@@ -465,14 +465,14 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                             setSelectedInvoiceIds([]);
                                             setAmount("");
                                         }}
-                                        className="flex-1 py-3 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 font-bold text-sm text-slate-700 dark:text-white transition-all flex items-center justify-center gap-2"
+                                        className="flex-1 min-h-[44px] py-3 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 font-bold text-sm text-slate-700 dark:text-white transition-all flex items-center justify-center gap-2"
                                     >
                                         <RefreshCw className="size-4" />
                                         Record Another
                                     </button>
                                     <button
                                         onClick={onClose}
-                                        className="flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 font-black text-sm text-white transition-all shadow-lg shadow-emerald-500/20"
+                                        className="flex-1 min-h-[44px] py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 font-black text-sm text-white transition-all shadow-lg shadow-emerald-500/20"
                                     >
                                         Done
                                     </button>
@@ -613,7 +613,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                         </div>
 
                                                         <div className="text-right shrink-0">
-                                                            <p className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm">
+                                                            <p className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm tabular-nums">
                                                                 {formatPhpCurrency(dueAmount)}
                                                             </p>
                                                             <span className={cn(
@@ -672,7 +672,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                     <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-neutral-400 block">
                                                         Balance Due
                                                     </span>
-                                                    <span className="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                                                    <span className="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
                                                         {formatPhpCurrency(invoiceDueAmount)}
                                                     </span>
                                                 </div>
@@ -689,6 +689,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                         <span className="absolute left-4 text-slate-700 dark:text-neutral-300 font-bold text-base select-none">₱</span>
                                                         <input maxLength={10}
                                                             type="text"
+                                                            inputMode="decimal"
                                                             value={amount}
                                                             onChange={(e) => {
                                                                 const raw = e.target.value.replace(/,/g, "");
@@ -704,7 +705,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                                 }
                                                             }}
                                                             placeholder="18,200.00"
-                                                            className="w-full pl-9 pr-4 py-3.5 text-base sm:text-lg font-black text-slate-900 dark:text-white bg-slate-50/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all placeholder:text-slate-400"
+                                                            className="w-full pl-9 pr-4 py-3.5 text-base sm:text-lg font-black text-slate-900 dark:text-white bg-slate-50/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all placeholder:text-slate-400 tabular-nums"
                                                             required
                                                         />
                                                     </div>
@@ -798,7 +799,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                     <span className="text-[11px] font-semibold text-slate-500 dark:text-neutral-400 block">
                                                         Remaining Balance
                                                     </span>
-                                                    <span className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">
+                                                    <span className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tabular-nums">
                                                         {formatPhpCurrency(remainingBalance)}
                                                     </span>
                                                 </div>
@@ -819,7 +820,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                     type="button"
                                                     onClick={handleSendInvoice}
                                                     disabled={isSendingReminder || isSubmitting}
-                                                    className="w-full sm:w-auto px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-neutral-200 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                                                    className="w-full sm:w-auto px-5 py-3.5 min-h-[44px] rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-neutral-200 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
                                                 >
                                                     {isSendingReminder ? (
                                                         <>
@@ -837,7 +838,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                 <button
                                                     type="submit"
                                                     disabled={isSubmitting || numAmount <= 0}
-                                                    className="w-full sm:flex-1 py-3.5 sm:py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-sm sm:text-base transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 disabled:opacity-50 active:scale-[0.99] cursor-pointer"
+                                                    className="w-full sm:flex-1 py-3.5 sm:py-4 min-h-[44px] rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-sm sm:text-base transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 disabled:opacity-50 active:scale-[0.99] cursor-pointer"
                                                 >
                                                     <Receipt className="size-4 sm:size-5" />
                                                     Record {numAmount > 0 ? formatPhpCurrency(numAmount) : "Payment"} & Settle

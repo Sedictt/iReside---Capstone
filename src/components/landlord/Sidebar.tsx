@@ -19,7 +19,8 @@ import {
     FileText,
     Calendar,
     BookOpen,
-    Download
+    Download,
+    Plus
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { signOut } from "@/lib/supabase/client-auth";
@@ -31,14 +32,10 @@ import { useProperty } from "@/context/PropertyContext";
 import { cn } from "@/lib/utils";
 
 export function Sidebar({
-    isCollapsed = false,
-    onToggleCollapse,
-    showCollapseToggle = false,
+    onCloseMobile,
     className,
 }: {
-    isCollapsed?: boolean;
-    onToggleCollapse?: () => void;
-    showCollapseToggle?: boolean;
+    onCloseMobile?: () => void;
     className?: string;
 }) {
     const { counts, importantNotifications } = useNotifications();
@@ -118,17 +115,19 @@ export function Sidebar({
     }, [SCOPED_TENANT_DELAYED_KEY, SCOPED_MAP_SETUP_COMPLETE_KEY, SCOPED_EXPLORE_MODAL_SHOWN_KEY, SCOPED_AWAITING_TENANT_SETUP_KEY, SCOPED_BILLING_RAILS_COMPLETE_KEY, SCOPED_BILLING_RAILS_DELAYED_KEY, activePropertyId, properties]);
 
     const hasZeroProperties = !propertyLoading && properties.length === 0;
-    const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete) || localMapCompleted;
-    const hasPendingUnitMap = !propertyLoading && properties.length > 0 && !hasConfiguredMap;
 
-    const hasConfiguredBilling = localBillingCompleted || isBillingDelayed;
-    const hasPendingBillingRails = !propertyLoading && properties.length > 0 && hasConfiguredMap && !hasConfiguredBilling;
-    
     // Check if at least one tenant or occupied unit exists across the portfolio
     const hasAtLeastOneTenant = properties.some((p) => 
         Boolean(p.hasTenants) || 
         p.units?.some((u) => (u.status || "").toLowerCase() === "occupied")
     );
+
+    const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete || (p.placedCount ?? 0) > 0 || p.hasTenants) || localMapCompleted;
+    const hasPendingUnitMap = !propertyLoading && properties.length > 0 && !hasConfiguredMap;
+
+    const hasConfiguredBilling = localBillingCompleted || isBillingDelayed || hasAtLeastOneTenant;
+    const hasPendingBillingRails = !propertyLoading && properties.length > 0 && hasConfiguredMap && !hasConfiguredBilling && !hasAtLeastOneTenant;
+    
     const hasPendingTenantSetup = !propertyLoading && properties.length > 0 && hasConfiguredMap && hasConfiguredBilling && !hasAtLeastOneTenant;
 
     const isLocked = hasZeroProperties || hasPendingUnitMap || hasPendingBillingRails || hasPendingTenantSetup;
@@ -146,7 +145,7 @@ export function Sidebar({
 
     const NAV_ITEMS: SidebarNavSection[] = [
         {
-            category: "Main",
+            category: "Daily Operations",
             hideHeading: true,
             collapsible: false,
             items: [
@@ -157,46 +156,6 @@ export function Sidebar({
                     description: "Operational overview, urgent tasks & real-time property KPIs"
                 },
                 { 
-                    label: "Analytics", 
-                    href: "/landlord/analytics", 
-                    icon: BarChart2,
-                    description: "Revenue trends, occupancy rates & financial performance metrics"
-                },
-                { 
-                    label: "Messaging", 
-                    href: "/landlord/messages", 
-                    icon: MessageSquare, 
-                    badge: counts.messages || undefined,
-                    description: "Direct communications, tenant inquiries & broadcast channels"
-                },
-                { 
-                    label: "Calendar", 
-                    href: "/landlord/calendar", 
-                    icon: Calendar,
-                    description: "Viewing schedules, property inspections & lease milestone dates"
-                },
-                { 
-                    label: "Community Hub", 
-                    href: "/landlord/community", 
-                    icon: Megaphone,
-                    description: "Building announcements, community posts & resident discussions"
-                },
-            ]
-        },
-        {
-            category: "Portfolio",
-            icon: Building2,
-            defaultExpanded: true,
-            dividerBefore: true,
-            items: [
-                { 
-                    label: "Properties", 
-                    href: "/landlord/properties", 
-                    icon: Building2, 
-                    tourId: "nav-properties",
-                    description: "Manage registered buildings, configure units & set property amenities"
-                },
-                { 
                     label: "Unit Map", 
                     href: "/landlord/unit-map", 
                     icon: Map, 
@@ -204,10 +163,51 @@ export function Sidebar({
                     description: "Interactive 2D architectural blueprint & visual unit layout planner"
                 },
                 { 
-                    label: "Facilities", 
-                    href: "/landlord/utilities", 
-                    icon: LayoutGrid,
-                    description: "Track on-site facilities, building amenities & shared utility meters"
+                    label: "Messages", 
+                    href: "/landlord/messages", 
+                    icon: MessageSquare, 
+                    badge: counts.messages || undefined,
+                    description: "Direct communications, tenant inquiries & broadcast channels"
+                },
+                { 
+                    label: "Finance Hub", 
+                    href: "/landlord/invoices", 
+                    icon: CreditCard, 
+                    tourId: "nav-finance-hub", 
+                    urgent: isUrgent('payment'),
+                    description: "Rental ledger, incoming payments, receipts & automated billing"
+                },
+                { 
+                    label: "Maintenance", 
+                    href: "/landlord/maintenance", 
+                    icon: Wrench, 
+                    badge: counts.maintenance || undefined, 
+                    urgent: isUrgent('maintenance'),
+                    description: "Track repair tickets, contractor assignments & resolution progress"
+                },
+            ]
+        },
+        {
+            category: "Residents",
+            icon: Users,
+            defaultExpanded: true,
+            collapsible: true,
+            dividerBefore: true,
+            items: [
+                { 
+                    label: "Tenants", 
+                    href: "/landlord/tenants", 
+                    icon: Users, 
+                    tourId: "nav-tenant-hub",
+                    warning: isTenantSetupDelayed,
+                    warningTooltip: "Action needed: Begin setting up your tenants to occupy units and activate lease tracking.",
+                    description: "Active resident profiles, occupancy records & emergency contacts",
+                    action: {
+                        icon: Plus,
+                        label: "Add Tenant",
+                        href: "/landlord/tenants?action=new",
+                        hotkey: "A"
+                    }
                 },
                 { 
                     label: "Applications", 
@@ -216,15 +216,6 @@ export function Sidebar({
                     badge: counts.applications || undefined, 
                     urgent: isUrgent('application'),
                     description: "Review tenant applications, screening details & issue digital approvals"
-                },
-                { 
-                    label: "Tenants", 
-                    href: "/landlord/tenants", 
-                    icon: Users, 
-                    tourId: "nav-tenant-hub",
-                    warning: isTenantSetupDelayed,
-                    warningTooltip: "Action needed: Begin setting up your tenants to occupy units and activate lease tracking.",
-                    description: "Active resident profiles, occupancy records & emergency contacts"
                 },
                 { 
                     label: "Leases", 
@@ -240,28 +231,27 @@ export function Sidebar({
                     urgent: isUrgent('move_out_approved') || isUrgent('move_out_denied'),
                     description: "Process resident move-out notices, checkout inspections & deposit refunds"
                 },
-                { 
-                    label: "Maintenance", 
-                    href: "/landlord/maintenance", 
-                    icon: Wrench, 
-                    badge: counts.maintenance || undefined, 
-                    urgent: isUrgent('maintenance'),
-                    description: "Track repair tickets, contractor assignments & resolution progress"
-                },
             ]
         },
         {
-            category: "Finance",
-            icon: CreditCard,
+            category: "Property & Spaces",
+            icon: Building2,
             defaultExpanded: true,
+            collapsible: true,
+            dividerBefore: false,
             items: [
                 { 
-                    label: "Finance Hub", 
-                    href: "/landlord/invoices", 
-                    icon: CreditCard, 
-                    tourId: "nav-finance-hub", 
-                    urgent: isUrgent('payment'),
-                    description: "Rental ledger, incoming payments, receipts & automated billing"
+                    label: "Properties", 
+                    href: "/landlord/properties", 
+                    icon: Building2, 
+                    tourId: "nav-properties",
+                    description: "Manage registered buildings, configure units & set property amenities",
+                    action: {
+                        icon: Plus,
+                        label: "Add Property",
+                        href: "/landlord/properties/new",
+                        hotkey: "P"
+                    }
                 },
                 { 
                     label: "Utility Billing", 
@@ -271,12 +261,47 @@ export function Sidebar({
                     warningTooltip: "Action needed: Configure your payment channels and utility tariffs to automate billing.",
                     description: "Calculate, allocate and bill electricity, water & submeter charges"
                 },
+                { 
+                    label: "Facilities", 
+                    href: "/landlord/utilities", 
+                    icon: LayoutGrid,
+                    description: "Track on-site facilities, building amenities & shared utility meters"
+                },
             ]
         },
         {
-            category: "Account",
-            icon: User,
-            defaultExpanded: true,
+            category: "Community & Insights",
+            icon: BarChart2,
+            defaultExpanded: false,
+            collapsible: true,
+            dividerBefore: false,
+            items: [
+                { 
+                    label: "Analytics", 
+                    href: "/landlord/analytics", 
+                    icon: BarChart2, 
+                    description: "Revenue trends, occupancy rates & financial performance metrics"
+                },
+                { 
+                    label: "Community Hub", 
+                    href: "/landlord/community", 
+                    icon: Megaphone,
+                    description: "Building announcements, community posts & resident discussions"
+                },
+                { 
+                    label: "Calendar", 
+                    href: "/landlord/calendar", 
+                    icon: Calendar,
+                    description: "Viewing schedules, property inspections & lease milestone dates"
+                },
+            ]
+        },
+        {
+            category: "System & Account",
+            icon: Settings,
+            defaultExpanded: false,
+            collapsible: true,
+            dividerBefore: false,
             items: [
                 { 
                     label: "Profile", 
@@ -343,13 +368,11 @@ export function Sidebar({
                                 <span className="relative inline-flex rounded-full size-2.5 bg-primary"></span>
                             </span>
                         )}
-                        <PropertySelector isCollapsed={isCollapsed} />
+                        <PropertySelector />
                     </div>
                 }
                 onLogout={() => setIsLogoutModalOpen(true)}
-                isCollapsed={isCollapsed}
-                onToggleCollapse={onToggleCollapse}
-                showCollapseToggle={showCollapseToggle}
+                onClose={onCloseMobile}
                 isLocked={isLocked}
                 lockStage={lockStage}
                 className={`neu-landlord-sidebar ${className || ''}`}

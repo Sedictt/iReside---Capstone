@@ -40,3 +40,31 @@ trigger: always_on
     - Single-line inputs (names, emails, codes, titles) enforce `maxLength` silently without visual counter clutter.
   - **Shared Component Safety Baseline**:
     - The shared `Input` component (`src/components/ui/input.tsx`) must supply a default fallback `maxLength={120}` for text inputs when unspecified, ensuring no text field in the application remains unbounded.
+- **Plain English & Non-Native Accessibility Invariant**:
+  - The application must use everyday, conversational English easily understood by non-fluent and non-native English speakers (especially Filipino and senior landlords).
+  - Strictly avoid buzzwords, tech jargon, or accounting abstractions. Enforce these canonical term mappings across all pages, headers, buttons, and tour steps:
+    - ❌ *Intelligence Hub* ➔ ✅ **Today's Overview** or **Property Overview**
+    - ❌ *Operations Center* ➔ ✅ **Quick Actions & Tools**
+    - ❌ *Cash Flow Ledger* ➔ ✅ **Rent & Payments**
+    - ❌ *Utility Submeters* ➔ ✅ **Water & Electricity**
+    - ❌ *Invoice Ledger* ➔ ✅ **Bills & Receipts**
+    - ❌ *Tenant Records* ➔ ✅ **Tenant Directory**
+    - ❌ *Property Portfolio* ➔ ✅ **My Properties**
+    - ❌ *Rental Applications* ➔ ✅ **Tenant Applications**
+    - ❌ *Unit Visualizer* ➔ ✅ **2D Room Map**
+    - ❌ *Maintenance Desk* ➔ ✅ **Repairs & Maintenance**
+    - ❌ *Lease Lifecycle* ➔ ✅ **Lease Contracts**
+    - ❌ *Financial Metrics* ➔ ✅ **Income & Reports**
+    - ❌ *All Systems Clear* ➔ ✅ **All Good! No Issues Today**
+    - ❌ *Action Needed* ➔ ✅ **Needs Attention**
+    - ❌ *Past Due Rent* ➔ ✅ **Unpaid Rent**
+    - ❌ *Inspect Overdue List* ➔ ✅ **View Unpaid Tenants**
+    - ❌ *Collect Payment* ➔ ✅ **Record Payment**
+- **Award-Winning Surface Architecture & Anti-AI Slop Invariant**:
+  - Strictly prohibit multi-color background gradient soup (e.g. `from-rose-50 via-red-50 to-background`) that gives cards a cheap, auto-generated appearance.
+  - Employ crisp, elevated card surfaces with subtle 1px hairline borders (`border-border/60` or `border-zinc-200/80 dark:border-zinc-800`), soft grounded micro-shadows (`shadow-xs` / `shadow-sm`), and generous internal padding (`p-6` to `p-8`).
+  - Color must be purposeful, restrained, and semantic:
+    - Deep crimson/rose for unpaid rent and urgent action items.
+    - Deep forest/emerald for paid accounts and healthy statuses.
+    - Deep cognac/amber for pending repair requests.
+    - Deep royal brand violet for room occupancies and primary actions.

@@ -217,7 +217,7 @@ export function CommandCenter({
 
     return (
         <section className={cn(
-            "neumorphic-panel relative group/section overflow-hidden rounded-[2.5rem] p-4 sm:p-6 md:p-8",
+            "neumorphic-panel relative group/section overflow-hidden rounded-3xl p-6 sm:p-8",
             "dark:glass-premium dark:bg-card/40 dark:border-white/10 dark:shadow-2xl"
         )}>
             {/* Background decorative elements */}
@@ -225,12 +225,12 @@ export function CommandCenter({
             
             <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between relative z-10">
                 <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
-                    <div className="neumorphic-inset-card flex size-12 sm:size-14 items-center justify-center rounded-[1.25rem] text-primary dark:bg-primary/10 dark:border-primary/20 dark:shadow-none shrink-0">
+                    <div className="neumorphic-inset-card flex size-12 sm:size-14 items-center justify-center rounded-2xl text-primary dark:bg-primary/10 dark:border-primary/20 dark:shadow-none shrink-0">
                         <ShieldCheck className="size-6 sm:size-7" />
                     </div>
                     <div className="min-w-0">
-                        <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">Intelligence Hub</h2>
-                        <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 leading-relaxed truncate sm:whitespace-normal">
+                        <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground text-balance">Intelligence Hub</h2>
+                        <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 leading-relaxed max-w-prose text-pretty">
                             Orchestrating your property ecosystem from one dashboard.
                         </p>
                     </div>
@@ -247,14 +247,14 @@ export function CommandCenter({
                                     {stat.isLoading ? (
                                         <div className="h-4 w-8 rounded bg-muted animate-pulse mt-1" />
                                     ) : (
-                                        <span className="text-sm sm:text-base font-black leading-none text-foreground">{stat.value}</span>
+                                        <span className="text-sm sm:text-base font-black leading-none text-foreground tabular-nums">{stat.value}</span>
                                     )}
                                 </div>
                             </>
                         );
 
                         const cardClass = cn(
-                            "neumorphic-extruded group relative flex items-center gap-2 sm:gap-2.5 xl:gap-3 rounded-2xl px-3 sm:px-3.5 xl:px-4 py-2 sm:py-2.5 active:scale-95 justify-start min-w-0 shrink-0",
+                            "neumorphic-extruded group relative flex items-center gap-2 sm:gap-2.5 xl:gap-3 rounded-2xl min-h-[44px] px-3.5 sm:px-4 py-2 sm:py-2.5 active:scale-95 justify-start min-w-0 shrink-0",
                             "dark:bento-glass-card dark:hover:bg-white/[0.05] transition-all cursor-pointer",
                             stat.toneClass
                         );
@@ -289,7 +289,7 @@ export function CommandCenter({
             <div className="grid gap-6 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_380px] relative z-10">
                 {/* Operations Center */}
                 <div className={cn(
-                    "neumorphic-inset rounded-[2rem] p-4 sm:p-5 md:p-6 min-w-0",
+                    "neumorphic-inset rounded-2xl p-5 sm:p-6 min-w-0",
                     "dark:bento-glass-inset"
                 )}>
                     <div className="mb-5 sm:mb-6 flex items-start sm:items-center justify-between gap-3 flex-wrap">
@@ -467,7 +467,7 @@ export function CommandCenter({
 
                 {/* Insights Hub */}
                 <div className={cn(
-                    "neumorphic-inset rounded-[2rem] p-4 sm:p-5 md:p-6 min-w-0",
+                    "neumorphic-inset rounded-2xl p-5 sm:p-6 min-w-0",
                     "dark:bento-glass-inset"
                 )}>
                     <h3 className="mb-5 sm:mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/80">
@@ -478,7 +478,7 @@ export function CommandCenter({
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
                         {nextMoves.map((move) => (
                             <div key={move.id} className={cn(
-                                "neumorphic-extruded group/item relative overflow-hidden rounded-2xl p-4",
+                                "neumorphic-extruded group/item relative overflow-hidden rounded-2xl p-4 sm:p-5",
                                 "dark:bento-glass-card dark:hover:bg-white/[0.05] transition-all"
                             )}>
                                 <div className="absolute top-0 right-0 p-2 opacity-0 -translate-y-1 translate-x-1 group-hover/item:opacity-20 transition-all">
@@ -489,14 +489,14 @@ export function CommandCenter({
                                         {move.urgency} Priority
                                     </span>
                                 </div>
-                                <h4 className="text-sm font-black text-foreground relative z-10">{move.title}</h4>
-                                <p className="mt-1 text-xs font-medium text-muted-foreground/70 dark:text-white/60 leading-relaxed relative z-10">{move.detail}</p>
+                                <h4 className="text-sm font-black text-foreground relative z-10 text-balance">{move.title}</h4>
+                                <p className="mt-1 text-xs font-medium text-muted-foreground/70 dark:text-white/60 leading-relaxed relative z-10 text-pretty">{move.detail}</p>
                                 
                                 {move.onClick ? (
                                     <button
                                         type="button"
                                         onClick={move.onClick}
-                                        className="mt-4 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary transition-all hover:gap-3 group/link cursor-pointer"
+                                        className="mt-4 inline-flex items-center min-h-[44px] gap-2 text-xs font-black uppercase tracking-wider text-primary transition-all hover:gap-3 group/link cursor-pointer"
                                     >
                                         {move.cta}
                                         <ArrowRight className="size-3.5 transition-transform group-hover/link:translate-x-1" />
@@ -504,7 +504,7 @@ export function CommandCenter({
                                 ) : (
                                     <Link
                                         href={move.href || "#"}
-                                        className="mt-4 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary transition-all hover:gap-3 group/link"
+                                        className="mt-4 inline-flex items-center min-h-[44px] gap-2 text-xs font-black uppercase tracking-wider text-primary transition-all hover:gap-3 group/link"
                                     >
                                         {move.cta}
                                         <ArrowRight className="size-3.5 transition-transform group-hover/link:translate-x-1" />

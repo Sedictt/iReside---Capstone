@@ -6,6 +6,8 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect, useReducer } from "react";
 import { createPortal } from "react-dom";
 
+import { DEFAULT_AVATAR_URL } from "@/lib/constants";
+
 interface Inquiry {
     id: string;
     prospectName: string;
@@ -17,7 +19,7 @@ interface Inquiry {
     isUnread: boolean;
 }
 
-const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
+const FALLBACK_AVATAR = DEFAULT_AVATAR_URL;
 
 export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: boolean }) {
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);

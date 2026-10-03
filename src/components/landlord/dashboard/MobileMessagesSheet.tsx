@@ -11,7 +11,7 @@ import {
     type ConversationSummary,
 } from "@/lib/messages/client";
 import { RoleBadge, type BadgeRole } from "@/components/profile/RoleBadge";
-import { getSafeAvatarBgColor } from "@/lib/constants";
+import { getSafeAvatarBgColor, DEFAULT_AVATAR_URL } from "@/lib/constants";
 
 interface ChatUser {
     id: string;
@@ -25,7 +25,7 @@ interface ChatUser {
     unread?: boolean;
 }
 
-const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
+const FALLBACK_AVATAR = DEFAULT_AVATAR_URL;
 
 const formatConversationTimestamp = (iso: string | null) => {
     if (!iso) return "No messages yet";

@@ -94,13 +94,15 @@ function TenantsContent() {
  );
 
  const hasConfiguredBilling = Boolean(
-  typeof window !== "undefined" && (
+  hasAtLeastOneTenant ||
+  properties.some((p) => p.hasTenants) ||
+  (typeof window !== "undefined" && (
    window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
    window.localStorage.getItem(`ireside.billing_rails_complete.${activePropertyId}`) === "true" ||
    window.localStorage.getItem("ireside.billing_rails_delayed") === "true" ||
    window.localStorage.getItem(`ireside.billing_rails_delayed.${activePropertyId}`) === "true" ||
    properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true")
-  )
+  ))
  );
 
  useEffect(() => {
@@ -239,6 +241,7 @@ function TenantsContent() {
      window.localStorage.removeItem(SCOPED_TENANT_DELAYED_KEY);
      window.localStorage.removeItem(`ireside.onboarding_awaiting_tenant_setup.${activePropertyId}`);
      window.localStorage.removeItem(`ireside.awaiting_tenant_setup.${activePropertyId}`);
+     window.localStorage.setItem("ireside.onboarding_awaiting_dashboard_tour", "true");
      window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
     } catch {}
    }

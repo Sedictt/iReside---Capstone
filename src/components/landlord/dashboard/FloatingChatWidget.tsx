@@ -6,6 +6,8 @@ import { MessageSquare, X, Minus, Send, MoreHorizontal, Phone, Video } from "luc
 import { cn } from "@/lib/utils";
 import { AnimatePresence, m as motion } from "framer-motion";
 
+import { getSystemAvatarUrl } from "@/lib/constants";
+
 interface ChatUser {
     id: string;
     name: string;
@@ -19,7 +21,7 @@ const mockMessages: ChatUser[] = [
     {
         id: "usr_1",
         name: "John Doe",
-        avatar: "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?auto=format&fit=crop&w=150&q=80",
+        avatar: getSystemAvatarUrl(4),
         lastMessage: "Is it possible to move in earlier than the agreed date?",
         time: "15m ago",
         unread: true
@@ -27,14 +29,14 @@ const mockMessages: ChatUser[] = [
     {
         id: "usr_2",
         name: "Sarah Wilson",
-        avatar: "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80",
+        avatar: getSystemAvatarUrl(7),
         lastMessage: "Thank you for the quick repair on the faucet!",
         time: "1h ago"
     },
     {
         id: "usr_3",
         name: "Alex Reyes",
-        avatar: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=150&q=80",
+        avatar: getSystemAvatarUrl(12),
         lastMessage: "I'll be paying the rent this Friday.",
         time: "Yesterday"
     }

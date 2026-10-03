@@ -64,6 +64,7 @@ import { UnitHistoryModal } from "./components/UnitHistoryModal";
 import { FirstTimePresetModal, type LayoutPresetType } from "./components/FirstTimePresetModal";
 import { UnitMapExploreOrReturnModal } from "./components/UnitMapExploreOrReturnModal";
 import { generatePresetLayout } from "./utils/presets";
+import { DEFAULT_AVATAR_URL, getSystemAvatarUrl } from "@/lib/constants";
 
 /** Complaint Modal Component */
 const ComplaintModal = ({
@@ -693,7 +694,20 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         setHasHydratedFloorState(true);
 
         // First-time preset prompt check during setup phase
-        if (!readOnly && !demoMode && data.isSetupComplete && data.totalUnits > 0 && selectedPropertyId && selectedPropertyId !== "all") {
+        // Only prompt if units exist, but NONE have been placed yet, and property has no tenants
+        const hasPlacedUnits = (data.placedCount ?? 0) > 0 || targetUnits.length > 0;
+        const hasPropertyTenants = Boolean(selectedProperty?.hasTenants);
+
+        if (
+            !readOnly && 
+            !demoMode && 
+            data.isSetupComplete && 
+            data.totalUnits > 0 && 
+            !hasPlacedUnits && 
+            !hasPropertyTenants && 
+            selectedPropertyId && 
+            selectedPropertyId !== "all"
+        ) {
             if (typeof window !== "undefined") {
                 try {
                     const dismissed = window.localStorage.getItem(SCOPED_PRESET_PROMPT_KEY);
@@ -702,6 +716,12 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         window.dispatchEvent(new Event("unit-map-guidance-changed"));
                         setIsFirstTimePresetModalOpen(true);
                     }
+                } catch {}
+            }
+        } else if (hasPlacedUnits || hasPropertyTenants) {
+            if (typeof window !== "undefined") {
+                try {
+                    window.localStorage.setItem(SCOPED_PRESET_PROMPT_KEY, "true");
                 } catch {}
             }
         }
@@ -714,7 +734,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         }];
         historyIndexRef.current = 0;
         setUndoAvailable(false);
-    }, [SCOPED_ACTIVE_FLOOR_KEY, SCOPED_PRESET_PROMPT_KEY, SCOPED_UNPLACED_UNITS_KEY, currentUnitId, demoMode, readOnly, selectedPropertyId]);
+    }, [SCOPED_ACTIVE_FLOOR_KEY, SCOPED_PRESET_PROMPT_KEY, SCOPED_UNPLACED_UNITS_KEY, currentUnitId, demoMode, readOnly, selectedPropertyId, selectedProperty]);
 
     // ---------------------------------------------------------------
     // Load real data from DB when a property is selected (SWR Instant Cache)
@@ -6225,7 +6245,7 @@ const UnitDetailsPanel = ({
                                                     />
                                                 ) : (
                                                     <Image
-                                                        src={unit.tenant ? `https://ui-avatars.com/api/?name=${encodeURIComponent(unit.tenant)}&background=random&color=fff` : "https://images.unsplash.com/photo-1529778456-9a2cf1fbe4a8?auto=format&fit=crop&w=150&q=80"}
+                                                        src={getSystemAvatarUrl(unit.tenant)}
                                                         alt="Tenant"
                                                         fill
                                                         className="object-cover"

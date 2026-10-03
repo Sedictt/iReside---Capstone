@@ -375,10 +375,15 @@ export function UtilityBillingDashboard() {
 		? selectedPropertyId
 		: (properties[0]?.id || "default");
 
-	const isBillingConfigured = typeof window !== "undefined" && (
-		window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
-		window.localStorage.getItem(`ireside.billing_rails_complete.${activePropertyId}`) === "true" ||
-		properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true")
+	const hasTenantsAnywhere = properties.some((p) => p.hasTenants);
+
+	const isBillingConfigured = Boolean(
+		hasTenantsAnywhere ||
+		(typeof window !== "undefined" && (
+			window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
+			window.localStorage.getItem(`ireside.billing_rails_complete.${activePropertyId}`) === "true" ||
+			properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true")
+		))
 	);
 
 	// Sync local property selection with global navbar selector
@@ -424,7 +429,9 @@ export function UtilityBillingDashboard() {
 	// re-shows the modal until the step is explicitly completed.
 	useEffect(() => {
 		if (typeof window === "undefined") return;
+		const hasTenantsAnywhere = properties.some((p) => p.hasTenants);
 		const isBillingDone =
+			hasTenantsAnywhere ||
 			window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
 			properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true");
 		if (!isBillingDone && !dismissedThisVisit) {
@@ -432,9 +439,16 @@ export function UtilityBillingDashboard() {
 				setIsOnboardingModalOpen(true);
 			}, 600);
 			return () => clearTimeout(timer);
+		} else if (hasTenantsAnywhere) {
+			try {
+				window.localStorage.setItem("ireside.billing_rails_complete", "true");
+				if (activePropertyId && activePropertyId !== "default") {
+					window.localStorage.setItem(`ireside.billing_rails_complete.${activePropertyId}`, "true");
+				}
+			} catch {}
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []); // Run once on mount — dismissedThisVisit reset is handled by component remount
+	}, [properties]);
 
 	// Helper to update both state and monthly draft cache
 	const updateDraftsAndCache = useCallback((newDrafts: ReadingDraft[]) => {

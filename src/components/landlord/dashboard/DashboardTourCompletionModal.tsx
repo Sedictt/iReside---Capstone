@@ -83,10 +83,10 @@ export function DashboardTourCompletionModal({
                                 </div>
                                 <div>
                                     <h4 className="text-xs font-black text-foreground group-hover:text-primary transition-colors">
-                                        Open 2D Visual Map
+                                        Open 2D Room Map
                                     </h4>
                                     <p className="text-[11px] text-muted-foreground">
-                                        Review unit occupancy, tenant assignments, and room layout.
+                                        See occupied rooms, who is staying where, and available slots.
                                     </p>
                                 </div>
                             </div>
@@ -104,10 +104,10 @@ export function DashboardTourCompletionModal({
                                 </div>
                                 <div>
                                     <h4 className="text-xs font-black text-foreground group-hover:text-primary transition-colors">
-                                        Manage Resident Directory
+                                        View Tenant Directory
                                     </h4>
                                     <p className="text-[11px] text-muted-foreground">
-                                        View tenant profiles, digital leases, and lease renewal dates.
+                                        See renter contacts, contracts, and payment history.
                                     </p>
                                 </div>
                             </div>

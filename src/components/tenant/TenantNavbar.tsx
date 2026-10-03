@@ -32,6 +32,8 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "@/lib/supabase/client-auth";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { useLanguage } from "@/hooks/useLanguage";
 import { useNotifications } from "@/context/NotificationContext";
 import { RoleBadge } from "@/components/profile/RoleBadge";
 import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
@@ -106,6 +108,7 @@ const NAV_SECTIONS = [
 export function TenantSidebar() {
     const pathname = usePathname();
     const router = useRouter();
+    const { t } = useLanguage();
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);

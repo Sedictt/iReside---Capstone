@@ -30,7 +30,7 @@ import { MiniChatSkeleton } from "@/components/messaging/MiniChatSkeleton";
 import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
-import { getSafeAvatarBgColor } from "@/lib/constants";
+import { getSafeAvatarBgColor, DEFAULT_AVATAR_URL } from "@/lib/constants";
 
 interface ChatUser {
     id: string;
@@ -89,7 +89,7 @@ const DEFAULT_CHAT_STATE: MiniChatState = {
 
 const MESSAGE_CACHE_TTL_MS = 2 * 60 * 1000;
 
-const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
+const FALLBACK_AVATAR = DEFAULT_AVATAR_URL;
 
 const formatConversationTimestamp = (iso: string | null) => {
     if (!iso) {

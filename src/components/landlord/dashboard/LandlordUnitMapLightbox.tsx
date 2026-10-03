@@ -35,7 +35,9 @@ export function LandlordUnitMapLightbox() {
         window.localStorage.getItem(`ireside.awaiting_tenant_setup.${activePropertyId}`) === "true" ||
         properties.some((p) => window.localStorage.getItem(`ireside_map_setup_complete_${p.id}`) === "true")
     );
-    const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete) || isLocallyComplete;
+    const hasConfiguredMap =
+        properties.some((p) => p.isMapSetupComplete || (p.placedCount ?? 0) > 0 || p.hasTenants) ||
+        isLocallyComplete;
 
     const isUnitMapPage = Boolean(pathname?.startsWith("/landlord/unit-map"));
 

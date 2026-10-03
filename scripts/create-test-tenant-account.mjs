@@ -156,6 +156,9 @@ async function provisionTenantAccount() {
     console.log(`  \x1b[32m✓\x1b[0m Assigned unit: \x1b[33m${targetUnit.name}\x1b[0m (ID: ${targetUnit.id})`);
   }
 
+  const avatarIndex = (Math.abs(parseInt(tenantIndex, 10) || 5) % 16) + 3;
+  const systemAvatarUrl = `https://hlpgsiqyrtndqdgvttcr.supabase.co/storage/v1/object/public/profile-avatars/default_avatars/${avatarIndex}.png`;
+
   // 3. Create Supabase Auth User
   console.log('2. Creating Supabase Auth user...');
   const { data: authUser, error: authErr } = await adminClient.auth.admin.createUser({
@@ -168,6 +171,7 @@ async function provisionTenantAccount() {
       phone,
       role: 'tenant',
       is_account_claimed: true,
+      avatar_url: systemAvatarUrl,
     },
   });
 
@@ -188,7 +192,7 @@ async function provisionTenantAccount() {
     phone,
     role: 'tenant',
     avatar_bg_color: '#8B5CF6',
-    avatar_url: null,
+    avatar_url: systemAvatarUrl,
     has_changed_password: true,
     updated_at: new Date().toISOString(),
   }, { onConflict: 'id' });

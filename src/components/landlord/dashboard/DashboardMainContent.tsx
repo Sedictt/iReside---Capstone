@@ -28,30 +28,30 @@ export function DashboardMainContent({
     onCreateInvite,
     onOpenFlyer
 }: DashboardMainContentProps) {
-    const applicationsCtaClassName = "group relative flex items-center justify-center gap-3 overflow-hidden rounded-2xl neumorphic-primary landlord-applications-cta px-6 sm:px-8 py-4 w-auto";
-    const collectPaymentCtaClassName = "group relative flex items-center justify-center gap-3 overflow-hidden rounded-2xl neumorphic-extruded border border-emerald-500/20 hover:border-emerald-500/50 bg-emerald-500/5 hover:bg-emerald-500/10 px-6 py-4 w-auto active:scale-95 transition-all text-foreground hover:text-emerald-400 shrink-0";
+    const applicationsCtaClassName = "group relative flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-4.5 sm:px-5 py-2.5 w-auto active:scale-95 transition-all shadow-xs cursor-pointer";
+    const collectPaymentCtaClassName = "group relative flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-background hover:bg-emerald-500/10 text-foreground hover:text-emerald-600 dark:hover:text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/50 font-bold px-4.5 sm:px-5 py-2.5 w-auto active:scale-95 transition-all shadow-xs shrink-0 cursor-pointer";
 
     return (
         <>
             {/* Desktop and Tablet Layout */}
             <div data-tour-id="tour-welcome-area" className="hidden sm:flex flex-col justify-center max-w-2xl w-full">
                 {/* Badge */}
-                <div className="mb-4 sm:mb-6 flex items-center gap-2 w-fit rounded-full neumorphic-inset-card px-4 py-2">
+                <div className="mb-2 sm:mb-2.5 flex items-center gap-2 w-fit rounded-full bg-muted/60 border border-border/60 px-3 py-1">
                     <div className="relative">
-                        <div className="size-2 rounded-full bg-primary animate-ping" />
-                        <div className="absolute inset-0 size-2 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.8)]" />
+                        <div className="size-1.5 rounded-full bg-primary animate-ping" />
+                        <div className="absolute inset-0 size-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.8)]" />
                     </div>
                     <span className="text-[9px] font-black uppercase tracking-[0.15em] text-foreground/80">
                         {time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                     </span>
                 </div>
 
-                <h1 className="mb-4 text-3xl md:text-5xl font-black tracking-tight text-foreground leading-[1.1]">
+                <h1 className="mb-1 text-2xl md:text-3xl font-black tracking-tight text-foreground leading-[1.15]">
                     {title}
                     <span className="text-primary prose-invert">.</span>
                 </h1>
                 
-                <p className="max-w-lg text-base font-medium text-muted-foreground md:text-xl leading-relaxed">
+                <p className="max-w-lg text-xs sm:text-sm font-medium text-muted-foreground leading-relaxed">
                     {subtitle}
                 </p>
 
@@ -59,7 +59,7 @@ export function DashboardMainContent({
                 <div 
                     data-tour-id="tour-quick-actions" 
                     className={cn(
-                        "relative flex sm:flex-row sm:items-center gap-3 mt-8 w-auto flex-wrap rounded-2xl transition-all duration-300",
+                        "relative flex sm:flex-row sm:items-center gap-2.5 mt-3.5 sm:mt-4 w-auto flex-wrap rounded-2xl transition-all duration-300",
                         isTourOpen && currentTourStep === 0 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse bg-primary/10 p-2 z-30"
                     )}
                 >
@@ -75,14 +75,14 @@ export function DashboardMainContent({
                             className={applicationsCtaClassName}
                         >
                             <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-primary-foreground/10" />
-                            <UserPlus className="size-4 font-black relative z-10" />
-                            <span className="text-sm font-black uppercase tracking-tight relative z-10">New Application</span>
+                            <UserPlus className="size-3.5 font-black relative z-10" />
+                            <span className="text-xs font-black uppercase tracking-wider relative z-10">New Application</span>
                         </button>
                     ) : (
                         <Link href="/landlord/applications?action=tenant-application" className={applicationsCtaClassName}>
                             <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-primary-foreground/10" />
-                            <UserPlus className="size-4 font-black relative z-10" />
-                            <span className="text-sm font-black uppercase tracking-tight relative z-10">New Application</span>
+                            <UserPlus className="size-3.5 font-black relative z-10" />
+                            <span className="text-xs font-black uppercase tracking-wider relative z-10">New Application</span>
                         </Link>
                     )}
 
@@ -90,65 +90,65 @@ export function DashboardMainContent({
                         <button 
                             onClick={onCollectPayment}
                             className={collectPaymentCtaClassName}
-                            title="Record Cash or Offline Rent Collection"
+                            title="Record Cash or In-Person Rent Payment"
                         >
-                            <Banknote className="size-4 text-emerald-500 font-black relative z-10" />
-                            <span className="text-sm font-black uppercase tracking-tight relative z-10">Collect Payment</span>
+                            <Banknote className="size-3.5 text-emerald-500 font-black relative z-10" />
+                            <span className="text-xs font-black uppercase tracking-wider relative z-10">Record Payment</span>
                         </button>
                     ) : (
-                        <Link href="/landlord/invoices" className={collectPaymentCtaClassName}>
-                            <Banknote className="size-4 text-emerald-500 font-black relative z-10" />
-                            <span className="text-sm font-black uppercase tracking-tight relative z-10">Collect Payment</span>
+                        <Link href="/landlord/invoices" className={collectPaymentCtaClassName} title="Record Cash or In-Person Rent Payment">
+                            <Banknote className="size-3.5 text-emerald-500 font-black relative z-10" />
+                            <span className="text-xs font-black uppercase tracking-wider relative z-10">Record Payment</span>
                         </Link>
                     )}
                     
-                    <div className="flex items-center justify-center gap-2.5 w-auto">
+                    <div className="flex items-center justify-center gap-2 w-auto">
                         {onCreateInvite && (
                             <button
                                 onClick={onCreateInvite}
                                 title="Create Invite link"
-                                className="flex h-14 w-14 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 shrink-0"
+                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-background hover:bg-muted text-primary border border-border/70 hover:border-border shadow-2xs active:scale-95 transition-all shrink-0 cursor-pointer"
                             >
-                                <QrCode className="size-5 text-primary" />
+                                <QrCode className="size-4" />
                             </button>
                         )}
                         {onOpenFlyer ? (
                             <button
                                 onClick={onOpenFlyer}
                                 title="Lobby QR Code Flyer Poster"
-                                className="flex h-14 w-14 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 shrink-0 text-foreground hover:text-primary transition-colors"
+                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-background hover:bg-muted text-foreground hover:text-primary border border-border/70 hover:border-border shadow-2xs active:scale-95 transition-all shrink-0 cursor-pointer"
                             >
-                                <Printer className="size-5" />
+                                <Printer className="size-4" />
                             </button>
                         ) : (
                             <Link
                                 href="/landlord/flyer"
                                 title="Lobby QR Code Flyer Poster"
-                                className="flex h-14 w-14 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 shrink-0 text-foreground hover:text-primary transition-colors"
+                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-background hover:bg-muted text-foreground hover:text-primary border border-border/70 hover:border-border shadow-2xs active:scale-95 transition-all shrink-0 cursor-pointer"
                             >
-                                <Printer className="size-5" />
+                                <Printer className="size-4" />
                             </Link>
                         )}
                         <Link 
                             href="/landlord/maintenance" 
                             title="Maintenance Queue"
-                            className="flex h-14 w-14 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 shrink-0"
+                            className="flex h-10 w-10 items-center justify-center rounded-xl bg-background hover:bg-muted text-amber-500 border border-border/70 hover:border-border shadow-2xs active:scale-95 transition-all shrink-0 cursor-pointer"
                         >
-                            <Wrench className="size-5 text-amber-500" />
+                            <Wrench className="size-4" />
                         </Link>
                         <Link 
                             href="/landlord/unit-map" 
                             title="Unit Map"
-                            className="flex h-14 w-14 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 shrink-0 text-foreground hover:text-rose-500 transition-colors"
+                            className="flex h-10 w-10 items-center justify-center rounded-xl bg-background hover:bg-muted text-rose-500 border border-border/70 hover:border-border shadow-2xs active:scale-95 transition-all shrink-0 cursor-pointer"
                         >
-                            <Map className="size-5 text-rose-500" />
+                            <Map className="size-4" />
                         </Link>
                         <Link 
                             href="/landlord/docs" 
                             title="Help & User Manual"
-                            className="flex h-14 w-14 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95 shrink-0 text-foreground hover:text-primary transition-colors"
+                            className="flex h-10 w-10 items-center justify-center rounded-xl bg-background hover:bg-muted text-foreground hover:text-primary border border-border/70 hover:border-border shadow-2xs active:scale-95 transition-all shrink-0 cursor-pointer"
                         >
-                            <HelpCircle className="size-5 text-indigo-400" />
+                            <HelpCircle className="size-4 text-indigo-400" />
                         </Link>
                     </div>
                 </div>
@@ -164,6 +164,8 @@ export function DashboardMainContent({
                     </div>
                     <span className="text-[8px] font-black uppercase tracking-[0.12em] text-foreground/80">
                         {time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        {" • "}
+                        {time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                     </span>
                 </div>
 
@@ -195,7 +197,7 @@ export function DashboardMainContent({
                     {onNewWalkIn ? (
                         <button 
                             onClick={onNewWalkIn}
-                            className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl neumorphic-primary py-2.5 min-w-[100px]"
+                            className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 min-w-[100px] font-bold shadow-xs active:scale-95 transition-all"
                         >
                             <UserPlus className="size-3.5 font-black" />
                             <span className="text-[10px] font-black uppercase tracking-wider">New App</span>
@@ -203,7 +205,7 @@ export function DashboardMainContent({
                     ) : (
                         <Link 
                             href="/landlord/applications?action=tenant-application"
-                            className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl neumorphic-primary py-2.5 min-w-[100px]"
+                            className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 min-w-[100px] font-bold shadow-xs active:scale-95 transition-all"
                         >
                             <UserPlus className="size-3.5 font-black" />
                             <span className="text-[10px] font-black uppercase tracking-wider">New App</span>
@@ -213,18 +215,20 @@ export function DashboardMainContent({
                     {onCollectPayment ? (
                         <button 
                             onClick={onCollectPayment}
-                            className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl neumorphic-extruded border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 py-2.5 min-w-[100px]"
+                            className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl bg-background hover:bg-emerald-500/10 border border-emerald-500/30 text-foreground hover:text-emerald-600 dark:hover:text-emerald-400 py-2.5 min-w-[100px] font-bold shadow-xs active:scale-95 transition-all"
+                            title="Record Cash or In-Person Rent Payment"
                         >
                             <Banknote className="size-3.5 font-black text-emerald-500" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">Collect</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider">Record</span>
                         </button>
                     ) : (
                         <Link 
                             href="/landlord/invoices"
-                            className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl neumorphic-extruded border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 py-2.5 min-w-[100px]"
+                            className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl bg-background hover:bg-emerald-500/10 border border-emerald-500/30 text-foreground hover:text-emerald-600 dark:hover:text-emerald-400 py-2.5 min-w-[100px] font-bold shadow-xs active:scale-95 transition-all"
+                            title="Record Cash or In-Person Rent Payment"
                         >
                             <Banknote className="size-3.5 font-black text-emerald-500" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">Collect</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider">Record</span>
                         </Link>
                     )}
 
@@ -233,16 +237,16 @@ export function DashboardMainContent({
                             <button
                                 onClick={onCreateInvite}
                                 title="Create Invite link"
-                                className="flex h-9 w-9 items-center justify-center rounded-xl neumorphic-extruded active:scale-95"
+                                className="flex h-9 w-9 items-center justify-center rounded-xl bg-background hover:bg-muted text-primary border border-border/70 shadow-2xs active:scale-95"
                             >
-                                <QrCode className="size-4 text-primary" />
+                                <QrCode className="size-4" />
                             </button>
                         )}
                         {onOpenFlyer ? (
                             <button
                                 onClick={onOpenFlyer}
                                 title="Print Lobby Poster"
-                                className="flex h-9 w-9 items-center justify-center rounded-xl neumorphic-extruded active:scale-95 text-foreground hover:text-primary"
+                                className="flex h-9 w-9 items-center justify-center rounded-xl bg-background hover:bg-muted border border-border/70 shadow-2xs active:scale-95 text-foreground hover:text-primary"
                             >
                                 <Printer className="size-4" />
                             </button>
@@ -250,7 +254,7 @@ export function DashboardMainContent({
                             <Link
                                 href="/landlord/flyer"
                                 title="Print Lobby Poster"
-                                className="flex h-9 w-9 items-center justify-center rounded-xl neumorphic-extruded active:scale-95 text-foreground hover:text-primary"
+                                className="flex h-9 w-9 items-center justify-center rounded-xl bg-background hover:bg-muted border border-border/70 shadow-2xs active:scale-95 text-foreground hover:text-primary"
                             >
                                 <Printer className="size-4" />
                             </Link>
@@ -258,21 +262,21 @@ export function DashboardMainContent({
                         <Link 
                             href="/landlord/maintenance" 
                             title="Maintenance Queue"
-                            className="flex h-9 w-9 items-center justify-center rounded-xl neumorphic-extruded active:scale-95"
+                            className="flex h-9 w-9 items-center justify-center rounded-xl bg-background hover:bg-muted text-amber-500 border border-border/70 shadow-2xs active:scale-95"
                         >
-                            <Wrench className="size-4 text-amber-500" />
+                            <Wrench className="size-4" />
                         </Link>
                         <Link 
                             href="/landlord/unit-map" 
                             title="Unit Map"
-                            className="flex h-9 w-9 items-center justify-center rounded-xl neumorphic-extruded active:scale-95"
+                            className="flex h-9 w-9 items-center justify-center rounded-xl bg-background hover:bg-muted text-rose-500 border border-border/70 shadow-2xs active:scale-95"
                         >
-                            <Map className="size-4 text-rose-500" />
+                            <Map className="size-4" />
                         </Link>
                         <Link 
                             href="/landlord/docs" 
                             title="Help & User Manual"
-                            className="flex h-9 w-9 items-center justify-center rounded-xl neumorphic-extruded active:scale-95 text-foreground hover:text-primary"
+                            className="flex h-9 w-9 items-center justify-center rounded-xl bg-background hover:bg-muted border border-border/70 shadow-2xs active:scale-95 text-foreground hover:text-primary"
                         >
                             <HelpCircle className="size-4 text-indigo-400" />
                         </Link>

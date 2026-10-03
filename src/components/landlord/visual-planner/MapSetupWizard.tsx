@@ -93,12 +93,26 @@ export function MapSetupWizard({
     const [isDeletingUnit, setIsDeletingUnit] = useState(false);
 
     // --- Guided Tour Spotlight State ---
-    const [isTourOpen, setIsTourOpen] = useState(true);
+    const [isTourOpen, setIsTourOpen] = useState(() => {
+        if (typeof window === "undefined") return false;
+        try {
+            return window.sessionStorage.getItem(`ireside.map_wizard_tour_dismissed.${propertyId}`) !== "true";
+        } catch {
+            return true;
+        }
+    });
     const [tourStepIndex, setTourStepIndex] = useState(0);
 
     const handleTourNext = () => setTourStepIndex((prev) => Math.min(prev + 1, 3));
     const handleTourPrev = () => setTourStepIndex((prev) => Math.max(prev - 1, 0));
-    const handleTourClose = () => setIsTourOpen(false);
+    const handleTourClose = () => {
+        setIsTourOpen(false);
+        if (typeof window !== "undefined") {
+            try {
+                window.sessionStorage.setItem(`ireside.map_wizard_tour_dismissed.${propertyId}`, "true");
+            } catch {}
+        }
+    };
 
     // Dynamic tour target IDs for Step 2 (Drag & Drop)
     const tourDraggableUnitId = useMemo(() => {

@@ -2,27 +2,34 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import type { LucideIcon } from "lucide-react";
 import { 
     ChevronDown, 
     LogOut, 
-    ChevronLeft, 
-    ChevronRight, 
-    PanelLeftClose, 
-    PanelLeftOpen,
-    Menu,
     Lock,
-    AlertTriangle
+    AlertTriangle,
+    X,
+    Search,
+    Megaphone
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Logo } from "@/components/ui/Logo";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
-import { m as motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
+
+export interface SidebarNavAction {
+    icon: LucideIcon;
+    label: string;
+    href?: string;
+    onClick?: (e: React.MouseEvent) => void;
+    hotkey?: string;
+}
 
 export interface SidebarNavItem {
     label: string;
@@ -34,6 +41,7 @@ export interface SidebarNavItem {
     tourId?: string;
     warning?: boolean;
     warningTooltip?: string;
+    action?: SidebarNavAction;
 }
 
 export interface SidebarNavSection {
@@ -56,9 +64,7 @@ interface RoleSidebarProps {
     className?: string;
     header?: React.ReactNode;
     footer?: React.ReactNode;
-    isCollapsed?: boolean;
-    onToggleCollapse?: () => void;
-    showCollapseToggle?: boolean;
+    onClose?: () => void;
     isLocked?: boolean;
     lockStage?: SidebarLockStage;
 }
@@ -113,6 +119,10 @@ function LogoLink({
     );
 }
 
+const MIN_SIDEBAR_WIDTH = 240;
+const MAX_SIDEBAR_WIDTH = 300;
+const DEFAULT_SIDEBAR_WIDTH = 280;
+
 export function RoleSidebar({
     sections,
     portalLabel,
@@ -121,14 +131,81 @@ export function RoleSidebar({
     className,
     header,
     footer,
-    isCollapsed = false,
-    onToggleCollapse,
-    showCollapseToggle = false,
+    onClose,
     isLocked = false,
     lockStage,
 }: RoleSidebarProps) {
     const pathname = usePathname();
+    const { t } = useLanguage();
+    const prefersReducedMotion = useReducedMotion();
     const [expandedOverrides, setExpandedOverrides] = useState<Record<string, boolean>>({});
+    const [searchQuery, setSearchQuery] = useState("");
+    const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
+    const [isResizing, setIsResizing] = useState(false);
+    const [isUpdateCardDismissed, setIsUpdateCardDismissed] = useState(false);
+    const searchInputRef = useRef<HTMLInputElement>(null);
+
+    // Load persisted width and update card dismissal state
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        try {
+            const savedWidth = window.localStorage.getItem("ireside.sidebar_width");
+            if (savedWidth) {
+                const parsed = parseInt(savedWidth, 10);
+                if (!isNaN(parsed) && parsed >= MIN_SIDEBAR_WIDTH && parsed <= MAX_SIDEBAR_WIDTH) {
+                    setSidebarWidth(parsed);
+                }
+            }
+            const dismissed = window.localStorage.getItem("ireside.sidebar_updates_dismissed");
+            if (dismissed === "true") {
+                setIsUpdateCardDismissed(true);
+            }
+        } catch {
+            // Ignore localStorage read errors
+        }
+    }, []);
+
+    // Global keyboard shortcut (Cmd+K or Ctrl+K) to focus search
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+                e.preventDefault();
+                searchInputRef.current?.focus();
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, []);
+
+    // Resize handle logic
+    const handleResizeMouseDown = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setIsResizing(true);
+    };
+
+    useEffect(() => {
+        if (!isResizing) return;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            const clamped = Math.min(Math.max(e.clientX, MIN_SIDEBAR_WIDTH), MAX_SIDEBAR_WIDTH);
+            setSidebarWidth(clamped);
+            if (typeof window !== "undefined") {
+                window.localStorage.setItem("ireside.sidebar_width", clamped.toString());
+                window.dispatchEvent(new CustomEvent("sidebar-width-changed", { detail: clamped }));
+            }
+        };
+
+        const handleMouseUp = () => {
+            setIsResizing(false);
+        };
+
+        window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("mouseup", handleMouseUp);
+        return () => {
+            window.removeEventListener("mousemove", handleMouseMove);
+            window.removeEventListener("mouseup", handleMouseUp);
+        };
+    }, [isResizing]);
 
     const isItemActive = (href: string) => pathname === href || pathname?.startsWith(`${href}/`);
     const getSectionId = (category: string) => `sidebar-section-${category.replace(/\s+/g, "-").toLowerCase()}`;
@@ -139,6 +216,28 @@ export function RoleSidebar({
             [category]: !(current[category] ?? fallbackExpanded),
         }));
     };
+
+    const handleDismissUpdateCard = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsUpdateCardDismissed(true);
+        if (typeof window !== "undefined") {
+            window.localStorage.setItem("ireside.sidebar_updates_dismissed", "true");
+        }
+    };
+
+    // Filter items according to search query
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const filteredSections = sections.map((sec) => {
+        if (!normalizedQuery) return sec;
+        const matchingItems = sec.items.filter((item) => 
+            t(item.label).toLowerCase().includes(normalizedQuery) ||
+            (item.description && t(item.description).toLowerCase().includes(normalizedQuery))
+        );
+        return {
+            ...sec,
+            items: matchingItems,
+        };
+    }).filter((sec) => !normalizedQuery || sec.items.length > 0);
 
     const renderNavItem = (item: SidebarNavItem, nested = false) => {
         const isActive = isItemActive(item.href);
@@ -203,7 +302,7 @@ export function RoleSidebar({
         const tooltipContent = (
             <div className="flex flex-col gap-1 max-w-[220px] text-left py-0.5">
                 <div className="flex items-center gap-1.5">
-                    <span className="font-black text-xs text-foreground tracking-tight">{item.label}</span>
+                    <span className="font-bold text-xs text-foreground tracking-tight">{t(item.label)}</span>
                     {item.warning ? (
                         <span className="flex items-center gap-1 text-[9px] font-bold text-amber-500 uppercase tracking-wider">
                             <AlertTriangle className="size-2.5" />
@@ -213,6 +312,10 @@ export function RoleSidebar({
                         <span className="flex items-center gap-1 text-[9px] font-bold text-amber-500 uppercase tracking-wider">
                             <Lock className="size-2.5" />
                             {lockBadgeText}
+                        </span>
+                    ) : item.badge && !item.warning ? (
+                        <span className="ml-auto rounded-full bg-red-500 px-1.5 py-0.2 text-[9px] font-bold text-white">
+                            {item.badge > 99 ? '99+' : item.badge}
                         </span>
                     ) : item.urgent ? (
                         <span className="size-1.5 rounded-full bg-red-500 animate-ping" />
@@ -228,7 +331,7 @@ export function RoleSidebar({
                     </span>
                 ) : item.description ? (
                     <span className="text-[11px] font-medium text-muted-foreground/90 leading-snug">
-                        {item.description}
+                        {t(item.description)}
                     </span>
                 ) : null}
             </div>
@@ -237,219 +340,277 @@ export function RoleSidebar({
         return (
             <Tooltip
                 key={item.href}
-                content={isCollapsed || isItemLocked || Boolean(item.warning) ? tooltipContent : undefined}
+                content={isItemLocked || Boolean(item.warning) ? tooltipContent : undefined}
                 side="right"
                 align="center"
-                sideOffset={18}
+                sideOffset={14}
                 showArrow
             >
-                <Link
-                    href={resolvedHref}
-                    prefetch={!isItemLocked}
-                    data-tour-id={item.tourId}
-                    aria-current={isActive && !isItemLocked ? "page" : undefined}
-                    aria-disabled={isItemLocked}
-                    onClick={(e) => {
-                        if (isItemLocked) {
-                            e.preventDefault();
-                            toast.warning(lockToastText);
-                        }
-                    }}
-                    className={cn(
-                        "group relative flex items-center transition-all duration-200 ease-out",
-                        isItemLocked
-                            ? "opacity-35 cursor-not-allowed text-muted-foreground hover:text-muted-foreground active:scale-100 shadow-none pointer-events-auto"
-                            : cn(
-                                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.98]",
-                                isActive
-                                    ? "text-primary neumorphic-active"
-                                    : "text-muted-foreground hover:text-foreground neumorphic-extruded neumorphic-extruded-hover"
-                            ),
-                        nested && !isCollapsed ? "ml-0" : "", // Reduced margin
-                        isCollapsed ? "justify-center rounded-xl px-0 size-12 mx-auto" : "justify-between px-6 py-4 mx-3 my-2 rounded-xl"
-                    )}
-                >
-                    {/* Active Indicator removed for seamless molded aesthetic */}
-                    <div className="flex items-center gap-3 min-w-0">
-                        <item.icon 
-                            className={cn(
-                                "transition-transform duration-300", 
-                                isCollapsed ? "size-6" : "size-5 shrink-0",
-                                isActive && !isItemLocked ? "text-primary drop-shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" : "text-muted-foreground group-hover:text-foreground"
-                            )} 
-                            aria-hidden="true" 
-                        />
-                        {!isCollapsed && (
+                <div className="relative group/row flex items-center w-full">
+                    <Link
+                        href={resolvedHref}
+                        prefetch={!isItemLocked}
+                        data-tour-id={item.tourId}
+                        aria-current={isActive && !isItemLocked ? "page" : undefined}
+                        aria-disabled={isItemLocked}
+                        onClick={(e) => {
+                            if (isItemLocked) {
+                                e.preventDefault();
+                                toast.warning(lockToastText);
+                            }
+                        }}
+                        className={cn(
+                            "group relative flex items-center justify-between py-2 px-3 mx-1 my-0.5 rounded-xl transition-colors duration-150 ease-out cursor-pointer flex-1 min-w-0",
+                            isItemLocked
+                                ? "opacity-35 cursor-not-allowed text-muted-foreground hover:text-muted-foreground active:scale-100 shadow-none pointer-events-auto"
+                                : cn(
+                                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                                    isActive
+                                        ? "bg-primary/10 text-primary font-bold"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                                )
+                        )}
+                    >
+                        {/* Flat 2D Active Indicator Bar - vertically centered */}
+                        {isActive && !isItemLocked && (
+                            <span 
+                                className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-primary"
+                                aria-hidden="true" 
+                            />
+                        )}
+
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <item.icon 
+                                className={cn(
+                                    "size-4.5 shrink-0 transition-transform duration-200", 
+                                    isActive && !isItemLocked ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                                )} 
+                                aria-hidden="true" 
+                            />
                             <span
                                 className={cn(
-                                    "whitespace-nowrap text-[11px] uppercase tracking-widest leading-none font-black truncate"
+                                    "whitespace-nowrap text-xs font-medium tracking-normal truncate transition-colors",
+                                    isActive ? "text-primary font-bold" : "text-foreground/90"
                                 )}
                             >
-                                {item.label}
+                                {t(item.label)}
                             </span>
-                        )}
-                    </div>
+                        </div>
 
-                    {isItemLocked && !isCollapsed && (
-                        <Lock className="size-3.5 text-muted-foreground/60 shrink-0 ml-auto" />
-                    )}
-
-                    {isItemLocked && isCollapsed && (
-                        <span className="absolute right-1 top-1 text-muted-foreground/60">
-                            <Lock className="size-2.5" />
-                        </span>
-                    )}
-
-                    {!isItemLocked && item.warning && (
-                        <span
-                            data-testid={`warning-icon-${item.label.toLowerCase()}`}
-                            className={cn(
-                                "flex items-center justify-center text-amber-500 shrink-0",
-                                isCollapsed ? "absolute right-2 top-2" : "ml-auto"
+                        {/* Inline Badges & Status Icons */}
+                        <div className="flex items-center gap-1.5 ml-auto shrink-0 pl-1">
+                            {isItemLocked && (
+                                <Lock className="size-3.5 text-muted-foreground/60 shrink-0" />
                             )}
-                            title={item.warningTooltip || "Action needed: Begin setting up your tenants"}
-                        >
-                            <AlertTriangle className="size-4 text-amber-500 animate-pulse" />
-                        </span>
-                    )}
 
-                    {!isItemLocked && !isCollapsed && item.badge && !item.warning ? (
-                        <span className={cn(
-                            "flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-foreground shadow-[inset_2px_2px_4px_rgba(255,255,255,0.4),inset_-2px_-2px_4px_rgba(0,0,0,0.2)]",
-                            item.urgent && "animate-pulse shadow-lg shadow-red-500/40"
-                        )}>
-                            {item.badge > 99 ? '99+' : item.badge}
-                        </span>
-                    ) : !isItemLocked && isCollapsed && item.badge && !item.warning ? (
-                        <span className={cn(
-                            "absolute right-2 top-2 size-2.5 rounded-full bg-red-500 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.4),0_0_6px_rgba(239,68,68,0.5)]",
-                            item.urgent && "animate-ping"
-                        )} />
-                    ) : null}
-                </Link>
+                            {!isItemLocked && item.warning && (
+                                <span
+                                    data-testid={`warning-icon-${item.label.toLowerCase()}`}
+                                    className="flex items-center justify-center text-amber-500 shrink-0"
+                                    title={item.warningTooltip || "Action needed: Begin setting up your tenants"}
+                                >
+                                    <AlertTriangle className="size-3.5 text-amber-500 animate-pulse" />
+                                </span>
+                            )}
+
+                            {!isItemLocked && item.badge && !item.warning && (
+                                <span className={cn(
+                                    "flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white",
+                                    item.urgent && "animate-pulse"
+                                )}>
+                                    {item.badge > 99 ? '99+' : item.badge}
+                                </span>
+                            )}
+                        </div>
+                    </Link>
+
+                    {/* Targeted Action Button (Guideline 10) */}
+                    {item.action && !isItemLocked && (
+                        <div className="opacity-0 group-hover/row:opacity-100 focus-within:opacity-100 transition-opacity pr-2 shrink-0">
+                            <Tooltip content={`${item.action.label}${item.action.hotkey ? ` (${item.action.hotkey})` : ''}`} side="right" sideOffset={8}>
+                                {item.action.href ? (
+                                    <Link
+                                        href={item.action.href}
+                                        className="flex size-6 items-center justify-center rounded-md hover:bg-primary/10 hover:text-primary text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                                        aria-label={item.action.label}
+                                    >
+                                        <item.action.icon className="size-3.5" />
+                                    </Link>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={item.action.onClick}
+                                        className="flex size-6 items-center justify-center rounded-md hover:bg-primary/10 hover:text-primary text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary cursor-pointer"
+                                        aria-label={item.action.label}
+                                    >
+                                        <item.action.icon className="size-3.5" />
+                                    </button>
+                                )}
+                            </Tooltip>
+                        </div>
+                    )}
+                </div>
             </Tooltip>
         );
     };
 
     return (
-        <TooltipProvider delayDuration={600} skipDelayDuration={250}>
+        <TooltipProvider delayDuration={400} skipDelayDuration={150}>
             <aside
+                style={{ width: sidebarWidth }}
                 className={cn(
-                    "fixed left-0 top-0 z-40 flex h-screen flex-col bg-background text-foreground transition-all duration-300",
-                    isCollapsed ? "w-[80px]" : "w-[280px]",
+                    "fixed left-0 top-0 z-40 flex h-screen flex-col bg-card dark:bg-zinc-900 text-foreground border-r border-border/60 shadow-xs select-none",
                     className
                 )}
+                aria-label="Sidebar Navigation"
             >
-                {/* Header */}
-                <div className={cn("flex h-20 items-center justify-between px-4 transition-all duration-300 mb-2 gap-2", isCollapsed ? "justify-center" : "justify-between")}>
-                    {!isCollapsed && (
-                        <div className="flex items-center min-w-0 flex-1 overflow-hidden pr-1">
-                            <LogoLink 
-                                isLocked={Boolean((isLocked || lockStage) && lockStage !== "no_tenant")} 
-                                lockToastText="Onboarding in progress. Complete your property setup first to unlock portal operations."
-                            >
-                                <BrandLogo size="md" className="w-full min-w-0" />
-                            </LogoLink>
-                        </div>
-                    )}
+                {/* Header (Branding & Global Controls) */}
+                <div className="flex h-16 items-center justify-between px-3.5 border-b border-border/40 gap-2 shrink-0">
+                    <div className="flex items-center min-w-0 flex-1 overflow-hidden pr-1">
+                        <LogoLink 
+                            isLocked={Boolean((isLocked || lockStage) && lockStage !== "no_tenant")} 
+                            lockToastText="Onboarding in progress. Complete your property setup first to unlock portal operations."
+                        >
+                            <BrandLogo size="md" className="w-full min-w-0" />
+                        </LogoLink>
+                    </div>
                     <div className="flex items-center gap-1 shrink-0">
-                        {!isCollapsed && (
+                        {!onClose && (
                             <Tooltip content="Toggle theme" side="bottom" sideOffset={8}>
                                 <ThemeToggle variant="sidebar" className="size-8 shrink-0" />
                             </Tooltip>
                         )}
-                        {showCollapseToggle && !isCollapsed && (
-                            <Tooltip content="Collapse sidebar" side="bottom" sideOffset={8}>
-                                <button 
-                                    onClick={onToggleCollapse}
-                                    className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-background shadow-[3px_3px_6px_rgba(163,177,198,0.25),-3px_-3px_6px_rgba(255,255,255,0.8)] dark:shadow-[3px_3px_6px_rgba(0,0,0,0.4),-3px_-3px_6px_rgba(255,255,255,0.04)] border border-white/20 dark:border-white/03 text-muted-foreground hover:text-foreground transition-all active:shadow-[inset_2px_2px_4px_rgba(163,177,198,0.3),inset_-2px_-2px_4px_rgba(255,255,255,0.8)] dark:active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.4),inset_-2px_-2px_4px_rgba(255,255,255,0.04)]"
-                                    aria-label="Collapse sidebar"
+                        {onClose && (
+                            <Tooltip content="Close navigation" side="bottom" sideOffset={8}>
+                                <button
+                                    type="button"
+                                    onClick={onClose}
+                                    className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-background hover:bg-muted text-muted-foreground hover:text-foreground border border-border/60 transition-colors shadow-2xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                    aria-label="Close navigation"
                                 >
-                                    <PanelLeftClose className="size-4" />
+                                    <X className="size-4" />
                                 </button>
                             </Tooltip>
                         )}
                     </div>
-                    {isCollapsed && (
-                        <Tooltip content="Expand sidebar" side="right" sideOffset={18}>
-                            <button 
-                                onClick={onToggleCollapse}
-                                className="flex size-12 items-center justify-center rounded-2xl bg-background text-primary shadow-[4px_4px_8px_rgba(163,177,198,0.3),-4px_-4px_8px_rgba(255,255,255,0.9)] dark:shadow-[5px_5px_10px_rgba(0,0,0,0.45),-5px_-5px_10px_rgba(255,255,255,0.04)] border border-white/20 dark:border-white/03 hover:scale-[1.02] transition-all active:scale-[0.98] active:shadow-[inset_3px_3px_6px_rgba(163,177,198,0.35),inset_-3px_-3px_6px_rgba(255,255,255,0.9)] dark:active:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.5),inset_-4px_-4px_8px_rgba(255,255,255,0.05)]"
-                                aria-label="Expand sidebar"
-                            >
-                                <PanelLeftOpen className="size-6" />
-                            </button>
-                        </Tooltip>
-                    )}
                 </div>
 
-                {/* Header Content (Property Selector etc) */}
+                {/* Header Content (Account / Property Switcher - Guideline 8) */}
                 {header && (
-                    <div className={cn("pb-2 pt-6 transition-all duration-300", isCollapsed ? "px-2 flex justify-center" : "px-4")}>
+                    <div className="py-2.5 px-3 shrink-0">
                         {header}
                     </div>
                 )}
 
-                {/* Navigation */}
-                <nav className="flex-1 custom-scrollbar-premium space-y-2 overflow-y-auto px-2 py-4">
+                {/* Quick Search Field (Guideline 9) */}
+                <div className="px-3 pb-1 shrink-0">
+                    <div className="relative flex items-center">
+                        <Search className="absolute left-2.5 size-3.5 text-muted-foreground/60 pointer-events-none" />
+                        <input
+                            ref={searchInputRef}
+                            type="text"
+                            placeholder={t("Quick search...")}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="h-8 w-full rounded-lg border border-border/60 bg-muted/20 pl-8 pr-12 text-xs text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
+                            aria-label="Search navigation menu"
+                        />
+                        {searchQuery ? (
+                            <button
+                                type="button"
+                                onClick={() => setSearchQuery("")}
+                                className="absolute right-2 p-0.5 text-muted-foreground hover:text-foreground"
+                                aria-label="Clear search"
+                            >
+                                <X className="size-3" />
+                            </button>
+                        ) : (
+                            <kbd className="absolute right-2 pointer-events-none hidden sm:inline-flex h-4 select-none items-center gap-0.5 rounded border border-border/60 bg-muted/40 px-1 font-mono text-[9px] font-medium text-muted-foreground">
+                                ⌘K
+                            </kbd>
+                        )}
+                    </div>
+                </div>
+
+                {/* Navigation Items (Guideline 3 & 4) */}
+                <nav className="flex-1 custom-scrollbar-premium space-y-1 overflow-y-auto px-1.5 py-1.5" aria-label="Main Navigation">
                     {portalLabel && (
-                        <div className="px-5 pb-1 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+                        <div className="px-3 pb-1 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
                             {portalLabel}
                         </div>
                     )}
 
+                    {filteredSections.length === 0 && searchQuery && (
+                        <div className="py-6 px-3 text-center">
+                            <p className="text-xs font-medium text-muted-foreground">No menu items match &quot;{searchQuery}&quot;</p>
+                            <button
+                                type="button"
+                                onClick={() => setSearchQuery("")}
+                                className="mt-2 text-[11px] font-bold text-primary hover:underline"
+                            >
+                                Clear search
+                            </button>
+                        </div>
+                    )}
+
                     <div className="space-y-1">
-                        {sections.map((section) => {
+                        {filteredSections.map((section) => {
                             const hasActiveItem = section.items.some((item) => isItemActive(item.href));
                             const isCollapsible = section.collapsible ?? !section.hideHeading;
                             const fallbackExpanded = section.defaultExpanded ?? hasActiveItem;
-                            const isExpanded = !isCollapsible ? true : (expandedOverrides[section.category] ?? fallbackExpanded);
+                            // Auto-expand sections when user is actively searching
+                            const isExpanded = normalizedQuery 
+                                ? true 
+                                : (!isCollapsible ? true : (expandedOverrides[section.category] ?? fallbackExpanded));
                             const SectionIcon = section.icon;
+                            const sectionId = getSectionId(section.category);
 
                             return (
                                 <React.Fragment key={section.category}>
                                     {section.dividerBefore && (
-                                        <div className="mx-4 my-3 border-t border-border/40" />
+                                        <div className="mx-2 my-1.5 border-t border-border/40" />
                                     )}
 
-                                    {/* Section heading (hidden when collapsed) */}
-                                    {!section.hideHeading && !isCollapsed && (
+                                    {/* Section heading */}
+                                    {!section.hideHeading && (
                                         <button
                                             type="button"
-                                            suppressHydrationWarning
+                                            aria-expanded={isExpanded}
+                                            aria-controls={sectionId}
                                             onClick={() => toggleSection(section.category, fallbackExpanded)}
                                             className={cn(
-                                                "group flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition-all",
-                                                hasActiveItem ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+                                                "group flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
+                                                hasActiveItem ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground",
                                             )}
                                         >
                                             <div className="flex items-center gap-2">
                                                 {SectionIcon && (
-                                                    <SectionIcon className={cn("size-4", hasActiveItem ? "text-primary" : "text-muted-foreground")} />
+                                                    <SectionIcon className={cn("size-3.5", hasActiveItem ? "text-primary" : "text-muted-foreground")} />
                                                 )}
-                                                <span className="text-[11px] font-black uppercase tracking-wider">{section.category}</span>
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/80">{t(section.category)}</span>
                                             </div>
-                                            {isCollapsible && (
-                                                <ChevronDown className={cn("size-3 transition-transform duration-200", isExpanded ? "rotate-180" : "")} />
-                                            )}
+                                            <div className="flex items-center gap-1.5">
+                                                {!isExpanded && section.items.some((i) => i.badge || i.urgent || i.warning) && (
+                                                    <span className="size-2 rounded-full bg-primary animate-pulse" />
+                                                )}
+                                                {isCollapsible && (
+                                                    <ChevronDown className={cn("size-3 text-muted-foreground/70 transition-transform duration-200", isExpanded ? "rotate-180" : "")} />
+                                                )}
+                                            </div>
                                         </button>
                                     )}
 
-                                    {/* Collapsed mode: divider between sections */}
-                                    {!section.hideHeading && isCollapsed && (
-                                        <div className="mx-auto my-4 h-px w-8 bg-border/40" />
-                                    )}
-
-                                    {/* Section items container - sunken/inset shadow for grouped differentiation */}
-                                    {!section.hideHeading && !isCollapsed ? (
-                                        <div className="neumorphic-inset mx-3 my-2 rounded-2xl overflow-hidden p-1 bg-background/50">
+                                    {/* Section items container */}
+                                    {!section.hideHeading ? (
+                                        <div id={sectionId} className="space-y-0.5">
                                             <AnimatePresence initial={false}>
                                                 {isExpanded && (
                                                     <motion.div
-                                                        initial={{ height: 0, opacity: 0 }}
-                                                        animate={{ height: "auto", opacity: 1 }}
-                                                        exit={{ height: 0, opacity: 0 }}
-                                                        className="space-y-2 overflow-visible py-2"
+                                                        initial={prefersReducedMotion ? { opacity: 1 } : { height: 0, opacity: 0 }}
+                                                        animate={prefersReducedMotion ? { opacity: 1 } : { height: "auto", opacity: 1 }}
+                                                        exit={prefersReducedMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                                                        transition={{ duration: prefersReducedMotion ? 0 : 0.18 }}
+                                                        className="space-y-0.5 overflow-visible"
                                                     >
                                                         {section.items.map((item) => renderNavItem(item, true))}
                                                     </motion.div>
@@ -457,20 +618,9 @@ export function RoleSidebar({
                                             </AnimatePresence>
                                         </div>
                                     ) : (
-                                        /* No heading or collapsed: render items directly */
-                                        <div className="space-y-1">
-                                            <AnimatePresence initial={false}>
-                                                {(isExpanded || isCollapsed) && (
-                                                    <motion.div
-                                                        initial={isCollapsed ? { opacity: 1 } : { height: 0, opacity: 0 }}
-                                                        animate={isCollapsed ? { opacity: 1 } : { height: "auto", opacity: 1 }}
-                                                        exit={isCollapsed ? { opacity: 1 } : { height: 0, opacity: 0 }}
-                                                        className="space-y-1 overflow-hidden"
-                                                    >
-                                                        {section.items.map((item) => renderNavItem(item, !section.hideHeading && !isCollapsed))}
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
+                                        /* No heading: render items directly */
+                                        <div id={sectionId} className="space-y-0.5">
+                                            {section.items.map((item) => renderNavItem(item, false))}
                                         </div>
                                     )}
                                 </React.Fragment>
@@ -479,33 +629,69 @@ export function RoleSidebar({
                     </div>
                 </nav>
 
-                {/* Footer */}
-                <div className="border-t border-border/40 p-4 space-y-2">
+                {/* Updates Area (Guideline 11) */}
+                {!isUpdateCardDismissed && (
+                    <div className="px-3 py-1.5 shrink-0">
+                        <div className="relative flex flex-col gap-1 rounded-xl border border-border/70 dark:border-border/60 bg-muted/20 p-2.5 text-xs">
+                            <button
+                                type="button"
+                                onClick={handleDismissUpdateCard}
+                                className="absolute right-2 top-2 p-0.5 text-muted-foreground hover:text-foreground rounded transition-colors"
+                                aria-label="Dismiss product update"
+                            >
+                                <X className="size-3" />
+                            </button>
+                            <div className="flex items-center gap-1.5 text-primary font-bold text-[11px]">
+                                <Megaphone className="size-3" />
+                                <span>What&apos;s New</span>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground leading-snug pr-4">
+                                2D Room Map & Quick Actions are now live on your dashboard.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Footer (Pinned Utilities - Guideline 5) */}
+                <div className="border-t border-border/40 p-3 space-y-1.5 shrink-0">
                     {footer && (
-                        <div className="transition-all duration-300">
+                        <div className="transition-all duration-200">
                             {footer}
                         </div>
                     )}
                     
-                    <Tooltip content={isCollapsed ? "Sign out of your session" : undefined} side="right" sideOffset={18}>
-                        <button
-                            type="button"
-                            suppressHydrationWarning
-                            onClick={onLogout}
-                            className={cn(
-                                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-300 text-muted-foreground hover:text-red-500 neumorphic-extruded neumorphic-extruded-hover",
-                                isCollapsed ? "size-10 justify-center mx-auto" : "w-full"
-                            )}
-                        >
-                            <LogOut className="size-5 shrink-0" />
-                            {!isCollapsed && <span className="text-sm font-black">{logoutLabel}</span>}
-                        </button>
-                    </Tooltip>
+                    <div className="flex items-center justify-between gap-2 px-1 py-0.5">
+                        <span className="text-xs font-bold text-muted-foreground">{t("Language")}:</span>
+                        <LanguageToggle variant="compact" />
+                    </div>
+
+                    <button
+                        type="button"
+                        suppressHydrationWarning
+                        onClick={onLogout}
+                        className="group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors text-muted-foreground hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        aria-label={t(logoutLabel)}
+                    >
+                        <LogOut className="size-4.5 shrink-0" />
+                        <span className="text-xs font-bold">{t(logoutLabel)}</span>
+                    </button>
+                </div>
+
+                {/* Adjustable Width Drag Handle (Guideline 12) */}
+                <div
+                    onMouseDown={handleResizeMouseDown}
+                    role="separator"
+                    aria-orientation="vertical"
+                    aria-label="Resize sidebar"
+                    className={cn(
+                        "absolute top-0 right-0 bottom-0 w-1.5 cursor-col-resize hover:bg-primary/40 active:bg-primary z-50 transition-colors select-none group",
+                        isResizing && "bg-primary w-2"
+                    )}
+                    title="Drag to resize sidebar (240px - 300px)"
+                >
+                    <div className="hidden group-hover:block absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-full bg-primary/60" />
                 </div>
             </aside>
         </TooltipProvider>
     );
 }
-
-
-
