@@ -215,13 +215,13 @@ export function TenantSidebar() {
             {NAV_SECTIONS.map((section) => (
                 <div key={section.category}>
                     <h3 className="mb-4 px-2 text-xs font-black uppercase tracking-wider text-muted-foreground">
-                        {section.category}
+                        {t(section.category)}
                     </h3>
                     <div className="space-y-1">
                         {section.items.map((item) => {
                             const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
 
-return (
+                            return (
                                 <Link
                                     key={item.href}
                                     href={item.href}
@@ -234,7 +234,7 @@ return (
                                     )}
                                 >
                                     <item.icon className={cn("size-5", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
-                                    <span className="flex-1">{item.label}</span>
+                                    <span className="flex-1">{t(item.label)}</span>
                                     {((item.href === '/tenant/lease' && (isUrgent('lease') || isUrgent('lease_renewal_request'))) ||
                                       (item.href === '/tenant/maintenance' && isUrgent('maintenance')) ||
                                       (item.href === '/tenant/payments' && isUrgent('payment'))) && (
@@ -256,7 +256,8 @@ return (
                     <Link href="/tenant/dashboard" className="flex items-center min-w-0 flex-1 overflow-hidden">
                         <BrandLogo size="sm" className="w-full min-w-0" />
                     </Link>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                        <LanguageToggle variant="compact" />
                         <div className="relative" ref={mobileNotificationsRef}>
                             <button
                                 type="button"
@@ -424,20 +425,24 @@ return (
                     </div>
 
                     <div className="space-y-1">
+                        <div className="flex items-center justify-between gap-2 px-3 py-1 mb-1">
+                            <span className="text-xs font-bold text-muted-foreground">{t("Language")}:</span>
+                            <LanguageToggle variant="compact" />
+                        </div>
                         <Link href="/tenant/profile" className="flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:text-foreground hover:neumorphic-extruded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                             <div className="flex items-center gap-2">
                                 <User className="size-4" />
-                                <span>Profile</span>
+                                <span>{t("Profile")}</span>
                             </div>
                             {isIncomplete && (
                                 <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md bg-primary/15 text-primary border border-primary/20">
-                                    Set Up
+                                    {t("Set Up")}
                                 </span>
                             )}
                         </Link>
                         <Link href="/tenant/settings" className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:text-foreground hover:neumorphic-extruded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                             <Settings className="size-4" />
-                            Settings
+                            {t("Settings")}
                         </Link>
                         <button
                             type="button"
@@ -445,7 +450,7 @@ return (
                             className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:text-red-500 hover:neumorphic-extruded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                         >
                             <LogOut className="size-5" />
-                            Log Out
+                            {t("Log Out")}
                         </button>
                     </div>
                 </div>
@@ -483,20 +488,24 @@ return (
                     {renderNav(true)}
 
                     <div className="mt-6 border-t border-border pt-4 space-y-1">
+                        <div className="flex items-center justify-between gap-2 px-3 py-1.5 mb-2 rounded-xl bg-muted/30 border border-border/40">
+                            <span className="text-xs font-bold text-muted-foreground">{t("Language")}:</span>
+                            <LanguageToggle variant="compact" />
+                        </div>
                         <Link href="/tenant/profile" className="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground" onClick={() => setIsMobileOpen(false)}>
                             <div className="flex items-center gap-2">
                                 <User className="size-4" />
-                                <span>Profile</span>
+                                <span>{t("Profile")}</span>
                             </div>
                             {isIncomplete && (
                                 <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md bg-primary/15 text-primary border border-primary/20">
-                                    Set Up
+                                    {t("Set Up")}
                                 </span>
                             )}
                         </Link>
                         <Link href="/tenant/settings" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground" onClick={() => setIsMobileOpen(false)}>
                             <Settings className="size-4" />
-                            Settings
+                            {t("Settings")}
                         </Link>
                         <button
                             type="button"
@@ -507,7 +516,7 @@ return (
                             className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 text-left"
                         >
                             <LogOut className="size-4" />
-                            Log Out
+                            {t("Log Out")}
                         </button>
                     </div>
                 </aside>

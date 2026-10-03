@@ -35,6 +35,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { useNotifications } from "@/context/NotificationContext";
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 import { MissionTriggerButton } from "@/components/landlord/dashboard/MissionTriggerButton";
+import { useLanguage } from "@/hooks/useLanguage";
 
 type SearchResultType = "action" | "page" | "setting" | "property" | "unit" | "maintenance" | "tenant" | "invoice";
 
@@ -374,6 +375,7 @@ interface DashboardHeaderActionsProps {
 
 export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = false, className }: DashboardHeaderActionsProps) {
     const router = useRouter();
+    const { t, isFilipino } = useLanguage();
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -661,7 +663,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                     <input maxLength={60}
                         ref={inputRef}
                         type="text"
-                        placeholder="Search unit, tenant, or action…"
+                        placeholder={isFilipino ? "Maghanap ng kwarto, tenant, aksyon…" : "Search unit, tenant, or action…"}
                         value={searchQuery}
                         onChange={(e) => {
                             setSearchQuery(e.target.value);
@@ -673,7 +675,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                             }
                         }}
                         onKeyDown={handleKeyDown}
-                        className="w-48 md:w-56 lg:w-64 rounded-xl sm:rounded-2xl neumorphic-inset bg-background/50 py-2 pl-10 pr-4 text-xs sm:text-sm text-foreground transition-all placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:w-64 lg:focus:w-80"
+                        className="w-48 md:w-56 lg:w-64 rounded-xl sm:rounded-2xl neumorphic-extruded bg-card/90 backdrop-blur-xl py-2 pl-10 pr-4 text-xs sm:text-sm text-foreground transition-all placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:w-64 lg:focus:w-80"
                     />
                     
                     {isSearchOpen && searchQuery.trim() && (

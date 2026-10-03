@@ -54,6 +54,8 @@ import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { useHighContrast } from "@/hooks/useHighContrast";
 import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
 import { TimeFormatToggle } from "@/components/ui/TimeFormatToggle";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { useLanguage } from "@/hooks/useLanguage";
 import { SecurityKeyManagementCard } from "@/components/auth/SecurityKeyManagementCard";
 import { TwoFactorManagementCard } from "@/components/auth/TwoFactorManagementCard";
 
@@ -204,6 +206,7 @@ function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: s
 export function TenantSettings() {
     const router = useRouter();
     const { profile, loading, refreshProfile } = useAuth();
+    const { t, isFilipino } = useLanguage();
     const supabase = createClient();
 
     // UI State
@@ -1315,6 +1318,13 @@ export function TenantSettings() {
                 </div>
 
                 <div className="space-y-6">
+                    <GlassCard 
+                        title={t("Language")} 
+                        description={isFilipino ? "Pumili sa pagitan ng pang-araw-araw na Filipino (Taglish) o Standard English." : "Choose between everyday conversational Filipino (Taglish) and standard English."}
+                    >
+                        <LanguageToggle variant="segmented" showPreview={true} />
+                    </GlassCard>
+
                     <GlassCard 
                         title="Text Size & Readability" 
                         description="Adjust the interface typography scale without distorting card layouts or button heights."

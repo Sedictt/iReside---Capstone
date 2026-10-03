@@ -16,6 +16,19 @@ function UnitMapContent() {
 
     const { selectedPropertyId, loading, properties, setSelectedPropertyId } = useProperty();
 
+    // When "All Properties" is selected, always show the property picker
+    if (selectedPropertyId === "all") {
+        return (
+            <PropertySelectorHub 
+                title="2D Room Map"
+                description="Select a property to view and manage its unit map layout."
+                buttonText="Open Room Map"
+                icon={<Map className="size-6" />}
+                badgeText="Unit Map"
+            />
+        );
+    }
+
     const paramPropertyId = searchParams.get("propertyId");
     const unconfiguredProperty = properties.find((p) => !p.isMapSetupComplete);
     const activePropertyId =
@@ -43,11 +56,11 @@ function UnitMapContent() {
     if (!activePropertyId) {
         return (
             <PropertySelectorHub 
-                title="Visual Planner"
-                description="Initialize the architectural layout and unit map for your property portfolio."
-                buttonText="Open Visual Planner"
+                title="2D Room Map"
+                description="Select a property to view and manage its unit map layout."
+                buttonText="Open Room Map"
                 icon={<Map className="size-6" />}
-                badgeText="Architecture Hub"
+                badgeText="Unit Map"
             />
         );
     }

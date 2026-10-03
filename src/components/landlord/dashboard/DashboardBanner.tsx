@@ -11,6 +11,7 @@ import { DashboardBackground } from "./DashboardBackground";
 import { BannerCustomizerModal, DEFAULT_BANNER_URL } from "./BannerCustomizerModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useBrand } from "@/context/BrandContext";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface DashboardBannerProps {
     title?: string;
@@ -42,6 +43,7 @@ export function DashboardBanner({
     onStartTour
 }: DashboardBannerProps) {
     const brand = useBrand();
+    const { t, isFilipino } = useLanguage();
     const getManilaTime = () => new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
     const [time, setTime] = useState<Date>(() => getManilaTime());
     const [isQuestPanelOpen, setIsQuestPanelOpen] = useState(false);
@@ -94,8 +96,12 @@ export function DashboardBanner({
     const firstName = rawName.split(" ")[0] || "Landlord";
     
     // Replace 'Landlord' in the title if it exists, otherwise use title as is
-    const displayTitle = title.includes("Landlord") ? title.replace("Landlord", firstName) : title;
-    const displaySubtitle = simplifiedMode ? "Hi! Here is a quick look at your houses today." : subtitle;
+    const displayTitle = isFilipino
+        ? `Maligayang pagbabalik, ${firstName}`
+        : (title.includes("Landlord") ? title.replace("Landlord", firstName) : title);
+    const displaySubtitle = isFilipino
+        ? (simplifiedMode ? "Kumusta! Narito ang mabilisang lagay ng iyong mga paupahan." : "Ito ang lagay ng iyong mga paupahan ngayong araw.")
+        : (simplifiedMode ? "Hi! Here is a quick look at your houses today." : subtitle);
 
     useEffect(() => {
         const handleOpenQuestBoard = () => {
@@ -166,7 +172,7 @@ export function DashboardBanner({
                     title="Customize banner image"
                 >
                     <Camera className="size-3.5 text-primary" />
-                    <span>Customize Banner</span>
+                    <span>{isFilipino ? "I-customize ang Banner" : "Customize Banner"}</span>
                 </button>
             </div>
 

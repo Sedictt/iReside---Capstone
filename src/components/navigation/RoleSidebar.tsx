@@ -136,6 +136,7 @@ export function RoleSidebar({
     lockStage,
 }: RoleSidebarProps) {
     const pathname = usePathname();
+    const router = useRouter();
     const { t } = useLanguage();
     const prefersReducedMotion = useReducedMotion();
     const [expandedOverrides, setExpandedOverrides] = useState<Record<string, boolean>>({});
@@ -165,17 +166,48 @@ export function RoleSidebar({
         }
     }, []);
 
-    // Global keyboard shortcut (Cmd+K or Ctrl+K) to focus search
+    // Global keyboard shortcuts (Cmd+K for search, hotkeys for sidebar actions)
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
                 e.preventDefault();
                 searchInputRef.current?.focus();
+                return;
+            }
+
+            // Ignore single-key shortcuts when typing inside inputs or textareas
+            const target = e.target as HTMLElement | null;
+            const isTyping = target && (
+                target.tagName === "INPUT" || 
+                target.tagName === "TEXTAREA" || 
+                target.tagName === "SELECT" || 
+                target.isContentEditable
+            );
+            if (isTyping || e.metaKey || e.ctrlKey || e.altKey) return;
+
+            // Trigger action hotkey if matched
+            const pressedKey = e.key.toUpperCase();
+            for (const section of sections) {
+                for (const item of section.items) {
+                    if (item.action && item.action.hotkey?.toUpperCase() === pressedKey) {
+                        e.preventDefault();
+                        if (item.action.onClick) {
+                            item.action.onClick(e as any);
+                        } else if (item.action.href) {
+                            if (pathname === '/landlord/tenants' && item.action.href.includes('action=new')) {
+                                window.dispatchEvent(new CustomEvent('open-add-tenant-modal', { detail: { tab: 'quick_add' } }));
+                            } else {
+                                router.push(item.action.href);
+                            }
+                        }
+                        return;
+                    }
+                }
             }
         };
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, []);
+    }, [sections, pathname, router]);
 
     // Resize handle logic
     const handleResizeMouseDown = (e: React.MouseEvent) => {
@@ -433,6 +465,15 @@ export function RoleSidebar({
                                         href={item.action.href}
                                         className="flex size-6 items-center justify-center rounded-md hover:bg-primary/10 hover:text-primary text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                                         aria-label={item.action.label}
+                                        onClick={(e) => {
+                                            if (item.action?.onClick) {
+                                                item.action.onClick(e);
+                                            }
+                                            if (pathname === '/landlord/tenants' && item.action?.href?.includes('action=new')) {
+                                                e.preventDefault();
+                                                window.dispatchEvent(new CustomEvent('open-add-tenant-modal', { detail: { tab: 'quick_add' } }));
+                                            }
+                                        }}
                                     >
                                         <item.action.icon className="size-3.5" />
                                     </Link>

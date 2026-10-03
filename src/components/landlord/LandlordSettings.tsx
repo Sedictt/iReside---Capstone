@@ -79,6 +79,8 @@ import { useTheme } from "next-themes";
 import { useHighContrast } from "@/hooks/useHighContrast";
 import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
 import { TimeFormatToggle } from "@/components/ui/TimeFormatToggle";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { useLanguage } from "@/hooks/useLanguage";
 import { CURATED_BANNER_PRESETS, DEFAULT_BANNER_URL } from "@/components/landlord/dashboard/BannerCustomizerModal";
 import { ColorPickerModal } from "@/components/ui/ColorPickerModal";
 import { UnsavedChangesModal } from "@/components/ui/UnsavedChangesModal";
@@ -373,6 +375,7 @@ export function saveCachedSettings(settings: CachedLandlordSettings, userId?: st
 export function LandlordSettings() {
     const router = useRouter();
     const { user, profile, loading, refreshProfile } = useAuth();
+    const { t, isFilipino } = useLanguage();
     // UI State
     const [activeTab, setActiveTab] = useState<SettingsCategory>("Identity");
     const [activeSubTab, setActiveSubTab] = useState<string>("Profile");
@@ -2730,6 +2733,13 @@ export function LandlordSettings() {
                                         </button>
                                     ))}
                                 </div>
+                            </GlassCard>
+
+                            <GlassCard 
+                                title="Language / Wika" 
+                                description={isFilipino ? "Pumili kung nais mong gamitin ang sistemang ito sa pang-araw-araw na Filipino (Taglish) o English." : "Choose between everyday conversational Filipino (Taglish) and standard English."}
+                            >
+                                <LanguageToggle variant="segmented" showPreview={true} />
                             </GlassCard>
 
                             <GlassCard 

@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useProperty } from '@/context/PropertyContext'
 import { cn } from '@/lib/utils'
 import { 
@@ -8,7 +9,8 @@ import {
     Building2, 
     Check, 
     LayoutGrid,
-    Search
+    Search,
+    Plus
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
@@ -210,6 +212,19 @@ export function PropertySelector({ className }: { className?: string } = {}) {
                                     </button>
                                 ))
                             )}
+                        </div>
+
+                        <div className="mt-2 pt-2 border-t border-border/60">
+                            <Link
+                                href="/landlord/properties/new"
+                                onClick={() => setIsOpen(false)}
+                                className="group flex w-full items-center gap-2.5 rounded-xl p-2 px-2.5 transition-colors text-primary hover:bg-primary/10 text-xs font-bold"
+                            >
+                                <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary group-hover:scale-105 transition-transform">
+                                    <Plus className="size-3.5" />
+                                </div>
+                                <span className="truncate">Add New Property</span>
+                            </Link>
                         </div>
                     </div>
                 </div>

@@ -1400,8 +1400,8 @@ export function ContactsSidebar() {
                                         <div className={cn(
                                             "text-sm px-4 py-2.5 rounded-2xl max-w-[85%] border break-words [overflow-wrap:anywhere]",
                                             message.isOwn
-                                                ? "neumorphic-primary text-primary-foreground border-none rounded-br-sm font-black shadow-lg"
-                                                : "rounded-bl-sm neumorphic-panel !shadow-sm text-foreground",
+                                                ? "bg-primary text-primary-foreground border-primary/50 dark:border-primary/60 rounded-br-sm font-semibold shadow-sm"
+                                                : "bg-zinc-100/95 dark:bg-zinc-800/90 text-foreground border-zinc-200/90 dark:border-zinc-700/80 rounded-bl-sm shadow-xs",
                                             hasFile && "mr-0 border-none bg-transparent px-0 py-0 text-foreground shadow-none dark:text-white",
                                             hasImage && "border-border bg-white/70 p-1 dark:border-white/10 dark:bg-black/40"
                                         )}>
@@ -1630,7 +1630,7 @@ function MiniSystemMessage({ message, router }: { message: MiniChatMessage; rout
         return (
             <NotificationCard
                 message={message}
-                icon={isOverpayment ? <TrendingUp className="size-6 text-white" /> : (isRejected ? <AlertTriangle className="size-6 text-white" /> : <CheckCircle2 className="size-6 text-white" />)}
+                icon={isOverpayment ? <TrendingUp className="size-6" /> : (isRejected ? <AlertTriangle className="size-6" /> : <CheckCircle2 className="size-6" />)}
                 title={isOverpayment 
                     ? (isResolved ? "Reconciliation Complete" : "Overpayment Detected")
                     : (isRejected ? "Payment Rejected" : "Payment Confirmed")
@@ -1647,7 +1647,7 @@ function MiniSystemMessage({ message, router }: { message: MiniChatMessage; rout
         return (
             <NotificationCard
                 message={message}
-                icon={<HandCoins className="size-6 text-white" />}
+                icon={<HandCoins className="size-6" />}
                 title="In-Person Payment"
                 subtitle="Verification Required"
                 variant="warning"
@@ -1660,7 +1660,7 @@ function MiniSystemMessage({ message, router }: { message: MiniChatMessage; rout
         return (
             <NotificationCard
                 message={message}
-                icon={<Bell className="size-6 text-white" />}
+                icon={<Bell className="size-6" />}
                 title="Payment Reminder"
                 subtitle="Notification Sent"
                 variant="default"

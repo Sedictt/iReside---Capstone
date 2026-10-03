@@ -11,25 +11,39 @@ vi.mock("framer-motion", () => ({
     AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
+// Mock next/dynamic
+vi.mock("next/dynamic", () => ({
+    __esModule: true,
+    default: () => () => null,
+}));
+
+// Mock WalkInApplicationModal
+vi.mock("@/components/landlord/applications/WalkInApplicationModal", () => ({
+    WalkInApplicationModal: () => null,
+}));
+
+const mockProperties = [
+    {
+        id: "prop-1",
+        name: "Pinecrest Residences",
+        address: "123 Main St",
+        units: [
+            { id: "u-1", name: "101", status: "vacant", rentAmount: 12000 },
+        ],
+    },
+];
+
 // Mock PropertyContext
 vi.mock("@/context/PropertyContext", () => ({
     useProperty: () => ({
-        properties: [
-            {
-                id: "prop-1",
-                name: "Pinecrest Residences",
-                address: "123 Main St",
-                units: [
-                    { id: "u-1", name: "101", status: "vacant", rentAmount: 12000 },
-                ],
-            },
-        ],
+        properties: mockProperties,
+        selectedPropertyId: "prop-1",
         refreshProperties: vi.fn(),
     }),
 }));
 
 describe("AddTenantModal", () => {
-    it("renders quick_add tab by default when isOpen is true", () => {
+    it("renders invite tab by default when isOpen is true (recommended mode)", () => {
         render(
             <AddTenantModal
                 isOpen={true}
@@ -42,6 +56,21 @@ describe("AddTenantModal", () => {
         expect(screen.getByText("Quick Add")).toBeDefined();
         expect(screen.getByText("Invite Link")).toBeDefined();
         expect(screen.getByText("Walk-in Application")).toBeDefined();
+        expect(screen.getByText("Self-Onboarding Link")).toBeDefined();
+        expect(screen.getByText("Recommended")).toBeDefined();
+    });
+
+    it("renders quick_add tab directly when initialTab is set to 'quick_add'", () => {
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSuccess={vi.fn()}
+                initialTab="quick_add"
+            />
+        );
+
+        expect(screen.getByText("Onboard Residents")).toBeDefined();
         expect(screen.getByText("Resident Profile")).toBeDefined();
     });
 
@@ -86,20 +115,20 @@ describe("AddTenantModal", () => {
             />
         );
 
-        // Initially in Quick Add
-        expect(screen.getByText("Resident Profile")).toBeDefined();
-
-        // Switch to Invite Link
-        fireEvent.click(screen.getByText("Invite Link"));
+        // Initially in Invite Link (recommended default)
         expect(screen.getByText("Self-Onboarding Link")).toBeDefined();
+
+        // Switch to Quick Add
+        fireEvent.click(screen.getByText("Quick Add"));
+        expect(screen.getByText("Resident Profile")).toBeDefined();
 
         // Switch to Walk-in
         fireEvent.click(screen.getByText("Walk-in Application"));
         expect(screen.getByText("In-Person Walk-in Application")).toBeDefined();
 
-        // Switch back to Quick Add
-        fireEvent.click(screen.getByText("Quick Add"));
-        expect(screen.getByText("Resident Profile")).toBeDefined();
+        // Switch back to Invite Link
+        fireEvent.click(screen.getByText("Invite Link"));
+        expect(screen.getByText("Self-Onboarding Link")).toBeDefined();
     });
 
     it("toggles simple and advanced mode in the invite tab", () => {
@@ -200,20 +229,26 @@ describe("AddTenantModal", () => {
         fireEvent.change(advanceInput, { target: { value: "25000" } });
         fireEvent.change(depositInput, { target: { value: "15000" } });
 
-        expect(advanceInput.value).toBe("25000");
-        expect(depositInput.value).toBe("15000");
-        expect(screen.getByText("₱40,000")).toBeDefined();
+        expect(advanceInput.value).toBe("25,000");
+        expect(depositInput.value).toBe("15,000");
+        expect(screen.getByText("₱40,000.00")).toBeDefined();
+
+        // Auto decimal placing on blur
+        fireEvent.blur(advanceInput);
+        fireEvent.blur(depositInput);
+        expect(advanceInput.value).toBe("25,000.00");
+        expect(depositInput.value).toBe("15,000.00");
 
         // Preset chip test
         const noneButtons = screen.getAllByRole("button", { name: "None" });
         fireEvent.click(noneButtons[0]); // Advance None
-        expect(advanceInput.value).toBe("0");
-        expect(screen.getByText("₱15,000")).toBeDefined();
+        expect(advanceInput.value).toBe("0.00");
+        expect(screen.getByText("₱15,000.00")).toBeDefined();
 
         const twoMoButtons = screen.getAllByRole("button", { name: "2 Mo" });
         fireEvent.click(twoMoButtons[0]); // Advance 2 Mo (2 * 12,000 = 24,000)
-        expect(advanceInput.value).toBe("24000");
-        expect(screen.getByText("₱39,000")).toBeDefined();
+        expect(advanceInput.value).toBe("24,000.00");
+        expect(screen.getByText("₱39,000.00")).toBeDefined();
     });
 
     it("sanitizes financial amounts by stripping letters and invalid characters", () => {
@@ -233,10 +268,10 @@ describe("AddTenantModal", () => {
         fireEvent.change(advanceInput, { target: { value: "20000xasxasxaxxasxas" } });
         fireEvent.change(depositInput, { target: { value: "20000xsax" } });
 
-        // Sanitizer strips letters immediately
-        expect(advanceInput.value).toBe("20000");
-        expect(depositInput.value).toBe("20000");
-        expect(screen.getByText("₱40,000")).toBeDefined();
+        // Sanitizer strips letters immediately and formats with commas
+        expect(advanceInput.value).toBe("20,000");
+        expect(depositInput.value).toBe("20,000");
+        expect(screen.getByText("₱40,000.00")).toBeDefined();
     });
 
     it("validates email and phone formats on blur with clear error messages", () => {
@@ -328,20 +363,20 @@ describe("AddTenantModal", () => {
         // Direct custom configuration
         fireEvent.change(advanceInput, { target: { value: "24000" } });
         fireEvent.change(depositInput, { target: { value: "12000" } });
-        expect(advanceInput.value).toBe("24000");
-        expect(depositInput.value).toBe("12000");
-        expect(screen.getByText("₱36,000")).toBeDefined();
+        expect(advanceInput.value).toBe("24,000");
+        expect(depositInput.value).toBe("12,000");
+        expect(screen.getByText("₱36,000.00")).toBeDefined();
 
         // Preset chip test
         const noneButtons = screen.getAllByRole("button", { name: "None" });
         fireEvent.click(noneButtons[0]); // Advance None
-        expect(advanceInput.value).toBe("0");
-        expect(screen.getByText("₱12,000")).toBeDefined();
+        expect(advanceInput.value).toBe("0.00");
+        expect(screen.getByText("₱12,000.00")).toBeDefined();
 
         const twoMoButtons = screen.getAllByRole("button", { name: "2 Mo" });
         fireEvent.click(twoMoButtons[1]); // Deposit 2 Mo (2 * 12,000 = 24,000)
-        expect(depositInput.value).toBe("24000");
-        expect(screen.getByText("₱24,000")).toBeDefined();
+        expect(depositInput.value).toBe("24,000.00");
+        expect(screen.getByText("₱24,000.00")).toBeDefined();
     });
 
     it("sanitizes financial amounts by stripping letters in Invite Link tab", () => {
@@ -360,9 +395,9 @@ describe("AddTenantModal", () => {
         fireEvent.change(advanceInput, { target: { value: "15000abc" } });
         fireEvent.change(depositInput, { target: { value: "25000xyz" } });
 
-        expect(advanceInput.value).toBe("15000");
-        expect(depositInput.value).toBe("25000");
-        expect(screen.getByText("₱40,000")).toBeDefined();
+        expect(advanceInput.value).toBe("15,000");
+        expect(depositInput.value).toBe("25,000");
+        expect(screen.getByText("₱40,000.00")).toBeDefined();
     });
 
     it("submits paymentTerms payload when generating an onboarding link", async () => {
@@ -411,5 +446,39 @@ describe("AddTenantModal", () => {
         });
         expect(requestBody.propertyId).toBe("prop-1");
         expect(requestBody.previewUnitId).toBe("u-1");
+    });
+
+    it("auto places decimals on blur for monthly rent, advance rent, and security deposit", () => {
+        render(
+            <AddTenantModal
+                isOpen={true}
+                onClose={vi.fn()}
+                onSuccess={vi.fn()}
+                initialTab="quick_add"
+            />
+        );
+
+        const rentInput = screen.getByLabelText("Monthly Rent") as HTMLInputElement;
+        const advanceInput = screen.getByLabelText("Advance Rent Amount") as HTMLInputElement;
+        const depositInput = screen.getByLabelText("Security Deposit Amount") as HTMLInputElement;
+
+        // Auto initialized with decimals from vacant unit
+        expect(rentInput.value).toBe("12,000.00");
+        expect(advanceInput.value).toBe("12,000.00");
+        expect(depositInput.value).toBe("12,000.00");
+
+        // Type whole number 16000
+        fireEvent.change(rentInput, { target: { value: "16000" } });
+        expect(rentInput.value).toBe("16,000");
+
+        // On blur, auto decimal placing adds .00
+        fireEvent.blur(rentInput);
+        expect(rentInput.value).toBe("16,000.00");
+
+        // Typing with decimal e.g. 16500.5
+        fireEvent.change(advanceInput, { target: { value: "16500.5" } });
+        expect(advanceInput.value).toBe("16,500.5");
+        fireEvent.blur(advanceInput);
+        expect(advanceInput.value).toBe("16,500.50");
     });
 });

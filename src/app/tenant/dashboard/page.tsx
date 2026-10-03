@@ -33,6 +33,7 @@ import LeaseRenewalReminder from "@/components/tenant/LeaseRenewalReminder";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { TenantDigitalClock } from "@/components/tenant/dashboard/TenantDigitalClock";
 import { getSafeAvatarBgColor } from "@/lib/constants";
+import { useLanguage } from "@/hooks/useLanguage";
 
 type DashboardData = {
     userName: string;
@@ -182,6 +183,7 @@ export default function TenantDashboard() {
     const searchParams = useSearchParams();
     const previewDays = searchParams.get("preview_days");
     const router = useRouter();
+    const { t, language } = useLanguage();
     const [showBanner, setShowBanner] = useState(true);
     const [showMaintenanceSuccess, setShowMaintenanceSuccess] = useState(false);
     const [isLeaseModalOpen, setIsLeaseModalOpen] = useState(false);
@@ -400,8 +402,8 @@ export default function TenantDashboard() {
                                     <CheckCircle2 className="size-5 text-white" />
                                 </div>
                                 <div>
-                                    <p className="font-black text-emerald-600 dark:text-emerald-400">Request Submitted!</p>
-                                    <p className="text-xs text-emerald-600/80 dark:text-emerald-400/70">We've notified your landlord and will keep you updated on the progress.</p>
+                                    <p className="font-black text-emerald-600 dark:text-emerald-400">{t("Request Submitted!")}</p>
+                                    <p className="text-xs text-emerald-600/80 dark:text-emerald-400/70">{t("We've notified your landlord and will keep you updated on the progress.")}</p>
                                 </div>
                             </div>
                             <button 
@@ -417,10 +419,10 @@ export default function TenantDashboard() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2" data-tour-id="tour-dashboard-overview">
                     <div>
                         <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
-                            Welcome back, {userName}
+                            {language === "fil" ? `Maligayang pagbabalik, ${userName}` : `Welcome back, ${userName}`}
                         </h1>
                         <p className="mt-2 text-muted-foreground">
-                            {lease ? `Everything is looking good at ${lease.propertyName}.` : "Welcome to your iReside dashboard."}
+                            {lease ? `${t("Everything is looking good at")} ${lease.propertyName}.` : t("Welcome to your iReside dashboard.")}
                         </p>
                     </div>
 
@@ -439,7 +441,7 @@ export default function TenantDashboard() {
                             <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 shadow-sm">
                                 <span className="size-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(109,152,56,0.6)]" />
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em]">
-                                    {isInitialLoading ? "Loading status..." : nextPayment ? "Payment Due • Active Standing" : "Account Up to Date • Excellent"}
+                                    {isInitialLoading ? t("Loading status...") : nextPayment ? t("Payment Due • Active Standing") : t("Account Up to Date • Excellent")}
                                 </span>
                             </div>
 
@@ -451,12 +453,12 @@ export default function TenantDashboard() {
                                 <p className="text-muted-foreground flex items-center gap-2 font-medium">
                                     <Calendar className="size-4" />
                                     {isInitialLoading
-                                        ? "Calculating..."
+                                        ? t("Calculating...")
                                         : nextPayment?.dueDate
-                                            ? `Due ${formatDueDate(nextPayment.dueDate)}`
+                                            ? `${t("Due")} ${formatDueDate(nextPayment.dueDate)}`
                                             : upcomingMonths[0]?.dueDate
-                                                ? `Next rent due: ${formatDueDate(upcomingMonths[0].dueDate)}`
-                                                : "No upcoming payments"}
+                                                ? `${t("Due")} ${formatDueDate(upcomingMonths[0].dueDate)}`
+                                                : t("No upcoming payments")}
                                 </p>
                             </div>
 
@@ -467,21 +469,21 @@ export default function TenantDashboard() {
                                         className="neumorphic-primary px-8 py-4 rounded-2xl font-black text-sm flex items-center gap-2"
                                     >
                                         <CreditCard className="size-4" />
-                                        Pay Rent Now
+                                        {t("Pay Rent Now")}
                                     </Link>
                                 )}
                                 <Link
                                     href="/tenant/payments"
                                     className="neumorphic-extruded text-secondary-foreground px-8 py-4 rounded-2xl font-black text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
                                 >
-                                    Billing Details
+                                    {t("Billing Details")}
                                 </Link>
                             </div>
                         </div>
 
                         <div className="neumorphic-inset rounded-3xl p-6 space-y-4">
                             <div className="flex items-center justify-between">
-                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Lease Progress</p>
+                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t("Lease Progress")}</p>
                                 <span className="text-xs font-black text-primary">{leaseProgress.progressPercent}%</span>
                             </div>
                             <div className="h-2.5 bg-muted rounded-full overflow-hidden">
@@ -494,13 +496,13 @@ export default function TenantDashboard() {
                             </div>
                             <div className="flex justify-between items-end pt-2">
                                 <div>
-                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Remaining</p>
+                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{t("Remaining")}</p>
                                     <p className="text-sm font-black text-foreground">
-                                        {leaseProgress.monthsLeft !== null ? `${leaseProgress.monthsLeft} months` : "--"}
+                                        {leaseProgress.monthsLeft !== null ? `${leaseProgress.monthsLeft} ${t("months")}` : "--"}
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Expires</p>
+                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{t("Expires")}</p>
                                     <p className="text-sm font-black text-foreground">{leaseProgress.endLabel}</p>
                                 </div>
                             </div>
@@ -528,13 +530,13 @@ export default function TenantDashboard() {
                                 </p>
                                 <div className="flex items-center justify-between gap-1 mt-2">
                                     {monthForecast.isForecast ? (
-                                        <span className="text-[9px] font-medium text-muted-foreground">Estimated</span>
+                                        <span className="text-[9px] font-medium text-muted-foreground">{t("Estimated")}</span>
                                     ) : (
-                                        <span className="text-[9px] font-medium text-primary">Ready to Pay</span>
+                                        <span className="text-[9px] font-medium text-primary">{t("Ready to Pay")}</span>
                                     )}
                                     {monthForecast.dueDate && (
                                         <span className="text-[9px] text-muted-foreground">
-                                            Due {new Date(monthForecast.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                                            {t("Due")} {new Date(monthForecast.dueDate).toLocaleDateString(language === "fil" ? "fil-PH" : "en-US", { month: "short", day: "numeric" })}
                                         </span>
                                     )}
                                 </div>

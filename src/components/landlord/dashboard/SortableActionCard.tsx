@@ -6,6 +6,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { Tooltip } from "@/components/ui/tooltip";
 import { EyeOff, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/hooks/useLanguage";
 import type { QuickActionItem, QuickActionId } from "@/lib/landlord/quick-actions";
 
 interface SortableActionCardProps {
@@ -71,6 +72,10 @@ export function SortableActionCard({
     compact = false,
     onSelect,
 }: SortableActionCardProps) {
+    const { t } = useLanguage();
+    const label = t(action.label);
+    const description = t(action.description);
+
     const {
         attributes,
         listeners,
@@ -96,7 +101,7 @@ export function SortableActionCard({
     // Normal View Mode
     if (!isCustomizing) {
         return (
-            <Tooltip content={action.description}>
+            <Tooltip content={description}>
                 <Link
                     href={action.href}
                     onClick={() => {
@@ -110,7 +115,7 @@ export function SortableActionCard({
                             : "gap-3.5 rounded-2xl sm:rounded-3xl p-5 sm:p-7 min-h-[120px] sm:min-h-[140px]",
                         "dark:hover:bg-primary/5 dark:hover:border-primary/20 hover:scale-[1.02] active:scale-95 shadow-2xs hover:shadow-xs"
                     )}
-                    aria-label={`${action.label}: ${action.description}`}
+                    aria-label={`${label}: ${description}`}
                 >
                     <div
                         className={cn(
@@ -129,7 +134,7 @@ export function SortableActionCard({
                             "font-bold tracking-tight text-foreground transition-colors group-hover:text-primary line-clamp-2 break-words",
                             compact ? "text-[11px] sm:text-xs leading-tight" : "text-xs sm:text-sm leading-snug"
                         )}>
-                            {action.label}
+                            {label}
                         </span>
                     </div>
                 </Link>
@@ -156,7 +161,7 @@ export function SortableActionCard({
             {...listeners}
             role="button"
             tabIndex={0}
-            aria-label={`Reorder ${action.label}`}
+            aria-label={`Reorder ${label}`}
         >
             {/* Top Row: Discreet drag indicator & hide action */}
             <div className={cn(
@@ -166,7 +171,7 @@ export function SortableActionCard({
                 <GripVertical className={compact ? "size-3" : "size-4"} />
             </div>
 
-            <Tooltip content={`Hide "${action.label}"`}>
+            <Tooltip content={`Hide "${label}"`}>
                 <button
                     type="button"
                     onClick={(e) => {
@@ -180,7 +185,7 @@ export function SortableActionCard({
                         "bg-muted/70 hover:bg-destructive/15 text-muted-foreground hover:text-destructive",
                         "border border-border/50 hover:border-destructive/30 shadow-2xs cursor-pointer"
                     )}
-                    aria-label={`Hide ${action.label}`}
+                    aria-label={`Hide ${label}`}
                 >
                     <EyeOff className={compact ? "size-3" : "size-3.5"} />
                 </button>
@@ -206,7 +211,7 @@ export function SortableActionCard({
                     "font-bold tracking-tight text-foreground line-clamp-2 break-words",
                     compact ? "text-[11px] sm:text-xs leading-tight" : "text-xs sm:text-sm leading-snug"
                 )}>
-                    {action.label}
+                    {label}
                 </span>
             </div>
         </div>

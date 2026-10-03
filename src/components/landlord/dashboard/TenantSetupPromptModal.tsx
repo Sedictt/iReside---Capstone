@@ -271,9 +271,14 @@ export function TenantSetupPromptModal({
                                             <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
                                                 Invite via Reusable Link
                                             </h3>
-                                            <span className="inline-flex text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20">
-                                                Remote Onboarding
-                                            </span>
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                <span className="inline-flex text-[11px] font-semibold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
+                                                    Recommended
+                                                </span>
+                                                <span className="inline-flex text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20">
+                                                    Remote Onboarding
+                                                </span>
+                                            </div>
                                         </div>
                                         <p className="text-xs text-muted-foreground leading-relaxed">
                                             Generate a single reusable link or QR code to share with a single user or post in a group chat (Messenger, Viber, WhatsApp). Tenants can complete the application and onboarding process remotely from their own devices.

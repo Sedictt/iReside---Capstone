@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { UserPlus, QrCode, Wrench, Map, Printer, HelpCircle, Banknote } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface DashboardMainContentProps {
     title: string;
@@ -28,6 +29,7 @@ export function DashboardMainContent({
     onCreateInvite,
     onOpenFlyer
 }: DashboardMainContentProps) {
+    const { t, isFilipino } = useLanguage();
     const applicationsCtaClassName = "group relative flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-4.5 sm:px-5 py-2.5 w-auto active:scale-95 transition-all shadow-xs cursor-pointer";
     const collectPaymentCtaClassName = "group relative flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-background hover:bg-emerald-500/10 text-foreground hover:text-emerald-600 dark:hover:text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/50 font-bold px-4.5 sm:px-5 py-2.5 w-auto active:scale-95 transition-all shadow-xs shrink-0 cursor-pointer";
 
@@ -42,7 +44,7 @@ export function DashboardMainContent({
                         <div className="absolute inset-0 size-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.8)]" />
                     </div>
                     <span className="text-[9px] font-black uppercase tracking-[0.15em] text-foreground/80">
-                        {time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                        {time.toLocaleDateString(isFilipino ? 'fil-PH' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                     </span>
                 </div>
 
@@ -76,13 +78,13 @@ export function DashboardMainContent({
                         >
                             <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-primary-foreground/10" />
                             <UserPlus className="size-3.5 font-black relative z-10" />
-                            <span className="text-xs font-black uppercase tracking-wider relative z-10">New Application</span>
+                            <span className="text-xs font-black uppercase tracking-wider relative z-10">{t("New Application")}</span>
                         </button>
                     ) : (
                         <Link href="/landlord/applications?action=tenant-application" className={applicationsCtaClassName}>
                             <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-primary-foreground/10" />
                             <UserPlus className="size-3.5 font-black relative z-10" />
-                            <span className="text-xs font-black uppercase tracking-wider relative z-10">New Application</span>
+                            <span className="text-xs font-black uppercase tracking-wider relative z-10">{t("New Application")}</span>
                         </Link>
                     )}
 
@@ -93,12 +95,12 @@ export function DashboardMainContent({
                             title="Record Cash or In-Person Rent Payment"
                         >
                             <Banknote className="size-3.5 text-emerald-500 font-black relative z-10" />
-                            <span className="text-xs font-black uppercase tracking-wider relative z-10">Record Payment</span>
+                            <span className="text-xs font-black uppercase tracking-wider relative z-10">{t("Record Payment")}</span>
                         </button>
                     ) : (
                         <Link href="/landlord/invoices" className={collectPaymentCtaClassName} title="Record Cash or In-Person Rent Payment">
                             <Banknote className="size-3.5 text-emerald-500 font-black relative z-10" />
-                            <span className="text-xs font-black uppercase tracking-wider relative z-10">Record Payment</span>
+                            <span className="text-xs font-black uppercase tracking-wider relative z-10">{t("Record Payment")}</span>
                         </Link>
                     )}
                     
@@ -200,7 +202,7 @@ export function DashboardMainContent({
                             className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 min-w-[100px] font-bold shadow-xs active:scale-95 transition-all"
                         >
                             <UserPlus className="size-3.5 font-black" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">New App</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider">{isFilipino ? "Aplikasyon" : "New App"}</span>
                         </button>
                     ) : (
                         <Link 
@@ -208,7 +210,7 @@ export function DashboardMainContent({
                             className="group relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 min-w-[100px] font-bold shadow-xs active:scale-95 transition-all"
                         >
                             <UserPlus className="size-3.5 font-black" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">New App</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider">{isFilipino ? "Aplikasyon" : "New App"}</span>
                         </Link>
                     )}
 
@@ -219,7 +221,7 @@ export function DashboardMainContent({
                             title="Record Cash or In-Person Rent Payment"
                         >
                             <Banknote className="size-3.5 font-black text-emerald-500" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">Record</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider">{isFilipino ? "Magbayad" : "Record"}</span>
                         </button>
                     ) : (
                         <Link 
@@ -228,7 +230,7 @@ export function DashboardMainContent({
                             title="Record Cash or In-Person Rent Payment"
                         >
                             <Banknote className="size-3.5 font-black text-emerald-500" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">Record</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider">{isFilipino ? "Magbayad" : "Record"}</span>
                         </Link>
                     )}
 

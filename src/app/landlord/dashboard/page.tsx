@@ -42,6 +42,7 @@ import { DashboardTourCompletionModal } from "@/components/landlord/dashboard/Da
 import { SeniorOverviewHub } from "@/components/landlord/dashboard/SeniorOverviewHub";
 import { useNotifications } from "@/context/NotificationContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 import { toast } from "sonner";
 import { getSafeAvatarBgColor, DEFAULT_AVATAR_URL } from "@/lib/constants";
 
@@ -124,6 +125,7 @@ export default function LandlordDashboard() {
     const router = useRouter();
     const { user, profile } = useAuth();
     const { counts } = useNotifications();
+    const { t } = useLanguage();
     const { selectedPropertyId, properties, refreshProperties } = useProperty();
     const currentProperty = properties.find(p => p.id === selectedPropertyId) || properties[0];
     const [mounted, setMounted] = useState(false);
@@ -202,7 +204,7 @@ export default function LandlordDashboard() {
     const [selectedWalkInUnitId, setSelectedWalkInUnitId] = useState<string | undefined>(undefined);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isAddTenantModalOpen, setIsAddTenantModalOpen] = useState(false);
-    const [addTenantModalTab, setAddTenantModalTab] = useState<'quick_add' | 'manual' | 'invite' | 'walk_in'>('quick_add');
+    const [addTenantModalTab, setAddTenantModalTab] = useState<'quick_add' | 'manual' | 'invite' | 'walk_in'>('invite');
     const [isFlyerModalOpen, setIsFlyerModalOpen] = useState(false);
     const [isCollectPaymentModalOpen, setIsCollectPaymentModalOpen] = useState(false);
     const [loadingUnits, setLoadingUnits] = useState(true);
@@ -852,10 +854,10 @@ export default function LandlordDashboard() {
                                         </span>
                                     </div>
                                     <h3 className="text-lg font-black text-foreground tracking-tight">
-                                        Activate Your Payment & Utility Rails
+                                        {t("Activate Your Payment & Utility Rails")}
                                     </h3>
                                     <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 max-w-2xl">
-                                        Set up your GCash QR code and water/electricity tariffs so lease generation and rent billing have valid payment details ready.
+                                        {t("Set up your GCash QR code and water/electricity tariffs so lease generation and rent billing have valid payment details ready.")}
                                     </p>
                                 </div>
                             </div>
@@ -865,13 +867,13 @@ export default function LandlordDashboard() {
                                     onClick={handleDelayBillingSetup}
                                     className="px-4 py-2.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground border border-border/60 hover:bg-muted/50 transition-all active:scale-95"
                                 >
-                                    Configure Later
+                                    {t("Configure Later")}
                                 </button>
                                 <Link
                                     href="/landlord/utility-billing"
                                     className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:brightness-105 transition-all active:scale-95"
                                 >
-                                    <span>Set Up Billing</span>
+                                    <span>{t("Set Up Billing")}</span>
                                     <ArrowRight className="size-3.5" />
                                 </Link>
                             </div>
@@ -904,6 +906,7 @@ export default function LandlordDashboard() {
                         openUnitsCount={openUnitsCount}
                         maintenanceCount={maintenanceCount}
                         userName={userName}
+                        hasTenants={hasAtLeastOneTenant}
                         onOpenOverduePayments={() => setOpenPaymentModal("Overdue")}
                         onRecordPayment={() => setIsCollectPaymentModalOpen(true)}
                         onOpenVacantUnits={() => setIsVacantUnitsModalOpen(true)}
@@ -927,7 +930,7 @@ export default function LandlordDashboard() {
                             )}
                         >
                             <CreditCard className="size-4" aria-hidden="true" />
-                            <span>Rent & Payments</span>
+                            <span>{t("Rent & Payments")}</span>
                         </button>
                         <button
                             type="button"
@@ -940,7 +943,7 @@ export default function LandlordDashboard() {
                             )}
                         >
                             <Zap className="size-4" aria-hidden="true" />
-                            <span>Water & Electricity</span>
+                            <span>{t("Water & Electricity")}</span>
                         </button>
                         <button
                             type="button"
@@ -953,7 +956,7 @@ export default function LandlordDashboard() {
                             )}
                         >
                             <RefreshCw className="size-4" aria-hidden="true" />
-                            <span>Contracts & Tasks</span>
+                            <span>{t("Contracts & Tasks")}</span>
                         </button>
                     </div>
 
@@ -983,8 +986,8 @@ export default function LandlordDashboard() {
                                             <CreditCard className="size-6" aria-hidden="true" />
                                         </div>
                                         <div>
-                                            <h2 id="cash-flow-heading" className="text-xl sm:text-2xl font-black tracking-tight text-foreground text-balance">Rent & Payments</h2>
-                                            <p className="text-xs sm:text-sm font-medium text-muted-foreground text-pretty mt-1">Track what is unpaid, due this week, and recently settled.</p>
+                                            <h2 id="cash-flow-heading" className="text-xl sm:text-2xl font-black tracking-tight text-foreground text-balance">{t("Rent & Payments")}</h2>
+                                            <p className="text-xs sm:text-sm font-medium text-muted-foreground text-pretty mt-1">{t("Track what is unpaid, due this week, and recently settled.")}</p>
                                         </div>
                                     </div>
                                     <Link 
@@ -992,7 +995,7 @@ export default function LandlordDashboard() {
                                         className="group shrink-0 min-h-[44px] flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-all motion-reduce:transition-none text-muted-foreground hover:text-primary"
                                         aria-label="View all invoices in the financial hub"
                                     >
-                                        <span>View Bills & Receipts</span>
+                                        <span>{t("View Bills & Receipts")}</span>
                                         <ArrowUpRight className="size-4 transition-transform motion-reduce:transition-none group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
                                     </Link>
                                 </div>
@@ -1008,8 +1011,8 @@ export default function LandlordDashboard() {
                                                     <div className="flex items-start gap-2 sm:gap-3">
                                                         <div className={cn("size-2 rounded-full mt-1.5 sm:mt-1 shadow-inner", dot)} aria-hidden="true" />
                                                         <div className="space-y-0.5">
-                                                            <h3 className={cn("text-xs sm:text-sm font-bold tracking-wide", tone)}>{label}</h3>
-                                                            <p className="text-[11px] sm:text-xs font-medium text-muted-foreground">{hint}</p>
+                                                            <h3 className={cn("text-xs sm:text-sm font-bold tracking-wide", tone)}>{t(label)}</h3>
+                                                            <p className="text-[11px] sm:text-xs font-medium text-muted-foreground">{t(hint)}</p>
                                                         </div>
                                                     </div>
                                                     <button 
@@ -1017,7 +1020,7 @@ export default function LandlordDashboard() {
                                                         className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-primary neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all"
                                                         aria-label={`See more details for ${label}`}
                                                     >
-                                                        See more
+                                                        {t("See more")}
                                                     </button>
                                                 </div>
                                                 
@@ -1049,7 +1052,7 @@ export default function LandlordDashboard() {
                                                     ) : (
                                                         <div className="flex flex-col items-center justify-center py-5 sm:py-6 text-muted-foreground/50 transition-transform hover:scale-105 duration-300">
                                                             <CheckCircle2 className="size-5 sm:size-6 mb-2 opacity-50" aria-hidden="true" />
-                                                            <p className="text-xs font-semibold tracking-wide text-muted-foreground">{emptyState}</p>
+                                                            <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t(emptyState)}</p>
                                                         </div>
                                                     )}
                                                 </div>
@@ -1070,8 +1073,8 @@ export default function LandlordDashboard() {
                                         <Zap className="size-6" aria-hidden="true" />
                                     </div>
                                     <div>
-                                        <h2 id="utility-heading" className="text-xl sm:text-2xl font-black tracking-tight text-foreground text-balance">Water & Electricity</h2>
-                                        <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 mt-1 max-w-prose text-pretty">Record water and electric meter readings and calculate utility charges.</p>
+                                        <h2 id="utility-heading" className="text-xl sm:text-2xl font-black tracking-tight text-foreground text-balance">{t("Water & Electricity")}</h2>
+                                        <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 mt-1 max-w-prose text-pretty">{t("Record water and electric meter readings and calculate utility charges.")}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
@@ -1080,7 +1083,7 @@ export default function LandlordDashboard() {
                                         className="group shrink-0 inline-flex items-center justify-center gap-2 rounded-xl min-h-[44px] px-5 py-2.5 text-xs sm:text-sm font-semibold neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
                                         aria-label="Verify pending utility and invoice payments"
                                     >
-                                        Review Payments
+                                        {t("Review Payments")}
                                         <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
                                     </Link>
                                     <Link 
@@ -1089,7 +1092,7 @@ export default function LandlordDashboard() {
                                         aria-label="Open utility billing to record readings"
                                     >
                                         <Zap className="size-3.5" />
-                                        Record Readings
+                                        {t("Record Readings")}
                                     </Link>
                                 </div>
                             </div>
@@ -1106,8 +1109,8 @@ export default function LandlordDashboard() {
                                             <RefreshCw className="size-6" aria-hidden="true" />
                                         </div>
                                         <div>
-                                            <h2 id="renewals-heading" className="text-xl sm:text-2xl font-black tracking-tight text-foreground text-balance">Contracts & Tasks</h2>
-                                            <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 mt-1 max-w-prose text-pretty">Review expiring lease contracts and pending tenant requests.</p>
+                                            <h2 id="renewals-heading" className="text-xl sm:text-2xl font-black tracking-tight text-foreground text-balance">{t("Contracts & Tasks")}</h2>
+                                            <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 mt-1 max-w-prose text-pretty">{t("Review expiring lease contracts and pending tenant requests.")}</p>
                                         </div>
                                     </div>
                                     <Link 
@@ -1115,7 +1118,7 @@ export default function LandlordDashboard() {
                                         className="group shrink-0 inline-flex items-center justify-center gap-2 rounded-xl min-h-[44px] px-5 py-2.5 text-xs sm:text-sm font-semibold neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
                                         aria-label="View all lease renewals"
                                     >
-                                        View All Contracts
+                                        {t("View All Contracts")}
                                         <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
                                     </Link>
                                 </div>
