@@ -122,7 +122,7 @@ export function DashboardBanner({
     return (
         <div
             className={cn(
-                "group relative min-h-[200px] xs:min-h-[220px] sm:min-h-[240px] md:min-h-[320px] w-full shrink-0 overflow-visible rounded-[2.5rem] neumorphic-panel transition-all duration-500",
+                "group relative min-h-[170px] sm:min-h-[190px] md:min-h-[210px] w-full shrink-0 overflow-visible rounded-[2.5rem] bg-card dark:bg-zinc-900 border border-border/60 shadow-sm transition-all duration-500",
                 className
             )}>
             {/* Background Layer */}
@@ -130,14 +130,14 @@ export function DashboardBanner({
 
             {/* Header Actions (Floating Controls & Dropdown with top z-index z-50) */}
             <DashboardHeaderActions 
+                className="absolute top-3 right-3 sm:top-4 sm:right-5 md:top-5 md:right-6"
                 onQuestPanelOpen={handleQuestPanelOpen} 
                 isTourHighlighted={isTourOpen && currentTourStep === 3}
             />
 
             {/* Main Content Area */}
-            <div className="relative z-10 w-full px-4 py-5 sm:px-6 sm:py-8 md:px-10 md:py-10 pointer-events-none">
-                {/* Banner uses lg:grid to put content on left, clock on right on large screens */}
-                <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] items-center gap-6 lg:gap-8 pointer-events-auto">
+            <div className="relative z-10 w-full px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6 pointer-events-none">
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] items-end justify-between gap-4 pointer-events-auto">
                     <DashboardMainContent
                         title={displayTitle}
                         subtitle={displaySubtitle}
@@ -150,26 +150,15 @@ export function DashboardBanner({
                         onOpenFlyer={onOpenFlyer}
                     />
 
-                    {/* Digital Clock - only visible on large screens */}
-                    <div className="hidden lg:block shrink-0">
+                    {/* Digital Clock - positioned neatly below the header actions */}
+                    <div className="hidden lg:block shrink-0 pb-1">
                         <DashboardDigitalClock time={time} />
                     </div>
                 </div>
             </div>
 
-            {/* Floating Action Controls (Guided Tour & Banner Customizer) */}
-            <div className="absolute bottom-3 right-4 z-20 pointer-events-auto flex items-center gap-2">
-                {onStartTour && (
-                    <button
-                        type="button"
-                        onClick={onStartTour}
-                        className="px-3 py-1.5 rounded-xl bg-background/80 hover:bg-background border border-primary/40 backdrop-blur-md text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer transition-all duration-300"
-                        title="Start Guided Tour"
-                    >
-                        <Compass className="size-3.5 text-primary" />
-                        <span>Guided Tour</span>
-                    </button>
-                )}
+            {/* Floating Action Controls (Banner Customizer Only - Guided Tour chip removed) */}
+            <div className="absolute bottom-3 right-4 z-20 pointer-events-auto">
                 <button
                     type="button"
                     onClick={() => setIsCustomizerOpen(true)}
