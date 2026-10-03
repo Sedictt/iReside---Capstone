@@ -125,7 +125,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                         <div className="shrink-0 border-b border-neutral-200/50 dark:border-white/5 p-8 bg-neutral-50/30 dark:bg-white/[0.02]">
                             <div className="relative group">
                                 <Search className="absolute left-5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                <input
+                                <input maxLength={60}
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}

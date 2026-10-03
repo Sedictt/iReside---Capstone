@@ -1036,7 +1036,7 @@ function LeasesContent() {
         <div className="flex w-full items-center gap-3 xl:w-auto">
           <div className="relative flex-1 xl:w-72">
             <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <input 
+            <input maxLength={60} 
               type="text" 
               placeholder="Search tenant or unit..." 
               value={searchQuery}

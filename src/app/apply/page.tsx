@@ -188,6 +188,7 @@ function ApplyForm() {
                                     <input
                                         id="inviteCode"
                                         type="text"
+                                        maxLength={30}
                                         value={inviteCode}
                                         onChange={(e) => {
                                             setInviteCode(e.target.value);

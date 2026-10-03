@@ -133,7 +133,7 @@ export function PropertySelectorHub({
 
                     <div className="group relative">
                         <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/60 transition-colors group-focus-within:text-primary" />
-                        <input 
+                        <input maxLength={60} 
                             type="text"
                             value={searchQuery}
                             onChange={(e) => {

@@ -809,7 +809,7 @@ function CheckoutPageContent() {
                                         <div className="space-y-6 rounded-[2rem] p-8 backdrop-blur-3xl neumorphic-panel">
                                             <div className="space-y-5">
                                                 <Field label="Reference number">
-                                                    <input 
+                                                    <input maxLength={60} 
                                                         value={referenceNumber} 
                                                         onChange={(event) => setReferenceNumber(event.target.value)} 
                                                         className="w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10" 
@@ -878,7 +878,7 @@ function CheckoutPageContent() {
                                     {/* Optional Note moved inside for better density */}
                                     <div className="mt-6">
                                         <Field label="Optional Note">
-                                            <textarea 
+                                            <textarea maxLength={250} 
                                                 rows={2} 
                                                 value={note} 
                                                 onChange={(event) => setNote(event.target.value)} 
@@ -932,7 +932,7 @@ function CheckoutPageContent() {
                                     {/* Optional Note moved inside for better density */}
                                     <div className="mt-6 rounded-[2rem] p-8 backdrop-blur-md neumorphic-panel">
                                         <Field label="Optional Note">
-                                            <textarea 
+                                            <textarea maxLength={250} 
                                                 rows={2} 
                                                 value={note} 
                                                 onChange={(event) => setNote(event.target.value)} 

@@ -457,7 +457,7 @@ export default function AdminRegistrationsPage() {
                                         </div>
 
                                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
-                                            <input
+                                            <input maxLength={60}
                                                 type="text"
                                                 value={businessNames[selected.id] || ""}
                                                 onChange={(e) => setBusinessNames((cur) => ({ ...cur, [selected.id]: e.target.value }))}
@@ -642,7 +642,7 @@ export default function AdminRegistrationsPage() {
                                             <p className="text-[11px] text-white/30">Internal review notes — not visible to the applicant</p>
                                         </div>
                                     </div>
-                                    <textarea
+                                    <textarea maxLength={500}
                                         value={notes[selected.id] ?? ""}
                                         onChange={(e) => setNotes((cur) => ({ ...cur, [selected.id]: e.target.value }))}
                                         rows={4}

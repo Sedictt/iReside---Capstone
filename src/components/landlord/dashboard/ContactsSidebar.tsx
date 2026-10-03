@@ -1031,7 +1031,7 @@ export function ContactsSidebar() {
                                     "absolute left-3 top-1/2 -translate-y-1/2 size-3.5 transition-colors",
                                     searchQuery ? "text-primary" : "text-muted-foreground"
                                 )} />
-                                <input
+                                <input maxLength={60}
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -1490,7 +1490,7 @@ export function ContactsSidebar() {
                                         />
                                     </label>
                                     <div className="flex flex-1 items-center rounded-full neumorphic-inset px-4 py-2 transition-all">
-                                        <input
+                                        <input maxLength={500}
                                             type="text"
                                             placeholder={chat.isActive ? "Write something..." : "Select to chat"}
                                             disabled={!chat.isActive}

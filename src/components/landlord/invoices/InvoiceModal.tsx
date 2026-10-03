@@ -763,7 +763,7 @@ export function InvoiceModal({
  
                                                             <div className="space-y-4">
                                                                 <div className="relative group">
-                                                                    <textarea 
+                                                                    <textarea maxLength={500} 
                                                                         value={tenantComment} 
                                                                         onChange={(event) => setTenantComment(event.target.value)} 
                                                                         rows={3} 
@@ -1103,7 +1103,7 @@ function F2FActionCenter({
                 </div>
 
                 <div className="relative group">
-                    <textarea 
+                    <textarea maxLength={500} 
                         value={tenantComment} 
                         onChange={(event) => setTenantComment(event.target.value)} 
                         rows={2} 
@@ -1236,7 +1236,7 @@ function WizardFlow({
                                 <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Actual Amount Received</p>
                                 <div className="relative group">
                                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-disabled group-focus-within:text-primary transition-colors font-black text-sm">₱</div>
-                                    <input 
+                                    <input min={0} max={9999999.99} step="0.01" 
                                         type="number"
                                         value={receivedAmount}
                                         onChange={(e) => setReceivedAmount(e.target.value ? Number(e.target.value) : "")}
@@ -1390,7 +1390,7 @@ function WizardFlow({
 
                         <div className="space-y-4">
                             <div className="relative group">
-                                <textarea 
+                                <textarea maxLength={250} 
                                     value={rejectionReason} 
                                     onChange={(event) => setRejectionReason(event.target.value)} 
                                     rows={3} 

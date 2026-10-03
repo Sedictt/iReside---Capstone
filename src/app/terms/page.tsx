@@ -348,7 +348,7 @@ export default function TermsPage() {
           {/* Search bar */}
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <input 
+            <input maxLength={60} 
               type="text" 
               placeholder="Search terms (e.g. rent, liability, landlords)..."
               value={searchQuery}

@@ -300,7 +300,7 @@ export default function DocumentsPage() {
                                                     <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                                                         <SearchIcon className="size-4 opacity-50 transition-colors group-focus-within:text-primary group-focus-within:opacity-100" />
                                                     </div>
-                                                    <input 
+                                                    <input maxLength={60} 
                                                         type="text"
                                                         placeholder="Search records..."
                                                         value={searchQuery}

@@ -1030,6 +1030,7 @@ export function RentApplications() {
  <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
  <input
  type="text"
+ maxLength={60}
  placeholder="Search applications..."
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
@@ -1705,7 +1706,7 @@ export function RentApplications() {
  )}
  {signingLinkState.signingUrl && signingLinkState.emailSent === false && (
  <div className="mt-2 flex items-center gap-2">
- <input readOnly value={signingLinkState.signingUrl} className="flex-1 rounded-lg neumorphic-inset px-3 py-1.5 text-[10px] font-mono text-foreground truncate" />
+ <input readOnly maxLength={500} value={signingLinkState.signingUrl} className="flex-1 rounded-lg neumorphic-inset px-3 py-1.5 text-[10px] font-mono text-foreground truncate" />
  <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 px-3 py-1.5 text-[10px] font-black uppercase text-primary hover:bg-primary/20 cursor-pointer">Copy</button>
  </div>
  )}
@@ -1775,7 +1776,7 @@ export function RentApplications() {
  )}
  {signingLinkState.signingUrl && (
  <div className="mt-2 flex items-center gap-2">
- <input readOnly value={signingLinkState.signingUrl} className="flex-1 rounded-lg neumorphic-inset px-3 py-1.5 text-[10px] font-mono text-neutral-400 truncate" />
+ <input readOnly maxLength={500} value={signingLinkState.signingUrl} className="flex-1 rounded-lg neumorphic-inset px-3 py-1.5 text-[10px] font-mono text-neutral-400 truncate" />
  <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 px-3 py-1.5 text-[10px] font-black uppercase text-primary hover:bg-primary/20">Copy</button>
  </div>
  )}
@@ -1853,7 +1854,7 @@ export function RentApplications() {
  )}
  {signingLinkState.signingUrl && (
  <div className="mt-2 flex items-center gap-2">
- <input readOnly value={signingLinkState.signingUrl} className="flex-1 rounded-lg neumorphic-inset px-3 py-1.5 text-[10px] font-mono text-neutral-400 truncate" />
+ <input readOnly maxLength={500} value={signingLinkState.signingUrl} className="flex-1 rounded-lg neumorphic-inset px-3 py-1.5 text-[10px] font-mono text-neutral-400 truncate" />
  <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 px-3 py-1.5 text-[10px] font-black uppercase text-primary hover:bg-primary/20">Copy</button>
  </div>
  )}
@@ -2044,9 +2045,14 @@ export function RentApplications() {
  </p>
  </div>
  <div className="space-y-2">
+ <div className="flex items-center justify-between">
  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Rejection Reason (Required)</label>
+ <span className="text-[10px] font-medium text-muted-foreground/70">{declineReason.length} / 250</span>
+ </div>
  <textarea
  id="rejection-reason"
+ maxLength={250}
+ value={declineReason}
  placeholder="Enter the reason for declining this application..."
  className="neumorphic-inset w-full py-4 px-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all resize-none"
  rows={3}
@@ -2145,8 +2151,11 @@ export function RentApplications() {
 
                 <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Bypass Reason (Min 10 characters)</label>
-                    <textarea
+                    <div className="flex items-center justify-between">
+ <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Bypass Reason (Min 10 characters)</label>
+ <span className="text-[10px] font-medium text-muted-foreground/70">{bypassReason.length} / 250</span>
+ </div>
+                    <textarea maxLength={250}
                       rows={3}
                       placeholder="e.g., Received full cash payment in person at leasing office on Sep 13."
                       value={bypassReason}
@@ -2160,6 +2169,7 @@ export function RentApplications() {
                     <div className="relative">
                       <input
                         type="password"
+                        maxLength={16}
                         placeholder="Enter password to authenticate"
                         value={bypassPassword}
                         onChange={(e) => setBypassPassword(e.target.value)}
@@ -2261,6 +2271,9 @@ export function RentApplications() {
                       </label>
                       <input
                         type="number"
+                        min={0}
+                        max={9999999.99}
+                        step="0.01"
                         placeholder="0.00"
                         value={resolutionAmount}
                         onChange={(e) => setResolutionAmount(e.target.value)}
@@ -2273,7 +2286,7 @@ export function RentApplications() {
                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                       Explanation for Tenant (Required)
                     </label>
-                    <textarea
+                    <textarea maxLength={250}
                       rows={3}
                       placeholder="Explain the reason for this adjustment or return..."
                       value={resolutionNote}
@@ -2333,6 +2346,7 @@ export function RentApplications() {
 
                       <input
                         type="text"
+                        maxLength={250}
                         placeholder="Or paste GCash ref # or receipt link (optional)"
                         value={resolutionProofUrl}
                         onChange={(e) => setResolutionProofUrl(e.target.value)}

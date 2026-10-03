@@ -860,7 +860,7 @@ export default function TenantCommunityHubPage() {
                             <h3 className="text-xl font-black text-foreground">Report Content</h3>
                             <p className="mt-2 text-sm text-muted-foreground">Help us understand what's wrong with this post. Your report is confidential.</p>
                             
-                            <textarea
+                            <textarea maxLength={250}
                                 value={reportReason}
                                 onChange={(e) => setReportReason(e.target.value)}
                                 placeholder="Why are you reporting this?..."

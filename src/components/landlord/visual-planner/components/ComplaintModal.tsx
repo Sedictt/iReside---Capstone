@@ -128,9 +128,15 @@ export const ComplaintModal = ({
                                             animate={{ opacity: 1, height: 'auto' }}
                                             className="space-y-3"
                                         >
-                                            <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Details</label>
+                                            <div className="flex items-center justify-between ml-1">
+                                                <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Details</label>
+                                                <span className="text-[10px] font-medium text-muted-foreground/70 select-none">
+                                                    {customComplaint.length} / 500
+                                                </span>
+                                            </div>
                                             <textarea
                                                 required
+                                                maxLength={500}
                                                 value={customComplaint}
                                                 onChange={(e) => setCustomComplaint(e.target.value)}
                                                 placeholder="Please describe the issue in detail..."

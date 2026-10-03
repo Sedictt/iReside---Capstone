@@ -517,7 +517,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  </p>
 
  <div className="mt-6">
- <textarea
+ <textarea maxLength={250}
  value={denialReason}
  onChange={(e) => setDenialReason(e.target.value)}
  placeholder="e.g., Minimum stay requirements not met..."

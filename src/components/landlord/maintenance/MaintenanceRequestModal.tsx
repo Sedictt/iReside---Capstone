@@ -220,7 +220,7 @@ export function MaintenanceRequestModal({
  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1.5 neumorphic-inset text-muted-foreground rounded-md group-focus-within:bg-primary/10 group-focus-within:text-primary transition-colors pointer-events-none ">
  <Wrench className="size-3.5" />
  </div>
- <input
+ <input maxLength={60}
  id="create-title"
  type="text"
  value={createTitle}
@@ -263,7 +263,7 @@ export function MaintenanceRequestModal({
  <label htmlFor="create-description" className="mb-2 block text-[10px] font-black uppercase tracking-widest text-muted-foreground">
  Description <span className="text-red-500">*</span>
  </label>
- <textarea
+ <textarea maxLength={500}
  id="create-description"
  value={createDescription}
  onChange={(e) => setCreateDescription(e.target.value)}
@@ -885,7 +885,7 @@ export function MaintenanceRequestModal({
  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1.5 neumorphic-inset text-muted-foreground rounded-md group-focus-within:bg-primary/10 group-focus-within:text-primary transition-colors pointer-events-none ">
  <UserRound className="size-3.5" />
  </div>
- <input
+ <input maxLength={50}
  id="repair-person-name"
  type="text"
  value={thirdPartyPerson}

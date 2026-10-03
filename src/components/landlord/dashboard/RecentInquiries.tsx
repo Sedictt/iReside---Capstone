@@ -460,7 +460,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                         {/* Chat Input */}
                         <div className="border-t border-border bg-card p-3 dark:border-white/10 dark:bg-neutral-900">
                             <div className="flex items-center gap-2">
-                                <input
+                                <input maxLength={500}
                                     type="text"
                                     value={messageInput}
                                     onChange={(e) => setMessageInput(e.target.value)}

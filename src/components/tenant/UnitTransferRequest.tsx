@@ -163,7 +163,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                                 <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                                     <div className="relative w-full md:w-96">
                                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                                        <input 
+                                        <input maxLength={60} 
                                             type="text"
                                             placeholder="Search by unit number or floor..."
                                             value={searchQuery}
@@ -242,7 +242,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                                 <div className="space-y-4 pt-4">
                                     <div className="space-y-2">
                                         <label htmlFor="transferReason" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Reason for Transfer (Optional)</label>
-                                        <textarea 
+                                        <textarea maxLength={500} 
                                             id="transferReason"
                                             rows={3}
                                             value={reason}

@@ -857,6 +857,7 @@ export function AddTenantModal({
                               <input
                                 id="fullName"
                                 type="text"
+                                maxLength={50}
                                 placeholder="Juan Dela Cruz"
                                 value={formData.fullName}
                                 onChange={(e) => handleFullNameChange(e.target.value)}
@@ -885,6 +886,7 @@ export function AddTenantModal({
                               <input
                                 id="email"
                                 type="email"
+                                maxLength={50}
                                 placeholder="juan@example.com"
                                 value={formData.email}
                                 onChange={(e) => handleEmailChange(e.target.value)}
@@ -914,6 +916,7 @@ export function AddTenantModal({
                                 id="phone"
                                 type="tel"
                                 inputMode="tel"
+                                maxLength={15}
                                 placeholder="0912 345 6789"
                                 value={formData.phone}
                                 onChange={(e) => handlePhoneChange(e.target.value)}
@@ -1076,6 +1079,7 @@ export function AddTenantModal({
                                 id="monthlyRent"
                                 type="text"
                                 inputMode="decimal"
+                                maxLength={10}
                                 value={formData.monthlyRent}
                                 onChange={(e) => handleRentChange(e.target.value)}
                                 onBlur={handleRentBlur}
@@ -1155,6 +1159,7 @@ export function AddTenantModal({
                                   id="advanceAmount"
                                   type="text"
                                   inputMode="decimal"
+                                  maxLength={10}
                                   value={advanceAmount}
                                   onChange={(e) => handleAdvanceAmountChange(e.target.value)}
                                   onBlur={handleAdvanceAmountBlur}
@@ -1232,6 +1237,7 @@ export function AddTenantModal({
                                   id="securityDepositAmount"
                                   type="text"
                                   inputMode="decimal"
+                                  maxLength={10}
                                   value={securityDepositAmount}
                                   onChange={(e) => handleSecurityDepositAmountChange(e.target.value)}
                                   onBlur={handleSecurityDepositAmountBlur}
@@ -1566,6 +1572,7 @@ export function AddTenantModal({
                                     id="inviteAdvanceAmount"
                                     type="text"
                                     inputMode="decimal"
+                                    maxLength={10}
                                     value={inviteAdvanceAmount}
                                     onChange={(e) => handleInviteAdvanceAmountChange(e.target.value)}
                                     onBlur={handleInviteAdvanceAmountBlur}
@@ -1631,6 +1638,7 @@ export function AddTenantModal({
                                     id="inviteSecurityDepositAmount"
                                     type="text"
                                     inputMode="decimal"
+                                    maxLength={10}
                                     value={inviteSecurityDepositAmount}
                                     onChange={(e) => handleInviteSecurityDepositAmountChange(e.target.value)}
                                     onBlur={handleInviteSecurityDepositAmountBlur}
@@ -1687,6 +1695,8 @@ export function AddTenantModal({
                             <input
                               id="expiresAt"
                               type="date"
+                              min={new Date().toISOString().split('T')[0]}
+                              max="2099-12-31"
                               value={inviteData.expiresAt}
                               onChange={(e) => {
                                 setInviteData(prev => ({ ...prev, expiresAt: e.target.value }))

@@ -251,7 +251,7 @@ export function VacantUnitsModal({
                     <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
                         <div className="relative w-full sm:flex-1">
                             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                            <input
+                            <input maxLength={60}
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}

@@ -1101,7 +1101,7 @@ export function EBookReader({
             </div>
 
             <div className="relative">
-              <input
+              <input maxLength={60}
                 type="text"
                 autoFocus
                 value={searchQuery}

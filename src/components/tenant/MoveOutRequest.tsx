@@ -395,7 +395,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <label htmlFor="moveOutDate" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Target Move-Out Date</label>
-                                        <input 
+                                        <input min={new Date().toISOString().split("T")[0]} max="2099-12-31" 
                                             id="moveOutDate"
                                             type="date" 
                                             required
@@ -407,7 +407,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
 
                                     <div className="space-y-2">
                                         <label htmlFor="moveOutReason" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Reason for Leaving (Optional)</label>
-                                        <textarea 
+                                        <textarea maxLength={500} 
                                             id="moveOutReason"
                                             rows={3}
                                             value={reason}

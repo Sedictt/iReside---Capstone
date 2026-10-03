@@ -78,7 +78,7 @@ export function ContactList({
                         "absolute left-3.5 top-1/2 size-4 -translate-y-1/2 transition-colors",
                         searchQuery ? "text-primary" : "text-disabled"
                     )} />
-                    <input
+                    <input maxLength={60}
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}

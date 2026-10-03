@@ -664,6 +664,74 @@ const text = `Your iReside verification code is: ${otp}\n\nThis code expires in 
     await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
 
+export async function sendTwoFactorOTP({
+    to,
+    otp,
+    action = "login",
+}: {
+    to: string;
+    otp: string;
+    action?: "login" | "enable" | "verification";
+}) {
+    const subject = `${otp} is your iReside two-factor verification code`;
+
+    const title = action === "enable" 
+        ? "Enable Two-Factor Authentication" 
+        : action === "login" 
+        ? "Two-Factor Authentication Sign-In" 
+        : "Two-Factor Security Verification";
+
+    const description = action === "enable"
+        ? "Use the verification code below to enable Two-Factor Authentication on your iReside account."
+        : action === "login"
+        ? "Use the verification code below to complete your sign-in to your iReside account."
+        : "Use the verification code below to verify your identity for Two-Factor Authentication.";
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>${title}</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+  </style>
+</head>
+<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+  <div style="max-width:480px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+    <div style="background-color:#c4b0ff;padding:24px 32px;text-align:center;">
+      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
+      <p style="margin:4px 0 0;color:#1e1b4b;font-size:12px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:1.5px;">Two-Factor Authentication</p>
+    </div>
+    <div style="padding:32px;text-align:center;">
+      <h2 style="margin:0 0 8px;font-size:18px;font-weight:700;color:#09090b;">${title}</h2>
+      <p style="margin:0 0 28px;color:#52525b;font-size:14px;line-height:1.6;">
+        ${description}
+      </p>
+
+      <div style="background-color:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:24px;margin-bottom:28px;">
+        <span style="font-size:32px;font-weight:900;color:#09090b;font-family:Consolas,'Liberation Mono',Menlo,monospace;letter-spacing:8px;margin-left:8px;">${otp}</span>
+      </div>
+
+      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
+        This code will expire in 5 minutes. If you did not request this code, please secure your account credentials immediately.
+      </p>
+    </div>
+    <div style="padding:16px;background-color:#fafafa;text-align:center;border-top:1px solid #f4f4f5;">
+      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const text = `${title}\n\n${description}\n\nVerification Code: ${otp}\n\nThis code will expire in 5 minutes. If you did not request this code, please secure your account credentials immediately.\n\n© ${new Date().getFullYear()} iReside Property Management`;
+
+    return await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
+}
+
 export async function sendEmailVerificationOTP({
     to,
     otp,

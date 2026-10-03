@@ -191,9 +191,15 @@ const ComplaintModal = ({
                                             animate={{ opacity: 1, height: 'auto' }}
                                             className="space-y-3"
                                         >
-                                            <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Details</label>
+                                            <div className="flex items-center justify-between ml-1">
+                                                <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Details</label>
+                                                <span className="text-[10px] font-medium text-muted-foreground/70 select-none">
+                                                    {customComplaint.length} / 500
+                                                </span>
+                                            </div>
                                             <textarea
                                                 required
+                                                maxLength={500}
                                                 value={customComplaint}
                                                 onChange={(e) => setCustomComplaint(e.target.value)}
                                                 placeholder="Please describe the issue in detail…"
@@ -3941,6 +3947,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                             <div className="flex items-center mx-1">
                                 <input
                                     type="text"
+                                    maxLength={60}
                                     value={editingFloorName}
                                     onChange={(e) => setEditingFloorName(e.target.value)}
                                     onBlur={() => {
@@ -5088,6 +5095,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             <span className={`material-icons-round text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>edit</span>
                                             <input
                                                 type="text"
+                                                maxLength={60}
                                                 value={corridors.find(c => c.id === selectedItem.id)?.label || ""}
                                                 onChange={(e) => {
                                                     const val = e.target.value;
@@ -6029,11 +6037,13 @@ const UnitDetailsPanel = ({
                                 <input
                                     type="number"
                                     min="0"
+                                    max="9999"
                                     step="1"
                                     disabled={isSavingConfig}
                                     value={draftAreaSqm}
                                     onChange={(e) => {
-                                        setDraftAreaSqm(e.target.value);
+                                        const num = e.target.value === "" ? "" : String(Math.min(9999, Math.max(0, parseInt(e.target.value) || 0)));
+                                        setDraftAreaSqm(num);
                                         if (configFeedback) setConfigFeedback(null);
                                     }}
                                     className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
@@ -6045,11 +6055,13 @@ const UnitDetailsPanel = ({
                                     <input
                                         type="number"
                                         min="0"
+                                        max="99"
                                         step="1"
                                         disabled={isSavingConfig}
                                         value={draftBedrooms}
                                         onChange={(e) => {
-                                            setDraftBedrooms(e.target.value);
+                                            const num = e.target.value === "" ? "" : String(Math.min(99, Math.max(0, parseInt(e.target.value) || 0)));
+                                            setDraftBedrooms(num);
                                             if (configFeedback) setConfigFeedback(null);
                                         }}
                                         className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
@@ -6060,11 +6072,13 @@ const UnitDetailsPanel = ({
                                     <input
                                         type="number"
                                         min="0"
+                                        max="99"
                                         step="0.5"
                                         disabled={isSavingConfig}
                                         value={draftBaths}
                                         onChange={(e) => {
-                                            setDraftBaths(e.target.value);
+                                            const num = e.target.value === "" ? "" : String(Math.min(99, Math.max(0, parseFloat(e.target.value) || 0)));
+                                            setDraftBaths(num);
                                             if (configFeedback) setConfigFeedback(null);
                                         }}
                                         className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
@@ -6632,6 +6646,7 @@ const UnitNotesPanel = ({
                             </div>
                         </div>
                         <textarea
+                            maxLength={500}
                             value={value}
                             onChange={(event) => onChange(event.target.value)}
                             placeholder="Add reminders, follow-ups, or move-in prep details…"
@@ -6639,7 +6654,7 @@ const UnitNotesPanel = ({
                         />
                         <div className="mt-2 flex items-center justify-between px-1">
                             <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Tip: Use short action-oriented notes.</p>
-                            <p className="text-[11px] font-black text-zinc-500 dark:text-zinc-400">{noteLength} chars</p>
+                            <p className="text-[11px] font-black text-zinc-500 dark:text-zinc-400">{noteLength} / 500 chars</p>
                         </div>
                     </div>
                 )}
@@ -6711,7 +6726,7 @@ export const SidebarBlockLibrary = ({
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                         <span className="material-icons-round text-zinc-400 text-lg">search</span>
                     </span>
-                    <input className={`w-full rounded-lg border pl-10 pr-3 py-2 text-sm placeholder-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary ${isDark ? 'border-zinc-700 bg-background-dark text-zinc-200' : 'border-border bg-zinc-50 text-zinc-700'}`} placeholder="Search components…" type="text" />
+                    <input maxLength={60} className={`w-full rounded-lg border pl-10 pr-3 py-2 text-sm placeholder-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary ${isDark ? 'border-zinc-700 bg-background-dark text-zinc-200' : 'border-border bg-zinc-50 text-zinc-700'}`} placeholder="Search components…" type="text" />
                 </div>
             </div>
             <div className={`flex-1 overflow-y-auto p-4 space-y-6 ${styles['scrollbarHide'] || ''}`}>

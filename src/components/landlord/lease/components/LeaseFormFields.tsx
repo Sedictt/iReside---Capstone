@@ -36,7 +36,7 @@ export function LeaseFormFields({
                         <Calendar className="size-3.5" />
                         Lease Start Date
                     </label>
-                    <input
+                    <input min="2000-01-01" max="2099-12-31"
                         id="lease-start"
                         type="date"
                         value={leaseStart}
@@ -52,7 +52,7 @@ export function LeaseFormFields({
                         <Calendar className="size-3.5" />
                         Lease End Date
                     </label>
-                    <input
+                    <input min="2000-01-01" max="2099-12-31"
                         id="lease-end"
                         type="date"
                         value={leaseEnd}
@@ -71,7 +71,7 @@ export function LeaseFormFields({
                         <Banknote className="size-3.5" />
                         Monthly Rent
                     </label>
-                    <input
+                    <input max={9999999.99}
                         id="monthly-rent"
                         type="number"
                         min={0}
@@ -88,7 +88,7 @@ export function LeaseFormFields({
                         <Banknote className="size-3.5" />
                         Advance Rent
                     </label>
-                    <input
+                    <input max={9999999.99}
                         id="advance-invoice"
                         type="number"
                         min={0}
@@ -105,7 +105,7 @@ export function LeaseFormFields({
                         <Banknote className="size-3.5" />
                         Security Deposit
                     </label>
-                    <input
+                    <input max={9999999.99}
                         id="security-deposit"
                         type="number"
                         min={0}

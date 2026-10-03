@@ -566,6 +566,7 @@ function NewAssetContent() {
                                             <input 
                                                 id="property-name"
                                                 type="text" 
+                                                maxLength={60}
                                                 value={formData.propertyName} 
                                                 onChange={e => handleInputChange("propertyName", e.target.value)} 
                                                 className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/50 ${errors.propertyName ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`} 
@@ -580,10 +581,14 @@ function NewAssetContent() {
                                         <div className="space-y-2 relative">
                                             <div className="flex items-center justify-between px-1">
                                                 <label htmlFor="property-address" className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Location</label>
+                                                <span className="text-[10px] font-medium text-muted-foreground/70 select-none">
+                                                    {formData.address?.length || 0} / 120
+                                                </span>
                                             </div>
                                             <textarea 
                                                 id="property-address"
                                                 rows={3} 
+                                                maxLength={120}
                                                 value={formData.address} 
                                                 onChange={e => handleInputChange("address", e.target.value)} 
                                                 className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary/40 resize-none transition-all placeholder:text-muted-foreground/50 ${errors.address ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`} 
@@ -686,8 +691,12 @@ function NewAssetContent() {
                                                     <input 
                                                         type="number" 
                                                         min="1"
+                                                        max="999"
                                                         value={formData.totalUnits}
-                                                        onChange={(e) => handleInputChange("totalUnits", e.target.value)}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value === "" ? "" : Math.min(999, Math.max(1, parseInt(e.target.value) || 1));
+                                                            handleInputChange("totalUnits", val);
+                                                        }}
                                                         className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 ${errors.totalUnits ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`}
                                                     />
                                                     {errors.totalUnits && (
@@ -699,8 +708,12 @@ function NewAssetContent() {
                                                     <input 
                                                         type="number" 
                                                         min="1"
+                                                        max="100"
                                                         value={formData.floorCount}
-                                                        onChange={(e) => handleInputChange("floorCount", e.target.value)}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value === "" ? "" : Math.min(100, Math.max(1, parseInt(e.target.value) || 1));
+                                                            handleInputChange("floorCount", val);
+                                                        }}
                                                         className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 ${errors.floorCount ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`}
                                                     />
                                                     {errors.floorCount && (
@@ -713,8 +726,12 @@ function NewAssetContent() {
                                                 <input 
                                                     type="number" 
                                                     min="1"
+                                                    max="20"
                                                     value={formData.occupancyLimit}
-                                                    onChange={(e) => handleInputChange("occupancyLimit", e.target.value)}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value === "" ? "" : Math.min(20, Math.max(1, parseInt(e.target.value) || 1));
+                                                        handleInputChange("occupancyLimit", val);
+                                                    }}
                                                     className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 ${errors.occupancyLimit ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`}
                                                 />
                                                 {errors.occupancyLimit && (
@@ -758,6 +775,7 @@ function NewAssetContent() {
                                                 </div>
                                                 <input
                                                     type="text"
+                                                    maxLength={10}
                                                     value={formData.unitPrefix}
                                                     onChange={(e) => handleInputChange("unitPrefix", e.target.value)}
                                                     placeholder="Or type custom prefix (e.g. Tower A-)"
@@ -804,8 +822,13 @@ function NewAssetContent() {
                                                         <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground px-1">Starting Number</label>
                                                         <input
                                                             type="number"
+                                                            min="1"
+                                                            max="9999"
                                                             value={formData.startingNumber}
-                                                            onChange={(e) => handleInputChange("startingNumber", parseInt(e.target.value) || 1)}
+                                                            onChange={(e) => {
+                                                                const val = Math.min(9999, Math.max(1, parseInt(e.target.value) || 1));
+                                                                handleInputChange("startingNumber", val);
+                                                            }}
                                                             className="w-full neumorphic-inset rounded-2xl px-5 py-2.5 text-xs font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 mt-1"
                                                         />
                                                     </div>
@@ -943,10 +966,12 @@ function NewAssetContent() {
                                                     <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none text-xl font-black text-primary/60 group-focus-within:text-primary transition-colors">₱</div>
                                                     <input 
                                                         type="text" 
+                                                        inputMode="decimal"
+                                                        maxLength={10}
                                                         value={formData.baseRent === 0 ? "" : formData.baseRent.toLocaleString('en-US')}
                                                         onChange={(e) => {
-                                                            const val = e.target.value.replace(/,/g, "");
-                                                            const num = parseInt(val) || 0;
+                                                            const val = e.target.value.replace(/[^0-9.]/g, "");
+                                                            const num = Math.min(9999999.99, parseFloat(val) || 0);
                                                             handleInputChange("baseRent", num);
                                                         }}
                                                         placeholder="0.00"

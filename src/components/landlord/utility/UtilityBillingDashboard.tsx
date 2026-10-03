@@ -1155,7 +1155,7 @@ export function UtilityBillingDashboard() {
 					{activeTab === "readings" && (
 						<div className="relative flex-1 min-w-[130px] sm:w-56 md:w-64">
 							<Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-							<input 
+							<input maxLength={60} 
 								placeholder="Search unit or room..." 
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
@@ -1328,7 +1328,7 @@ export function UtilityBillingDashboard() {
 																	{draft.water.exists ? (
 																		<span className="font-mono text-xs font-bold text-sky-400">{draft.water.current}</span>
 																	) : (
-																		<input 
+																		<input min={0} max={9999999} 
 																			type="number" 
 																			value={draft.water.current}
 																			placeholder="0.0"
@@ -1367,7 +1367,7 @@ export function UtilityBillingDashboard() {
 																	{draft.electricity.exists ? (
 																		<span className="font-mono text-xs font-bold text-amber-400">{draft.electricity.current}</span>
 																	) : (
-																		<input 
+																		<input min={0} max={9999999} 
 																			type="number" 
 																			value={draft.electricity.current}
 																			placeholder="0.0"
@@ -1803,7 +1803,7 @@ function UnitDetailModal({
 									<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground block mb-1">Base Monthly Rent</span>
 									<div className="flex items-baseline gap-1.5">
 										<span className="text-lg font-black text-muted-foreground">₱</span>
-										<input 
+										<input min={0} max={9999999.99} step="0.01" 
 											type="number" 
 											value={draft.rentAmount}
 											onChange={(e) => onUpdate({ rentAmount: parseFloat(e.target.value) || 0 })}
@@ -1927,7 +1927,7 @@ function ResourceSection({
 					<div className="grid grid-cols-2 gap-3">
 						<div className="space-y-1">
 							<label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block">Previous</label>
-							<input 
+							<input min={0} max={9999999} 
 								type="number" 
 								value={draft.previous}
 								onChange={(e) => onUpdate({ previous: parseFloat(e.target.value) || 0 })}
@@ -1936,7 +1936,7 @@ function ResourceSection({
 						</div>
 						<div className="space-y-1">
 							<label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block">Current</label>
-							<input 
+							<input min={0} max={9999999} 
 								type="number" 
 								value={draft.current}
 								placeholder="Enter reading..."
@@ -1952,7 +1952,7 @@ function ResourceSection({
 						<span className={cn("text-[9px] font-black uppercase tracking-widest block opacity-80", accentClass)}>Billing Rate</span>
 						<div className="flex items-center justify-center gap-1 mt-1">
 							<span className="text-sm font-black text-muted-foreground">₱</span>
-							<input 
+							<input min={0} max={99999.99} 
 								type="number" 
 								value={draft.rate}
 								step="0.01"

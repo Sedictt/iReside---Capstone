@@ -656,7 +656,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                 {/* Fast Omni-Search Bar */}
                 <div className="relative group hidden sm:block" ref={searchRef}>
                     <Search className="absolute left-4 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
-                    <input
+                    <input maxLength={60}
                         ref={inputRef}
                         type="text"
                         placeholder="Looking for something specific? Search unit, tenant, or concern…"

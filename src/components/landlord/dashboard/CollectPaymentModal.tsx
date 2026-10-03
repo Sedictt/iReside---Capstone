@@ -550,7 +550,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                     {/* Search Input */}
                                     <div className="relative">
                                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 dark:text-neutral-500" />
-                                        <input
+                                        <input maxLength={60}
                                             type="text"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -687,7 +687,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                     </label>
                                                     <div className="relative flex items-center">
                                                         <span className="absolute left-4 text-slate-700 dark:text-neutral-300 font-bold text-base select-none">₱</span>
-                                                        <input
+                                                        <input maxLength={10}
                                                             type="text"
                                                             value={amount}
                                                             onChange={(e) => {
@@ -753,7 +753,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                     <label className="text-xs font-semibold text-slate-600 dark:text-neutral-400">
                                                         Reference # (Optional)
                                                     </label>
-                                                    <input
+                                                    <input maxLength={60}
                                                         type="text"
                                                         value={referenceNumber}
                                                         onChange={(e) => setReferenceNumber(e.target.value)}
@@ -767,7 +767,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                         Date Received
                                                     </label>
                                                     <div className="relative flex items-center">
-                                                        <input
+                                                        <input min="2000-01-01" max="2099-12-31"
                                                             type="date"
                                                             value={paymentDate}
                                                             onChange={(e) => setPaymentDate(e.target.value)}
@@ -783,7 +783,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                 <label className="text-xs font-semibold text-slate-600 dark:text-neutral-400">
                                                     Notes / Remarks (Optional)
                                                 </label>
-                                                <input
+                                                <input maxLength={250}
                                                     type="text"
                                                     value={note}
                                                     onChange={(e) => setNote(e.target.value)}

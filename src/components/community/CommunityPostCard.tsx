@@ -329,14 +329,14 @@ export function CommunityPostCard({
 
             {isEditingPost ? (
                 <div className="space-y-3 px-5 pb-5 md:px-6" onClick={(e) => e.stopPropagation()}>
-                    <input
+                    <input maxLength={60}
                         type="text"
                         value={editPostTitle}
                         onChange={(e) => setEditPostTitle(e.target.value)}
                         className="w-full rounded-xl px-4 py-2.5 text-sm font-black outline-none transition-all neumorphic-inset"
                         placeholder="Post title..."
                     />
-                    <textarea
+                    <textarea maxLength={500}
                         value={editPostContent}
                         onChange={(e) => setEditPostContent(e.target.value)}
                         className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all neumorphic-inset min-h-[80px] resize-none"
@@ -581,7 +581,7 @@ export function CommunityPostCard({
                                                 <div className="flex-1 min-w-0">
                                                     {editingCommentId === comment.id ? (
                                                         <div className="space-y-2">
-                                                            <textarea
+                                                            <textarea maxLength={500}
                                                                 value={editingCommentContent}
                                                                 onChange={(e) => setEditingCommentContent(e.target.value)}
                                                                 className="w-full rounded-xl border border-border bg-background/80 px-3 py-2 text-sm outline-none transition-all focus:border-primary/50 dark:border-white/10 dark:bg-white/5 min-h-[60px] resize-none"
@@ -695,7 +695,7 @@ export function CommunityPostCard({
                                     <User className="size-4 text-muted-foreground/50" />
                                 </div>
                                 <div className="relative flex-1">
-                                    <textarea
+                                    <textarea maxLength={500}
                                         ref={commentInputRef}
                                         value={commentContent}
                                         onChange={(e) => {

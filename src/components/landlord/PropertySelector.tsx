@@ -134,7 +134,7 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                 )}>
                     <div className="relative mb-2 px-2 pt-2">
                         <Search className="absolute left-6 top-1/2 mt-1 size-4 -translate-y-1/2 text-muted-foreground/40" />
-                        <input
+                        <input maxLength={60}
                             type="text"
                             placeholder="Search properties…"
                             className="h-11 w-full rounded-2xl border-none text-[11px] font-black uppercase tracking-wider pl-10 pr-4 focus:outline-none neumorphic-inset"

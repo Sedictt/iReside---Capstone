@@ -1027,7 +1027,7 @@ export function TenantContactsSidebar() {
                                     "absolute left-3 top-1/2 -translate-y-1/2 size-3.5 transition-colors",
                                     searchQuery ? "text-primary" : "text-muted-foreground"
                                 )} />
-                                <input
+                                <input maxLength={60}
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -1516,7 +1516,7 @@ export function TenantContactsSidebar() {
                                         />
                                     </label>
                                     <div className="flex-1 bg-background border border-border rounded-full flex items-center px-3 py-1.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
-                                        <input
+                                        <input maxLength={500}
                                             type="text"
                                             placeholder={chat.isActive ? "Aa" : "Click header to activate"}
                                             disabled={!chat.isActive}

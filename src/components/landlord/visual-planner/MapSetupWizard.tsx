@@ -1086,7 +1086,7 @@ export function MapSetupWizard({
                                             </button>
                                         ))}
                                     </div>
-                                    <input
+                                    <input maxLength={10}
                                         type="text"
                                         value={renumberPrefix}
                                         onChange={(e) => setRenumberPrefix(e.target.value)}
@@ -1131,7 +1131,7 @@ export function MapSetupWizard({
                                     {renumberStyle === "sequential" && (
                                         <div className="pt-1">
                                             <label className="text-[11px] font-semibold text-muted-foreground">Starting Number</label>
-                                            <input
+                                            <input min={1} max={9999}
                                                 type="number"
                                                 value={renumberStartingNumber}
                                                 onChange={(e) => setRenumberStartingNumber(parseInt(e.target.value) || 1)}

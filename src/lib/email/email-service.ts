@@ -22,6 +22,7 @@ import {
   sendTenantOnboardingReminder,
   sendProspectPaymentRequestEmail as sendProspectPaymentRequestEmailImpl,
   sendRegistrationOTP,
+  sendTwoFactorOTP,
   sendLandlordRegistrationApproved,
   sendLandlordOnboardingMagicLink,
   sendApplicationRejectedEmail,
@@ -33,6 +34,7 @@ export {
   sendApplicationRejectedEmail,
   sendPaymentReviewResolutionEmail,
   sendNewApplicationReceivedEmail,
+  sendTwoFactorOTP,
 };
 
 // ---------------------------------------------------------------------------

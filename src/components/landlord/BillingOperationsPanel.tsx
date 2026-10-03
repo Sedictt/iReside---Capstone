@@ -2016,7 +2016,7 @@ function UtilityConfigEditor({
  </div>
 
  {/* Hidden Native Picker */}
- <input 
+ <input min="2000-01-01" max="2099-12-31" 
  type="date"
  value={config.effective_from}
  onChange={(e) => onChange(config.localId, { effective_from: e.target.value })}

@@ -850,7 +850,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                                 {method === "gcash" ? "13-Digit GCash Reference Number *" : "Reference Number (Optional)"}
                                             </label>
                                             <div className="relative">
-                                                <input
+                                                <input maxLength={60}
                                                     type="text"
                                                     value={referenceNumber}
                                                     onChange={(e) => setReferenceNumber(e.target.value)}
@@ -964,7 +964,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
                                                 Transfer Note (Optional)
                                             </label>
-                                            <input
+                                            <input maxLength={250}
                                                 type="text"
                                                 value={note}
                                                 onChange={(e) => setNote(e.target.value)}

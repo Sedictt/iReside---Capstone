@@ -405,7 +405,7 @@ export default function LandlordRenewalReview({ searchQuery }: LandlordRenewalRe
  <div className="grid grid-cols-2 gap-6">
  <div className="space-y-2">
  <label htmlFor="new-start-date" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New Start Date</label>
- <input
+ <input min="2000-01-01" max="2099-12-31"
  id="new-start-date"
  type="date"
  value={proposedStartDate}
@@ -415,7 +415,7 @@ export default function LandlordRenewalReview({ searchQuery }: LandlordRenewalRe
  </div>
  <div className="space-y-2">
  <label htmlFor="new-end-date" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New End Date</label>
- <input
+ <input min="2000-01-01" max="2099-12-31"
  id="new-end-date"
  type="date"
  value={proposedEndDate}
@@ -427,7 +427,7 @@ export default function LandlordRenewalReview({ searchQuery }: LandlordRenewalRe
  <label htmlFor="monthly-rent" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Rent (PHP)</label>
  <div className="relative">
  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-black">₱</span>
- <input
+ <input maxLength={10}
  id="monthly-rent"
  type="text"
  value={proposedRent}
@@ -448,7 +448,7 @@ export default function LandlordRenewalReview({ searchQuery }: LandlordRenewalRe
  </div>
  <div className="relative">
  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-black">₱</span>
- <input
+ <input maxLength={10}
  type="text"
  value={proposedDeposit}
  onChange={(e) => handleMoneyInput(e.target.value, setProposedDeposit)}
@@ -465,7 +465,7 @@ export default function LandlordRenewalReview({ searchQuery }: LandlordRenewalRe
 
  <div className="space-y-2">
  <label htmlFor="landlord-notes" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block">Landlord Notes (Optional)</label>
- <textarea
+ <textarea maxLength={250}
  id="landlord-notes"
  value={rejectNotes}
  onChange={(e) => setRejectNotes(e.target.value)}

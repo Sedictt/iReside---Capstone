@@ -526,6 +526,7 @@ export function AccountActivationModal({
                       <input
                         type="text"
                         required
+                        maxLength={50}
                         value={fullName}
                         onChange={(e) => {
                           setFullName(e.target.value);
@@ -548,6 +549,7 @@ export function AccountActivationModal({
                         <input
                           type="email"
                           required
+                          maxLength={50}
                           value={newEmail}
                           onChange={(e) => {
                             setNewEmail(e.target.value);
@@ -681,6 +683,7 @@ export function AccountActivationModal({
                       <input
                         type={showPassword ? "text" : "password"}
                         required
+                        maxLength={16}
                         value={newPassword}
                         onChange={(e) => {
                           setNewPassword(e.target.value);
@@ -798,6 +801,7 @@ export function AccountActivationModal({
                       <input
                         type={showConfirmPassword ? "text" : "password"}
                         required
+                        maxLength={16}
                         value={confirmPassword}
                         onChange={(e) => {
                           setConfirmPassword(e.target.value);

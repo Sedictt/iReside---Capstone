@@ -76,6 +76,9 @@ export function PaymentRecordForm({
             </div>
             <input
               id="amount-due"
+              min={0}
+              max={9999999.99}
+              step="0.01"
               type="number"
               value={amount}
               onChange={(e) => {
@@ -134,6 +137,7 @@ export function PaymentRecordForm({
             </div>
             <input
               id="ref-number"
+              maxLength={60}
               type="text"
               value={referenceNumber}
               onChange={(e) => onReferenceChange(e.target.value)}
@@ -155,6 +159,8 @@ export function PaymentRecordForm({
             </div>
             <input
               id="payment-date"
+              min="2000-01-01"
+              max="2099-12-31"
               type="date"
               value={paidAt || ""}
               onChange={(e) => onPaidAtChange(e.target.value)}

@@ -551,12 +551,13 @@ export default function TenantUtilitiesPage() {
                                         <label htmlFor="booking-date" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Date</label>
                                         <div className="flex items-center gap-2 rounded-xl p-3 neumorphic-inset">
                                             <Calendar className="size-4 text-primary" />
-                                            <input 
+                                            <input
                                                 id="booking-date"
                                                 type="date" 
                                                 value={bookingDate}
                                                 onChange={(e) => setBookingDate(e.target.value)}
                                                 min={minDate}
+                                                max="2099-12-31"
                                                 className="bg-transparent text-sm font-medium outline-none"
                                             />
                                         </div>
@@ -581,7 +582,7 @@ export default function TenantUtilitiesPage() {
 
                                 <div className="flex flex-col gap-1.5">
                                     <label htmlFor="booking-notes" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Notes (Optional)</label>
-                                    <textarea 
+                                    <textarea maxLength={500} 
                                         id="booking-notes"
                                         placeholder="Tell us about your event..."
                                         value={bookingNotes}

@@ -301,7 +301,7 @@ export function PropertiesDashboard() {
 
                 <div className="relative w-full sm:w-80">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                    <input
+                    <input maxLength={60}
                         type="text"
                         placeholder="Filter portfolio by name or location..."
                         value={searchQuery}

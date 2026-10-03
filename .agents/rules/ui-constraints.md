@@ -16,9 +16,27 @@ trigger: always_on
 - Default Profile Avatar & Background Color Invariants:
   - New user accounts (both landlord and tenant) MUST NEVER display a pitch-black avatar or background fallback (e.g. `#171717`, `#000000`, `#0a0a0a`, `#121212`, `#18181b`).
   - Avatar background colors must normalize legacy dark values to the brand violet (`#8B5CF6`) via `getSafeAvatarBgColor()`.
-  - Fallback avatar images must reference the canonical system avatar (`DEFAULT_AVATAR_URL`) rather than broken blanks or external placeholders.
 - Profile Incompleteness & Attention Seeker Nudge Invariants:
   - When a user's profile is incomplete (missing custom avatar, phone number, or bio), the profile widget and navigation avatar (both landlord and tenant) MUST display an attention seeker beacon dot (`animate-ping`) on the top-right of the avatar button.
   - Dropdowns and navigation drawers for incomplete profiles MUST display an actionable "Complete Profile" callout banner and a concise "Set Up" badge next to the profile menu item.
   - Once profile setup requirements are satisfied, the attention seeker badge automatically dismisses.
-
+- Compact Input Limits & Clamping Invariants:
+  - Every `<input>`, `<Input>`, and `<textarea>` must define explicit, domain-appropriate `maxLength` (for strings) or `max` (for numbers):
+    - **Phone Numbers**: Fixed to Philippine mobile format (+63 prefix). Strict `maxLength={11}` (e.g., `09XXXXXXXXX`), sanitized in real-time (`replace(/[^0-9]/g, '')`), with `inputMode="tel"`.
+    - **Email Addresses**: `maxLength={50}`.
+    - **Passwords**: `maxLength={16}`.
+    - **Search & Filter Inputs**: `maxLength={60}`.
+    - **OTP / Verification / Security Codes**: `maxLength={8}` (allowing 6 to 8 digit codes).
+    - **Personal Names** (First, Last, Middle, Full name, Contact person): `maxLength={50}`.
+    - **Titles & Names** (Property name, branch, role title, post heading): `maxLength={60}`.
+    - **Short Codes & Unit Labels** (Unit number, room tag, floor label, promo code): `maxLength={10}`.
+    - **Addresses & Locations** (Street address, city, barangay, landmark): `maxLength={120}`.
+    - **Short Notes & Briefs** (Rejection reasons, transaction memo, amenity name, notice): `maxLength={250}`.
+    - **Long Descriptions & Narrative Fields** (Maintenance problem details, property description, lease terms, announcements, user bio): `maxLength={500}`.
+    - **Financial Amounts** (Rent, deposits, utility rates, payment settlements): Max numeric value `9,999,999.99` (or `maxLength={10}` on sanitized decimal strings).
+    - **Utility Meter Readings** (Electric kWh, Water cubic meters): Max numeric value `9,999,999` (`maxLength={7}`).
+  - **Visual Character Counter Invariant**:
+    - All multi-line `<textarea>` inputs and long narrative fields (250+ characters) MUST display a clean, subtle character count indicator (e.g., `120 / 500`) right-aligned below the input or inside the footer.
+    - Single-line inputs (names, emails, codes, titles) enforce `maxLength` silently without visual counter clutter.
+  - **Shared Component Safety Baseline**:
+    - The shared `Input` component (`src/components/ui/input.tsx`) must supply a default fallback `maxLength={120}` for text inputs when unspecified, ensuring no text field in the application remains unbounded.

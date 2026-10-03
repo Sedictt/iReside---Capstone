@@ -118,7 +118,7 @@ export default function TestVerificationPage() {
                             <label className="block text-sm font-medium text-neutral-400 mb-2">
                                 Business Name <span className="text-red-400">*</span>
                             </label>
-                            <input
+                            <input maxLength={60}
                                 type="text"
                                 value={businessName}
                                 onChange={(e) => setBusinessName(e.target.value)}
@@ -132,7 +132,7 @@ export default function TestVerificationPage() {
                             <label className="block text-sm font-medium text-neutral-400 mb-2">
                                 Business Address (optional)
                             </label>
-                            <input
+                            <input maxLength={120}
                                 type="text"
                                 value={businessAddress}
                                 onChange={(e) => setBusinessAddress(e.target.value)}

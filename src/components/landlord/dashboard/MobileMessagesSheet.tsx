@@ -204,7 +204,7 @@ export function MobileMessagesSheet() {
                             <div className="px-5 py-3">
                                 <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-muted/50 px-3 py-2">
                                     <Search className="size-4 text-muted-foreground shrink-0" />
-                                    <input
+                                    <input maxLength={60}
                                         type="text"
                                         placeholder="Search messages..."
                                         value={searchQuery}

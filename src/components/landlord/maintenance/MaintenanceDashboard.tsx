@@ -199,7 +199,7 @@ export function MaintenanceDashboard() {
  <div className="flex-1 w-full max-w-md">
  <div className="relative group">
  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
- <input
+ <input maxLength={60}
  type="text"
  placeholder="Search by ID, tenant, unit or title..."
  value={searchQuery}

@@ -310,6 +310,7 @@ function ResetPasswordContent() {
                                             name="new-password"
                                             type={isPasswordVisible ? "text" : "password"}
                                             required
+                                            maxLength={16}
                                             value={newPassword}
                                             onChange={(e) => {
                                                 setNewPassword(e.target.value);
@@ -353,6 +354,7 @@ function ResetPasswordContent() {
                                             name="confirm-password"
                                             type={isConfirmVisible ? "text" : "password"}
                                             required
+                                            maxLength={16}
                                             value={confirmPassword}
                                             onChange={(e) => {
                                                 const val = e.target.value;
