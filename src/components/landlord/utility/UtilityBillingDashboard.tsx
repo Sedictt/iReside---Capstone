@@ -1232,55 +1232,6 @@ export function UtilityBillingDashboard() {
 						exit={{ opacity: 0, y: -10 }}
 						className="space-y-6"
 					>
-						{/* Progress & Live Consumption Dashboard */}
-						<div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-							<div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 flex flex-col justify-between shadow-xs">
-								<span className="text-xs font-bold text-muted-foreground">Rooms Recorded</span>
-								<div className="mt-2 flex items-baseline gap-1.5">
-									<span className="text-2xl font-bold font-mono text-foreground">{readingsSummary.recordedCount}</span>
-									<span className="text-xs font-semibold text-muted-foreground">of {readingsSummary.totalUnits} rooms</span>
-								</div>
-								<div className="mt-3 h-2 w-full bg-muted rounded-full overflow-hidden">
-									<div 
-										className="h-full bg-primary rounded-full transition-all duration-500"
-										style={{ width: `${readingsSummary.totalUnits > 0 ? (readingsSummary.recordedCount / readingsSummary.totalUnits) * 100 : 0}%` }}
-									/>
-								</div>
-							</div>
-
-							<div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 flex flex-col justify-between shadow-xs">
-								<span className="text-xs font-bold text-amber-500 flex items-center gap-1.5">
-									<Zap className="size-3.5" /> Total Electricity
-								</span>
-								<div className="mt-2 flex items-baseline gap-1.5">
-									<span className="text-2xl font-bold font-mono text-foreground">{readingsSummary.totalElecKwh.toFixed(1)}</span>
-									<span className="text-xs font-bold text-muted-foreground">kWh</span>
-								</div>
-								<span className="text-xs text-muted-foreground mt-2">Used this month</span>
-							</div>
-
-							<div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 flex flex-col justify-between shadow-xs">
-								<span className="text-xs font-bold text-sky-500 flex items-center gap-1.5">
-									<Droplets className="size-3.5" /> Total Water
-								</span>
-								<div className="mt-2 flex items-baseline gap-1.5">
-									<span className="text-2xl font-bold font-mono text-foreground">{readingsSummary.totalWaterM3.toFixed(1)}</span>
-									<span className="text-xs font-bold text-muted-foreground">m³</span>
-								</div>
-								<span className="text-xs text-muted-foreground mt-2">Used this month</span>
-							</div>
-
-							<div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 flex flex-col justify-between shadow-xs">
-								<span className="text-xs font-bold text-emerald-500 flex items-center gap-1.5">
-									<DollarSign className="size-3.5" /> Total Utility Charges
-								</span>
-								<div className="mt-2 flex items-baseline gap-1">
-									<span className="text-xs font-bold text-muted-foreground">₱</span>
-									<span className="text-2xl font-bold font-mono text-foreground">{readingsSummary.totalEstimatedUtilRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-								</div>
-								<span className="text-xs text-muted-foreground mt-2">To be billed to tenants</span>
-							</div>
-						</div>
 
 						{/* All Rooms Vacant Helpful Callout (removes confusion for empty buildings) */}
 						{filteredDrafts.length > 0 && filteredDrafts.every(d => d.occupancyStatus !== "occupied") && (
@@ -1325,21 +1276,21 @@ export function UtilityBillingDashboard() {
 									<thead>
 										<tr className="border-b border-border/70 text-xs font-bold text-muted-foreground">
 											<th className="px-6 py-4 bg-muted/30">Room &amp; Rent</th>
-											<th className="px-6 py-4 text-center bg-sky-500/[0.05] dark:bg-sky-500/[0.08] border-x border-sky-500/15">
-												<div className="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-300 font-bold text-xs">
-													<Droplets className="size-4 text-sky-500 shrink-0" />
+											<th className="px-6 py-3.5 text-center bg-sky-500/[0.08] dark:bg-sky-500/[0.12] border-x-2 border-sky-500/20 dark:border-sky-500/30">
+												<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/15 dark:bg-sky-500/25 text-sky-800 dark:text-sky-200 border border-sky-500/30 text-xs font-bold shadow-xs">
+													<Droplets className="size-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
 													<span>Water (m³)</span>
 												</div>
-												<div className="text-[10px] font-medium text-sky-600/80 dark:text-sky-400/80 tracking-normal normal-case mt-0.5">
+												<div className="text-[10px] font-semibold text-sky-700/80 dark:text-sky-300/80 tracking-normal normal-case mt-1">
 													Previous → Current
 												</div>
 											</th>
-											<th className="px-6 py-4 text-center bg-amber-500/[0.05] dark:bg-amber-500/[0.08] border-r border-amber-500/15">
-												<div className="inline-flex items-center gap-1.5 text-amber-700 dark:text-amber-300 font-bold text-xs">
-													<Zap className="size-4 text-amber-500 shrink-0" />
+											<th className="px-6 py-3.5 text-center bg-amber-500/[0.08] dark:bg-amber-500/[0.12] border-r-2 border-amber-500/20 dark:border-amber-500/30">
+												<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 dark:bg-amber-500/25 text-amber-900 dark:text-amber-100 border border-amber-500/30 text-xs font-bold shadow-xs">
+													<Zap className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
 													<span>Electricity (kWh)</span>
 												</div>
-												<div className="text-[10px] font-medium text-amber-600/80 dark:text-amber-400/80 tracking-normal normal-case mt-0.5">
+												<div className="text-[10px] font-semibold text-amber-700/80 dark:text-amber-300/80 tracking-normal normal-case mt-1">
 													Previous → Current
 												</div>
 											</th>
@@ -1397,16 +1348,17 @@ export function UtilityBillingDashboard() {
 													</td>
 													
 													{/* Water Reading Column - distinct Sky Blue channel */}
-													<td className="px-6 py-4 bg-sky-500/[0.02] dark:bg-sky-500/[0.03] border-x border-sky-500/10">
+													<td className="px-6 py-4 bg-sky-500/[0.04] dark:bg-sky-500/[0.08] border-x-2 border-sky-500/20 dark:border-sky-500/30">
 														<div className="flex flex-col items-center gap-1.5">
 															<div className="flex items-center justify-center gap-2">
-																<span className="font-mono text-xs font-semibold text-muted-foreground w-12 text-right">
+																<span className="font-mono text-xs font-bold text-sky-900 dark:text-sky-100 bg-sky-100/90 dark:bg-sky-900/60 px-2 py-1 rounded-lg border border-sky-200 dark:border-sky-800 min-w-[36px] text-center shadow-2xs">
 																	{draft.water.previous}
 																</span>
-																<span className="text-sky-400/80 text-xs font-bold">→</span>
+																<span className="text-sky-500 dark:text-sky-400 text-sm font-black">→</span>
 																{draft.water.exists ? (
-																	<span className="font-mono text-xs font-bold text-sky-700 dark:text-sky-300 w-28 text-center">
-																		{draft.water.current} m³
+																	<span className="inline-flex items-center gap-1 font-mono text-xs font-bold text-sky-800 dark:text-sky-200 bg-sky-500/15 dark:bg-sky-500/25 px-3 py-1.5 rounded-xl border border-sky-500/30 w-32 justify-center shadow-xs">
+																		<Droplets className="size-3 text-sky-500 shrink-0" />
+																		<span>{draft.water.current} m³</span>
 																	</span>
 																) : (
 																	<div className="relative">
@@ -1424,16 +1376,16 @@ export function UtilityBillingDashboard() {
 																					updateDraftsAndCache(newDrafts);
 																				}
 																			}}
-																			className="w-28 h-9 rounded-xl border-2 border-sky-300/90 dark:border-sky-500/50 bg-sky-50/50 dark:bg-sky-950/30 pl-2.5 pr-7 text-center font-mono text-xs font-bold text-sky-950 dark:text-sky-100 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 transition-all placeholder:text-sky-400/50"
+																			className="w-32 h-9.5 rounded-xl border-2 border-sky-400 dark:border-sky-500 bg-white dark:bg-zinc-900 pl-3 pr-9 text-center font-mono text-xs font-bold text-sky-950 dark:text-sky-100 outline-none focus:border-sky-600 focus:ring-4 focus:ring-sky-500/20 transition-all placeholder:text-sky-300 dark:placeholder:text-sky-700 shadow-2xs"
 																		/>
-																		<span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-sky-600 dark:text-sky-400 pointer-events-none select-none">
+																		<span className="absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[10px] font-black bg-sky-500 text-white pointer-events-none select-none shadow-2xs">
 																			m³
 																		</span>
 																	</div>
 																)}
 															</div>
 															{hasWater && waterUsage > 0 && (
-																<span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-500/15 px-2.5 py-0.5 rounded-full border border-sky-500/30">
+																<span className="text-[10px] font-bold text-sky-800 dark:text-sky-200 bg-sky-500/20 dark:bg-sky-500/30 px-2.5 py-0.5 rounded-full border border-sky-500/40">
 																	+{waterUsage.toFixed(1)} m³ (₱{waterCost.toFixed(2)})
 																</span>
 															)}
@@ -1441,16 +1393,17 @@ export function UtilityBillingDashboard() {
 													</td>
 
 													{/* Electricity Reading Column - distinct Amber channel */}
-													<td className="px-6 py-4 bg-amber-500/[0.02] dark:bg-amber-500/[0.03] border-r border-amber-500/10">
+													<td className="px-6 py-4 bg-amber-500/[0.04] dark:bg-amber-500/[0.08] border-r-2 border-amber-500/20 dark:border-amber-500/30">
 														<div className="flex flex-col items-center gap-1.5">
 															<div className="flex items-center justify-center gap-2">
-																<span className="font-mono text-xs font-semibold text-muted-foreground w-12 text-right">
+																<span className="font-mono text-xs font-bold text-amber-950 dark:text-amber-100 bg-amber-100/90 dark:bg-amber-900/60 px-2 py-1 rounded-lg border border-amber-200 dark:border-amber-800 min-w-[36px] text-center shadow-2xs">
 																	{draft.electricity.previous}
 																</span>
-																<span className="text-amber-400/80 text-xs font-bold">→</span>
+																<span className="text-amber-500 dark:text-amber-400 text-sm font-black">→</span>
 																{draft.electricity.exists ? (
-																	<span className="font-mono text-xs font-bold text-amber-700 dark:text-amber-300 w-28 text-center">
-																		{draft.electricity.current} kWh
+																	<span className="inline-flex items-center gap-1 font-mono text-xs font-bold text-amber-900 dark:text-amber-100 bg-amber-500/15 dark:bg-amber-500/25 px-3 py-1.5 rounded-xl border border-amber-500/30 w-32 justify-center shadow-xs">
+																		<Zap className="size-3 text-amber-500 shrink-0" />
+																		<span>{draft.electricity.current} kWh</span>
 																	</span>
 																) : (
 																	<div className="relative">
@@ -1468,16 +1421,16 @@ export function UtilityBillingDashboard() {
 																					updateDraftsAndCache(newDrafts);
 																				}
 																			}}
-																			className="w-28 h-9 rounded-xl border-2 border-amber-300/90 dark:border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/30 pl-2.5 pr-8 text-center font-mono text-xs font-bold text-amber-950 dark:text-amber-100 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 transition-all placeholder:text-amber-400/50"
+																			className="w-32 h-9.5 rounded-xl border-2 border-amber-400 dark:border-amber-500 bg-white dark:bg-zinc-900 pl-3 pr-11 text-center font-mono text-xs font-bold text-amber-950 dark:text-amber-100 outline-none focus:border-amber-600 focus:ring-4 focus:ring-amber-500/20 transition-all placeholder:text-amber-300 dark:placeholder:text-amber-700 shadow-2xs"
 																		/>
-																		<span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-amber-600 dark:text-amber-400 pointer-events-none select-none">
+																		<span className="absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-500 text-zinc-950 pointer-events-none select-none shadow-2xs">
 																			kWh
 																		</span>
 																	</div>
 																)}
 															</div>
 															{hasElec && elecUsage > 0 && (
-																<span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-500/15 px-2.5 py-0.5 rounded-full border border-amber-500/30">
+																<span className="text-[10px] font-bold text-amber-900 dark:text-amber-100 bg-amber-500/20 dark:bg-amber-500/30 px-2.5 py-0.5 rounded-full border border-amber-500/40">
 																	+{elecUsage.toFixed(1)} kWh (₱{elecCost.toFixed(2)})
 																</span>
 															)}
