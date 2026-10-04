@@ -1002,8 +1002,6 @@ export function MapSetupWizard({
                                             canRemoveUnit={units.length > 1}
                                             highlightedUnitId={tourDraggableUnitId}
                                             isDropHighlighted={tourDestinationFloorNumber === -1}
-                                            availableFloors={floorConfigs}
-                                            onMoveToFloor={handleUpdateUnitFloor}
                                         />
                                     </div>
                                 )}
@@ -1076,8 +1074,6 @@ export function MapSetupWizard({
                                                 canRemoveUnit={units.length > 1}
                                                 highlightedUnitId={tourDraggableUnitId}
                                                 isDropHighlighted={tourDestinationFloorNumber === fc.floor_number}
-                                                availableFloors={floorConfigs}
-                                                onMoveToFloor={handleUpdateUnitFloor}
                                             />
                                         ))}
                                     </div>

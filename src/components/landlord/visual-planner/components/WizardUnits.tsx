@@ -37,16 +37,12 @@ function SortableUnit({
     onRemove,
     canRemove = true,
     isHighlighted = false,
-    availableFloors,
-    onMoveToFloor,
 }: {
     unit: DbUnit;
     isOverlay?: boolean;
     onRemove?: (unit: DbUnit) => void;
     canRemove?: boolean;
     isHighlighted?: boolean;
-    availableFloors?: FloorConfig[];
-    onMoveToFloor?: (unitId: string, targetFloor: number) => void;
 }) {
     const {
         attributes,
@@ -112,48 +108,22 @@ function SortableUnit({
                 )}
             </div>
 
-            <div className="flex items-center gap-1.5 shrink-0">
-                {/* Clean, Subtle Move Selector */}
-                {availableFloors && availableFloors.length > 1 && onMoveToFloor && !isOverlay && (
-                    <select
-                        value={unit.floor}
-                        onChange={(e) => {
-                            const targetFloor = parseInt(e.target.value, 10);
-                            if (!isNaN(targetFloor) && targetFloor !== unit.floor) {
-                                onMoveToFloor(unit.id, targetFloor);
-                            }
-                        }}
-                        onPointerDown={(e) => e.stopPropagation()}
-                        onClick={(e) => e.stopPropagation()}
-                        className="h-7 rounded-lg border border-transparent hover:border-border/80 bg-transparent hover:bg-muted/80 text-xs font-semibold text-muted-foreground hover:text-foreground px-2 py-0 cursor-pointer outline-none focus:ring-1 focus:ring-primary transition-colors"
-                        title="Move room to another floor"
-                        aria-label={`Move ${unit.name} to another floor`}
-                    >
-                        {availableFloors.map((f) => (
-                            <option key={f.floor_key} value={f.floor_number}>
-                                {f.floor_number === unit.floor ? `Floor ${f.floor_number}` : `Move to ${f.floor_number === -1 ? "Unassigned" : f.floor_number === 0 ? "Ground Floor" : `Floor ${f.floor_number}`}`}
-                            </option>
-                        ))}
-                    </select>
-                )}
-
-                {onRemove && isDeletable && !isOverlay && (
-                    <button
-                        type="button"
-                        onPointerDown={(e) => e.stopPropagation()}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            onRemove(unit);
-                        }}
-                        className="size-7 flex items-center justify-center rounded-lg text-muted-foreground/40 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
-                        title={`Remove ${unit.name}`}
-                        aria-label={`Remove ${unit.name}`}
-                    >
-                        <Trash2 className="size-3.5" />
-                    </button>
-                )}
-            </div>
+            {onRemove && isDeletable && !isOverlay && (
+                <button
+                    type="button"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        onRemove(unit);
+                    }}
+                    className="size-7 flex items-center justify-center rounded-lg text-muted-foreground/40 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0"
+                    title={`Remove ${unit.name}`}
+                    aria-label={`Remove ${unit.name}`}
+                >
+                    <Trash2 className="size-3.5" />
+                </button>
+            )}
         </div>
     );
 }
@@ -167,8 +137,6 @@ function FloorLane({
     canRemoveUnit = true,
     highlightedUnitId,
     isDropHighlighted = false,
-    availableFloors,
-    onMoveToFloor,
 }: {
     floor: FloorConfig;
     units: DbUnit[];
@@ -178,8 +146,6 @@ function FloorLane({
     canRemoveUnit?: boolean;
     highlightedUnitId?: string;
     isDropHighlighted?: boolean;
-    availableFloors?: FloorConfig[];
-    onMoveToFloor?: (unitId: string, targetFloor: number) => void;
 }) {
     const { setNodeRef, isOver } = useSortable({
         id: `floor-${floor.floor_number}`,
@@ -278,8 +244,6 @@ function FloorLane({
                                     onRemove={onRemoveUnit}
                                     canRemove={canRemoveUnit}
                                     isHighlighted={unit.id === highlightedUnitId}
-                                    availableFloors={availableFloors}
-                                    onMoveToFloor={onMoveToFloor}
                                 />
                             ))}
                         </div>
