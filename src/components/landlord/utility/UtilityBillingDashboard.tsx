@@ -1323,18 +1323,28 @@ export function UtilityBillingDashboard() {
 							<div className="overflow-x-auto">
 								<table className="w-full text-left border-collapse">
 									<thead>
-										<tr className="border-b border-border/70 bg-muted/30 text-xs font-bold text-muted-foreground">
-											<th className="px-6 py-4">Room &amp; Rent</th>
-											<th className="px-6 py-4 text-center">
-												<div>Water (m³)</div>
-												<div className="text-[10px] font-normal text-muted-foreground/70 tracking-normal normal-case">Previous → Current</div>
+										<tr className="border-b border-border/70 text-xs font-bold text-muted-foreground">
+											<th className="px-6 py-4 bg-muted/30">Room &amp; Rent</th>
+											<th className="px-6 py-4 text-center bg-sky-500/[0.05] dark:bg-sky-500/[0.08] border-x border-sky-500/15">
+												<div className="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-300 font-bold text-xs">
+													<Droplets className="size-4 text-sky-500 shrink-0" />
+													<span>Water (m³)</span>
+												</div>
+												<div className="text-[10px] font-medium text-sky-600/80 dark:text-sky-400/80 tracking-normal normal-case mt-0.5">
+													Previous → Current
+												</div>
 											</th>
-											<th className="px-6 py-4 text-center">
-												<div>Electricity (kWh)</div>
-												<div className="text-[10px] font-normal text-muted-foreground/70 tracking-normal normal-case">Previous → Current</div>
+											<th className="px-6 py-4 text-center bg-amber-500/[0.05] dark:bg-amber-500/[0.08] border-r border-amber-500/15">
+												<div className="inline-flex items-center gap-1.5 text-amber-700 dark:text-amber-300 font-bold text-xs">
+													<Zap className="size-4 text-amber-500 shrink-0" />
+													<span>Electricity (kWh)</span>
+												</div>
+												<div className="text-[10px] font-medium text-amber-600/80 dark:text-amber-400/80 tracking-normal normal-case mt-0.5">
+													Previous → Current
+												</div>
 											</th>
-											<th className="px-6 py-4 text-right">Total Due</th>
-											<th className="px-6 py-4 text-right">Actions</th>
+											<th className="px-6 py-4 text-right bg-muted/30">Total Due</th>
+											<th className="px-6 py-4 text-right bg-muted/30">Actions</th>
 										</tr>
 									</thead>
 									<tbody className="divide-y divide-border/50">
@@ -1386,78 +1396,88 @@ export function UtilityBillingDashboard() {
 														</div>
 													</td>
 													
-													{/* Water Reading Column */}
-													<td className="px-6 py-4">
+													{/* Water Reading Column - distinct Sky Blue channel */}
+													<td className="px-6 py-4 bg-sky-500/[0.02] dark:bg-sky-500/[0.03] border-x border-sky-500/10">
 														<div className="flex flex-col items-center gap-1.5">
 															<div className="flex items-center justify-center gap-2">
 																<span className="font-mono text-xs font-semibold text-muted-foreground w-12 text-right">
 																	{draft.water.previous}
 																</span>
-																<span className="text-muted-foreground/40 text-xs font-bold">→</span>
+																<span className="text-sky-400/80 text-xs font-bold">→</span>
 																{draft.water.exists ? (
-																	<span className="font-mono text-xs font-bold text-foreground w-24 text-center">
-																		{draft.water.current}
+																	<span className="font-mono text-xs font-bold text-sky-700 dark:text-sky-300 w-28 text-center">
+																		{draft.water.current} m³
 																	</span>
 																) : (
-																	<input 
-																		min={0} 
-																		max={9999999} 
-																		type="number" 
-																		value={draft.water.current}
-																		placeholder="0.0"
-																		onChange={(e) => {
-																			const newDrafts = [...drafts];
-																			const index = drafts.findIndex(d => d.unitId === draft.unitId);
-																			if (index !== -1) {
-																				newDrafts[index] = { ...newDrafts[index], water: { ...draft.water, current: e.target.value } };
-																				updateDraftsAndCache(newDrafts);
-																			}
-																		}}
-																		className="w-24 h-9 rounded-xl border border-border/80 bg-background px-3 py-1 text-center font-mono text-xs font-bold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/40"
-																	/>
+																	<div className="relative">
+																		<input 
+																			min={0} 
+																			max={9999999} 
+																			type="number" 
+																			value={draft.water.current}
+																			placeholder="0.0"
+																			onChange={(e) => {
+																				const newDrafts = [...drafts];
+																				const index = drafts.findIndex(d => d.unitId === draft.unitId);
+																				if (index !== -1) {
+																					newDrafts[index] = { ...newDrafts[index], water: { ...draft.water, current: e.target.value } };
+																					updateDraftsAndCache(newDrafts);
+																				}
+																			}}
+																			className="w-28 h-9 rounded-xl border-2 border-sky-300/90 dark:border-sky-500/50 bg-sky-50/50 dark:bg-sky-950/30 pl-2.5 pr-7 text-center font-mono text-xs font-bold text-sky-950 dark:text-sky-100 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 transition-all placeholder:text-sky-400/50"
+																		/>
+																		<span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-sky-600 dark:text-sky-400 pointer-events-none select-none">
+																			m³
+																		</span>
+																	</div>
 																)}
 															</div>
 															{hasWater && waterUsage > 0 && (
-																<span className="text-[10px] font-bold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2.5 py-0.5 rounded-full border border-sky-500/20">
+																<span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-500/15 px-2.5 py-0.5 rounded-full border border-sky-500/30">
 																	+{waterUsage.toFixed(1)} m³ (₱{waterCost.toFixed(2)})
 																</span>
 															)}
 														</div>
 													</td>
 
-													{/* Electricity Reading Column */}
-													<td className="px-6 py-4">
+													{/* Electricity Reading Column - distinct Amber channel */}
+													<td className="px-6 py-4 bg-amber-500/[0.02] dark:bg-amber-500/[0.03] border-r border-amber-500/10">
 														<div className="flex flex-col items-center gap-1.5">
 															<div className="flex items-center justify-center gap-2">
 																<span className="font-mono text-xs font-semibold text-muted-foreground w-12 text-right">
 																	{draft.electricity.previous}
 																</span>
-																<span className="text-muted-foreground/40 text-xs font-bold">→</span>
+																<span className="text-amber-400/80 text-xs font-bold">→</span>
 																{draft.electricity.exists ? (
-																	<span className="font-mono text-xs font-bold text-foreground w-24 text-center">
-																		{draft.electricity.current}
+																	<span className="font-mono text-xs font-bold text-amber-700 dark:text-amber-300 w-28 text-center">
+																		{draft.electricity.current} kWh
 																	</span>
 																) : (
-																	<input 
-																		min={0} 
-																		max={9999999} 
-																		type="number" 
-																		value={draft.electricity.current}
-																		placeholder="0.0"
-																		onChange={(e) => {
-																			const newDrafts = [...drafts];
-																			const index = drafts.findIndex(d => d.unitId === draft.unitId);
-																			if (index !== -1) {
-																				newDrafts[index] = { ...newDrafts[index], electricity: { ...draft.electricity, current: e.target.value } };
-																				updateDraftsAndCache(newDrafts);
-																			}
-																		}}
-																		className="w-24 h-9 rounded-xl border border-border/80 bg-background px-3 py-1 text-center font-mono text-xs font-bold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/40"
-																	/>
+																	<div className="relative">
+																		<input 
+																			min={0} 
+																			max={9999999} 
+																			type="number" 
+																			value={draft.electricity.current}
+																			placeholder="0.0"
+																			onChange={(e) => {
+																				const newDrafts = [...drafts];
+																				const index = drafts.findIndex(d => d.unitId === draft.unitId);
+																				if (index !== -1) {
+																					newDrafts[index] = { ...newDrafts[index], electricity: { ...draft.electricity, current: e.target.value } };
+																					updateDraftsAndCache(newDrafts);
+																				}
+																			}}
+																			className="w-28 h-9 rounded-xl border-2 border-amber-300/90 dark:border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/30 pl-2.5 pr-8 text-center font-mono text-xs font-bold text-amber-950 dark:text-amber-100 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 transition-all placeholder:text-amber-400/50"
+																		/>
+																		<span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-amber-600 dark:text-amber-400 pointer-events-none select-none">
+																			kWh
+																		</span>
+																	</div>
 																)}
 															</div>
 															{hasElec && elecUsage > 0 && (
-																<span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+																<span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-500/15 px-2.5 py-0.5 rounded-full border border-amber-500/30">
 																	+{elecUsage.toFixed(1)} kWh (₱{elecCost.toFixed(2)})
 																</span>
 															)}
