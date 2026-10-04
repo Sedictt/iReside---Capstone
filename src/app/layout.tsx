@@ -36,6 +36,7 @@ import { OfflineBanner } from "@/components/ui/OfflineBanner";
 import { OfflineCommandCenterModal } from "@/components/offline/OfflineCommandCenterModal";
 import { BrandProvider } from "@/context/BrandContext";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { DebugToolsLauncher } from "@/components/debug/DebugToolsLauncher";
 
 
 export default function RootLayout({
@@ -96,6 +97,7 @@ export default function RootLayout({
                             {children}
                             <AppToaster />
                             <CookieConsent />
+                            <DebugToolsLauncher />
                           </GlobalClickSpark>
                         </TooltipProvider>
                       </FramerMotionProvider>

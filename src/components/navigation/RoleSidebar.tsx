@@ -670,28 +670,7 @@ export function RoleSidebar({
                     </div>
                 </nav>
 
-                {/* Updates Area (Guideline 11) */}
-                {!isUpdateCardDismissed && (
-                    <div className="px-3 py-1.5 shrink-0">
-                        <div className="relative flex flex-col gap-1 rounded-xl border border-border/70 dark:border-border/60 bg-muted/20 p-2.5 text-xs">
-                            <button
-                                type="button"
-                                onClick={handleDismissUpdateCard}
-                                className="absolute right-2 top-2 p-0.5 text-muted-foreground hover:text-foreground rounded transition-colors"
-                                aria-label="Dismiss product update"
-                            >
-                                <X className="size-3" />
-                            </button>
-                            <div className="flex items-center gap-1.5 text-primary font-bold text-[11px]">
-                                <Megaphone className="size-3" />
-                                <span>What&apos;s New</span>
-                            </div>
-                            <p className="text-[11px] text-muted-foreground leading-snug pr-4">
-                                2D Room Map & Quick Actions are now live on your dashboard.
-                            </p>
-                        </div>
-                    </div>
-                )}
+
 
                 {/* Footer (Pinned Utilities - Guideline 5) */}
                 <div className="border-t border-border/40 p-3 space-y-1.5 shrink-0">

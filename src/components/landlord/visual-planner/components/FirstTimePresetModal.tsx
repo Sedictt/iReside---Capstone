@@ -207,12 +207,12 @@ export const FirstTimePresetModal = ({
                         {/* Header Section */}
                         <div className="p-7 sm:p-9 pb-5 border-b border-border/60 bg-muted/20">
                             <div className="flex items-center gap-2 mb-3">
-                                <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                                    <Layers className="size-3.5" />
+                                <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.2em] text-primary">
+                                    <Layers className="size-4" />
                                     Step 2 of Onboarding • Unit Map Setup
                                 </span>
                                 {unitCount > 0 && (
-                                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
                                         {unitCount} {unitCount === 1 ? "Unit" : "Units"} • {floorCount} {floorCount === 1 ? "Floor" : "Floors"}
                                     </span>
                                 )}
@@ -224,7 +224,7 @@ export const FirstTimePresetModal = ({
                             >
                                 Choose a Unit-map Layout
                             </h2>
-                            <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-3xl font-medium">
+                            <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-3xl font-medium">
                                 Your units are on the canvas but haven&apos;t been organized into a final unit-map layout yet. Choose a preset to automatically organize units and hallways, or lay them out manually by dragging and dropping units and adding elements like stairs from the sidebar.
                             </p>
                         </div>
@@ -276,11 +276,11 @@ export const FirstTimePresetModal = ({
                         {/* Footer / Manual Layout Banner */}
                         <div className="p-6 sm:p-7 border-t border-border/60 bg-muted/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div className="space-y-1">
-                                <p className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-2">
-                                    <Move className="size-3.5 text-primary" />
+                                <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                                    <Move className="size-4 text-primary" />
                                     Prefer to arrange it yourself?
                                 </p>
-                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                                     You can lay out your units manually by drag and dropping the units themselves and add elements such as stairs from the sidebar.
                                 </p>
                             </div>
@@ -289,9 +289,9 @@ export const FirstTimePresetModal = ({
                                 type="button"
                                 onClick={onChooseManual}
                                 className={cn(
-                                    "shrink-0 inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-wider",
+                                    "shrink-0 inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-bold",
                                     "border border-border/90 bg-card hover:bg-muted text-foreground hover:border-primary/50",
-                                    "transition-all active:scale-95 shadow-sm"
+                                    "transition-all active:scale-95 shadow-sm min-h-[44px] cursor-pointer"
                                 )}
                             >
                                 <span>Lay Out Manually</span>

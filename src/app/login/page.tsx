@@ -18,6 +18,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { AccountActivationModal } from "@/components/auth/AccountActivationModal";
 import { SecurityKeyRecoveryModal } from "@/components/auth/SecurityKeyRecoveryModal";
 import { DISALLOWED_PRESEEDED_DATA } from "@/lib/validation/brand-setup";
@@ -79,6 +80,7 @@ function LoginContent() {
         password?: string;
     } | null>(null);
     const [isRecoveryRedirecting, setIsRecoveryRedirecting] = useState(false);
+    const [unclaimedUserData, setUnclaimedUserData] = useState<{ fullName?: string; email?: string } | null>(null);
 
     // 2FA Challenge States
     const [twoFactorChallenge, setTwoFactorChallenge] = useState<{
@@ -151,7 +153,7 @@ function LoginContent() {
     const handleRecoveryProceed = async () => {
         if (!pendingRecovery) return;
         setIsRecoveryRedirecting(true);
-        const { email } = pendingRecovery;
+        const { email, password } = pendingRecovery;
 
         // Clear pending recovery key and temporary stored credentials
         try {
@@ -194,7 +196,29 @@ function LoginContent() {
             } catch {}
         }
 
-        // Force browser refresh so there are no stale cache or auth locks before logging in
+        // Seamless Auto-Login: Authenticate directly with the newly set credentials
+        if (password) {
+            try {
+                const supabase = createClient();
+                const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+                if (!signInErr && signInData?.session) {
+                    toast.success("Account Claimed Successfully!", {
+                        description: "Continuing directly to property setup...",
+                    });
+                    if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+                        window.location.replace("/setup");
+                        return;
+                    }
+                }
+            } catch (autoLoginErr) {
+                console.warn("[Recovery Proceed] Auto-login error, falling back to manual login:", autoLoginErr);
+            }
+        }
+
+        // Fallback: Force browser refresh so there are no stale cache or auth locks before logging in
         if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
             window.location.replace(`/login?activated=true&email=${encodeURIComponent(email)}`);
             return;
@@ -379,6 +403,10 @@ function LoginContent() {
         // Intercept initial setup/default accounts for landlord/admin
         if ((role === "landlord" || role === "admin") && (isClaimed === false || isDefaultAccount)) {
             clearStaleLandlordData();
+            setUnclaimedUserData({
+                fullName: userData?.user_metadata?.full_name || userData?.user_metadata?.name,
+                email: userData?.email,
+            });
             setShowActivationModal(true);
             setTwoFactorChallenge(null);
             setLoading(false);
@@ -920,7 +948,7 @@ function LoginContent() {
                                                     </Link>
                                                 </div>
                                                 <div className="relative">
-                                                    <input maxLength={16}
+                                                    <input
                                                         ref={passwordInputRef}
                                                         id="password"
                                                         name="password"
@@ -990,6 +1018,8 @@ function LoginContent() {
             <AccountActivationModal
                 isOpen={showActivationModal}
                 onComplete={handleActivationComplete}
+                initialFullName={unclaimedUserData?.fullName}
+                initialEmail={unclaimedUserData?.email}
             />
 
             {/* Security Recovery Key Lightbox Modal (rendered after refresh) */}

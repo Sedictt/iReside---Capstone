@@ -52,6 +52,11 @@ export function LandlordUnitMapLightbox() {
         pathname !== "/landlord/properties/new" &&
         (!isUnitMapPage || !isDismissed);
 
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        window.dispatchEvent(new CustomEvent("ireside-unit-map-greeting-change", { detail: { isVisible, propertyId: activePropertyId } }));
+    }, [isVisible, activePropertyId]);
+
     if (!isVisible) return null;
 
     const unconfiguredProperty = 
@@ -68,6 +73,7 @@ export function LandlordUnitMapLightbox() {
             if (typeof window !== "undefined") {
                 try {
                     window.sessionStorage.setItem(`ireside.unit_map_intro_dismissed.${activePropertyId}`, "true");
+                    window.dispatchEvent(new CustomEvent("ireside-unit-map-greeting-dismissed", { detail: { propertyId: activePropertyId } }));
                 } catch {}
             }
         } else {
@@ -81,6 +87,7 @@ export function LandlordUnitMapLightbox() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="unit-map-setup-lightbox-title"
+            data-ireside-greeting="unit-map"
         >
             {/* Dimmed Non-Dismissible Background */}
             <div className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300 pointer-events-auto" />

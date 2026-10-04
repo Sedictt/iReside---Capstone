@@ -37,9 +37,9 @@ export const UNIT_MAP_TOUR_STEPS: UnitMapTourStep[] = [
     {
         id: 4,
         title: "Step 4: Generate Interactive Unit Map",
-        description: "When all units have a floor assignment, click 'Generate Unit-map' in the header. iReside will synthesize your 2D architectural blueprint layout.",
+        description: "When all units have a floor assignment, click 'Generate Unit-map' in the header to create your interactive 2D unit map layout.",
         targetElementLabel: "Generate Unit-map Button",
-        tip: "After generation, you can pick a hallway architectural preset or freely drag units on the canvas.",
+        tip: "After generation, you can pick a hallway preset or freely arrange units on the canvas.",
     },
 ];
 
@@ -66,6 +66,14 @@ export function UnitMapTourSpotlight({
 }: UnitMapTourSpotlightProps) {
     if (!isOpen) return null;
 
+    // Defense-in-depth: Never render the tour spotlight card if the unit map greeting lightbox is visible in DOM
+    if (typeof document !== "undefined" && Boolean(
+        document.querySelector('[data-ireside-greeting="unit-map"]') ||
+        document.querySelector('[aria-labelledby="unit-map-setup-lightbox-title"]')
+    )) {
+        return null;
+    }
+
     const step = UNIT_MAP_TOUR_STEPS[currentStepIndex] || UNIT_MAP_TOUR_STEPS[0];
     const isFirst = currentStepIndex === 0;
     const isLast = currentStepIndex === UNIT_MAP_TOUR_STEPS.length - 1;
@@ -84,14 +92,14 @@ export function UnitMapTourSpotlight({
                         <span className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-black">
                             {step.id}
                         </span>
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                        <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">
                             Tour: Step {step.id} of {UNIT_MAP_TOUR_STEPS.length}
                         </span>
                     </div>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
                         aria-label="Exit tour"
                     >
                         <X className="size-4" />
@@ -100,7 +108,7 @@ export function UnitMapTourSpotlight({
 
                 {/* Target Highlight Beacon Pill */}
                 {step.targetElementLabel && (
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-[11px] font-bold text-primary">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-xs font-bold text-primary">
                         <span className="relative flex size-2 shrink-0">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                             <span className="relative inline-flex rounded-full size-2 bg-primary"></span>
@@ -114,14 +122,14 @@ export function UnitMapTourSpotlight({
                     <h3 id="unit-map-tour-title" className="text-base font-bold text-foreground tracking-tight">
                         {step.title}
                     </h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                         {step.description}
                     </p>
                 </div>
 
                 {step.tip && (
-                    <div className="rounded-xl bg-primary/5 border border-primary/15 p-2.5 text-[11px] text-muted-foreground leading-snug">
-                        <span className="font-semibold text-primary">Note: </span>
+                    <div className="rounded-xl bg-primary/5 border border-primary/15 p-3 text-xs text-muted-foreground leading-snug">
+                        <span className="font-bold text-primary">Note: </span>
                         {step.tip}
                     </div>
                 )}
@@ -133,11 +141,11 @@ export function UnitMapTourSpotlight({
                         onClick={onPrev}
                         disabled={isFirst}
                         className={cn(
-                            "h-9 px-3 rounded-xl border border-border text-xs font-semibold flex items-center gap-1.5 transition-all",
+                            "h-10 sm:h-11 px-4 rounded-xl border border-border text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-all",
                             isFirst ? "opacity-30 cursor-not-allowed" : "hover:bg-muted cursor-pointer"
                         )}
                     >
-                        <ArrowLeft className="size-3" />
+                        <ArrowLeft className="size-3.5" />
                         <span>Back</span>
                     </button>
 
@@ -146,18 +154,18 @@ export function UnitMapTourSpotlight({
                             <button
                                 type="button"
                                 onClick={onNext}
-                                className="h-9 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 hover:bg-primary/90 transition-all cursor-pointer shadow-xs active:scale-95"
+                                className="h-10 sm:h-11 px-5 rounded-xl bg-primary text-primary-foreground text-xs sm:text-sm font-bold flex items-center gap-2 hover:bg-primary/90 transition-all cursor-pointer shadow-xs active:scale-95"
                             >
                                 <span>Next</span>
-                                <ArrowRight className="size-3" />
+                                <ArrowRight className="size-3.5" />
                             </button>
                         ) : (
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="h-9 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 hover:bg-primary/90 transition-all cursor-pointer shadow-md shadow-primary/25 active:scale-95"
+                                className="h-10 sm:h-11 px-5 rounded-xl bg-primary text-primary-foreground text-xs sm:text-sm font-bold flex items-center gap-2 hover:bg-primary/90 transition-all cursor-pointer shadow-md shadow-primary/25 active:scale-95"
                             >
-                                <CheckCircle2 className="size-3.5" />
+                                <CheckCircle2 className="size-4" />
                                 <span>Finish Tour</span>
                             </button>
                         )}

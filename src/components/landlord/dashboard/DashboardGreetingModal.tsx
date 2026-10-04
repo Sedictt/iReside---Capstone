@@ -50,61 +50,61 @@ export function DashboardGreetingModal({
                 {/* Headings */}
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">
+                        <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">
                             Step 5 of 5 • Final Stage
                         </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                            Command Center
+                        <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                            Dashboard Tour
                         </span>
                     </div>
                     <h1 id="dashboard-greeting-modal-title" className="text-2xl sm:text-3xl font-black tracking-tight text-foreground leading-tight">
-                        Master Your Dashboard
+                        Tour Your Dashboard
                     </h1>
-                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                        Welcome to your operational headquarters{propertyName ? <> for <span className="font-bold text-foreground">{propertyName}</span></> : ""}! Take a quick 1-minute guided tour to discover how to record cash payments, inspect occupancy, and monitor collection health.
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                        Welcome to your management dashboard{propertyName ? <> for <span className="font-bold text-foreground">{propertyName}</span></> : ""}! Take a quick 1-minute guided tour to discover how to record cash payments, check room occupancy, and track rent collection.
                     </p>
                 </div>
 
                 {/* 3 Clean Feature Steps Overview */}
-                <div className="space-y-2.5 rounded-2xl border border-border/70 bg-muted/20 p-4 sm:p-5">
+                <div className="space-y-3 rounded-2xl border border-border/70 bg-muted/20 p-4 sm:p-5">
                     <div className="flex items-start gap-3">
-                        <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5 border border-primary/20">
+                        <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5 border border-primary/20">
                             <Zap className="size-4" />
                         </div>
                         <div>
-                            <h3 className="text-xs font-black text-foreground">
-                                1. Action Launchpad
+                            <h3 className="text-sm font-bold text-foreground">
+                                1. Quick Actions
                             </h3>
-                            <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Record cash collections, onboard walk-in tenants, generate invite links, or download marketing flyers in one click.
+                            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                                Record cash payments, onboard walk-in tenants, generate invite links, or download marketing flyers in one click.
                             </p>
                         </div>
                     </div>
 
                     <div className="flex items-start gap-3">
-                        <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5 border border-primary/20">
+                        <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5 border border-primary/20">
                             <Activity className="size-4" />
                         </div>
                         <div>
-                            <h3 className="text-xs font-black text-foreground">
-                                2. Real-Time Operational Pulse
+                            <h3 className="text-sm font-bold text-foreground">
+                                2. Today&apos;s Overview
                             </h3>
-                            <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Monitor overdue balances, vacant rooms, and pending applications with instant interactive drill-down drawers.
+                            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                                See who hasn&apos;t paid rent yet, which rooms are empty, and pending tenant applications at a glance.
                             </p>
                         </div>
                     </div>
 
                     <div className="flex items-start gap-3">
-                        <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5 border border-primary/20">
+                        <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5 border border-primary/20">
                             <Banknote className="size-4" />
                         </div>
                         <div>
-                            <h3 className="text-xs font-black text-foreground">
-                                3. Revenue Stream &amp; Settlement
+                            <h3 className="text-sm font-bold text-foreground">
+                                3. Rent &amp; Payments
                             </h3>
-                            <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Review inbound payments in real-time and acknowledge settlements with automatic digital receipting.
+                            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                                Review payments in real-time, approve GCash/bank transfers, and issue automatic receipts.
                             </p>
                         </div>
                     </div>
@@ -115,14 +115,14 @@ export function DashboardGreetingModal({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="w-full sm:w-auto px-5 py-3 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all cursor-pointer text-center active:scale-95"
+                        className="w-full sm:w-auto h-12 px-6 rounded-2xl text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all cursor-pointer text-center active:scale-95"
                     >
                         Explore First
                     </button>
                     <button
                         type="button"
                         onClick={onStartTour}
-                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-7 py-3 rounded-xl text-xs font-black bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-105 transition-all cursor-pointer active:scale-95"
+                        className="w-full sm:w-auto h-12 flex items-center justify-center gap-2 px-7 rounded-2xl text-sm font-bold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-105 transition-all cursor-pointer active:scale-95"
                     >
                         <span>Start Guided Tour</span>
                         <ArrowRight className="size-4" />

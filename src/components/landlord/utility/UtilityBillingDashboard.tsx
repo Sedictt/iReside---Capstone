@@ -982,7 +982,7 @@ export function UtilityBillingDashboard() {
 
 			{/* Step-by-step Guided Tour Spotlight */}
 			<UtilityBillingTourSpotlight
-				isOpen={isTourOpen}
+				isOpen={isTourOpen && !isOnboardingModalOpen}
 				currentStepIndex={tourStepIndex}
 				onNext={handleTourNext}
 				onPrev={handleTourPrev}

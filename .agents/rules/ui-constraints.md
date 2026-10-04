@@ -51,7 +51,8 @@ trigger: always_on
     - ❌ *Tenant Records* ➔ ✅ **Tenant Directory**
     - ❌ *Property Portfolio* ➔ ✅ **My Properties**
     - ❌ *Rental Applications* ➔ ✅ **Tenant Applications**
-    - ❌ *Unit Visualizer* ➔ ✅ **2D Room Map**
+    - ❌ *Unit Visualizer* ➔ ✅ **Interactive Unit Map** or **Unit Map** (Preserve canonical "Unit Map" terminology across modals, badges, and navigation; do not replace with generic "Room Map")
+    - **Preserve Unit Map Architectural & Preset Terms**: Layout presets ("Double Loaded", "Single Loaded", "U-Shape", "L-Shape", "Apply [Preset]") and floor management labels ("Add & Manage Floor Levels") are core domain terms and must be retained.
     - ❌ *Maintenance Desk* ➔ ✅ **Repairs & Maintenance**
     - ❌ *Lease Lifecycle* ➔ ✅ **Lease Contracts**
     - ❌ *Financial Metrics* ➔ ✅ **Income & Reports**
@@ -68,3 +69,13 @@ trigger: always_on
     - Deep forest/emerald for paid accounts and healthy statuses.
     - Deep cognac/amber for pending repair requests.
     - Deep royal brand violet for room occupancies and primary actions.
+- **Elderly Landlord Accessibility & Emergency Key Invariants**:
+  - **The "Emergency Spare Key" Metaphor**: Never present recovery keys as cryptic crypto/security tokens. Frame them using the relatable physical metaphor: **Emergency Backup Key** or **Spare Key to Your Account**.
+  - **Plain, Reassuring Microcopy**:
+    - ❌ *"Single-Use Security Recovery Key. This key will be encrypted and will not be displayed again."*
+    - ✅ *"Here is your Emergency Spare Key. Just like a spare key to your house, keep this in a safe place. If you ever forget your password or lose access to your phone/email, this code lets you unlock your account."*
+  - **No Disabled Button Traps**: Never trap users on a screen with a disabled primary button that requires downloading an obscure `.txt` file and checking a dense disclaimer. Instead:
+    - Provide a prominent 1-click **"Download Key & Continue to Setup"** button that automatically saves the key and advances seamlessly.
+    - Keep the key unmasked by default (with large, clear monospaced lettering) so users can easily read or write it down.
+    - Provide a secondary **"Copy Code"** button with immediate checkmark feedback.
+  - **Senior-Friendly Readability**: Use high-contrast text, minimum 14px body font size, warm encouraging accents instead of alarming warning badges, and touch targets >= 48px.

@@ -92,16 +92,76 @@ export function MapSetupWizard({
     const [unitToDelete, setUnitToDelete] = useState<DbUnit | null>(null);
     const [isDeletingUnit, setIsDeletingUnit] = useState(false);
 
+    // --- Greeting State Sync ---
+    const [isGreetingVisible, setIsGreetingVisible] = useState(() => {
+        if (typeof window === "undefined") return false;
+        try {
+            const dismissed = window.sessionStorage.getItem(`ireside.unit_map_intro_dismissed.${propertyId}`);
+            if (dismissed === "true") return false;
+            return Boolean(document.querySelector('[data-ireside-greeting="unit-map"]'));
+        } catch {
+            return false;
+        }
+    });
+
     // --- Guided Tour Spotlight State ---
     const [isTourOpen, setIsTourOpen] = useState(() => {
         if (typeof window === "undefined") return false;
         try {
-            return window.sessionStorage.getItem(`ireside.map_wizard_tour_dismissed.${propertyId}`) !== "true";
+            // Do NOT auto-open tour if greeting is still active or not yet dismissed
+            const isGreetingDismissed = window.sessionStorage.getItem(`ireside.unit_map_intro_dismissed.${propertyId}`) === "true";
+            const isTourDismissed = window.sessionStorage.getItem(`ireside.map_wizard_tour_dismissed.${propertyId}`) === "true";
+            return isGreetingDismissed && !isTourDismissed;
         } catch {
-            return true;
+            return false;
         }
     });
     const [tourStepIndex, setTourStepIndex] = useState(0);
+
+    const effectiveTourOpen = isTourOpen && !isGreetingVisible;
+
+    // Sync with Greeting Lightbox events
+    useEffect(() => {
+        const handleGreetingChange = (e: any) => {
+            if (e?.detail?.isVisible !== undefined) {
+                const visible = Boolean(e.detail.isVisible);
+                setIsGreetingVisible(visible);
+                if (visible) {
+                    setIsTourOpen(false);
+                }
+            }
+        };
+
+        const handleGreetingDismissed = () => {
+            setIsGreetingVisible(false);
+            if (typeof window !== "undefined") {
+                try {
+                    const isTourDismissed = window.sessionStorage.getItem(`ireside.map_wizard_tour_dismissed.${propertyId}`) === "true";
+                    if (!isTourDismissed) {
+                        setIsTourOpen(true);
+                        setTourStepIndex(0);
+                    }
+                } catch {}
+            }
+        };
+
+        window.addEventListener("ireside-unit-map-greeting-change", handleGreetingChange);
+        window.addEventListener("ireside-unit-map-greeting-dismissed", handleGreetingDismissed);
+
+        const timer = setTimeout(() => {
+            const el = document.querySelector('[data-ireside-greeting="unit-map"]');
+            if (el) {
+                setIsGreetingVisible(true);
+                setIsTourOpen(false);
+            }
+        }, 50);
+
+        return () => {
+            window.removeEventListener("ireside-unit-map-greeting-change", handleGreetingChange);
+            window.removeEventListener("ireside-unit-map-greeting-dismissed", handleGreetingDismissed);
+            clearTimeout(timer);
+        };
+    }, [propertyId]);
 
     const handleTourNext = () => setTourStepIndex((prev) => Math.min(prev + 1, 3));
     const handleTourPrev = () => setTourStepIndex((prev) => Math.max(prev - 1, 0));
@@ -116,22 +176,22 @@ export function MapSetupWizard({
 
     // Dynamic tour target IDs for Step 2 (Drag & Drop)
     const tourDraggableUnitId = useMemo(() => {
-        if (!isTourOpen || tourStepIndex !== 1) return undefined;
+        if (!effectiveTourOpen || tourStepIndex !== 1) return undefined;
         const unassigned = units.find((u) => u.floor === -1);
         return unassigned?.id || units[0]?.id;
-    }, [isTourOpen, tourStepIndex, units]);
+    }, [effectiveTourOpen, tourStepIndex, units]);
 
     const tourDestinationFloorNumber = useMemo(() => {
-        if (!isTourOpen || tourStepIndex !== 1) return undefined;
+        if (!effectiveTourOpen || tourStepIndex !== 1) return undefined;
         const targetUnit = units.find((u) => u.id === tourDraggableUnitId);
         const currentFloor = targetUnit?.floor ?? -1;
         const destination = floorConfigs.find((fc) => fc.floor_number !== currentFloor) || floorConfigs[0];
         return destination?.floor_number;
-    }, [isTourOpen, tourStepIndex, units, tourDraggableUnitId, floorConfigs]);
+    }, [effectiveTourOpen, tourStepIndex, units, tourDraggableUnitId, floorConfigs]);
 
     // Auto-scroll when tour opens or step changes
     useEffect(() => {
-        if (!isTourOpen) return;
+        if (!effectiveTourOpen) return;
         if (tourStepIndex === 1) {
             const el = document.querySelector('[data-tour-id="tour-wizard-draggable-unit"]');
             if (el) {
@@ -140,7 +200,7 @@ export function MapSetupWizard({
             }
         }
         window.scrollTo({ top: 0, behavior: "smooth" });
-    }, [isTourOpen, tourStepIndex]);
+    }, [effectiveTourOpen, tourStepIndex]);
 
     // Sync state if initial data arrives later
     useEffect(() => {
@@ -687,13 +747,14 @@ export function MapSetupWizard({
                         <button
                             type="button"
                             onClick={() => {
+                                setIsGreetingVisible(false);
                                 setIsTourOpen(true);
                                 setTourStepIndex(0);
                             }}
                             title="Open Guided Tour"
                             className={cn(
                                 "inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border text-xs font-semibold transition-all active:scale-95 cursor-pointer",
-                                isTourOpen
+                                effectiveTourOpen
                                     ? "bg-primary/10 border-primary/30 text-primary shadow-xs"
                                     : "bg-card border-border hover:bg-muted text-muted-foreground hover:text-foreground"
                             )}
@@ -725,10 +786,10 @@ export function MapSetupWizard({
                             className={cn(
                                 "group relative inline-flex items-center gap-2 h-9 rounded-xl px-4 text-xs font-semibold transition-all duration-200 shadow-sm active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed bg-primary text-primary-foreground hover:brightness-105 cursor-pointer",
                                 isAllAssigned && "ring-2 ring-primary/30",
-                                isTourOpen && tourStepIndex === 3 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_35px_rgba(155,119,255,0.95)] animate-pulse scale-105 brightness-110 font-black z-30"
+                                effectiveTourOpen && tourStepIndex === 3 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_35px_rgba(155,119,255,0.95)] animate-pulse scale-105 brightness-110 font-black z-30"
                             )}
                         >
-                            {isTourOpen && tourStepIndex === 3 && (
+                            {effectiveTourOpen && tourStepIndex === 3 && (
                                 <span className="relative flex size-2 shrink-0">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-90"></span>
                                     <span className="relative inline-flex rounded-full size-2 bg-white"></span>
@@ -817,9 +878,9 @@ export function MapSetupWizard({
                                     {/* Action Group */}
                                     <div className={cn(
                                         "flex items-center rounded-xl border border-border bg-card p-1 shadow-xs transition-all relative",
-                                        isTourOpen && tourStepIndex === 0 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-102 border-primary z-30"
+                                        effectiveTourOpen && tourStepIndex === 0 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-102 border-primary z-30"
                                     )}>
-                                        {isTourOpen && tourStepIndex === 0 && (
+                                        {effectiveTourOpen && tourStepIndex === 0 && (
                                             <span className="relative flex size-2 shrink-0 ml-1.5 mr-0.5">
                                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                                                 <span className="relative inline-flex rounded-full size-2 bg-primary"></span>
@@ -868,10 +929,10 @@ export function MapSetupWizard({
                                         disabled={isSaving}
                                         className={cn(
                                             "inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3.5 py-2 text-xs font-semibold text-primary hover:bg-primary hover:text-primary-foreground transition-all active:scale-95 shadow-xs disabled:opacity-50 relative cursor-pointer",
-                                            isTourOpen && tourStepIndex === 2 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-105 bg-primary/20 border-primary font-bold z-30"
+                                            effectiveTourOpen && tourStepIndex === 2 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-105 bg-primary/20 border-primary font-bold z-30"
                                         )}
                                     >
-                                        {isTourOpen && tourStepIndex === 2 && (
+                                        {effectiveTourOpen && tourStepIndex === 2 && (
                                             <span className="relative flex size-2 shrink-0">
                                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                                                 <span className="relative inline-flex rounded-full size-2 bg-primary"></span>
@@ -1269,7 +1330,7 @@ export function MapSetupWizard({
 
             {/* Guided Tour Spotlight */}
             <UnitMapTourSpotlight
-                isOpen={isTourOpen}
+                isOpen={effectiveTourOpen}
                 currentStepIndex={tourStepIndex}
                 onNext={handleTourNext}
                 onPrev={handleTourPrev}

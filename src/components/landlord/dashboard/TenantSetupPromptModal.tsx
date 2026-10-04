@@ -101,7 +101,7 @@ export function TenantSetupPromptModal({
                             <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
                                 <Users className="size-6" />
                             </div>
-                            <span className="inline-flex items-center text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/25">
+                            <span className="inline-flex items-center text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/25">
                                 Step 4 of Onboarding
                             </span>
                         </div>
@@ -115,23 +115,23 @@ export function TenantSetupPromptModal({
                                 Configure Your Tenants
                             </h2>
                             <p id="tenant-setup-modal-desc" className="text-sm text-muted-foreground leading-relaxed">
-                                Your property and utility billing rails{propertyName ? <> for <span className="font-semibold text-foreground">{propertyName}</span></> : ""} are ready! Do you want to configure your tenants and add them to the system now?
+                                Your property and utility rates{propertyName ? <> for <span className="font-semibold text-foreground">{propertyName}</span></> : ""} are ready! Would you like to add your tenants and assign them to rooms now?
                             </p>
                         </div>
 
                         {/* Benefits checklist */}
                         <div className="rounded-2xl border border-border/70 bg-muted/30 dark:bg-muted/10 p-4 sm:p-5 space-y-3">
-                            <div className="flex items-center gap-3 text-xs sm:text-sm font-medium text-foreground">
+                            <div className="flex items-center gap-3 text-sm font-medium text-foreground">
                                 <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                                <span>Assign residents to vacant units</span>
+                                <span>Assign residents to vacant rooms</span>
                             </div>
-                            <div className="flex items-center gap-3 text-xs sm:text-sm font-medium text-foreground">
+                            <div className="flex items-center gap-3 text-sm font-medium text-foreground">
                                 <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                                <span>Enable digital rent collection & invoices</span>
+                                <span>Send monthly rent bills automatically</span>
                             </div>
-                            <div className="flex items-center gap-3 text-xs sm:text-sm font-medium text-foreground">
+                            <div className="flex items-center gap-3 text-sm font-medium text-foreground">
                                 <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                                <span>Track active leases & emergency contacts</span>
+                                <span>Keep tenant phone numbers, contacts, and lease dates safe</span>
                             </div>
                         </div>
 
@@ -140,7 +140,7 @@ export function TenantSetupPromptModal({
                             <button
                                 type="button"
                                 onClick={onMaybeLater}
-                                className="flex-1 inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-5 rounded-xl border border-border/80 bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground text-sm font-semibold transition-all cursor-pointer active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-5 rounded-2xl border border-border/80 bg-background hover:bg-muted text-muted-foreground hover:text-foreground text-sm font-semibold transition-all cursor-pointer active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                                 <Clock className="size-4" />
                                 <span>Maybe Later</span>
@@ -149,7 +149,7 @@ export function TenantSetupPromptModal({
                             <button
                                 type="button"
                                 onClick={() => setStep("choose_method")}
-                                className="flex-1 group inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                                className="flex-1 group inline-flex items-center justify-center gap-2 h-12 px-5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm shadow-md shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                             >
                                 <span>Yes, Configure Tenants</span>
                                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
@@ -199,43 +199,43 @@ export function TenantSetupPromptModal({
                                     </div>
                                     <div className="flex-1 min-w-0 space-y-1">
                                         <div className="flex items-center justify-between gap-2 flex-wrap">
-                                            <h3 className="text-sm font-bold text-foreground">
+                                            <h3 className="text-sm sm:text-base font-bold text-foreground">
                                                 Add Tenants Manually
                                             </h3>
-                                            <span className="inline-flex text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
-                                                Quick Add / Existing Leases
+                                            <span className="inline-flex text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+                                                Quick Add / Existing Tenants
                                             </span>
                                         </div>
-                                        <p className="text-xs text-muted-foreground leading-relaxed">
-                                            Quickly add existing residents who are already living in your property before adopting iReside:
+                                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                                             Quickly add existing residents who are already living in your property:
                                         </p>
                                     </div>
                                 </div>
 
                                 {/* Step-by-Step Guidance */}
-                                <div className="rounded-xl border border-border/70 bg-background/70 p-3.5 sm:p-4 space-y-2 text-xs text-muted-foreground">
+                                <div className="rounded-xl border border-border/70 bg-background/70 p-3.5 sm:p-4 space-y-2.5 text-xs sm:text-sm text-muted-foreground">
                                     <div className="flex items-start gap-2.5">
-                                        <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-[10px] shrink-0 mt-0.5">
+                                        <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs shrink-0 mt-0.5">
                                             1
                                         </span>
                                         <span className="leading-snug">
-                                            <strong className="text-foreground">Select Unit:</strong> Pick which vacant unit this resident will occupy.
+                                            <strong className="text-foreground">Select Unit:</strong> Pick which vacant room or unit this resident will occupy.
                                         </span>
                                     </div>
                                     <div className="flex items-start gap-2.5">
-                                        <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-[10px] shrink-0 mt-0.5">
+                                        <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs shrink-0 mt-0.5">
                                             2
                                         </span>
                                         <span className="leading-snug">
-                                            <strong className="text-foreground">Resident Info:</strong> Provide their full legal name, email, and phone number.
+                                            <strong className="text-foreground">Resident Info:</strong> Provide their full legal name, phone number, and email.
                                         </span>
                                     </div>
                                     <div className="flex items-start gap-2.5">
-                                        <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-[10px] shrink-0 mt-0.5">
+                                        <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs shrink-0 mt-0.5">
                                             3
                                         </span>
                                         <span className="leading-snug">
-                                            <strong className="text-foreground">Lease Terms:</strong> Confirm the monthly rent, security deposit, and lease start date.
+                                            <strong className="text-foreground">Lease Terms:</strong> Confirm monthly rent, security deposit, and start date.
                                         </span>
                                     </div>
                                 </div>
@@ -249,7 +249,7 @@ export function TenantSetupPromptModal({
                                             onSelectAddManually();
                                         }
                                     }}
-                                    className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-xs sm:text-sm hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                    className="w-full flex items-center justify-center gap-2 h-12 px-5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                 >
                                     <UserPlus className="size-4" />
                                     <span>Open Manual Resident Form</span>
@@ -268,24 +268,24 @@ export function TenantSetupPromptModal({
                                     </div>
                                     <div className="flex-1 min-w-0 space-y-1.5">
                                         <div className="flex items-center justify-between gap-2 flex-wrap">
-                                            <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                                            <h3 className="text-sm sm:text-base font-bold text-foreground group-hover:text-primary transition-colors">
                                                 Invite via Reusable Link
                                             </h3>
                                             <div className="flex items-center gap-1.5 flex-wrap">
-                                                <span className="inline-flex text-[11px] font-semibold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
+                                                <span className="inline-flex text-xs font-semibold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
                                                     Recommended
                                                 </span>
-                                                <span className="inline-flex text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20">
+                                                <span className="inline-flex text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20">
                                                     Remote Onboarding
                                                 </span>
                                             </div>
                                         </div>
-                                        <p className="text-xs text-muted-foreground leading-relaxed">
-                                            Generate a single reusable link or QR code to share with a single user or post in a group chat (Messenger, Viber, WhatsApp). Tenants can complete the application and onboarding process remotely from their own devices.
+                                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                                            Generate a link or QR code to share directly or post in a group chat (Messenger, Viber, WhatsApp). Tenants can fill out their details and complete onboarding directly from their own phone.
                                         </p>
-                                        <div className="flex items-center gap-1.5 pt-0.5 text-xs font-semibold text-primary">
+                                        <div className="flex items-center gap-1.5 pt-0.5 text-xs sm:text-sm font-semibold text-primary">
                                             <span>Generate and share link</span>
-                                            <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+                                            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                                         </div>
                                     </div>
                                 </div>
@@ -309,19 +309,19 @@ export function TenantSetupPromptModal({
                                     </div>
                                     <div className="flex-1 min-w-0 space-y-1.5">
                                         <div className="flex items-center justify-between gap-2 flex-wrap">
-                                            <h3 className="text-sm font-bold text-foreground group-hover:text-emerald-500 transition-colors">
+                                            <h3 className="text-sm sm:text-base font-bold text-foreground group-hover:text-emerald-500 transition-colors">
                                                 Walk-in Application
                                             </h3>
-                                            <span className="inline-flex text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                                            <span className="inline-flex text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
                                                 In-Person Leasing
                                             </span>
                                         </div>
-                                        <p className="text-xs text-muted-foreground leading-relaxed">
+                                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                                             Process prospective walk-in applicants on-site with live document verification, instant digital contract signing, and downpayment recording.
                                         </p>
-                                        <div className="flex items-center gap-1.5 pt-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                        <div className="flex items-center gap-1.5 pt-0.5 text-xs sm:text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                                             <span>Start in-person intake</span>
-                                            <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+                                            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                                         </div>
                                     </div>
                                 </div>

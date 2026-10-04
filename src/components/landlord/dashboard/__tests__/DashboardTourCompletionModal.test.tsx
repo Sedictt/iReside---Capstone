@@ -29,7 +29,7 @@ describe("DashboardTourCompletionModal", () => {
         expect(screen.getByText("All Features Unlocked")).toBeDefined();
         expect(screen.getByText("You're All Set Up!")).toBeDefined();
         expect(screen.getByText("Pinecrest Tower")).toBeDefined();
-        expect(screen.getByText("Open 2D Room Map")).toBeDefined();
+        expect(screen.getByText("Open Unit Map")).toBeDefined();
         expect(screen.getByText("View Tenant Directory")).toBeDefined();
         expect(screen.getByText("Explore Operational Dashboard")).toBeDefined();
     });
@@ -44,7 +44,7 @@ describe("DashboardTourCompletionModal", () => {
             />
         );
 
-        fireEvent.click(screen.getByText("Open 2D Room Map"));
+        fireEvent.click(screen.getByText("Open Unit Map"));
         expect(handleNavigate).toHaveBeenCalledWith("/landlord/unit-map");
 
         fireEvent.click(screen.getByText("View Tenant Directory"));
