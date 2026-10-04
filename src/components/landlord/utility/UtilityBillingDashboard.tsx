@@ -29,9 +29,10 @@ import {
 	Clock,
 	FileText,
 	QrCode,
-	ChevronRight,
 	ExternalLink,
-	ArrowRight
+	ArrowRight,
+	ChevronRight,
+	ChevronDown
 } from "lucide-react";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { m as motion, AnimatePresence } from "framer-motion";
@@ -1237,18 +1238,37 @@ export function UtilityBillingDashboard() {
 					})}
 				</div>
 
-				{/* Search & Cycle Filter */}
-				<div className="relative z-30 flex items-center gap-2.5 w-full lg:w-auto lg:justify-end">
+				{/* Search, Filter Dropdown & Cycle Picker */}
+				<div className="relative z-30 flex flex-wrap items-center gap-2 w-full lg:w-auto lg:justify-end">
 					{activeTab === "readings" && (
-						<div className="relative flex-1 min-w-[130px] sm:w-56 md:w-64">
-							<Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-							<input maxLength={60} 
-								placeholder="Search unit or room..." 
-								value={searchQuery}
-								onChange={(e) => setSearchQuery(e.target.value)}
-								className="h-9.5 w-full rounded-xl border border-border/70 bg-card/60 pl-8.5 pr-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all"
-							/>
-						</div>
+						<>
+							{/* Status Filter Dropdown */}
+							<div className="relative">
+								<select
+									value={filterStatus}
+									onChange={(e) => setFilterStatus(e.target.value as any)}
+									className="h-9.5 rounded-xl border border-border/70 bg-card/60 pl-3 pr-8 text-xs font-semibold text-foreground focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer appearance-none shadow-2xs"
+								>
+									<option value="all">All Rooms ({filterCounts.all})</option>
+									<option value="occupied">Occupied ({filterCounts.occupied})</option>
+									<option value="vacant">Vacant ({filterCounts.vacant})</option>
+									<option value="needs_reading">Needs Reading ({filterCounts.needsReading})</option>
+									<option value="recorded">Recorded ({filterCounts.recorded})</option>
+								</select>
+								<ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground pointer-events-none" />
+							</div>
+
+							{/* Search Input */}
+							<div className="relative flex-1 min-w-[120px] sm:w-44 md:w-52">
+								<Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+								<input maxLength={60} 
+									placeholder="Search unit..." 
+									value={searchQuery}
+									onChange={(e) => setSearchQuery(e.target.value)}
+									className="h-9.5 w-full rounded-xl border border-border/70 bg-card/60 pl-8.5 pr-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all"
+								/>
+							</div>
+						</>
 					)}
 
 					<MonthPicker
@@ -1288,53 +1308,6 @@ export function UtilityBillingDashboard() {
 						exit={{ opacity: 0, y: -10 }}
 						className="space-y-6"
 					>
-
-						{/* Quick Filter Chips Bar */}
-						<div className="flex flex-wrap items-center gap-2">
-							<span className="text-xs font-bold text-muted-foreground mr-1 hidden sm:inline">Filter:</span>
-							{[
-								{ id: "all", label: "All Rooms", count: filterCounts.all },
-								{ id: "occupied", label: "Occupied", count: filterCounts.occupied },
-								{ id: "vacant", label: "Vacant", count: filterCounts.vacant },
-								{ id: "needs_reading", label: "Needs Reading", count: filterCounts.needsReading },
-								{ id: "recorded", label: "Recorded", count: filterCounts.recorded },
-							].map((f) => (
-								<button
-									key={f.id}
-									type="button"
-									onClick={() => setFilterStatus(f.id as any)}
-									className={cn(
-										"inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-2xs whitespace-nowrap active:scale-95",
-										filterStatus === f.id
-											? "bg-primary text-primary-foreground font-bold shadow-xs"
-											: "bg-card border border-border/80 text-muted-foreground hover:text-foreground hover:bg-muted"
-									)}
-								>
-									<span>{f.label}</span>
-									<span className={cn(
-										"text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold",
-										filterStatus === f.id
-											? "bg-primary-foreground/20 text-primary-foreground"
-											: "bg-muted text-muted-foreground"
-									)}>
-										{f.count}
-									</span>
-								</button>
-							))}
-
-							{(filterStatus !== "all" || searchQuery) && (
-								<button
-									type="button"
-									onClick={() => {
-										setFilterStatus("all");
-										setSearchQuery("");
-									}}
-									className="text-xs text-muted-foreground hover:text-foreground font-medium underline underline-offset-2 ml-1 cursor-pointer shrink-0"
-								>
-									Reset filters
-								</button>
-							)}
-						</div>
 
 						{/* All Rooms Vacant Helpful Callout (removes confusion for empty buildings) */}
 						{filteredDrafts.length > 0 && filteredDrafts.every(d => d.occupancyStatus !== "occupied") && (
