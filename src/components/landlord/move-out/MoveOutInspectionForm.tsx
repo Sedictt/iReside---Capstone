@@ -284,7 +284,7 @@ export function MoveOutInspectionForm({
 
  <div className="space-y-3">
  <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">General Notes</h3>
- <textarea
+ <textarea maxLength={500}
  value={notes}
  onChange={(e) => setNotes(e.target.value)}
  placeholder="Record any specific damages or observations..."
@@ -362,7 +362,7 @@ export function MoveOutInspectionForm({
  animate={{ opacity: 1, x: 0 }}
  className="flex items-center gap-3"
  >
- <input
+ <input maxLength={120}
  type="text"
  value={deduction.description}
  onChange={(e) => setDeductions(deductions.map(item => item.id === deduction.id ? { ...item, description: e.target.value } : item))}
@@ -371,7 +371,7 @@ export function MoveOutInspectionForm({
  />
  <div className="relative w-32">
  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black">₱</span>
- <input
+ <input min={0} max={9999999.99} step="0.01"
  type="number"
  value={deduction.amount}
  onChange={(e) => setDeductions(deductions.map(item => item.id === deduction.id ? { ...item, amount: parseFloat(e.target.value) || 0 } : item))}

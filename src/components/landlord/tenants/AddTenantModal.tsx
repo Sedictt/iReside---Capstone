@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { m as motion, AnimatePresence } from "framer-motion"
 import { 
   X, 
@@ -25,7 +26,7 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
-import { cn } from '@/lib/utils'
+import { cn, formatCurrencyInput, parseCurrency } from '@/lib/utils'
 import { useProperty } from '@/context/PropertyContext'
 import { toast } from 'sonner'
 import type { WalkInUnit } from '@/components/landlord/applications/application-intake-shared'
@@ -49,10 +50,10 @@ export function AddTenantModal({
   isOpen, 
   onClose, 
   onSuccess, 
-  initialTab = 'quick_add',
+  initialTab = 'invite',
   onOpenWalkIn 
 }: AddTenantModalProps) {
-  const { properties, refreshProperties } = useProperty()
+  const { properties, selectedPropertyId, refreshProperties } = useProperty()
   
   const normalizeTab = (tab?: OnboardingTab): 'quick_add' | 'invite' | 'walk_in' => {
     if (tab === 'manual' || tab === 'quick_add') return 'quick_add';
@@ -128,68 +129,93 @@ export function AddTenantModal({
   const [walkInPropertyId, setWalkInPropertyId] = useState('')
   const [walkInUnitId, setWalkInUnitId] = useState('')
   const [isInternalWalkInOpen, setIsInternalWalkInOpen] = useState(false)
+  const prevIsOpenRef = useRef(false)
+  const prevTabRef = useRef(initialTab)
 
-  // Reset state when modal opens
+  // Reset state with smart defaults when modal opens
   useEffect(() => {
-    if (isOpen) {
+    const tabChanged = prevTabRef.current !== initialTab
+    if ((isOpen && !prevIsOpenRef.current) || (isOpen && tabChanged)) {
+      prevTabRef.current = initialTab
       setActiveTab(normalizeTab(initialTab))
       setLoading(false)
       setSuccessData(null)
       setInviteResult(null)
       setIsInternalWalkInOpen(false)
-      const firstProp = properties[0]
-      const firstUnit = firstProp?.units[0]
-      const rentStr = firstUnit?.rentAmount != null ? String(firstUnit.rentAmount) : ''
+
+      const activeProp = (selectedPropertyId && selectedPropertyId !== 'all')
+        ? properties.find(p => p.id === selectedPropertyId) || properties[0]
+        : properties[0]
+      const targetUnit = activeProp?.units?.find(u => (u.status ?? 'vacant') === 'vacant') || activeProp?.units?.[0]
+      const rentNum = targetUnit?.rentAmount != null ? Number(targetUnit.rentAmount) : 0
+      const rentFormatted = rentNum > 0 ? formatCurrencyInput(rentNum, true) : ''
+
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      const todayStr = `${year}-${month}-${day}`
+      const nextYearStr = `${year + 1}-${month}-${day}`
+
+      const expDate = new Date(now)
+      expDate.setDate(expDate.getDate() + 7)
+      const expDateStr = `${expDate.getFullYear()}-${String(expDate.getMonth() + 1).padStart(2, '0')}-${String(expDate.getDate()).padStart(2, '0')}`
+
       setFormData({
         fullName: '',
         email: '',
         phone: '',
-        propertyId: firstProp?.id || '',
-        unitId: firstUnit?.id || '',
-        startDate: '',
-        endDate: '',
-        monthlyRent: rentStr,
+        propertyId: activeProp?.id || '',
+        unitId: targetUnit?.id || '',
+        startDate: todayStr,
+        endDate: nextYearStr,
+        monthlyRent: rentFormatted,
         securityDeposit: '',
       })
       setAdvanceMonths(1)
-      setAdvanceAmount(rentStr || '0')
+      setAdvanceAmount(rentFormatted || '0.00')
       setAdvancePaid(true)
       setSecurityDepositMonths(1)
-      setSecurityDepositAmount(rentStr || '0')
+      setSecurityDepositAmount(rentFormatted || '0.00')
       setSecurityDepositPaid(true)
       setFieldErrors({})
+      setInvitePreset(7)
       setInviteData({
-        propertyId: firstProp?.id || '',
-        expiresAt: '',
+        propertyId: activeProp?.id || '',
+        expiresAt: expDateStr,
       })
       setInviteAdvanceMonths(1)
-      setInviteAdvanceAmount(rentStr || '0')
+      setInviteAdvanceAmount(rentFormatted || '0.00')
       setInviteSecurityDepositMonths(1)
-      setInviteSecurityDepositAmount(rentStr || '0')
+      setInviteSecurityDepositAmount(rentFormatted || '0.00')
       setInviteFieldErrors({})
+      setWalkInPropertyId(activeProp?.id || '')
+      setWalkInUnitId(targetUnit?.id || '')
     }
-  }, [isOpen, initialTab])
+    prevIsOpenRef.current = isOpen
+  }, [isOpen, initialTab, selectedPropertyId, properties])
 
   // Auto-select first property and vacant units
   useEffect(() => {
     if (properties.length > 0 && !formData.propertyId) {
       const firstProp = properties[0]
       const firstUnit = firstProp.units[0]
-      const rentStr = firstUnit?.rentAmount != null ? String(firstUnit.rentAmount) : ''
+      const rentNum = firstUnit?.rentAmount != null ? Number(firstUnit.rentAmount) : 0
+      const rentFormatted = rentNum > 0 ? formatCurrencyInput(rentNum, true) : ''
       setFormData(prev => ({
         ...prev,
         propertyId: firstProp.id,
         unitId: firstUnit?.id || '',
-        monthlyRent: rentStr
+        monthlyRent: rentFormatted
       }))
-      setAdvanceAmount(rentStr || '0')
-      setSecurityDepositAmount(rentStr || '0')
+      setAdvanceAmount(rentFormatted || '0.00')
+      setSecurityDepositAmount(rentFormatted || '0.00')
       setInviteData(prev => ({
         ...prev,
         propertyId: firstProp.id
       }))
-      setInviteAdvanceAmount(rentStr || '0')
-      setInviteSecurityDepositAmount(rentStr || '0')
+      setInviteAdvanceAmount(rentFormatted || '0.00')
+      setInviteSecurityDepositAmount(rentFormatted || '0.00')
     }
   }, [properties, formData.propertyId])
 
@@ -227,9 +253,9 @@ export function AddTenantModal({
     )
   }, [properties])
 
-  const currentRent = Number(formData.monthlyRent) || 0
-  const currentAdvanceAmount = parseFloat(advanceAmount) || 0
-  const currentDepositAmount = parseFloat(securityDepositAmount) || 0
+  const currentRent = parseCurrency(formData.monthlyRent)
+  const currentAdvanceAmount = parseCurrency(advanceAmount)
+  const currentDepositAmount = parseCurrency(securityDepositAmount)
 
   // Computed values for Invite Link
   const selectedInviteProperty = properties.find(p => p.id === inviteData.propertyId) || properties[0]
@@ -240,44 +266,44 @@ export function AddTenantModal({
     : (inviteVacantUnits[0] || inviteAvailableUnits[0])
   const effectiveInviteRent = Number(effectiveInviteUnit?.rentAmount || 0)
 
-  const currentInviteAdvanceAmount = parseFloat(inviteAdvanceAmount) || 0
-  const currentInviteDepositAmount = parseFloat(inviteSecurityDepositAmount) || 0
+  const currentInviteAdvanceAmount = parseCurrency(inviteAdvanceAmount)
+  const currentInviteDepositAmount = parseCurrency(inviteSecurityDepositAmount)
   const currentInviteTotalSettlement = currentInviteAdvanceAmount + currentInviteDepositAmount
 
   const handlePropertyChange = (propertyId: string) => {
     const prop = properties.find(p => p.id === propertyId)
     const firstUnit = prop?.units[0]
-    const rentStr = firstUnit?.rentAmount != null ? String(firstUnit.rentAmount) : ''
     const numRent = Number(firstUnit?.rentAmount || 0)
+    const rentFormatted = numRent > 0 ? formatCurrencyInput(numRent, true) : ''
     setFormData(prev => ({
       ...prev,
       propertyId,
       unitId: firstUnit?.id || '',
-      monthlyRent: rentStr
+      monthlyRent: rentFormatted
     }))
     if (advanceMonths >= 0) {
-      setAdvanceAmount(String(advanceMonths * numRent))
+      setAdvanceAmount(formatCurrencyInput(advanceMonths * numRent, true))
     }
     if (securityDepositMonths >= 0) {
-      setSecurityDepositAmount(String(securityDepositMonths * numRent))
+      setSecurityDepositAmount(formatCurrencyInput(securityDepositMonths * numRent, true))
     }
     setFieldErrors(prev => ({ ...prev, propertyId: undefined, unitId: undefined }))
   }
 
   const handleUnitChange = (unitId: string) => {
     const unit = availableUnits.find(u => u.id === unitId)
-    const rentStr = unit?.rentAmount != null ? String(unit.rentAmount) : ''
     const numRent = Number(unit?.rentAmount || 0)
+    const rentFormatted = numRent > 0 ? formatCurrencyInput(numRent, true) : ''
     setFormData(prev => ({
       ...prev,
       unitId,
-      monthlyRent: rentStr
+      monthlyRent: rentFormatted
     }))
     if (advanceMonths >= 0) {
-      setAdvanceAmount(String(advanceMonths * numRent))
+      setAdvanceAmount(formatCurrencyInput(advanceMonths * numRent, true))
     }
     if (securityDepositMonths >= 0) {
-      setSecurityDepositAmount(String(securityDepositMonths * numRent))
+      setSecurityDepositAmount(formatCurrencyInput(securityDepositMonths * numRent, true))
     }
     setFieldErrors(prev => ({ ...prev, unitId: undefined }))
   }
@@ -288,7 +314,7 @@ export function AddTenantModal({
   }
 
   const sanitizeNumericInput = (val: string) => {
-    return val.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1')
+    return formatCurrencyInput(val, false)
   }
 
   const sanitizePhoneInput = (val: string) => {
@@ -358,14 +384,14 @@ export function AddTenantModal({
   }
 
   const handleRentChange = (val: string) => {
-    const sanitized = sanitizeNumericInput(val)
+    const sanitized = formatCurrencyInput(val, false)
     setFormData(prev => ({ ...prev, monthlyRent: sanitized }))
-    const numRent = parseFloat(sanitized) || 0
+    const numRent = parseCurrency(sanitized)
     if (advanceMonths >= 0) {
-      setAdvanceAmount(String(advanceMonths * numRent))
+      setAdvanceAmount(formatCurrencyInput(advanceMonths * numRent, true))
     }
     if (securityDepositMonths >= 0) {
-      setSecurityDepositAmount(String(securityDepositMonths * numRent))
+      setSecurityDepositAmount(formatCurrencyInput(securityDepositMonths * numRent, true))
     }
     if (numRent > 0) {
       setFieldErrors(prev => ({ ...prev, monthlyRent: undefined }))
@@ -373,21 +399,22 @@ export function AddTenantModal({
   }
 
   const handleRentBlur = () => {
-    const num = parseFloat(formData.monthlyRent) || 0
+    const num = parseCurrency(formData.monthlyRent)
     if (!formData.monthlyRent || num <= 0) {
       setFieldErrors(prev => ({ ...prev, monthlyRent: 'Monthly rent must be greater than ₱0.' }))
     } else {
+      setFormData(prev => ({ ...prev, monthlyRent: formatCurrencyInput(num, true) }))
       setFieldErrors(prev => ({ ...prev, monthlyRent: undefined }))
     }
   }
 
   const handleAdvanceAmountChange = (valStr: string) => {
-    const sanitized = sanitizeNumericInput(valStr)
+    const sanitized = formatCurrencyInput(valStr, false)
     setAdvanceAmount(sanitized)
-    const val = parseFloat(sanitized) || 0
-    if (currentRent > 0 && val === currentRent) {
+    const val = parseCurrency(sanitized)
+    if (currentRent > 0 && Math.abs(val - currentRent) < 0.01) {
       setAdvanceMonths(1)
-    } else if (currentRent > 0 && val === currentRent * 2) {
+    } else if (currentRent > 0 && Math.abs(val - currentRent * 2) < 0.01) {
       setAdvanceMonths(2)
     } else if (val === 0 && sanitized !== '') {
       setAdvanceMonths(0)
@@ -400,20 +427,23 @@ export function AddTenantModal({
   }
 
   const handleAdvanceAmountBlur = () => {
-    if (advanceAmount === '' || isNaN(parseFloat(advanceAmount)) || parseFloat(advanceAmount) < 0) {
+    const raw = advanceAmount.trim()
+    const num = parseCurrency(raw)
+    if (raw === '' || isNaN(num) || num < 0) {
       setFieldErrors(prev => ({ ...prev, advanceAmount: 'Please enter a valid advance rent amount.' }))
     } else {
+      setAdvanceAmount(formatCurrencyInput(num, true))
       setFieldErrors(prev => ({ ...prev, advanceAmount: undefined }))
     }
   }
 
   const handleSecurityDepositAmountChange = (valStr: string) => {
-    const sanitized = sanitizeNumericInput(valStr)
+    const sanitized = formatCurrencyInput(valStr, false)
     setSecurityDepositAmount(sanitized)
-    const val = parseFloat(sanitized) || 0
-    if (currentRent > 0 && val === currentRent) {
+    const val = parseCurrency(sanitized)
+    if (currentRent > 0 && Math.abs(val - currentRent) < 0.01) {
       setSecurityDepositMonths(1)
-    } else if (currentRent > 0 && val === currentRent * 2) {
+    } else if (currentRent > 0 && Math.abs(val - currentRent * 2) < 0.01) {
       setSecurityDepositMonths(2)
     } else if (val === 0 && sanitized !== '') {
       setSecurityDepositMonths(0)
@@ -426,9 +456,12 @@ export function AddTenantModal({
   }
 
   const handleSecurityDepositAmountBlur = () => {
-    if (securityDepositAmount === '' || isNaN(parseFloat(securityDepositAmount)) || parseFloat(securityDepositAmount) < 0) {
+    const raw = securityDepositAmount.trim()
+    const num = parseCurrency(raw)
+    if (raw === '' || isNaN(num) || num < 0) {
       setFieldErrors(prev => ({ ...prev, securityDepositAmount: 'Please enter a valid security deposit amount.' }))
     } else {
+      setSecurityDepositAmount(formatCurrencyInput(num, true))
       setFieldErrors(prev => ({ ...prev, securityDepositAmount: undefined }))
     }
   }
@@ -441,10 +474,10 @@ export function AddTenantModal({
     const defUnit = prop?.units.find(u => (u.status ?? 'vacant') === 'vacant') || prop?.units[0]
     const rent = Number(defUnit?.rentAmount || 0)
     if (inviteAdvanceMonths >= 0) {
-      setInviteAdvanceAmount(String(inviteAdvanceMonths * rent))
+      setInviteAdvanceAmount(formatCurrencyInput(inviteAdvanceMonths * rent, true))
     }
     if (inviteSecurityDepositMonths >= 0) {
-      setInviteSecurityDepositAmount(String(inviteSecurityDepositMonths * rent))
+      setInviteSecurityDepositAmount(formatCurrencyInput(inviteSecurityDepositMonths * rent, true))
     }
     setInviteFieldErrors(prev => ({ ...prev, propertyId: undefined, unitId: undefined }))
   }
@@ -454,21 +487,21 @@ export function AddTenantModal({
     const unit = inviteAvailableUnits.find(u => u.id === unitId)
     const rent = Number(unit?.rentAmount || 0)
     if (inviteAdvanceMonths >= 0) {
-      setInviteAdvanceAmount(String(inviteAdvanceMonths * rent))
+      setInviteAdvanceAmount(formatCurrencyInput(inviteAdvanceMonths * rent, true))
     }
     if (inviteSecurityDepositMonths >= 0) {
-      setInviteSecurityDepositAmount(String(inviteSecurityDepositMonths * rent))
+      setInviteSecurityDepositAmount(formatCurrencyInput(inviteSecurityDepositMonths * rent, true))
     }
     setInviteFieldErrors(prev => ({ ...prev, unitId: undefined }))
   }
 
   const handleInviteAdvanceAmountChange = (valStr: string) => {
-    const sanitized = sanitizeNumericInput(valStr)
+    const sanitized = formatCurrencyInput(valStr, false)
     setInviteAdvanceAmount(sanitized)
-    const val = parseFloat(sanitized) || 0
-    if (effectiveInviteRent > 0 && val === effectiveInviteRent) {
+    const val = parseCurrency(sanitized)
+    if (effectiveInviteRent > 0 && Math.abs(val - effectiveInviteRent) < 0.01) {
       setInviteAdvanceMonths(1)
-    } else if (effectiveInviteRent > 0 && val === effectiveInviteRent * 2) {
+    } else if (effectiveInviteRent > 0 && Math.abs(val - effectiveInviteRent * 2) < 0.01) {
       setInviteAdvanceMonths(2)
     } else if (val === 0 && sanitized !== '') {
       setInviteAdvanceMonths(0)
@@ -481,20 +514,23 @@ export function AddTenantModal({
   }
 
   const handleInviteAdvanceAmountBlur = () => {
-    if (inviteAdvanceAmount === '' || isNaN(parseFloat(inviteAdvanceAmount)) || parseFloat(inviteAdvanceAmount) < 0) {
+    const raw = inviteAdvanceAmount.trim()
+    const num = parseCurrency(raw)
+    if (raw === '' || isNaN(num) || num < 0) {
       setInviteFieldErrors(prev => ({ ...prev, advanceAmount: 'Please enter a valid advance rent amount.' }))
     } else {
+      setInviteAdvanceAmount(formatCurrencyInput(num, true))
       setInviteFieldErrors(prev => ({ ...prev, advanceAmount: undefined }))
     }
   }
 
   const handleInviteSecurityDepositAmountChange = (valStr: string) => {
-    const sanitized = sanitizeNumericInput(valStr)
+    const sanitized = formatCurrencyInput(valStr, false)
     setInviteSecurityDepositAmount(sanitized)
-    const val = parseFloat(sanitized) || 0
-    if (effectiveInviteRent > 0 && val === effectiveInviteRent) {
+    const val = parseCurrency(sanitized)
+    if (effectiveInviteRent > 0 && Math.abs(val - effectiveInviteRent) < 0.01) {
       setInviteSecurityDepositMonths(1)
-    } else if (effectiveInviteRent > 0 && val === effectiveInviteRent * 2) {
+    } else if (effectiveInviteRent > 0 && Math.abs(val - effectiveInviteRent * 2) < 0.01) {
       setInviteSecurityDepositMonths(2)
     } else if (val === 0 && sanitized !== '') {
       setInviteSecurityDepositMonths(0)
@@ -507,9 +543,12 @@ export function AddTenantModal({
   }
 
   const handleInviteSecurityDepositAmountBlur = () => {
-    if (inviteSecurityDepositAmount === '' || isNaN(parseFloat(inviteSecurityDepositAmount)) || parseFloat(inviteSecurityDepositAmount) < 0) {
+    const raw = inviteSecurityDepositAmount.trim()
+    const num = parseCurrency(raw)
+    if (raw === '' || isNaN(num) || num < 0) {
       setInviteFieldErrors(prev => ({ ...prev, securityDepositAmount: 'Please enter a valid security deposit amount.' }))
     } else {
+      setInviteSecurityDepositAmount(formatCurrencyInput(num, true))
       setInviteFieldErrors(prev => ({ ...prev, securityDepositAmount: undefined }))
     }
   }
@@ -602,11 +641,11 @@ export function AddTenantModal({
       errs.monthlyRent = 'Monthly rent must be greater than ₱0.'
     }
 
-    if (advanceAmount === '' || isNaN(parseFloat(advanceAmount)) || parseFloat(advanceAmount) < 0) {
+    if (advanceAmount === '' || isNaN(parseCurrency(advanceAmount)) || parseCurrency(advanceAmount) < 0) {
       errs.advanceAmount = 'Please enter a valid advance rent amount.'
     }
 
-    if (securityDepositAmount === '' || isNaN(parseFloat(securityDepositAmount)) || parseFloat(securityDepositAmount) < 0) {
+    if (securityDepositAmount === '' || isNaN(parseCurrency(securityDepositAmount)) || parseCurrency(securityDepositAmount) < 0) {
       errs.securityDepositAmount = 'Please enter a valid security deposit amount.'
     }
 
@@ -755,32 +794,55 @@ export function AddTenantModal({
     toast.success('Copied to clipboard')
   }
 
+  // Prevent background scrolling while modal is open
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = originalOverflow
+      }
+    }
+  }, [isOpen])
+
+  // Handle Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen && !loading) {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, loading, onClose])
+
   if (!isOpen) return null
+  if (typeof window === 'undefined') return null
 
   const isSuccess = successData || inviteResult
 
-  return (
+  const modalContent = (
     <>
       <AnimatePresence>
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={isSuccess ? undefined : onClose}
-            className="absolute inset-0 bg-background/80 backdrop-blur-md"
+            className="fixed inset-0 bg-black/70 dark:bg-black/85 backdrop-blur-md"
           />
           
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-4xl overflow-hidden rounded-[2.5rem] neumorphic-panel shadow-2xl"
+            className="relative z-10 flex flex-col w-full max-w-4xl h-[min(90vh,860px)] overflow-hidden rounded-[2.5rem] bg-card neumorphic-panel shadow-2xl border border-border/40"
           >
             {!isSuccess ? (
               <>
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-white/5 neumorphic-inset px-6 sm:px-8 py-5">
+                <div className="shrink-0 flex items-center justify-between border-b border-white/5 neumorphic-inset px-6 sm:px-8 py-4 sm:py-5">
                   <div className="space-y-1">
                     <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">Onboard Residents</h2>
                     <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
@@ -797,10 +859,10 @@ export function AddTenantModal({
                 </div>
 
                 {/* 3 Modes Tabs */}
-                <div className="flex flex-wrap gap-1 border-b border-white/5 neumorphic-inset px-6 sm:px-8 py-3">
+                <div className="shrink-0 flex flex-wrap gap-1 border-b border-white/5 neumorphic-inset px-6 sm:px-8 py-2.5 sm:py-3">
                   {[
+                    { id: 'invite', label: 'Invite Link', icon: LinkIcon, recommended: true },
                     { id: 'quick_add', label: 'Quick Add', icon: UserPlus },
-                    { id: 'invite', label: 'Invite Link', icon: LinkIcon },
                     { id: 'walk_in', label: 'Walk-in Application', icon: DoorOpen },
                   ].map((tab) => {
                     const isSelected = activeTab === tab.id
@@ -818,16 +880,24 @@ export function AddTenantModal({
                       >
                         <tab.icon className="size-3.5" />
                         <span>{tab.label}</span>
+                        {tab.recommended && (
+                          <span className={cn(
+                            "rounded-full px-1.5 py-0.5 text-[9px] font-black tracking-normal transition-colors",
+                            isSelected ? "bg-primary text-primary-foreground font-bold" : "bg-primary/15 text-primary"
+                          )}>
+                            Recommended
+                          </span>
+                        )}
                       </button>
                     )
                   })}
                 </div>
 
-                <div className="max-h-[min(820px,80vh)] overflow-y-auto p-6 sm:p-8">
-                  {/* Mode 1: Quick Add */}
-                  {activeTab === 'quick_add' && (
-                    <form onSubmit={handleSubmit} noValidate className="space-y-6">
-                      <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs font-medium text-muted-foreground flex items-center justify-between gap-3">
+                {/* Mode 1: Quick Add */}
+                {activeTab === 'quick_add' && (
+                  <form onSubmit={handleSubmit} noValidate className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar-premium px-6 sm:px-8 py-5 sm:py-6 space-y-6">
+                      <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3.5 text-xs font-medium text-muted-foreground flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2.5">
                           <UserPlus className="size-4 text-primary shrink-0" />
                           <span>
@@ -857,7 +927,9 @@ export function AddTenantModal({
                               <input
                                 id="fullName"
                                 type="text"
-                                placeholder="Juan Dela Cruz"
+                                maxLength={50}
+                                autoComplete="name"
+                                placeholder="e.g. Maria Santos"
                                 value={formData.fullName}
                                 onChange={(e) => handleFullNameChange(e.target.value)}
                                 onBlur={handleFullNameBlur}
@@ -885,7 +957,9 @@ export function AddTenantModal({
                               <input
                                 id="email"
                                 type="email"
-                                placeholder="juan@example.com"
+                                maxLength={50}
+                                autoComplete="email"
+                                placeholder="e.g. maria.santos@gmail.com"
                                 value={formData.email}
                                 onChange={(e) => handleEmailChange(e.target.value)}
                                 onBlur={handleEmailBlur}
@@ -914,7 +988,9 @@ export function AddTenantModal({
                                 id="phone"
                                 type="tel"
                                 inputMode="tel"
-                                placeholder="0912 345 6789"
+                                maxLength={15}
+                                autoComplete="tel"
+                                placeholder="e.g. 0917 123 4567"
                                 value={formData.phone}
                                 onChange={(e) => handlePhoneChange(e.target.value)}
                                 onBlur={handlePhoneBlur}
@@ -1065,6 +1141,54 @@ export function AddTenantModal({
                             </div>
                           </div>
 
+                          {/* Quick Duration Presets */}
+                          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60 mr-1">
+                              Duration:
+                            </span>
+                            {[
+                              { label: "6 Mo", months: 6 },
+                              { label: "1 Year (Standard)", months: 12 },
+                              { label: "2 Years", months: 24 },
+                            ].map((preset) => {
+                              const isMatched = (() => {
+                                if (!formData.startDate || !formData.endDate) return false
+                                const s = new Date(formData.startDate)
+                                const e = new Date(formData.endDate)
+                                const diffMonths = Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24 * 30.4375))
+                                return Math.abs(diffMonths - preset.months) <= 1
+                              })()
+
+                              return (
+                                <button
+                                  key={preset.label}
+                                  type="button"
+                                  onClick={() => {
+                                    const base = formData.startDate ? new Date(formData.startDate) : new Date()
+                                    const target = new Date(base)
+                                    target.setFullYear(target.getFullYear() + Math.floor(preset.months / 12))
+                                    if (preset.months % 12 !== 0) {
+                                      target.setMonth(base.getMonth() + (preset.months % 12))
+                                    }
+                                    const y = target.getFullYear()
+                                    const m = String(target.getMonth() + 1).padStart(2, '0')
+                                    const d = String(target.getDate()).padStart(2, '0')
+                                    setFormData(prev => ({ ...prev, endDate: `${y}-${m}-${d}` }))
+                                    setFieldErrors(prev => ({ ...prev, endDate: undefined }))
+                                  }}
+                                  className={cn(
+                                    "rounded-xl px-2.5 py-1 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
+                                    isMatched
+                                      ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                                      : "neumorphic-inset text-muted-foreground hover:text-foreground"
+                                  )}
+                                >
+                                  {preset.label}
+                                </button>
+                              )
+                            })}
+                          </div>
+
                           {/* Monthly Rent */}
                           <div className="space-y-1.5">
                             <label htmlFor="monthlyRent" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
@@ -1076,10 +1200,11 @@ export function AddTenantModal({
                                 id="monthlyRent"
                                 type="text"
                                 inputMode="decimal"
+                                maxLength={14}
                                 value={formData.monthlyRent}
                                 onChange={(e) => handleRentChange(e.target.value)}
                                 onBlur={handleRentBlur}
-                                placeholder="0"
+                                placeholder="0.00"
                                 className={cn(
                                   "w-full rounded-2xl neumorphic-inset py-3.5 pl-8 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
                                   fieldErrors.monthlyRent && "border border-red-500/50 ring-2 ring-red-500/20"
@@ -1121,7 +1246,7 @@ export function AddTenantModal({
                               <div className="inline-flex rounded-xl bg-background/50 p-1 border border-border/50">
                                 {[
                                   { label: "None", months: 0 },
-                                  { label: "1 Mo", months: 1 },
+                                  { label: "1 Mo (Standard)", months: 1 },
                                   { label: "2 Mo", months: 2 },
                                 ].map((opt) => (
                                   <button
@@ -1129,7 +1254,7 @@ export function AddTenantModal({
                                     type="button"
                                     onClick={() => {
                                       setAdvanceMonths(opt.months)
-                                      setAdvanceAmount(String(opt.months * currentRent))
+                                      setAdvanceAmount(formatCurrencyInput(opt.months * currentRent, true))
                                       setFieldErrors(prev => ({ ...prev, advanceAmount: undefined }))
                                     }}
                                     className={cn(
@@ -1155,10 +1280,11 @@ export function AddTenantModal({
                                   id="advanceAmount"
                                   type="text"
                                   inputMode="decimal"
+                                  maxLength={14}
                                   value={advanceAmount}
                                   onChange={(e) => handleAdvanceAmountChange(e.target.value)}
                                   onBlur={handleAdvanceAmountBlur}
-                                  placeholder="0"
+                                  placeholder="0.00"
                                   className={cn(
                                     "w-full rounded-2xl neumorphic-inset py-3 pl-8 pr-4 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
                                     fieldErrors.advanceAmount && "border border-red-500/50 ring-2 ring-red-500/20"
@@ -1198,7 +1324,7 @@ export function AddTenantModal({
                               <div className="inline-flex rounded-xl bg-background/50 p-1 border border-border/50">
                                 {[
                                   { label: "None", months: 0 },
-                                  { label: "1 Mo", months: 1 },
+                                  { label: "1 Mo (Standard)", months: 1 },
                                   { label: "2 Mo", months: 2 },
                                 ].map((opt) => (
                                   <button
@@ -1206,7 +1332,7 @@ export function AddTenantModal({
                                     type="button"
                                     onClick={() => {
                                       setSecurityDepositMonths(opt.months)
-                                      setSecurityDepositAmount(String(opt.months * currentRent))
+                                      setSecurityDepositAmount(formatCurrencyInput(opt.months * currentRent, true))
                                       setFieldErrors(prev => ({ ...prev, securityDepositAmount: undefined }))
                                     }}
                                     className={cn(
@@ -1232,10 +1358,11 @@ export function AddTenantModal({
                                   id="securityDepositAmount"
                                   type="text"
                                   inputMode="decimal"
+                                  maxLength={14}
                                   value={securityDepositAmount}
                                   onChange={(e) => handleSecurityDepositAmountChange(e.target.value)}
                                   onBlur={handleSecurityDepositAmountBlur}
-                                  placeholder="0"
+                                  placeholder="0.00"
                                   className={cn(
                                     "w-full rounded-2xl neumorphic-inset py-3 pl-8 pr-4 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
                                     fieldErrors.securityDepositAmount && "border border-red-500/50 ring-2 ring-red-500/20"
@@ -1279,14 +1406,15 @@ export function AddTenantModal({
                                 <span className="sr-only">Total Inception Settlement</span>
                               </div>
                               <p className="text-[11px] text-muted-foreground">
-                                Advance: ₱{currentAdvanceAmount.toLocaleString()} + Deposit: ₱{currentDepositAmount.toLocaleString()}
+                                Advance: ₱{formatCurrencyInput(currentAdvanceAmount, true)} + Deposit: ₱{formatCurrencyInput(currentDepositAmount, true)}
                               </p>
                             </div>
                           </div>
                           <div className="text-left sm:text-right flex sm:flex-col items-center sm:items-end justify-between">
                             <span className="text-base sm:text-lg font-black text-primary">
-                              ₱{(currentAdvanceAmount + currentDepositAmount).toLocaleString()}
+                              ₱{formatCurrencyInput(currentAdvanceAmount + currentDepositAmount, true)}
                             </span>
+                            <span className="sr-only">₱{(currentAdvanceAmount + currentDepositAmount).toLocaleString()}</span>
                             <span className="text-[10px] font-bold text-muted-foreground">
                               {advancePaid && securityDepositPaid 
                                 ? "✓ Marked as collected" 
@@ -1298,34 +1426,37 @@ export function AddTenantModal({
                         </div>
                       </div>
 
-                      {/* Footer Actions */}
-                      <div className="mt-8 flex gap-4 pt-4 border-t border-white/5">
-                        <button
-                          type="button"
-                          onClick={onClose}
-                          className="flex-1 rounded-2xl neumorphic-inset py-4 text-sm font-black transition-all hover:neumorphic-inset cursor-pointer"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={loading}
-                          className="flex-[2] rounded-2xl neumorphic-primary py-4 text-sm font-black shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
-                        >
-                          {loading ? (
-                            <div className="flex items-center justify-center gap-2">
-                              <Loader2 className="size-4 animate-spin" />
-                              <span>Registering Resident…</span>
-                            </div>
-                          ) : 'Register Resident'}
-                        </button>
-                      </div>
-                    </form>
-                  )}
+                    </div>
 
-                  {/* Mode 2: Invite Link */}
-                  {activeTab === 'invite' && (
-                    <div className="space-y-6">
+                    {/* Permanent Docked Footer Actions */}
+                    <div className="shrink-0 px-6 sm:px-8 py-3.5 sm:py-4 bg-card/95 backdrop-blur-md border-t border-border/40 flex gap-4">
+                      <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex-1 rounded-2xl neumorphic-inset py-3.5 text-sm font-black transition-all hover:neumorphic-inset cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex-[2] rounded-2xl neumorphic-primary py-3.5 text-sm font-black shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
+                      >
+                        {loading ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <Loader2 className="size-4 animate-spin" />
+                            <span>Registering Resident…</span>
+                          </div>
+                        ) : 'Register Resident'}
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* Mode 2: Invite Link */}
+                {activeTab === 'invite' && (
+                  <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar-premium px-6 sm:px-8 py-5 sm:py-6 space-y-6">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-[2rem] border border-primary/20 bg-primary/5 p-5">
                         <div className="space-y-1">
                           <h3 className="text-base font-black text-foreground">Self-Onboarding Link</h3>
@@ -1532,7 +1663,7 @@ export function AddTenantModal({
                                 <div className="inline-flex rounded-xl bg-background/50 p-1 border border-border/50">
                                   {[
                                     { label: "None", months: 0 },
-                                    { label: "1 Mo", months: 1 },
+                                    { label: "1 Mo (Standard)", months: 1 },
                                     { label: "2 Mo", months: 2 },
                                   ].map((opt) => (
                                     <button
@@ -1540,7 +1671,7 @@ export function AddTenantModal({
                                       type="button"
                                       onClick={() => {
                                         setInviteAdvanceMonths(opt.months)
-                                        setInviteAdvanceAmount(String(opt.months * effectiveInviteRent))
+                                        setInviteAdvanceAmount(formatCurrencyInput(opt.months * effectiveInviteRent, true))
                                         setInviteFieldErrors(prev => ({ ...prev, advanceAmount: undefined }))
                                       }}
                                       className={cn(
@@ -1566,10 +1697,11 @@ export function AddTenantModal({
                                     id="inviteAdvanceAmount"
                                     type="text"
                                     inputMode="decimal"
+                                    maxLength={14}
                                     value={inviteAdvanceAmount}
                                     onChange={(e) => handleInviteAdvanceAmountChange(e.target.value)}
                                     onBlur={handleInviteAdvanceAmountBlur}
-                                    placeholder="0"
+                                    placeholder="0.00"
                                     className={cn(
                                       "w-full rounded-2xl neumorphic-inset py-3 pl-8 pr-4 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
                                       inviteFieldErrors.advanceAmount && "border border-red-500/50 ring-2 ring-red-500/20"
@@ -1597,7 +1729,7 @@ export function AddTenantModal({
                                 <div className="inline-flex rounded-xl bg-background/50 p-1 border border-border/50">
                                   {[
                                     { label: "None", months: 0 },
-                                    { label: "1 Mo", months: 1 },
+                                    { label: "1 Mo (Standard)", months: 1 },
                                     { label: "2 Mo", months: 2 },
                                   ].map((opt) => (
                                     <button
@@ -1605,7 +1737,7 @@ export function AddTenantModal({
                                       type="button"
                                       onClick={() => {
                                         setInviteSecurityDepositMonths(opt.months)
-                                        setInviteSecurityDepositAmount(String(opt.months * effectiveInviteRent))
+                                        setInviteSecurityDepositAmount(formatCurrencyInput(opt.months * effectiveInviteRent, true))
                                         setInviteFieldErrors(prev => ({ ...prev, securityDepositAmount: undefined }))
                                       }}
                                       className={cn(
@@ -1631,10 +1763,11 @@ export function AddTenantModal({
                                     id="inviteSecurityDepositAmount"
                                     type="text"
                                     inputMode="decimal"
+                                    maxLength={14}
                                     value={inviteSecurityDepositAmount}
                                     onChange={(e) => handleInviteSecurityDepositAmountChange(e.target.value)}
                                     onBlur={handleInviteSecurityDepositAmountBlur}
-                                    placeholder="0"
+                                    placeholder="0.00"
                                     className={cn(
                                       "w-full rounded-2xl neumorphic-inset py-3 pl-8 pr-4 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
                                       inviteFieldErrors.securityDepositAmount && "border border-red-500/50 ring-2 ring-red-500/20"
@@ -1665,14 +1798,15 @@ export function AddTenantModal({
                                   <span className="sr-only">Total Inception Settlement</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground">
-                                  Advance: ₱{currentInviteAdvanceAmount.toLocaleString()} + Deposit: ₱{currentInviteDepositAmount.toLocaleString()}
+                                  Advance: ₱{formatCurrencyInput(currentInviteAdvanceAmount, true)} + Deposit: ₱{formatCurrencyInput(currentInviteDepositAmount, true)}
                                 </p>
                               </div>
                             </div>
                             <div className="text-left sm:text-right flex sm:flex-col items-center sm:items-end justify-between">
                               <span className="text-base sm:text-lg font-black text-primary">
-                                ₱{currentInviteTotalSettlement.toLocaleString()}
+                                ₱{formatCurrencyInput(currentInviteTotalSettlement, true)}
                               </span>
+                              <span className="sr-only">₱{currentInviteTotalSettlement.toLocaleString()}</span>
                               <span className="text-[10px] font-bold text-muted-foreground">
                                 Required upon applicant approval
                               </span>
@@ -1687,6 +1821,8 @@ export function AddTenantModal({
                             <input
                               id="expiresAt"
                               type="date"
+                              min={new Date().toISOString().split('T')[0]}
+                              max="2099-12-31"
                               value={inviteData.expiresAt}
                               onChange={(e) => {
                                 setInviteData(prev => ({ ...prev, expiresAt: e.target.value }))
@@ -1698,7 +1834,7 @@ export function AddTenantModal({
                           <div className="flex gap-2 pt-1">
                             {[
                               { label: '+1 Day', days: 1 },
-                              { label: '+7 Days', days: 7 },
+                              { label: '+7 Days (Standard)', days: 7 },
                               { label: '+30 Days', days: 30 },
                             ].map((preset) => (
                               <button
@@ -1724,34 +1860,37 @@ export function AddTenantModal({
                           </div>
                         </div>
                       </div>
-
-                      <div className="flex gap-4 pt-4">
-                        <button
-                          type="button"
-                          onClick={onClose}
-                          className="flex-1 rounded-2xl neumorphic-inset py-4 text-sm font-black transition-all hover:neumorphic-inset"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleGenerateInvite}
-                          disabled={loading}
-                          className="flex-[2] rounded-2xl neumorphic-primary py-4 text-sm font-black shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
-                        >
-                          {loading ? (
-                            <div className="flex items-center justify-center gap-2">
-                              <Loader2 className="size-4 animate-spin" />
-                              <span>Generating Link…</span>
-                            </div>
-                          ) : 'Generate Onboarding Link'}
-                        </button>
-                      </div>
                     </div>
-                  )}
 
-                  {/* Mode 3: Walk-in Application */}
-                  {activeTab === 'walk_in' && (
-                    <div className="space-y-6">
+                    {/* Permanent Docked Footer Actions */}
+                    <div className="shrink-0 px-6 sm:px-8 py-3.5 sm:py-4 bg-card/95 backdrop-blur-md border-t border-border/40 flex gap-4">
+                      <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex-1 rounded-2xl neumorphic-inset py-3.5 text-sm font-black transition-all hover:neumorphic-inset cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleGenerateInvite}
+                        disabled={loading}
+                        className="flex-[2] rounded-2xl neumorphic-primary py-3.5 text-sm font-black shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
+                      >
+                        {loading ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <Loader2 className="size-4 animate-spin" />
+                            <span>Generating Link…</span>
+                          </div>
+                        ) : 'Generate Onboarding Link'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Mode 3: Walk-in Application */}
+                {activeTab === 'walk_in' && (
+                  <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar-premium px-6 sm:px-8 py-5 sm:py-6 space-y-6">
                       <div className="rounded-[2rem] border border-primary/20 bg-primary/5 p-5 text-center">
                         <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                           <DoorOpen className="size-6" />
@@ -1852,32 +1991,32 @@ export function AddTenantModal({
                           </div>
                         </div>
                       </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-4 pt-2">
-                        <button
-                          type="button"
-                          onClick={onClose}
-                          className="flex-1 rounded-2xl neumorphic-inset py-4 text-sm font-black transition-all hover:neumorphic-inset"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleStartWalkIn}
-                          disabled={!walkInUnitId}
-                          className="flex-[2] inline-flex items-center justify-center gap-2 rounded-2xl neumorphic-primary py-4 text-sm font-black shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
-                        >
-                          <span>Start Walk-in Application</span>
-                          <ArrowRight className="size-4" />
-                        </button>
-                      </div>
                     </div>
-                  )}
-                </div>
+
+                    {/* Permanent Docked Action Buttons */}
+                    <div className="shrink-0 px-6 sm:px-8 py-3.5 sm:py-4 bg-card/95 backdrop-blur-md border-t border-border/40 flex gap-4">
+                      <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex-1 rounded-2xl neumorphic-inset py-3.5 text-sm font-black transition-all hover:neumorphic-inset cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleStartWalkIn}
+                        disabled={!walkInUnitId}
+                        className="flex-[2] inline-flex items-center justify-center gap-2 rounded-2xl neumorphic-primary py-3.5 text-sm font-black shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
+                      >
+                        <span>Start Walk-in Application</span>
+                        <ArrowRight className="size-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
-              <div className="p-10 text-center">
+              <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar-premium p-6 sm:p-10 text-center">
                 {successData ? (
                   <>
                     <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
@@ -1988,4 +2127,6 @@ export function AddTenantModal({
       )}
     </>
   )
+
+  return createPortal(modalContent, document.body)
 }

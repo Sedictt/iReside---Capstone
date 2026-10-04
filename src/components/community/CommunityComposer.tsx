@@ -149,7 +149,7 @@ export function CommunityComposer({
                             )}
                         </div>
                         <div className="flex-1 space-y-3">
-                            <textarea
+                            <textarea maxLength={500}
                                 value={state.body}
                                 onChange={(e) => {
                                     dispatch({ type: "SET_BODY", payload: e.target.value })
@@ -169,7 +169,7 @@ export function CommunityComposer({
                                 <div className="space-y-2 pt-2">
                                     {state.pollOptions.map((option: string, index: number) => (
                                         <div key={`poll-option-${index}`} className="group relative">
-                                            <input
+                                            <input maxLength={60}
                                                 type="text"
                                                 value={option}
                                                 onChange={(e) => {

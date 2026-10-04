@@ -1046,7 +1046,7 @@ export default function AnalyticsPage() {
                                     <div className="flex items-center gap-3">
                                         <div className="flex-1 flex flex-col gap-2">
                                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Start</span>
-                                            <input
+                                            <input min="2000-01-01" max="2099-12-31"
                                                 type="date"
                                                 value={startDate}
                                                 onChange={(event) => onStartDateChange(event.target.value)}
@@ -1057,7 +1057,7 @@ export default function AnalyticsPage() {
                                         <div className="pt-7 text-muted-foreground/40 font-black">–</div>
                                         <div className="flex-1 flex flex-col gap-2">
                                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">End</span>
-                                            <input
+                                            <input min="2000-01-01" max="2099-12-31"
                                                 type="date"
                                                 value={endDate}
                                                 onChange={(event) => onEndDateChange(event.target.value)}

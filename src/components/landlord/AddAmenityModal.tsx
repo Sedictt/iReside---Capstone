@@ -529,6 +529,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                             id="facility-name"
                                             required
                                             type="text"
+                                            maxLength={60}
                                             autoComplete="off"
                                             placeholder="e.g., Sky Pool, Game Room"
                                             value={formData.name}
@@ -566,17 +567,19 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                                 <input
                                                     id="facility-capacity"
                                                     type="number"
+                                                    min="1"
+                                                    max="9999"
                                                     value={formData.capacity}
                                                     onChange={(e) => {
                                                         const val = parseInt(e.target.value)
-                                                        setFormData(prev => ({ ...prev, capacity: isNaN(val) ? 1 : Math.max(1, val) }))
+                                                        setFormData(prev => ({ ...prev, capacity: isNaN(val) ? 1 : Math.min(9999, Math.max(1, val)) }))
                                                     }}
                                                     className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 px-4 text-center text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                 />
                                             </div>
                                             <button
                                                 type="button"
-                                                onClick={() => setFormData(prev => ({ ...prev, capacity: prev.capacity + 1 }))}
+                                                onClick={() => setFormData(prev => ({ ...prev, capacity: Math.min(9999, prev.capacity + 1) }))}
                                                 className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-muted/80 text-muted-foreground transition-all hover:bg-primary/20 hover:text-primary"
                                             >
                                                 <Plus className="size-5" />
@@ -601,6 +604,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                         <input
                                             id="icon-search"
                                             type="text"
+                                            maxLength={60}
                                             placeholder="Search icons…"
                                             value={searchTerm}
                                             onChange={handleSearch}
@@ -690,14 +694,20 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
                                             <input
-                                                type="number"
+                                                type="text"
+                                                inputMode="decimal"
+                                                maxLength={10}
                                                 placeholder="Price"
                                                 value={formData.price_per_unit}
                                                 onChange={(e) => {
-                                                    const val = e.target.value
-                                                    // Allow decimal points while typing
+                                                    const val = e.target.value.replace(/[^0-9.]/g, "")
                                                     if (val === '' || val === '.' || !isNaN(Number(val))) {
-                                                        setFormData(prev => ({ ...prev, price_per_unit: val }))
+                                                        const num = parseFloat(val)
+                                                        if (!isNaN(num) && num > 9999999.99) {
+                                                            setFormData(prev => ({ ...prev, price_per_unit: "9999999.99" }))
+                                                        } else {
+                                                            setFormData(prev => ({ ...prev, price_per_unit: val }))
+                                                        }
                                                     }
                                                 }}
                                                 className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-8 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
@@ -727,6 +737,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                         <input
                                             id="location-details"
                                             type="text"
+                                            maxLength={120}
                                             autoComplete="off"
                                             spellCheck={false}
                                             placeholder="e.g., 5th Floor, Main Wing"
@@ -781,11 +792,17 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label htmlFor="facility-description" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
-                                        Description
-                                    </label>
+                                    <div className="flex items-center justify-between">
+                                        <label htmlFor="facility-description" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                            Description
+                                        </label>
+                                        <span className="text-[10px] font-medium text-muted-foreground/70 select-none">
+                                            {formData.description?.length || 0} / 500
+                                        </span>
+                                    </div>
                                     <textarea
                                         id="facility-description"
+                                        maxLength={500}
                                         placeholder="Describe the facility's features and rules…"
                                         value={formData.description}
                                         onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}

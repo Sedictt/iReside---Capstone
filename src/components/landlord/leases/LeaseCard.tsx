@@ -336,4 +336,210 @@ export function LeaseCard({ lease, variant, onClick, index = 0 }: LeaseCardProps
  );
 }
 
+export function LeaseListRow({ lease, variant, onClick, index = 0 }: LeaseCardProps) {
+ const isArchive = variant === "archive";
+ const daysRemaining = useMemo(() => getDaysRemaining(lease.end_date), [lease.end_date]);
+ const avatarStyles = useMemo(() => getAvatarStyles(lease.tenant), [lease.tenant]);
+ const progress = useMemo(() => getLeaseProgress(lease.start_date, lease.end_date), [lease.start_date, lease.end_date]);
+
+ return (
+ <m.div
+ initial={{ opacity: 0, y: 6 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ delay: index * 0.02 }}
+ onClick={onClick}
+ onKeyDown={(e) => {
+ if (e.key === "Enter" || e.key === " ") {
+ e.preventDefault();
+ onClick?.();
+ }
+ }}
+ role="button"
+ tabIndex={0}
+ className={cn(
+ "group relative flex flex-col md:flex-row md:items-center justify-between neumorphic-panel rounded-2xl overflow-hidden hover:border-primary/40 hover:neumorphic-inset transition-all duration-200 cursor-pointer p-4 sm:p-5 gap-4 outline-none focus-visible:ring-2 focus-visible:ring-primary",
+ isArchive && "opacity-75 grayscale-[0.25]"
+ )}
+ >
+ {/* 1. Tenant Avatar & Details */}
+ <div className="flex items-center gap-3.5 min-w-[220px] max-w-xs">
+ <div className="relative shrink-0">
+ <div
+ style={avatarStyles.style}
+ className={cn(
+ "flex size-11 items-center justify-center overflow-hidden rounded-xl text-base font-black transition-all group-hover:scale-105",
+ avatarStyles.className
+ )}
+ >
+ {lease.tenant?.avatar_url ? (
+ <img
+ src={lease.tenant.avatar_url}
+ alt={lease.tenant.full_name}
+ className="size-full object-cover"
+ />
+ ) : lease.tenant ? (
+ lease.tenant.full_name.charAt(0)
+ ) : (
+ <User className="size-5" />
+ )}
+ </div>
+ <LeaseStatusBadge
+ status={lease.status as any}
+ dotOnly
+ className="absolute -right-1 -top-1 size-3.5 rounded-full border-2 border-card bg-card"
+ />
+ </div>
+
+ <div className="min-w-0 flex-1">
+ <h4 className="truncate text-sm font-black text-foreground group-hover:text-primary transition-colors">
+ {lease.tenant?.full_name || "Unassigned"}
+ </h4>
+ <div className="flex items-center gap-1.5 text-[10px] font-bold">
+ <span className="uppercase tracking-wider text-muted-foreground/70">
+ {isArchive ? "Closed Lease" : (lease.status.replace(/_/g, " ") || "Status Unknown")}
+ </span>
+ {lease.tenant?.email && (
+ <span className="text-muted-foreground/40 truncate max-w-[120px] hidden sm:inline">
+ • {lease.tenant.email}
+ </span>
+ )}
+ </div>
+ </div>
+ </div>
+
+ {/* 2. Property & Unit Info */}
+ <div className="flex items-center gap-3 min-w-[170px] max-w-xs">
+ <div className="flex size-9 shrink-0 items-center justify-center rounded-xl neumorphic-inset text-muted-foreground">
+ <Building2 className="size-4" />
+ </div>
+ <div className="min-w-0">
+ <p className="truncate text-xs font-bold text-foreground">{lease.unit.property.name}</p>
+ <p className="truncate text-[11px] font-semibold text-primary">
+ {lease.unit.name?.trim().toLowerCase().startsWith("unit")
+ ? lease.unit.name
+ : `Unit ${lease.unit.name}`}
+ </p>
+ </div>
+ </div>
+
+ {/* 3. Timeline / Progress */}
+ <div className="flex flex-col justify-center min-w-[200px] flex-1 max-w-sm">
+ <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground mb-1.5">
+ <span className="flex items-center gap-1.5">
+ <Calendar className="size-3 text-muted-foreground/70" />
+ <span>{formatDate(lease.start_date)} – {formatDate(lease.end_date)}</span>
+ </span>
+ {!isArchive && (
+ <span className="font-mono text-[10px]">{progress}%</span>
+ )}
+ </div>
+ {!isArchive ? (
+ <div className="flex items-center gap-3">
+ <div className="h-1.5 flex-1 overflow-hidden rounded-full neumorphic-inset">
+ <div
+ className={cn(
+ "h-full rounded-full transition-all duration-500",
+ progress >= 90 ? "bg-amber-500" : "bg-primary"
+ )}
+ style={{ width: `${progress}%` }}
+ />
+ </div>
+ {daysRemaining <= 90 && (
+ <span
+ className={cn(
+ "shrink-0 flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider",
+ daysRemaining <= 30
+ ? "bg-red-500/10 text-red-600 dark:text-red-400"
+ : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+ )}
+ >
+ <Clock className="size-2.5" />
+ {daysRemaining}d left
+ </span>
+ )}
+ </div>
+ ) : (
+ <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+ Lease Concluded
+ </span>
+ )}
+ </div>
+
+ {/* 4. Financials (Right-aligned, tabular-nums) & Actions */}
+ <div className="flex items-center justify-between md:justify-end gap-5 shrink-0">
+ <div className="text-left md:text-right">
+ <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/70 mb-0.5">
+ {isArchive ? "Total Settlement" : "Monthly Rent"}
+ </p>
+ <p className="font-mono text-base font-black tracking-tight text-foreground tabular-nums">
+ {formatCurrency(lease.monthly_rent)}
+ </p>
+ </div>
+
+ {/* Action Controls */}
+ <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+ {!isArchive && (
+ <DropdownMenu>
+ <DropdownMenuTrigger asChild>
+ <Button
+ variant="ghost"
+ size="icon"
+ className="size-8 rounded-xl text-muted-foreground/50 hover:bg-accent hover:text-foreground transition-all cursor-pointer"
+ aria-label="Lease actions"
+ >
+ <MoreVertical className="size-4" />
+ </Button>
+ </DropdownMenuTrigger>
+ <DropdownMenuContent align="end" className="w-48">
+ {lease.tenant && (
+ <DropdownMenuItem
+ onClick={(e) => {
+ e.stopPropagation();
+ window.location.href = `mailto:${lease.tenant?.email}`;
+ }}
+ >
+ <Mail className="mr-2 size-4" />
+ Contact Tenant
+ </DropdownMenuItem>
+ )}
+ <DropdownMenuItem
+ onClick={(e) => {
+ e.stopPropagation();
+ onClick?.();
+ }}
+ >
+ <FileText className="mr-2 size-4" />
+ View Agreement
+ </DropdownMenuItem>
+ <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+ <History className="mr-2 size-4" />
+ Lease History
+ </DropdownMenuItem>
+ <DropdownMenuItem
+ className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
+ onClick={(e) => e.stopPropagation()}
+ >
+ <Trash2 className="mr-2 size-4" />
+ Terminate Lease
+ </DropdownMenuItem>
+ </DropdownMenuContent>
+ </DropdownMenu>
+ )}
+
+ <button
+ type="button"
+ onClick={() => onClick?.()}
+ className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all cursor-pointer group-hover:scale-105"
+ aria-label="View Lease Details"
+ title="View Lease Details"
+ >
+ <ArrowRight className="size-4" />
+ </button>
+ </div>
+ </div>
+ </m.div>
+ );
+}
+
+
 

@@ -205,7 +205,7 @@ export default function LandlordUtilitiesPage() {
                     <div className="flex items-center gap-4">
                         <div className="relative w-full sm:w-96">
                             <Search className="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-muted-foreground/40" />
-                            <input
+                            <input maxLength={60}
                                 type="text"
                                 suppressHydrationWarning
                                 placeholder="Find a facility..."

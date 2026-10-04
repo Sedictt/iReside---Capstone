@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ShieldCheck,
   User,
@@ -15,12 +15,14 @@ import {
   ArrowLeft,
   Send,
   Check,
+  KeyRound,
 } from "lucide-react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { evaluatePasswordStrength } from "@/lib/validation/landlord-settings";
 import {
+  DISALLOWED_PRESEEDED_DATA,
   validateAdminFullName,
   validateAdminEmail,
   validateAdminPassword,
@@ -28,15 +30,22 @@ import {
 } from "@/lib/validation/brand-setup";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
 import { createClient } from "@/lib/supabase/client";
+import { setupDictionary } from "@/lib/i18n/setup-translations";
 
 interface AccountActivationModalProps {
   isOpen: boolean;
   onComplete: (newEmail: string, newPassword?: string) => Promise<void> | void;
+  initialFullName?: string;
+  initialEmail?: string;
 }
+
+const CLAIM_STORAGE_KEY = "ireside_claim_draft";
 
 export function AccountActivationModal({
   isOpen,
   onComplete,
+  initialFullName,
+  initialEmail,
 }: AccountActivationModalProps) {
   const [step, setStep] = useState<1 | 2>(1);
   const [fullName, setFullName] = useState("");
@@ -44,6 +53,11 @@ export function AccountActivationModal({
   const [otpCode, setOtpCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+  const otpInputRef = useRef<HTMLInputElement>(null);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -60,6 +74,8 @@ export function AccountActivationModal({
   // Submission States
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
   const [isSuccess, setIsSuccess] = useState(false);
   const [claimedEmail, setClaimedEmail] = useState("");
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -69,11 +85,15 @@ export function AccountActivationModal({
   const [isSecurityKeyAcknowledged, setIsSecurityKeyAcknowledged] = useState(false);
   const [hasDownloadedKey, setHasDownloadedKey] = useState(false);
 
+  const markFieldTouched = (field: string) => {
+    setTouchedFields((prev) => ({ ...prev, [field]: true }));
+  };
+
   const handleProceedToSetup = async () => {
     if (isRedirecting) return;
     if (securityKey && (!hasDownloadedKey || !isSecurityKeyAcknowledged)) {
-      toast.warning("Please Download Your Recovery Key", {
-        description: "Download your single-use security recovery key before proceeding to sign in.",
+      toast.warning("Please Download Your Spare Key", {
+        description: setupDictionary.accountClaiming.step3SaveWarning,
         id: "save-recovery-key-warning",
       });
       return;
@@ -103,12 +123,90 @@ export function AccountActivationModal({
     return () => clearTimeout(timer);
   }, [otpCooldown]);
 
+  const hasFocusedStep1Ref = useRef(false);
+  const hasFocusedStep2Ref = useRef(false);
+  const hasPrefilledRef = useRef(false);
+
+  // Autofocus first interactive element on modal open and step transition
+  useEffect(() => {
+    if (!isOpen) {
+      hasFocusedStep1Ref.current = false;
+      hasFocusedStep2Ref.current = false;
+      hasPrefilledRef.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      if (step === 1 && !hasFocusedStep1Ref.current) {
+        hasFocusedStep1Ref.current = true;
+        if (!fullName) {
+          nameInputRef.current?.focus();
+        } else {
+          emailInputRef.current?.focus();
+        }
+      } else if (step === 2 && !hasFocusedStep2Ref.current) {
+        hasFocusedStep2Ref.current = true;
+        passwordInputRef.current?.focus();
+      }
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [isOpen, step, fullName]);
+
+  // Restore draft from storage
+  useEffect(() => {
+    if (!isOpen) return;
+    try {
+      const raw = sessionStorage.getItem(CLAIM_STORAGE_KEY);
+      if (raw) {
+        const draft = JSON.parse(raw);
+        if (draft.fullName) setFullName(draft.fullName);
+        if (draft.newEmail) setNewEmail(draft.newEmail);
+        if (draft.otpCode) setOtpCode(draft.otpCode);
+        if (draft.step) setStep(draft.step);
+      }
+    } catch {
+      // storage unavailable
+    }
+  }, [isOpen]);
+
+  // Persist draft to storage
+  useEffect(() => {
+    if (!isOpen || isSuccess) return;
+    try {
+      if (fullName || newEmail || otpCode) {
+        sessionStorage.setItem(
+          CLAIM_STORAGE_KEY,
+          JSON.stringify({ fullName, newEmail, otpCode, step })
+        );
+      }
+    } catch {
+      // storage quota
+    }
+  }, [isOpen, isSuccess, fullName, newEmail, otpCode, step]);
+
+  // Smart prefill for full name and email once on modal open
+  useEffect(() => {
+    if (!hasPrefilledRef.current && isOpen) {
+      if (initialFullName) {
+        const lower = initialFullName.trim().toLowerCase();
+        const isPreseeded = DISALLOWED_PRESEEDED_DATA.adminNames.some((n) => lower.includes(n));
+        if (!isPreseeded && initialFullName.trim().length >= 2) {
+          setFullName(initialFullName.trim());
+        }
+      }
+      if (initialEmail && !initialEmail.includes("turnkey.local")) {
+        setNewEmail(initialEmail.trim());
+      }
+      hasPrefilledRef.current = true;
+    }
+  }, [isOpen, initialFullName, initialEmail]);
+
   if (!isOpen) return null;
 
   const passwordStrength = evaluatePasswordStrength(newPassword);
 
   const handleSendOtp = async () => {
     setError(null);
+    markFieldTouched("email");
     const emailValidation = validateAdminEmail(newEmail);
     if (!emailValidation.isValid) {
       setError(emailValidation.error || "Please enter a valid email address.");
@@ -132,6 +230,7 @@ export function AccountActivationModal({
       setOtpSent(true);
       setOtpCooldown(60);
       toast.success(`Verification code sent to ${newEmail.trim()}`);
+      setTimeout(() => otpInputRef.current?.focus(), 150);
     } catch {
       setError("Network error while sending verification code. Please try again.");
     } finally {
@@ -206,17 +305,20 @@ export function AccountActivationModal({
     const nameCheck = validateAdminFullName(fullName);
     if (!nameCheck.isValid) {
       setError(nameCheck.error || "Please provide your full name.");
+      nameInputRef.current?.focus();
       return;
     }
 
     const emailCheck = validateAdminEmail(newEmail);
     if (!emailCheck.isValid) {
       setError(emailCheck.error || "Please provide a valid email address.");
+      emailInputRef.current?.focus();
       return;
     }
 
     if (!otpCode || otpCode.trim().length !== 6) {
       setError("Please enter the 6-digit verification code sent to your email.");
+      otpInputRef.current?.focus();
       return;
     }
 
@@ -238,6 +340,7 @@ export function AccountActivationModal({
     const passCheck = validateAdminPassword(newPassword);
     if (!passCheck.isValid) {
       setError(passCheck.error || "Password does not meet security requirements.");
+      passwordInputRef.current?.focus();
       return;
     }
 
@@ -272,7 +375,12 @@ export function AccountActivationModal({
         return;
       }
 
-      // Store pending recovery key and credentials so the clean refreshed page displays the lightbox
+      try {
+        sessionStorage.removeItem(CLAIM_STORAGE_KEY);
+      } catch {
+        // best effort
+      }
+
       if (data.securityKey) {
         const pendingData = {
           securityKey: data.securityKey,
@@ -287,7 +395,6 @@ export function AccountActivationModal({
         }
       }
 
-      // Synchronously clear client auth cookies and tokens so stale tokens are wiped immediately
       if (typeof document !== "undefined") {
         document.cookie.split(";").forEach((c) => {
           const name = c.split("=")[0].trim();
@@ -309,7 +416,6 @@ export function AccountActivationModal({
         } catch {}
       }
 
-      // Best effort non-blocking signOut with strict 300ms timeout
       try {
         const supabase = createClient();
         await Promise.race([
@@ -331,15 +437,12 @@ export function AccountActivationModal({
         }
       }
 
-      // CRITICAL: The page must first refresh before showing the security key lightbox
-      // to eliminate Supabase token invalidation / CORS errors.
       if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
         setIsRedirecting(true);
         window.location.href = "/login?claimed=true";
         return;
       }
 
-      // Test environment fallback: display the modal in unit test runner
       if (data.securityKey) {
         setSecurityKey(data.securityKey);
       }
@@ -366,24 +469,24 @@ export function AccountActivationModal({
     >
       <div
         className={cn(
-          "w-full bg-card border border-border/80 rounded-2xl sm:rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 my-auto text-foreground transition-all duration-200",
-          isSuccess && securityKey ? "max-w-[540px]" : "max-w-[460px]"
+          "w-full bg-card border border-border/80 rounded-3xl p-6 sm:p-9 shadow-2xl space-y-6 my-auto text-foreground transition-all duration-200",
+          isSuccess && securityKey ? "max-w-xl" : "max-w-xl"
         )}
         onClick={(e) => e.stopPropagation()}
       >
         {isSuccess ? (
-          /* Security Recovery Code & Success Screen */
-          <div className="space-y-4 py-1 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center gap-3 pb-3 border-b border-border/60">
-              <div className="size-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 shadow-xs">
-                <CheckCircle2 className="size-6" />
+          /* SUCCESS & EMERGENCY SPARE KEY PRESENTATION */
+          <div className="space-y-6 py-1 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-4 pb-4 border-b border-border/80">
+              <div className="size-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 shadow-sm">
+                <CheckCircle2 className="size-8 stroke-[2.5]" />
               </div>
-              <div className="space-y-0.5">
-                <h2 className="text-base font-bold tracking-tight text-foreground">
+              <div className="space-y-1">
+                <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">
                   Account Claimed Successfully
                 </h2>
-                <p className="text-xs text-muted-foreground leading-snug">
-                  Workspace linked to <span className="font-semibold text-foreground">{claimedEmail}</span>
+                <p className="text-sm sm:text-base text-muted-foreground">
+                  Workspace linked to <span className="font-bold text-foreground">{claimedEmail}</span>
                 </p>
               </div>
             </div>
@@ -397,12 +500,12 @@ export function AccountActivationModal({
                   setHasDownloadedKey(true);
                   setIsSecurityKeyAcknowledged(true);
                 }}
-                title="Landlord Security Recovery Key"
-                description="Save your single-use recovery key now in case you ever lose access to your email. You will need this to regain access to your property portal."
+                title="Emergency Spare Key (Landlord Security Recovery Key)"
+                description={setupDictionary.accountClaiming.step3Subtitle}
                 accountEmail={claimedEmail}
               />
             ) : (
-              <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-xs text-muted-foreground">
+              <div className="p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-base text-muted-foreground">
                 Your credentials are saved. Please sign in with your updated credentials to start property setup.
               </div>
             )}
@@ -413,50 +516,52 @@ export function AccountActivationModal({
                 disabled={Boolean(securityKey && (!hasDownloadedKey || !isSecurityKeyAcknowledged)) || isRedirecting}
                 onClick={handleProceedToSetup}
                 className={cn(
-                  "w-full h-11 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-xs",
+                  "w-full min-h-[56px] rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 shadow-md",
                   Boolean(securityKey && (!hasDownloadedKey || !isSecurityKeyAcknowledged))
                     ? "bg-muted text-muted-foreground/60 cursor-not-allowed border border-border/60"
-                    : "bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.99] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                    : "bg-primary text-primary-foreground hover:bg-primary/95 active:scale-[0.99] cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary",
                   isRedirecting && "opacity-75 cursor-wait"
                 )}
               >
                 {isRedirecting ? (
                   <>
-                    <Loader2 className="size-4 animate-spin" />
-                    <span>Connecting to Sign In...</span>
+                    <Loader2 className="size-5 animate-spin" />
+                    <span>{setupDictionary.accountClaiming.connectingToSignIn}</span>
                   </>
                 ) : (
                   <>
                     <span>Proceed to Sign In</span>
-                    <ArrowRight className="size-4" />
+                    <ArrowRight className="size-6 stroke-[3]" />
                   </>
                 )}
               </button>
               {securityKey && !hasDownloadedKey && (
-                <p className="mt-2 text-center text-[11px] text-muted-foreground">
-                  Please download your recovery key file to proceed to sign in.
+                <p className="mt-3 text-center text-xs sm:text-sm font-semibold text-muted-foreground">
+                  Please click &ldquo;Download Key&rdquo; above to proceed to sign in.
                 </p>
               )}
             </div>
           </div>
         ) : (
-          /* Step-based Form */
+          /* STEP-BASED FORM */
           <>
-            {/* Header with Icon, Progress, and Clear Titles */}
-            <div className="space-y-3">
+            {/* Header with Step Counter and Progress Bar */}
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
-                  <ShieldCheck className="size-5" />
+                <div className="size-12 rounded-2xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-xs">
+                  <ShieldCheck className="size-6" />
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
-                  <span>Step {step} of 2</span>
+                <div className="flex items-center gap-2 text-sm sm:text-base font-bold text-muted-foreground">
+                  <span className="text-primary font-black text-base sm:text-lg">
+                    Step {step} of 2
+                  </span>
                   <span>•</span>
-                  <span>{step === 1 ? "Profile & Email" : "Password"}</span>
+                  <span>{step === 1 ? "~1 min" : "~30 sec"}</span>
                 </div>
               </div>
 
-              {/* Progress Indicator */}
-              <div className="grid grid-cols-2 gap-1.5 h-1 w-full bg-muted rounded-full overflow-hidden">
+              {/* Progress Bar */}
+              <div className="grid grid-cols-2 gap-2 h-2.5 w-full bg-muted/80 rounded-full overflow-hidden p-0.5 border border-border/80">
                 <div className="h-full bg-primary rounded-full transition-all duration-300" />
                 <div
                   className={cn(
@@ -466,27 +571,48 @@ export function AccountActivationModal({
                 />
               </div>
 
+              {/* Jump back pill if on Step 2 */}
+              {step === 2 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError(null);
+                    setStep(1);
+                  }}
+                  className="min-h-[44px] px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-muted/70 text-foreground border border-border/80 hover:bg-muted transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Check className="size-4 text-emerald-600 stroke-[3]" />
+                  <span>Step 1: {fullName || "Name & Email"} (Click to edit)</span>
+                </button>
+              )}
+
               <div>
                 <h2
                   id="activation-modal-title"
-                  className="text-xl font-bold tracking-tight text-foreground"
+                  className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground"
                 >
-                  {step === 1 ? "Claim Your Account" : "Set Your New Password"}
-                </h2>
-                <p className="text-xs text-muted-foreground leading-relaxed mt-1">
                   {step === 1
-                    ? "You signed in with temporary credentials. Set your permanent email and password to claim and secure this workspace."
-                    : "Create a permanent password for future sign-ins to your landlord account."}
+                    ? setupDictionary.accountClaiming.step1Title
+                    : setupDictionary.accountClaiming.step2Title}
+                </h2>
+                <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mt-1.5">
+                  {step === 1
+                    ? setupDictionary.accountClaiming.step1Instruction
+                    : setupDictionary.accountClaiming.step2Instruction}
                 </p>
               </div>
             </div>
 
             {/* Error Notification */}
             {error && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-2.5 text-red-600 dark:text-red-400 text-xs animate-in fade-in">
-                <AlertCircle className="size-4 shrink-0 mt-0.5" />
+              <div
+                role="alert"
+                aria-live="polite"
+                className="p-4 rounded-2xl bg-rose-500/10 border-2 border-rose-500/30 flex items-start gap-3 text-rose-600 dark:text-rose-400 text-sm sm:text-base animate-in fade-in"
+              >
+                <AlertCircle className="size-5 shrink-0 mt-0.5" />
                 <div className="flex-1 space-y-1">
-                  <p className="font-medium leading-relaxed">{error}</p>
+                  <p className="font-bold leading-relaxed">{error}</p>
                   {step === 2 && /code|otp|expired|verification/i.test(error) && (
                     <button
                       type="button"
@@ -494,7 +620,7 @@ export function AccountActivationModal({
                         setError(null);
                         setStep(1);
                       }}
-                      className="text-[11px] font-semibold underline hover:no-underline text-red-700 dark:text-red-300 block cursor-pointer"
+                      className="text-xs sm:text-sm font-bold underline hover:no-underline text-rose-700 dark:text-rose-300 block cursor-pointer mt-1"
                     >
                       Return to verification step
                     </button>
@@ -503,7 +629,7 @@ export function AccountActivationModal({
               </div>
             )}
 
-            {/* Stepper Content */}
+            {/* Step Content */}
             <AnimatePresence mode="wait">
               {step === 1 ? (
                 <motion.form
@@ -513,41 +639,53 @@ export function AccountActivationModal({
                   exit={{ opacity: 0, x: 10 }}
                   transition={{ duration: 0.18, ease: "easeOut" }}
                   onSubmit={handleProceedToStep2}
-                  className="space-y-4"
+                  className="space-y-5"
                   noValidate
                 >
                   {/* Full Name */}
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-foreground select-none">
-                      Full Name
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="admin-fullname-input"
+                      className="block text-base sm:text-lg font-bold text-foreground cursor-pointer select-none"
+                    >
+                      {setupDictionary.accountClaiming.fullNameLabel}
                     </label>
                     <div className="relative">
-                      <User className="size-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <User className="size-5 text-muted-foreground absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
+                        id="admin-fullname-input"
+                        ref={nameInputRef}
                         type="text"
                         required
+                        maxLength={50}
                         value={fullName}
                         onChange={(e) => {
                           setFullName(e.target.value);
                           if (error) setError(null);
                         }}
                         placeholder="e.g. Roberto Reyes"
-                        className="h-10.5 w-full rounded-xl border border-border bg-background pl-10 pr-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        className="w-full min-h-[54px] rounded-xl border border-border/90 bg-background pl-12 pr-4 text-base sm:text-lg font-semibold text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-3 focus:ring-primary/20"
                       />
                     </div>
                   </div>
 
-                  {/* Email & Send OTP */}
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-foreground select-none">
-                      Email Address
+                  {/* Email & Send Code Button */}
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="admin-email-input"
+                      className="block text-base sm:text-lg font-bold text-foreground cursor-pointer select-none"
+                    >
+                      {setupDictionary.accountClaiming.emailLabel}
                     </label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2.5">
                       <div className="relative flex-1">
-                        <Mail className="size-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <Mail className="size-5 text-muted-foreground absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <input
+                          id="admin-email-input"
+                          ref={emailInputRef}
                           type="email"
                           required
+                          maxLength={50}
                           value={newEmail}
                           onChange={(e) => {
                             setNewEmail(e.target.value);
@@ -555,22 +693,22 @@ export function AccountActivationModal({
                             if (error) setError(null);
                           }}
                           placeholder="landlord@example.com"
-                          className="h-10.5 w-full rounded-xl border border-border bg-background pl-10 pr-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          className="w-full min-h-[54px] rounded-xl border border-border/90 bg-background pl-12 pr-4 text-base sm:text-lg font-semibold text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-3 focus:ring-primary/20"
                         />
                       </div>
                       <button
                         type="button"
                         disabled={isSendingOtp || otpCooldown > 0 || !newEmail.includes("@")}
                         onClick={handleSendOtp}
-                        className="h-10.5 px-3.5 rounded-xl border border-border bg-muted/40 hover:bg-muted text-foreground text-xs font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 shrink-0 active:scale-[0.98] cursor-pointer"
+                        className="min-h-[54px] px-5 rounded-xl border border-border bg-muted/60 hover:bg-muted text-foreground text-sm sm:text-base font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shrink-0 active:scale-[0.98] cursor-pointer"
                       >
                         {isSendingOtp ? (
-                          <Loader2 className="size-3.5 animate-spin" />
+                          <Loader2 className="size-4 animate-spin" />
                         ) : otpCooldown > 0 ? (
-                          <span className="font-mono text-[11px]">{otpCooldown}s</span>
+                          <span className="font-mono text-sm">{otpCooldown}s</span>
                         ) : (
                           <>
-                            <Send className="size-3.5" />
+                            <Send className="size-4" />
                             <span>{otpSent ? "Resend" : "Send Code"}</span>
                           </>
                         )}
@@ -578,31 +716,37 @@ export function AccountActivationModal({
                     </div>
                   </div>
 
-                  {/* 6-Digit Email OTP Verification Code */}
-                  <div className="space-y-1.5">
+                  {/* 6-Digit Email Verification Code */}
+                  <div className="space-y-2 pt-1">
                     <div className="flex justify-between items-center">
-                      <label className="block text-xs font-semibold text-foreground select-none">
-                        Verification Code
+                      <label
+                        htmlFor="admin-otp-input"
+                        className="block text-base sm:text-lg font-bold text-foreground cursor-pointer select-none"
+                      >
+                        {setupDictionary.accountClaiming.codeLabel}
                       </label>
                       {isVerifyingOtp ? (
-                        <span className="text-[11px] font-medium text-primary flex items-center gap-1.5">
-                          <Loader2 className="size-3 animate-spin" />
+                        <span className="text-xs sm:text-sm font-bold text-primary flex items-center gap-1.5">
+                          <Loader2 className="size-3.5 animate-spin" />
                           Verifying code...
                         </span>
                       ) : isOtpVerified ? (
-                        <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                          <Check className="size-3" />
+                        <span className="text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <Check className="size-4 stroke-[3]" />
                           Code verified
                         </span>
                       ) : otpSent ? (
-                        <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                          <Check className="size-3" />
+                        <span className="text-xs sm:text-sm font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <Check className="size-4 stroke-[3]" />
                           Code sent to inbox
                         </span>
                       ) : null}
                     </div>
+
                     <div className="relative">
                       <input
+                        id="admin-otp-input"
+                        ref={otpInputRef}
                         type="text"
                         maxLength={6}
                         inputMode="numeric"
@@ -613,29 +757,24 @@ export function AccountActivationModal({
                         onChange={(e) => handleOtpChange(e.target.value)}
                         placeholder="Enter 6-digit code"
                         className={cn(
-                          "h-11 w-full rounded-xl border bg-background px-4 text-center font-mono text-base tracking-[0.25em] font-semibold text-foreground placeholder:font-sans placeholder:tracking-normal placeholder:text-xs placeholder:text-muted-foreground/50 transition-colors focus:outline-none focus:ring-2",
+                          "w-full min-h-[54px] rounded-xl border bg-background px-4 text-center font-mono text-xl sm:text-2xl tracking-[0.3em] font-bold text-foreground placeholder:font-sans placeholder:tracking-normal placeholder:text-sm sm:placeholder:text-base placeholder:text-muted-foreground/50 transition-colors focus:outline-none focus:ring-3",
                           error && otpCode.length === 6
-                            ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                            ? "border-rose-500 focus:border-rose-500 focus:ring-rose-500/20"
                             : isOtpVerified
                             ? "border-emerald-500 focus:border-emerald-500 focus:ring-emerald-500/20"
-                            : "border-border focus:border-primary focus:ring-primary/20"
+                            : "border-border/90 focus:border-primary focus:ring-primary/20"
                         )}
                       />
-                      {isVerifyingOtp && (
-                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                          <Loader2 className="size-4 animate-spin text-primary" />
-                        </div>
-                      )}
                     </div>
                     {!otpSent && (
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-xs sm:text-sm text-muted-foreground pt-0.5">
                         Click &ldquo;Send Code&rdquo; above to receive your 6-digit confirmation code.
                       </p>
                     )}
                   </div>
 
-                  {/* Continue Button */}
-                  <div className="pt-2">
+                  {/* Primary Action Button */}
+                  <div className="pt-3">
                     <button
                       type="submit"
                       disabled={
@@ -644,17 +783,17 @@ export function AccountActivationModal({
                         otpCode.trim().length !== 6 ||
                         isVerifyingOtp
                       }
-                      className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm transition-all hover:bg-primary/90 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      className="w-full min-h-[56px] rounded-2xl bg-primary text-primary-foreground font-black text-lg transition-all hover:bg-primary/95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-md cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary"
                     >
                       {isVerifyingOtp ? (
                         <>
-                          <Loader2 className="size-4 animate-spin" />
+                          <Loader2 className="size-5 animate-spin" />
                           <span>Verifying Code...</span>
                         </>
                       ) : (
                         <>
                           <span>Continue to Password</span>
-                          <ArrowRight className="size-4" />
+                          <ArrowRight className="size-6 stroke-[3]" />
                         </>
                       )}
                     </button>
@@ -668,41 +807,47 @@ export function AccountActivationModal({
                   exit={{ opacity: 0, x: -10 }}
                   transition={{ duration: 0.18, ease: "easeOut" }}
                   onSubmit={handleClaimAccount}
-                  className="space-y-4"
+                  className="space-y-5"
                   noValidate
                 >
                   {/* New Password */}
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-foreground select-none">
-                      New Password
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="admin-new-password"
+                      className="block text-base sm:text-lg font-bold text-foreground cursor-pointer select-none"
+                    >
+                      {setupDictionary.accountClaiming.passwordLabel}
                     </label>
                     <div className="relative">
-                      <Lock className="size-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <Lock className="size-5 text-muted-foreground absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
+                        id="admin-new-password"
+                        ref={passwordInputRef}
                         type={showPassword ? "text" : "password"}
                         required
+                        maxLength={16}
                         value={newPassword}
                         onChange={(e) => {
                           setNewPassword(e.target.value);
                           if (error) setError(null);
                         }}
                         placeholder="At least 8 characters"
-                        className="h-10.5 w-full rounded-xl border border-border bg-background pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        className="w-full min-h-[54px] rounded-xl border border-border/90 bg-background pl-12 pr-14 text-base sm:text-lg font-semibold text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-3 focus:ring-primary/20"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
+                        className="min-h-[48px] min-w-[48px] absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center p-2 rounded-lg"
                         aria-label={showPassword ? "Hide password" : "Show password"}
                       >
-                        {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                        {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                       </button>
                     </div>
 
-                    {/* Password Strength & Requirements */}
+                    {/* Password Strength Indicator */}
                     {newPassword && (
-                      <div className="space-y-1.5 pt-1">
-                        <div className="flex gap-1 h-1.5">
+                      <div className="space-y-2 pt-1">
+                        <div className="flex gap-1.5 h-2">
                           {[1, 2, 3, 4].map((level) => (
                             <div
                               key={level}
@@ -710,7 +855,7 @@ export function AccountActivationModal({
                                 "flex-1 rounded-full transition-colors duration-200",
                                 passwordStrength.score >= level
                                   ? passwordStrength.score === 1
-                                    ? "bg-red-500"
+                                    ? "bg-rose-500"
                                     : passwordStrength.score === 2
                                     ? "bg-amber-500"
                                     : passwordStrength.score === 3
@@ -721,62 +866,48 @@ export function AccountActivationModal({
                             />
                           ))}
                         </div>
-                        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                        <div className="flex items-center justify-between text-xs sm:text-sm text-muted-foreground">
                           <span>
                             Strength:{" "}
                             <span
                               className={cn(
-                                "font-semibold",
+                                "font-bold",
                                 passwordStrength.score >= 3
                                   ? "text-emerald-500"
                                   : passwordStrength.score === 2
                                   ? "text-amber-500"
-                                  : "text-red-500"
+                                  : "text-rose-500"
                               )}
                             >
                               {passwordStrength.label}
                             </span>
                           </span>
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={cn(
-                                "flex items-center gap-0.5",
-                                newPassword.length >= 8 ? "text-emerald-500" : "text-muted-foreground"
-                              )}
-                            >
-                              {newPassword.length >= 8 ? <Check className="size-3" /> : "•"} 8+ chars
-                            </span>
-                            <span
-                              className={cn(
-                                "flex items-center gap-0.5",
-                                /[a-zA-Z]/.test(newPassword) && /[\d\W_]/.test(newPassword)
-                                  ? "text-emerald-500"
-                                  : "text-muted-foreground"
-                              )}
-                            >
-                              {/[a-zA-Z]/.test(newPassword) && /[\d\W_]/.test(newPassword) ? (
-                                <Check className="size-3" />
-                              ) : (
-                                "•"
-                              )}{" "}
-                              letters & numbers
-                            </span>
-                          </div>
+                          <span
+                            className={cn(
+                              "font-bold",
+                              newPassword.length >= 8 ? "text-emerald-500" : "text-muted-foreground"
+                            )}
+                          >
+                            {newPassword.length >= 8 ? "✓ 8+ chars" : "• Needs 8+ chars"}
+                          </span>
                         </div>
                       </div>
                     )}
                   </div>
 
                   {/* Confirm Password */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <label className="block text-xs font-semibold text-foreground select-none">
-                        Confirm Password
+                      <label
+                        htmlFor="admin-confirm-password"
+                        className="block text-base sm:text-lg font-bold text-foreground cursor-pointer select-none"
+                      >
+                        {setupDictionary.accountClaiming.confirmPasswordLabel}
                       </label>
                       {confirmPassword && (
                         <span
                           className={cn(
-                            "text-[11px] font-medium flex items-center gap-1",
+                            "text-xs sm:text-sm font-bold flex items-center gap-1",
                             confirmPassword === newPassword
                               ? "text-emerald-600 dark:text-emerald-400"
                               : "text-amber-600 dark:text-amber-400"
@@ -784,7 +915,7 @@ export function AccountActivationModal({
                         >
                           {confirmPassword === newPassword ? (
                             <>
-                              <Check className="size-3" />
+                              <Check className="size-4 stroke-[3]" />
                               Passwords match
                             </>
                           ) : (
@@ -794,31 +925,33 @@ export function AccountActivationModal({
                       )}
                     </div>
                     <div className="relative">
-                      <Lock className="size-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <Lock className="size-5 text-muted-foreground absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
+                        id="admin-confirm-password"
                         type={showConfirmPassword ? "text" : "password"}
                         required
+                        maxLength={16}
                         value={confirmPassword}
                         onChange={(e) => {
                           setConfirmPassword(e.target.value);
                           if (error) setError(null);
                         }}
                         placeholder="Re-enter your password"
-                        className="h-10.5 w-full rounded-xl border border-border bg-background pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        className="w-full min-h-[54px] rounded-xl border border-border/90 bg-background pl-12 pr-14 text-base sm:text-lg font-semibold text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-3 focus:ring-primary/20"
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword((prev) => !prev)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
+                        className="min-h-[48px] min-w-[48px] absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center p-2 rounded-lg"
                         aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                       >
-                        {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                        {showConfirmPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                       </button>
                     </div>
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex items-center gap-2 pt-1">
+                  <div className="flex items-center gap-3 pt-3">
                     <button
                       type="button"
                       onClick={() => {
@@ -826,25 +959,25 @@ export function AccountActivationModal({
                         setStep(1);
                       }}
                       disabled={isSubmitting}
-                      className="h-11 px-4 rounded-xl border border-border bg-background hover:bg-muted text-foreground font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 shrink-0 cursor-pointer active:scale-[0.98] disabled:opacity-50"
+                      className="min-h-[56px] px-5 rounded-2xl border border-border bg-background hover:bg-muted text-foreground font-bold text-base transition-colors flex items-center justify-center gap-2 shrink-0 cursor-pointer active:scale-[0.98] disabled:opacity-50"
                     >
-                      <ArrowLeft className="size-3.5" />
-                      <span>Back</span>
+                      <ArrowLeft className="size-4" />
+                      <span>{setupDictionary.common.back}</span>
                     </button>
                     <button
                       type="submit"
                       disabled={isSubmitting || !newPassword || confirmPassword !== newPassword}
-                      className="h-11 flex-1 rounded-xl bg-primary text-primary-foreground font-bold text-sm transition-all hover:bg-primary/90 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      className="min-h-[56px] flex-1 rounded-2xl bg-primary text-primary-foreground font-black text-lg transition-all hover:bg-primary/95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-md cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary"
                     >
                       {isSubmitting ? (
                         <>
-                          <Loader2 className="size-4 animate-spin" />
-                          <span>Claiming Account...</span>
+                          <Loader2 className="size-5 animate-spin" />
+                          <span>{setupDictionary.accountClaiming.claimingButton}</span>
                         </>
                       ) : (
                         <>
-                          <span>Claim Account</span>
-                          <ArrowRight className="size-4" />
+                          <span>{setupDictionary.accountClaiming.claimButton}</span>
+                          <ArrowRight className="size-6 stroke-[3]" />
                         </>
                       )}
                     </button>

@@ -21,7 +21,7 @@ export function TenantFilterBar({
         <div className="flex flex-col gap-4 rounded-[2rem] neumorphic-panel p-3 lg:flex-row lg:items-center">
             <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <input
+                <input maxLength={60}
                     type="text"
                     placeholder="Search residents, units, or properties..."
                     value={searchQuery}

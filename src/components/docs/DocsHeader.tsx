@@ -57,7 +57,7 @@ export function DocsHeader({ onMenuToggle, isMenuOpen }: DocsHeaderProps) {
         <div className="flex items-center gap-2 sm:gap-4">
           <div className="relative hidden sm:block">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-disabled" />
-            <input
+            <input maxLength={60}
               type="text"
               placeholder="Search documentation..."
               className="h-10 w-64 rounded-full border border-divider bg-surface-1 pl-10 pr-4 text-sm outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10"

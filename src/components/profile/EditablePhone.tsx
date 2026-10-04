@@ -78,7 +78,7 @@ export function EditablePhone({ initialPhone, userId, className }: EditablePhone
         return (
             <form onSubmit={handleSave} noValidate className="flex flex-col items-center gap-2 w-full max-w-xs animate-in fade-in">
                 <div className="relative w-full">
-                    <input
+                    <input maxLength={15}
                         type="tel"
                         inputMode="tel"
                         value={tempPhone}

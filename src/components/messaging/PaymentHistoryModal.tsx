@@ -218,7 +218,7 @@ export function PaymentHistoryModal({
                         {/* Search Input */}
                         <div className="relative flex-1">
                             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-3.5 text-disabled" />
-                            <input
+                            <input maxLength={60}
                                 type="text"
                                 placeholder="Search by type, date, or amount..."
                                 value={searchQuery}

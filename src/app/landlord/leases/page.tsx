@@ -49,6 +49,8 @@ import { LeaseAuditTrail } from "@/components/landlord/leases/LeaseAuditTrail";
 import { useProperty } from "@/context/PropertyContext";
 import ActiveLeasesTab from "@/components/landlord/leases/ActiveLeasesTab";
 import ArchiveTab from "@/components/landlord/leases/ArchiveTab";
+import { ViewToggle } from "@/components/shared/ViewToggle";
+import { useViewMode } from "@/hooks/useViewMode";
 
 function LeasesContent() {
  const searchParams = useSearchParams();
@@ -59,6 +61,7 @@ function LeasesContent() {
 
  const [searchQuery, setSearchQuery] = useState("");
  const [sortBy, setSortBy] = useState<string>("default");
+ const [view, setView] = useViewMode("ireside:leases-view", "grid");
 
  const [activeTab, setActiveTab] = useState<"active" | "renewals" | "history">(
  "active",
@@ -1008,9 +1011,9 @@ function LeasesContent() {
       </div>
 
       {/* ─── Unified Command Bar ──────────────────────────────────── */}
-      <div className="flex flex-col items-center justify-between gap-4 border border-border/50 neumorphic-panel p-3 md:p-4 rounded-3xl backdrop-blur-xl xl:flex-row">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-3 border border-border/50 neumorphic-panel p-2 sm:p-2.5 md:p-3 rounded-2xl md:rounded-[1.75rem] backdrop-blur-xl">
         {/* Segmented Pill Tabs */}
-        <div className="flex items-center gap-1 rounded-2xl neumorphic-extruded p-1 w-full sm:w-auto overflow-x-auto">
+        <div className="flex shrink-0 items-center gap-1 rounded-xl neumorphic-extruded p-1 w-full sm:w-auto overflow-x-auto no-scrollbar">
           {[
             { id: "active", label: "Active", icon: ShieldCheck },
             { id: "renewals", label: "Renewals", icon: RefreshCw },
@@ -1020,37 +1023,37 @@ function LeasesContent() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={cn(
-                "flex items-center gap-2 rounded-xl px-5 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap cursor-pointer",
+                "flex items-center gap-1.5 rounded-lg px-3 sm:px-3.5 py-1.5 sm:py-2 text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer",
                 activeTab === tab.id
-                  ? "neumorphic-panel text-foreground shadow-sm ring-1 ring-border"
+                  ? "neumorphic-panel text-foreground shadow-xs ring-1 ring-border"
                   : "text-muted-foreground hover:neumorphic-inset hover:text-foreground"
               )}
             >
               <tab.icon className={cn("size-3.5", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
-              {tab.label}
+              <span>{tab.label}</span>
             </button>
           ))}
         </div>
 
         {/* Search, Scope, and Refine Controls */}
-        <div className="flex w-full items-center gap-3 xl:w-auto">
-          <div className="relative flex-1 xl:w-72">
-            <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <input 
+        <div className="flex items-center gap-2 sm:gap-2.5 w-full md:w-auto flex-1 md:flex-initial justify-end">
+          <div className="relative flex-1 min-w-[130px] sm:w-44 md:w-52 lg:w-60">
+            <Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
+            <input maxLength={60} 
               type="text" 
               placeholder="Search tenant or unit..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-11 w-full rounded-2xl neumorphic-extruded pl-10 pr-4 text-xs font-black text-foreground focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/60"
+              className="h-9.5 sm:h-10 w-full rounded-xl neumorphic-extruded pl-9 pr-3 text-xs font-bold text-foreground focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/50"
             />
           </div>
 
-          <div className="flex h-11 items-center gap-2 rounded-2xl neumorphic-extruded px-3.5 text-xs font-black uppercase tracking-wider text-foreground">
-            <Building2 className="size-4 text-muted-foreground shrink-0" />
+          <div className="flex h-9.5 sm:h-10 shrink-0 items-center gap-1.5 rounded-xl neumorphic-extruded px-2.5 sm:px-3 text-xs font-black uppercase tracking-wider text-foreground max-w-[150px] sm:max-w-[190px]">
+            <Building2 className="size-3.5 text-muted-foreground shrink-0" />
             <select 
               value={selectedPropertyId}
               onChange={(e) => setSelectedPropertyId(e.target.value as any)}
-              className="bg-transparent text-xs font-black text-foreground focus:outline-none cursor-pointer pr-1"
+              className="bg-transparent text-xs font-bold text-foreground focus:outline-none cursor-pointer pr-1 truncate max-w-[100px] sm:max-w-[140px]"
             >
               <option value="all" className="bg-background text-foreground dark:bg-zinc-900 dark:text-white">All Properties</option>
               {properties.map(p => (
@@ -1061,8 +1064,15 @@ function LeasesContent() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex size-11 shrink-0 items-center justify-center rounded-2xl neumorphic-extruded text-muted-foreground hover:neumorphic-inset hover:text-foreground transition-all cursor-pointer">
-                <Filter className="size-4" />
+              <button 
+                title="Refine filters"
+                aria-label="Refine filters"
+                className={cn(
+                  "flex size-9.5 sm:size-10 shrink-0 items-center justify-center rounded-xl neumorphic-extruded transition-all cursor-pointer",
+                  sortBy !== "default" ? "text-primary border border-primary/30" : "text-muted-foreground hover:neumorphic-inset hover:text-foreground"
+                )}
+              >
+                <Filter className="size-3.5 sm:size-4" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64 p-2 rounded-2xl neumorphic-panel border border-border">
@@ -1132,17 +1142,21 @@ function LeasesContent() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* View Mode Toggle (List / Grid) */}
+          <ViewToggle view={view} onChange={setView} size="sm" />
         </div>
       </div>
 
       {/* ─── Tab Content Views ────────────────────────────────────── */}
       <div className="mt-4">
         {activeTab === "renewals" ? (
-          <LandlordRenewalReview searchQuery={searchQuery} />
+          <LandlordRenewalReview searchQuery={searchQuery} viewMode={view} />
         ) : activeTab === "active" ? (
           <ActiveLeasesTab 
             searchQuery={searchQuery} 
             sortBy={sortBy}
+            viewMode={view}
             onClearSearch={() => {
               setSearchQuery("");
               setSortBy("default");
@@ -1152,6 +1166,7 @@ function LeasesContent() {
           <ArchiveTab 
             searchQuery={searchQuery} 
             sortBy={sortBy}
+            viewMode={view}
             onClearSearch={() => {
               setSearchQuery("");
               setSortBy("default");

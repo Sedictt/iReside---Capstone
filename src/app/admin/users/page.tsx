@@ -357,7 +357,7 @@ export default function AdminUsersPage() {
                 <div className="relative z-10 mt-8">
                     <div className="group relative flex items-center">
                         <Search className="absolute left-6 size-5 text-white/30 transition-colors group-focus-within:text-primary" />
-                        <input
+                        <input maxLength={60}
                             type="text"
                             placeholder="Search by name, email, or identity..."
                             value={search}

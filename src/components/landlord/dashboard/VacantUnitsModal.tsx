@@ -179,7 +179,7 @@ export function VacantUnitsModal({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.98, y: 10 }}
                 transition={{ duration: 0.18, ease: "easeOut" }}
-                className="relative z-10 w-full max-w-6xl max-h-[92vh] flex flex-col rounded-[2rem] sm:rounded-[2.5rem] border border-border/80 bg-card text-card-foreground shadow-2xl overflow-hidden will-change-transform"
+                className="relative z-10 w-full max-w-6xl max-h-[92vh] flex flex-col rounded-3xl border border-border/80 bg-card text-card-foreground shadow-2xl overflow-hidden will-change-transform"
             >
                 {/* Top Header */}
                 <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-border/60 bg-muted/20">
@@ -189,14 +189,14 @@ export function VacantUnitsModal({
                         </div>
                         <div>
                             <div className="flex items-center gap-2.5">
-                                <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+                                <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight text-balance">
                                     Vacant Units Directory
                                 </h2>
-                                <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-black">
+                                <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-black tabular-nums">
                                     {units.length} {units.length === 1 ? "Unit" : "Units"} Available
                                 </span>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-0.5">
+                            <p className="text-xs text-muted-foreground mt-0.5 max-w-prose text-pretty">
                                 Select a vacant unit to start an instant walk-in application, preview unit details, or share a direct link.
                             </p>
                         </div>
@@ -204,8 +204,9 @@ export function VacantUnitsModal({
 
                     <button
                         onClick={onClose}
-                        className="size-10 rounded-2xl neumorphic-extruded text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                        className="size-11 min-h-[44px] min-w-[44px] rounded-2xl neumorphic-extruded text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95 cursor-pointer"
                         title="Close Directory"
+                        aria-label="Close Vacant Units Directory"
                     >
                         <X className="size-5" />
                     </button>
@@ -251,7 +252,7 @@ export function VacantUnitsModal({
                     <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
                         <div className="relative w-full sm:flex-1">
                             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                            <input
+                            <input maxLength={60}
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -334,64 +335,67 @@ export function VacantUnitsModal({
                                         Active Listing
                                     </div>
 
-                                    {/* Monthly Rent */}
-                                    <div className="text-left lg:text-center min-w-[120px]">
-                                        <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">
-                                            Monthly Rent
-                                        </span>
-                                        <span className="text-lg font-black text-foreground">
-                                            ₱{unit.rent_amount.toLocaleString()}
-                                        </span>
-                                    </div>
+                                    {/* Monthly Rent (Right aligned per numerical data invariants) */}
+                                    <div className="text-left lg:text-right min-w-[120px]">
+                                         <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">
+                                             Monthly Rent
+                                         </span>
+                                         <span className="text-lg font-black text-foreground tabular-nums">
+                                             ₱{unit.rent_amount.toLocaleString()}
+                                         </span>
+                                     </div>
 
-                                    {/* Actions */}
-                                    <div className="flex items-center gap-2 shrink-0">
-                                        <button
-                                            type="button"
-                                            onClick={() => setPreviewUnit(unit)}
-                                            className="size-10 rounded-2xl neumorphic-extruded text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95 cursor-pointer"
-                                            title="Quick Preview Unit"
-                                        >
-                                            <Eye className="size-4" />
-                                        </button>
+                                     {/* Actions */}
+                                     <div className="flex items-center gap-2 shrink-0">
+                                         <button
+                                             type="button"
+                                             onClick={() => setPreviewUnit(unit)}
+                                             className="size-11 min-h-[44px] min-w-[44px] rounded-2xl neumorphic-extruded text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                                             title="Quick Preview Unit"
+                                             aria-label={`Quick Preview ${unit.name}`}
+                                         >
+                                             <Eye className="size-4" />
+                                         </button>
 
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                onClose();
-                                                onStartWalkIn(unit.id);
-                                            }}
-                                            className="flex-1 sm:flex-none px-5 py-2.5 rounded-2xl neumorphic-primary text-primary-foreground text-xs font-black transition-all shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
-                                        >
-                                            <UserPlus className="size-3.5 font-black" />
-                                            <span>Start Walk-In Application</span>
-                                        </button>
+                                         <button
+                                             type="button"
+                                             onClick={() => {
+                                                 onClose();
+                                                 onStartWalkIn(unit.id);
+                                             }}
+                                             className="flex-1 sm:flex-none px-5 py-2.5 min-h-[44px] rounded-2xl neumorphic-primary text-primary-foreground text-xs font-black transition-all shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                                         >
+                                             <UserPlus className="size-3.5 font-black" />
+                                             <span>Start Walk-In</span>
+                                         </button>
 
-                                        <button
-                                            type="button"
-                                            onClick={() => handleOpenQr(unit)}
-                                            className="size-10 rounded-2xl neumorphic-extruded text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95 cursor-pointer"
-                                            title="View QR Code for Applicant's Phone"
-                                        >
-                                            <QrCode className="size-4" />
-                                        </button>
+                                         <button
+                                             type="button"
+                                             onClick={() => handleOpenQr(unit)}
+                                             className="size-11 min-h-[44px] min-w-[44px] rounded-2xl neumorphic-extruded text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                                             title="View QR Code for Applicant's Phone"
+                                             aria-label={`View QR Code for ${unit.name}`}
+                                         >
+                                             <QrCode className="size-4" />
+                                         </button>
 
-                                        <button
-                                            type="button"
-                                            onClick={() => handleCopyLink(unit)}
-                                            disabled={isCopyingThis}
-                                            className="size-10 rounded-2xl neumorphic-extruded text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95 cursor-pointer disabled:opacity-50"
-                                            title="Copy Direct Application Link"
-                                        >
-                                            {isCopyingThis ? (
-                                                <Loader2 className="size-4 animate-spin text-primary" />
-                                            ) : copiedUnitId === unit.id ? (
-                                                <Check className="size-4 text-emerald-500 font-bold" />
-                                            ) : (
-                                                <Copy className="size-4" />
-                                            )}
-                                        </button>
-                                    </div>
+                                         <button
+                                             type="button"
+                                             onClick={() => handleCopyLink(unit)}
+                                             disabled={isCopyingThis}
+                                             className="size-11 min-h-[44px] min-w-[44px] rounded-2xl neumorphic-extruded text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+                                             title="Copy Direct Application Link"
+                                             aria-label={`Copy Direct Application Link for ${unit.name}`}
+                                         >
+                                             {isCopyingThis ? (
+                                                 <Loader2 className="size-4 animate-spin text-primary" />
+                                             ) : copiedUnitId === unit.id ? (
+                                                 <Check className="size-4 text-emerald-500 font-bold" />
+                                             ) : (
+                                                 <Copy className="size-4" />
+                                             )}
+                                         </button>
+                                     </div>
                                 </div>
                             );
                         })

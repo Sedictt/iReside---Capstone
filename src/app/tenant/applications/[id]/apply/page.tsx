@@ -800,7 +800,7 @@ function FormField({ label, value, onChange, placeholder, type = "text" }: any) 
                 {label}
             </label>
             <div className="relative">
-                <input
+                <input maxLength={120}
                     type={type}
                     value={value}
                     onChange={(e) => onChange(e.target.value)}

@@ -94,9 +94,15 @@ export const TransferRequestModal = ({
                                     </div>
 
                                     <div className="space-y-3">
-                                        <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Transfer Justification</label>
+                                        <div className="flex items-center justify-between ml-1">
+                                            <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Transfer Justification</label>
+                                            <span className="text-[10px] font-medium text-muted-foreground/70 select-none">
+                                                {reason.length} / 500
+                                            </span>
+                                        </div>
                                         <textarea
                                             required
+                                            maxLength={500}
                                             value={reason}
                                             onChange={(e) => setReason(e.target.value)}
                                             placeholder="Please explain why you'd like to transfer (e.g., needing more space, preferred floor...)"

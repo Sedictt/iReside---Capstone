@@ -79,12 +79,15 @@ import { useTheme } from "next-themes";
 import { useHighContrast } from "@/hooks/useHighContrast";
 import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
 import { TimeFormatToggle } from "@/components/ui/TimeFormatToggle";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { useLanguage } from "@/hooks/useLanguage";
 import { CURATED_BANNER_PRESETS, DEFAULT_BANNER_URL } from "@/components/landlord/dashboard/BannerCustomizerModal";
 import { ColorPickerModal } from "@/components/ui/ColorPickerModal";
 import { UnsavedChangesModal } from "@/components/ui/UnsavedChangesModal";
 import { useBrand, DEFAULT_BRANDING } from "@/context/BrandContext";
 import { applyBrandCssVariables } from "@/lib/branding/colors";
 import { SecurityKeyManagementCard } from "@/components/auth/SecurityKeyManagementCard";
+import { TwoFactorManagementCard } from "@/components/auth/TwoFactorManagementCard";
 import Link from "next/link";
 import {
     validateFullName,
@@ -372,6 +375,7 @@ export function saveCachedSettings(settings: CachedLandlordSettings, userId?: st
 export function LandlordSettings() {
     const router = useRouter();
     const { user, profile, loading, refreshProfile } = useAuth();
+    const { t, isFilipino } = useLanguage();
     // UI State
     const [activeTab, setActiveTab] = useState<SettingsCategory>("Identity");
     const [activeSubTab, setActiveSubTab] = useState<string>("Profile");
@@ -2275,7 +2279,7 @@ export function LandlordSettings() {
                                     icon={Facebook}
                                     error={touchedFields.socials_facebook ? fieldErrors.socials_facebook : undefined}
                                 >
-                                    <input
+                                    <input maxLength={120}
                                         type="text"
                                         placeholder="https://facebook.com/your-page or page-handle"
                                         value={formData.socials.facebook}
@@ -2306,7 +2310,7 @@ export function LandlordSettings() {
                                     icon={Instagram}
                                     error={touchedFields.socials_instagram ? fieldErrors.socials_instagram : undefined}
                                 >
-                                    <input
+                                    <input maxLength={120}
                                         type="text"
                                         placeholder="https://instagram.com/your-profile or @handle"
                                         value={formData.socials.instagram}
@@ -2337,7 +2341,7 @@ export function LandlordSettings() {
                                     icon={Twitter}
                                     error={touchedFields.socials_twitter ? fieldErrors.socials_twitter : undefined}
                                 >
-                                    <input
+                                    <input maxLength={120}
                                         type="text"
                                         placeholder="https://x.com/your-handle or @handle"
                                         value={formData.socials.twitter}
@@ -2368,7 +2372,7 @@ export function LandlordSettings() {
                                     icon={Linkedin}
                                     error={touchedFields.socials_linkedin ? fieldErrors.socials_linkedin : undefined}
                                 >
-                                    <input
+                                    <input maxLength={120}
                                         type="text"
                                         placeholder="https://linkedin.com/in/your-profile or username"
                                         value={formData.socials.linkedin}
@@ -2729,6 +2733,13 @@ export function LandlordSettings() {
                                         </button>
                                     ))}
                                 </div>
+                            </GlassCard>
+
+                            <GlassCard 
+                                title="Language / Wika" 
+                                description={isFilipino ? "Pumili kung nais mong gamitin ang sistemang ito sa pang-araw-araw na Filipino (Taglish) o English." : "Choose between everyday conversational Filipino (Taglish) and standard English."}
+                            >
+                                <LanguageToggle variant="segmented" showPreview={true} />
                             </GlassCard>
 
                             <GlassCard 
@@ -3267,7 +3278,7 @@ export function LandlordSettings() {
                                     error={fieldErrors["newPassword"]}
                                 >
                                     <div className="relative">
-                                        <input 
+                                        <input maxLength={16} 
                                             type={showNewPassword ? "text" : "password"} 
                                             value={newPassword}
                                             onChange={(e) => {
@@ -3360,7 +3371,7 @@ export function LandlordSettings() {
                                     error={fieldErrors["confirmNewPassword"]}
                                 >
                                     <div className="relative">
-                                        <input 
+                                        <input maxLength={16} 
                                             type={showConfirmPassword ? "text" : "password"} 
                                             value={confirmNewPassword}
                                             onChange={(e) => {
@@ -3410,228 +3421,17 @@ export function LandlordSettings() {
                         </GlassCard>
                     );
                 case "Protection":
-                    const handleConnectGmail = async () => {
-                        try {
-                            const res = await fetch("/api/landlord/2fa?action=google-auth");
-                            const data = await res.json();
-                            if (data.authUrl) {
-                                window.location.href = data.authUrl;
-                            }
-                        } catch (err) {
-                            toast.error("Failed to initiate Google OAuth");
-                        }
-                    };
-
-                    const handleSendOTP = async () => {
-                        const loadingToast = toast.loading("Sending OTP…");
-                        try {
-                            const res = await fetch("/api/landlord/2fa", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ action: "send-otp" }),
-                            });
-                            const data = await res.json();
-                            if (data.error) {
-                                toast.error(data.error, { id: loadingToast });
-                            } else {
-                                setTwoFAStatus('pending_otp');
-                                toast.success(`OTP sent to ${data.email}`, { id: loadingToast });
-                            }
-                        } catch (err) {
-                            toast.error("Failed to send OTP", { id: loadingToast });
-                        }
-                    };
-
-                    const handleVerifyOTP = async () => {
-                        if (otpInput.length !== 6) {
-                            toast.error("Please enter a 6-digit code");
-                            return;
-                        }
-                        setIsVerifyingOTP(true);
-                        const loadingToast = toast.loading("Verifying OTP…");
-                        try {
-                            const res = await fetch("/api/landlord/2fa", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ action: "verify-otp", otp: otpInput }),
-                            });
-                            const data = await res.json();
-                            if (data.error) {
-                                toast.error(data.error, { id: loadingToast });
-                            } else {
-                                setTwoFAStatus('enabled');
-                                setTwoFAEmail(data.email);
-                                setOtpInput("");
-                                toast.success("2FA enabled successfully!", { id: loadingToast });
-                            }
-                        } catch (err) {
-                            toast.error("Failed to verify OTP", { id: loadingToast });
-                        } finally {
-                            setIsVerifyingOTP(false);
-                        }
-                    };
-
-                    const handleDisable2FA = async () => {
-                        if (!disablePassword) {
-                            toast.error("Please enter your password");
-                            return;
-                        }
-                        setIsDisabling(true);
-                        const loadingToast = toast.loading("Disabling 2FA…");
-                        try {
-                            const res = await fetch("/api/landlord/2fa", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ action: "disable", password: disablePassword }),
-                            });
-                            const data = await res.json();
-                            if (data.error) {
-                                toast.error(data.error, { id: loadingToast });
-                            } else {
-                                setTwoFAStatus('disabled');
-                                setTwoFAEmail(null);
-                                setDisablePassword("");
-                                toast.success("2FA disabled successfully", { id: loadingToast });
-                            }
-                        } catch (err) {
-                            toast.error("Failed to disable 2FA", { id: loadingToast });
-                        } finally {
-                            setIsDisabling(false);
-                        }
-                    };
-
                     return (
                         <div className="space-y-6 max-w-2xl">
                             <SecurityKeyManagementCard accountEmail={user?.email || profile?.email || undefined} />
 
-                            <GlassCard title="Two-Factor Authentication" description="Add an extra layer of security using your Google account.">
-        {twoFAStatus === 'loading' ? (
-            <div className="flex items-center justify-center py-12">
-                <div className="relative flex items-center justify-center">
-                    <div className="absolute size-12 animate-ping rounded-full bg-primary/20"></div>
-                    <div className="relative size-12 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-                </div>
-            </div>
-        ) : twoFAStatus === 'disabled' ? (
-            <div className="space-y-8 max-w-lg">
-                <div className="flex items-center gap-6 p-6 rounded-3xl border border-white/5 bg-white/[0.02] transition-all hover:bg-white/[0.04]">
-                    <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-inner">
-                        <Smartphone className="size-8" />
-                    </div>
-                    <div className="space-y-1">
-                        <h4 className="text-base font-black text-white">Email OTP Protection</h4>
-                        <p className="text-xs text-neutral-500 leading-relaxed">Connect your Gmail account to receive secure one-time passwords for account verification.</p>
-                    </div>
-                </div>
-                <button 
-                    onClick={handleConnectGmail}
-                    className="group relative w-full overflow-hidden rounded-2xl neumorphic-primary py-4 text-sm font-black transition-all hover:scale-[1.02] active:scale-95"
-                >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                    <span className="relative flex items-center justify-center gap-2">
-                        Connect with Google
-                    </span>
-                </button>
-            </div>
-        ) : twoFAStatus === 'gmail_connected' ? (
-            <div className="space-y-8 max-w-lg">
-                <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-8 transition-all">
-                    <div className="absolute top-0 right-0 p-4">
-                        <div className="flex size-3 items-center justify-center rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
-                    </div>
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="size-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                                <CheckCircle className="size-3 text-emerald-500" />
-                            </div>
-                            <span className="text-xs font-black text-neutral-300 uppercase tracking-widest">Google Account Linked</span>
-                        </div>
-                        <p className="text-sm text-neutral-400 leading-relaxed">
-                            Your Google account is successfully connected. The final step is to verify your identity.
-                        </p>
-                        <div className="pt-4">
-                            <button 
-                                onClick={handleSendOTP}
-                                className="w-full rounded-2xl neumorphic-primary py-4 text-sm font-black transition-all hover:scale-[1.02] active:scale-95"
-                            >
-                                Send Verification Code
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        ) : twoFAStatus === 'pending_otp' ? (
-            <div className="space-y-8 max-w-lg">
-                <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-8">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="size-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.6)]"></div>
-                        <span className="text-xs font-black text-neutral-300 uppercase tracking-widest">Verification Required</span>
-                    </div>
-                    <div className="space-y-6">
-                        <div className="space-y-2">
-                            <p className="text-sm text-neutral-400 text-center mb-4">Enter the 6-digit code sent to your email</p>
-                            <input 
-                                type="text" 
-                                maxLength={6}
-                                value={otpInput}
-                                onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
-                                placeholder="000000" 
-                                className="w-full rounded-2xl neumorphic-inset px-4 py-4 text-2xl tracking-[0.7em] text-center focus:outline-none font-mono transition-all placeholder:opacity-50 placeholder:tracking-normal"
+                            <TwoFactorManagementCard
+                                apiEndpoint="/api/landlord/2fa"
+                                accountEmail={user?.email || profile?.email || undefined}
+                                onStatusChange={(enabled) => {
+                                    setTwoFAStatus(enabled ? 'enabled' : 'disabled');
+                                }}
                             />
-                        </div>
-                        <button 
-                            onClick={handleVerifyOTP}
-                            disabled={isVerifyingOTP || otpInput.length !== 6}
-                            className="w-full rounded-2xl neumorphic-primary py-4 text-sm font-black transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-95"
-                        >
-                            {isVerifyingOTP ? "Verifying…" : "Verify & Enable 2FA"}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        ) : (
-            <div className="space-y-8 max-w-lg">
-                <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-primary/5 p-8 transition-all">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="size-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
-                        <span className="text-xs font-black text-primary uppercase tracking-widest">2FA Active</span>
-                    </div>
-                    <div className="space-y-4">
-                        <p className="text-sm text-neutral-400 leading-relaxed">Your account is now protected with high-security email authentication.</p>
-                        <div className="flex items-center gap-3 text-sm font-mono rounded-xl neumorphic-panel px-4 py-3 w-fit">
-                            <Mail className="size-4 text-primary" />
-                            {twoFAEmail?.replace(/(.{2})(.*)(@.*)/, "$1***$3")}
-                        </div>
-                    </div>
-                </div>
-                <div className="pt-6 border-t border-white/5">
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                            <h4 className="text-sm font-black text-white">Disable Protection</h4>
-                            <div className="h-px flex-1 bg-white/5"></div>
-                        </div>
-                        <p className="text-xs text-neutral-500">To disable two-factor authentication, please provide your current account password.</p>
-                        <div className="grid grid-cols-1 gap-3">
-                            <input 
-                                type="password"
-                                value={disablePassword}
-                                onChange={(e) => setDisablePassword(e.target.value)}
-                                placeholder="Your password"
-                                className="w-full rounded-2xl neumorphic-inset px-4 py-4 text-sm focus:outline-none transition-all"
-                            />
-                            <button 
-                                onClick={handleDisable2FA}
-                                disabled={isDisabling || !disablePassword}
-                                className="w-full rounded-2xl bg-red-500/10 border border-red-500/20 py-4 text-sm font-black text-red-400 transition-all hover:bg-red-500/20 disabled:opacity-50 active:scale-[0.98]"
-                            >
-                                {isDisabling ? "Disabling…" : "Disable 2FA"}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )}
-    </GlassCard>
                         </div>
                     );
                 case "Sessions":
@@ -4063,7 +3863,7 @@ export function LandlordSettings() {
                                         <p className="text-xs text-muted-foreground">
                                             Please type <span className="text-rose-600 dark:text-rose-400 font-mono font-black">DELETE</span> to confirm:
                                         </p>
-                                        <input
+                                        <input maxLength={60}
                                             type="text"
                                             value={deleteConfirmText}
                                             onChange={(e) => setDeleteConfirmText(e.target.value)}

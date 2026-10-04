@@ -35,6 +35,8 @@ import { ServiceWorkerProvider } from "@/components/providers/ServiceWorkerProvi
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
 import { OfflineCommandCenterModal } from "@/components/offline/OfflineCommandCenterModal";
 import { BrandProvider } from "@/context/BrandContext";
+import { LanguageProvider } from "@/context/LanguageContext";
+import { DebugToolsLauncher } from "@/components/debug/DebugToolsLauncher";
 
 
 export default function RootLayout({
@@ -56,7 +58,7 @@ export default function RootLayout({
         */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var sc=localStorage.getItem("ireside_font_scale");if(sc&&!isNaN(Number(sc))){var n=Math.min(130,Math.max(90,Number(sc)));document.documentElement.style.fontSize=n+"%";document.documentElement.setAttribute("data-font-size",n<=90?"compact":n<=100?"normal":n<=115?"large":"larger");document.documentElement.setAttribute("data-font-scale",String(n));}else{var s=localStorage.getItem("ireside_font_size");if(s==="large"){document.documentElement.style.fontSize="110%";}else if(s==="larger"){document.documentElement.style.fontSize="120%";}}var hc=localStorage.getItem("ireside_high_contrast");if(hc==="true"){document.documentElement.classList.add("high-contrast");document.documentElement.setAttribute("data-high-contrast","true");}}catch(e){}})();`,
+            __html: `(function(){try{var sc=localStorage.getItem("ireside_font_scale");if(sc&&!isNaN(Number(sc))){var n=Math.min(130,Math.max(90,Number(sc)));document.documentElement.style.fontSize=n+"%";document.documentElement.setAttribute("data-font-size",n<=90?"compact":n<=100?"normal":n<=115?"large":"larger");document.documentElement.setAttribute("data-font-scale",String(n));}else{var s=localStorage.getItem("ireside_font_size");if(s==="large"){document.documentElement.style.fontSize="110%";}else if(s==="larger"){document.documentElement.style.fontSize="120%";}}var hc=localStorage.getItem("ireside_high_contrast");if(hc==="true"){document.documentElement.classList.add("high-contrast");document.documentElement.setAttribute("data-high-contrast","true");}var lang=localStorage.getItem("ireside_language");if(lang==="fil"||lang==="en"){document.documentElement.lang=lang;document.documentElement.setAttribute("data-language",lang);}}catch(e){}})();`,
           }}
         />
         {/*
@@ -84,20 +86,23 @@ export default function RootLayout({
                   disableTransitionOnChange
                   storageKey="ireside-theme"
                 >
-                  <PageTransitionProvider>
-                    <FramerMotionProvider>
-                      <TooltipProvider delayDuration={600} skipDelayDuration={300}>
-                        <GlobalTooltipManager />
-                        <OfflineBanner />
-                        <OfflineCommandCenterModal />
-                        <GlobalClickSpark>
-                          {children}
-                          <AppToaster />
-                          <CookieConsent />
-                        </GlobalClickSpark>
-                      </TooltipProvider>
-                    </FramerMotionProvider>
-                  </PageTransitionProvider>
+                  <LanguageProvider>
+                    <PageTransitionProvider>
+                      <FramerMotionProvider>
+                        <TooltipProvider delayDuration={600} skipDelayDuration={300}>
+                          <GlobalTooltipManager />
+                          <OfflineBanner />
+                          <OfflineCommandCenterModal />
+                          <GlobalClickSpark>
+                            {children}
+                            <AppToaster />
+                            <CookieConsent />
+                            <DebugToolsLauncher />
+                          </GlobalClickSpark>
+                        </TooltipProvider>
+                      </FramerMotionProvider>
+                    </PageTransitionProvider>
+                  </LanguageProvider>
                 </ThemeProvider>
               </GlobalLoadingProvider>
             </BrandProvider>

@@ -16,9 +16,66 @@ trigger: always_on
 - Default Profile Avatar & Background Color Invariants:
   - New user accounts (both landlord and tenant) MUST NEVER display a pitch-black avatar or background fallback (e.g. `#171717`, `#000000`, `#0a0a0a`, `#121212`, `#18181b`).
   - Avatar background colors must normalize legacy dark values to the brand violet (`#8B5CF6`) via `getSafeAvatarBgColor()`.
-  - Fallback avatar images must reference the canonical system avatar (`DEFAULT_AVATAR_URL`) rather than broken blanks or external placeholders.
 - Profile Incompleteness & Attention Seeker Nudge Invariants:
   - When a user's profile is incomplete (missing custom avatar, phone number, or bio), the profile widget and navigation avatar (both landlord and tenant) MUST display an attention seeker beacon dot (`animate-ping`) on the top-right of the avatar button.
   - Dropdowns and navigation drawers for incomplete profiles MUST display an actionable "Complete Profile" callout banner and a concise "Set Up" badge next to the profile menu item.
   - Once profile setup requirements are satisfied, the attention seeker badge automatically dismisses.
-
+- Compact Input Limits & Clamping Invariants:
+  - Every `<input>`, `<Input>`, and `<textarea>` must define explicit, domain-appropriate `maxLength` (for strings) or `max` (for numbers):
+    - **Phone Numbers**: Fixed to Philippine mobile format (+63 prefix). Strict `maxLength={11}` (e.g., `09XXXXXXXXX`), sanitized in real-time (`replace(/[^0-9]/g, '')`), with `inputMode="tel"`.
+    - **Email Addresses**: `maxLength={50}`.
+    - **Passwords**: `maxLength={16}`.
+    - **Search & Filter Inputs**: `maxLength={60}`.
+    - **OTP / Verification / Security Codes**: `maxLength={8}` (allowing 6 to 8 digit codes).
+    - **Personal Names** (First, Last, Middle, Full name, Contact person): `maxLength={50}`.
+    - **Titles & Names** (Property name, branch, role title, post heading): `maxLength={60}`.
+    - **Short Codes & Unit Labels** (Unit number, room tag, floor label, promo code): `maxLength={10}`.
+    - **Addresses & Locations** (Street address, city, barangay, landmark): `maxLength={120}`.
+    - **Short Notes & Briefs** (Rejection reasons, transaction memo, amenity name, notice): `maxLength={250}`.
+    - **Long Descriptions & Narrative Fields** (Maintenance problem details, property description, lease terms, announcements, user bio): `maxLength={500}`.
+    - **Financial Amounts** (Rent, deposits, utility rates, payment settlements): Max numeric value `9,999,999.99` (or `maxLength={10}` on sanitized decimal strings).
+    - **Utility Meter Readings** (Electric kWh, Water cubic meters): Max numeric value `9,999,999` (`maxLength={7}`).
+  - **Visual Character Counter Invariant**:
+    - All multi-line `<textarea>` inputs and long narrative fields (250+ characters) MUST display a clean, subtle character count indicator (e.g., `120 / 500`) right-aligned below the input or inside the footer.
+    - Single-line inputs (names, emails, codes, titles) enforce `maxLength` silently without visual counter clutter.
+  - **Shared Component Safety Baseline**:
+    - The shared `Input` component (`src/components/ui/input.tsx`) must supply a default fallback `maxLength={120}` for text inputs when unspecified, ensuring no text field in the application remains unbounded.
+- **Plain English & Non-Native Accessibility Invariant**:
+  - The application must use everyday, conversational English easily understood by non-fluent and non-native English speakers (especially Filipino and senior landlords).
+  - Strictly avoid buzzwords, tech jargon, or accounting abstractions. Enforce these canonical term mappings across all pages, headers, buttons, and tour steps:
+    - ❌ *Intelligence Hub* ➔ ✅ **Today's Overview** or **Property Overview**
+    - ❌ *Operations Center* ➔ ✅ **Quick Actions & Tools**
+    - ❌ *Cash Flow Ledger* ➔ ✅ **Rent & Payments**
+    - ❌ *Utility Submeters* ➔ ✅ **Water & Electricity**
+    - ❌ *Invoice Ledger* ➔ ✅ **Bills & Receipts**
+    - ❌ *Tenant Records* ➔ ✅ **Tenant Directory**
+    - ❌ *Property Portfolio* ➔ ✅ **My Properties**
+    - ❌ *Rental Applications* ➔ ✅ **Tenant Applications**
+    - ❌ *Unit Visualizer* ➔ ✅ **Interactive Unit Map** or **Unit Map** (Preserve canonical "Unit Map" terminology across modals, badges, and navigation; do not replace with generic "Room Map")
+    - **Preserve Unit Map Architectural & Preset Terms**: Layout presets ("Double Loaded", "Single Loaded", "U-Shape", "L-Shape", "Apply [Preset]") and floor management labels ("Add & Manage Floor Levels") are core domain terms and must be retained.
+    - ❌ *Maintenance Desk* ➔ ✅ **Repairs & Maintenance**
+    - ❌ *Lease Lifecycle* ➔ ✅ **Lease Contracts**
+    - ❌ *Financial Metrics* ➔ ✅ **Income & Reports**
+    - ❌ *All Systems Clear* ➔ ✅ **All Good! No Issues Today**
+    - ❌ *Action Needed* ➔ ✅ **Needs Attention**
+    - ❌ *Past Due Rent* ➔ ✅ **Unpaid Rent**
+    - ❌ *Inspect Overdue List* ➔ ✅ **View Unpaid Tenants**
+    - ❌ *Collect Payment* ➔ ✅ **Record Payment**
+- **Award-Winning Surface Architecture & Anti-AI Slop Invariant**:
+  - Strictly prohibit multi-color background gradient soup (e.g. `from-rose-50 via-red-50 to-background`) that gives cards a cheap, auto-generated appearance.
+  - Employ crisp, elevated card surfaces with subtle 1px hairline borders (`border-border/60` or `border-zinc-200/80 dark:border-zinc-800`), soft grounded micro-shadows (`shadow-xs` / `shadow-sm`), and generous internal padding (`p-6` to `p-8`).
+  - Color must be purposeful, restrained, and semantic:
+    - Deep crimson/rose for unpaid rent and urgent action items.
+    - Deep forest/emerald for paid accounts and healthy statuses.
+    - Deep cognac/amber for pending repair requests.
+    - Deep royal brand violet for room occupancies and primary actions.
+- **Elderly Landlord Accessibility & Emergency Key Invariants**:
+  - **The "Emergency Spare Key" Metaphor**: Never present recovery keys as cryptic crypto/security tokens. Frame them using the relatable physical metaphor: **Emergency Backup Key** or **Spare Key to Your Account**.
+  - **Plain, Reassuring Microcopy**:
+    - ❌ *"Single-Use Security Recovery Key. This key will be encrypted and will not be displayed again."*
+    - ✅ *"Here is your Emergency Spare Key. Just like a spare key to your house, keep this in a safe place. If you ever forget your password or lose access to your phone/email, this code lets you unlock your account."*
+  - **No Disabled Button Traps**: Never trap users on a screen with a disabled primary button that requires downloading an obscure `.txt` file and checking a dense disclaimer. Instead:
+    - Provide a prominent 1-click **"Download Key & Continue to Setup"** button that automatically saves the key and advances seamlessly.
+    - Keep the key unmasked by default (with large, clear monospaced lettering) so users can easily read or write it down.
+    - Provide a secondary **"Copy Code"** button with immediate checkmark feedback.
+  - **Senior-Friendly Readability**: Use high-contrast text, minimum 14px body font size, warm encouraging accents instead of alarming warning badges, and touch targets >= 48px.

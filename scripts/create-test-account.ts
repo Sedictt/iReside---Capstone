@@ -82,6 +82,9 @@ async function main() {
     const existingUser = users?.find(u => u.email?.toLowerCase() === email);
     let userId: string;
 
+    const avatarIndex = (Math.abs(email.split("").reduce((acc, c) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0)) % 16) + 3;
+    const systemAvatarUrl = `https://hlpgsiqyrtndqdgvttcr.supabase.co/storage/v1/object/public/profile-avatars/default_avatars/${avatarIndex}.png`;
+
     if (existingUser) {
         console.log(`ℹ️  Auth user with email ${email} already exists (${existingUser.id}). Updating credentials and metadata...`);
         userId = existingUser.id;
@@ -93,6 +96,7 @@ async function main() {
                 full_name: name,
                 role,
                 phone,
+                avatar_url: systemAvatarUrl,
             },
         });
 
@@ -110,6 +114,7 @@ async function main() {
                 full_name: name,
                 role,
                 phone,
+                avatar_url: systemAvatarUrl,
             },
         });
 
@@ -130,6 +135,8 @@ async function main() {
             full_name: name,
             role,
             phone,
+            avatar_url: systemAvatarUrl,
+            avatar_bg_color: "#8B5CF6",
         }, { onConflict: "id" });
 
     if (profileError) {

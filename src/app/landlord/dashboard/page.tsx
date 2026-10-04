@@ -29,7 +29,7 @@ import { CollectPaymentModal } from "@/components/landlord/dashboard/CollectPaym
 import { ActionRequired } from "@/components/landlord/dashboard/ActionRequired";
 import { WalkInApplicationModal } from "@/components/landlord/applications/WalkInApplicationModal";
 import { TenantInviteManager } from "@/components/landlord/applications/TenantInviteManager";
-import { CommandCenter } from "@/components/landlord/dashboard/CommandCenter";
+import { OperationsCenter } from "@/components/landlord/dashboard/OperationsCenter";
 import { VacantUnitsModal } from "@/components/landlord/dashboard/VacantUnitsModal";
 import { MobileMessagesSheet } from "@/components/landlord/dashboard/MobileMessagesSheet";
 import { LobbyFlyerModal } from "@/components/landlord/flyer/LobbyFlyerModal";
@@ -39,8 +39,12 @@ import { AddTenantModal } from "@/components/landlord/tenants/AddTenantModal";
 import { DashboardGreetingModal } from "@/components/landlord/dashboard/DashboardGreetingModal";
 import { DashboardTourSpotlight, DASHBOARD_TOUR_STEPS } from "@/components/landlord/dashboard/DashboardTourSpotlight";
 import { DashboardTourCompletionModal } from "@/components/landlord/dashboard/DashboardTourCompletionModal";
+import { SeniorOverviewHub } from "@/components/landlord/dashboard/SeniorOverviewHub";
+import { useNotifications } from "@/context/NotificationContext";
+import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 import { toast } from "sonner";
-import { getSafeAvatarBgColor } from "@/lib/constants";
+import { getSafeAvatarBgColor, DEFAULT_AVATAR_URL } from "@/lib/constants";
 
 type PaymentCategory = "Overdue" | "Near Due" | "Paid";
 
@@ -60,7 +64,7 @@ type PaymentListItem = {
 const OPEN_UNIT_STATUSES = ["available", "vacant", "open", "listed"];
 const INACTIVE_INVITE_STATUSES = ["expired", "revoked", "inactive", "disabled", "cancelled"];
 
-const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
+const FALLBACK_AVATAR = DEFAULT_AVATAR_URL;
 
 // --- Payments Loading Reducer ---
 type PaymentsState = {
@@ -119,9 +123,13 @@ const PAYMENT_CATEGORIES: Array<{ key: PaymentCategory; label: string; hint: str
 
 export default function LandlordDashboard() {
     const router = useRouter();
+    const { user, profile } = useAuth();
+    const { counts } = useNotifications();
+    const { t } = useLanguage();
     const { selectedPropertyId, properties, refreshProperties } = useProperty();
     const currentProperty = properties.find(p => p.id === selectedPropertyId) || properties[0];
     const [mounted, setMounted] = useState(false);
+    const [activeDashboardTab, setActiveDashboardTab] = useState<"cash-flow" | "utilities" | "renewals">("cash-flow");
 
     const activePropertyId = selectedPropertyId && selectedPropertyId !== "all"
         ? selectedPropertyId
@@ -157,6 +165,7 @@ export default function LandlordDashboard() {
     const [currentTourStep, setCurrentTourStep] = useState(0);
     const [isTourCompletionOpen, setIsTourCompletionOpen] = useState(false);
     const [dismissedDashboardTourThisVisit, setDismissedDashboardTourThisVisit] = useState(false);
+    const [backendTourCompleted, setBackendTourCompleted] = useState(false);
     const dashboardTourTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
@@ -195,7 +204,7 @@ export default function LandlordDashboard() {
     const [selectedWalkInUnitId, setSelectedWalkInUnitId] = useState<string | undefined>(undefined);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isAddTenantModalOpen, setIsAddTenantModalOpen] = useState(false);
-    const [addTenantModalTab, setAddTenantModalTab] = useState<'quick_add' | 'manual' | 'invite' | 'walk_in'>('quick_add');
+    const [addTenantModalTab, setAddTenantModalTab] = useState<'quick_add' | 'manual' | 'invite' | 'walk_in'>('invite');
     const [isFlyerModalOpen, setIsFlyerModalOpen] = useState(false);
     const [isCollectPaymentModalOpen, setIsCollectPaymentModalOpen] = useState(false);
     const [loadingUnits, setLoadingUnits] = useState(true);
@@ -257,8 +266,40 @@ export default function LandlordDashboard() {
         return !INACTIVE_INVITE_STATUSES.includes(normalizedStatus);
     }).length;
 
+    const overdueAmount = useMemo(() => {
+        const list = paymentsState.paymentsByCategory.Overdue || [];
+        return list.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+    }, [paymentsState.paymentsByCategory.Overdue]);
+
+    const totalUnits = currentProperty?.units?.length || 0;
+    const occupiedUnits = Math.max(0, totalUnits - openUnitsCount);
+    const maintenanceCount = counts.maintenance || 0;
+    const userName = profile?.full_name?.split(" ")[0] || user?.user_metadata?.full_name?.split(" ")[0] || "Landlord";
+
+    useEffect(() => {
+        if (isDashboardTourOpen && currentTourStep === 2) {
+            setActiveDashboardTab("cash-flow");
+        }
+    }, [isDashboardTourOpen, currentTourStep]);
+
     useEffect(() => {
         setMounted(true);
+
+        // Check backend tour state so completed tours are remembered across devices/sessions
+        fetch("/api/landlord/tour?start=false", { cache: "no-store" })
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                if (data?.state?.status === "completed" || data?.reason === "completed") {
+                    setBackendTourCompleted(true);
+                    if (typeof window !== "undefined") {
+                        try {
+                            window.localStorage.setItem(GLOBAL_DASHBOARD_TOUR_COMPLETE_KEY, "true");
+                            window.localStorage.setItem("ireside.onboarding_completed", "true");
+                        } catch {}
+                    }
+                }
+            })
+            .catch(() => {});
 
         if (typeof window !== "undefined") {
             const urlParams = new URLSearchParams(window.location.search);
@@ -271,11 +312,23 @@ export default function LandlordDashboard() {
                 setCurrentTourStep(0);
             }
         }
-    }, []);
+    }, [GLOBAL_DASHBOARD_TOUR_COMPLETE_KEY]);
+
+    const hasAtLeastOneTenant = Boolean(
+        currentProperty?.hasTenants ||
+        availableUnits.some((u) => {
+            if (selectedPropertyId && selectedPropertyId !== "all" && u.property_id !== selectedPropertyId) return false;
+            const st = (u.status || "").toLowerCase();
+            return st === "occupied" || st === "leased";
+        }) ||
+        properties.some((p) => p.hasTenants || p.units?.some((u) => (u.status || "").toLowerCase() === "occupied"))
+    );
 
     const hasConfiguredMap = Boolean(
         currentProperty?.isMapSetupComplete ||
         (currentProperty && (currentProperty.placedCount ?? 0) > 0) ||
+        currentProperty?.hasTenants ||
+        properties.some((p) => p.isMapSetupComplete || (p.placedCount ?? 0) > 0 || p.hasTenants) ||
         (typeof window !== "undefined" && (
             window.localStorage.getItem(`ireside_map_setup_complete_${activePropertyId}`) === "true" ||
             window.localStorage.getItem(`ireside.onboarding_awaiting_tenant_setup.${activePropertyId}`) === "true" ||
@@ -284,35 +337,30 @@ export default function LandlordDashboard() {
         ))
     );
 
-    const hasAtLeastOneTenant = Boolean(
-        currentProperty?.hasTenants ||
-        availableUnits.some(u => {
-            if (selectedPropertyId && selectedPropertyId !== "all" && u.property_id !== selectedPropertyId) return false;
-            const st = (u.status || "").toLowerCase();
-            return st === "occupied" || st === "leased";
-        }) ||
-        properties.some(p => p.hasTenants)
-    );
-
     const hasConfiguredBilling = Boolean(
-        typeof window !== "undefined" && (
+        hasAtLeastOneTenant ||
+        properties.some((p) => p.hasTenants) ||
+        (typeof window !== "undefined" && (
             window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
             window.localStorage.getItem(SCOPED_BILLING_RAILS_COMPLETE_KEY) === "true" ||
             window.localStorage.getItem("ireside.billing_rails_delayed") === "true" ||
             window.localStorage.getItem(SCOPED_BILLING_RAILS_DELAYED_KEY) === "true" ||
             properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true")
-        )
+        ))
     );
 
     const hasCompletedDashboardTour = Boolean(
-        typeof window !== "undefined" && (
+        backendTourCompleted ||
+        (user?.user_metadata as any)?.dashboard_tour_completed ||
+        (user?.user_metadata as any)?.onboarding_completed ||
+        (typeof window !== "undefined" && (
             window.localStorage.getItem(SCOPED_DASHBOARD_TOUR_COMPLETE_KEY) === "true" ||
             window.localStorage.getItem(GLOBAL_DASHBOARD_TOUR_COMPLETE_KEY) === "true" ||
             window.localStorage.getItem("ireside.onboarding_completed") === "true"
-        )
+        ))
     );
 
-    const hasPendingBillingRails = !loadingUnits && properties.length > 0 && hasConfiguredMap && !hasConfiguredBilling;
+    const hasPendingBillingRails = !loadingUnits && properties.length > 0 && hasConfiguredMap && !hasConfiguredBilling && !hasAtLeastOneTenant;
 
     const handleDelayBillingSetup = () => {
         if (typeof window !== "undefined") {
@@ -469,6 +517,15 @@ export default function LandlordDashboard() {
         if (typeof window === "undefined") return;
 
         const isTenantStageSatisfied = hasAtLeastOneTenant || window.localStorage.getItem(SCOPED_TENANT_DELAYED_KEY) === "true";
+
+        // For established landlords (who already have active tenants or properties with tenants),
+        // suppress automatic greeting modal unless they are explicitly in the active onboarding flow
+        const hasAwaitingDashboardTourSignal = typeof window !== "undefined" && (
+            window.localStorage.getItem("ireside.onboarding_awaiting_dashboard_tour") === "true" ||
+            window.localStorage.getItem(`ireside.onboarding_awaiting_dashboard_tour.${activePropertyId}`) === "true"
+        );
+        const isEstablishedLandlord = hasAtLeastOneTenant || properties.some((p) => p.hasTenants);
+
         const readyForDashboardTour = 
             properties.length > 0 &&
             hasConfiguredMap &&
@@ -479,7 +536,8 @@ export default function LandlordDashboard() {
             !isDashboardTourOpen &&
             !isTourCompletionOpen &&
             !isTenantSetupPromptOpen &&
-            !isBillingSetupPromptOpen;
+            !isBillingSetupPromptOpen &&
+            (!isEstablishedLandlord || hasAwaitingDashboardTourSignal);
 
         if (readyForDashboardTour) {
             if (dashboardTourTimeoutRef.current) {
@@ -514,7 +572,9 @@ export default function LandlordDashboard() {
         isTourCompletionOpen,
         isTenantSetupPromptOpen,
         isBillingSetupPromptOpen,
-        SCOPED_TENANT_DELAYED_KEY
+        SCOPED_TENANT_DELAYED_KEY,
+        activePropertyId,
+        properties
     ]);
 
     const handleStartTourFromGreeting = () => {
@@ -534,6 +594,19 @@ export default function LandlordDashboard() {
         }
         setIsDashboardGreetingOpen(false);
         setDismissedDashboardTourThisVisit(true);
+        if (typeof window !== "undefined") {
+            try {
+                window.localStorage.removeItem("ireside.onboarding_awaiting_dashboard_tour");
+                window.localStorage.removeItem(`ireside.onboarding_awaiting_dashboard_tour.${activePropertyId}`);
+                window.localStorage.setItem(SCOPED_DASHBOARD_TOUR_COMPLETE_KEY, "true");
+                window.localStorage.setItem(GLOBAL_DASHBOARD_TOUR_COMPLETE_KEY, "true");
+            } catch {}
+        }
+        fetch("/api/landlord/tour/skip", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ stepId: "dashboard_overview" }),
+        }).catch(() => {});
     };
 
     const handleTourNext = () => {
@@ -551,12 +624,23 @@ export default function LandlordDashboard() {
     const handleTourClose = () => {
         setIsDashboardTourOpen(false);
         setDismissedDashboardTourThisVisit(true);
+        if (typeof window !== "undefined") {
+            try {
+                window.localStorage.removeItem("ireside.onboarding_awaiting_dashboard_tour");
+                window.localStorage.removeItem(`ireside.onboarding_awaiting_dashboard_tour.${activePropertyId}`);
+                window.localStorage.setItem(SCOPED_DASHBOARD_TOUR_COMPLETE_KEY, "true");
+                window.localStorage.setItem(GLOBAL_DASHBOARD_TOUR_COMPLETE_KEY, "true");
+            } catch {}
+        }
     };
 
     const handleTourComplete = () => {
         setIsDashboardTourOpen(false);
+        setBackendTourCompleted(true);
         if (typeof window !== "undefined") {
             try {
+                window.localStorage.removeItem("ireside.onboarding_awaiting_dashboard_tour");
+                window.localStorage.removeItem(`ireside.onboarding_awaiting_dashboard_tour.${activePropertyId}`);
                 window.localStorage.setItem(SCOPED_DASHBOARD_TOUR_COMPLETE_KEY, "true");
                 window.localStorage.setItem(GLOBAL_DASHBOARD_TOUR_COMPLETE_KEY, "true");
                 window.localStorage.setItem("ireside.onboarding_completed", "true");
@@ -564,6 +648,11 @@ export default function LandlordDashboard() {
                 window.dispatchEvent(new CustomEvent("onboarding-completed"));
             } catch {}
         }
+        fetch("/api/landlord/tour/complete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ stepId: "dashboard_overview" }),
+        }).catch(() => {});
         setIsTourCompletionOpen(true);
     };
 
@@ -765,10 +854,10 @@ export default function LandlordDashboard() {
                                         </span>
                                     </div>
                                     <h3 className="text-lg font-black text-foreground tracking-tight">
-                                        Activate Your Payment & Utility Rails
+                                        {t("Activate Your Payment & Utility Rails")}
                                     </h3>
                                     <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 max-w-2xl">
-                                        Set up your GCash QR code and water/electricity tariffs so lease generation and rent billing have valid payment details ready.
+                                        {t("Set up your GCash QR code and water/electricity tariffs so lease generation and rent billing have valid payment details ready.")}
                                     </p>
                                 </div>
                             </div>
@@ -778,13 +867,13 @@ export default function LandlordDashboard() {
                                     onClick={handleDelayBillingSetup}
                                     className="px-4 py-2.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground border border-border/60 hover:bg-muted/50 transition-all active:scale-95"
                                 >
-                                    Configure Later
+                                    {t("Configure Later")}
                                 </button>
                                 <Link
                                     href="/landlord/utility-billing"
                                     className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:brightness-105 transition-all active:scale-95"
                                 >
-                                    <span>Set Up Billing</span>
+                                    <span>{t("Set Up Billing")}</span>
                                     <ArrowRight className="size-3.5" />
                                 </Link>
                             </div>
@@ -795,11 +884,11 @@ export default function LandlordDashboard() {
 
 
 
-                {/* Primary Hub */}
+                {/* Senior-Friendly At-a-Glance Hub (Intelligence Hub / Tour Step 2) */}
                 <div 
                     data-tour-id="tour-command-center"
                     className={cn(
-                        "relative transition-all duration-300 rounded-[2.5rem]",
+                        "relative transition-all duration-300 rounded-3xl",
                         isDashboardTourOpen && currentTourStep === 1 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-[1.01] z-30"
                     )}
                 >
@@ -809,182 +898,237 @@ export default function LandlordDashboard() {
                             <span className="relative inline-flex rounded-full size-3 bg-primary"></span>
                         </span>
                     )}
-                    <CommandCenter
+                    <SeniorOverviewHub
                         overdueCount={overdueCount}
-                        nearDueCount={nearDueCount}
-                        vacantUnitsCount={openUnitsCount}
-                        activeInviteCount={activeInviteCount}
-                        loadingPayments={paymentsState.loading}
-                        loadingUnits={loadingUnits}
-                        loadingInvites={loadingInvites}
-                        onOpenVacantUnits={() => setIsVacantUnitsModalOpen(true)}
+                        overdueAmount={overdueAmount}
+                        occupiedUnits={occupiedUnits}
+                        totalUnits={totalUnits}
+                        openUnitsCount={openUnitsCount}
+                        maintenanceCount={maintenanceCount}
+                        userName={userName}
+                        hasTenants={hasAtLeastOneTenant}
                         onOpenOverduePayments={() => setOpenPaymentModal("Overdue")}
-                        onOpenNearDuePayments={() => setOpenPaymentModal("Near Due")}
-                        onOpenInvites={() => setIsInviteModalOpen(true)}
+                        onRecordPayment={() => setIsCollectPaymentModalOpen(true)}
+                        onOpenVacantUnits={() => setIsVacantUnitsModalOpen(true)}
                     />
                 </div>
 
-                {/* Payments Section */}
-                <div 
-                    data-tour-id="tour-cash-flow"
-                    className={cn(
-                        "relative transition-all duration-300 rounded-[2.5rem]",
-                        isDashboardTourOpen && currentTourStep === 2 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-[1.01] z-30"
-                    )}
-                >
-                    {isDashboardTourOpen && currentTourStep === 2 && (
-                        <span className="absolute -top-2 -right-2 flex size-3 z-40">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                            <span className="relative inline-flex rounded-full size-3 bg-primary"></span>
-                        </span>
-                    )}
-                    <section 
-                        className="relative z-0 h-auto w-full rounded-[2.5rem] p-4 sm:p-6 md:p-8 neumorphic-panel focus-within:ring-2 focus-within:ring-primary/20 transition-all outline-none"
-                        tabIndex={-1} 
-                        aria-labelledby="cash-flow-heading"
-                    >
-                    <div className="mb-10 flex flex-wrap items-center justify-between gap-4 px-2">
-                        <div className="flex min-w-0 items-center gap-4">
-                            <div className="flex size-14 items-center justify-center rounded-[1.25rem] neumorphic-inset-card text-primary shrink-0 transition-transform hover:scale-105">
-                                <CreditCard className="size-6" aria-hidden="true" />
-                            </div>
-                            <div>
-                                <h2 id="cash-flow-heading" className="text-2xl font-black tracking-tight text-foreground">Cash Flow Ledger</h2>
-                                <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 mt-1">Track what is overdue, due this week, and already paid.</p>
-                            </div>
-                        </div>
-                        <Link 
-                            href="/landlord/invoices" 
-                            className="group shrink-0 flex items-center gap-2 rounded-xl px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
-                            aria-label="View all invoices in the financial hub"
+                {/* Operations Center Quick Action Grid matching Image 1 */}
+                <OperationsCenter />
+
+                {/* Progressive Disclosure Tabs: Group deeper modules so the main view stays simple */}
+                <div className="pt-2 space-y-6">
+                    <div className="neumorphic-inset rounded-2xl p-1.5 flex items-center gap-2 overflow-x-auto scrollbar-none bg-background/50">
+                        <button
+                            type="button"
+                            onClick={() => setActiveDashboardTab("cash-flow")}
+                            className={cn(
+                                "flex items-center gap-2 px-4 sm:px-5 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 motion-reduce:transition-none",
+                                activeDashboardTab === "cash-flow"
+                                    ? "text-primary neumorphic-active"
+                                    : "text-muted-foreground hover:text-foreground neumorphic-extruded neumorphic-extruded-hover"
+                            )}
                         >
-                            View Invoices
-                            <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
-                        </Link>
+                            <CreditCard className="size-4" aria-hidden="true" />
+                            <span>{t("Rent & Payments")}</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveDashboardTab("utilities")}
+                            className={cn(
+                                "flex items-center gap-2 px-4 sm:px-5 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 motion-reduce:transition-none",
+                                activeDashboardTab === "utilities"
+                                    ? "text-primary neumorphic-active"
+                                    : "text-muted-foreground hover:text-foreground neumorphic-extruded neumorphic-extruded-hover"
+                            )}
+                        >
+                            <Zap className="size-4" aria-hidden="true" />
+                            <span>{t("Water & Electricity")}</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveDashboardTab("renewals")}
+                            className={cn(
+                                "flex items-center gap-2 px-4 sm:px-5 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 motion-reduce:transition-none",
+                                activeDashboardTab === "renewals"
+                                    ? "text-primary neumorphic-active"
+                                    : "text-muted-foreground hover:text-foreground neumorphic-extruded neumorphic-extruded-hover"
+                            )}
+                        >
+                            <RefreshCw className="size-4" aria-hidden="true" />
+                            <span>{t("Contracts & Tasks")}</span>
+                        </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 relative z-10" role="list" aria-label="Payment categories">
-                        {PAYMENT_CATEGORIES.map(({ key, label, hint, emptyState, dot, tone }) => {
-                            const items = paymentsState.paymentsByCategory[key] ?? [];
-                            const topItem = items[0] ?? null;
-
-                            return (
-                                <div key={key} className="flex flex-col gap-4" role="listitem">
-                                    <div className="flex items-center justify-between px-2 sm:px-4">
-                                        <div className="flex items-start gap-2 sm:gap-3">
-                                            <div className={cn("size-2 rounded-full mt-1.5 sm:mt-1 shadow-inner", dot)} aria-hidden="true" />
-                                            <div className="space-y-0.5">
-                                                <h3 className={cn("text-xs sm:text-sm font-bold tracking-wide", tone)}>{label}</h3>
-                                                <p className="text-[11px] sm:text-xs font-medium text-muted-foreground">{hint}</p>
-                                            </div>
+                    {/* Tab 1: Payments & Cash Flow */}
+                    {activeDashboardTab === "cash-flow" && (
+                        <div 
+                            data-tour-id="tour-cash-flow"
+                            className={cn(
+                                "relative transition-all duration-300 rounded-3xl",
+                                isDashboardTourOpen && currentTourStep === 2 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-[1.01] z-30"
+                            )}
+                        >
+                            {isDashboardTourOpen && currentTourStep === 2 && (
+                                <span className="absolute -top-2 -right-2 flex size-3 z-40">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full size-3 bg-primary"></span>
+                                </span>
+                            )}
+                            <section 
+                                className="relative z-0 h-auto w-full rounded-3xl p-6 sm:p-8 neumorphic-panel focus-within:ring-2 focus-within:ring-primary/20 transition-all outline-none"
+                                tabIndex={-1} 
+                                aria-labelledby="cash-flow-heading"
+                            >
+                                <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+                                    <div className="flex min-w-0 items-center gap-4">
+                                        <div className="flex size-12 items-center justify-center rounded-2xl neumorphic-inset-card text-primary shrink-0 transition-transform motion-reduce:transition-none hover:scale-105">
+                                            <CreditCard className="size-6" aria-hidden="true" />
                                         </div>
-                                        <button 
-                                            onClick={() => setOpenPaymentModal(key)} 
-                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-primary neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all"
-                                            aria-label={`See more details for ${label}`}
-                                        >
-                                            See more
-                                        </button>
+                                        <div>
+                                            <h2 id="cash-flow-heading" className="text-xl sm:text-2xl font-black tracking-tight text-foreground text-balance">{t("Rent & Payments")}</h2>
+                                            <p className="text-xs sm:text-sm font-medium text-muted-foreground text-pretty mt-1">{t("Track what is unpaid, due this week, and recently settled.")}</p>
+                                        </div>
                                     </div>
-                                    
-                                    <div className="flex min-h-[130px] sm:min-h-[140px] flex-1 flex-col justify-center rounded-[1.75rem] p-3 sm:p-4 neumorphic-inset transition-colors duration-300 focus-within:bg-background/40">
-                                        {paymentsState.loading ? (
-                                            <div className="space-y-4 animate-pulse px-2" aria-busy="true" aria-label="Loading latest payments">
-                                                <div className="flex items-center gap-3 sm:gap-4">
-                                                    <div className="size-10 sm:size-12 rounded-full neumorphic-inset" />
-                                                    <div className="flex-1 space-y-3">
-                                                        <div className="h-3 sm:h-4 w-3/4 rounded-lg neumorphic-inset" />
-                                                        <div className="h-2 sm:h-3 w-1/2 rounded-lg neumorphic-inset" />
+                                    <Link 
+                                        href="/landlord/invoices" 
+                                        className="group shrink-0 min-h-[44px] flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-all motion-reduce:transition-none text-muted-foreground hover:text-primary"
+                                        aria-label="View all invoices in the financial hub"
+                                    >
+                                        <span>{t("View Bills & Receipts")}</span>
+                                        <ArrowUpRight className="size-4 transition-transform motion-reduce:transition-none group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                                    </Link>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 relative z-10" role="list" aria-label="Payment categories">
+                                    {PAYMENT_CATEGORIES.map(({ key, label, hint, emptyState, dot, tone }) => {
+                                        const items = paymentsState.paymentsByCategory[key] ?? [];
+                                        const topItem = items[0] ?? null;
+
+                                        return (
+                                            <div key={key} className="flex flex-col gap-4" role="listitem">
+                                                <div className="flex items-center justify-between px-2 sm:px-4">
+                                                    <div className="flex items-start gap-2 sm:gap-3">
+                                                        <div className={cn("size-2 rounded-full mt-1.5 sm:mt-1 shadow-inner", dot)} aria-hidden="true" />
+                                                        <div className="space-y-0.5">
+                                                            <h3 className={cn("text-xs sm:text-sm font-bold tracking-wide", tone)}>{t(label)}</h3>
+                                                            <p className="text-[11px] sm:text-xs font-medium text-muted-foreground">{t(hint)}</p>
+                                                        </div>
                                                     </div>
+                                                    <button 
+                                                        onClick={() => setOpenPaymentModal(key)} 
+                                                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-primary neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all"
+                                                        aria-label={`See more details for ${label}`}
+                                                    >
+                                                        {t("See more")}
+                                                    </button>
+                                                </div>
+                                                
+                                                <div className="flex min-h-[130px] sm:min-h-[140px] flex-1 flex-col justify-center rounded-[1.75rem] p-3 sm:p-4 neumorphic-inset transition-colors duration-300 focus-within:bg-background/40">
+                                                    {paymentsState.loading ? (
+                                                        <div className="space-y-4 animate-pulse px-2" aria-busy="true" aria-label="Loading latest payments">
+                                                            <div className="flex items-center gap-3 sm:gap-4">
+                                                                <div className="size-10 sm:size-12 rounded-full neumorphic-inset" />
+                                                                <div className="flex-1 space-y-3">
+                                                                    <div className="h-3 sm:h-4 w-3/4 rounded-lg neumorphic-inset" />
+                                                                    <div className="h-2 sm:h-3 w-1/2 rounded-lg neumorphic-inset" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ) : paymentsState.error ? (
+                                                        <div className="p-3 sm:p-4 text-center rounded-2xl border border-red-500/20 bg-red-500/5">
+                                                            <AlertTriangle className="size-5 mx-auto mb-2 text-red-500/70" aria-hidden="true" />
+                                                            <p className="text-[10px] sm:text-xs text-red-500/80 font-black" role="alert">{paymentsState.error}</p>
+                                                        </div>
+                                                    ) : topItem ? (
+                                                        <PaymentCard
+                                                            payment={topItem}
+                                                            fallbackAvatar={FALLBACK_AVATAR}
+                                                            onClick={(e: React.MouseEvent) => {
+                                                                setSelectedActionPayment(topItem);
+                                                                setPopoutPosition({ x: e.clientX, y: e.clientY });
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="flex flex-col items-center justify-center py-5 sm:py-6 text-muted-foreground/50 transition-transform hover:scale-105 duration-300">
+                                                            <CheckCircle2 className="size-5 sm:size-6 mb-2 opacity-50" aria-hidden="true" />
+                                                            <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t(emptyState)}</p>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
-                                        ) : paymentsState.error ? (
-                                            <div className="p-3 sm:p-4 text-center rounded-2xl border border-red-500/20 bg-red-500/5">
-                                                <AlertTriangle className="size-5 mx-auto mb-2 text-red-500/70" aria-hidden="true" />
-                                                <p className="text-[10px] sm:text-xs text-red-500/80 font-black" role="alert">{paymentsState.error}</p>
-                                            </div>
-                                        ) : topItem ? (
-                                            <PaymentCard
-                                                payment={topItem}
-                                                fallbackAvatar={FALLBACK_AVATAR}
-                                                onClick={(e: React.MouseEvent) => {
-                                                    setSelectedActionPayment(topItem);
-                                                    setPopoutPosition({ x: e.clientX, y: e.clientY });
-                                                }}
-                                            />
-                                        ) : (
-                                            <div className="flex flex-col items-center justify-center py-5 sm:py-6 text-muted-foreground/50 transition-transform hover:scale-105 duration-300">
-                                                <CheckCircle2 className="size-5 sm:size-6 mb-2 opacity-50" aria-hidden="true" />
-                                                <p className="text-xs font-semibold tracking-wide text-muted-foreground">{emptyState}</p>
-                                            </div>
-                                        )}
+                                        );
+                                    })}
+                                </div>
+                            </section>
+                        </div>
+                    )}
+
+                    {/* Tab 2: Monthly Utility Billing Cycle */}
+                    {activeDashboardTab === "utilities" && (
+                        <section className="relative z-0 h-auto w-full rounded-3xl p-6 sm:p-8 neumorphic-panel outline-none focus-within:ring-2 focus-within:ring-primary/20 transition-all animate-in fade-in duration-200" tabIndex={-1} aria-labelledby="utility-heading">
+                            <div className="flex flex-wrap items-center justify-between gap-4">
+                                <div className="flex min-w-0 items-center gap-4">
+                                    <div className="flex size-14 items-center justify-center rounded-2xl neumorphic-inset-card text-amber-500 shrink-0 transition-transform hover:scale-105">
+                                        <Zap className="size-6" aria-hidden="true" />
+                                    </div>
+                                    <div>
+                                        <h2 id="utility-heading" className="text-xl sm:text-2xl font-black tracking-tight text-foreground text-balance">{t("Water & Electricity")}</h2>
+                                        <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 mt-1 max-w-prose text-pretty">{t("Record water and electric meter readings and calculate utility charges.")}</p>
                                     </div>
                                 </div>
-                            );
-                        })}
-                    </div>
-                </section>
-                </div>
-
-                {/* Monthly Utility Billing Cycle Section */}
-                <section className="relative z-0 h-auto w-full rounded-[2.5rem] p-4 sm:p-6 md:p-8 neumorphic-panel outline-none focus-within:ring-2 focus-within:ring-primary/20 transition-all" tabIndex={-1} aria-labelledby="utility-heading">
-                    <div className="flex flex-wrap items-center justify-between gap-4 px-2">
-                        <div className="flex min-w-0 items-center gap-4">
-                            <div className="flex size-14 items-center justify-center rounded-[1.25rem] neumorphic-inset-card text-amber-500 shrink-0 transition-transform hover:scale-105">
-                                <Zap className="size-6" aria-hidden="true" />
+                                <div className="flex items-center gap-3">
+                                    <Link 
+                                        href="/landlord/utility-billing?tab=verify" 
+                                        className="group shrink-0 inline-flex items-center justify-center gap-2 rounded-xl min-h-[44px] px-5 py-2.5 text-xs sm:text-sm font-semibold neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
+                                        aria-label="Verify pending utility and invoice payments"
+                                    >
+                                        {t("Review Payments")}
+                                        <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                                    </Link>
+                                    <Link 
+                                        href="/landlord/utility-billing" 
+                                        className="group shrink-0 inline-flex items-center justify-center gap-2 rounded-xl min-h-[44px] px-5 py-2.5 text-xs sm:text-sm font-bold bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95 transition-all"
+                                        aria-label="Open utility billing to record readings"
+                                    >
+                                        <Zap className="size-3.5" />
+                                        {t("Record Readings")}
+                                    </Link>
+                                </div>
                             </div>
-                            <div>
-                                <h2 id="utility-heading" className="text-2xl font-black tracking-tight text-foreground">Utility Submeters</h2>
-                                <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 mt-1">Record monthly water & power readings, compute exact consumption, and update active invoices.</p>
+                        </section>
+                    )}
+
+                    {/* Tab 3: Lease Renewals & Task Queue */}
+                    {activeDashboardTab === "renewals" && (
+                        <div className="space-y-6 animate-in fade-in duration-200">
+                            <section className="relative z-0 h-auto w-full rounded-3xl p-6 sm:p-8 neumorphic-panel outline-none focus-within:ring-2 focus-within:ring-primary/20 transition-all" tabIndex={-1} aria-labelledby="renewals-heading">
+                                <div className="flex flex-wrap items-center justify-between gap-4">
+                                    <div className="flex min-w-0 items-center gap-4">
+                                        <div className="flex size-14 items-center justify-center rounded-2xl neumorphic-inset-card text-primary shrink-0 transition-transform hover:scale-105">
+                                            <RefreshCw className="size-6" aria-hidden="true" />
+                                        </div>
+                                        <div>
+                                            <h2 id="renewals-heading" className="text-xl sm:text-2xl font-black tracking-tight text-foreground text-balance">{t("Contracts & Tasks")}</h2>
+                                            <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 mt-1 max-w-prose text-pretty">{t("Review expiring lease contracts and pending tenant requests.")}</p>
+                                        </div>
+                                    </div>
+                                    <Link 
+                                        href="/landlord/tenants?tab=renewals" 
+                                        className="group shrink-0 inline-flex items-center justify-center gap-2 rounded-xl min-h-[44px] px-5 py-2.5 text-xs sm:text-sm font-semibold neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
+                                        aria-label="View all lease renewals"
+                                    >
+                                        {t("View All Contracts")}
+                                        <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                                    </Link>
+                                </div>
+                            </section>
+
+                            <div className="w-full relative z-0 pt-2">
+                                <ActionRequired />
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <Link 
-                                href="/landlord/utility-billing?tab=verify" 
-                                className="group shrink-0 flex items-center gap-2 rounded-xl px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
-                                aria-label="Verify pending utility and invoice payments"
-                            >
-                                Verify Queue
-                                <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
-                            </Link>
-                            <Link 
-                                href="/landlord/utility-billing" 
-                                className="group shrink-0 flex items-center gap-2 rounded-xl px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-bold bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95 transition-all"
-                                aria-label="Open utility billing to record readings"
-                            >
-                                <Zap className="size-3.5" />
-                                Record Readings
-                            </Link>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Lease Renewals Section */}
-                <section className="relative z-0 h-auto w-full rounded-[2.5rem] p-4 sm:p-6 md:p-8 neumorphic-panel outline-none focus-within:ring-2 focus-within:ring-primary/20 transition-all" tabIndex={-1} aria-labelledby="renewals-heading">
-                    <div className="flex flex-wrap items-center justify-between gap-4 px-2">
-                        <div className="flex min-w-0 items-center gap-4">
-                            <div className="flex size-14 items-center justify-center rounded-[1.25rem] neumorphic-inset-card text-primary shrink-0 transition-transform hover:scale-105">
-                                <RefreshCw className="size-6" aria-hidden="true" />
-                            </div>
-                            <div>
-                                <h2 id="renewals-heading" className="text-2xl font-black tracking-tight text-foreground">Lease Renewals</h2>
-                                <p className="text-xs sm:text-sm font-medium text-muted-foreground/80 mt-1">Review and manage tenant renewal requests.</p>
-                            </div>
-                        </div>
-                        <Link 
-                            href="/landlord/tenants?tab=renewals" 
-                            className="group shrink-0 flex items-center gap-2 rounded-xl px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold neumorphic-extruded active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-muted-foreground hover:text-primary"
-                            aria-label="View all lease renewals"
-                        >
-                            View All
-                            <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
-                        </Link>
-                    </div>
-                </section>
-
-                {/* Task Operations Queue */}
-                <div className="w-full relative z-0 pt-6">
-                    <ActionRequired />
+                    )}
                 </div>
             </div>
 
@@ -1035,21 +1179,22 @@ export default function LandlordDashboard() {
                         className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity animate-in fade-in duration-300"
                         onClick={() => setIsInviteModalOpen(false)}
                     />
-                    <div className="relative z-10 max-h-[90vh] w-full max-w-6xl overflow-hidden rounded-[2.5rem] border border-white/10 bg-card shadow-[0_30px_60px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-300">
+                    <div className="relative z-10 max-h-[90vh] w-full max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-card shadow-[0_30px_60px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-300">
                         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-card/95 px-8 py-6 backdrop-blur-xl">
                             <div className="flex items-center gap-4">
                                 <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                                     <QrCode className="size-6" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-black text-foreground">Private Referral Link</h2>
-                                    <p className="text-sm font-medium text-muted-foreground/80">Generate exclusive invitation tokens for new residents.</p>
+                                    <h2 className="text-xl font-black text-foreground text-balance">Private Referral Link</h2>
+                                    <p className="text-sm font-medium text-muted-foreground/80 text-pretty">Generate exclusive invitation tokens for new residents.</p>
                                 </div>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setIsInviteModalOpen(false)}
-                                className="group flex size-10 items-center justify-center rounded-xl border border-white/10 bg-card/70 text-muted-foreground transition-all hover:bg-card hover:text-foreground hover:rotate-90 active:scale-95"
+                                className="group flex size-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/10 bg-card/70 text-muted-foreground transition-all hover:bg-card hover:text-foreground hover:rotate-90 active:scale-95"
+                                aria-label="Close invite modal"
                             >
                                 <X className="size-5" />
                             </button>
@@ -1119,7 +1264,7 @@ export default function LandlordDashboard() {
                             exit={{ opacity: 0, scale: 0.95, y: 10 }}
                             style={popoutStyles}
                             className={cn(
-                                "pointer-events-auto absolute z-10 w-full max-w-[400px] overflow-hidden rounded-[2.5rem] border border-border bg-card/80 backdrop-blur-2xl transition-all duration-300",
+                                "pointer-events-auto absolute z-10 w-full max-w-[400px] overflow-hidden rounded-3xl border border-border bg-card/80 backdrop-blur-2xl transition-all duration-300",
                                 "shadow-[0_8px_30px_rgb(0,0,0,0.04),0_20px_80px_rgba(0,0,0,0.08)]",
                                 "dark:bg-neutral-900/90 dark:border-white/10 dark:shadow-[0_20px_50px_rgba(109,152,56,0.15)]"
                             )}
@@ -1133,7 +1278,7 @@ export default function LandlordDashboard() {
                                                 {/* Avatar with status indicator */}
                                                 <div 
                                                     className="relative size-20 shrink-0 rounded-full flex items-center justify-center overflow-hidden shadow-sm"
-                                                    style={{ backgroundColor: (selectedActionPayment as any).avatarBgColor || '#8B5CF6' }}
+                                                    style={{ backgroundColor: getSafeAvatarBgColor((selectedActionPayment as any).avatarBgColor) }}
                                                 >
                                                     {selectedActionPayment.avatar ? (
                                                         <Image
@@ -1175,7 +1320,7 @@ export default function LandlordDashboard() {
                                                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Settlement Due</p>
                                                 <span className="text-[10px] font-black text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full">Overdue</span>
                                             </div>
-                                            <h4 className="text-3xl font-black text-foreground">PHP {selectedActionPayment.amount.toLocaleString()}</h4>
+                                            <h4 className="text-3xl font-black text-foreground tabular-nums">PHP {selectedActionPayment.amount.toLocaleString()}</h4>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3">
@@ -1194,7 +1339,7 @@ export default function LandlordDashboard() {
                                     <div className="px-8 pb-6 flex items-center gap-3">
                                         <Link 
                                             href="/landlord/messages"
-                                            className="flex-1 flex items-center justify-center gap-3 rounded-full bg-[#D7EFFF] dark:bg-blue-500/20 py-4 px-6 text-base font-medium text-[#001D35] dark:text-blue-100 transition-all hover:bg-[#c3e6ff] active:scale-[0.98]"
+                                            className="flex-1 min-h-[44px] flex items-center justify-center gap-3 rounded-full bg-[#D7EFFF] dark:bg-blue-500/20 py-3.5 px-6 text-base font-medium text-[#001D35] dark:text-blue-100 transition-all hover:bg-[#c3e6ff] active:scale-[0.98]"
                                         >
                                             <MessageSquare className="size-5" />
                                             Message
@@ -1203,12 +1348,12 @@ export default function LandlordDashboard() {
                                         <div className="flex items-center gap-2">
                                             <button 
                                                 onClick={() => setIsConfirmingAction(true)}
-                                                className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/5 text-emerald-600 transition-all hover:bg-emerald-500/10 active:scale-[0.92]"
+                                                className="flex h-[52px] w-[52px] min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/5 text-emerald-600 transition-all hover:bg-emerald-500/10 active:scale-[0.92]"
                                                 title="Acknowledge Payment"
                                             >
                                                 <CheckCircle2 className="size-6" />
                                             </button>
-                                            <button className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-600 dark:text-neutral-400 transition-all hover:bg-neutral-50 dark:hover:bg-neutral-800 active:scale-[0.92]">
+                                            <button className="flex h-[52px] w-[52px] min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-600 dark:text-neutral-400 transition-all hover:bg-neutral-50 dark:hover:bg-neutral-800 active:scale-[0.92]">
                                                 <FolderOpen className="size-5" />
                                             </button>
                                         </div>
@@ -1218,7 +1363,7 @@ export default function LandlordDashboard() {
                                     <div className="px-6 pb-6">
                                         <button 
                                             onClick={() => setSelectedActionPayment(null)}
-                                            className="w-full flex items-center justify-center gap-3 rounded-2xl bg-[#f0f4f9] dark:bg-neutral-800 px-6 py-4 text-base font-medium text-blue-700 dark:text-blue-400 transition-all hover:bg-[#e1e9f1] dark:hover:bg-neutral-700 group"
+                                            className="w-full min-h-[44px] flex items-center justify-center gap-3 rounded-2xl bg-[#f0f4f9] dark:bg-neutral-800 px-6 py-3.5 text-base font-medium text-blue-700 dark:text-blue-400 transition-all hover:bg-[#e1e9f1] dark:hover:bg-neutral-700 group"
                                         >
                                             Open Full Profile
                                             <ArrowUpRight className="size-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
@@ -1230,9 +1375,9 @@ export default function LandlordDashboard() {
                                     <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-primary/10 text-primary">
                                         <AlertTriangle className="size-10" />
                                     </div>
-                                    <h3 className="text-xl font-black text-foreground">Confirm Settlement</h3>
+                                    <h3 className="text-xl font-black text-foreground text-balance">Confirm Settlement</h3>
                                     <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-5">
-                                        <p className="text-xs font-black leading-relaxed text-primary/80">
+                                        <p className="text-xs font-black leading-relaxed text-primary/80 text-pretty">
                                             Make sure that the tenant has already paid their rent. Seek proof of payment for GCash payments.
                                         </p>
                                     </div>
@@ -1243,13 +1388,13 @@ export default function LandlordDashboard() {
                                                 setSelectedActionPayment(null);
                                                 setIsConfirmingAction(false);
                                             }}
-                                            className="w-full rounded-2xl bg-primary py-4 text-sm font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
+                                            className="w-full min-h-[44px] rounded-2xl bg-primary py-4 text-sm font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
                                         >
                                             Complete Settlement
                                         </button>
                                         <button 
                                             onClick={() => setIsConfirmingAction(false)}
-                                            className="w-full rounded-2xl border border-white/10 bg-card/70 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 transition-all hover:bg-card hover:text-foreground"
+                                            className="w-full min-h-[44px] rounded-2xl border border-white/10 bg-card/70 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 transition-all hover:bg-card hover:text-foreground"
                                         >
                                             Go Back
                                         </button>
@@ -1339,8 +1484,8 @@ function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentLis
         <button 
             type="button"
             onClick={onClick}
-            aria-label={`View payment details for ${tenant}, Unit ${unit}. Amount: PHP ${amount}.`}
-            className="group relative flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-2xl p-3 sm:p-3.5 neumorphic-extruded active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-left"
+            aria-label={`View payment details for ${tenant}, Unit ${unit}. Amount: PHP ${amount}. Status: ${status}.`}
+            className="group relative flex w-full min-h-[52px] cursor-pointer items-center justify-between overflow-hidden rounded-2xl p-3 sm:p-3.5 neumorphic-extruded active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all text-left"
         >
             <div className="flex items-center gap-2.5 sm:gap-3 relative z-10 min-w-0 flex-1 mr-2">
                 <div className="relative shrink-0">
@@ -1362,7 +1507,7 @@ function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentLis
             </div>
 
             <div className="text-right relative z-10 flex flex-col items-end shrink-0">
-                <h4 className="text-xs sm:text-sm font-black text-foreground whitespace-nowrap">PHP {amount.toLocaleString()}</h4>
+                <h4 className="text-xs sm:text-sm font-black text-foreground whitespace-nowrap tabular-nums">PHP {amount.toLocaleString()}</h4>
                 <div className="flex items-center justify-end gap-1 mt-0.5">
                     <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground whitespace-nowrap">{date}</span>
                 </div>

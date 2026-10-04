@@ -173,7 +173,7 @@ export function PropertyTenantsModal({
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-6 border-b border-white/5 bg-white/[0.01]">
                             <div className="relative flex-1 max-w-md">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-neutral-500" />
-                                <input
+                                <input maxLength={60}
                                     type="text"
                                     placeholder="Search by tenant name, unit number, email..."
                                     value={searchQuery}

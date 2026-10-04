@@ -16,27 +16,27 @@ export interface UtilityTourStep {
 export const TOUR_STEPS: UtilityTourStep[] = [
     {
         id: 1,
-        title: "Step 1: Configure Utility Rates",
-        description: "Click the Utility Rates tab to configure your property's electricity (₱/kWh) and water (₱/m³) tariffs. You can also customize individual unit rates if specific rooms have higher baseline consumption.",
+        title: "Step 1: Set Electric & Water Rates",
+        description: "Click the Electricity & Water Rates tab to set your standard electric (₱/kWh) and water (₱/m³) rates, or choose if utilities are already included in the rent.",
         targetTab: "rates",
-        targetElementLabel: "Utility Rates Tab & Unit-Specific Rules",
-        tip: "Pro-tip: If utilities are already included in your flat rent, keep the default rates or set them to zero.",
+        targetElementLabel: "Electricity & Water Rates Tab",
+        tip: "If utilities are already included in your monthly rent, you can set rates to zero or choose 'Included in Rent'.",
     },
     {
         id: 2,
-        title: "Step 2: Log Room Submeters",
-        description: "In the Meter Readings tab, enter the current meter values for each room. iReside automatically carries over the previous readings month-to-month and calculates the exact consumption delta.",
+        title: "Step 2: Enter Room Meter Readings",
+        description: "In the Meter Readings tab, enter current meter numbers for occupied rooms. iReside remembers previous readings and calculates monthly usage automatically.",
         targetTab: "readings",
-        targetElementLabel: "Save Draft Button & Meter Readings Tab",
-        tip: "Pro-tip: You can click 'Save Draft' at any time while walking the building without issuing bills.",
+        targetElementLabel: "Save Readings Button",
+        tip: "You can click 'Save Readings' at any time while checking rooms without sending bills yet.",
     },
     {
         id: 3,
-        title: "Step 3: Post & Bill Monthly Invoices",
-        description: "When readings are recorded for your billing cycle, click 'Post & Bill Invoices'. iReside bundles the base rent and submeter totals into itemized digital invoices sent to your residents.",
+        title: "Step 3: Send Monthly Bills to Tenants",
+        description: "When readings are recorded for the month, click 'Send Monthly Bills'. Your tenants receive transparent, itemized receipts showing their rent and exact utility usage.",
         targetTab: "readings",
-        targetElementLabel: "Post & Bill Invoices Button",
-        tip: "Tenants receive transparent breakdown receipts showing previous and current meter numbers.",
+        targetElementLabel: "Send Monthly Bills Button",
+        tip: "Tenants receive easy-to-read receipts with exact meter numbers and charges.",
     },
 ];
 
@@ -59,6 +59,14 @@ export function UtilityBillingTourSpotlight({
 }: UtilityBillingTourSpotlightProps) {
     if (!isOpen) return null;
 
+    // Defense-in-depth: Never render the tour spotlight card if the utility onboarding modal is open
+    if (typeof document !== "undefined" && Boolean(
+        document.querySelector('[aria-labelledby="utility-billing-onboarding-title"]') ||
+        document.querySelector('[data-ireside-greeting="utility-billing"]')
+    )) {
+        return null;
+    }
+
     const step = TOUR_STEPS[currentStepIndex] || TOUR_STEPS[0];
     const isFirst = currentStepIndex === 0;
     const isLast = currentStepIndex === TOUR_STEPS.length - 1;
@@ -77,14 +85,14 @@ export function UtilityBillingTourSpotlight({
                         <span className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-black">
                             {step.id}
                         </span>
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                        <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">
                             Tour: Step {step.id} of {TOUR_STEPS.length}
                         </span>
                     </div>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
                         aria-label="Exit tour"
                     >
                         <X className="size-4" />
@@ -93,7 +101,7 @@ export function UtilityBillingTourSpotlight({
 
                 {/* Target Highlight Beacon Pill */}
                 {step.targetElementLabel && (
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-[11px] font-bold text-primary">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-xs font-bold text-primary">
                         <span className="relative flex size-2 shrink-0">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                             <span className="relative inline-flex rounded-full size-2 bg-primary"></span>
@@ -107,14 +115,14 @@ export function UtilityBillingTourSpotlight({
                     <h3 id="utility-tour-title" className="text-base font-bold text-foreground tracking-tight">
                         {step.title}
                     </h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                         {step.description}
                     </p>
                 </div>
 
                 {step.tip && (
-                    <div className="rounded-xl bg-primary/5 border border-primary/15 p-2.5 text-[11px] text-muted-foreground leading-snug">
-                        <span className="font-semibold text-primary">Note: </span>
+                    <div className="rounded-xl bg-primary/5 border border-primary/15 p-3 text-xs text-muted-foreground leading-snug">
+                        <span className="font-bold text-primary">Note: </span>
                         {step.tip}
                     </div>
                 )}
@@ -126,11 +134,11 @@ export function UtilityBillingTourSpotlight({
                         onClick={onPrev}
                         disabled={isFirst}
                         className={cn(
-                            "h-9 px-3 rounded-xl border border-border text-xs font-semibold flex items-center gap-1.5 transition-all",
+                            "h-10 sm:h-11 px-4 rounded-xl border border-border text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-all",
                             isFirst ? "opacity-30 cursor-not-allowed" : "hover:bg-muted cursor-pointer"
                         )}
                     >
-                        <ArrowLeft className="size-3" />
+                        <ArrowLeft className="size-3.5" />
                         <span>Back</span>
                     </button>
 
@@ -139,18 +147,18 @@ export function UtilityBillingTourSpotlight({
                             <button
                                 type="button"
                                 onClick={onNext}
-                                className="h-9 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 hover:bg-primary/90 transition-all cursor-pointer shadow-xs active:scale-95"
+                                className="h-10 sm:h-11 px-5 rounded-xl bg-primary text-primary-foreground text-xs sm:text-sm font-bold flex items-center gap-2 hover:bg-primary/90 transition-all cursor-pointer shadow-xs active:scale-95"
                             >
                                 <span>Next</span>
-                                <ArrowRight className="size-3" />
+                                <ArrowRight className="size-3.5" />
                             </button>
                         ) : (
                             <button
                                 type="button"
                                 onClick={onCompleteStep}
-                                className="h-9 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 hover:bg-primary/90 transition-all cursor-pointer shadow-md shadow-primary/25 active:scale-95"
+                                className="h-10 sm:h-11 px-5 rounded-xl bg-primary text-primary-foreground text-xs sm:text-sm font-bold flex items-center gap-2 hover:bg-primary/90 transition-all cursor-pointer shadow-md shadow-primary/25 active:scale-95"
                             >
-                                <CheckCircle2 className="size-3.5" />
+                                <CheckCircle2 className="size-4" />
                                 <span>Complete Step</span>
                             </button>
                         )}

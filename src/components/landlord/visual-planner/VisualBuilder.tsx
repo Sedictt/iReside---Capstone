@@ -64,6 +64,7 @@ import { UnitHistoryModal } from "./components/UnitHistoryModal";
 import { FirstTimePresetModal, type LayoutPresetType } from "./components/FirstTimePresetModal";
 import { UnitMapExploreOrReturnModal } from "./components/UnitMapExploreOrReturnModal";
 import { generatePresetLayout } from "./utils/presets";
+import { DEFAULT_AVATAR_URL, getSystemAvatarUrl } from "@/lib/constants";
 
 /** Complaint Modal Component */
 const ComplaintModal = ({
@@ -191,9 +192,15 @@ const ComplaintModal = ({
                                             animate={{ opacity: 1, height: 'auto' }}
                                             className="space-y-3"
                                         >
-                                            <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Details</label>
+                                            <div className="flex items-center justify-between ml-1">
+                                                <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Details</label>
+                                                <span className="text-[10px] font-medium text-muted-foreground/70 select-none">
+                                                    {customComplaint.length} / 500
+                                                </span>
+                                            </div>
                                             <textarea
                                                 required
+                                                maxLength={500}
                                                 value={customComplaint}
                                                 onChange={(e) => setCustomComplaint(e.target.value)}
                                                 placeholder="Please describe the issue in detail…"
@@ -410,6 +417,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [isCanvasFullscreen, setIsCanvasFullscreen] = useState(false);
     const [saveStatus, setSaveStatus] = useState<"idle" | "waiting" | "saving" | "saved">("idle");
     const [isMinimapDragging, setIsMinimapDragging] = useState(false);
+    const [isMinimapVisible, setIsMinimapVisible] = useState(true);
+    const [showViewOptions, setShowViewOptions] = useState(false);
+    const viewOptionsRef = useRef<HTMLDivElement>(null);
     // DB-driven state
     const [dbUnits, setDbUnits] = useState<DbUnit[]>(EMPTY_ARRAY);
     const [floorConfigs, setFloorConfigs] = useState<FloorConfig[]>(demoMode ? [
@@ -687,7 +697,20 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         setHasHydratedFloorState(true);
 
         // First-time preset prompt check during setup phase
-        if (!readOnly && !demoMode && data.isSetupComplete && data.totalUnits > 0 && selectedPropertyId && selectedPropertyId !== "all") {
+        // Only prompt if units exist, but NONE have been placed yet, and property has no tenants
+        const hasPlacedUnits = (data.placedCount ?? 0) > 0 || targetUnits.length > 0;
+        const hasPropertyTenants = Boolean(selectedProperty?.hasTenants);
+
+        if (
+            !readOnly && 
+            !demoMode && 
+            data.isSetupComplete && 
+            data.totalUnits > 0 && 
+            !hasPlacedUnits && 
+            !hasPropertyTenants && 
+            selectedPropertyId && 
+            selectedPropertyId !== "all"
+        ) {
             if (typeof window !== "undefined") {
                 try {
                     const dismissed = window.localStorage.getItem(SCOPED_PRESET_PROMPT_KEY);
@@ -696,6 +719,12 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         window.dispatchEvent(new Event("unit-map-guidance-changed"));
                         setIsFirstTimePresetModalOpen(true);
                     }
+                } catch {}
+            }
+        } else if (hasPlacedUnits || hasPropertyTenants) {
+            if (typeof window !== "undefined") {
+                try {
+                    window.localStorage.setItem(SCOPED_PRESET_PROMPT_KEY, "true");
                 } catch {}
             }
         }
@@ -708,7 +737,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         }];
         historyIndexRef.current = 0;
         setUndoAvailable(false);
-    }, [SCOPED_ACTIVE_FLOOR_KEY, SCOPED_PRESET_PROMPT_KEY, SCOPED_UNPLACED_UNITS_KEY, currentUnitId, demoMode, readOnly, selectedPropertyId]);
+    }, [SCOPED_ACTIVE_FLOOR_KEY, SCOPED_PRESET_PROMPT_KEY, SCOPED_UNPLACED_UNITS_KEY, currentUnitId, demoMode, readOnly, selectedPropertyId, selectedProperty]);
 
     // ---------------------------------------------------------------
     // Load real data from DB when a property is selected (SWR Instant Cache)
@@ -1115,6 +1144,26 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     useEffect(() => {
         window.dispatchEvent(new CustomEvent('hide-sidebars', { detail: isCanvasFullscreen }));
     }, [isCanvasFullscreen]);
+
+    useEffect(() => {
+        if (!showViewOptions) return;
+        const handleOutsideClick = (e: MouseEvent) => {
+            if (viewOptionsRef.current && !viewOptionsRef.current.contains(e.target as Node)) {
+                setShowViewOptions(false);
+            }
+        };
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                setShowViewOptions(false);
+            }
+        };
+        document.addEventListener("mousedown", handleOutsideClick);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("mousedown", handleOutsideClick);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [showViewOptions]);
 
     const [extraDimensions, setExtraDimensions] = useState({ width: 0, height: 0 });
 
@@ -3941,6 +3990,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                             <div className="flex items-center mx-1">
                                 <input
                                     type="text"
+                                    maxLength={60}
                                     value={editingFloorName}
                                     onChange={(e) => setEditingFloorName(e.target.value)}
                                     onBlur={() => {
@@ -4867,89 +4917,119 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -20 }}
-                                    className="absolute top-10 left-10 z-30 pointer-events-none"
+                                    className="absolute top-6 left-6 z-30 pointer-events-none"
                                 >
-                                    <div className="flex items-center gap-4 bg-zinc-900/80 backdrop-blur-xl border border-white/10 px-4 py-2.5 rounded-2xl shadow-2xl pointer-events-auto transition-all hover:bg-zinc-900/90 hover:scale-[1.02]">
-                                        <div className="flex items-center gap-4 px-2 py-1">
+                                    <div className={`flex items-center gap-4 backdrop-blur-xl border px-4 py-2.5 rounded-2xl shadow-lg pointer-events-auto transition-all ${
+                                        isDark ? 'bg-zinc-900/90 border-white/10 text-white' : 'bg-card/95 border-border/80 text-foreground'
+                                    }`}>
+                                        <div className="flex items-center gap-4 px-1 py-0.5">
                                             <div className="flex flex-col">
-                                                <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em]">Live Units</span>
-                                                <span className="font-mono text-lg font-black text-white leading-none mt-1">{units.filter(u => statusFilters.includes(u.status)).length}</span>
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Live Units</span>
+                                                <span className="font-mono text-base font-bold leading-none mt-1">{units.filter(u => statusFilters.includes(u.status)).length}</span>
                                             </div>
-                                            <div className="h-8 w-px bg-white/10" />
+                                            <div className={`h-7 w-px ${isDark ? 'bg-white/10' : 'bg-border'}`} />
                                             <div className="flex flex-col">
-                                                <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em]">Footprint</span>
-                                                <span className="font-mono text-lg font-black text-white leading-none mt-1">
-                                                    {totalArea.toLocaleString()} <span className="text-[10px] font-normal text-white/40">sqft</span>
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Floor Area</span>
+                                                <span className="font-mono text-base font-bold leading-none mt-1">
+                                                    {totalArea.toLocaleString()} <span className="text-[11px] font-normal text-muted-foreground">sqft</span>
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
                                 </motion.div>
 
-                                {/* Integrated Bottom Dock */}
+                                {/* Status Legend Dock */}
                                 <motion.div 
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 20 }}
-                                    className="absolute bottom-12 left-12 z-30 pointer-events-none"
+                                    className="absolute bottom-6 left-6 z-30 pointer-events-none"
                                 >
-                                    <div className="flex items-center gap-2 bg-zinc-900/90 backdrop-blur-2xl border border-white/10 p-1.5 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.5)] pointer-events-auto">
-                                        <div className="flex items-center gap-6 px-6 py-1.5 whitespace-nowrap">
+                                    <div className={`flex items-center gap-2 backdrop-blur-xl border p-1.5 rounded-2xl md:rounded-full shadow-lg pointer-events-auto ${
+                                        isDark ? 'bg-zinc-900/95 border-white/10 text-white' : 'bg-card/95 border-border/80 text-foreground'
+                                    }`}>
+                                        <div className="flex items-center gap-4 md:gap-5 px-3 md:px-5 py-1 whitespace-nowrap">
                                             <button 
                                                 onClick={() => toggleStatusFilter("vacant")}
-                                                className={`flex items-center gap-2.5 group transition-all hover:scale-105 ${statusFilters.includes("vacant") ? 'opacity-100' : 'opacity-40'}`}
+                                                className={`flex items-center gap-2 group transition-all hover:scale-105 ${statusFilters.includes("vacant") ? 'opacity-100' : 'opacity-40'}`}
+                                                title="Filter available units"
                                             >
-                                                <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("vacant") ? 'bg-emerald-500 border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-transparent border-white/30'}`}>
+                                                <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("vacant") ? 'bg-emerald-500 border-emerald-500 shadow-sm' : 'bg-transparent border-muted-foreground/40'}`}>
                                                     {statusFilters.includes("vacant") && <span className="material-icons-round text-[10px] text-white">check</span>}
                                                 </div>
-                                                <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Available</span>
+                                                <span className="text-xs font-bold">Available</span>
                                             </button>
                                             <button 
                                                 onClick={() => toggleStatusFilter("occupied")}
-                                                className={`flex items-center gap-2.5 group transition-all hover:scale-105 ${statusFilters.includes("occupied") ? 'opacity-100' : 'opacity-40'}`}
+                                                className={`flex items-center gap-2 group transition-all hover:scale-105 ${statusFilters.includes("occupied") ? 'opacity-100' : 'opacity-40'}`}
+                                                title="Filter occupied units"
                                             >
-                                                <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("occupied") ? 'bg-blue-500 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-transparent border-white/30'}`}>
+                                                <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("occupied") ? 'bg-blue-500 border-blue-500 shadow-sm' : 'bg-transparent border-muted-foreground/40'}`}>
                                                     {statusFilters.includes("occupied") && <span className="material-icons-round text-[10px] text-white">check</span>}
                                                 </div>
-                                                <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Occupied</span>
+                                                <span className="text-xs font-bold">Occupied</span>
                                             </button>
                                             <button 
                                                 onClick={() => toggleStatusFilter("maintenance")}
-                                                className={`flex items-center gap-2.5 group transition-all hover:scale-105 ${statusFilters.includes("maintenance") ? 'opacity-100' : 'opacity-40'}`}
+                                                className={`flex items-center gap-2 group transition-all hover:scale-105 ${statusFilters.includes("maintenance") ? 'opacity-100' : 'opacity-40'}`}
+                                                title="Filter units in maintenance"
                                             >
-                                                <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("maintenance") ? 'bg-rose-500 border-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]' : 'bg-transparent border-white/30'}`}>
+                                                <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("maintenance") ? 'bg-rose-500 border-rose-500 shadow-sm' : 'bg-transparent border-muted-foreground/40'}`}>
                                                     {statusFilters.includes("maintenance") && <span className="material-icons-round text-[10px] text-white">check</span>}
                                                 </div>
-                                                <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Maintenance</span>
+                                                <span className="text-xs font-bold">Maintenance</span>
                                             </button>
                                             <button 
                                                 onClick={() => toggleStatusFilter("neardue")}
-                                                className={`flex items-center gap-2.5 group transition-all hover:scale-105 ${statusFilters.includes("neardue") ? 'opacity-100' : 'opacity-40'}`}
+                                                className={`flex items-center gap-2 group transition-all hover:scale-105 ${statusFilters.includes("neardue") ? 'opacity-100' : 'opacity-40'}`}
+                                                title="Filter near-due units"
                                             >
-                                                <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("neardue") ? 'bg-amber-500 border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'bg-transparent border-white/30'}`}>
+                                                <div className={`size-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("neardue") ? 'bg-amber-500 border-amber-500 shadow-sm' : 'bg-transparent border-muted-foreground/40'}`}>
                                                     {statusFilters.includes("neardue") && <span className="material-icons-round text-[10px] text-white">check</span>}
                                                 </div>
-                                                <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Near Due</span>
+                                                <span className="text-xs font-bold">Near Due</span>
                                             </button>
                                         </div>
                                     </div>
                                 </motion.div>
 
-                                {/* Controls (Legend & Minimap) */}
+                                {/* Unified Controls Dock & Overview Minimap */}
                                 <motion.div 
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
-                                    className="absolute bottom-12 right-12 z-30 pointer-events-none"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
+                                    className="absolute bottom-6 right-6 z-30 pointer-events-none flex flex-col items-end gap-2.5"
                                 >
-                                    <div className="flex gap-4 items-end pointer-events-auto">
-                                        {/* Minimap */}
-                                        <div className={`relative hidden h-32 w-48 overflow-hidden rounded-lg shadow-xl md:block ${isDark ? 'border border-zinc-800 bg-surface-dark' : 'border border-border bg-card/95'}`}>
-                                            <div className="absolute inset-0 p-2">
+                                    {/* Minimap (Collapsible) */}
+                                    {isMinimapVisible && (
+                                        <div className={`relative hidden w-52 overflow-hidden rounded-2xl shadow-xl md:block pointer-events-auto border transition-all ${
+                                            isDark ? 'border-white/10 bg-zinc-900/95 backdrop-blur-xl' : 'border-border/80 bg-card/95 backdrop-blur-xl'
+                                        }`}>
+                                            {/* Minimap header */}
+                                            <div className={`flex items-center justify-between px-3 py-1.5 border-b text-[11px] font-bold select-none ${
+                                                isDark ? 'border-white/5 text-zinc-400' : 'border-border/60 text-zinc-600'
+                                            }`}>
+                                                <span className="flex items-center gap-1.5">
+                                                    <span className="material-icons-round text-sm opacity-70">map</span>
+                                                    <span>Floor Overview</span>
+                                                </span>
+                                                <button
+                                                    onClick={() => setIsMinimapVisible(false)}
+                                                    className={`p-0.5 rounded-md transition-colors ${
+                                                        isDark ? 'hover:bg-white/10 text-zinc-400 hover:text-white' : 'hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900'
+                                                    }`}
+                                                    title="Minimize overview map"
+                                                    aria-label="Minimize overview map"
+                                                >
+                                                    <span className="material-icons-round text-sm">close</span>
+                                                </button>
+                                            </div>
+
+                                            <div className="p-2 h-32">
                                                 <div
                                                     ref={minimapRef}
                                                     onPointerDown={handleMinimapPointerDown}
-                                                    className={`relative h-full w-full cursor-pointer overflow-hidden rounded border ${isDark ? 'border-zinc-700 bg-[#15181d]' : 'border-zinc-200 bg-[linear-gradient(180deg,#f7faf5,#eef4ec)]'}`}
+                                                    className={`relative h-full w-full cursor-pointer overflow-hidden rounded-xl border ${isDark ? 'border-zinc-700 bg-[#15181d]' : 'border-zinc-200 bg-[linear-gradient(180deg,#f7faf5,#eef4ec)]'}`}
                                                 >
                                                     <div
                                                         className={`absolute border ${isDark ? 'border-zinc-600/70 bg-white/[0.03]' : 'border-zinc-400/70 bg-white/25'}`}
@@ -5026,46 +5106,280 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 </div>
                                             </div>
                                         </div>
+                                    )}
 
-                                        <div className={`flex flex-col rounded-2xl shadow-2xl p-1.5 backdrop-blur-xl border ${isDark ? 'bg-zinc-900/90 border-white/10' : 'bg-card/95 border-border'}`}>
-                                            <button 
-                                                onClick={handleZoomIn} 
-                                                className={`size-10 rounded-xl flex items-center justify-center transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100 active:scale-95'}`} 
-                                                title="Zoom In"
+                                    {/* Primary Simplified & Compact HUD Control Bar */}
+                                    <div className="flex items-center gap-2 pointer-events-auto">
+                                        {/* Layout Locked Indicator Badge (Visible when locked, 1-click unlock) */}
+                                        {isLayoutLocked && (
+                                            <button
+                                                onClick={() => {
+                                                    setIsLayoutLocked(false);
+                                                    toast.success("Layout editing unlocked");
+                                                }}
+                                                className="flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-bold shadow-lg backdrop-blur-xl hover:bg-amber-500/25 transition-all active:scale-95 animate-pulse"
+                                                title="Layout is locked. Click to unlock room dragging."
+                                                aria-label="Layout is locked. Click to unlock room dragging."
                                             >
-                                                <span className="material-icons-round text-xl">add</span>
+                                                <span className="material-icons-round text-base">lock</span>
+                                                <span>Layout Locked</span>
                                             </button>
+                                        )}
+
+                                        {/* Unified Floating Controls Dock */}
+                                        <div className={`flex items-center rounded-2xl shadow-xl p-1.5 backdrop-blur-xl border ${
+                                            isDark ? 'bg-zinc-900/95 border-white/10 text-white' : 'bg-card/95 border-border/80 text-foreground'
+                                        }`}>
+                                            {/* Zoom Out (-) */}
                                             <button 
                                                 onClick={handleZoomOut} 
-                                                className={`size-10 rounded-xl flex items-center justify-center transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100 active:scale-95'}`} 
+                                                className={`size-10 rounded-xl flex items-center justify-center transition-all ${
+                                                    isDark ? 'text-white/80 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-muted active:scale-95'
+                                                }`} 
                                                 title="Zoom Out"
+                                                aria-label="Zoom out"
                                             >
-                                                <span className="material-icons-round text-xl">remove</span>
+                                                <span className="material-icons-round text-xl font-bold">remove</span>
                                             </button>
+
+                                            {/* Current Zoom Level / Center Blueprint */}
+                                            <button
+                                                onClick={handleFit}
+                                                className={`h-10 px-2 rounded-xl flex items-center justify-center font-bold text-xs tabular-nums transition-all ${
+                                                    isDark ? 'text-white/90 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-800 hover:text-zinc-950 hover:bg-muted active:scale-95'
+                                                }`}
+                                                title="Click to center floor plan"
+                                                aria-label="Reset zoom and center floor plan view"
+                                            >
+                                                {Math.round(scale * 100)}%
+                                            </button>
+
+                                            {/* Zoom In (+) */}
+                                            <button 
+                                                onClick={handleZoomIn} 
+                                                className={`size-10 rounded-xl flex items-center justify-center transition-all ${
+                                                    isDark ? 'text-white/80 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-muted active:scale-95'
+                                                }`} 
+                                                title="Zoom In"
+                                                aria-label="Zoom in"
+                                            >
+                                                <span className="material-icons-round text-xl font-bold">add</span>
+                                            </button>
+
+                                            {/* Subtle Divider */}
+                                            <div className={`w-px h-6 mx-1 ${isDark ? 'bg-white/10' : 'bg-border'}`} />
+
+                                            {/* Center & Fit View */}
                                             <button 
                                                 onClick={handleFit} 
-                                                className={`size-10 rounded-xl flex items-center justify-center transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100 active:scale-95'}`} 
-                                                title="Fit to Screen"
+                                                className={`size-10 rounded-xl flex items-center justify-center transition-all ${
+                                                    isDark ? 'text-white/80 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-muted active:scale-95'
+                                                }`} 
+                                                title="Center Floor Plan (Fit to Screen)"
+                                                aria-label="Center floor plan view"
                                             >
-                                                <span className="material-icons-round text-xl">aspect_ratio</span>
+                                                <span className="material-icons-round text-xl">fit_screen</span>
                                             </button>
+
+                                            {/* Undo (Only in edit mode) */}
                                             {!readOnly && (
-                                                <>
-                                                    <div className={`h-px my-0.5 mx-1.5 ${isDark ? 'bg-white/10' : 'bg-zinc-200'}`} />
-                                                    <button
-                                                        onClick={performUndo}
-                                                        disabled={!undoAvailable}
-                                                        className={`size-10 rounded-xl flex items-center justify-center transition-all ${
-                                                            undoAvailable
-                                                                ? (isDark ? 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100 active:scale-95')
-                                                                : (isDark ? 'text-white/20 cursor-not-allowed' : 'text-zinc-300 cursor-not-allowed')
-                                                        }`}
-                                                        title={undoAvailable ? "Undo (Ctrl+Z)" : "Nothing to undo"}
-                                                    >
-                                                        <span className="material-icons-round text-xl">undo</span>
-                                                    </button>
-                                                </>
+                                                <button
+                                                    onClick={performUndo}
+                                                    disabled={!undoAvailable}
+                                                    className={`size-10 rounded-xl flex items-center justify-center transition-all ${
+                                                        undoAvailable
+                                                            ? (isDark ? 'text-white/80 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-muted active:scale-95')
+                                                            : (isDark ? 'text-white/20 cursor-not-allowed' : 'text-zinc-300 dark:text-zinc-600 cursor-not-allowed')
+                                                    }`}
+                                                    title={undoAvailable ? "Undo last move (Ctrl+Z)" : "Nothing to undo"}
+                                                    aria-label="Undo last action"
+                                                >
+                                                    <span className="material-icons-round text-xl">undo</span>
+                                                </button>
                                             )}
+
+                                            {/* Canvas Fullscreen Toggle */}
+                                            <button 
+                                                onClick={toggleFullscreen}
+                                                className={`size-10 rounded-xl flex items-center justify-center transition-all ${
+                                                    isCanvasFullscreen 
+                                                        ? 'bg-primary text-white shadow-md' 
+                                                        : (isDark ? 'text-white/80 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-muted active:scale-95')
+                                                }`}
+                                                title={isCanvasFullscreen ? "Exit Fullscreen" : "Fullscreen View"}
+                                                aria-label={isCanvasFullscreen ? "Exit full screen view" : "View floor plan in full screen"}
+                                            >
+                                                <span className="material-icons-round text-xl">{isCanvasFullscreen ? 'fullscreen_exit' : 'fullscreen'}</span>
+                                            </button>
+
+                                            {/* Quick Minimap Toggle (if minimized) */}
+                                            {!isMinimapVisible && (
+                                                <button
+                                                    onClick={() => setIsMinimapVisible(true)}
+                                                    className={`size-10 rounded-xl flex items-center justify-center transition-all ${
+                                                        isDark ? 'text-white/80 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-muted active:scale-95'
+                                                    }`}
+                                                    title="Show Floor Overview Map"
+                                                    aria-label="Show floor overview map"
+                                                >
+                                                    <span className="material-icons-round text-xl">map</span>
+                                                </button>
+                                            )}
+
+                                            {/* Subtle Divider */}
+                                            <div className={`w-px h-6 mx-1 ${isDark ? 'bg-white/10' : 'bg-border'}`} />
+
+                                            {/* More Options / View Settings Dropdown */}
+                                            <div className="relative" ref={viewOptionsRef}>
+                                                <button 
+                                                    onClick={() => setShowViewOptions(!showViewOptions)}
+                                                    className={`size-10 rounded-xl flex items-center justify-center transition-all ${
+                                                        showViewOptions 
+                                                            ? 'bg-primary text-white shadow-md' 
+                                                            : (isDark ? 'text-white/80 hover:text-white hover:bg-white/10 active:scale-95' : 'text-zinc-700 hover:text-zinc-950 hover:bg-muted active:scale-95')
+                                                    }`}
+                                                    title="Map & View Options"
+                                                    aria-label="Map and view options"
+                                                >
+                                                    <span className="material-icons-round text-xl">tune</span>
+                                                </button>
+
+                                                {/* Popover Menu */}
+                                                {showViewOptions && (
+                                                    <div className={`absolute bottom-full right-0 mb-3 w-72 rounded-2xl shadow-2xl p-3 border backdrop-blur-2xl z-50 animate-in fade-in zoom-in-95 duration-150 ${
+                                                        isDark ? 'bg-zinc-900/98 border-white/10 text-white' : 'bg-card/98 border-border/80 text-foreground'
+                                                    }`}>
+                                                        <div className="px-2 py-1.5 border-b border-border/40 dark:border-white/10 mb-2">
+                                                            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">View & Tools</h4>
+                                                            <p className="text-[11px] text-muted-foreground mt-0.5">Adjust map display and controls</p>
+                                                        </div>
+
+                                                        <div className="space-y-1">
+                                                            {/* Lock Layout Option */}
+                                                            <button
+                                                                onClick={() => {
+                                                                    const next = !isLayoutLocked;
+                                                                    setIsLayoutLocked(next);
+                                                                    toast.info(next ? "Layout locked. Room dragging is disabled." : "Layout unlocked. Rooms can now be moved.");
+                                                                }}
+                                                                className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-all ${
+                                                                    isDark ? 'hover:bg-white/10' : 'hover:bg-muted'
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-center gap-2.5">
+                                                                    <span className={`material-icons-round text-lg ${isLayoutLocked ? 'text-amber-500' : 'opacity-60'}`}>
+                                                                        {isLayoutLocked ? 'lock' : 'lock_open'}
+                                                                    </span>
+                                                                    <div>
+                                                                        <div className="text-xs font-bold">Lock Room Dragging</div>
+                                                                        <div className="text-[10px] text-muted-foreground">Prevent accidental room moves</div>
+                                                                    </div>
+                                                                </div>
+                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                                                    isLayoutLocked 
+                                                                        ? 'bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold' 
+                                                                        : (isDark ? 'bg-white/5 text-zinc-400' : 'bg-zinc-100 text-zinc-500')
+                                                                }`}>
+                                                                    {isLayoutLocked ? 'ON' : 'OFF'}
+                                                                </span>
+                                                            </button>
+
+                                                            {/* Overview Mini-Map Option */}
+                                                            <button
+                                                                onClick={() => setIsMinimapVisible(!isMinimapVisible)}
+                                                                className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-all ${
+                                                                    isDark ? 'hover:bg-white/10' : 'hover:bg-muted'
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-center gap-2.5">
+                                                                    <span className="material-icons-round text-lg opacity-60">map</span>
+                                                                    <div>
+                                                                        <div className="text-xs font-bold">Floor Overview Map</div>
+                                                                        <div className="text-[10px] text-muted-foreground">Show corner mini-map</div>
+                                                                    </div>
+                                                                </div>
+                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                                                    isMinimapVisible 
+                                                                        ? 'bg-primary/15 text-primary' 
+                                                                        : (isDark ? 'bg-white/5 text-zinc-400' : 'bg-zinc-100 text-zinc-500')
+                                                                }`}>
+                                                                    {isMinimapVisible ? 'ON' : 'OFF'}
+                                                                </span>
+                                                            </button>
+
+                                                            {/* Tenant Note Badges Option */}
+                                                            <button
+                                                                onClick={() => {
+                                                                    const next = !showQuickMessages;
+                                                                    setShowQuickMessages(next);
+                                                                    try { window.localStorage.setItem("ireside.visualPlanner.showQuickMessages", String(next)); } catch {}
+                                                                    toast.info(next ? "Tenant message badges enabled" : "Tenant message badges disabled");
+                                                                }}
+                                                                className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-all ${
+                                                                    isDark ? 'hover:bg-white/10' : 'hover:bg-muted'
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-center gap-2.5">
+                                                                    <span className="material-icons-round text-lg opacity-60">chat</span>
+                                                                    <div>
+                                                                        <div className="text-xs font-bold">Tenant Note Badges</div>
+                                                                        <div className="text-[10px] text-muted-foreground">Show message bubbles on rooms</div>
+                                                                    </div>
+                                                                </div>
+                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                                                    showQuickMessages 
+                                                                        ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400' 
+                                                                        : (isDark ? 'bg-white/5 text-zinc-400' : 'bg-zinc-100 text-zinc-500')
+                                                                }`}>
+                                                                    {showQuickMessages ? 'ON' : 'OFF'}
+                                                                </span>
+                                                            </button>
+
+                                                            {/* Blocks Sidebar Option */}
+                                                            <button
+                                                                onClick={() => setIsSidebarVisible(!isSidebarVisible)}
+                                                                className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-all ${
+                                                                    isDark ? 'hover:bg-white/10' : 'hover:bg-muted'
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-center gap-2.5">
+                                                                    <span className="material-icons-round text-lg opacity-60">view_sidebar</span>
+                                                                    <div>
+                                                                        <div className="text-xs font-bold">Building Blocks Sidebar</div>
+                                                                        <div className="text-[10px] text-muted-foreground">Show room library panel</div>
+                                                                    </div>
+                                                                </div>
+                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                                                    isSidebarVisible 
+                                                                        ? 'bg-primary/15 text-primary' 
+                                                                        : (isDark ? 'bg-white/5 text-zinc-400' : 'bg-zinc-100 text-zinc-500')
+                                                                }`}>
+                                                                    {isSidebarVisible ? 'ON' : 'OFF'}
+                                                                </span>
+                                                            </button>
+
+                                                            {/* Help & Shortcuts Option */}
+                                                            <div className="pt-1.5 border-t border-border/40 dark:border-white/10 mt-1">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setShowHotkeys(true);
+                                                                        setShowViewOptions(false);
+                                                                    }}
+                                                                    className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-left transition-all ${
+                                                                        isDark ? 'hover:bg-white/10' : 'hover:bg-muted'
+                                                                    }`}
+                                                                >
+                                                                    <span className="material-icons-round text-lg opacity-60">help_outline</span>
+                                                                    <div>
+                                                                        <div className="text-xs font-bold">Keyboard Shortcuts & Tips</div>
+                                                                        <div className="text-[10px] text-muted-foreground">View keyboard shortcuts guide</div>
+                                                                    </div>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -5088,6 +5402,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             <span className={`material-icons-round text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>edit</span>
                                             <input
                                                 type="text"
+                                                maxLength={60}
                                                 value={corridors.find(c => c.id === selectedItem.id)?.label || ""}
                                                 onChange={(e) => {
                                                     const val = e.target.value;
@@ -5140,69 +5455,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         )}
                     </AnimatePresence>
 
-                    {/* Viewport System Toolbar (Always Visible) */}
-                    <div className="absolute right-10 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2">
-                        <div className="flex flex-col bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-2xl">
-                            {!isHUDHidden && (
-                                <motion.div 
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    className="flex flex-col"
-                                >
-                                    <button 
-                                        onClick={() => setIsLayoutLocked(!isLayoutLocked)}
-                                        className={`size-10 rounded-xl flex items-center justify-center transition-all ${isLayoutLocked ? 'bg-amber-500 text-zinc-900 shadow-lg shadow-amber-500/20' : 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95'}`}
-                                        title={isLayoutLocked ? "Unlock Layout" : "Lock Layout (L)"}
-                                    >
-                                        <span className="material-icons-round text-xl">{isLayoutLocked ? 'lock' : 'lock_open'}</span>
-                                    </button>
-                                    <button 
-                                        onClick={toggleFullscreen}
-                                        className={`size-10 rounded-xl flex items-center justify-center transition-all ${isCanvasFullscreen ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95'}`}
-                                        title="Toggle Canvas Fullscreen (F)"
-                                    >
-                                        <span className="material-icons-round text-xl">{isCanvasFullscreen ? 'fullscreen_exit' : 'fullscreen'}</span>
-                                    </button>
-                                    <div className="h-px bg-white/10 my-1 mx-1.5" />
-                                    <button 
-                                    onClick={() => setShowHotkeys(true)}
-                                    className="size-10 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-95 transition-all"
-                                    title="Hotkeys Hint (?)"
-                                    >
-                                    <span className="material-icons-round text-xl">help_outline</span>
-                                    </button>
-                                    <button 
-                                    onClick={() => {
-                                             const next = !showQuickMessages;
-                                             setShowQuickMessages(next);
-                                             try { window.localStorage.setItem("ireside.visualPlanner.showQuickMessages", String(next)); } catch {}
-                                             toast.info(next ? "Canvas Quick Messages Enabled" : "Canvas Quick Messages Disabled");
-                                         }}
-                                         className={`size-10 rounded-xl flex items-center justify-center transition-all ${showQuickMessages ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95'}`}
-                                         title={showQuickMessages ? "Disable Quick Messages on Canvas" : "Enable Quick Messages on Canvas"}
-                                     >
-                                         <span className="material-icons-round text-xl">{showQuickMessages ? 'chat' : 'chat_bubble_outline'}</span>
-                                     </button>
-                                     <button 
-                                         onClick={() => setIsSidebarVisible(!isSidebarVisible)}
-                                        className={`size-10 rounded-xl flex items-center justify-center transition-all ${isSidebarVisible ? 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95' : 'bg-primary text-white shadow-lg shadow-primary/20'}`}
-                                        title={isSidebarVisible ? "Hide Sidebar (S)" : "Show Sidebar (S)"}
-                                    >
-                                        <span className="material-icons-round text-xl">{isSidebarVisible ? 'dock' : 'view_sidebar'}</span>
-                                    </button>
-                                    <div className="h-px bg-white/10 my-1 mx-1.5" />
-                                </motion.div>
-                            )}
-                            
-                            <button 
-                                onClick={() => setIsHUDHidden(!isHUDHidden)}
-                                className={`size-10 rounded-xl flex items-center justify-center transition-all ${isHUDHidden ? 'bg-primary text-white shadow-lg shadow-primary/20 animate-pulse' : 'text-white/70 hover:text-white hover:bg-white/10 active:scale-95'}`}
-                                title={isHUDHidden ? "Show Interface (H)" : "Hide Interface (H)"}
-                            >
-                                <span className="material-icons-round text-xl">{isHUDHidden ? 'visibility_off' : 'visibility'}</span>
-                            </button>
-                        </div>
-                    </div>
+
 
                     {/* Hotkeys Modal */}
                     <AnimatePresence>
@@ -5232,8 +5485,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     <span className="material-icons-round">keyboard</span>
                                                 </div>
                                                 <div>
-                                                    <h2 className="text-xl font-black text-white tracking-tight">Command Center</h2>
-                                                    <p className="text-xs text-white/40 font-black uppercase tracking-widest mt-0.5">Quick Access Shortcuts</p>
+                                                    <h2 className="text-xl font-bold text-white tracking-tight">Keyboard Shortcuts & Guide</h2>
+                                                    <p className="text-xs text-white/50 font-medium mt-0.5">Quick keyboard controls and planner tips</p>
                                                 </div>
                                             </div>
                                             <button 
@@ -6029,11 +6282,13 @@ const UnitDetailsPanel = ({
                                 <input
                                     type="number"
                                     min="0"
+                                    max="9999"
                                     step="1"
                                     disabled={isSavingConfig}
                                     value={draftAreaSqm}
                                     onChange={(e) => {
-                                        setDraftAreaSqm(e.target.value);
+                                        const num = e.target.value === "" ? "" : String(Math.min(9999, Math.max(0, parseInt(e.target.value) || 0)));
+                                        setDraftAreaSqm(num);
                                         if (configFeedback) setConfigFeedback(null);
                                     }}
                                     className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
@@ -6045,11 +6300,13 @@ const UnitDetailsPanel = ({
                                     <input
                                         type="number"
                                         min="0"
+                                        max="99"
                                         step="1"
                                         disabled={isSavingConfig}
                                         value={draftBedrooms}
                                         onChange={(e) => {
-                                            setDraftBedrooms(e.target.value);
+                                            const num = e.target.value === "" ? "" : String(Math.min(99, Math.max(0, parseInt(e.target.value) || 0)));
+                                            setDraftBedrooms(num);
                                             if (configFeedback) setConfigFeedback(null);
                                         }}
                                         className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
@@ -6060,11 +6317,13 @@ const UnitDetailsPanel = ({
                                     <input
                                         type="number"
                                         min="0"
+                                        max="99"
                                         step="0.5"
                                         disabled={isSavingConfig}
                                         value={draftBaths}
                                         onChange={(e) => {
-                                            setDraftBaths(e.target.value);
+                                            const num = e.target.value === "" ? "" : String(Math.min(99, Math.max(0, parseFloat(e.target.value) || 0)));
+                                            setDraftBaths(num);
                                             if (configFeedback) setConfigFeedback(null);
                                         }}
                                         className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
@@ -6211,7 +6470,7 @@ const UnitDetailsPanel = ({
                                                     />
                                                 ) : (
                                                     <Image
-                                                        src={unit.tenant ? `https://ui-avatars.com/api/?name=${encodeURIComponent(unit.tenant)}&background=random&color=fff` : "https://images.unsplash.com/photo-1529778456-9a2cf1fbe4a8?auto=format&fit=crop&w=150&q=80"}
+                                                        src={getSystemAvatarUrl(unit.tenant)}
                                                         alt="Tenant"
                                                         fill
                                                         className="object-cover"
@@ -6632,6 +6891,7 @@ const UnitNotesPanel = ({
                             </div>
                         </div>
                         <textarea
+                            maxLength={500}
                             value={value}
                             onChange={(event) => onChange(event.target.value)}
                             placeholder="Add reminders, follow-ups, or move-in prep details…"
@@ -6639,7 +6899,7 @@ const UnitNotesPanel = ({
                         />
                         <div className="mt-2 flex items-center justify-between px-1">
                             <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Tip: Use short action-oriented notes.</p>
-                            <p className="text-[11px] font-black text-zinc-500 dark:text-zinc-400">{noteLength} chars</p>
+                            <p className="text-[11px] font-black text-zinc-500 dark:text-zinc-400">{noteLength} / 500 chars</p>
                         </div>
                     </div>
                 )}
@@ -6711,7 +6971,7 @@ export const SidebarBlockLibrary = ({
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                         <span className="material-icons-round text-zinc-400 text-lg">search</span>
                     </span>
-                    <input className={`w-full rounded-lg border pl-10 pr-3 py-2 text-sm placeholder-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary ${isDark ? 'border-zinc-700 bg-background-dark text-zinc-200' : 'border-border bg-zinc-50 text-zinc-700'}`} placeholder="Search components…" type="text" />
+                    <input maxLength={60} className={`w-full rounded-lg border pl-10 pr-3 py-2 text-sm placeholder-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary ${isDark ? 'border-zinc-700 bg-background-dark text-zinc-200' : 'border-border bg-zinc-50 text-zinc-700'}`} placeholder="Search components…" type="text" />
                 </div>
             </div>
             <div className={`flex-1 overflow-y-auto p-4 space-y-6 ${styles['scrollbarHide'] || ''}`}>

@@ -93,7 +93,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                     <label htmlFor="facebook-url" className="text-[9px] font-black tracking-widest text-muted-foreground uppercase flex items-center gap-2">
                         <Facebook size={12} className="text-[#1877F2]" /> Facebook URL
                     </label>
-                    <input 
+                    <input maxLength={120} 
                         id="facebook-url"
                         type="url" 
                         value={socials.facebook || ""} 
@@ -106,7 +106,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                     <label htmlFor="twitter-url" className="text-[9px] font-black tracking-widest text-muted-foreground uppercase flex items-center gap-2">
                         <Twitter size={12} className="text-[#1DA1F2]" /> Twitter URL
                     </label>
-                    <input 
+                    <input maxLength={120} 
                         id="twitter-url"
                         type="url" 
                         value={socials.twitter || ""} 
@@ -119,7 +119,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                     <label htmlFor="linkedin-url" className="text-[9px] font-black tracking-widest text-muted-foreground uppercase flex items-center gap-2">
                         <Linkedin size={12} className="text-[#0A66C2]" /> LinkedIn URL
                     </label>
-                    <input 
+                    <input maxLength={120} 
                         id="linkedin-url"
                         type="url" 
                         value={socials.linkedin || ""} 
@@ -132,7 +132,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                     <label htmlFor="instagram-url" className="text-[9px] font-black tracking-widest text-muted-foreground uppercase flex items-center gap-2">
                         <Instagram size={12} className="text-[#E4405F]" /> Instagram URL
                     </label>
-                    <input 
+                    <input maxLength={120} 
                         id="instagram-url"
                         type="url" 
                         value={socials.instagram || ""} 

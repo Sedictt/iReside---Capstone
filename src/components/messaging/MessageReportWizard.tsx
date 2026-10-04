@@ -356,7 +356,7 @@ export function MessageReportWizard({
                     Message Identifier
                   </label>
                   <div className="group relative">
-                    <input
+                    <input maxLength={60}
                       id="message-id"
                       value={state.reportedMessageId}
                       onChange={(e) => dispatch({ type: "SET_REPORTED_MESSAGE_ID", payload: normalizePastedMessageId(e.target.value) })}
@@ -381,7 +381,7 @@ export function MessageReportWizard({
                   <label htmlFor="exact-content" className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled mb-3 ml-1">
                     Exact Content (Optional)
                   </label>
-                  <textarea
+                  <textarea maxLength={500}
                     id="exact-content"
                     value={state.exactMessage}
                     onChange={(e) => dispatch({ type: "SET_EXACT_MESSAGE", payload: e.target.value })}
@@ -396,7 +396,7 @@ export function MessageReportWizard({
                 <label htmlFor="incident-narrative" className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled mb-3 ml-1">
                   Incident Narrative
                 </label>
-                <textarea
+                <textarea maxLength={500}
                   id="incident-narrative"
                   value={state.details}
                   onChange={(e) => dispatch({ type: "SET_DETAILS", payload: e.target.value })}

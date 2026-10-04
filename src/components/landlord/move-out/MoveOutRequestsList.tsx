@@ -273,7 +273,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
 
  <div className="relative w-full md:w-80">
  <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
- <input
+ <input maxLength={60}
  type="text"
  placeholder="Search by tenant, unit, or property..."
  value={searchQuery}

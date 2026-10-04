@@ -6,6 +6,8 @@ import { MessageSquare, X, Minus, Send, MoreHorizontal, Phone, Video } from "luc
 import { cn } from "@/lib/utils";
 import { AnimatePresence, m as motion } from "framer-motion";
 
+import { getSystemAvatarUrl } from "@/lib/constants";
+
 interface ChatUser {
     id: string;
     name: string;
@@ -19,7 +21,7 @@ const mockMessages: ChatUser[] = [
     {
         id: "usr_1",
         name: "John Doe",
-        avatar: "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?auto=format&fit=crop&w=150&q=80",
+        avatar: getSystemAvatarUrl(4),
         lastMessage: "Is it possible to move in earlier than the agreed date?",
         time: "15m ago",
         unread: true
@@ -27,14 +29,14 @@ const mockMessages: ChatUser[] = [
     {
         id: "usr_2",
         name: "Sarah Wilson",
-        avatar: "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80",
+        avatar: getSystemAvatarUrl(7),
         lastMessage: "Thank you for the quick repair on the faucet!",
         time: "1h ago"
     },
     {
         id: "usr_3",
         name: "Alex Reyes",
-        avatar: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=150&q=80",
+        avatar: getSystemAvatarUrl(12),
         lastMessage: "I'll be paying the rent this Friday.",
         time: "Yesterday"
     }
@@ -201,7 +203,7 @@ export function HeaderChatWidget() {
                                         <MoreHorizontal className="size-4" />
                                     </button>
                                     <div className="flex-1 bg-white/5 border border-white/10 rounded-full flex items-center px-3 py-1.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
-                                        <input
+                                        <input maxLength={500}
                                             type="text"
                                             placeholder="Type a message…"
                                             className="w-full bg-transparent border-none focus:outline-none text-sm text-white placeholder:text-neutral-500"

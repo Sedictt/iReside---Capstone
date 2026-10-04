@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react";
 
-export function useViewMode(key: string): ["list" | "grid", (v: "list" | "grid") => void] {
-  const [view, setView] = useState<"list" | "grid">("list");
+export function useViewMode(
+  key: string,
+  defaultMode: "list" | "grid" = "list"
+): ["list" | "grid", (v: "list" | "grid") => void] {
+  const [view, setView] = useState<"list" | "grid">(defaultMode);
 
   // Read from localStorage on mount
   useEffect(() => {

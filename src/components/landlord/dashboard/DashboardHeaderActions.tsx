@@ -35,6 +35,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { useNotifications } from "@/context/NotificationContext";
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 import { MissionTriggerButton } from "@/components/landlord/dashboard/MissionTriggerButton";
+import { useLanguage } from "@/hooks/useLanguage";
 
 type SearchResultType = "action" | "page" | "setting" | "property" | "unit" | "maintenance" | "tenant" | "invoice";
 
@@ -369,10 +370,12 @@ function formatTimeAgo(value: string) {
 interface DashboardHeaderActionsProps {
     onQuestPanelOpen: () => void;
     isTourHighlighted?: boolean;
+    className?: string;
 }
 
-export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = false }: DashboardHeaderActionsProps) {
+export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = false, className }: DashboardHeaderActionsProps) {
     const router = useRouter();
+    const { t, isFilipino } = useLanguage();
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -640,8 +643,9 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
             <div 
                 data-tour-id="tour-dashboard-navigation"
                 className={cn(
-                    "absolute top-3 right-3 sm:top-4 sm:right-4 md:top-8 md:right-8 z-50 flex items-center gap-1.5 sm:gap-2 md:gap-4 transition-all duration-300 rounded-2xl",
-                    isTourHighlighted && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse bg-background/80 backdrop-blur-md p-1.5"
+                    "relative z-50 flex items-center gap-1.5 sm:gap-2 md:gap-3 transition-all duration-300 rounded-2xl",
+                    isTourHighlighted && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse bg-background/80 backdrop-blur-md p-1.5",
+                    className
                 )}
             >
                 {isTourHighlighted && (
@@ -655,11 +659,11 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
 
                 {/* Fast Omni-Search Bar */}
                 <div className="relative group hidden sm:block" ref={searchRef}>
-                    <Search className="absolute left-4 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
-                    <input
+                    <Search className="absolute left-3.5 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                    <input maxLength={60}
                         ref={inputRef}
                         type="text"
-                        placeholder="Looking for something specific? Search unit, tenant, or concern…"
+                        placeholder={isFilipino ? "Maghanap ng kwarto, tenant, aksyon…" : "Search unit, tenant, or action…"}
                         value={searchQuery}
                         onChange={(e) => {
                             setSearchQuery(e.target.value);
@@ -671,7 +675,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                             }
                         }}
                         onKeyDown={handleKeyDown}
-                        className="w-64 rounded-2xl neumorphic-inset bg-background/50 py-2.5 pl-11 pr-4 text-sm text-foreground transition-all placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:w-80"
+                        className="w-48 md:w-56 lg:w-64 rounded-xl sm:rounded-2xl neumorphic-extruded bg-card/90 backdrop-blur-xl py-2 pl-10 pr-4 text-xs sm:text-sm text-foreground transition-all placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:w-64 lg:focus:w-80"
                     />
                     
                     {isSearchOpen && searchQuery.trim() && (

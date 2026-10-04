@@ -229,6 +229,14 @@ interface GlassInputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 const GlassInput = ({ icon: Icon, label, error, id, nextFieldId, onKeyDown, ...props }: GlassInputProps) => {
+    const isTextType = !props.type || ['text', 'email', 'search', 'tel', 'url'].includes(props.type);
+    const resolvedMaxLength = props.maxLength ?? (
+        props.type === 'email' ? 50 :
+        props.type === 'tel' ? 15 :
+        props.type === 'search' ? 60 :
+        props.type === 'password' ? 16 :
+        isTextType ? 120 : undefined
+    );
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" && nextFieldId) {
             e.preventDefault();
@@ -252,7 +260,7 @@ const GlassInput = ({ icon: Icon, label, error, id, nextFieldId, onKeyDown, ...p
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-all duration-500 transform group-focus-within:rotate-[5deg] group-focus-within:scale-110 group-focus-within:text-primary">
                     <Icon size={18} strokeWidth={1.5} />
                 </div>
-                <input
+                <input maxLength={resolvedMaxLength}
                     {...props}
                     id={id}
                     onKeyDown={handleKeyDown}
@@ -1021,6 +1029,7 @@ export function WalkInApplicationModal({
                                                             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                                                             <input
                                                                 type="text"
+                                                                maxLength={60}
                                                                 placeholder="Filter unit by name or number..."
                                                                 value={unitSearchQuery}
                                                                 onChange={(e) => setUnitSearchQuery(e.target.value)}
@@ -1235,7 +1244,9 @@ export function WalkInApplicationModal({
                                                          </div>
                                                          <input
                                                              id="move-in-date"
-                                                             type="date"
+                                                            type="date"
+                                                            min={new Date().toISOString().split("T")[0]}
+                                                            max="2099-12-31"
                                                              value={formData.move_in_date}
                                                              onChange={(e) => updateField("move_in_date", e.target.value, ["move_in_date"])}
                                                              className="h-15 w-full rounded-2xl bg-transparent py-4 pl-12 pr-4 text-sm font-medium tracking-tight text-foreground outline-none transition-all placeholder:text-muted-foreground focus-visible:ring-0 [color-scheme:light] dark:[color-scheme:dark]"
@@ -1342,12 +1353,16 @@ export function WalkInApplicationModal({
                                         <section className="space-y-6">
                                               <div className="flex items-center gap-4 text-muted-foreground">
                                                   <FileCheck size={18} strokeWidth={2.5} />
-                                                 <label htmlFor="additional-notes" className="cursor-pointer text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground">Additional Notes</label>
+                                                 <div className="flex flex-1 items-center justify-between">
+ <label htmlFor="additional-notes" className="cursor-pointer text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground">Additional Notes</label>
+ <span className="text-[10px] font-medium text-muted-foreground/70">{formData.message.length} / 500</span>
+ </div>
                                               </div>
                                             <div className="relative isolate">
                                                 <div className="absolute inset-0 -z-10 rounded-[2rem] border border-border bg-card/90 transition-all duration-300 hover:bg-card" />
                                                 <textarea
-                                                     id="additional-notes"
+                                                        id="additional-notes"
+                                                        maxLength={500}
                                                      placeholder="Add internal notes about the applicant's character, urgent requests, or specific unit adjustments here..."
                                                      className={cn(
                                                          "min-h-[180px] w-full resize-none bg-transparent p-7 text-sm font-medium leading-relaxed text-foreground outline-none transition-all placeholder:text-muted-foreground",
@@ -1499,6 +1514,8 @@ export function WalkInApplicationModal({
                                                                 <div className="absolute inset-0 -z-10 rounded-2xl border border-border bg-card/90" />
                                                                 <input
                                                                     type="date"
+                                                                    min="2000-01-01"
+                                                                    max="2099-12-31"
                                                                     value={leaseData.start_date}
                                                                     onChange={(e) => setLeaseData(prev => ({ ...prev, start_date: e.target.value  }))}
                                                                     className="h-15 w-full rounded-2xl bg-transparent px-4 py-4 text-sm font-medium text-foreground outline-none [color-scheme:light] dark:[color-scheme:dark]"
@@ -1514,6 +1531,8 @@ export function WalkInApplicationModal({
                                                                 <div className="absolute inset-0 -z-10 rounded-2xl border border-border bg-card/90" />
                                                                 <input
                                                                     type="date"
+                                                                    min="2000-01-01"
+                                                                    max="2099-12-31"
                                                                     value={leaseData.end_date}
                                                                     onChange={(e) => setLeaseData(prev => ({ ...prev, end_date: e.target.value  }))}
                                                                     className="h-15 w-full rounded-2xl bg-transparent px-4 py-4 text-sm font-medium text-foreground outline-none [color-scheme:light] dark:[color-scheme:dark]"
@@ -1531,6 +1550,7 @@ export function WalkInApplicationModal({
                                                                 <input
                                                                     type="text"
                                                                     inputMode="numeric"
+                                                                    maxLength={12}
                                                                     className="h-15 w-full rounded-2xl bg-transparent py-4 pl-8 pr-4 text-sm font-medium font-mono text-foreground outline-none"
                                                                     value={leaseData.monthly_rent ? leaseData.monthly_rent.toLocaleString("en-US", { maximumFractionDigits: 2 }) : ""}
                                                                     onChange={(e) => {
@@ -1551,6 +1571,7 @@ export function WalkInApplicationModal({
                                                                 <input
                                                                     type="text"
                                                                     inputMode="numeric"
+                                                                    maxLength={12}
                                                                     className="h-15 w-full rounded-2xl bg-transparent py-4 pl-8 pr-4 text-sm font-medium font-mono text-foreground outline-none"
                                                                     value={leaseData.security_deposit ? leaseData.security_deposit.toLocaleString("en-US", { maximumFractionDigits: 2 }) : ""}
                                                                     onChange={(e) => {

@@ -50,18 +50,18 @@ export function DashboardTourCompletionModal({
                 {/* Headings */}
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-600 dark:text-emerald-400">
+                        <span className="text-xs font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
                             Onboarding Complete
                         </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                        <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
                             All Features Unlocked
                         </span>
                     </div>
                     <h1 id="dashboard-tour-complete-title" className="text-2xl sm:text-3xl font-black tracking-tight text-foreground leading-tight">
                         You&apos;re All Set Up!
                     </h1>
-                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                        Congratulations! You have completed the 5-stage setup{propertyName ? <> for <span className="font-bold text-foreground">{propertyName}</span></> : ""}. Your property, visual unit map, billing rails, tenants, and operational dashboard are fully ready for daily rental operations.
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                        Congratulations! You have completed the 5-stage setup{propertyName ? <> for <span className="font-bold text-foreground">{propertyName}</span></> : ""}. Your property, unit map, utility rates, tenants, and dashboard are ready for daily operations.
                     </p>
                 </div>
 
@@ -71,22 +71,22 @@ export function DashboardTourCompletionModal({
                         Where would you like to go next?
                     </h3>
 
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-2.5">
                         <button
                             type="button"
                             onClick={() => onNavigate("/landlord/unit-map")}
-                            className="flex items-center justify-between p-3.5 rounded-xl border border-border/70 bg-card hover:bg-muted/50 transition-all text-left group cursor-pointer active:scale-98"
+                            className="flex items-center justify-between p-4 rounded-xl border border-border/70 bg-card hover:bg-muted/50 transition-all text-left group cursor-pointer active:scale-98"
                         >
-                            <div className="flex items-center gap-3">
-                                <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                                    <Map className="size-4" />
+                            <div className="flex items-center gap-3.5">
+                                <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
+                                    <Map className="size-5" />
                                 </div>
                                 <div>
-                                    <h4 className="text-xs font-black text-foreground group-hover:text-primary transition-colors">
-                                        Open 2D Visual Map
+                                    <h4 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                                        Open Unit Map
                                     </h4>
-                                    <p className="text-[11px] text-muted-foreground">
-                                        Review unit occupancy, tenant assignments, and room layout.
+                                    <p className="text-xs sm:text-sm text-muted-foreground">
+                                        See occupied units, who is staying where, and vacant rooms.
                                     </p>
                                 </div>
                             </div>
@@ -96,18 +96,18 @@ export function DashboardTourCompletionModal({
                         <button
                             type="button"
                             onClick={() => onNavigate("/landlord/tenants")}
-                            className="flex items-center justify-between p-3.5 rounded-xl border border-border/70 bg-card hover:bg-muted/50 transition-all text-left group cursor-pointer active:scale-98"
+                            className="flex items-center justify-between p-4 rounded-xl border border-border/70 bg-card hover:bg-muted/50 transition-all text-left group cursor-pointer active:scale-98"
                         >
-                            <div className="flex items-center gap-3">
-                                <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                                    <Users className="size-4" />
+                            <div className="flex items-center gap-3.5">
+                                <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
+                                    <Users className="size-5" />
                                 </div>
                                 <div>
-                                    <h4 className="text-xs font-black text-foreground group-hover:text-primary transition-colors">
-                                        Manage Resident Directory
+                                    <h4 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                                        View Tenant Directory
                                     </h4>
-                                    <p className="text-[11px] text-muted-foreground">
-                                        View tenant profiles, digital leases, and lease renewal dates.
+                                    <p className="text-xs sm:text-sm text-muted-foreground">
+                                        See tenant contact info, contracts, and payment history.
                                     </p>
                                 </div>
                             </div>
@@ -121,7 +121,7 @@ export function DashboardTourCompletionModal({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="w-full flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-xs font-black bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-105 transition-all cursor-pointer active:scale-95"
+                        className="w-full h-12 flex items-center justify-center gap-2 px-7 rounded-2xl text-sm font-bold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-105 transition-all cursor-pointer active:scale-95"
                     >
                         <LayoutDashboard className="size-4" />
                         <span>Explore Operational Dashboard</span>

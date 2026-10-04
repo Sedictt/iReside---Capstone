@@ -97,6 +97,22 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
             if (typeof window !== 'undefined') {
                 try {
                     localStorage.setItem('iReside_cached_properties', JSON.stringify(options))
+
+                    // Self-heal onboarding flags when real database records confirm existing operations
+                    options.forEach((p) => {
+                        if (p.isMapSetupComplete || (p.placedCount ?? 0) > 0 || p.hasTenants) {
+                            localStorage.setItem(`ireside_map_setup_complete_${p.id}`, "true")
+                        }
+                        if (p.hasTenants) {
+                            localStorage.setItem(`ireside.billing_rails_complete.${p.id}`, "true")
+                        }
+                    })
+
+                    if (options.some((p) => p.hasTenants)) {
+                        localStorage.setItem("ireside.billing_rails_complete", "true")
+                        localStorage.setItem("ireside.onboarding_completed", "true")
+                        localStorage.setItem("ireside.dashboard_tour_complete", "true")
+                    }
                 } catch {}
             }
 

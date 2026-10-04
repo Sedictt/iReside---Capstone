@@ -35,7 +35,9 @@ export function LandlordUnitMapLightbox() {
         window.localStorage.getItem(`ireside.awaiting_tenant_setup.${activePropertyId}`) === "true" ||
         properties.some((p) => window.localStorage.getItem(`ireside_map_setup_complete_${p.id}`) === "true")
     );
-    const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete) || isLocallyComplete;
+    const hasConfiguredMap =
+        properties.some((p) => p.isMapSetupComplete || (p.placedCount ?? 0) > 0 || p.hasTenants) ||
+        isLocallyComplete;
 
     const isUnitMapPage = Boolean(pathname?.startsWith("/landlord/unit-map"));
 
@@ -49,6 +51,11 @@ export function LandlordUnitMapLightbox() {
         !hasConfiguredMap &&
         pathname !== "/landlord/properties/new" &&
         (!isUnitMapPage || !isDismissed);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        window.dispatchEvent(new CustomEvent("ireside-unit-map-greeting-change", { detail: { isVisible, propertyId: activePropertyId } }));
+    }, [isVisible, activePropertyId]);
 
     if (!isVisible) return null;
 
@@ -66,6 +73,7 @@ export function LandlordUnitMapLightbox() {
             if (typeof window !== "undefined") {
                 try {
                     window.sessionStorage.setItem(`ireside.unit_map_intro_dismissed.${activePropertyId}`, "true");
+                    window.dispatchEvent(new CustomEvent("ireside-unit-map-greeting-dismissed", { detail: { propertyId: activePropertyId } }));
                 } catch {}
             }
         } else {
@@ -79,6 +87,7 @@ export function LandlordUnitMapLightbox() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="unit-map-setup-lightbox-title"
+            data-ireside-greeting="unit-map"
         >
             {/* Dimmed Non-Dismissible Background */}
             <div className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300 pointer-events-auto" />

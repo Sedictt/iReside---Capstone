@@ -130,7 +130,7 @@ export function CommunityHeader({
                         <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center xl:max-w-md">
                             <div className="relative flex-1">
                                 <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                                <input
+                                <input maxLength={60}
                                     type="text"
                                     placeholder="Search discussions..."
                                     value={searchQuery}

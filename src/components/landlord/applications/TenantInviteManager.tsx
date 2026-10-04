@@ -605,7 +605,7 @@ export function TenantInviteManager({
                                             </span>
                                             <input
                                                 type="number"
-                                                min="0"
+                                                min="0" max="9999999.99"
                                                 step="500"
                                                 value={customAdvance}
                                                 onChange={(e) => setCustomAdvance(e.target.value)}
@@ -653,7 +653,7 @@ export function TenantInviteManager({
                                             </span>
                                             <input
                                                 type="number"
-                                                min="0"
+                                                min="0" max="9999999.99"
                                                 step="500"
                                                 value={customDeposit}
                                                 onChange={(e) => setCustomDeposit(e.target.value)}
@@ -809,7 +809,9 @@ export function TenantInviteManager({
                                 </div>
                                 <input
                                     id="expires-at"
-                                    type="datetime-local"
+                                                type="datetime-local"
+                                                min={new Date().toISOString().slice(0, 16)}
+                                                max="2099-12-31T23:59"
                                     value={expiresAt}
                                     onChange={(event) => {
                                         setExpiresAt(event.target.value);
