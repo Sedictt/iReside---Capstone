@@ -87,7 +87,6 @@ export function TenantProfileView() {
 
     const fullName = 
         profile?.full_name || 
-        `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 
         user?.user_metadata?.full_name || 
         user?.user_metadata?.name || 
         'Resident';

@@ -65,7 +65,6 @@ export function TenantHomeView() {
 
     const rawName = 
         (data as any)?.userName ||
-        profile?.first_name ||
         profile?.full_name ||
         user?.user_metadata?.first_name ||
         user?.user_metadata?.full_name ||
