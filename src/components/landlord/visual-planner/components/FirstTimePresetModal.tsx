@@ -59,15 +59,15 @@ export const FirstTimePresetModal = ({
         {
             id: "double-loaded",
             title: "Double Loaded",
-            tag: "Central Corridor",
-            description: "Units arranged on both sides of a central hallway. Maximizes footprint efficiency for apartments and dorms.",
+            tag: "Hallway in Middle",
+            description: "Rooms on both sides of a central hallway. Most common for dorms, boarding houses, and apartment buildings.",
             diagram: (
                 <div className="flex h-24 w-full flex-col justify-between rounded-xl border border-border/80 bg-muted/40 p-2.5">
                     {/* Top unit row */}
                     <div className="flex gap-1.5 justify-center">
                         {[1, 2, 3, 4].map((i) => (
                             <div key={`dl-top-${i}`} className="h-5 flex-1 rounded bg-primary/25 border border-primary/40 flex items-center justify-center">
-                                <span className="text-[8px] font-bold text-primary">Unit</span>
+                                <span className="text-[8px] font-bold text-primary">Room</span>
                             </div>
                         ))}
                     </div>
@@ -79,7 +79,7 @@ export const FirstTimePresetModal = ({
                     <div className="flex gap-1.5 justify-center">
                         {[1, 2, 3, 4].map((i) => (
                             <div key={`dl-bot-${i}`} className="h-5 flex-1 rounded bg-primary/25 border border-primary/40 flex items-center justify-center">
-                                <span className="text-[8px] font-bold text-primary">Unit</span>
+                                <span className="text-[8px] font-bold text-primary">Room</span>
                             </div>
                         ))}
                     </div>
@@ -89,21 +89,21 @@ export const FirstTimePresetModal = ({
         {
             id: "single-loaded",
             title: "Single Loaded",
-            tag: "Linear Wing",
-            description: "Single row of units along an open hallway. Ideal for exterior balconies, motel-style corridors, or narrow sites.",
+            tag: "Single Row",
+            description: "Rooms in a single line with an open corridor or balcony walkway along the front.",
             diagram: (
                 <div className="flex h-24 w-full flex-col justify-center gap-2 rounded-xl border border-border/80 bg-muted/40 p-2.5">
                     {/* Top unit row */}
                     <div className="flex gap-1.5 justify-center">
                         {[1, 2, 3, 4].map((i) => (
                             <div key={`sl-top-${i}`} className="h-7 flex-1 rounded bg-primary/25 border border-primary/40 flex items-center justify-center">
-                                <span className="text-[8px] font-bold text-primary">Unit</span>
+                                <span className="text-[8px] font-bold text-primary">Room</span>
                             </div>
                         ))}
                     </div>
                     {/* Single Corridor */}
                     <div className="h-5 w-full rounded bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
-                        <span className="text-[8px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Open Corridor</span>
+                        <span className="text-[8px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Open Walkway</span>
                     </div>
                 </div>
             ),
@@ -111,18 +111,18 @@ export const FirstTimePresetModal = ({
         {
             id: "u-shape",
             title: "U-Shape",
-            tag: "Courtyard Core",
-            description: "Three connected wings wrapping a central courtyard or open space. Offers natural airflow and garden views.",
+            tag: "Courtyard Center",
+            description: "Rooms wrap around three sides with an open center patio, garden, or light well.",
             diagram: (
                 <div className="relative h-24 w-full rounded-xl border border-border/80 bg-muted/40 p-2">
                     {/* Top wing */}
                     <div className="h-4.5 w-full rounded bg-primary/25 border border-primary/40 flex items-center justify-center">
-                        <span className="text-[8px] font-bold text-primary">North Wing</span>
+                        <span className="text-[8px] font-bold text-primary">Top Wing</span>
                     </div>
                     <div className="mt-1 flex justify-between h-13">
                         {/* West wing */}
                         <div className="w-8 rounded bg-primary/25 border border-primary/40 flex items-center justify-center">
-                            <span className="text-[7px] font-bold text-primary -rotate-90">West</span>
+                            <span className="text-[7px] font-bold text-primary -rotate-90">Left</span>
                         </div>
                         {/* Center Courtyard */}
                         <div className="flex-1 mx-1.5 rounded border border-dashed border-emerald-500/40 bg-emerald-500/10 flex items-center justify-center">
@@ -130,7 +130,7 @@ export const FirstTimePresetModal = ({
                         </div>
                         {/* East wing */}
                         <div className="w-8 rounded bg-primary/25 border border-primary/40 flex items-center justify-center">
-                            <span className="text-[7px] font-bold text-primary rotate-90">East</span>
+                            <span className="text-[7px] font-bold text-primary rotate-90">Right</span>
                         </div>
                     </div>
                 </div>
@@ -139,8 +139,8 @@ export const FirstTimePresetModal = ({
         {
             id: "l-shape",
             title: "L-Shape",
-            tag: "Corner Wing",
-            description: "Two perpendicular wings connecting at a central joint. Designed for corner lots and dual-exposure buildings.",
+            tag: "Corner Building",
+            description: "Two connected wings forming an L-shape, ideal for corner lots or properties with two wings.",
             diagram: (
                 <div className="relative h-24 w-full rounded-xl border border-border/80 bg-muted/40 p-2">
                     {/* Top wing */}
@@ -154,7 +154,7 @@ export const FirstTimePresetModal = ({
                         </div>
                         {/* Open yard */}
                         <div className="flex-1 ml-1.5 rounded border border-dashed border-border/60 bg-background/40 flex items-center justify-center">
-                            <span className="text-[8px] font-bold text-muted-foreground/60">Open Lot Area</span>
+                            <span className="text-[8px] font-bold text-muted-foreground/60">Open Area</span>
                         </div>
                     </div>
                 </div>
@@ -199,7 +199,7 @@ export const FirstTimePresetModal = ({
                             type="button"
                             onClick={onChooseManual}
                             title="Close and edit manually"
-                            className="absolute right-6 top-6 z-20 rounded-full p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+                            className="absolute right-6 top-6 z-20 rounded-full p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
                         >
                             <X className="size-5" />
                         </button>
@@ -209,11 +209,11 @@ export const FirstTimePresetModal = ({
                             <div className="flex items-center gap-2 mb-3">
                                 <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.2em] text-primary">
                                     <Layers className="size-4" />
-                                    Step 2 of Onboarding • Unit Map Setup
+                                    Step 2 of 5 • Unit Map Setup
                                 </span>
                                 {unitCount > 0 && (
                                     <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                                        {unitCount} {unitCount === 1 ? "Unit" : "Units"} • {floorCount} {floorCount === 1 ? "Floor" : "Floors"}
+                                        {unitCount} {unitCount === 1 ? "Room" : "Rooms"} • {floorCount} {floorCount === 1 ? "Floor" : "Floors"}
                                     </span>
                                 )}
                             </div>
@@ -222,10 +222,10 @@ export const FirstTimePresetModal = ({
                                 id="layout-preset-modal-title"
                                 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground"
                             >
-                                Choose a Unit-map Layout
+                                Choose How Your Hallway Looks
                             </h2>
                             <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-3xl font-medium">
-                                Your units are on the canvas but haven&apos;t been organized into a final unit-map layout yet. Choose a preset to automatically organize units and hallways, or lay them out manually by dragging and dropping units and adding elements like stairs from the sidebar.
+                                Pick the hallway layout that looks most like your building. We&apos;ll automatically place your rooms and hallways on the map. You can still adjust everything on the canvas later.
                             </p>
                         </div>
 
@@ -238,7 +238,7 @@ export const FirstTimePresetModal = ({
                                         type="button"
                                         onClick={() => onSelectPreset(preset.id)}
                                         className={cn(
-                                            "group text-left flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-4 sm:p-5",
+                                            "group text-left flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-4 sm:p-5 cursor-pointer",
                                             "transition-all duration-200 hover:border-primary hover:shadow-lg hover:shadow-primary/5 active:scale-[0.99]",
                                             "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                                         )}
@@ -278,10 +278,10 @@ export const FirstTimePresetModal = ({
                             <div className="space-y-1">
                                 <p className="text-sm font-bold text-foreground flex items-center gap-2">
                                     <Move className="size-4 text-primary" />
-                                    Prefer to arrange it yourself?
+                                    Want to arrange rooms yourself?
                                 </p>
                                 <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                    You can lay out your units manually by drag and dropping the units themselves and add elements such as stairs from the sidebar.
+                                    You can skip the presets and arrange each room on the canvas yourself anytime.
                                 </p>
                             </div>
                             
@@ -294,7 +294,7 @@ export const FirstTimePresetModal = ({
                                     "transition-all active:scale-95 shadow-sm min-h-[44px] cursor-pointer"
                                 )}
                             >
-                                <span>Lay Out Manually</span>
+                                <span>Arrange Manually</span>
                                 <ArrowRight className="size-4 text-muted-foreground" />
                             </button>
                         </div>

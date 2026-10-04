@@ -710,23 +710,23 @@ export function MapSetupWizard({
                     <div>
                         <div className="flex items-center gap-2">
                             <h1 className="text-sm font-bold tracking-tight text-foreground">{propertyName}</h1>
-                            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground border border-border/60">
-                                Unit Map Setup
+                            <span className="inline-flex items-center rounded-md bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-bold border border-primary/20">
+                                Step 2 of 5: Unit Map
                             </span>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                            Step 2 of Onboarding • Arrange units before generating unit-map canvas
+                            Review your rooms and floors before generating your unit map
                         </p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-5">
+                <div className="flex items-center gap-4">
                     <div className="hidden md:flex flex-col items-end gap-1">
                         <div className="flex items-center gap-1.5 text-xs">
                             {isAllAssigned ? (
-                                <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                <span className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                                     <CheckCircle2 className="size-3.5" />
-                                    All {totalUnits} Units Assigned
+                                    All {totalUnits} Rooms Assigned
                                 </span>
                             ) : (
                                 <span className="font-medium text-muted-foreground">
@@ -762,29 +762,13 @@ export function MapSetupWizard({
                             <Compass className="size-3.5" />
                             <span className="hidden sm:inline">Guided Tour</span>
                         </button>
-
-                        <button
-                            data-tour-id="tour-wizard-bulk"
-                            onClick={() => setIsBulkOrganizerOpen(!isBulkOrganizerOpen)}
-                            disabled={isSaving}
-                            title="Open bulk unit distribution"
-                            className={cn(
-                                "inline-flex items-center gap-2 h-9 px-3 rounded-xl border text-xs font-semibold transition-all active:scale-95 disabled:opacity-50 cursor-pointer",
-                                isBulkOrganizerOpen 
-                                    ? "bg-primary border-primary text-primary-foreground shadow-xs" 
-                                    : "bg-card border-border hover:bg-muted text-foreground"
-                            )}
-                        >
-                            <SlidersHorizontal className="size-3.5" />
-                            <span className="hidden sm:inline">Bulk Distribution</span>
-                        </button>
                         
                         <button
                             data-tour-id="tour-wizard-generate"
                             onClick={handleAutoPlace}
                             disabled={isSaving || floorConfigs.length === 0 || totalUnits === 0}
                             className={cn(
-                                "group relative inline-flex items-center gap-2 h-9 rounded-xl px-4 text-xs font-semibold transition-all duration-200 shadow-sm active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed bg-primary text-primary-foreground hover:brightness-105 cursor-pointer",
+                                "group relative inline-flex items-center gap-2 h-9 rounded-xl px-4 text-xs font-bold transition-all duration-200 shadow-sm active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed bg-primary text-primary-foreground hover:brightness-105 cursor-pointer",
                                 isAllAssigned && "ring-2 ring-primary/30",
                                 effectiveTourOpen && tourStepIndex === 3 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_35px_rgba(155,119,255,0.95)] animate-pulse scale-105 brightness-110 font-black z-30"
                             )}
@@ -800,7 +784,7 @@ export function MapSetupWizard({
                             ) : (
                                 <ArrowRight className="size-3.5 group-hover:translate-x-0.5 transition-transform" />
                             )}
-                            <span>Generate Unit-map</span>
+                            <span>Generate Unit Map</span>
                         </button>
                     </div>
                 </div>
@@ -853,7 +837,7 @@ export function MapSetupWizard({
                                 <div>
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="text-[11px] font-bold text-primary uppercase tracking-wider">
-                                            Step 2 of Onboarding
+                                            Step 2 of 5: Unit Map
                                         </span>
                                         <span className="text-[11px] text-muted-foreground">•</span>
                                         <span className="text-xs font-semibold text-muted-foreground">
@@ -862,15 +846,15 @@ export function MapSetupWizard({
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                                            Organize Units by Floor
+                                            Check Your Rooms & Floors
                                         </h1>
                                         <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-semibold">
                                             <Move className="size-3.5" />
-                                            <span>Drag & Drop Enabled</span>
+                                            <span>Drag or Pick Floor</span>
                                         </div>
                                     </div>
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        Grab and drag unit cards between floor boards to arrange your building layout.
+                                        We organized your rooms across each floor. Everything is ready, but you can move rooms or change numbers below if you want.
                                     </p>
                                 </div>
 
@@ -893,7 +877,7 @@ export function MapSetupWizard({
                                             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
                                         >
                                             <Hash className="size-3.5 text-primary" />
-                                            <span>Renumber</span>
+                                            <span>Renumber Rooms</span>
                                         </button>
 
                                         {floorConfigs.length > 1 && (
@@ -906,20 +890,21 @@ export function MapSetupWizard({
                                                     className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
                                                 >
                                                     <Equal className="size-3.5 text-primary" />
-                                                    <span>Distribute Evenly</span>
+                                                    <span>Divide Evenly</span>
                                                 </button>
                                             </>
                                         )}
 
                                         <div className="h-4 w-px bg-border mx-0.5" />
                                         <button
+                                            data-tour-id="tour-wizard-bulk"
                                             type="button"
                                             onClick={() => setIsBulkOrganizerOpen(true)}
                                             disabled={isSaving}
                                             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
                                         >
                                             <SlidersHorizontal className="size-3.5 text-primary" />
-                                            <span>Bulk Distribute</span>
+                                            <span>Rooms Per Floor</span>
                                         </button>
                                     </div>
 
@@ -950,7 +935,7 @@ export function MapSetupWizard({
                                 {units.some(u => u.floor === -1) && (
                                     <div className="w-full">
                                         <FloorLane
-                                            floor={{ id: "unassigned", floor_number: -1, floor_key: "unassigned", display_name: "Unassigned Units (Holding Area)", sort_order: -999 }}
+                                            floor={{ id: "unassigned", floor_number: -1, floor_key: "unassigned", display_name: "Unassigned Rooms (Holding Area)", sort_order: -999 }}
                                             units={sortUnitsSequential(units.filter(u => u.floor === -1))}
                                             onRemove={() => {}}
                                             canRemove={false}
@@ -958,6 +943,8 @@ export function MapSetupWizard({
                                             canRemoveUnit={units.length > 1}
                                             highlightedUnitId={tourDraggableUnitId}
                                             isDropHighlighted={tourDestinationFloorNumber === -1}
+                                            availableFloors={floorConfigs}
+                                            onMoveToFloor={handleUpdateUnitFloor}
                                         />
                                     </div>
                                 )}
@@ -1030,13 +1017,15 @@ export function MapSetupWizard({
                                                 canRemoveUnit={units.length > 1}
                                                 highlightedUnitId={tourDraggableUnitId}
                                                 isDropHighlighted={tourDestinationFloorNumber === fc.floor_number}
+                                                availableFloors={floorConfigs}
+                                                onMoveToFloor={handleUpdateUnitFloor}
                                             />
                                         ))}
                                     </div>
                                 )}
                             </div>
 
-                            {/* Docked Completion Action Bar (Guides Eye Movement to Next Action) */}
+                            {/* Docked Completion Action Bar */}
                             <div className="sticky bottom-0 z-30 pt-4 pb-2 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-none">
                                 <div className="pointer-events-auto rounded-2xl border border-border/90 bg-card/98 backdrop-blur-xl p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <div className="flex items-center gap-3.5">
@@ -1047,32 +1036,32 @@ export function MapSetupWizard({
                                                 : "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30"
                                         )}>
                                             {isAllAssigned ? (
-                                                <CheckCircle2 className="size-5.5 stroke-[2.5]" />
+                                                <CheckCircle2 className="size-6 stroke-[2.5]" />
                                             ) : (
-                                                <Layers className="size-5.5" />
+                                                <Layers className="size-6" />
                                             )}
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
                                                 <h4 className="text-sm font-bold text-foreground">
                                                     {isAllAssigned 
-                                                        ? `All ${totalUnits} units assigned across ${floorConfigs.length} floors`
-                                                        : `${assignedUnitsCount} of ${totalUnits} units assigned (${totalUnits - assignedUnitsCount} unassigned)`
+                                                        ? `All ${totalUnits} rooms assigned across ${floorConfigs.length} floors`
+                                                        : `${assignedUnitsCount} of ${totalUnits} rooms assigned (${totalUnits - assignedUnitsCount} unassigned)`
                                                     }
                                                 </h4>
                                                 <span className={cn(
-                                                    "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                                                    "text-[10px] font-bold px-2.5 py-0.5 rounded-full border",
                                                     isAllAssigned
                                                         ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
                                                         : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
                                                 )}>
-                                                    {isAllAssigned ? "Ready to Launch" : "Action Needed"}
+                                                    {isAllAssigned ? "Ready to Build" : "Action Needed"}
                                                 </span>
                                             </div>
                                             <p className="text-xs text-muted-foreground mt-0.5">
                                                 {isAllAssigned
-                                                    ? "Your floor assignments are complete. Click Generate Unit-map in the header to automatically build your interactive architectural canvas."
-                                                    : "Drag remaining units to their respective floors or use quick actions to finish organizing."
+                                                    ? "Everything looks good! Click Generate Unit Map to create your interactive room layout."
+                                                    : "Assign remaining rooms to their floors or click Divide Evenly to finish quickly."
                                                 }
                                             </p>
                                         </div>
@@ -1084,11 +1073,30 @@ export function MapSetupWizard({
                                                 type="button"
                                                 onClick={handleDistributeEvenly}
                                                 disabled={isSaving}
-                                                className="px-3.5 py-2.5 rounded-xl border border-border bg-card hover:bg-muted text-xs font-semibold text-foreground transition-all shadow-xs"
+                                                className="px-4 py-2.5 rounded-xl border border-border bg-card hover:bg-muted text-xs font-bold text-foreground transition-all shadow-xs cursor-pointer"
                                             >
-                                                Distribute Evenly
+                                                Divide Evenly
                                             </button>
                                         )}
+
+                                        <button
+                                            type="button"
+                                            onClick={handleAutoPlace}
+                                            disabled={isSaving || floorConfigs.length === 0 || totalUnits === 0 || !isAllAssigned}
+                                            className={cn(
+                                                "inline-flex items-center gap-2 rounded-xl px-6 py-3 text-xs sm:text-sm font-bold transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer",
+                                                isAllAssigned
+                                                    ? "bg-primary text-primary-foreground hover:brightness-105 shadow-primary/20"
+                                                    : "bg-muted text-muted-foreground cursor-not-allowed"
+                                            )}
+                                        >
+                                            {isSaving ? (
+                                                <Loader2 className="size-4 animate-spin" />
+                                            ) : (
+                                                <ArrowRight className="size-4" />
+                                            )}
+                                            <span>Generate Unit Map</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -1127,13 +1135,13 @@ export function MapSetupWizard({
                                         <Hash className="size-5" />
                                     </div>
                                     <div>
-                                        <h3 className="text-base font-bold text-foreground">Customize Unit Numbering</h3>
-                                        <p className="text-xs text-muted-foreground">Batch renumber and label all units</p>
+                                        <h3 className="text-base font-bold text-foreground">Renumber Your Rooms</h3>
+                                        <p className="text-xs text-muted-foreground">Choose a clean numbering format for all your rooms</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setIsRenumberModalOpen(false)}
-                                    className="flex size-8 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                                    className="flex size-8 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer"
                                     aria-label="Close dialog"
                                 >
                                     <X className="size-4" />
@@ -1143,17 +1151,17 @@ export function MapSetupWizard({
                             <div className="space-y-4">
                                 {/* Prefix */}
                                 <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-foreground">Unit Prefix / Label</label>
+                                    <label className="text-xs font-semibold text-foreground">Room Label</label>
                                     <div className="flex flex-wrap gap-1.5">
-                                        {["Unit", "Room", "Studio", "Apt", "Suite", "Villa", "Bed"].map((preset) => (
+                                        {["Unit", "Room", "Studio", "Bed", "Apt"].map((preset) => (
                                             <button
                                                 key={preset}
                                                 type="button"
                                                 onClick={() => setRenumberPrefix(preset)}
                                                 className={cn(
-                                                    "px-3 py-1 rounded-lg text-xs font-semibold transition-all",
+                                                    "px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer",
                                                     renumberPrefix === preset
-                                                        ? "bg-primary text-primary-foreground shadow-xs"
+                                                        ? "bg-primary text-primary-foreground shadow-xs font-bold"
                                                         : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
                                                 )}
                                             >
@@ -1165,26 +1173,26 @@ export function MapSetupWizard({
                                         type="text"
                                         value={renumberPrefix}
                                         onChange={(e) => setRenumberPrefix(e.target.value)}
-                                        placeholder="Or type custom prefix (e.g. Tower A-)"
-                                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-medium text-foreground outline-none focus:border-primary/50 transition-colors"
+                                        placeholder="Or type custom label (e.g. Rm)"
+                                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-medium text-foreground outline-none focus:border-primary transition-colors"
                                     />
                                 </div>
 
                                 {/* Scheme */}
                                 <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-foreground">Numbering Pattern</label>
-                                    <div className="grid grid-cols-2 gap-2">
+                                    <label className="text-xs font-semibold text-foreground">Numbering Style</label>
+                                    <div className="grid grid-cols-2 gap-2.5">
                                         <button
                                             type="button"
                                             onClick={() => setRenumberStyle("floor_based")}
                                             className={cn(
-                                                "p-3 rounded-xl border text-left transition-all",
+                                                "p-3 rounded-xl border text-left transition-all cursor-pointer",
                                                 renumberStyle === "floor_based"
-                                                    ? "bg-primary/10 border-primary/50 text-foreground ring-1 ring-primary/30"
+                                                    ? "bg-primary/10 border-primary/50 text-foreground ring-2 ring-primary/30"
                                                     : "bg-muted/40 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                                             )}
                                         >
-                                            <p className="text-xs font-bold">Floor-Based</p>
+                                            <p className="text-xs font-bold text-foreground">By Floor</p>
                                             <p className="text-[11px] text-muted-foreground mt-0.5">101, 102 / 201, 202</p>
                                         </button>
 
@@ -1192,14 +1200,14 @@ export function MapSetupWizard({
                                             type="button"
                                             onClick={() => setRenumberStyle("sequential")}
                                             className={cn(
-                                                "p-3 rounded-xl border text-left transition-all",
+                                                "p-3 rounded-xl border text-left transition-all cursor-pointer",
                                                 renumberStyle === "sequential"
-                                                    ? "bg-primary/10 border-primary/50 text-foreground ring-1 ring-primary/30"
+                                                    ? "bg-primary/10 border-primary/50 text-foreground ring-2 ring-primary/30"
                                                     : "bg-muted/40 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                                             )}
                                         >
-                                            <p className="text-xs font-bold">Sequential</p>
-                                            <p className="text-[11px] text-muted-foreground mt-0.5">1, 2, 3... or custom start</p>
+                                            <p className="text-xs font-bold text-foreground">Continuous</p>
+                                            <p className="text-[11px] text-muted-foreground mt-0.5">1, 2, 3, 4...</p>
                                         </button>
                                     </div>
 
@@ -1210,7 +1218,7 @@ export function MapSetupWizard({
                                                 type="number"
                                                 value={renumberStartingNumber}
                                                 onChange={(e) => setRenumberStartingNumber(parseInt(e.target.value) || 1)}
-                                                className="w-full bg-background border border-border rounded-xl px-4 py-2 text-xs font-medium text-foreground outline-none focus:border-primary/50 mt-1"
+                                                className="w-full bg-background border border-border rounded-xl px-4 py-2 text-xs font-medium text-foreground outline-none focus:border-primary mt-1"
                                             />
                                         </div>
                                     )}
@@ -1220,7 +1228,7 @@ export function MapSetupWizard({
                                 <div className="rounded-xl border border-border/80 bg-muted/20 p-3.5 space-y-2">
                                     <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                                         <Eye className="size-3.5 text-primary" />
-                                        <span>Preview ({units.length} total units):</span>
+                                        <span>Sample preview ({units.length} total rooms):</span>
                                     </div>
                                     <div className="flex flex-wrap items-center gap-1.5">
                                         {generateUnitList(
@@ -1251,7 +1259,7 @@ export function MapSetupWizard({
                                     type="button"
                                     onClick={() => setIsRenumberModalOpen(false)}
                                     disabled={isRenumbering}
-                                    className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-all disabled:opacity-50"
+                                    className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-all disabled:opacity-50 cursor-pointer"
                                 >
                                     Cancel
                                 </button>
@@ -1259,10 +1267,10 @@ export function MapSetupWizard({
                                     type="button"
                                     onClick={handleApplyRenumber}
                                     disabled={isRenumbering}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground transition-all hover:brightness-105 active:scale-95 disabled:opacity-50 shadow-sm"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground transition-all hover:brightness-105 active:scale-95 disabled:opacity-50 shadow-sm cursor-pointer"
                                 >
                                     {isRenumbering ? <Loader2 className="size-3.5 animate-spin" /> : <CheckCircle2 className="size-3.5" />}
-                                    Apply & Save
+                                    <span>Apply Room Numbers</span>
                                 </button>
                             </div>
                         </motion.div>
