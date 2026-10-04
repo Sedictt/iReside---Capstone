@@ -1912,6 +1912,8 @@ export interface Database {
 
 // ---------- Convenience row types ----------
 export type Profile = Database['public']['Tables']['profiles']['Row'] & {
+    first_name?: string | null
+    last_name?: string | null
     emergency_contact_name?: string | null
     emergency_contact_phone?: string | null
 }
