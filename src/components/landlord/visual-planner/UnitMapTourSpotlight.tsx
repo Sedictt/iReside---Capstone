@@ -80,7 +80,7 @@ export function UnitMapTourSpotlight({
 
     return (
         <div 
-            className="fixed bottom-6 right-6 z-[250] max-w-[420px] w-full pointer-events-auto"
+            className="fixed bottom-24 sm:bottom-28 right-4 sm:right-6 z-[250] max-w-[420px] w-[calc(100%-2rem)] sm:w-full pointer-events-auto"
             role="dialog"
             aria-modal="false"
             aria-labelledby="unit-map-tour-title"

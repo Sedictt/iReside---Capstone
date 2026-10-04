@@ -281,6 +281,14 @@ export function MapSetupWizard({
     const progress = totalUnits > 0 ? Math.round((assignedUnitsCount / totalUnits) * 100) : 0;
     const isAllAssigned = totalUnits > 0 && assignedUnitsCount === totalUnits && floorConfigs.length > 0;
 
+    const populatedFloors = useMemo(() => {
+        return floorConfigs.filter(fc => units.some(u => u.floor === fc.floor_number));
+    }, [floorConfigs, units]);
+
+    const emptyFloors = useMemo(() => {
+        return floorConfigs.filter(fc => !units.some(u => u.floor === fc.floor_number));
+    }, [floorConfigs, units]);
+
     const handleAddFloor = async (floorNum?: number) => {
         setIsSaving(true);
         try {
@@ -352,6 +360,42 @@ export function MapSetupWizard({
             setError(null);
         } catch {
             setError("Failed to remove floor.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleRemoveAllEmptyFloors = async () => {
+        if (emptyFloors.length === 0) return;
+        setIsSaving(true);
+        const emptyKeys = emptyFloors.map(f => f.floor_key);
+        const previousFloors = floorConfigs;
+        setFloorConfigs(prev => prev.filter(f => !emptyKeys.includes(f.floor_key)));
+
+        if (previewEmptyFloors) {
+            setIsSaving(false);
+            toast.success(`Removed ${emptyKeys.length} empty ${emptyKeys.length === 1 ? "floor" : "floors"}.`);
+            return;
+        }
+
+        try {
+            const results = await Promise.all(
+                emptyKeys.map(k =>
+                    fetch(`/api/landlord/unit-map/floor-configs?propertyId=${propertyId}&floorKey=${k}`, {
+                        method: "DELETE",
+                    })
+                )
+            );
+            const allOk = results.every(r => r.ok);
+            if (!allOk) {
+                setFloorConfigs(previousFloors);
+                await loadData();
+                throw new Error("Failed to remove some empty floors");
+            }
+            toast.success(`Removed ${emptyKeys.length} empty ${emptyKeys.length === 1 ? "floor" : "floors"}.`);
+        } catch (err: any) {
+            setError("Failed to clean up empty floors.");
+            toast.error(err.message || "Failed to remove empty floors.");
         } finally {
             setIsSaving(false);
         }
@@ -833,28 +877,13 @@ export function MapSetupWizard({
                             )}
 
                             {/* Section Header with Clear Narrative Hierarchy */}
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/70">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-border/60">
                                 <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-[11px] font-bold text-primary uppercase tracking-wider">
-                                            Step 2 of 5: Unit Map
-                                        </span>
-                                        <span className="text-[11px] text-muted-foreground">•</span>
-                                        <span className="text-xs font-semibold text-muted-foreground">
-                                            {propertyName}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                                            Check Your Rooms & Floors
-                                        </h1>
-                                        <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-semibold">
-                                            <Move className="size-3.5" />
-                                            <span>Drag or Pick Floor</span>
-                                        </div>
-                                    </div>
-                                    <p className="mt-1 text-xs text-muted-foreground">
-                                        We organized your rooms across each floor. Everything is ready, but you can move rooms or change numbers below if you want.
+                                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                                        Check Your Rooms & Floors
+                                    </h1>
+                                    <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground">
+                                        Everything is organized. You can move rooms, adjust counts per floor, or click Generate Unit Map below.
                                     </p>
                                 </div>
 
@@ -928,6 +957,36 @@ export function MapSetupWizard({
                                     </button>
                                 </div>
                             </div>
+
+                            {/* 1-Click Clean Up Banner for Empty Floors */}
+                            {emptyFloors.length > 0 && populatedFloors.length > 0 && (
+                                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs animate-in fade-in duration-300">
+                                    <div className="flex items-center gap-3.5">
+                                        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                            <Layers className="size-5" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-bold text-foreground">
+                                                {emptyFloors.length} {emptyFloors.length === 1 ? "floor has" : "floors have"} no rooms
+                                            </h4>
+                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                                All your {totalUnits} rooms are on {populatedFloors.length} {populatedFloors.length === 1 ? "floor" : "floors"}. Clean up the extra empty floors with one click, or use Divide Evenly to spread rooms across all floors.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <button
+                                            type="button"
+                                            onClick={handleRemoveAllEmptyFloors}
+                                            disabled={isSaving}
+                                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border/80 hover:border-destructive/40 hover:bg-destructive/10 text-xs font-bold text-foreground hover:text-destructive transition-all shadow-xs cursor-pointer active:scale-95 disabled:opacity-50"
+                                        >
+                                            <Trash2 className="size-3.5 text-destructive" />
+                                            <span>Remove {emptyFloors.length} Empty {emptyFloors.length === 1 ? "Floor" : "Floors"}</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Floor Lanes Grid */}
                             <div data-tour-id="tour-wizard-lanes" className="space-y-6">
@@ -1045,7 +1104,9 @@ export function MapSetupWizard({
                                             <div className="flex items-center gap-2">
                                                 <h4 className="text-sm font-bold text-foreground">
                                                     {isAllAssigned 
-                                                        ? `All ${totalUnits} rooms assigned across ${floorConfigs.length} floors`
+                                                        ? emptyFloors.length > 0
+                                                            ? `All ${totalUnits} rooms assigned to ${populatedFloors.length} ${populatedFloors.length === 1 ? "floor" : "floors"} (${emptyFloors.length} empty)`
+                                                            : `All ${totalUnits} rooms assigned across ${floorConfigs.length} ${floorConfigs.length === 1 ? "floor" : "floors"}`
                                                         : `${assignedUnitsCount} of ${totalUnits} rooms assigned (${totalUnits - assignedUnitsCount} unassigned)`
                                                     }
                                                 </h4>
