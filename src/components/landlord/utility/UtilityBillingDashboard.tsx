@@ -1165,112 +1165,108 @@ export function UtilityBillingDashboard() {
 				</div>
 			</div>
 
-			{/* Unified Command Bar */}
-			<div className="relative z-30 overflow-visible flex flex-col gap-3 rounded-2xl border border-border/60 bg-card/40 p-2.5 sm:p-3 backdrop-blur-md lg:flex-row lg:items-center lg:justify-between shadow-sm">
-				{/* Segmented Pill Tabs */}
-				<div className="flex shrink-0 items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-none p-1 sm:p-1.5 rounded-xl bg-muted/40 border border-border/50 min-w-max">
-					{[
-						{ 
-							id: "readings", 
-							label: "Meter Readings", 
-							icon: Zap,
-							badge: `${readingsSummary.recordedCount}/${readingsSummary.totalUnits}`
-						},
-						{ 
-							id: "verify", 
-							label: "Payment Proofs", 
-							icon: ShieldCheck,
-							badge: pendingInvoices.length > 0 ? pendingInvoices.length.toString() : undefined,
-							badgeAlert: pendingInvoices.length > 0
-						},
-						{ 
-							id: "rates", 
-							label: "Electricity & Water Rates", 
-							icon: Settings2,
-							badge: isRatesDirty ? "Unsaved" : undefined,
-							badgeAlert: isRatesDirty
-						},
-						{ 
-							id: "history", 
-							label: "Past Bills", 
-							icon: History 
-						}
-					].map((tab) => {
-						const isTabHighlighted = isTourOpen && (
-							(tourStepIndex === 0 && tab.id === "rates") ||
-							((tourStepIndex === 1 || tourStepIndex === 2) && tab.id === "readings")
-						);
+			{/* Tab Navigation */}
+			<div className="flex items-center overflow-x-auto scrollbar-none gap-1 p-1 rounded-xl bg-muted/40 border border-border/50">
+				{[
+					{ 
+						id: "readings", 
+						label: "Meter Readings", 
+						icon: Zap,
+						badge: `${readingsSummary.recordedCount}/${readingsSummary.totalUnits}`
+					},
+					{ 
+						id: "verify", 
+						label: "Payment Proofs", 
+						icon: ShieldCheck,
+						badge: pendingInvoices.length > 0 ? pendingInvoices.length.toString() : undefined,
+						badgeAlert: pendingInvoices.length > 0
+					},
+					{ 
+						id: "rates", 
+						label: "Electricity & Water Rates", 
+						icon: Settings2,
+						badge: isRatesDirty ? "Unsaved" : undefined,
+						badgeAlert: isRatesDirty
+					},
+					{ 
+						id: "history", 
+						label: "Past Bills", 
+						icon: History 
+					}
+				].map((tab) => {
+					const isTabHighlighted = isTourOpen && (
+						(tourStepIndex === 0 && tab.id === "rates") ||
+						((tourStepIndex === 1 || tourStepIndex === 2) && tab.id === "readings")
+					);
 
-						return (
-						<button
-							key={tab.id}
-							onClick={() => setActiveTab(tab.id as any)}
-							className={cn(
-								"flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 sm:px-3.5 sm:py-2 text-xs font-medium transition-all whitespace-nowrap cursor-pointer relative",
-								activeTab === tab.id
-									? "bg-card text-foreground font-semibold shadow-sm border border-border/80"
-									: "text-muted-foreground hover:text-foreground hover:bg-card/40",
-								isTabHighlighted && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_25px_rgba(155,119,255,0.8)] animate-pulse font-bold z-20"
-							)}
+					return (
+					<button
+						key={tab.id}
+						onClick={() => setActiveTab(tab.id as any)}
+						className={cn(
+							"flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 sm:px-3.5 sm:py-2 text-xs font-medium transition-all whitespace-nowrap cursor-pointer relative",
+							activeTab === tab.id
+								? "bg-card text-foreground font-semibold shadow-sm border border-border/80"
+								: "text-muted-foreground hover:text-foreground hover:bg-card/40",
+							isTabHighlighted && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_25px_rgba(155,119,255,0.8)] animate-pulse font-bold z-20"
+						)}
+					>
+						{isTabHighlighted && (
+							<span className="relative flex size-2 shrink-0">
+								<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+								<span className="relative inline-flex rounded-full size-2 bg-primary"></span>
+							</span>
+						)}
+						<tab.icon className={cn("size-3.5 shrink-0", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
+						<span>{tab.label}</span>
+						{tab.badge && (
+							<span className={cn(
+								"px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold",
+								tab.badgeAlert 
+									? "bg-amber-500 text-zinc-950 font-bold animate-pulse" 
+									: activeTab === tab.id 
+										? "bg-primary/15 text-primary" 
+										: "bg-muted text-muted-foreground"
+							)}>
+								{tab.badge}
+							</span>
+						)}
+					</button>
+					);
+				})}
+			</div>
+
+			{/* Contextual Toolbar: Filter + Search + Month (only on Readings tab) */}
+			{activeTab === "readings" && (
+				<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+					{/* Filter Dropdown */}
+					<div className="relative shrink-0">
+						<select
+							value={filterStatus}
+							onChange={(e) => setFilterStatus(e.target.value as any)}
+							className="h-9 w-full sm:w-auto rounded-xl border border-border/70 bg-card pl-3 pr-8 text-xs font-semibold text-foreground focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer appearance-none"
 						>
-							{isTabHighlighted && (
-								<span className="relative flex size-2 shrink-0">
-									<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-									<span className="relative inline-flex rounded-full size-2 bg-primary"></span>
-								</span>
-							)}
-							<tab.icon className={cn("size-3.5 shrink-0", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
-							<span>{tab.label}</span>
-							{tab.badge && (
-								<span className={cn(
-									"px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold",
-									tab.badgeAlert 
-										? "bg-amber-500 text-zinc-950 font-bold animate-pulse" 
-										: activeTab === tab.id 
-											? "bg-primary/15 text-primary" 
-											: "bg-muted text-muted-foreground"
-								)}>
-									{tab.badge}
-								</span>
-							)}
-						</button>
-						);
-					})}
-				</div>
+							<option value="all">All Rooms ({filterCounts.all})</option>
+							<option value="occupied">Occupied ({filterCounts.occupied})</option>
+							<option value="vacant">Vacant ({filterCounts.vacant})</option>
+							<option value="needs_reading">Needs Reading ({filterCounts.needsReading})</option>
+							<option value="recorded">Recorded ({filterCounts.recorded})</option>
+						</select>
+						<ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground pointer-events-none" />
+					</div>
 
-				{/* Search, Filter Dropdown & Cycle Picker */}
-				<div className="relative z-30 flex flex-wrap items-center gap-2 w-full lg:w-auto lg:justify-end">
-					{activeTab === "readings" && (
-						<>
-							{/* Status Filter Dropdown */}
-							<div className="relative">
-								<select
-									value={filterStatus}
-									onChange={(e) => setFilterStatus(e.target.value as any)}
-									className="h-9.5 rounded-xl border border-border/70 bg-card/60 pl-3 pr-8 text-xs font-semibold text-foreground focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer appearance-none shadow-2xs"
-								>
-									<option value="all">All Rooms ({filterCounts.all})</option>
-									<option value="occupied">Occupied ({filterCounts.occupied})</option>
-									<option value="vacant">Vacant ({filterCounts.vacant})</option>
-									<option value="needs_reading">Needs Reading ({filterCounts.needsReading})</option>
-									<option value="recorded">Recorded ({filterCounts.recorded})</option>
-								</select>
-								<ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground pointer-events-none" />
-							</div>
+					{/* Search Input */}
+					<div className="relative flex-1 min-w-0">
+						<Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+						<input maxLength={60} 
+							placeholder="Search by room or tenant name..." 
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+							className="h-9 w-full rounded-xl border border-border/70 bg-card pl-8.5 pr-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all"
+						/>
+					</div>
 
-							{/* Search Input */}
-							<div className="relative flex-1 min-w-[120px] sm:w-44 md:w-52">
-								<Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-								<input maxLength={60} 
-									placeholder="Search unit..." 
-									value={searchQuery}
-									onChange={(e) => setSearchQuery(e.target.value)}
-									className="h-9.5 w-full rounded-xl border border-border/70 bg-card/60 pl-8.5 pr-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all"
-								/>
-							</div>
-						</>
-					)}
-
+					{/* Month Picker */}
 					<MonthPicker
 						value={selectedMonth}
 						onChange={(newMonth) => {
@@ -1292,11 +1288,10 @@ export function UtilityBillingDashboard() {
 							}
 							setSelectedMonth(newMonth);
 						}}
-						className={cn(activeTab !== "readings" && "ml-auto lg:ml-0")}
 						align="right"
 					/>
 				</div>
-			</div>
+			)}
 
 			{/* Content Area */}
 			<AnimatePresence mode="wait">
