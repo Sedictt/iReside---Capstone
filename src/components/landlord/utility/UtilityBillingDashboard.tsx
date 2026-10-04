@@ -348,6 +348,7 @@ export function UtilityBillingDashboard() {
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
+	const [filterStatus, setFilterStatus] = useState<"all" | "occupied" | "vacant" | "needs_reading" | "recorded">("all");
 	const [selectedPropertyId, setSelectedPropertyId] = useState<string>("all");
 	const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
 	const [selectedHistoryMonth, setSelectedHistoryMonth] = useState<string | null>(null);
@@ -629,11 +630,66 @@ export function UtilityBillingDashboard() {
 		return () => { alive = false; };
 	}, [activeTab]);
 
-	const filteredDrafts = drafts.filter(d => {
-		const matchesProperty = selectedPropertyId === "all" || d.propertyId === selectedPropertyId;
-		const matchesSearch = d.unitName.toLowerCase().includes(searchQuery.toLowerCase());
-		return matchesProperty && matchesSearch;
-	});
+	// Compute filter pill counts for current property scope
+	const filterCounts = useMemo(() => {
+		const propertyDrafts = drafts.filter(d => selectedPropertyId === "all" || d.propertyId === selectedPropertyId);
+		let occupied = 0;
+		let vacant = 0;
+		let needsReading = 0;
+		let recorded = 0;
+
+		propertyDrafts.forEach(d => {
+			const isOccupied = d.occupancyStatus === "occupied";
+			if (isOccupied) occupied++;
+			else vacant++;
+
+			const waterPrev = d.water.previous || 0;
+			const waterCurr = parseFloat(d.water.current);
+			const hasWater = !isNaN(waterCurr) && waterCurr >= waterPrev;
+			const elecPrev = d.electricity.previous || 0;
+			const elecCurr = parseFloat(d.electricity.current);
+			const hasElec = !isNaN(elecCurr) && elecCurr >= elecPrev;
+			const isComplete = (d.water.exists || hasWater) && (d.electricity.exists || hasElec);
+
+			if (isComplete) recorded++;
+			else needsReading++;
+		});
+
+		return {
+			all: propertyDrafts.length,
+			occupied,
+			vacant,
+			needsReading,
+			recorded,
+		};
+	}, [drafts, selectedPropertyId]);
+
+	const filteredDrafts = useMemo(() => {
+		return drafts.filter(d => {
+			const matchesProperty = selectedPropertyId === "all" || d.propertyId === selectedPropertyId;
+			const query = searchQuery.toLowerCase().trim();
+			const matchesSearch = !query || 
+				d.unitName.toLowerCase().includes(query) || 
+				(d.tenantName && d.tenantName.toLowerCase().includes(query));
+
+			if (!matchesProperty || !matchesSearch) return false;
+
+			const isOccupied = d.occupancyStatus === "occupied";
+			const waterPrev = d.water.previous || 0;
+			const waterCurr = parseFloat(d.water.current);
+			const hasWater = !isNaN(waterCurr) && waterCurr >= waterPrev;
+			const elecPrev = d.electricity.previous || 0;
+			const elecCurr = parseFloat(d.electricity.current);
+			const hasElec = !isNaN(elecCurr) && elecCurr >= elecPrev;
+			const isComplete = (d.water.exists || hasWater) && (d.electricity.exists || hasElec);
+
+			if (filterStatus === "occupied") return isOccupied;
+			if (filterStatus === "vacant") return !isOccupied;
+			if (filterStatus === "needs_reading") return !isComplete;
+			if (filterStatus === "recorded") return isComplete;
+			return true;
+		});
+	}, [drafts, selectedPropertyId, searchQuery, filterStatus]);
 
 	// Compute real-time progress & consumption totals
 	const readingsSummary = useMemo(() => {
@@ -1233,6 +1289,53 @@ export function UtilityBillingDashboard() {
 						className="space-y-6"
 					>
 
+						{/* Quick Filter Chips Bar */}
+						<div className="flex flex-wrap items-center gap-2">
+							<span className="text-xs font-bold text-muted-foreground mr-1 hidden sm:inline">Filter:</span>
+							{[
+								{ id: "all", label: "All Rooms", count: filterCounts.all },
+								{ id: "occupied", label: "Occupied", count: filterCounts.occupied },
+								{ id: "vacant", label: "Vacant", count: filterCounts.vacant },
+								{ id: "needs_reading", label: "Needs Reading", count: filterCounts.needsReading },
+								{ id: "recorded", label: "Recorded", count: filterCounts.recorded },
+							].map((f) => (
+								<button
+									key={f.id}
+									type="button"
+									onClick={() => setFilterStatus(f.id as any)}
+									className={cn(
+										"inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-2xs whitespace-nowrap active:scale-95",
+										filterStatus === f.id
+											? "bg-primary text-primary-foreground font-bold shadow-xs"
+											: "bg-card border border-border/80 text-muted-foreground hover:text-foreground hover:bg-muted"
+									)}
+								>
+									<span>{f.label}</span>
+									<span className={cn(
+										"text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold",
+										filterStatus === f.id
+											? "bg-primary-foreground/20 text-primary-foreground"
+											: "bg-muted text-muted-foreground"
+									)}>
+										{f.count}
+									</span>
+								</button>
+							))}
+
+							{(filterStatus !== "all" || searchQuery) && (
+								<button
+									type="button"
+									onClick={() => {
+										setFilterStatus("all");
+										setSearchQuery("");
+									}}
+									className="text-xs text-muted-foreground hover:text-foreground font-medium underline underline-offset-2 ml-1 cursor-pointer shrink-0"
+								>
+									Reset filters
+								</button>
+							)}
+						</div>
+
 						{/* All Rooms Vacant Helpful Callout (removes confusion for empty buildings) */}
 						{filteredDrafts.length > 0 && filteredDrafts.every(d => d.occupancyStatus !== "occupied") && (
 							<div className="rounded-2xl border border-border/80 bg-muted/20 p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
@@ -1301,10 +1404,21 @@ export function UtilityBillingDashboard() {
 									<tbody className="divide-y divide-border/50">
 										{filteredDrafts.length === 0 ? (
 											<tr>
-												<td colSpan={5} className="px-6 py-20 text-center">
+												<td colSpan={5} className="px-6 py-16 text-center">
 													<div className="flex flex-col items-center gap-3 text-muted-foreground">
-														<Building2 className="size-12 opacity-20" />
-														<p className="text-sm font-medium">No rooms found matching your search</p>
+														<Building2 className="size-10 opacity-30" />
+														<p className="text-sm font-semibold text-foreground">No rooms found</p>
+														<p className="text-xs text-muted-foreground">No rooms match your current search or filter criteria.</p>
+														<button
+															type="button"
+															onClick={() => {
+																setFilterStatus("all");
+																setSearchQuery("");
+															}}
+															className="mt-1 px-4 py-2 rounded-xl bg-card border border-border/80 hover:bg-muted text-xs font-bold text-foreground transition-all cursor-pointer shadow-xs"
+														>
+															Reset Filters
+														</button>
 													</div>
 												</td>
 											</tr>
