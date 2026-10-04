@@ -30,7 +30,8 @@ import {
 	FileText,
 	QrCode,
 	ChevronRight,
-	ExternalLink
+	ExternalLink,
+	ArrowRight
 } from "lucide-react";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { m as motion, AnimatePresence } from "framer-motion";
@@ -1002,27 +1003,43 @@ export function UtilityBillingDashboard() {
 		<div className="flex flex-col space-y-8 pb-20 w-full">
 			{/* Re-occurring Setup Banner (shows after dismissal until step is complete) */}
 			{!isBillingConfigured && dismissedThisVisit && (
-				<div className="rounded-2xl border border-primary/20 bg-primary/[0.03] px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-					<div className="flex items-start gap-3">
-						<div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/15 shrink-0 mt-0.5">
-							<Zap className="size-4.5" />
+				<div className="rounded-2xl border border-primary/20 bg-primary/[0.04] px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+					<div className="flex items-start gap-3.5">
+						<div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shrink-0 mt-0.5">
+							<Zap className="size-5" />
 						</div>
 						<div>
-							<p className="text-xs font-black text-foreground">
-								You&apos;re still setting up your billing &amp; utility configuration.
+							<div className="flex items-center gap-2">
+								<span className="text-[11px] font-black uppercase tracking-wider text-primary">
+									Step 3 of 5 • Onboarding
+								</span>
+								<span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+									Water &amp; Electricity Setup
+								</span>
+							</div>
+							<p className="text-sm font-bold text-foreground mt-0.5">
+								Set up your water and electric rates
 							</p>
-							<p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
-								Configure your utility tariffs and confirm your settings to proceed to tenant onboarding.
+							<p className="text-xs text-muted-foreground leading-snug mt-0.5">
+								Make sure your rates are set so bills compute automatically, or continue to add your tenants.
 							</p>
 						</div>
 					</div>
-					<div className="flex items-center gap-2 shrink-0">
+					<div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
 						<button
 							type="button"
-							onClick={() => setIsOnboardingModalOpen(true)}
-							className="h-9 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm flex items-center gap-1.5 active:scale-98"
+							onClick={() => setActiveTab("rates")}
+							className="flex-1 sm:flex-initial h-10 px-4 rounded-xl border border-border/80 bg-card hover:bg-muted text-foreground text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-98"
 						>
-							<span>Resume Setup</span>
+							Check Rates
+						</button>
+						<button
+							type="button"
+							onClick={handleCompleteOnboardingStep}
+							className="flex-1 sm:flex-initial h-10 px-5 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 active:scale-98"
+						>
+							<span>Next: Add Tenants</span>
+							<ArrowRight className="size-3.5" />
 						</button>
 					</div>
 				</div>
@@ -1034,15 +1051,15 @@ export function UtilityBillingDashboard() {
 					<div className="flex items-center gap-2.5">
 						<span className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
 							<Zap className="size-3" />
-							Billing Cycle
+							Monthly Billing Cycle
 						</span>
 						<span className="text-xs font-medium text-muted-foreground">{formattedCycleMonth}</span>
 					</div>
 					<h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-						Utility & Submeter Billing
+						Water &amp; Electricity Billing
 					</h1>
 					<p className="text-xs sm:text-sm text-muted-foreground max-w-2xl">
-						Record room submeters, calculate tenant consumption, and issue itemized monthly invoices in one workflow.
+						Record room meter readings, compute monthly usage, and send clear itemized bills to your tenants.
 					</p>
 				</div>
 
@@ -1056,7 +1073,7 @@ export function UtilityBillingDashboard() {
 									"inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-card/60 px-4 text-xs font-semibold text-foreground transition-all hover:bg-muted active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm relative",
 									isTourOpen && tourStepIndex === 1 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-105 bg-primary/10 border-primary font-bold z-30"
 								)}
-								title="Save submeter readings without issuing invoices yet"
+								title="Save entered readings without sending bills yet"
 							>
 								{isTourOpen && tourStepIndex === 1 && (
 									<span className="relative flex size-2 shrink-0">
@@ -1065,7 +1082,7 @@ export function UtilityBillingDashboard() {
 									</span>
 								)}
 								<Save className="size-3.5 text-muted-foreground" />
-								<span>Save Draft</span>
+								<span>Save Readings</span>
 							</button>
 
 							<button 
@@ -1075,7 +1092,7 @@ export function UtilityBillingDashboard() {
 									"inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-5 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 cursor-pointer relative",
 									isTourOpen && tourStepIndex === 2 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_35px_rgba(155,119,255,0.95)] animate-pulse scale-105 brightness-110 font-black z-30"
 								)}
-								title="Save readings and immediately post itemized invoices to tenants"
+								title="Save readings and send monthly bills to your tenants"
 							>
 								{isTourOpen && tourStepIndex === 2 && (
 									<span className="relative flex size-2 shrink-0">
@@ -1084,7 +1101,7 @@ export function UtilityBillingDashboard() {
 									</span>
 								)}
 								{saving ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
-								<span>Post & Bill Invoices</span>
+								<span>Send Monthly Bills</span>
 							</button>
 						</>
 					)}
@@ -1104,21 +1121,21 @@ export function UtilityBillingDashboard() {
 						},
 						{ 
 							id: "verify", 
-							label: "Verify Payments", 
+							label: "Payment Proofs", 
 							icon: ShieldCheck,
 							badge: pendingInvoices.length > 0 ? pendingInvoices.length.toString() : undefined,
 							badgeAlert: pendingInvoices.length > 0
 						},
 						{ 
 							id: "rates", 
-							label: "Utility Rates", 
+							label: "Electricity & Water Rates", 
 							icon: Settings2,
 							badge: isRatesDirty ? "Unsaved" : undefined,
 							badgeAlert: isRatesDirty
 						},
 						{ 
 							id: "history", 
-							label: "Billing Archive", 
+							label: "Past Bills", 
 							icon: History 
 						}
 					].map((tab) => {
@@ -1217,13 +1234,13 @@ export function UtilityBillingDashboard() {
 					>
 						{/* Progress & Live Consumption Dashboard */}
 						<div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5 backdrop-blur-sm flex flex-col justify-between">
-								<span className="text-[11px] font-semibold text-muted-foreground">Units Logged</span>
+							<div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 flex flex-col justify-between shadow-xs">
+								<span className="text-xs font-bold text-muted-foreground">Rooms Recorded</span>
 								<div className="mt-2 flex items-baseline gap-1.5">
 									<span className="text-2xl font-bold font-mono text-foreground">{readingsSummary.recordedCount}</span>
-									<span className="text-xs font-medium text-muted-foreground">/ {readingsSummary.totalUnits} Units</span>
+									<span className="text-xs font-semibold text-muted-foreground">of {readingsSummary.totalUnits} rooms</span>
 								</div>
-								<div className="mt-3 h-1.5 w-full bg-muted rounded-full overflow-hidden">
+								<div className="mt-3 h-2 w-full bg-muted rounded-full overflow-hidden">
 									<div 
 										className="h-full bg-primary rounded-full transition-all duration-500"
 										style={{ width: `${readingsSummary.totalUnits > 0 ? (readingsSummary.recordedCount / readingsSummary.totalUnits) * 100 : 0}%` }}
@@ -1231,60 +1248,102 @@ export function UtilityBillingDashboard() {
 								</div>
 							</div>
 
-							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5 backdrop-blur-sm flex flex-col justify-between">
-								<span className="text-[11px] font-semibold text-amber-500 flex items-center gap-1.5">
-									<Zap className="size-3.5" /> Electricity Recorded
+							<div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 flex flex-col justify-between shadow-xs">
+								<span className="text-xs font-bold text-amber-500 flex items-center gap-1.5">
+									<Zap className="size-3.5" /> Total Electricity
 								</span>
 								<div className="mt-2 flex items-baseline gap-1.5">
 									<span className="text-2xl font-bold font-mono text-foreground">{readingsSummary.totalElecKwh.toFixed(1)}</span>
-									<span className="text-xs font-semibold text-muted-foreground">kWh</span>
+									<span className="text-xs font-bold text-muted-foreground">kWh</span>
 								</div>
-								<span className="text-[10px] text-muted-foreground mt-2">Active cycle usage</span>
+								<span className="text-xs text-muted-foreground mt-2">Used this month</span>
 							</div>
 
-							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5 backdrop-blur-sm flex flex-col justify-between">
-								<span className="text-[11px] font-semibold text-sky-400 flex items-center gap-1.5">
-									<Droplets className="size-3.5" /> Water Recorded
+							<div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 flex flex-col justify-between shadow-xs">
+								<span className="text-xs font-bold text-sky-500 flex items-center gap-1.5">
+									<Droplets className="size-3.5" /> Total Water
 								</span>
 								<div className="mt-2 flex items-baseline gap-1.5">
 									<span className="text-2xl font-bold font-mono text-foreground">{readingsSummary.totalWaterM3.toFixed(1)}</span>
-									<span className="text-xs font-semibold text-muted-foreground">m³</span>
+									<span className="text-xs font-bold text-muted-foreground">m³</span>
 								</div>
-								<span className="text-[10px] text-muted-foreground mt-2">Active cycle usage</span>
+								<span className="text-xs text-muted-foreground mt-2">Used this month</span>
 							</div>
 
-							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5 backdrop-blur-sm flex flex-col justify-between">
-								<span className="text-[11px] font-semibold text-emerald-500 flex items-center gap-1.5">
-									<DollarSign className="size-3.5" /> Est. Utility Billing
+							<div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 flex flex-col justify-between shadow-xs">
+								<span className="text-xs font-bold text-emerald-500 flex items-center gap-1.5">
+									<DollarSign className="size-3.5" /> Total Utility Charges
 								</span>
 								<div className="mt-2 flex items-baseline gap-1">
 									<span className="text-xs font-bold text-muted-foreground">₱</span>
 									<span className="text-2xl font-bold font-mono text-foreground">{readingsSummary.totalEstimatedUtilRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
 								</div>
-								<span className="text-[10px] text-muted-foreground mt-2">Added to tenant invoices</span>
+								<span className="text-xs text-muted-foreground mt-2">To be billed to tenants</span>
 							</div>
 						</div>
 
+						{/* All Rooms Vacant Helpful Callout (removes confusion for empty buildings) */}
+						{filteredDrafts.length > 0 && filteredDrafts.every(d => d.occupancyStatus !== "occupied") && (
+							<div className="rounded-2xl border border-border/80 bg-muted/20 p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+								<div className="space-y-1">
+									<div className="flex items-center gap-2">
+										<span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+											All Rooms Currently Vacant
+										</span>
+									</div>
+									<h3 className="text-base font-bold text-foreground">
+										No tenants have moved in yet
+									</h3>
+									<p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl">
+										Meter readings are only recorded once tenants live in the rooms. For now, check your Electricity &amp; Water Rates below, then proceed to add your tenants.
+									</p>
+								</div>
+								<div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
+									<button
+										type="button"
+										onClick={() => setActiveTab("rates")}
+										className="flex-1 sm:flex-initial h-10 px-4 rounded-xl border border-border/80 bg-card hover:bg-muted text-foreground text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-98"
+									>
+										Check Rates
+									</button>
+									<button
+										type="button"
+										onClick={handleCompleteOnboardingStep}
+										className="flex-1 sm:flex-initial h-10 px-5 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 active:scale-98"
+									>
+										<span>Next: Add Tenants</span>
+										<ArrowRight className="size-3.5" />
+									</button>
+								</div>
+							</div>
+						)}
+
 						{/* Batch Readings Table */}
-						<div className="rounded-2xl border border-border/60 bg-card/30 backdrop-blur-sm overflow-hidden shadow-sm">
+						<div className="rounded-2xl border border-border/80 bg-card overflow-hidden shadow-xs">
 							<div className="overflow-x-auto">
 								<table className="w-full text-left border-collapse">
 									<thead>
-										<tr className="border-b border-border/60 bg-muted/30">
-											<th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Unit & Base Rent</th>
-											<th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-center">Water Reading (m³)</th>
-											<th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-center">Electricity Reading (kWh)</th>
-											<th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-center">Estimated Total</th>
-											<th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-right">Actions</th>
+										<tr className="border-b border-border/70 bg-muted/30 text-xs font-bold text-muted-foreground">
+											<th className="px-6 py-4">Room &amp; Rent</th>
+											<th className="px-6 py-4 text-center">
+												<div>Water (m³)</div>
+												<div className="text-[10px] font-normal text-muted-foreground/70 tracking-normal normal-case">Previous → Current</div>
+											</th>
+											<th className="px-6 py-4 text-center">
+												<div>Electricity (kWh)</div>
+												<div className="text-[10px] font-normal text-muted-foreground/70 tracking-normal normal-case">Previous → Current</div>
+											</th>
+											<th className="px-6 py-4 text-right">Total Due</th>
+											<th className="px-6 py-4 text-right">Actions</th>
 										</tr>
 									</thead>
-									<tbody className="divide-y divide-border/40">
+									<tbody className="divide-y divide-border/50">
 										{filteredDrafts.length === 0 ? (
 											<tr>
 												<td colSpan={5} className="px-6 py-20 text-center">
 													<div className="flex flex-col items-center gap-3 text-muted-foreground">
 														<Building2 className="size-12 opacity-20" />
-														<p className="text-sm font-medium">No units found matching your criteria</p>
+														<p className="text-sm font-medium">No rooms found matching your search</p>
 													</div>
 												</td>
 											</tr>
@@ -1305,25 +1364,24 @@ export function UtilityBillingDashboard() {
 											const isComplete = (draft.water.exists || hasWater) && (draft.electricity.exists || hasElec);
 
 											return (
-												<tr key={draft.unitId} className="hover:bg-muted/10 transition-colors">
-													{/* Unit Info */}
+												<tr key={draft.unitId} className="hover:bg-muted/20 transition-colors">
+													{/* Room Info */}
 													<td className="px-6 py-4">
-														<div className="flex flex-col gap-0.5">
+														<div className="flex flex-col gap-1">
 															<div className="flex items-center gap-2">
 																<span className="text-sm font-bold text-foreground">{draft.unitName}</span>
 																{draft.occupancyStatus === "occupied" ? (
-																	<span className="text-[10px] font-semibold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-																		Occupied
+																	<span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+																		Occupied {draft.tenantName ? `• ${draft.tenantName}` : ""}
 																	</span>
 																) : (
-																	<span className="text-[10px] font-semibold text-muted-foreground/80 bg-muted/60 px-2 py-0.5 rounded-md border border-border">
+																	<span className="text-[11px] font-medium text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full border border-border/60">
 																		Vacant
 																	</span>
 																)}
 															</div>
 															<span className="text-xs text-muted-foreground">
-																{draft.occupancyStatus === "occupied" && draft.tenantName ? `${draft.tenantName} • ` : ""}
-																Base Rent: ₱{draft.rentAmount.toLocaleString()}
+																Base Rent: ₱{draft.rentAmount.toLocaleString()} / mo
 															</span>
 														</div>
 													</td>
@@ -1331,36 +1389,36 @@ export function UtilityBillingDashboard() {
 													{/* Water Reading Column */}
 													<td className="px-6 py-4">
 														<div className="flex flex-col items-center gap-1.5">
-															<div className="flex items-center justify-center gap-3">
-																<div className="text-center">
-																	<span className="text-[9px] block text-muted-foreground uppercase font-bold">Prev</span>
-																	<span className="font-mono text-xs text-muted-foreground/80 font-medium">{draft.water.previous}</span>
-																</div>
-																<div className="h-6 w-px bg-border/60" />
-																<div className="text-center">
-																	<span className="text-[9px] block text-sky-400 uppercase font-bold">Curr</span>
-																	{draft.water.exists ? (
-																		<span className="font-mono text-xs font-bold text-sky-400">{draft.water.current}</span>
-																	) : (
-																		<input min={0} max={9999999} 
-																			type="number" 
-																			value={draft.water.current}
-																			placeholder="0.0"
-																			onChange={(e) => {
-																				const newDrafts = [...drafts];
-																				const index = drafts.findIndex(d => d.unitId === draft.unitId);
-																				if (index !== -1) {
-																					newDrafts[index] = { ...newDrafts[index], water: { ...draft.water, current: e.target.value } };
-																					updateDraftsAndCache(newDrafts);
-																				}
-																			}}
-																			className="w-24 h-8 rounded-lg border border-border/70 bg-background/80 px-2.5 py-1 text-center font-mono text-xs font-semibold text-sky-400 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 transition-all"
-																		/>
-																	)}
-																</div>
+															<div className="flex items-center justify-center gap-2">
+																<span className="font-mono text-xs font-semibold text-muted-foreground w-12 text-right">
+																	{draft.water.previous}
+																</span>
+																<span className="text-muted-foreground/40 text-xs font-bold">→</span>
+																{draft.water.exists ? (
+																	<span className="font-mono text-xs font-bold text-foreground w-24 text-center">
+																		{draft.water.current}
+																	</span>
+																) : (
+																	<input 
+																		min={0} 
+																		max={9999999} 
+																		type="number" 
+																		value={draft.water.current}
+																		placeholder="0.0"
+																		onChange={(e) => {
+																			const newDrafts = [...drafts];
+																			const index = drafts.findIndex(d => d.unitId === draft.unitId);
+																			if (index !== -1) {
+																				newDrafts[index] = { ...newDrafts[index], water: { ...draft.water, current: e.target.value } };
+																				updateDraftsAndCache(newDrafts);
+																			}
+																		}}
+																		className="w-24 h-9 rounded-xl border border-border/80 bg-background px-3 py-1 text-center font-mono text-xs font-bold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/40"
+																	/>
+																)}
 															</div>
 															{hasWater && waterUsage > 0 && (
-																<span className="text-[10px] font-semibold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-md">
+																<span className="text-[10px] font-bold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2.5 py-0.5 rounded-full border border-sky-500/20">
 																	+{waterUsage.toFixed(1)} m³ (₱{waterCost.toFixed(2)})
 																</span>
 															)}
@@ -1370,36 +1428,36 @@ export function UtilityBillingDashboard() {
 													{/* Electricity Reading Column */}
 													<td className="px-6 py-4">
 														<div className="flex flex-col items-center gap-1.5">
-															<div className="flex items-center justify-center gap-3">
-																<div className="text-center">
-																	<span className="text-[9px] block text-muted-foreground uppercase font-bold">Prev</span>
-																	<span className="font-mono text-xs text-muted-foreground/80 font-medium">{draft.electricity.previous}</span>
-																</div>
-																<div className="h-6 w-px bg-border/60" />
-																<div className="text-center">
-																	<span className="text-[9px] block text-amber-400 uppercase font-bold">Curr</span>
-																	{draft.electricity.exists ? (
-																		<span className="font-mono text-xs font-bold text-amber-400">{draft.electricity.current}</span>
-																	) : (
-																		<input min={0} max={9999999} 
-																			type="number" 
-																			value={draft.electricity.current}
-																			placeholder="0.0"
-																			onChange={(e) => {
-																				const newDrafts = [...drafts];
-																				const index = drafts.findIndex(d => d.unitId === draft.unitId);
-																				if (index !== -1) {
-																					newDrafts[index] = { ...newDrafts[index], electricity: { ...draft.electricity, current: e.target.value } };
-																					updateDraftsAndCache(newDrafts);
-																				}
-																			}}
-																			className="w-24 h-8 rounded-lg border border-border/70 bg-background/80 px-2.5 py-1 text-center font-mono text-xs font-semibold text-amber-400 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all"
-																		/>
-																	)}
-																</div>
+															<div className="flex items-center justify-center gap-2">
+																<span className="font-mono text-xs font-semibold text-muted-foreground w-12 text-right">
+																	{draft.electricity.previous}
+																</span>
+																<span className="text-muted-foreground/40 text-xs font-bold">→</span>
+																{draft.electricity.exists ? (
+																	<span className="font-mono text-xs font-bold text-foreground w-24 text-center">
+																		{draft.electricity.current}
+																	</span>
+																) : (
+																	<input 
+																		min={0} 
+																		max={9999999} 
+																		type="number" 
+																		value={draft.electricity.current}
+																		placeholder="0.0"
+																		onChange={(e) => {
+																			const newDrafts = [...drafts];
+																			const index = drafts.findIndex(d => d.unitId === draft.unitId);
+																			if (index !== -1) {
+																				newDrafts[index] = { ...newDrafts[index], electricity: { ...draft.electricity, current: e.target.value } };
+																				updateDraftsAndCache(newDrafts);
+																			}
+																		}}
+																		className="w-24 h-9 rounded-xl border border-border/80 bg-background px-3 py-1 text-center font-mono text-xs font-bold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/40"
+																	/>
+																)}
 															</div>
 															{hasElec && elecUsage > 0 && (
-																<span className="text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md">
+																<span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
 																	+{elecUsage.toFixed(1)} kWh (₱{elecCost.toFixed(2)})
 																</span>
 															)}
@@ -1407,20 +1465,14 @@ export function UtilityBillingDashboard() {
 													</td>
 
 													{/* Total Estimated Calculation */}
-													<td className="px-6 py-4 text-center">
-														<div className="flex flex-col items-center">
-															<span className="text-sm font-bold text-foreground font-mono">
+													<td className="px-6 py-4 text-right">
+														<div className="flex flex-col items-end">
+															<span className="text-sm font-bold text-foreground font-mono tabular-nums">
 																₱{(draft.occupancyStatus === "occupied" ? totalEst : (waterCost + elecCost)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
 															</span>
-															{draft.occupancyStatus === "occupied" ? (
-																(waterCost > 0 || elecCost > 0) && (
-																	<span className="text-[10px] text-muted-foreground font-medium">
-																		Util: +₱{(waterCost + elecCost).toFixed(2)}
-																	</span>
-																)
-															) : (
+															{draft.occupancyStatus === "occupied" && (waterCost > 0 || elecCost > 0) && (
 																<span className="text-[10px] text-muted-foreground font-medium">
-																	Submeter Only (Vacant)
+																	Rent + Utilities
 																</span>
 															)}
 														</div>
@@ -1429,21 +1481,17 @@ export function UtilityBillingDashboard() {
 													{/* Row Status & Quick Edit */}
 													<td className="px-6 py-4 text-right">
 														<div className="flex items-center justify-end gap-2">
-															{isComplete ? (
-																<span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20" title="Both readings recorded for this cycle">
+															{isComplete && (
+																<span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20" title="Both readings recorded for this cycle">
 																	<Check className="size-3" /> Ready
-																</span>
-															) : (
-																<span className="text-[10px] font-medium text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full border border-border/50" title="Pending meter readings">
-																	Pending
 																</span>
 															)}
 															<button 
 																onClick={() => setSelectedUnitId(draft.unitId)}
-																className="inline-flex items-center justify-center size-8 rounded-lg border border-border text-muted-foreground transition-all hover:bg-muted hover:text-foreground cursor-pointer"
-																title="Inspect or adjust unit details"
+																className="inline-flex items-center justify-center size-9 rounded-xl border border-border/80 text-muted-foreground transition-all hover:bg-muted hover:text-foreground cursor-pointer shadow-xs active:scale-95"
+																title="Inspect or adjust room details"
 															>
-																<Edit3 className="size-3.5" />
+																<Edit3 className="size-4" />
 															</button>
 														</div>
 													</td>

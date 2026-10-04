@@ -1594,12 +1594,12 @@ export function BillingOperationsPanel({
  <div className="flex items-center justify-between px-2">
  <div className={cn("flex items-center gap-3 px-4 py-2 rounded-2xl border text-sm font-black uppercase tracking-wider ", meta.tint, meta.bg, meta.border)}>
  <meta.icon className="size-4" />
- {meta.label} Management
+ {meta.label} Rates
  </div>
  <button
  onClick={() => addOverride(property.id, type)}
  className={cn(
-  "group inline-flex items-center gap-2 text-xs font-black text-primary hover:text-primary/80 transition-all",
+  "group inline-flex items-center gap-2 text-xs font-bold text-primary hover:text-primary/80 transition-all cursor-pointer",
   isTourActive && tourStepIndex === 0 && "p-1.5 px-3 rounded-2xl ring-2 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_20px_rgba(155,119,255,0.7)] animate-pulse bg-primary/10"
  )}
  >
@@ -1612,7 +1612,7 @@ export function BillingOperationsPanel({
  <div className="size-8 flex items-center justify-center rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-all">
  <Plus className="size-4" />
  </div>
- Set Unit-Specific Rule
+ Customize Specific Room
  </button>
  </div>
 
@@ -1620,7 +1620,7 @@ export function BillingOperationsPanel({
  <div className="space-y-4">
  <div className="flex items-center gap-2 pl-4">
  <div className="size-1.5 rounded-full bg-primary" />
- <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Property Default</span>
+ <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Building Default Rate</span>
  </div>
  <UtilityConfigEditor
  config={baseConfig}
@@ -1660,7 +1660,7 @@ export function BillingOperationsPanel({
  <div className="flex items-center gap-2 pl-4">
  <Target className={cn("size-4", overrides.length > 0 ? "text-amber-600" : "text-muted-foreground/30")} />
  <span className={cn("text-[10px] font-black uppercase tracking-widest", overrides.length > 0 ? "text-amber-600" : "text-muted-foreground/30")}>
- Unit Customizations
+ Custom Room Rates
  </span>
  </div>
 
@@ -1851,11 +1851,11 @@ function UtilityConfigEditor({
  "text-[10px] font-black uppercase tracking-[0.2em]",
  isOverride ? "text-amber-500" : "text-primary"
  )}>
- {isOverride ? "Unit Customization" : "Property Default"}
+ {isOverride ? "Custom Room Rate" : "Building Default Rate"}
  </span>
  {!isOverride && (
  <p className="text-sm font-black text-foreground">
- Global settings for this building
+ Applies to all rooms unless customized
  </p>
  )}
  </div>
@@ -2049,19 +2049,19 @@ function UtilityConfigEditor({
  </div>
  <div className="space-y-1.5">
  <div className="flex items-center gap-2">
- <p className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground">Operational Strategy</p>
+ <p className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground">How This Works</p>
  {isSubmetered && config.rate_per_unit === 0 && (
  <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-[8px] font-black uppercase text-amber-600 tracking-tighter">Action Required</span>
  )}
  </div>
  <p className="text-xs text-muted-foreground leading-relaxed font-medium">
- {strategy === "included" && "Simplified strategy: This utility is fully subsidized within the base rent. No additional collections are processed."}
+ {strategy === "included" && "Utilities are included in the room rent. Tenants will not receive separate utility bills."}
  {strategy === "submetered" && (
  config.rate_per_unit === 0 
- ? "Warning: You've selected Submetered Billing but set the rate to ₱0. No revenue will be recovered from tenants unless a rate is defined."
- : "Revenue Recovery: Landlord manages the primary utility account and recovers costs from tenants based on submeter consumption at the defined rate."
+ ? "Notice: Rate is set to ₱0.00. Enter your standard rate so monthly usage is calculated automatically."
+ : "You pay the main utility bill and bill each room based on submeter readings each month."
  )}
- {strategy === "direct" && "Zero-Liability: Tenants manage their own utility accounts and receive bills directly from the provider. iReside will not track or invoice these costs."}
+ {strategy === "direct" && "Tenants pay the utility provider directly with their own account. Charges will not appear on their rent bill."}
  </p>
  </div>
  </div>
