@@ -51,13 +51,28 @@ export function MobileHeader({
             {/* Left: back button or spacer */}
             <div className="w-10 flex items-center justify-start">
                 {showBack ? (
-                    <button
-                        onClick={handleBack}
-                        className="flex items-center justify-center w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                        aria-label="Go back"
-                    >
-                        <ChevronLeft size={22} strokeWidth={2} />
-                    </button>
+                    backHref ? (
+                        <Link
+                            href={backHref}
+                            prefetch={true}
+                            onClick={() => triggerHaptic('light')}
+                            className="flex items-center justify-center w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 active:bg-muted transition-all"
+                            aria-label="Go back"
+                        >
+                            <ChevronLeft size={22} strokeWidth={2} />
+                        </Link>
+                    ) : (
+                        <button
+                            onClick={() => {
+                                triggerHaptic('light');
+                                router.back();
+                            }}
+                            className="flex items-center justify-center w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 active:bg-muted transition-all"
+                            aria-label="Go back"
+                        >
+                            <ChevronLeft size={22} strokeWidth={2} />
+                        </button>
+                    )
                 ) : null}
             </div>
 
