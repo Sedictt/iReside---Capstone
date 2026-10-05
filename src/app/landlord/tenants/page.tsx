@@ -63,8 +63,36 @@ function TenantsContent() {
  const [isModalOpen, setIsModalOpen] = useState(false);
  const [isTenantSetupPromptOpen, setIsTenantSetupPromptOpen] = useState(false);
  const [dismissedThisVisit, setDismissedThisVisit] = useState(false);
- const [addTenantModalTab, setAddTenantModalTab] = useState<'quick_add' | 'manual' | 'invite' | 'walk_in'>('quick_add');
+ const [addTenantModalTab, setAddTenantModalTab] = useState<'quick_add' | 'manual' | 'invite' | 'walk_in'>('invite');
  const tenantSetupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+ // Handle ?action=new from sidebar "+" button or direct URL
+ useEffect(() => {
+  if (searchParams.get("action") === "new") {
+   const tab = searchParams.get("modalTab") as 'quick_add' | 'manual' | 'invite' | 'walk_in';
+   if (tab && ['quick_add', 'manual', 'invite', 'walk_in'].includes(tab)) {
+    setAddTenantModalTab(tab);
+   } else {
+    setAddTenantModalTab('invite');
+   }
+   setIsModalOpen(true);
+  }
+ }, [searchParams]);
+
+ // Handle custom window event when already on /landlord/tenants
+ useEffect(() => {
+  const handleOpenAddTenant = (e: any) => {
+   const tab = e?.detail?.tab as 'quick_add' | 'manual' | 'invite' | 'walk_in';
+   if (tab && ['quick_add', 'manual', 'invite', 'walk_in'].includes(tab)) {
+    setAddTenantModalTab(tab);
+   } else {
+    setAddTenantModalTab('invite');
+   }
+   setIsModalOpen(true);
+  };
+  window.addEventListener("open-add-tenant-modal", handleOpenAddTenant);
+  return () => window.removeEventListener("open-add-tenant-modal", handleOpenAddTenant);
+ }, []);
 
  const activePropertyId = selectedPropertyId && selectedPropertyId !== "all"
   ? selectedPropertyId
@@ -94,13 +122,15 @@ function TenantsContent() {
  );
 
  const hasConfiguredBilling = Boolean(
-  typeof window !== "undefined" && (
+  hasAtLeastOneTenant ||
+  properties.some((p) => p.hasTenants) ||
+  (typeof window !== "undefined" && (
    window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
    window.localStorage.getItem(`ireside.billing_rails_complete.${activePropertyId}`) === "true" ||
    window.localStorage.getItem("ireside.billing_rails_delayed") === "true" ||
    window.localStorage.getItem(`ireside.billing_rails_delayed.${activePropertyId}`) === "true" ||
    properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true")
-  )
+  ))
  );
 
  useEffect(() => {
@@ -232,13 +262,23 @@ function TenantsContent() {
  <AddTenantModal 
   isOpen={isModalOpen}
   initialTab={addTenantModalTab}
-  onClose={() => setIsModalOpen(false)}
+  onClose={() => {
+   setIsModalOpen(false);
+   if (searchParams.get("action") === "new") {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("action");
+    params.delete("modalTab");
+    const newQuery = params.toString();
+    router.replace(newQuery ? `/landlord/tenants?${newQuery}` : `/landlord/tenants`, { scroll: false });
+   }
+  }}
   onSuccess={() => {
    if (typeof window !== "undefined") {
     try {
      window.localStorage.removeItem(SCOPED_TENANT_DELAYED_KEY);
      window.localStorage.removeItem(`ireside.onboarding_awaiting_tenant_setup.${activePropertyId}`);
      window.localStorage.removeItem(`ireside.awaiting_tenant_setup.${activePropertyId}`);
+     window.localStorage.setItem("ireside.onboarding_awaiting_dashboard_tour", "true");
      window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
     } catch {}
    }
@@ -267,7 +307,7 @@ function TenantsContent() {
  <div className="flex items-center gap-3">
  <button 
   onClick={() => {
-   setAddTenantModalTab('quick_add');
+   setAddTenantModalTab('invite');
    setIsModalOpen(true);
   }}
   className="inline-flex items-center gap-2 rounded-xl neumorphic-primary px-5 py-2.5 text-sm font-black transition-all hover:bg-primary/90 active:scale-95"
@@ -319,7 +359,7 @@ function TenantsContent() {
  onViewProfile={handleViewProfile}
  onMessage={handleMessageTenant}
  onAddTenant={() => {
-  setAddTenantModalTab('quick_add');
+  setAddTenantModalTab('invite');
   setIsModalOpen(true);
  }}
  />

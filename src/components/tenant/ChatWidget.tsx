@@ -580,7 +580,7 @@ export function ChatWidget({
                         <div className="relative flex items-center gap-3">
                             <div className="flex-1 relative group">
                                 <div className="absolute -inset-[1px] bg-gradient-to-r from-primary/50 to-blue-500/50 rounded-full blur opacity-0 group-focus-within:opacity-30 transition-opacity"></div>
-                                <input
+                                <input maxLength={500}
                                     type="text"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}

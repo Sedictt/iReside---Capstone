@@ -8,7 +8,8 @@ import {
     Download,
     AlertCircle,
     CheckCircle2,
-    Loader2
+    Loader2,
+    ShieldCheck
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { useState, Suspense, useEffect, useRef } from "react";
@@ -17,6 +18,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { AccountActivationModal } from "@/components/auth/AccountActivationModal";
 import { SecurityKeyRecoveryModal } from "@/components/auth/SecurityKeyRecoveryModal";
 import { DISALLOWED_PRESEEDED_DATA } from "@/lib/validation/brand-setup";
@@ -78,11 +80,33 @@ function LoginContent() {
         password?: string;
     } | null>(null);
     const [isRecoveryRedirecting, setIsRecoveryRedirecting] = useState(false);
+    const [unclaimedUserData, setUnclaimedUserData] = useState<{ fullName?: string; email?: string } | null>(null);
+
+    // 2FA Challenge States
+    const [twoFactorChallenge, setTwoFactorChallenge] = useState<{
+        userId: string;
+        email: string;
+        role?: string;
+        userData?: any;
+    } | null>(null);
+    const [twoFactorOtp, setTwoFactorOtp] = useState("");
+    const [twoFactorLoading, setTwoFactorLoading] = useState(false);
+    const [twoFactorError, setTwoFactorError] = useState<string | null>(null);
+    const [twoFactorCooldown, setTwoFactorCooldown] = useState(0);
+    const [isResendingTwoFactor, setIsResendingTwoFactor] = useState(false);
 
     const passwordInputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectUrl = searchParams.get('redirect');
+
+    useEffect(() => {
+        if (twoFactorCooldown <= 0) return;
+        const timer = setTimeout(() => {
+            setTwoFactorCooldown((prev) => prev - 1);
+        }, 1000);
+        return () => clearTimeout(timer);
+    }, [twoFactorCooldown]);
 
     useEffect(() => {
         setMounted(true);
@@ -129,7 +153,7 @@ function LoginContent() {
     const handleRecoveryProceed = async () => {
         if (!pendingRecovery) return;
         setIsRecoveryRedirecting(true);
-        const { email } = pendingRecovery;
+        const { email, password } = pendingRecovery;
 
         // Clear pending recovery key and temporary stored credentials
         try {
@@ -172,7 +196,29 @@ function LoginContent() {
             } catch {}
         }
 
-        // Force browser refresh so there are no stale cache or auth locks before logging in
+        // Seamless Auto-Login: Authenticate directly with the newly set credentials
+        if (password) {
+            try {
+                const supabase = createClient();
+                const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+                if (!signInErr && signInData?.session) {
+                    toast.success("Account Claimed Successfully!", {
+                        description: "Continuing directly to property setup...",
+                    });
+                    if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+                        window.location.replace("/setup");
+                        return;
+                    }
+                }
+            } catch (autoLoginErr) {
+                console.warn("[Recovery Proceed] Auto-login error, falling back to manual login:", autoLoginErr);
+            }
+        }
+
+        // Fallback: Force browser refresh so there are no stale cache or auth locks before logging in
         if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
             window.location.replace(`/login?activated=true&email=${encodeURIComponent(email)}`);
             return;
@@ -273,11 +319,13 @@ function LoginContent() {
             let role = data.user?.user_metadata?.role;
             let isClaimed = data.user?.user_metadata?.is_account_claimed;
 
+            let user2faEnabled = Boolean(data.user?.user_metadata?.two_factor_enabled);
+
             if (data.user?.id) {
                 try {
                     const profileQuery = supabase
                         .from("profiles")
-                        .select("role")
+                        .select("role, two_factor_enabled")
                         .eq("id", data.user.id)
                         .single();
                     const profileTimeout = new Promise<{ data: any; error: any }>((resolve) =>
@@ -286,76 +334,52 @@ function LoginContent() {
                     const { data: profile } = await Promise.race([profileQuery, profileTimeout]);
                     if (profile) {
                         if (!role) role = profile.role;
+                        if (profile.two_factor_enabled) user2faEnabled = true;
                     }
                 } catch {
                     // Profile query timeout should not block login
                 }
             }
 
-            const userEmail = (data.user?.email || "").toLowerCase().trim();
-            const isDefaultAccount =
-                userEmail.includes("turnkey.local") ||
-                userEmail === "admin@turnkey.local" ||
-                userEmail === "landlord@turnkey.local" ||
-                userEmail.startsWith("practice.landlord") ||
-                DISALLOWED_PRESEEDED_DATA.emails.includes(userEmail) ||
-                isClaimed === false;
-
-            // Intercept initial setup/default accounts for landlord/admin
-            if ((role === "landlord" || role === "admin") && (isClaimed === false || isDefaultAccount)) {
-                clearStaleLandlordData();
-                setShowActivationModal(true);
-                setLoading(false);
-                return;
-            }
-
-            // For claimed landlords, check if workspace setup is complete
-            if (role === "landlord" || role === "admin") {
-                const isSetupCompleted = data.user?.user_metadata?.is_setup_completed;
-                if (isSetupCompleted === false) {
-                    clearStaleLandlordData();
-                    const dest = redirectUrl || "/setup";
-                    if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-                        window.location.replace(dest);
-                    } else {
-                        router.push(dest);
-                    }
-                    return;
-                }
-
+            // If user has Two-Factor Authentication enabled, initiate the challenge
+            if (user2faEnabled) {
                 try {
-                    const controller = new AbortController();
-                    const brandTimeout = setTimeout(() => controller.abort(), 2500);
-                    const brandRes = await fetch("/api/branding", {
-                        signal: controller.signal,
-                        cache: "no-store",
-                        headers: { "Cache-Control": "no-cache" },
+                    const twoFactorRes = await fetch("/api/auth/2fa/challenge", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ userId: data.user?.id }),
                     });
-                    clearTimeout(brandTimeout);
-                    if (brandRes.ok) {
-                        const brandData = await brandRes.json();
-                        if (!brandData.setupCompleted) {
-                            const dest = redirectUrl || "/setup";
-                            if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-                                window.location.replace(dest);
-                            } else {
-                                router.push(dest);
-                            }
+
+                    if (twoFactorRes.ok) {
+                        const twoFactorData = await twoFactorRes.json();
+                        if (twoFactorData.required) {
+                            setTwoFactorChallenge({
+                                userId: data.user.id,
+                                email: twoFactorData.email,
+                                role,
+                                userData: data.user,
+                            });
+                            setTwoFactorOtp("");
+                            setTwoFactorError(null);
+                            setTwoFactorCooldown(60);
+                            setLoading(false);
                             return;
                         }
+                    } else {
+                        const errData = await twoFactorRes.json().catch(() => null);
+                        setError(errData?.error || "Failed to initiate Two-Factor Authentication. Please try again.");
+                        setLoading(false);
+                        return;
                     }
-                } catch {
-                    // Fallback to regular dashboard
+                } catch (twoFactorErr) {
+                    console.error("[Login] 2FA challenge check error:", twoFactorErr);
+                    setError("Unable to complete security verification. Please check your connection and try again.");
+                    setLoading(false);
+                    return;
                 }
             }
 
-            const target = role === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard";
-            const finalDest = redirectUrl || target;
-            if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-                window.location.replace(finalDest);
-            } else {
-                router.push(finalDest);
-            }
+            await completeSuccessfulLogin(data.user, role);
         } catch (err) {
             console.error('[Login] Unexpected error:', err);
             setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
@@ -364,7 +388,169 @@ function LoginContent() {
         }
     };
 
+
+    const completeSuccessfulLogin = async (userData: any, userRole?: string) => {
+        const role = userRole || userData?.user_metadata?.role;
+        const isClaimed = userData?.user_metadata?.is_account_claimed;
+        const userEmail = (userData?.email || "").toLowerCase().trim();
+        const isDefaultAccount =
+            userEmail.includes("turnkey.local") ||
+            userEmail === "admin@turnkey.local" ||
+            userEmail === "landlord@turnkey.local" ||
+            userEmail.startsWith("practice.landlord") ||
+            DISALLOWED_PRESEEDED_DATA.emails.includes(userEmail) ||
+            isClaimed === false;
+
+        // Intercept initial setup/default accounts for landlord/admin
+        if ((role === "landlord" || role === "admin") && (isClaimed === false || isDefaultAccount)) {
+            clearStaleLandlordData();
+            setUnclaimedUserData({
+                fullName: userData?.user_metadata?.full_name || userData?.user_metadata?.name,
+                email: userData?.email,
+            });
+            setShowActivationModal(true);
+            setTwoFactorChallenge(null);
+            setLoading(false);
+            return;
+        }
+
+        // For claimed landlords, check if workspace setup is complete
+        if (role === "landlord" || role === "admin") {
+            const isSetupCompleted = userData?.user_metadata?.is_setup_completed;
+            if (isSetupCompleted === false) {
+                clearStaleLandlordData();
+                const dest = redirectUrl || "/setup";
+                if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+                    window.location.replace(dest);
+                } else {
+                    router.push(dest);
+                }
+                return;
+            }
+
+            try {
+                const controller = new AbortController();
+                const brandTimeout = setTimeout(() => controller.abort(), 2500);
+                const brandRes = await fetch("/api/branding", {
+                    signal: controller.signal,
+                    cache: "no-store",
+                    headers: { "Cache-Control": "no-cache" },
+                });
+                clearTimeout(brandTimeout);
+                if (brandRes.ok) {
+                    const brandData = await brandRes.json();
+                    if (!brandData.setupCompleted) {
+                        const dest = redirectUrl || "/setup";
+                        if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+                            window.location.replace(dest);
+                        } else {
+                            router.push(dest);
+                        }
+                        return;
+                    }
+                }
+            } catch {
+                // Fallback to regular dashboard
+            }
+        }
+
+        const target = role === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard";
+        const finalDest = redirectUrl || target;
+        if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+            window.location.replace(finalDest);
+        } else {
+            router.push(finalDest);
+        }
+    };
+
+    const handleTwoFactorVerify = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!twoFactorChallenge) return;
+        const cleanOtp = twoFactorOtp.replace(/\D/g, "");
+        if (cleanOtp.length !== 6) {
+            setTwoFactorError("Please enter a valid 6-digit verification code.");
+            return;
+        }
+
+        setTwoFactorLoading(true);
+        setTwoFactorError(null);
+
+        try {
+            const res = await fetch("/api/auth/2fa/verify-login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userId: twoFactorChallenge.userId,
+                    otp: cleanOtp,
+                }),
+            });
+
+            const data = await res.json();
+            if (!res.ok || data.error) {
+                setTwoFactorError(data.error || "Verification failed. Please try again.");
+                setTwoFactorLoading(false);
+                return;
+            }
+
+            // 2FA Verified! Complete login
+            const { userData, role } = twoFactorChallenge;
+            setTwoFactorChallenge(null);
+            await completeSuccessfulLogin(userData, role);
+        } catch (err) {
+            setTwoFactorError(err instanceof Error ? err.message : "Verification failed. Please try again.");
+        } finally {
+            setTwoFactorLoading(false);
+        }
+    };
+
+    const handleResendTwoFactorOtp = async () => {
+        if (!twoFactorChallenge || twoFactorCooldown > 0 || isResendingTwoFactor) return;
+        setIsResendingTwoFactor(true);
+        setTwoFactorError(null);
+
+        try {
+            const res = await fetch("/api/auth/2fa/challenge", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userId: twoFactorChallenge.userId,
+                    resend: true,
+                }),
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                setTwoFactorCooldown(60);
+            } else {
+                setTwoFactorError(data.error || "Failed to resend code.");
+            }
+        } catch {
+            setTwoFactorError("Failed to resend code. Please try again.");
+        } finally {
+            setIsResendingTwoFactor(false);
+        }
+    };
+
+    const handleCancelTwoFactor = async () => {
+        try {
+            await fetch("/api/auth/2fa/cancel", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: twoFactorChallenge?.userId }),
+            });
+            const supabase = createClient();
+            await supabase.auth.signOut({ scope: "local" }).catch(() => null);
+        } catch {
+            // best-effort
+        }
+        setTwoFactorChallenge(null);
+        setTwoFactorOtp("");
+        setTwoFactorError(null);
+    };
+
     
+
+
 
     return (
         <div className="min-h-svh w-full flex flex-col justify-between bg-background text-foreground relative selection:bg-primary/25 font-sans">
@@ -576,154 +762,256 @@ function LoginContent() {
                             transition={{ duration: 0.4 }}
                             className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-xl space-y-6"
                         >
-                            {/* Card Header */}
-                            <div className="space-y-1.5">
-                                <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-                                    Sign In
-                                </h2>
-                                <p className="text-sm text-muted-foreground">
-                                    Enter your credentials to access your account.
-                                </p>
-                            </div>
-
-                            {/* Error Notification */}
-                            <AnimatePresence mode="wait">
-                                {error && (
-                                    <motion.div 
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        transition={{ duration: 0.2 }}
-                                        role="alert"
-                                        aria-live="polite"
-                                        className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/25 flex items-start gap-3 overflow-hidden text-red-600 dark:text-red-400"
-                                    >
-                                        <AlertCircle className="size-4 shrink-0 mt-0.5" />
-                                        <p className="text-xs font-medium leading-relaxed">{error}</p>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-
-                            {/* Activation Success Re-login Notification */}
-                            <AnimatePresence mode="wait">
-                                {activationBanner && (
-                                    <motion.div 
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        transition={{ duration: 0.2 }}
-                                        role="alert"
-                                        aria-live="polite"
-                                        className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-start gap-3 overflow-hidden text-emerald-700 dark:text-emerald-400"
-                                    >
-                                        <CheckCircle2 className="size-4 shrink-0 mt-0.5" />
-                                        <p className="text-xs font-semibold leading-relaxed">{activationBanner}</p>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-
-                            {/* Authentication Form */}
-                            <form className="space-y-4" onSubmit={handleSubmit} noValidate>
-                                <div className="space-y-4">
-                                    {/* Email Field */}
-                                    <div className="space-y-1.5">
-                                        <label 
-                                            htmlFor="email"
-                                            className="block text-xs font-semibold text-foreground/90 select-none"
-                                        >
-                                            Email Address
-                                        </label>
-                                        <input
-                                            id="email"
-                                            name="email"
-                                            type="email"
-                                            required
-                                            autoComplete="email"
-                                            autoCapitalize="none"
-                                            spellCheck={false}
-                                            value={prefilledEmail}
-                                            onChange={(e) => setPrefilledEmail(e.target.value)}
-                                            placeholder="name@example.com"
-                                            className="h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                        />
+                            {twoFactorChallenge ? (
+                                <div className="space-y-6">
+                                    <div className="space-y-2">
+                                        <div className="size-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-3">
+                                            <ShieldCheck className="size-6" />
+                                        </div>
+                                        <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+                                            Two-Factor Verification
+                                        </h2>
+                                        <p className="text-sm text-muted-foreground leading-relaxed">
+                                            Enter the 6-digit verification code sent to{" "}
+                                            <span className="font-mono font-bold text-foreground">
+                                                {twoFactorChallenge.email}
+                                            </span>.
+                                        </p>
                                     </div>
 
-                                    {/* Password Field */}
-                                    <div className="space-y-1.5">
-                                        <div className="flex justify-between items-center">
+                                    {/* Error Notification */}
+                                    <AnimatePresence mode="wait">
+                                        {twoFactorError && (
+                                            <motion.div 
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                exit={{ opacity: 0, height: 0 }}
+                                                transition={{ duration: 0.2 }}
+                                                role="alert"
+                                                aria-live="polite"
+                                                className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/25 flex items-start gap-3 overflow-hidden text-red-600 dark:text-red-400"
+                                            >
+                                                <AlertCircle className="size-4 shrink-0 mt-0.5" />
+                                                <p className="text-xs font-medium leading-relaxed">{twoFactorError}</p>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+
+                                    <form className="space-y-4" onSubmit={handleTwoFactorVerify} noValidate>
+                                        <div className="space-y-1.5">
                                             <label 
-                                                htmlFor="password"
+                                                htmlFor="two-factor-code"
                                                 className="block text-xs font-semibold text-foreground/90 select-none"
                                             >
-                                                Password
+                                                6-Digit Verification Code
                                             </label>
-                                            <Link 
-                                                href="/forgot-password" 
-                                                className="text-xs font-semibold text-primary hover:underline transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-xs"
-                                            >
-                                                Forgot Password?
-                                            </Link>
-                                        </div>
-                                        <div className="relative">
                                             <input
-                                                ref={passwordInputRef}
-                                                id="password"
-                                                name="password"
-                                                type={isPasswordVisible ? "text" : "password"}
-                                                required
-                                                autoComplete="current-password"
-                                                placeholder="••••••••"
-                                                className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                                id="two-factor-code"
+                                                type="text"
+                                                inputMode="numeric"
+                                                maxLength={8}
+                                                autoFocus
+                                                value={twoFactorOtp}
+                                                onChange={(e) => setTwoFactorOtp(e.target.value.replace(/\D/g, ''))}
+                                                placeholder="000000"
+                                                className="h-14 w-full text-center font-mono text-2xl tracking-[0.5em] rounded-xl border border-border bg-background px-3.5 text-foreground placeholder:text-muted-foreground/40 placeholder:tracking-normal transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                                             />
-                                            <button 
+                                        </div>
+
+                                        <button
+                                            type="submit"
+                                            disabled={twoFactorLoading || twoFactorOtp.trim().length < 6}
+                                            className="h-11 w-full rounded-xl bg-primary text-primary-foreground font-bold text-sm tracking-wide transition-all duration-200 hover:bg-primary/90 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                                        >
+                                            {twoFactorLoading ? (
+                                                <>
+                                                    <Loader2 className="size-4 animate-spin" />
+                                                    <span>Verifying...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span>Verify & Sign In</span>
+                                                    <ArrowRight className="size-4" />
+                                                </>
+                                            )}
+                                        </button>
+
+                                        <div className="flex items-center justify-between text-xs pt-2">
+                                            <button
                                                 type="button"
-                                                onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                                                aria-label={isPasswordVisible ? "Hide password" : "Show password"}
-                                                aria-pressed={isPasswordVisible}
+                                                onClick={handleResendTwoFactorOtp}
+                                                disabled={twoFactorCooldown > 0 || isResendingTwoFactor}
+                                                className="font-semibold text-primary hover:underline transition-colors disabled:text-muted-foreground disabled:no-underline cursor-pointer"
                                             >
-                                                {isPasswordVisible ? (
-                                                    <EyeOff className="size-4.5" />
-                                                ) : (
-                                                    <Eye className="size-4.5" />
-                                                )}
+                                                {isResendingTwoFactor
+                                                    ? "Sending code..."
+                                                    : twoFactorCooldown > 0
+                                                    ? `Resend code in ${twoFactorCooldown}s`
+                                                    : "Resend Code"}
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={handleCancelTwoFactor}
+                                                className="font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                            >
+                                                Back to sign in
                                             </button>
                                         </div>
-                                    </div>
+                                    </form>
                                 </div>
+                            ) : (
+                                <>
+                                    {/* Card Header */}
+                                    <div className="space-y-1.5">
+                                        <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+                                            Sign In
+                                        </h2>
+                                        <p className="text-sm text-muted-foreground">
+                                            Enter your credentials to access your account.
+                                        </p>
+                                    </div>
 
-                                {/* Submit Button */}
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="h-11 w-full rounded-xl bg-primary text-primary-foreground font-bold text-sm tracking-wide transition-all duration-200 hover:bg-primary/90 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                                >
-                                    {loading ? (
-                                        <>
-                                            <Loader2 className="size-4 animate-spin" />
-                                            <span>Authenticating...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span>Sign In</span>
-                                            <ArrowRight className="size-4" />
-                                        </>
-                                    )}
-                                </button>
-                            </form>
+                                    {/* Error Notification */}
+                                    <AnimatePresence mode="wait">
+                                        {error && (
+                                            <motion.div 
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                exit={{ opacity: 0, height: 0 }}
+                                                transition={{ duration: 0.2 }}
+                                                role="alert"
+                                                aria-live="polite"
+                                                className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/25 flex items-start gap-3 overflow-hidden text-red-600 dark:text-red-400"
+                                            >
+                                                <AlertCircle className="size-4 shrink-0 mt-0.5" />
+                                                <p className="text-xs font-medium leading-relaxed">{error}</p>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
 
-                            {/* Resident Activation Link (Single Clean Footnote) */}
-                            <div className="pt-2 text-center">
-                                <p className="text-xs text-muted-foreground">
-                                    Invited as a resident?{" "}
-                                    <Link 
-                                        href="/signup/tenant" 
-                                        className="font-semibold text-primary hover:underline transition-colors"
-                                    >
-                                        Activate with Invite Code
-                                    </Link>
-                                </p>
-                            </div>
+                                    {/* Activation Success Re-login Notification */}
+                                    <AnimatePresence mode="wait">
+                                        {activationBanner && (
+                                            <motion.div 
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                exit={{ opacity: 0, height: 0 }}
+                                                transition={{ duration: 0.2 }}
+                                                role="alert"
+                                                aria-live="polite"
+                                                className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-start gap-3 overflow-hidden text-emerald-700 dark:text-emerald-400"
+                                            >
+                                                <CheckCircle2 className="size-4 shrink-0 mt-0.5" />
+                                                <p className="text-xs font-semibold leading-relaxed">{activationBanner}</p>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+
+                                    {/* Authentication Form */}
+                                    <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+                                        <div className="space-y-4">
+                                            {/* Email Field */}
+                                            <div className="space-y-1.5">
+                                                <label 
+                                                    htmlFor="email"
+                                                    className="block text-xs font-semibold text-foreground/90 select-none"
+                                                >
+                                                    Email Address
+                                                </label>
+                                                <input maxLength={50}
+                                                    id="email"
+                                                    name="email"
+                                                    type="email"
+                                                    required
+                                                    autoComplete="email"
+                                                    autoCapitalize="none"
+                                                    spellCheck={false}
+                                                    value={prefilledEmail}
+                                                    onChange={(e) => setPrefilledEmail(e.target.value)}
+                                                    placeholder="name@example.com"
+                                                    className="h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                                />
+                                            </div>
+
+                                            {/* Password Field */}
+                                            <div className="space-y-1.5">
+                                                <div className="flex justify-between items-center">
+                                                    <label 
+                                                        htmlFor="password"
+                                                        className="block text-xs font-semibold text-foreground/90 select-none"
+                                                    >
+                                                        Password
+                                                    </label>
+                                                    <Link 
+                                                        href="/forgot-password" 
+                                                        className="text-xs font-semibold text-primary hover:underline transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-xs"
+                                                    >
+                                                        Forgot Password?
+                                                    </Link>
+                                                </div>
+                                                <div className="relative">
+                                                    <input
+                                                        ref={passwordInputRef}
+                                                        id="password"
+                                                        name="password"
+                                                        type={isPasswordVisible ? "text" : "password"}
+                                                        required
+                                                        autoComplete="current-password"
+                                                        placeholder="••••••••"
+                                                        className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                                    />
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                                        aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+                                                        aria-pressed={isPasswordVisible}
+                                                    >
+                                                        {isPasswordVisible ? (
+                                                            <EyeOff className="size-4.5" />
+                                                        ) : (
+                                                            <Eye className="size-4.5" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Submit Button */}
+                                        <button
+                                            type="submit"
+                                            disabled={loading}
+                                            className="h-11 w-full rounded-xl bg-primary text-primary-foreground font-bold text-sm tracking-wide transition-all duration-200 hover:bg-primary/90 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                                        >
+                                            {loading ? (
+                                                <>
+                                                    <Loader2 className="size-4 animate-spin" />
+                                                    <span>Authenticating...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span>Sign In</span>
+                                                    <ArrowRight className="size-4" />
+                                                </>
+                                            )}
+                                        </button>
+                                    </form>
+
+                                    {/* Resident Activation Link (Single Clean Footnote) */}
+                                    <div className="pt-2 text-center">
+                                        <p className="text-xs text-muted-foreground">
+                                            Invited as a resident?{" "}
+                                            <Link 
+                                                href="/signup/tenant" 
+                                                className="font-semibold text-primary hover:underline transition-colors"
+                                            >
+                                                Activate with Invite Code
+                                            </Link>
+                                        </p>
+                                    </div>
+                                </>
+                            )}
                         </motion.section>
                     </div>
                 </div>
@@ -733,6 +1021,8 @@ function LoginContent() {
             <AccountActivationModal
                 isOpen={showActivationModal}
                 onComplete={handleActivationComplete}
+                initialFullName={unclaimedUserData?.fullName}
+                initialEmail={unclaimedUserData?.email}
             />
 
             {/* Security Recovery Key Lightbox Modal (rendered after refresh) */}

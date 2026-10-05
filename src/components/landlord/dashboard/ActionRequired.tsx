@@ -99,19 +99,19 @@ function ActionFilteredEmptyState({ onReset }: { onReset: () => void }) {
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
-            className="rounded-[2rem] neumorphic-inset p-8 sm:p-12 text-center"
+            className="rounded-2xl neumorphic-inset p-8 sm:p-12 text-center"
         >
             <div className="mb-4 inline-flex size-14 sm:size-16 items-center justify-center rounded-2xl neumorphic-extruded text-primary">
                 <Filter className="size-6 sm:size-7" />
             </div>
-            <h3 className="text-base sm:text-lg font-black text-foreground">No Matching Attention Items</h3>
-            <p className="mt-1 text-xs sm:text-sm font-medium text-muted-foreground max-w-sm mx-auto">
+            <h3 className="text-base sm:text-lg font-black text-foreground text-balance">No Matching Attention Items</h3>
+            <p className="mt-1 text-xs sm:text-sm font-medium text-muted-foreground max-w-sm mx-auto text-pretty">
                 No items match your active filter criteria. Clear filters to view all pending tasks.
             </p>
             <button
                 type="button"
                 onClick={onReset}
-                className="mt-5 inline-flex items-center gap-2 rounded-xl neumorphic-primary px-4 py-2 sm:px-5 sm:py-2.5 text-xs font-black text-primary-foreground transition-all hover:brightness-110 active:scale-95"
+                className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl min-h-[44px] neumorphic-primary px-5 py-2.5 text-xs font-black text-primary-foreground transition-all hover:brightness-110 active:scale-95"
             >
                 <RotateCcw className="size-3.5" />
                 Reset All Filters
@@ -129,7 +129,7 @@ function ActionItemCard({ action }: { action: ActionItem }) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="group relative overflow-hidden rounded-[1.5rem] neumorphic-extruded p-4 sm:p-5 transition-all hover:scale-[1.01]"
+            className="group relative overflow-hidden rounded-2xl neumorphic-extruded p-4 sm:p-5 transition-all hover:scale-[1.01]"
         >
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between relative z-10">
                 <div className="flex items-start gap-4">
@@ -143,7 +143,7 @@ function ActionItemCard({ action }: { action: ActionItem }) {
                     </div>
                     <div className="min-w-0 flex-1">
                         <div className="mb-1.5 flex flex-wrap items-center gap-3">
-                            <h3 className="text-sm sm:text-base font-black tracking-tight text-foreground transition-colors group-hover:text-primary">
+                            <h3 className="text-sm sm:text-base font-black tracking-tight text-foreground transition-colors group-hover:text-primary text-balance">
                                 {action.title}
                             </h3>
                             <span className={cn(
@@ -153,7 +153,7 @@ function ActionItemCard({ action }: { action: ActionItem }) {
                                 {action.badgeLabel ?? action.tone}
                             </span>
                         </div>
-                        <p className="text-xs sm:text-sm font-medium text-muted-foreground leading-relaxed">
+                        <p className="text-xs sm:text-sm font-medium text-muted-foreground leading-relaxed text-pretty">
                             {action.detail}
                         </p>
                         <div className="mt-2 sm:mt-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
@@ -165,7 +165,7 @@ function ActionItemCard({ action }: { action: ActionItem }) {
 
                 <Link
                     href={action.href}
-                    className="group/btn inline-flex items-center justify-center gap-3 w-full sm:w-auto rounded-xl neumorphic-primary px-4 py-2.5 sm:px-6 sm:py-3 text-xs sm:text-sm font-black tracking-tight text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] sm:self-center"
+                    className="group/btn inline-flex items-center justify-center gap-3 w-full sm:w-auto rounded-xl min-h-[44px] neumorphic-primary px-5 py-2.5 sm:px-6 sm:py-3 text-xs sm:text-sm font-black tracking-tight text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] sm:self-center"
                 >
                     {action.cta}
                     <ArrowRight className="size-3.5 sm:size-4 transition-transform group-hover/btn:translate-x-1" />
@@ -180,13 +180,13 @@ function ActionEmptyState() {
         <m.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="rounded-[2.5rem] neumorphic-inset p-12 text-center"
+            className="rounded-3xl neumorphic-inset p-10 sm:p-12 text-center"
         >
-            <div className="mb-6 inline-flex size-20 items-center justify-center rounded-[1.5rem] neumorphic-extruded text-primary">
+            <div className="mb-6 inline-flex size-20 items-center justify-center rounded-2xl neumorphic-extruded text-primary">
                 <ShieldCheck className="size-10" />
             </div>
-            <h3 className="text-xl font-black text-foreground">All Caught Up</h3>
-            <p className="mt-2 text-sm font-medium text-muted-foreground max-w-sm mx-auto">
+            <h3 className="text-xl font-black text-foreground text-balance">All Caught Up</h3>
+            <p className="mt-2 text-sm font-medium text-muted-foreground max-w-sm mx-auto text-pretty">
                 No urgent tasks right now. Everything that needs action is already handled.
             </p>
         </m.div>
@@ -531,24 +531,24 @@ export function ActionRequired() {
 
     return (
         <LazyMotion features={domAnimation}>
-            <section className="rounded-[2.5rem] neumorphic-panel p-4 sm:p-6 md:p-8">
+            <section className="rounded-3xl neumorphic-panel p-6 sm:p-8">
                 {/* Header Row */}
                 <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex items-center gap-3">
-                        <div className="flex size-12 sm:size-14 items-center justify-center rounded-[1rem] sm:rounded-[1.25rem] neumorphic-extruded text-primary shrink-0">
+                        <div className="flex size-12 sm:size-14 items-center justify-center rounded-2xl neumorphic-extruded text-primary shrink-0">
                             <Activity className="size-5 sm:size-7" />
                         </div>
                         <div>
                             <div className="flex items-center gap-2.5">
-                                <h2 className="text-lg sm:text-2xl font-black tracking-tight text-foreground">Needs Your Attention</h2>
+                                <h2 className="text-lg sm:text-2xl font-black tracking-tight text-foreground text-balance">Needs Your Attention</h2>
                                 {counts.urgent > 0 && (
-                                    <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20">
+                                    <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20 tabular-nums">
                                         <span className="size-1.5 rounded-full bg-red-500 animate-pulse" />
                                         {counts.urgent} Urgent
                                     </span>
                                 )}
                             </div>
-                            <p className="hidden sm:block text-sm font-medium text-muted-foreground/80">
+                            <p className="hidden sm:block text-sm font-medium text-muted-foreground/80 max-w-prose text-pretty">
                                 Action items requiring your immediate review or follow-up.
                             </p>
                         </div>
@@ -572,7 +572,7 @@ export function ActionRequired() {
                             type="button"
                             onClick={() => setUrgentOnly((prev) => !prev)}
                             className={cn(
-                                "group relative flex h-8 sm:h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-black transition-all shrink-0 select-none",
+                                "group relative flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-black transition-all shrink-0 select-none",
                                 urgentOnly
                                     ? "border border-red-500/40 bg-red-500/15 text-red-400 shadow-sm shadow-red-500/10"
                                     : "neumorphic-inset text-muted-foreground hover:text-foreground"
@@ -582,7 +582,7 @@ export function ActionRequired() {
                             <span>Urgent Only</span>
                             {counts.urgent > 0 && (
                                 <span className={cn(
-                                    "rounded-full px-1.5 py-0.2 text-[9px] font-black",
+                                    "rounded-full px-1.5 py-0.2 text-[9px] font-black tabular-nums",
                                     urgentOnly ? "bg-red-500/30 text-red-300" : "bg-white/10 text-neutral-400"
                                 )}>
                                     {counts.urgent}
@@ -595,7 +595,7 @@ export function ActionRequired() {
                         <button
                             type="button"
                             onClick={handleResetFilters}
-                            className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold text-muted-foreground hover:text-primary transition-colors hover:neumorphic-inset"
+                            className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 min-h-[36px] text-xs font-bold text-muted-foreground hover:text-primary transition-colors hover:neumorphic-inset"
                         >
                             <RotateCcw className="size-3" />
                             <span>Reset Filter</span>
@@ -607,7 +607,7 @@ export function ActionRequired() {
                     {state.loading ? (
                         <div className="grid gap-4">
                             {[1, 2, 3].map((item) => (
-                                <div key={item} className="animate-pulse rounded-[1.5rem] neumorphic-inset p-6">
+                                <div key={item} className="animate-pulse rounded-2xl neumorphic-inset p-6">
                                     <div className="flex gap-4">
                                         <div className="size-12 rounded-xl neumorphic-extruded" />
                                         <div className="flex-1 space-y-3">

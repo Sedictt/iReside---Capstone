@@ -63,9 +63,10 @@ export function UnitMapExploreOrReturnModal({
                         <CheckCircle2 className="size-6" />
                     </div>
                     <div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-600 dark:text-emerald-400">
-                            Layout Saved
-                        </span>
+                        <div className="flex items-center gap-1 text-xs font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
+                            <span>Step 2 Complete •</span>
+                            <span>Layout Saved</span>
+                        </div>
                         <h2
                             id="explore-or-return-title"
                             className="text-xl sm:text-2xl font-black tracking-tight leading-tight"
@@ -76,37 +77,37 @@ export function UnitMapExploreOrReturnModal({
                 </div>
 
                 {/* Subtext */}
-                <p className={cn("text-xs sm:text-sm leading-relaxed", isDark ? "text-zinc-300" : "text-zinc-600")}>
+                <p className={cn("text-sm leading-relaxed", isDark ? "text-zinc-300" : "text-zinc-600")}>
                     Your units and hallways have been organized on the canvas
                     {propertyName ? <> for <span className="font-bold">{propertyName}</span></> : ""}.
-                    Next up in onboarding: Configure your payment channels (GCash) and utility tariffs so your invoices and leases are ready.
+                    Next up in onboarding: Set up your water and electric rates so your bills are ready for tenants.
                 </p>
 
                 {/* Choice Actions */}
-                <div className="flex w-full flex-col gap-2.5 pt-2">
+                <div className="flex w-full flex-col gap-3 pt-2">
                     {onProceedToBilling ? (
                         <button
                             type="button"
                             onClick={onProceedToBilling}
-                            className="w-full group inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-md shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer"
+                            className="w-full group inline-flex items-center justify-center gap-2 h-12 px-5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm shadow-md shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer"
                         >
-                            <span>Set Up Billing & Utilities</span>
+                            <span>Next: Set Up Water &amp; Electricity</span>
                             <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                         </button>
                     ) : null}
 
-                    <div className="flex w-full flex-col-reverse sm:flex-row gap-2.5">
+                    <div className="flex w-full flex-col-reverse sm:flex-row gap-3">
                         <button
                             type="button"
                             onClick={onContinueExploring}
                             className={cn(
-                                "flex-1 inline-flex items-center justify-center gap-2 h-10 sm:h-11 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer active:scale-[0.98]",
+                                "flex-1 inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer active:scale-[0.98]",
                                 isDark
                                     ? "bg-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700/60"
                                     : "bg-muted/70 hover:bg-muted text-zinc-700 hover:text-zinc-950 border border-border/70"
                             )}
                         >
-                            <Compass className="size-3.5" />
+                            <Compass className="size-4" />
                             <span>Continue Exploring Map</span>
                         </button>
 
@@ -114,7 +115,7 @@ export function UnitMapExploreOrReturnModal({
                             type="button"
                             onClick={onReturnToDashboard}
                             className={cn(
-                                "flex-1 group inline-flex items-center justify-center gap-2 h-10 sm:h-11 px-4 rounded-xl font-semibold text-xs sm:text-sm transition-all cursor-pointer active:scale-[0.98]",
+                                "flex-1 group inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-4 rounded-xl font-semibold text-xs sm:text-sm transition-all cursor-pointer active:scale-[0.98]",
                                 onProceedToBilling
                                     ? isDark
                                         ? "bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 border border-zinc-700/60"
@@ -123,13 +124,13 @@ export function UnitMapExploreOrReturnModal({
                             )}
                         >
                             <span>Return to Dashboard</span>
-                            <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+                            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                         </button>
                     </div>
                 </div>
 
                 {/* Footer hint */}
-                <p className={cn("text-center text-[11px]", isDark ? "text-zinc-500" : "text-zinc-400")}>
+                <p className={cn("text-center text-xs", isDark ? "text-zinc-500" : "text-zinc-400")}>
                     You can return to the dashboard anytime using the navigation menu.
                 </p>
             </div>

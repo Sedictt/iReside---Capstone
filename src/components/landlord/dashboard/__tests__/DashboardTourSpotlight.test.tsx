@@ -36,7 +36,7 @@ describe("DashboardTourSpotlight", () => {
         expect(screen.getByText("Next")).toBeDefined();
     });
 
-    it("renders Step 2: Intelligence Hub", () => {
+    it("renders Step 2: Today's Overview", () => {
         render(
             <DashboardTourSpotlight
                 isOpen={true}
@@ -49,13 +49,13 @@ describe("DashboardTourSpotlight", () => {
         );
 
         expect(screen.getByText("Tour: Step 2 of 4")).toBeDefined();
-        expect(screen.getByRole("heading", { name: "Step 2: Intelligence Hub" })).toBeDefined();
-        expect(screen.getByText(/Highlighted: Intelligence Hub/i)).toBeDefined();
+        expect(screen.getByRole("heading", { name: "Step 2: Today's Overview" })).toBeDefined();
+        expect(screen.getByText(/Highlighted: Today's Overview/i)).toBeDefined();
         expect(screen.getByText("Previous")).toBeDefined();
         expect(screen.getByText("Next")).toBeDefined();
     });
 
-    it("renders Step 3: Cash Flow Ledger", () => {
+    it("renders Step 3: Rent & Payments", () => {
         render(
             <DashboardTourSpotlight
                 isOpen={true}
@@ -68,8 +68,8 @@ describe("DashboardTourSpotlight", () => {
         );
 
         expect(screen.getByText("Tour: Step 3 of 4")).toBeDefined();
-        expect(screen.getByRole("heading", { name: "Step 3: Cash Flow Ledger" })).toBeDefined();
-        expect(screen.getByText(/Highlighted: Cash Flow Ledger/i)).toBeDefined();
+        expect(screen.getByRole("heading", { name: "Step 3: Rent & Payments" })).toBeDefined();
+        expect(screen.getByText(/Highlighted: Rent & Payments/i)).toBeDefined();
     });
 
     it("renders Step 4: Property Selector & Navigation with Complete Tour CTA", () => {

@@ -390,7 +390,7 @@ export function IssueInvoiceModal({
                                 <Calendar className="size-3.5 text-primary" />
                                 Billing Month
                             </label>
-                            <input
+                            <input min="2000-01" max="2099-12"
                                 type="month"
                                 value={billingMonth}
                                 onChange={(e) => setBillingMonth(e.target.value)}
@@ -403,7 +403,7 @@ export function IssueInvoiceModal({
                                 <Calendar className="size-3.5 text-primary" />
                                 Due Date
                             </label>
-                            <input
+                            <input min="2000-01-01" max="2099-12-31"
                                 type="date"
                                 value={dueDate}
                                 onChange={(e) => setDueDate(e.target.value)}
@@ -448,7 +448,7 @@ export function IssueInvoiceModal({
                                     </div>
 
                                     <div className="flex-1 min-w-0">
-                                        <input
+                                        <input maxLength={60}
                                             type="text"
                                             value={item.label}
                                             disabled={!item.removable}
@@ -460,7 +460,7 @@ export function IssueInvoiceModal({
 
                                     <div className="relative w-32 shrink-0">
                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">₱</span>
-                                        <input
+                                        <input max={9999999.99}
                                             type="number"
                                             step="any"
                                             min="0"
@@ -511,7 +511,7 @@ export function IssueInvoiceModal({
                         <label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
                             Notes / Memo for Tenant (Optional)
                         </label>
-                        <textarea
+                        <textarea maxLength={250}
                             rows={2}
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}

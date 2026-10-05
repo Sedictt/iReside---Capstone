@@ -790,7 +790,7 @@ function OfflinePaymentsView({ onDone }: { onDone: () => void }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Unit / Tenant</label>
-          <input
+          <input maxLength={60}
             type="text"
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
@@ -801,7 +801,7 @@ function OfflinePaymentsView({ onDone }: { onDone: () => void }) {
         </div>
         <div>
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Amount (₱)</label>
-          <input
+          <input max={9999999.99} step="0.01"
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
@@ -830,7 +830,7 @@ function OfflinePaymentsView({ onDone }: { onDone: () => void }) {
         </div>
         <div>
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Receipt / Reference Note</label>
-          <input
+          <input maxLength={250}
             type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -926,7 +926,7 @@ function OfflineMaintenanceView({ onDone }: { onDone: () => void }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Unit / Location</label>
-          <input
+          <input maxLength={60}
             type="text"
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
@@ -937,7 +937,7 @@ function OfflineMaintenanceView({ onDone }: { onDone: () => void }) {
         </div>
         <div>
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Issue Headline</label>
-          <input
+          <input maxLength={60}
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -981,7 +981,7 @@ function OfflineMaintenanceView({ onDone }: { onDone: () => void }) {
 
       <div>
         <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Detailed Description</label>
-        <textarea
+        <textarea maxLength={500}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
@@ -1080,7 +1080,7 @@ function OfflineRegistrationView({ onDone }: { onDone: () => void }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Full Name</label>
-          <input
+          <input maxLength={50}
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -1091,7 +1091,7 @@ function OfflineRegistrationView({ onDone }: { onDone: () => void }) {
         </div>
         <div>
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Mobile Phone Number</label>
-          <input
+          <input maxLength={15}
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -1105,7 +1105,7 @@ function OfflineRegistrationView({ onDone }: { onDone: () => void }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Assigned Unit</label>
-          <input
+          <input maxLength={10}
             type="text"
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
@@ -1116,7 +1116,7 @@ function OfflineRegistrationView({ onDone }: { onDone: () => void }) {
         </div>
         <div>
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Monthly Rent (₱)</label>
-          <input
+          <input min={0} max={9999999.99} step="0.01"
             type="number"
             value={rent}
             onChange={(e) => setRent(e.target.value)}
@@ -1171,7 +1171,7 @@ function OfflineTenantListView() {
     <div className="space-y-3.5">
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 dark:text-neutral-500" />
-        <input
+        <input maxLength={60}
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -1339,7 +1339,7 @@ function OfflineLeasesView({ onDone }: { onDone: () => void }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Tenant Signer</label>
-          <input
+          <input maxLength={50}
             type="text"
             value={signerName}
             onChange={(e) => setSignerName(e.target.value)}
@@ -1349,7 +1349,7 @@ function OfflineLeasesView({ onDone }: { onDone: () => void }) {
         </div>
         <div>
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Assigned Unit</label>
-          <input
+          <input maxLength={10}
             type="text"
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
@@ -1489,7 +1489,7 @@ function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Unit Number</label>
-          <input
+          <input maxLength={10}
             type="text"
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
@@ -1538,7 +1538,7 @@ function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
       <div className="grid grid-cols-3 gap-3">
         <div>
           <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Previous</label>
-          <input
+          <input min={0} max={9999999}
             type="number"
             value={prevReading}
             onChange={(e) => setPrevReading(e.target.value)}
@@ -1548,7 +1548,7 @@ function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
         </div>
         <div>
           <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Current</label>
-          <input
+          <input min={0} max={9999999}
             type="number"
             value={currReading}
             onChange={(e) => setCurrReading(e.target.value)}
@@ -1558,7 +1558,7 @@ function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
         </div>
         <div>
           <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Rate (₱)</label>
-          <input
+          <input min={0} max={99999.99}
             type="number"
             value={rate}
             onChange={(e) => setRate(e.target.value)}

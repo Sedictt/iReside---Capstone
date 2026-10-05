@@ -244,13 +244,14 @@ async function resetStarterAccount() {
   console.log('  \x1b[32m✓\x1b[0m Cleared security settings, business profiles, and notifications');
 
   // 3. Reset public.profiles
+  const DEFAULT_SYSTEM_AVATAR = 'https://hlpgsiqyrtndqdgvttcr.supabase.co/storage/v1/object/public/profile-avatars/default_avatars/3.png';
   const profileReset = {
     email: TARGET.email,
     full_name: TARGET.fullName,
     role: TARGET.role,
     phone: TARGET.phone,
     business_name: null,
-    avatar_url: null,
+    avatar_url: DEFAULT_SYSTEM_AVATAR,
     avatar_bg_color: '#8B5CF6',
     bio: null,
     website: null,
@@ -293,7 +294,8 @@ async function resetStarterAccount() {
       phone: TARGET.phone,
       role: TARGET.role,
       is_account_claimed: false,
-      is_setup_completed: false
+      is_setup_completed: false,
+      avatar_url: DEFAULT_SYSTEM_AVATAR
     }
   });
 

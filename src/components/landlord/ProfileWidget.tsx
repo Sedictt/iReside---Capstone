@@ -1,13 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { Settings, User, LogOut, Pencil, Contrast } from "lucide-react";
+import { Settings, User, LogOut, Pencil, Contrast, Globe } from "lucide-react";
 import { signOut } from "@/lib/supabase/client-auth";
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, m as motion } from "framer-motion";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useHighContrast } from "@/hooks/useHighContrast";
+import { useLanguage } from "@/hooks/useLanguage";
 import { RoleBadge } from "@/components/profile/RoleBadge";
 import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
 import { LogoutConfirmationModal } from "@/components/ui/LogoutConfirmationModal";
@@ -48,6 +49,7 @@ export function ProfileWidget() {
     const [avatarFailed, setAvatarFailed] = useState(false);
     const { user, profile } = useAuth();
     const { isHighContrast, toggleHighContrast } = useHighContrast();
+    const { t, isFilipino, toggleLanguage } = useLanguage();
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -213,8 +215,8 @@ export function ProfileWidget() {
                                         <span className="relative inline-flex rounded-full size-2 bg-primary" />
                                     </span>
                                     <div className="min-w-0">
-                                        <p className="text-xs font-bold text-foreground dark:text-white truncate">Complete Profile</p>
-                                        <p className="text-[11px] text-muted-foreground truncate">Set up avatar & details</p>
+                                        <p className="text-xs font-bold text-foreground dark:text-white truncate">{t("Complete Profile")}</p>
+                                        <p className="text-[11px] text-muted-foreground truncate">{t("Set up avatar & details")}</p>
                                     </div>
                                 </div>
                                 <Link 
@@ -222,7 +224,7 @@ export function ProfileWidget() {
                                     onClick={() => setIsMenuOpen(false)}
                                     className="px-2.5 py-1 text-xs font-bold rounded-lg bg-primary text-primary-foreground hover:opacity-90 active:scale-95 transition-all shrink-0"
                                 >
-                                    Set Up
+                                    {t("Set Up")}
                                 </Link>
                             </div>
                         )}
@@ -235,11 +237,11 @@ export function ProfileWidget() {
                             >
                                 <div className="flex items-center gap-3">
                                     <User className="size-4 group-hover:text-primary transition-colors" />
-                                    <span>My Profile</span>
+                                    <span>{t("My Profile")}</span>
                                 </div>
                                 {isIncomplete && (
                                     <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md bg-primary/15 text-primary border border-primary/20">
-                                        Set Up
+                                        {t("Set Up")}
                                     </span>
                                 )}
                             </Link>
@@ -249,8 +251,22 @@ export function ProfileWidget() {
                                 className="group flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-black transition-all hover:neumorphic-inset-card active:scale-[0.98] text-muted-foreground hover:text-primary border border-transparent"
                             >
                                 <Settings className="size-4 group-hover:text-primary transition-colors" />
-                                <span>Settings</span>
+                                <span>{t("Settings")}</span>
                             </Link>
+
+                            <button
+                                type="button"
+                                onClick={() => toggleLanguage()}
+                                className="flex w-full items-center justify-between rounded-2xl px-4 py-2.5 text-sm font-black transition-all hover:neumorphic-inset-card active:scale-[0.98] text-muted-foreground hover:text-primary group text-left border border-transparent cursor-pointer"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <Globe className="size-4 group-hover:text-primary transition-colors" />
+                                    <span>{t("Language")}</span>
+                                </div>
+                                <span className="text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-md bg-primary text-primary-foreground">
+                                    {isFilipino ? "Filipino" : "English"}
+                                </span>
+                            </button>
 
                             <button
                                 type="button"
@@ -259,12 +275,12 @@ export function ProfileWidget() {
                             >
                                 <div className="flex items-center gap-3">
                                     <Contrast className="size-4 group-hover:text-primary transition-colors" />
-                                    <span>High Contrast</span>
+                                    <span>{t("High Contrast")}</span>
                                 </div>
                                 <span className={cn(
                                     "text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-md",
                                     isHighContrast ? "bg-primary text-primary-foreground" : "bg-white/10 text-muted-foreground"
-                                )}>
+                                    )}>
                                     {isHighContrast ? "ON" : "OFF"}
                                 </span>
                             </button>
@@ -280,7 +296,7 @@ export function ProfileWidget() {
                                 className="flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-black transition-all hover:neumorphic-inset-card active:scale-[0.98] text-red-400 hover:text-red-300 group text-left border border-transparent"
                             >
                                 <LogOut className="size-4 text-red-400 group-hover:text-red-300 transition-colors" />
-                                <span>Log Out</span>
+                                <span>{t("Log Out")}</span>
                             </button>
                         </div>
                     </motion.div>

@@ -32,7 +32,7 @@ import { MiniChatSkeleton } from "@/components/messaging/MiniChatSkeleton";
 import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
-import { getSafeAvatarBgColor } from "@/lib/constants";
+import { getSafeAvatarBgColor, DEFAULT_AVATAR_URL } from "@/lib/constants";
 
 interface ChatUser {
     id: string;
@@ -94,7 +94,7 @@ const DEFAULT_CHAT_STATE: MiniChatState = {
     error: null,
 };
 
-const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
+const FALLBACK_AVATAR = DEFAULT_AVATAR_URL;
 
 const formatConversationTimestamp = (iso: string | null) => {
     if (!iso) {
@@ -1031,7 +1031,7 @@ export function ContactsSidebar() {
                                     "absolute left-3 top-1/2 -translate-y-1/2 size-3.5 transition-colors",
                                     searchQuery ? "text-primary" : "text-muted-foreground"
                                 )} />
-                                <input
+                                <input maxLength={60}
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -1400,8 +1400,8 @@ export function ContactsSidebar() {
                                         <div className={cn(
                                             "text-sm px-4 py-2.5 rounded-2xl max-w-[85%] border break-words [overflow-wrap:anywhere]",
                                             message.isOwn
-                                                ? "neumorphic-primary text-primary-foreground border-none rounded-br-sm font-black shadow-lg"
-                                                : "rounded-bl-sm neumorphic-panel !shadow-sm text-foreground",
+                                                ? "bg-primary text-primary-foreground border-primary/50 dark:border-primary/60 rounded-br-sm font-semibold shadow-sm"
+                                                : "bg-zinc-100/95 dark:bg-zinc-800/90 text-foreground border-zinc-200/90 dark:border-zinc-700/80 rounded-bl-sm shadow-xs",
                                             hasFile && "mr-0 border-none bg-transparent px-0 py-0 text-foreground shadow-none dark:text-white",
                                             hasImage && "border-border bg-white/70 p-1 dark:border-white/10 dark:bg-black/40"
                                         )}>
@@ -1490,7 +1490,7 @@ export function ContactsSidebar() {
                                         />
                                     </label>
                                     <div className="flex flex-1 items-center rounded-full neumorphic-inset px-4 py-2 transition-all">
-                                        <input
+                                        <input maxLength={500}
                                             type="text"
                                             placeholder={chat.isActive ? "Write something..." : "Select to chat"}
                                             disabled={!chat.isActive}
@@ -1630,7 +1630,7 @@ function MiniSystemMessage({ message, router }: { message: MiniChatMessage; rout
         return (
             <NotificationCard
                 message={message}
-                icon={isOverpayment ? <TrendingUp className="size-6 text-white" /> : (isRejected ? <AlertTriangle className="size-6 text-white" /> : <CheckCircle2 className="size-6 text-white" />)}
+                icon={isOverpayment ? <TrendingUp className="size-6" /> : (isRejected ? <AlertTriangle className="size-6" /> : <CheckCircle2 className="size-6" />)}
                 title={isOverpayment 
                     ? (isResolved ? "Reconciliation Complete" : "Overpayment Detected")
                     : (isRejected ? "Payment Rejected" : "Payment Confirmed")
@@ -1647,7 +1647,7 @@ function MiniSystemMessage({ message, router }: { message: MiniChatMessage; rout
         return (
             <NotificationCard
                 message={message}
-                icon={<HandCoins className="size-6 text-white" />}
+                icon={<HandCoins className="size-6" />}
                 title="In-Person Payment"
                 subtitle="Verification Required"
                 variant="warning"
@@ -1660,7 +1660,7 @@ function MiniSystemMessage({ message, router }: { message: MiniChatMessage; rout
         return (
             <NotificationCard
                 message={message}
-                icon={<Bell className="size-6 text-white" />}
+                icon={<Bell className="size-6" />}
                 title="Payment Reminder"
                 subtitle="Notification Sent"
                 variant="default"

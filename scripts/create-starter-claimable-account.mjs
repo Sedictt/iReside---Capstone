@@ -78,6 +78,9 @@ async function provisionStarterAccount() {
   console.log(`\x1b[1m\x1b[36m 🚀 Provisioning Fresh Claimable Account: ${targetEmail} \x1b[0m`);
   console.log('\x1b[1m\x1b[36m====================================================\x1b[0m\n');
 
+  const avatarIndex = (Math.abs(parseInt(landlordIndex, 10) || 2) % 16) + 3;
+  const systemAvatarUrl = `https://hlpgsiqyrtndqdgvttcr.supabase.co/storage/v1/object/public/profile-avatars/default_avatars/${avatarIndex}.png`;
+
   // 1. Create fresh auth user
   console.log('1. Creating Supabase Auth user...');
   const { data: authUser, error: authErr } = await adminClient.auth.admin.createUser({
@@ -91,6 +94,7 @@ async function provisionStarterAccount() {
       role: 'landlord',
       is_account_claimed: false,
       is_setup_completed: false,
+      avatar_url: systemAvatarUrl,
     },
   });
 
@@ -111,7 +115,7 @@ async function provisionStarterAccount() {
     role: 'landlord',
     phone,
     avatar_bg_color: '#8B5CF6',
-    avatar_url: null,
+    avatar_url: systemAvatarUrl,
     bio: null,
     business_name: null,
     has_changed_password: false,

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
-import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
+import { CheckCircle2, ArrowRight, Loader2, Download } from "lucide-react";
+import { SecurityKeyDisplayCard, downloadSecurityKeyFile } from "@/components/auth/SecurityKeyDisplayCard";
 import { cn } from "@/lib/utils";
 
 export interface SecurityKeyRecoveryModalProps {
@@ -35,23 +35,23 @@ export function SecurityKeyRecoveryModal({
       aria-labelledby="security-recovery-modal-title"
     >
       <div
-        className="w-full max-w-[540px] bg-card border border-border/80 rounded-2xl sm:rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 my-auto text-foreground transition-all duration-200"
+        className="w-full max-w-xl bg-card border border-border/80 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 my-auto text-foreground transition-all duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-3 pb-3 border-b border-border/60">
-          <div className="size-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 shadow-xs">
-            <CheckCircle2 className="size-6" />
+        {/* Header */}
+        <div className="flex items-center gap-4 pb-4 border-b border-border/80">
+          <div className="size-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 shadow-sm">
+            <CheckCircle2 className="size-8 stroke-[2.5]" />
           </div>
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             <h2
               id="security-recovery-modal-title"
-              className="text-base font-bold tracking-tight text-foreground"
+              className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground"
             >
               Account Claimed Successfully
             </h2>
-            <p className="text-xs text-muted-foreground leading-snug">
-              Workspace linked to{" "}
-              <span className="font-semibold text-foreground">{accountEmail}</span>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Workspace linked to <span className="font-bold text-foreground break-all">{accountEmail}</span>
             </p>
           </div>
         </div>
@@ -64,8 +64,8 @@ export function SecurityKeyRecoveryModal({
             setHasDownloaded(true);
             setIsSecurityKeyAcknowledged(true);
           }}
-          title="Landlord Security Recovery Key"
-          description="Save your single-use recovery key now in case you ever lose access to your email. You will need this to regain access to your property portal."
+          title="Emergency Spare Key (Landlord Security Recovery Key)"
+          description="Just like a spare key to your house, keep this safe so you never get locked out. If you ever forget your password or lose access to your email, this code lets you unlock your account."
           accountEmail={accountEmail}
         />
 
@@ -75,28 +75,28 @@ export function SecurityKeyRecoveryModal({
             disabled={isProceedDisabled}
             onClick={onProceed}
             className={cn(
-              "w-full h-11 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-xs",
+              "w-full min-h-[56px] rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 shadow-md",
               isProceedDisabled
                 ? "bg-muted text-muted-foreground/60 cursor-not-allowed border border-border/60"
-                : "bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.99] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                : "bg-primary text-primary-foreground hover:bg-primary/95 active:scale-[0.99] cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary",
               isRedirecting && "opacity-75 cursor-wait"
             )}
           >
             {isRedirecting ? (
               <>
-                <Loader2 className="size-4 animate-spin" />
+                <Loader2 className="size-5 animate-spin" />
                 <span>Connecting to Sign In...</span>
               </>
             ) : (
               <>
                 <span>Proceed to Sign In</span>
-                <ArrowRight className="size-4" />
+                <ArrowRight className="size-6 stroke-[3]" />
               </>
             )}
           </button>
           {!hasDownloaded && (
-            <p className="mt-2 text-center text-[11px] text-muted-foreground">
-              Please download your recovery key file to proceed to sign in.
+            <p className="mt-3 text-center text-xs sm:text-sm font-semibold text-muted-foreground">
+              Please click &ldquo;Download&rdquo; above to save your spare key file before signing in.
             </p>
           )}
         </div>

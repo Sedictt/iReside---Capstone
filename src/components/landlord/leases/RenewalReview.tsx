@@ -44,9 +44,10 @@ interface RenewalRequest {
 
 interface LandlordRenewalReviewProps {
  searchQuery?: string;
+ viewMode?: "list" | "grid";
 }
 
-export default function LandlordRenewalReview({ searchQuery }: LandlordRenewalReviewProps) {
+export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }: LandlordRenewalReviewProps) {
  const searchParams = useSearchParams();
  const isPreview = searchParams.get("preview_requests") === "true";
 
@@ -291,6 +292,68 @@ export default function LandlordRenewalReview({ searchQuery }: LandlordRenewalRe
  <p className="font-black text-foreground">All Caught Up</p>
  <p className="text-sm text-muted-foreground">No new renewal requests to process at this time.</p>
  </div>
+ ) : viewMode === "list" ? (
+ <div className="flex flex-col gap-3">
+ {requests.map((request) => (
+ <div
+ key={request.id}
+ className="group relative flex flex-col md:flex-row md:items-center justify-between neumorphic-panel rounded-2xl overflow-hidden hover:border-primary/40 hover:neumorphic-inset transition-all duration-200 p-4 sm:p-5 gap-4"
+ >
+ {/* Left: Tenant & Unit */}
+ <div className="flex items-center gap-3.5 min-w-[220px]">
+ <div className="size-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-base shrink-0">
+ {request.tenant.full_name.charAt(0)}
+ </div>
+ <div className="min-w-0 flex-1">
+ <h4 className="truncate text-sm font-black text-foreground group-hover:text-primary transition-colors">
+ {request.tenant.full_name}
+ </h4>
+ <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">
+ {request.current_lease.unit.property.name} • Unit {request.current_lease.unit.name}
+ </p>
+ </div>
+ </div>
+
+ {/* Middle: Expiry & Duration */}
+ <div className="flex items-center gap-6 min-w-[200px]">
+ <div>
+ <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Expires</p>
+ <p className="text-xs font-black text-foreground">
+ <ClientOnlyDate date={request.current_lease.end_date} />
+ </p>
+ </div>
+ <div>
+ <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Proposed Term</p>
+ <p className="text-xs font-black text-foreground">
+ {Math.round((new Date(request.proposed_end_date).getTime() - new Date(request.proposed_start_date).getTime()) / (86400000 * 30.44))} Months
+ </p>
+ </div>
+ </div>
+
+ {/* Financials */}
+ <div className="min-w-[140px] text-left md:text-right">
+ <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Proposed Rent</p>
+ <p className="font-mono text-base font-black tracking-tight text-foreground tabular-nums">
+ PHP {request.proposed_monthly_rent?.toLocaleString()}
+ </p>
+ </div>
+
+ {/* Status & Action */}
+ <div className="flex items-center justify-between md:justify-end gap-3 shrink-0">
+ <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-widest border border-amber-500/20">
+ Pending Review
+ </span>
+ <button
+ onClick={() => openReview(request)}
+ className="px-4 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white font-black uppercase tracking-wider text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+ >
+ <FileText className="size-3.5" />
+ <span>Review</span>
+ </button>
+ </div>
+ </div>
+ ))}
+ </div>
  ) : (
  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
  {requests.map((request) => (
@@ -335,7 +398,7 @@ export default function LandlordRenewalReview({ searchQuery }: LandlordRenewalRe
 
  <button
  onClick={() => openReview(request)}
- className="w-full py-4 rounded-2xl bg-primary/5 border border-primary/10 text-primary hover:bg-primary hover:text-white font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2"
+ className="w-full py-4 rounded-2xl bg-primary/5 border border-primary/10 text-primary hover:bg-primary hover:text-white font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
  >
  <FileText className="size-4" />
  Review Request
@@ -405,7 +468,7 @@ export default function LandlordRenewalReview({ searchQuery }: LandlordRenewalRe
  <div className="grid grid-cols-2 gap-6">
  <div className="space-y-2">
  <label htmlFor="new-start-date" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New Start Date</label>
- <input
+ <input min="2000-01-01" max="2099-12-31"
  id="new-start-date"
  type="date"
  value={proposedStartDate}
@@ -415,7 +478,7 @@ export default function LandlordRenewalReview({ searchQuery }: LandlordRenewalRe
  </div>
  <div className="space-y-2">
  <label htmlFor="new-end-date" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New End Date</label>
- <input
+ <input min="2000-01-01" max="2099-12-31"
  id="new-end-date"
  type="date"
  value={proposedEndDate}
@@ -427,7 +490,7 @@ export default function LandlordRenewalReview({ searchQuery }: LandlordRenewalRe
  <label htmlFor="monthly-rent" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Rent (PHP)</label>
  <div className="relative">
  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-black">₱</span>
- <input
+ <input maxLength={10}
  id="monthly-rent"
  type="text"
  value={proposedRent}
@@ -448,7 +511,7 @@ export default function LandlordRenewalReview({ searchQuery }: LandlordRenewalRe
  </div>
  <div className="relative">
  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-black">₱</span>
- <input
+ <input maxLength={10}
  type="text"
  value={proposedDeposit}
  onChange={(e) => handleMoneyInput(e.target.value, setProposedDeposit)}
@@ -465,7 +528,7 @@ export default function LandlordRenewalReview({ searchQuery }: LandlordRenewalRe
 
  <div className="space-y-2">
  <label htmlFor="landlord-notes" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block">Landlord Notes (Optional)</label>
- <textarea
+ <textarea maxLength={250}
  id="landlord-notes"
  value={rejectNotes}
  onChange={(e) => setRejectNotes(e.target.value)}

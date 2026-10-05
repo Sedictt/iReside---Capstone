@@ -188,7 +188,7 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                                     <div className="space-y-4 p-6 rounded-2xl border border-white/5 bg-surface-1 animate-in zoom-in-95 duration-300">
                                         <div className="space-y-2">
                                             <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">GCash Number</p>
-                                            <input 
+                                            <input maxLength={15} 
                                                 type="text"
                                                 value={gcashNumber}
                                                 onChange={(e) => setGcashNumber(e.target.value)}

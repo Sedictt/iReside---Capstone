@@ -26,11 +26,11 @@ describe("DashboardGreetingModal", () => {
         );
 
         expect(screen.getByText("Step 5 of 5 • Final Stage")).toBeDefined();
-        expect(screen.getByText("Master Your Dashboard")).toBeDefined();
+        expect(screen.getByText("Tour Your Dashboard")).toBeDefined();
         expect(screen.getByText("Pinecrest Tower")).toBeDefined();
-        expect(screen.getByText("1. Action Launchpad")).toBeDefined();
-        expect(screen.getByText("2. Real-Time Operational Pulse")).toBeDefined();
-        expect(screen.getByText("3. Revenue Stream & Settlement")).toBeDefined();
+        expect(screen.getByText("1. Quick Actions")).toBeDefined();
+        expect(screen.getByText(/2. Today's Overview/i)).toBeDefined();
+        expect(screen.getByText(/3. Rent & Payments/i)).toBeDefined();
         expect(screen.getByText("Start Guided Tour")).toBeDefined();
         expect(screen.getByText("Explore First")).toBeDefined();
     });

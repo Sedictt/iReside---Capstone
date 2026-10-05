@@ -272,6 +272,22 @@ export async function updateSession(request: NextRequest) {
         supabaseResponse.cookies.delete(ROLE_COOKIE_NAME);
     }
 
+    // 2FA pending & positive verification enforcement:
+    const is2faPending = request.cookies.get("ireside_2fa_pending")?.value === "true";
+    const verified2faUserId = request.cookies.get("ireside_2fa_verified")?.value;
+    const userRequires2fa = user?.user_metadata?.two_factor_enabled === true;
+    const is2faVerified = Boolean(user && verified2faUserId === user.id);
+
+    // If 2FA is required and not verified, or challenge is pending: restrict access to login/api/public
+    if (is2faPending || (userRequires2fa && !is2faVerified)) {
+        if (request.nextUrl.pathname.startsWith("/login") || request.nextUrl.pathname.startsWith("/api") || isPublicRoute(request.nextUrl.pathname, request)) {
+            return supabaseResponse;
+        }
+        const url = request.nextUrl.clone();
+        url.pathname = "/login";
+        return NextResponse.redirect(url);
+    }
+
     // Deprecate /admin routes - redirect all admin portal attempts to landlord dashboard (or login).
     if (request.nextUrl.pathname.startsWith("/admin")) {
         const url = request.nextUrl.clone();
@@ -292,6 +308,8 @@ export async function updateSession(request: NextRequest) {
                 c.name.startsWith("sb-") ||
                 c.name === "supabase-auth-token" ||
                 c.name === ROLE_COOKIE_NAME ||
+                c.name === "ireside_2fa_pending" ||
+                c.name === "ireside_2fa_verified" ||
                 c.name.includes("session")
             ) {
                 supabaseResponse.cookies.delete(c.name);
@@ -315,6 +333,9 @@ export async function updateSession(request: NextRequest) {
 
     // If user is already logged in, prevent them from accessing auth pages.
     if (user && (request.nextUrl.pathname.startsWith("/login") || request.nextUrl.pathname.startsWith("/signup") || request.nextUrl.pathname.startsWith("/forgot-password"))) {
+        if ((is2faPending || (userRequires2fa && !is2faVerified)) && request.nextUrl.pathname.startsWith("/login")) {
+            return supabaseResponse;
+        }
         const url = request.nextUrl.clone();
         if (role === "admin" || role === "landlord") {
             const userEmail = (user.email || "").toLowerCase().trim();

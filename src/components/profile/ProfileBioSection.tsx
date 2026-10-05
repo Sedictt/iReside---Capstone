@@ -116,7 +116,7 @@ export function ProfileBioSection({
             <div className="max-w-4xl">
                 {isEditing ? (
                     <div className="mt-2 w-full animate-in fade-in slide-in-from-top-2">
-                        <textarea
+                        <textarea maxLength={500}
                             value={tempBio}
                             onChange={(e) => setTempBio(e.target.value)}
                             className="w-full bg-background border border-border rounded-[1.5rem] p-4 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors resize-none neumorphic-inset"

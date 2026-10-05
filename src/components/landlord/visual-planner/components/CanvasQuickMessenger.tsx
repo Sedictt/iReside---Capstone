@@ -264,6 +264,7 @@ export const CanvasQuickMessenger: React.FC<CanvasQuickMessengerProps> = ({
             <form onSubmit={handleSend} className="flex items-center gap-1.5 border-t border-zinc-100 pt-2.5 dark:border-zinc-800">
                 <input
                     type="text"
+                    maxLength={250}
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder="Type a message..."

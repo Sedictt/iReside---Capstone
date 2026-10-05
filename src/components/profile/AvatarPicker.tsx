@@ -15,6 +15,8 @@ import {
     getSafeAvatarBgColor,
     DEFAULT_AVATAR_BG_COLOR,
     DEFAULT_AVATAR_URL,
+    DEFAULT_AVATARS_COUNT,
+    DEFAULT_AVATARS_BUCKET_URL,
 } from "@/lib/constants";
 import { handleMediaSelection } from "@/lib/validation/media-validation";
 
@@ -27,8 +29,7 @@ interface AvatarPickerProps {
     onProfileUpdate?: () => void;
 }
 
-const DEFAULT_AVATARS_COUNT = 16; // Avatars 3 to 18
-const BUCKET_URL = "https://hlpgsiqyrtndqdgvttcr.supabase.co/storage/v1/object/public/profile-avatars/default_avatars/";
+const BUCKET_URL = DEFAULT_AVATARS_BUCKET_URL;
 
 // Curated 24 high-contrast, accessible swatches (NO pitch-black #171717 per system invariants)
 const PRESET_COLORS = [

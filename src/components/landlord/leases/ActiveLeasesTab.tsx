@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProperty } from "@/context/PropertyContext";
-import { LeaseCard, type LeaseCardData } from "./LeaseCard";
+import { LeaseCard, LeaseListRow, type LeaseCardData } from "./LeaseCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -22,9 +22,10 @@ interface ActiveLeasesTabProps {
  searchQuery: string;
  sortBy: string;
  onClearSearch: () => void;
+ viewMode?: "list" | "grid";
 }
 
-export default function ActiveLeasesTab({ searchQuery, sortBy, onClearSearch }: ActiveLeasesTabProps) {
+export default function ActiveLeasesTab({ searchQuery, sortBy, onClearSearch, viewMode = "grid" }: ActiveLeasesTabProps) {
  const router = useRouter();
  const { selectedPropertyId } = useProperty();
 
@@ -113,12 +114,24 @@ export default function ActiveLeasesTab({ searchQuery, sortBy, onClearSearch }: 
  )}
  </div>
 
- {/* Grid */}
+ {/* Content: Grid or List */}
  {filteredLeases.length === 0 ? (
  <div className="flex flex-col items-center justify-center rounded-[3rem] border border-dashed border-border neumorphic-inset py-20 text-center">
  <FileText className="mb-4 size-10 text-muted-foreground/20" />
  <h4 className="font-bold text-foreground">No leases found</h4>
  <p className="text-sm text-muted-foreground">Adjust your search or add a new lease to get started.</p>
+ </div>
+ ) : viewMode === "list" ? (
+ <div className="flex flex-col gap-3">
+ {filteredLeases.map((lease, i) => (
+ <LeaseListRow
+ key={lease.id}
+ lease={lease}
+ variant="active"
+ index={i}
+ onClick={() => router.push(`/landlord/leases?id=${lease.id}`)}
+ />
+ ))}
  </div>
  ) : (
  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

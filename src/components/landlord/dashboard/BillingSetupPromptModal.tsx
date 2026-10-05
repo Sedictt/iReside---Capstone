@@ -70,8 +70,8 @@ export function BillingSetupPromptModal({
                         <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
                             <Zap className="size-6" />
                         </div>
-                        <span className="inline-flex items-center text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/25">
-                            Step 3 of Onboarding
+                        <span className="inline-flex items-center text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/25">
+                            Step 3 of 5 • Onboarding
                         </span>
                     </div>
 
@@ -81,26 +81,26 @@ export function BillingSetupPromptModal({
                             id="billing-setup-modal-title"
                             className="text-xl sm:text-2xl font-bold tracking-tight text-foreground leading-tight"
                         >
-                            Activate Payment &amp; Utility Rails
+                            Set Up Water &amp; Electric Rates
                         </h2>
                         <p id="billing-setup-modal-desc" className="text-sm text-muted-foreground leading-relaxed">
-                            Your unit map{propertyName ? <> for <span className="font-semibold text-foreground">{propertyName}</span></> : ""} is ready! Now let&apos;s set up your electricity and water tariffs to prepare for automated billing.
+                            Your unit map{propertyName ? <> for <span className="font-semibold text-foreground">{propertyName}</span></> : ""} is ready! Now let&apos;s set up your electricity and water rates to prepare for automated monthly billing.
                         </p>
                     </div>
 
                     {/* Benefits checklist */}
                     <div className="rounded-2xl border border-border/70 bg-muted/30 dark:bg-muted/10 p-4 sm:p-5 space-y-3">
-                        <div className="flex items-center gap-3 text-xs sm:text-sm font-medium text-foreground">
+                        <div className="flex items-center gap-3 text-sm font-medium text-foreground">
                             <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                            <span>Set baseline electricity (₱/kWh) and water (₱/m³) tariffs</span>
+                            <span>Set standard electricity (₱/kWh) and water (₱/m³) rates</span>
                         </div>
-                        <div className="flex items-center gap-3 text-xs sm:text-sm font-medium text-foreground">
+                        <div className="flex items-center gap-3 text-sm font-medium text-foreground">
                             <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                            <span>Record room submeters with automatic month-to-month deltas</span>
+                            <span>Record room meter numbers with automatic monthly calculation</span>
                         </div>
-                        <div className="flex items-center gap-3 text-xs sm:text-sm font-medium text-foreground">
+                        <div className="flex items-center gap-3 text-sm font-medium text-foreground">
                             <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                            <span>Enable digital invoices combining room rent and utilities</span>
+                            <span>Send clear monthly rent bills combining rent and utilities</span>
                         </div>
                     </div>
 
@@ -109,16 +109,16 @@ export function BillingSetupPromptModal({
                         <button
                             type="button"
                             onClick={onMaybeLater}
-                            className="flex-1 inline-flex items-center justify-center h-12 px-5 rounded-2xl border border-border/80 bg-background hover:bg-muted text-xs sm:text-sm font-semibold text-muted-foreground hover:text-foreground transition-all cursor-pointer active:scale-98"
+                            className="flex-1 inline-flex items-center justify-center h-12 px-5 rounded-2xl border border-border/80 bg-background hover:bg-muted text-sm font-semibold text-muted-foreground hover:text-foreground transition-all cursor-pointer active:scale-98"
                         >
                             Maybe Later
                         </button>
                         <button
                             type="button"
                             onClick={onConfigureNow}
-                            className="group flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-2xl bg-primary text-primary-foreground text-xs sm:text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-105 transition-all cursor-pointer active:scale-98"
+                            className="group flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-2xl bg-primary text-primary-foreground text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-105 transition-all cursor-pointer active:scale-98"
                         >
-                            <span>Set Up Billing Now</span>
+                            <span>Set Up Rates Now</span>
                             <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                         </button>
                     </div>

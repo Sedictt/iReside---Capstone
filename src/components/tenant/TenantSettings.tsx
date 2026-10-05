@@ -54,7 +54,10 @@ import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { useHighContrast } from "@/hooks/useHighContrast";
 import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
 import { TimeFormatToggle } from "@/components/ui/TimeFormatToggle";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { useLanguage } from "@/hooks/useLanguage";
 import { SecurityKeyManagementCard } from "@/components/auth/SecurityKeyManagementCard";
+import { TwoFactorManagementCard } from "@/components/auth/TwoFactorManagementCard";
 
 // --- Types ---
 type SettingsCategory = "Identity" | "Accessibility" | "Security" | "Notifications" | "Billing" | "Data";
@@ -200,9 +203,10 @@ function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: s
 
 // --- Main Component ---
 
-export function TenantSettings() {
+export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
     const router = useRouter();
     const { profile, loading, refreshProfile } = useAuth();
+    const { t, isFilipino } = useLanguage();
     const supabase = createClient();
 
     // UI State
@@ -616,7 +620,7 @@ export function TenantSettings() {
                             <GlassCard title="Profile Information" description="Basic details about you.">
                                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                     <SettingField label="Full Name" icon={User} description="Your verified name.">
-                                        <input
+                                        <input maxLength={50}
                                             type="text"
                                             value={formData.full_name}
                                             onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
@@ -624,7 +628,7 @@ export function TenantSettings() {
                                         />
                                     </SettingField>
                                     <SettingField label="Email" icon={Mail} description="Your verified email.">
-                                        <input
+                                        <input maxLength={50}
                                             type="email"
                                             value={formData.email}
                                             disabled
@@ -632,7 +636,7 @@ export function TenantSettings() {
                                         />
                                     </SettingField>
                                     <SettingField label="Phone Number" icon={Phone}>
-                                        <input
+                                        <input maxLength={15}
                                             type="tel"
                                             value={formData.phone}
                                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -640,7 +644,7 @@ export function TenantSettings() {
                                         />
                                     </SettingField>
                                     <SettingField label="Address" icon={Home}>
-                                        <input
+                                        <input maxLength={120}
                                             type="text"
                                             value={formData.address}
                                             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
@@ -649,7 +653,7 @@ export function TenantSettings() {
                                     </SettingField>
                                     <div className="md:col-span-2">
                                         <SettingField label="Bio" icon={FileText} description="Tell landlords a bit about yourself.">
-                                            <textarea
+                                            <textarea maxLength={500}
                                                 rows={4}
                                                 value={formData.bio}
                                                 onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
@@ -666,7 +670,7 @@ export function TenantSettings() {
                         <GlassCard title="Emergency Contact" description="Someone we can contact in case of emergency.">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <SettingField label="Contact Name" icon={User}>
-                                    <input
+                                    <input maxLength={50}
                                         type="text"
                                         value={formData.emergency_name}
                                         onChange={(e) => setFormData({ ...formData, emergency_name: e.target.value })}
@@ -674,7 +678,7 @@ export function TenantSettings() {
                                     />
                                 </SettingField>
                                 <SettingField label="Contact Phone" icon={Phone}>
-                                    <input
+                                    <input maxLength={15}
                                         type="tel"
                                         value={formData.emergency_phone}
                                         onChange={(e) => setFormData({ ...formData, emergency_phone: e.target.value })}
@@ -731,7 +735,7 @@ export function TenantSettings() {
                             <div className="space-y-6 max-w-lg">
                                 <SettingField label="Current Password" icon={Key}>
                                     <div className="relative">
-                                        <input 
+                                        <input maxLength={16} 
                                             type={showCurrentPassword ? "text" : "password"}
                                             value={currentPassword}
                                             onChange={(e) => setCurrentPassword(e.target.value)}
@@ -749,7 +753,7 @@ export function TenantSettings() {
                                 </SettingField>
                                 <SettingField label="New Password" icon={Key}>
                                     <div className="relative">
-                                        <input 
+                                        <input maxLength={16} 
                                             type={showNewPassword ? "text" : "password"}
                                             value={newPassword}
                                             onChange={(e) => setNewPassword(e.target.value)}
@@ -766,7 +770,7 @@ export function TenantSettings() {
                                     </div>
                                 </SettingField>
                                 <SettingField label="Confirm New Password" icon={Key}>
-                                    <input 
+                                    <input maxLength={16} 
                                         type="password"
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
@@ -823,42 +827,10 @@ export function TenantSettings() {
                         <div className="space-y-6 max-w-2xl">
                             <SecurityKeyManagementCard accountEmail={profile?.email || undefined} />
 
-                            <GlassCard title="Two-Factor Authentication" description="Add an extra layer of security to your account.">
-                                {twoFAStatus === 'loading' ? (
-                                    <div className="flex items-center justify-center py-12">
-                                        <div className="relative flex items-center justify-center">
-                                            <div className="absolute size-12 animate-ping rounded-full bg-primary/20"></div>
-                                            <div className="relative size-12 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-                                        </div>
-                                    </div>
-                                ) : twoFAStatus === 'enabled' ? (
-                                    <div className="space-y-6 max-w-lg">
-                                        <div className="flex items-center gap-4 p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10">
-                                            <div className="size-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                                                <ShieldCheck className="size-5 text-emerald-500" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-black text-foreground">2FA is Active</p>
-                                                <p className="text-xs text-muted-foreground">Your account is protected with two-factor authentication.</p>
-                                            </div>
-                                        </div>
-                                        <div className="pt-4 border-t border-border/40">
-                                            <p className="text-xs text-muted-foreground mb-4">To disable 2FA, please contact support.</p>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-6 max-w-lg">
-                                        <p className="text-sm text-muted-foreground">Two-factor authentication adds an extra layer of security by requiring a verification code in addition to your password.</p>
-                                        <button 
-                                            type="button"
-                                            className="w-full rounded-xl sm:rounded-2xl neumorphic-primary py-3 text-sm font-black text-primary-foreground transition-all shadow-md active:scale-95 cursor-pointer"
-                                            onClick={() => toast.info("2FA setup is managed by your administrator.")}
-                                        >
-                                            Enable Two-Factor Authentication
-                                        </button>
-                                    </div>
-                                )}
-                            </GlassCard>
+                            <TwoFactorManagementCard
+                                apiEndpoint="/api/tenant/2fa"
+                                accountEmail={profile?.email || undefined}
+                            />
                         </div>
                     );
                 case "Sessions":
@@ -1266,7 +1238,7 @@ export function TenantSettings() {
                                     <p className="text-sm text-muted-foreground">
                                         Please type <span className="text-rose-600 dark:text-rose-400 font-mono font-black">DELETE</span> to confirm:
                                     </p>
-                                    <input
+                                    <input maxLength={60}
                                         type="text"
                                         value={deleteConfirmText}
                                         onChange={(e) => setDeleteConfirmText(e.target.value)}
@@ -1346,6 +1318,13 @@ export function TenantSettings() {
                 </div>
 
                 <div className="space-y-6">
+                    <GlassCard 
+                        title={t("Language")} 
+                        description={isFilipino ? "Pumili sa pagitan ng pang-araw-araw na Filipino (Taglish) o Standard English." : "Choose between everyday conversational Filipino (Taglish) and standard English."}
+                    >
+                        <LanguageToggle variant="segmented" showPreview={true} />
+                    </GlassCard>
+
                     <GlassCard 
                         title="Text Size & Readability" 
                         description="Adjust the interface typography scale without distorting card layouts or button heights."

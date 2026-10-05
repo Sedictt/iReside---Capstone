@@ -342,7 +342,7 @@ export function SecurityKeyManagementCard({
                                             Current Password
                                         </label>
                                         <div className="relative flex items-center">
-                                            <input
+                                            <input maxLength={16}
                                                 type={showPassword ? "text" : "password"}
                                                 required
                                                 value={currentPassword}

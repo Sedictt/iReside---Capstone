@@ -5,41 +5,31 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import {
   Building2,
   Palette,
-  UserCheck,
-  ShieldCheck,
   CheckCircle2,
   AlertCircle,
-  EyeOff,
   ArrowRight,
   ArrowLeft,
   Moon,
   Sun,
   Check,
   RefreshCw,
-  Eye,
-  Award,
   Upload,
   Trash2,
-  CreditCard,
-  Edit3,
-  KeyRound,
-  Copy,
-  Download,
-  ShieldAlert,
+  Edit2,
+  Image as ImageIcon,
+  Pipette,
+  X,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
-import { Logo } from "@/components/ui/Logo";
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/context/BrandContext";
 import {
-  hexToHsl,
-  hslToHex,
-  getContrastRatio,
   getContrastTextColor,
   applyBrandCssVariables,
+  hexToHsl,
+  hslToHex,
 } from "@/lib/branding/colors";
 import { useAuth } from "@/hooks/useAuth";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
@@ -48,11 +38,13 @@ import {
   DISALLOWED_PRESEEDED_DATA,
   validatePropertyTradeName,
   validatePropertyTagline,
-  validateBrandColor,
   validateStep1Identity,
   validateStep2Theme,
 } from "@/lib/validation/brand-setup";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation/media-validation";
+import { WizardShell } from "@/components/setup/WizardShell";
+import { WizardStepper, StepItem } from "@/components/setup/WizardStepper";
+import { setupDictionary } from "@/lib/i18n/setup-translations";
 
 // Curated accessible brand palette presets
 interface PalettePreset {
@@ -66,39 +58,63 @@ interface PalettePreset {
 const PALETTE_PRESETS: PalettePreset[] = [
   {
     id: "sage-slate",
-    name: "Sage & Slate",
-    description: "Calm & Trustworthy",
+    name: "Sage Green & Slate",
+    description: "Calm, clean, and gentle",
     primary: "#10b981",
     secondary: "#6366f1",
   },
   {
     id: "oceanic-royal",
-    name: "Oceanic Navy",
-    description: "Corporate & Reliable",
+    name: "Oceanic Navy & Cyan",
+    description: "Professional, neat, and reliable",
     primary: "#2563eb",
     secondary: "#06b6d4",
   },
   {
     id: "forest-amber",
-    name: "Forest & Amber",
-    description: "Residential & Natural",
+    name: "Forest Green & Warm Amber",
+    description: "Natural, welcoming, and warm",
     primary: "#059669",
     secondary: "#d97706",
   },
   {
     id: "modern-violet",
-    name: "Modern Violet",
-    description: "Contemporary & Boutique",
+    name: "Royal Violet & Rose",
+    description: "Friendly, modern, and distinct",
     primary: "#7c3aed",
     secondary: "#f43f5e",
   },
   {
     id: "slate-sky",
-    name: "Slate & Sky",
-    description: "Architectural & Clean",
+    name: "Slate Gray & Sky Blue",
+    description: "Simple, architectural, and cool",
     primary: "#0284c7",
     secondary: "#64748b",
   },
+  {
+    id: "ruby-gold",
+    name: "Ruby Red & Gold",
+    description: "Bold, energetic, and warm",
+    primary: "#e11d48",
+    secondary: "#f59e0b",
+  },
+];
+
+const QUICK_COLOR_SWATCHES = [
+  "#7c3aed",
+  "#2563eb",
+  "#0284c7",
+  "#059669",
+  "#10b981",
+  "#d97706",
+  "#ea580c",
+  "#e11d48",
+];
+
+const WIZARD_STEPS: StepItem[] = [
+  { id: 1, label: setupDictionary.step1PropertyName.stepLabel },
+  { id: 2, label: setupDictionary.step2ThemeColor.stepLabel },
+  { id: 3, label: setupDictionary.step4Logo.stepLabel },
 ];
 
 const SETUP_STORAGE_KEY = "ireside_setup_inputs_draft";
@@ -110,39 +126,66 @@ function WizardContent() {
     searchParams.get("reconfigure") === "true" || searchParams.get("troubleshoot") === "true";
   const { profile, user, loading, refreshProfile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const brand = useBrand();
+
+  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [maxStepReached, setMaxStepReached] = useState<number>(1);
+  const [showConfirmationModal, setShowConfirmationModal] = useState<boolean>(false);
+
+  // Form Fields
+  const [propertyName, setPropertyName] = useState(() => {
+    if (!isReconfigure) return "";
+    const raw = brand.propertyName?.trim() || "";
+    return raw && !DISALLOWED_PRESEEDED_DATA.propertyNames.includes(raw.toLowerCase()) ? raw : "";
+  });
+  const [tagline, setTagline] = useState(() => {
+    if (!isReconfigure) return "";
+    const raw = brand.propertyTagline?.trim() || "";
+    return raw && !DISALLOWED_PRESEEDED_DATA.taglines.includes(raw.toLowerCase()) ? raw : "";
+  });
+  const [logoUrl, setLogoUrl] = useState<string | null>(brand.logoUrl);
+
+  // Theme & Appearance
+  const { resolvedTheme, setTheme } = useTheme();
+  const [modePreference, setModePreference] = useState<"dark" | "light">("light");
+
+  useEffect(() => {
+    if (resolvedTheme === "light" || resolvedTheme === "dark") {
+      setModePreference(resolvedTheme);
+    }
+  }, [resolvedTheme]);
+
+  const [primaryColor, setPrimaryColor] = useState(brand.primaryColor || "#7c3aed");
+  const [secondaryColor, setSecondaryColor] = useState(brand.secondaryColor || "#f43f5e");
+
+  // Field Validation & Interaction State
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
   // Launch State
   const [isLaunching, setIsLaunching] = useState(false);
   const [isLaunched, setIsLaunched] = useState(false);
 
-  // ── System Lock: prevent navigating away from mandatory setup ──
-  // Active only during first-time setup (not reconfigure/troubleshoot).
-  // Blocks: browser back/forward, tab/window close, and in-page logo link.
-  // Unlocked once setup is launched (setup completion reached).
+  // System Lock: prevent navigating away during mandatory setup
   const isSystemLocked = !isReconfigure && !isLaunched && !brand?.setupCompleted;
 
   useEffect(() => {
     if (!isSystemLocked) return;
 
-    // 1. Trap browser back/forward buttons
     const trapHistory = () => {
       window.history.pushState(null, "", window.location.href);
     };
-    // Push an extra history entry so the back button pops back to here
     trapHistory();
 
     const handlePopState = () => {
       trapHistory();
       toast.warning("Setup Required", {
-        description: "Please complete your property setup before navigating away.",
-        id: "setup-lock-popstate", // deduplicate
+        description: setupDictionary.wizardHeader.lockNotice,
+        id: "setup-lock-popstate",
       });
     };
     window.addEventListener("popstate", handlePopState);
 
-    // 2. Warn on tab/window close or hard refresh
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
     };
@@ -154,24 +197,16 @@ function WizardContent() {
     };
   }, [isSystemLocked]);
 
-  // Track whether the initial setup-completion check has already run.
-  // This prevents async BrandContext refreshes (window focus, realtime broadcast,
-  // background /api/branding fetch) from redirecting the user away from the wizard
-  // while they are actively typing. Only the first evaluation after auth loading
-  // completes is allowed to redirect.
+  // Initial setup check
   const hasCheckedSetupRef = useRef(false);
-
   useEffect(() => {
-    if (loading || brand.isLoading) return; // Wait for auth and live brand context to resolve
+    if (loading || brand.isLoading) return;
 
     if (profile && profile.role === "tenant") {
       router.replace("/tenant/dashboard");
       return;
     }
 
-    // Only check setup completion once on initial load after loading completes.
-    // Subsequent brand context updates (from refreshBranding on focus, realtime
-    // broadcasts, etc.) must NOT trigger a redirect — the user may be mid-typing.
     if (hasCheckedSetupRef.current) return;
     hasCheckedSetupRef.current = true;
 
@@ -190,8 +225,7 @@ function WizardContent() {
         document.cookie = "ireside_setup_completed=true; path=/; max-age=31536000; SameSite=Lax";
       }
       toast.info("Setup already finalized", {
-        description:
-          "Your property portal is already operational. You can update your brand in Settings.",
+        description: "Your property portal is already operational. You can update your brand in Settings.",
       });
       if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
         window.location.href = "/landlord/dashboard";
@@ -211,50 +245,13 @@ function WizardContent() {
     router,
   ]);
 
-  // Step 1: Identity & Landlord Details
-  const [propertyName, setPropertyName] = useState(() => {
-    if (!isReconfigure) return "";
-    const raw = brand.propertyName?.trim() || "";
-    return raw && !DISALLOWED_PRESEEDED_DATA.propertyNames.includes(raw.toLowerCase()) ? raw : "";
-  });
-  const [tagline, setTagline] = useState(() => {
-    if (!isReconfigure) return "";
-    const raw = brand.propertyTagline?.trim() || "";
-    return raw && !DISALLOWED_PRESEEDED_DATA.taglines.includes(raw.toLowerCase()) ? raw : "";
-  });
-  const [logoUrl, setLogoUrl] = useState<string | null>(brand.logoUrl);
-
-  // Step 2: Light / Dark Mode & Modern HSL Palette
-  const { resolvedTheme, setTheme } = useTheme();
-  const [modePreference, setModePreference] = useState<"dark" | "light">("dark");
-
-  useEffect(() => {
-    if (resolvedTheme === "light" || resolvedTheme === "dark") {
-      setModePreference(resolvedTheme);
-    }
-  }, [resolvedTheme]);
-
-  const [colorTarget, setColorTarget] = useState<"primary" | "secondary">("primary");
-
-  // HSL Component States
-  const [hue, setHue] = useState(264);
-  const [saturation, setSaturation] = useState(90);
-  const [lightness, setLightness] = useState(62);
-
-  const [primaryColor, setPrimaryColor] = useState(brand.primaryColor || "#8b5cf6");
-  const [secondaryColor, setSecondaryColor] = useState(brand.secondaryColor || "#06b6d4");
-
-  // Sync initial HSL with primary color
-  useEffect(() => {
-    const hsl = hexToHsl(brand.primaryColor || "#8b5cf6");
-    setHue(hsl.h);
-    setSaturation(hsl.s);
-    setLightness(hsl.l);
-  }, [brand.primaryColor]);
-
-  // ── 1. Restore setup inputs draft from localStorage (for connection loss or page refresh) ──
+  // 1. Restore setup inputs draft from localStorage (exactly once on mount)
+  const hasRestoredDraftRef = useRef(false);
   useEffect(() => {
     if (isReconfigure) return;
+    if (hasRestoredDraftRef.current) return;
+    hasRestoredDraftRef.current = true;
+
     try {
       const raw = localStorage.getItem(SETUP_STORAGE_KEY);
       if (!raw) return;
@@ -271,31 +268,39 @@ function WizardContent() {
       if (draft.modePreference === "dark" || draft.modePreference === "light") {
         setModePreference(draft.modePreference);
       }
-      if (typeof draft.primaryColor === "string" && draft.primaryColor.startsWith("#")) {
-        setPrimaryColor(draft.primaryColor);
-        const hsl = hexToHsl(draft.primaryColor);
-        setHue(hsl.h);
-        setSaturation(hsl.s);
-        setLightness(hsl.l);
-        applyBrandCssVariables(draft.primaryColor, draft.secondaryColor || secondaryColor);
+      const safePrimary =
+        typeof draft.primaryColor === "string" && draft.primaryColor.startsWith("#")
+          ? draft.primaryColor
+          : undefined;
+      const safeSecondary =
+        typeof draft.secondaryColor === "string" && draft.secondaryColor.startsWith("#")
+          ? draft.secondaryColor
+          : undefined;
+      if (safePrimary) {
+        setPrimaryColor(safePrimary);
       }
-      if (typeof draft.secondaryColor === "string" && draft.secondaryColor.startsWith("#")) {
-        setSecondaryColor(draft.secondaryColor);
+      if (safeSecondary) {
+        setSecondaryColor(safeSecondary);
       }
-      if (draft.currentStep && [1, 2, 3].includes(draft.currentStep)) {
+      if (safePrimary || safeSecondary) {
+        applyBrandCssVariables(safePrimary, safeSecondary);
+      }
+      if (typeof draft.currentStep === "number" && draft.currentStep >= 1 && draft.currentStep <= 3) {
         setCurrentStep(draft.currentStep);
+      }
+      if (typeof draft.maxStepReached === "number" && draft.maxStepReached >= 1) {
+        setMaxStepReached(Math.min(3, draft.maxStepReached));
       }
     } catch {
       // Storage unavailable or invalid JSON
     }
   }, [isReconfigure]);
 
-  // ── 2. Persist setup inputs draft to localStorage on any change ──
+  // 2. Persist setup inputs draft to localStorage
   useEffect(() => {
-    if (isReconfigure || isLaunched || brand?.setupCompleted) return;
+    if (isReconfigure || isLaunched || brand?.setupCompleted || !hasRestoredDraftRef.current) return;
     try {
-      // Only persist if user has started editing
-      if (propertyName || tagline || logoUrl || primaryColor !== "#8b5cf6") {
+      if (propertyName || tagline || logoUrl || primaryColor !== "#7c3aed" || currentStep > 1) {
         const draft = {
           propertyName,
           tagline,
@@ -304,6 +309,7 @@ function WizardContent() {
           primaryColor,
           secondaryColor,
           currentStep,
+          maxStepReached: Math.max(maxStepReached, currentStep),
         };
         localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify(draft));
       }
@@ -318,14 +324,11 @@ function WizardContent() {
     primaryColor,
     secondaryColor,
     currentStep,
+    maxStepReached,
     isReconfigure,
     isLaunched,
     brand?.setupCompleted,
   ]);
-
-  // Field Validation & Interaction State
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
   const markFieldTouched = (field: string) => {
     setTouchedFields((prev) => ({ ...prev, [field]: true }));
@@ -343,132 +346,6 @@ function WizardContent() {
     });
   };
 
-  const handleContinueToStep2 = () => {
-    const check = validateStep1Identity({
-      propertyName,
-      tagline,
-    });
-
-    if (!check.isValid) {
-      setFieldErrors((prev) => ({ ...prev, ...check.errors }));
-      setTouchedFields((prev) => ({
-        ...prev,
-        propertyName: true,
-        tagline: true,
-      }));
-      const firstMsg = Object.values(check.errors)[0];
-      toast.error(firstMsg || "Please fix the errors in Step 1 before continuing.");
-      return;
-    }
-
-    setCurrentStep(2);
-  };
-
-  const handleContinueToStep3 = () => {
-    const check = validateStep2Theme({
-      primaryColor,
-      secondaryColor,
-      modePreference,
-    });
-
-    if (!check.isValid) {
-      setFieldErrors((prev) => ({ ...prev, ...check.errors }));
-      setTouchedFields((prev) => ({
-        ...prev,
-        primaryColor: true,
-        secondaryColor: true,
-      }));
-      const firstMsg = Object.values(check.errors)[0];
-      toast.error(firstMsg || "Please fix color selection before continuing.");
-      return;
-    }
-
-    setCurrentStep(3);
-  };
-
-  // Contrast calculations against active surface
-  const surfaceHex = modePreference === "dark" ? "#09090b" : "#ffffff";
-  const primaryContrast = getContrastRatio(primaryColor, surfaceHex);
-  const secondaryContrast = getContrastRatio(secondaryColor, surfaceHex);
-  const primaryTextColor = getContrastTextColor(primaryColor);
-  const secondaryTextColor = getContrastTextColor(secondaryColor);
-
-  const activeHex = colorTarget === "primary" ? primaryColor : secondaryColor;
-
-  const updateCurrentTargetFromHsl = (newH: number, newS: number, newL: number) => {
-    const hex = hslToHex(newH, newS, newL);
-    if (colorTarget === "primary") {
-      setPrimaryColor(hex);
-      setFieldError("primaryColor", undefined);
-      applyBrandCssVariables(hex, secondaryColor);
-    } else {
-      setSecondaryColor(hex);
-      setFieldError("secondaryColor", undefined);
-      applyBrandCssVariables(primaryColor, hex);
-    }
-  };
-
-  const handleTargetTabChange = (target: "primary" | "secondary") => {
-    setColorTarget(target);
-    const hex = target === "primary" ? primaryColor : secondaryColor;
-    const hsl = hexToHsl(hex);
-    setHue(hsl.h);
-    setSaturation(hsl.s);
-    setLightness(hsl.l);
-  };
-
-  const applyPalettePreset = (preset: PalettePreset) => {
-    setPrimaryColor(preset.primary);
-    setSecondaryColor(preset.secondary);
-    setFieldError("primaryColor", undefined);
-    setFieldError("secondaryColor", undefined);
-    applyBrandCssVariables(preset.primary, preset.secondary);
-
-    const activeSelected = colorTarget === "primary" ? preset.primary : preset.secondary;
-    const hsl = hexToHsl(activeSelected);
-    setHue(hsl.h);
-    setSaturation(hsl.s);
-    setLightness(hsl.l);
-
-    toast.success(`Applied ${preset.name} palette`);
-  };
-
-  // Harmonized secondary color calculation from primary hue
-  const applyHarmonizedSecondary = (
-    rule: "analogous" | "complementary" | "split" | "monochrome",
-    label: string
-  ) => {
-    const primaryHsl = hexToHsl(primaryColor);
-    let newHex = "#06b6d4";
-
-    if (rule === "analogous") {
-      newHex = hslToHex((primaryHsl.h + 35) % 360, 80, 56);
-    } else if (rule === "complementary") {
-      newHex = hslToHex((primaryHsl.h + 180) % 360, 80, 56);
-    } else if (rule === "split") {
-      newHex = hslToHex((primaryHsl.h + 150) % 360, 80, 56);
-    } else if (rule === "monochrome") {
-      newHex = hslToHex(
-        primaryHsl.h,
-        Math.max(25, primaryHsl.s - 35),
-        Math.min(82, primaryHsl.l + 14)
-      );
-    }
-
-    setSecondaryColor(newHex);
-    setFieldError("secondaryColor", undefined);
-    applyBrandCssVariables(primaryColor, newHex);
-
-    if (colorTarget === "secondary") {
-      const hsl = hexToHsl(newHex);
-      setHue(hsl.h);
-      setSaturation(hsl.s);
-      setLightness(hsl.l);
-    }
-
-    toast.success(`Applied ${label} Accent: ${newHex.toUpperCase()}`);
-  };
-
   const handleModeToggle = (mode: "light" | "dark") => {
     setModePreference(mode);
     if (typeof document !== "undefined" && "startViewTransition" in document) {
@@ -479,6 +356,50 @@ function WizardContent() {
       );
     } else {
       setTheme(mode);
+    }
+  };
+
+  const [customPrimaryInput, setCustomPrimaryInput] = useState(primaryColor);
+  const [customSecondaryInput, setCustomSecondaryInput] = useState(secondaryColor);
+
+  const isCustomSelected = !PALETTE_PRESETS.some(
+    (p) => p.primary.toLowerCase() === primaryColor.toLowerCase()
+  );
+
+  const applyPalettePreset = (preset: PalettePreset) => {
+    setPrimaryColor(preset.primary);
+    setSecondaryColor(preset.secondary);
+    setCustomPrimaryInput(preset.primary);
+    setCustomSecondaryInput(preset.secondary);
+    setFieldError("primaryColor", undefined);
+    setFieldError("secondaryColor", undefined);
+    applyBrandCssVariables(preset.primary, preset.secondary);
+  };
+
+  const handleCustomPrimaryChange = (val: string) => {
+    let clean = val.trim();
+    if (!clean.startsWith("#")) clean = `#${clean}`;
+    setCustomPrimaryInput(clean);
+    if (/^#[0-9A-Fa-f]{6}$/.test(clean)) {
+      setPrimaryColor(clean);
+      const hsl = hexToHsl(clean);
+      const autoSec = hslToHex((hsl.h + 35) % 360, Math.min(hsl.s, 85), Math.max(hsl.l, 45));
+      setSecondaryColor(autoSec);
+      setCustomSecondaryInput(autoSec);
+      setFieldError("primaryColor", undefined);
+      setFieldError("secondaryColor", undefined);
+      applyBrandCssVariables(clean, autoSec);
+    }
+  };
+
+  const handleCustomSecondaryChange = (val: string) => {
+    let clean = val.trim();
+    if (!clean.startsWith("#")) clean = `#${clean}`;
+    setCustomSecondaryInput(clean);
+    if (/^#[0-9A-Fa-f]{6}$/.test(clean)) {
+      setSecondaryColor(clean);
+      setFieldError("secondaryColor", undefined);
+      applyBrandCssVariables(primaryColor, clean);
     }
   };
 
@@ -509,29 +430,85 @@ function WizardContent() {
     toast.info("Logo reset to default wordmark.");
   };
 
+  // Escape key closes confirmation modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && showConfirmationModal && !isLaunching) {
+        setShowConfirmationModal(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showConfirmationModal, isLaunching]);
+
+  // Step Navigation Handlers
+  const goToStep = (stepNumber: number) => {
+    setCurrentStep(stepNumber);
+    setMaxStepReached((prev) => Math.min(3, Math.max(prev, stepNumber)));
+    if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
+      try {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } catch {
+        // ignore in test
+      }
+    }
+  };
+
+  const handleContinueFromStep1 = () => {
+    markFieldTouched("propertyName");
+    const check = validatePropertyTradeName(propertyName);
+    if (!check.isValid) {
+      setFieldError("propertyName", check.error);
+      const el = document.getElementById("property-name-input");
+      el?.focus();
+      return;
+    }
+    if (tagline) {
+      const tagCheck = validatePropertyTagline(tagline);
+      if (!tagCheck.isValid) {
+        setFieldError("tagline", tagCheck.error);
+        const el = document.getElementById("tagline-input");
+        el?.focus();
+        return;
+      }
+    }
+    setFieldError("propertyName", undefined);
+    setFieldError("tagline", undefined);
+    goToStep(2);
+  };
+
+  const handleContinueFromStep2 = () => {
+    goToStep(3);
+  };
+
+  const handleContinueFromStep3 = () => {
+    setShowConfirmationModal(true);
+  };
+
   const handleLaunchPortal = async () => {
     const s1 = validateStep1Identity({
       propertyName,
       tagline,
     });
+    const s2 = validateStep2Theme({ primaryColor, secondaryColor, modePreference });
     if (!s1.isValid) {
+      setShowConfirmationModal(false);
       setFieldErrors((prev) => ({ ...prev, ...s1.errors }));
       setTouchedFields((prev) => ({
         ...prev,
         propertyName: true,
         tagline: true,
       }));
-      toast.error(Object.values(s1.errors)[0] || "Please correct errors in Step 1.");
-      setCurrentStep(1);
+      toast.error(Object.values(s1.errors)[0] || "Please enter a valid property name.");
+      goToStep(1);
       return;
     }
 
-    const s2 = validateStep2Theme({ primaryColor, secondaryColor, modePreference });
     if (!s2.isValid) {
+      setShowConfirmationModal(false);
       setFieldErrors((prev) => ({ ...prev, ...s2.errors }));
-      setTouchedFields((prev) => ({ ...prev, primaryColor: true, secondaryColor: true }));
-      toast.error(Object.values(s2.errors)[0] || "Please correct errors in Step 2.");
-      setCurrentStep(2);
+      toast.error(Object.values(s2.errors)[0] || "Please select a valid theme palette.");
+      goToStep(2);
       return;
     }
 
@@ -539,7 +516,6 @@ function WizardContent() {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 20000);
-
       const res = await fetch("/api/setup/launch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -564,7 +540,6 @@ function WizardContent() {
         throw new Error(json.error || "Failed to launch workspace");
       }
 
-      // Update client brand context locally without redundant backend POST
       await brand.updateBranding(
         {
           propertyName: propertyName.trim(),
@@ -575,7 +550,7 @@ function WizardContent() {
           setupCompleted: true,
           setupCompletedAt: new Date().toISOString(),
         },
-        false // false: /api/setup/launch already persisted all data to database
+        false
       );
 
       applyBrandCssVariables(primaryColor, secondaryColor);
@@ -583,31 +558,40 @@ function WizardContent() {
       try {
         localStorage.removeItem(SETUP_STORAGE_KEY);
       } catch {
-        // Storage cleanup is best-effort
+        // best effort
       }
 
       if (typeof document !== "undefined") {
         document.cookie = "ireside_setup_completed=true; path=/; max-age=31536000; SameSite=Lax";
       }
 
-      // Non-blocking background sync - do not block portal launch navigation
-      if (refreshProfile) {
-        void refreshProfile().catch(() => {});
+      try {
+        if (refreshProfile) {
+          const res = refreshProfile();
+          if (res && typeof res.catch === "function") {
+            void res.catch(() => {});
+          }
+        }
+      } catch {
+        // non-blocking
       }
 
       try {
         const supabase = createClient();
-        void supabase.auth.refreshSession().catch(() => {});
+        const sessionRes = supabase?.auth?.refreshSession?.();
+        if (sessionRes && typeof sessionRes.catch === "function") {
+          void sessionRes.catch(() => {});
+        }
       } catch {
-        // Non-blocking background sync
+        // non-blocking
       }
 
+      setShowConfirmationModal(false);
       setIsLaunched(true);
       toast.success("Property Portal Initialized", {
         description: `Branded as ${propertyName}. Opening your dashboard...`,
       });
 
-      // Smoothly navigate to dashboard
       const navigateToDashboard = () => {
         if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
           window.location.replace("/landlord/dashboard");
@@ -616,8 +600,7 @@ function WizardContent() {
         }
       };
 
-      // Brief delay so user sees the success state card before page unload
-      setTimeout(navigateToDashboard, 400);
+      setTimeout(navigateToDashboard, 700);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
       toast.error("Failed to save setup: " + message);
@@ -626,15 +609,28 @@ function WizardContent() {
     }
   };
 
-  const stepsList = [
-    { num: 1, label: "Property Details", icon: Building2 },
-    { num: 2, label: "Theme & Colors", icon: Palette },
-    { num: 3, label: "Review & Launch", icon: ShieldCheck },
-  ];
+  const primaryTextColor = getContrastTextColor(primaryColor);
+
+  // Time estimate text
+  const timeEstimates: Record<number, string> = {
+    1: "About 1 minute left",
+    2: "About 1 minute left",
+    3: "Almost done!",
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground font-sans transition-colors duration-200">
-      {/* Hidden Accessible File Input */}
+    <WizardShell
+      modePreference={modePreference}
+      onToggleMode={handleModeToggle}
+      isSystemLocked={isSystemLocked}
+      onLockedLogoClick={() => {
+        toast.warning("Setup Required", {
+          description: setupDictionary.wizardHeader.lockNotice,
+          id: "setup-lock-logo",
+        });
+      }}
+    >
+      {/* Hidden file input for logo */}
       <input
         id="logo-file-input"
         type="file"
@@ -645,1421 +641,775 @@ function WizardContent() {
         className="hidden"
       />
 
-      {/* Top Navigation Bar */}
-      <nav
-        aria-label="Wizard header navigation"
-        className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between bg-card/95 backdrop-blur-md border-b border-border/80 px-4 sm:px-8 shadow-xs"
-      >
-        <div className="flex items-center gap-3">
-          {isSystemLocked ? (
-            <button
-              type="button"
-              onClick={() => {
-                toast.warning("Setup Required", {
-                  description: "Please complete your property setup before navigating away.",
-                  id: "setup-lock-logo",
-                });
-              }}
-              aria-label="Setup must be completed first"
-              className="flex items-center transition-transform hover:opacity-85 active:scale-95 shrink-0 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-md cursor-not-allowed"
-            >
-              <Logo className="h-8 w-26 sm:h-9 sm:w-28" />
-            </button>
-          ) : (
-            <Link
-              href="/"
-              aria-label="Go to iReside home"
-              className="flex items-center transition-transform hover:opacity-85 active:scale-95 shrink-0 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-md"
-            >
-              <Logo className="h-8 w-26 sm:h-9 sm:w-28" />
-            </Link>
-          )}
-          <span className="text-muted-foreground/40 hidden sm:inline" aria-hidden="true">
-            /
-          </span>
-          <span className="text-xs font-semibold text-muted-foreground hidden sm:inline">
-            Setup Wizard
-          </span>
-        </div>
+      {/* Stepper with progress and clickable jump-back */}
+      {!isLaunched && (
+        <WizardStepper
+          currentStep={currentStep}
+          totalSteps={3}
+          steps={WIZARD_STEPS}
+          maxStepReached={maxStepReached}
+          onStepClick={(id) => goToStep(id)}
+          timeEstimate={timeEstimates[currentStep]}
+        />
+      )}
 
-        <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => handleModeToggle(modePreference === "dark" ? "light" : "dark")}
-            aria-label={`Switch to ${modePreference === "dark" ? "light" : "dark"} appearance`}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-muted/60 border border-border hover:bg-muted transition-all flex items-center gap-1.5 active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer"
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              {modePreference === "dark" ? (
-                <motion.span
-                  key="light-mode"
-                  initial={{ opacity: 0, rotate: -45, scale: 0.8 }}
-                  animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                  exit={{ opacity: 0, rotate: 45, scale: 0.8 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center gap-1.5 text-foreground"
-                >
-                  <Sun className="size-3.5 text-amber-500" />
-                  <span className="hidden sm:inline">Light</span>
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="dark-mode"
-                  initial={{ opacity: 0, rotate: -45, scale: 0.8 }}
-                  animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                  exit={{ opacity: 0, rotate: 45, scale: 0.8 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center gap-1.5 text-foreground"
-                >
-                  <Moon className="size-3.5 text-muted-foreground" />
-                  <span className="hidden sm:inline">Dark</span>
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </button>
-
+      {/* Main Single-Column Step Cards */}
+      <div className="w-full">
+        {isLaunched ? (
           <div
-            aria-live="polite"
-            className="bg-muted/60 border border-border px-3 py-1 rounded-lg text-xs font-medium text-muted-foreground"
+            className="bg-card rounded-3xl p-8 sm:p-12 border-2 border-emerald-500/40 text-center space-y-6 shadow-xl max-w-xl mx-auto"
           >
-            <span>Step </span>
-            <span style={{ color: primaryColor }} className="font-bold">
-              {isLaunched ? "3" : currentStep}
-            </span>
-            <span> of 3</span>
+            <div className="size-20 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-inner">
+              <CheckCircle2 className="size-12 stroke-[2.5]" />
+            </div>
+
+            <div className="space-y-3">
+              <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold text-xs uppercase tracking-wider">
+                {setupDictionary.celebration.badge}
+              </span>
+              <h1 className="text-2xl sm:text-4xl font-extrabold text-foreground tracking-tight">
+                {setupDictionary.celebration.title}
+              </h1>
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+                Branded as <span className="font-bold text-foreground">{propertyName}</span>. {setupDictionary.celebration.message}
+              </p>
+            </div>
+
+            <div className="pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.location.replace("/landlord/dashboard");
+                  } else {
+                    router.push("/landlord/dashboard");
+                  }
+                }}
+                className="w-full min-h-[56px] px-8 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 shadow-lg cursor-pointer active:scale-95 text-white bg-emerald-600 hover:bg-emerald-700"
+              >
+                <span>{setupDictionary.celebration.cta}</span>
+                <ArrowRight className="size-6 stroke-[3]" />
+              </button>
+            </div>
           </div>
-        </div>
-      </nav>
+        ) : (
+          <AnimatePresence mode="wait">
+            {currentStep === 1 ? (
+            /* STEP 1: PROPERTY NAME */
+            <motion.div
+              key="step-1"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-4 sm:space-y-5"
+            >
+              {/* Step Header */}
+              <div className="space-y-1 sm:space-y-1.5">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+                  {setupDictionary.step1PropertyName.title}
+                </h1>
+                <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+                  {setupDictionary.step1PropertyName.instruction}
+                </p>
+              </div>
 
-      {/* Main Container */}
-      <main
-        className={cn(
-          "w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 flex flex-col gap-5 transition-all",
-          currentStep === 3 ? "max-w-4xl" : "max-w-5xl"
-        )}
-      >
-        {/* Header */}
-        <div className="text-center space-y-1">
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-            Property Branding & Setup
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground max-w-xl mx-auto">
-            Configure your property identity, logo, and color theme for your resident portal.
-          </p>
-        </div>
+              {/* Form Input */}
+              <div className="bg-card rounded-2xl p-5 sm:p-6 border border-border/80 shadow-xs space-y-4">
+                {/* 1. Property Name (Required) */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label
+                      htmlFor="property-name-input"
+                      className="text-base sm:text-lg font-bold text-foreground cursor-pointer flex items-center gap-1.5"
+                    >
+                      <span>{setupDictionary.step1PropertyName.label}</span>
+                      <span className="text-rose-600 font-bold" aria-hidden="true">*</span>
+                    </label>
+                    <span className="text-xs sm:text-sm font-mono text-muted-foreground">
+                      {propertyName.length} / 80
+                    </span>
+                  </div>
 
-        {/* Connected Wizard Stepper */}
-        <nav
-          aria-label="Setup steps"
-          className="w-full bg-card/90 backdrop-blur-xs border border-border/80 rounded-2xl p-3.5 sm:px-8 shadow-xs"
-        >
-          <ol className="relative flex items-center justify-between">
-            {/* Background connecting track */}
-            <div
-              className="absolute top-1/2 left-8 right-8 -translate-y-1/2 h-0.5 bg-border -z-0 hidden sm:block"
-              aria-hidden="true"
-            />
+                  <input
+                    id="property-name-input"
+                    type="text"
+                    autoFocus
+                    required
+                    maxLength={80}
+                    value={propertyName}
+                    autoComplete="organization"
+                    placeholder={setupDictionary.step1PropertyName.placeholder}
+                    aria-required="true"
+                    aria-invalid={!!(touchedFields.propertyName && fieldErrors.propertyName)}
+                    aria-describedby={
+                      touchedFields.propertyName && fieldErrors.propertyName
+                        ? "property-name-error"
+                        : "property-name-helper"
+                    }
+                    onChange={(e) => {
+                      setPropertyName(e.target.value);
+                      if (touchedFields.propertyName) {
+                        setFieldError(
+                          "propertyName",
+                          validatePropertyTradeName(e.target.value).error
+                        );
+                      }
+                    }}
+                    onBlur={() => {
+                      markFieldTouched("propertyName");
+                      setFieldError(
+                        "propertyName",
+                        validatePropertyTradeName(propertyName).error
+                      );
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleContinueFromStep1();
+                      }
+                    }}
+                    className={cn(
+                      "w-full min-h-[50px] px-4 rounded-xl border text-base font-semibold text-foreground bg-background transition-all focus:outline-none focus:ring-3",
+                      touchedFields.propertyName && fieldErrors.propertyName
+                        ? "border-rose-500 focus:border-rose-500 focus:ring-rose-500/30"
+                        : "border-border/90 focus:border-primary focus:ring-primary/20"
+                    )}
+                  />
 
-            {/* Completed connector progress lines */}
-            <div
-              className="absolute top-1/2 left-8 -translate-y-1/2 h-0.5 transition-all duration-300 -z-0 hidden sm:block"
-              aria-hidden="true"
-              style={{
-                width:
-                  currentStep === 1
-                    ? "0%"
-                    : currentStep === 2
-                    ? "50%"
-                    : "calc(100% - 64px)",
-                backgroundColor: primaryColor,
-              }}
-            />
+                  {touchedFields.propertyName && fieldErrors.propertyName ? (
+                    <p
+                      id="property-name-error"
+                      role="alert"
+                      aria-live="polite"
+                      className="text-sm font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-2 pt-0.5"
+                    >
+                      <AlertCircle className="size-4 shrink-0" />
+                      <span>{fieldErrors.propertyName}</span>
+                    </p>
+                  ) : (
+                    <p id="property-name-helper" className="text-xs sm:text-sm text-muted-foreground pt-0.5">
+                      {setupDictionary.step1PropertyName.helper}
+                    </p>
+                  )}
+                </div>
 
-            {stepsList.map((step) => {
-              const isActive = currentStep === step.num;
-              const isDone = currentStep > step.num || isLaunched;
+                {/* 2. Short Tagline (Optional) */}
+                <div className="space-y-2 pt-3 border-t border-border/60">
+                  <div className="flex items-center justify-between">
+                    <label
+                      htmlFor="tagline-input"
+                      className="text-base font-bold text-foreground cursor-pointer flex items-center gap-1.5"
+                    >
+                      <span>{setupDictionary.step3Tagline.label}</span>
+                      <span className="text-muted-foreground font-normal text-xs sm:text-sm">
+                        ({setupDictionary.common.optional})
+                      </span>
+                    </label>
+                    <span className="text-xs sm:text-sm font-mono text-muted-foreground">
+                      {tagline.length} / 120
+                    </span>
+                  </div>
 
-              return (
-                <li key={step.num} className="relative z-10">
+                  <input
+                    id="tagline-input"
+                    type="text"
+                    maxLength={120}
+                    value={tagline}
+                    placeholder={setupDictionary.step3Tagline.placeholder}
+                    aria-invalid={!!(touchedFields.tagline && fieldErrors.tagline)}
+                    aria-describedby={
+                      touchedFields.tagline && fieldErrors.tagline
+                        ? "tagline-error"
+                        : "tagline-helper"
+                    }
+                    onChange={(e) => {
+                      setTagline(e.target.value);
+                      if (touchedFields.tagline) {
+                        setFieldError("tagline", validatePropertyTagline(e.target.value).error);
+                      }
+                    }}
+                    onBlur={() => {
+                      markFieldTouched("tagline");
+                      setFieldError("tagline", validatePropertyTagline(tagline).error);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleContinueFromStep1();
+                      }
+                    }}
+                    className={cn(
+                      "w-full min-h-[50px] px-4 rounded-xl border text-base font-medium text-foreground bg-background transition-all focus:outline-none focus:ring-3",
+                      touchedFields.tagline && fieldErrors.tagline
+                        ? "border-rose-500 focus:border-rose-500 focus:ring-rose-500/30"
+                        : "border-border/90 focus:border-primary focus:ring-primary/20"
+                    )}
+                  />
+
+                  {touchedFields.tagline && fieldErrors.tagline ? (
+                    <p
+                      id="tagline-error"
+                      role="alert"
+                      aria-live="polite"
+                      className="text-sm font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-2 pt-0.5"
+                    >
+                      <AlertCircle className="size-4 shrink-0" />
+                      <span>{fieldErrors.tagline}</span>
+                    </p>
+                  ) : (
+                    <p id="tagline-helper" className="text-xs sm:text-sm text-muted-foreground pt-0.5">
+                      {setupDictionary.step3Tagline.helper}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Primary Action Button */}
+              <div className="space-y-4 pt-1">
+                <button
+                  type="button"
+                  onClick={handleContinueFromStep1}
+                  className="w-full min-h-[54px] rounded-2xl bg-primary text-primary-foreground font-black text-lg transition-all hover:bg-primary/95 active:scale-[0.99] flex items-center justify-center gap-3 shadow-md cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  <span>{setupDictionary.common.continue}</span>
+                  <ArrowRight className="size-6 stroke-[3]" />
+                </button>
+              </div>
+            </motion.div>
+          ) : currentStep === 2 ? (
+            /* STEP 2: THEME COLOR */
+            <motion.div
+              key="step-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-4 sm:space-y-5"
+            >
+              <div className="space-y-1 sm:space-y-1.5">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+                  {setupDictionary.step2ThemeColor.title}
+                </h1>
+                <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+                  {setupDictionary.step2ThemeColor.instruction}
+                </p>
+              </div>
+
+              {/* 2-Column Responsive Preset Grid (Compact, no tall scrolling) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3" role="radiogroup" aria-label="Theme Color Styles">
+                {PALETTE_PRESETS.map((preset) => {
+                  const isSelected =
+                    primaryColor.toLowerCase() === preset.primary.toLowerCase();
+
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      onClick={() => applyPalettePreset(preset)}
+                      className={cn(
+                        "p-3 sm:p-3.5 rounded-xl border-2 text-left transition-all flex items-center justify-between gap-3 cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary",
+                        isSelected
+                          ? "border-primary bg-primary/10 shadow-xs ring-1 ring-primary/30"
+                          : "border-border/80 hover:border-border bg-card hover:bg-muted/40"
+                      )}
+                    >
+                      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                        <div className="flex -space-x-1.5 shrink-0">
+                          <span
+                            className="size-6 sm:size-7 rounded-full border-2 border-background shadow-xs"
+                            style={{ backgroundColor: preset.primary }}
+                          />
+                          <span
+                            className="size-6 sm:size-7 rounded-full border-2 border-background shadow-xs"
+                            style={{ backgroundColor: preset.secondary }}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm sm:text-base font-bold text-foreground truncate">
+                            {preset.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {preset.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      {isSelected ? (
+                        <div className="size-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0">
+                          <Check className="size-3.5 stroke-[3]" />
+                        </div>
+                      ) : (
+                        <div className="size-5 rounded-full border-2 border-muted-foreground/30 shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Prominent Custom Color Picker Section */}
+              <div
+                className={cn(
+                  "p-3.5 sm:p-4 rounded-2xl border-2 transition-all space-y-3 bg-card",
+                  isCustomSelected
+                    ? "border-primary bg-primary/5 shadow-xs ring-1 ring-primary/20"
+                    : "border-border/80"
+                )}
+              >
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2.5">
+                    <div className="size-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                      <Pipette className="size-4" />
+                    </div>
+                    <div>
+                      <h2 className="text-sm sm:text-base font-bold text-foreground">
+                        {setupDictionary.step2ThemeColor.customColor?.title || "Pick Your Own Color"}
+                      </h2>
+                      <p className="text-xs text-muted-foreground">
+                        {setupDictionary.step2ThemeColor.customColor?.description || "Tap the color circle or type your HEX code"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {isCustomSelected && (
+                    <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
+                      Custom Color Active
+                    </span>
+                  )}
+                </div>
+
+                {/* Color Picker Controls & Quick Swatches */}
+                <div className="flex items-center gap-4 flex-wrap pt-1">
+                  {/* Primary Color Picker Input */}
+                  <div className="flex items-center gap-2 bg-muted/50 p-1.5 sm:p-2 rounded-xl border border-border/70">
+                    <label
+                      htmlFor="custom-primary-color-input"
+                      className="size-8 sm:size-9 rounded-lg border-2 border-border shadow-xs cursor-pointer relative shrink-0 overflow-hidden flex items-center justify-center"
+                      style={{ backgroundColor: primaryColor }}
+                      title="Tap to open color wheel"
+                    >
+                      <input
+                        id="custom-primary-color-input"
+                        type="color"
+                        value={primaryColor.startsWith("#") && primaryColor.length === 7 ? primaryColor : "#7c3aed"}
+                        onChange={(e) => handleCustomPrimaryChange(e.target.value)}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                        aria-label="Pick custom primary color"
+                      />
+                    </label>
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                        Main Color
+                      </span>
+                      <input
+                        type="text"
+                        maxLength={7}
+                        value={customPrimaryInput}
+                        onChange={(e) => handleCustomPrimaryChange(e.target.value)}
+                        className="w-20 font-mono text-xs font-bold bg-background text-foreground px-1.5 py-0.5 rounded border border-border focus:outline-none focus:ring-2 focus:ring-primary uppercase"
+                        placeholder="#7C3AED"
+                        aria-label="Custom primary hex code"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Secondary Color Picker Input */}
+                  <div className="flex items-center gap-2 bg-muted/50 p-1.5 sm:p-2 rounded-xl border border-border/70">
+                    <label
+                      htmlFor="custom-secondary-color-input"
+                      className="size-8 sm:size-9 rounded-lg border-2 border-border shadow-xs cursor-pointer relative shrink-0 overflow-hidden flex items-center justify-center"
+                      style={{ backgroundColor: secondaryColor }}
+                      title="Tap to open accent color wheel"
+                    >
+                      <input
+                        id="custom-secondary-color-input"
+                        type="color"
+                        value={secondaryColor.startsWith("#") && secondaryColor.length === 7 ? secondaryColor : "#f43f5e"}
+                        onChange={(e) => handleCustomSecondaryChange(e.target.value)}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                        aria-label="Pick custom accent color"
+                      />
+                    </label>
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                        Accent Color
+                      </span>
+                      <input
+                        type="text"
+                        maxLength={7}
+                        value={customSecondaryInput}
+                        onChange={(e) => handleCustomSecondaryChange(e.target.value)}
+                        className="w-20 font-mono text-xs font-bold bg-background text-foreground px-1.5 py-0.5 rounded border border-border focus:outline-none focus:ring-2 focus:ring-primary uppercase"
+                        placeholder="#F43F5E"
+                        aria-label="Custom accent hex code"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Quick Color Dots */}
+                  <div className="flex items-center gap-1.5 ml-auto flex-wrap">
+                    {QUICK_COLOR_SWATCHES.map((hex) => (
+                      <button
+                        key={hex}
+                        type="button"
+                        onClick={() => handleCustomPrimaryChange(hex)}
+                        title={`Select ${hex}`}
+                        aria-label={`Select color ${hex}`}
+                        className={cn(
+                          "size-6 sm:size-7 rounded-full border-2 transition-transform hover:scale-110 active:scale-95 cursor-pointer shadow-xs",
+                          primaryColor.toLowerCase() === hex.toLowerCase()
+                            ? "border-primary ring-2 ring-primary/40 scale-105"
+                            : "border-background"
+                        )}
+                        style={{ backgroundColor: hex }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleContinueFromStep2}
+                  className="w-full min-h-[54px] rounded-2xl bg-primary text-primary-foreground font-black text-lg transition-all hover:bg-primary/95 active:scale-[0.99] flex items-center justify-center gap-3 shadow-md cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  <span>{setupDictionary.common.continue}</span>
+                  <ArrowRight className="size-6 stroke-[3]" />
+                </button>
+
+                <div className="text-center">
                   <button
                     type="button"
-                    onClick={() => {
-                      if (step.num === currentStep) return;
-                      if (step.num < currentStep || isDone) {
-                        setCurrentStep(step.num as 1 | 2 | 3);
-                        return;
-                      }
-                      if (step.num === 2) {
-                        handleContinueToStep2();
-                      } else if (step.num === 3) {
-                        const s1 = validateStep1Identity({
-                          propertyName,
-                          tagline,
-                        });
-                        if (!s1.isValid) {
-                          setFieldErrors((prev) => ({ ...prev, ...s1.errors }));
-                          setTouchedFields((prev) => ({
-                            ...prev,
-                            propertyName: true,
-                            tagline: true,
-                          }));
-                          toast.error(
-                            Object.values(s1.errors)[0] || "Please complete Step 1 first."
-                          );
-                          setCurrentStep(1);
-                          return;
-                        }
-                        handleContinueToStep3();
-                      }
-                    }}
-                    aria-current={isActive ? "step" : undefined}
-                    aria-label={`Step ${step.num}: ${step.label}${
-                      isDone ? " (Completed)" : isActive ? " (Active)" : ""
-                    }`}
-                    className={cn(
-                      "flex items-center gap-2 sm:gap-3 py-1.5 px-2 rounded-xl transition-all group focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer",
-                      isActive
-                        ? "text-foreground"
-                        : isDone
-                        ? "text-foreground/90 hover:text-foreground"
-                        : "text-muted-foreground hover:text-foreground/80"
-                    )}
+                    onClick={() => goToStep(1)}
+                    className="min-h-[44px] px-4 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-2 cursor-pointer"
                   >
-                    <div
-                      className={cn(
-                        "size-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all border",
-                        isDone
-                          ? "bg-emerald-600 border-emerald-600 text-white shadow-xs"
-                          : isActive
-                          ? "shadow-sm ring-4 ring-primary/20 border-transparent font-extrabold"
-                          : "bg-muted border-border text-muted-foreground group-hover:border-border/80 group-hover:bg-muted/80"
-                      )}
-                      style={
-                        isActive && !isDone
-                          ? { backgroundColor: primaryColor, color: primaryTextColor }
-                          : undefined
-                      }
-                    >
-                      {isDone ? <Check className="size-4 stroke-[3]" /> : step.num}
-                    </div>
-
-                    <div className="text-left hidden xs:block">
-                      <span className="text-[10px] font-medium text-muted-foreground block uppercase tracking-wider leading-tight">
-                        Step {step.num}
-                      </span>
-                      <span
-                        className={cn(
-                          "text-xs font-semibold block leading-tight",
-                          isActive
-                            ? "text-foreground"
-                            : "text-muted-foreground group-hover:text-foreground"
-                        )}
-                      >
-                        {step.label}
-                      </span>
-                    </div>
+                    <ArrowLeft className="size-4" />
+                    <span>{setupDictionary.common.back}</span>
                   </button>
-                </li>
-              );
-            })}
-          </ol>
-        </nav>
-
-        {/* Main Workspace Layout */}
-        <div
-          className={cn(
-            "grid gap-5 items-start",
-            currentStep === 3 ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-12"
-          )}
-        >
-          {/* Main Form Column */}
-          <div
-            className={cn(
-              "flex flex-col gap-4",
-              currentStep === 3 ? "w-full" : "lg:col-span-7"
-            )}
-          >
-            <AnimatePresence mode="wait">
-              {/* STEP 1: IDENTITY & LOGO */}
-              {currentStep === 1 && (
-                <motion.section
-                  key="step1"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.15 }}
-                  aria-labelledby="step1-heading"
-                  className="bg-card rounded-2xl p-5 sm:p-6 flex flex-col gap-4 border border-border/80 shadow-xs"
-                >
-                  <div className="flex items-center gap-3 pb-3 border-b border-border/60">
-                    <div
-                      className="size-8 rounded-xl bg-muted/70 border border-border flex items-center justify-center shrink-0"
-                      style={{ color: primaryColor }}
-                    >
-                      <Building2 className="size-4" />
-                    </div>
-                    <div>
-                      <h2 id="step1-heading" className="text-sm font-semibold text-foreground">
-                        Property Details
-                      </h2>
-                      <p className="text-[11px] text-muted-foreground">
-                        Set your property name, brand tagline, and official logo
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3.5">
-                    {/* Property Name */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label
-                          htmlFor="property-name-input"
-                          className="text-xs font-medium text-foreground cursor-pointer"
-                        >
-                          Property Name <span className="text-rose-500" aria-hidden="true">*</span>
-                        </label>
-                        {propertyName.length > 50 && (
-                          <span
-                            className={cn(
-                              "text-[9px] font-mono",
-                              propertyName.length > 80
-                                ? "text-rose-500 font-bold"
-                                : "text-muted-foreground"
-                            )}
-                          >
-                            {propertyName.length}/80
-                          </span>
-                        )}
-                      </div>
-                      <div
-                        className={cn(
-                          "bg-background border rounded-xl px-3 py-2 transition-all focus-within:ring-2 focus-within:ring-primary/20",
-                          touchedFields.propertyName && fieldErrors.propertyName
-                            ? "border-rose-500 ring-1 ring-rose-500"
-                            : "border-border hover:border-border/80"
-                        )}
-                      >
-                        <input
-                          id="property-name-input"
-                          type="text"
-                          value={propertyName}
-                          maxLength={80}
-                          autoComplete="organization"
-                          aria-required="true"
-                          aria-invalid={
-                            !!(touchedFields.propertyName && fieldErrors.propertyName)
-                          }
-                          aria-describedby={
-                            touchedFields.propertyName && fieldErrors.propertyName
-                              ? "property-name-error"
-                              : undefined
-                          }
-                          onChange={(e) => {
-                            setPropertyName(e.target.value);
-                            if (touchedFields.propertyName) {
-                              setFieldError(
-                                "propertyName",
-                                validatePropertyTradeName(e.target.value).error
-                              );
-                            }
-                          }}
-                          onBlur={() => {
-                            markFieldTouched("propertyName");
-                            setFieldError(
-                              "propertyName",
-                              validatePropertyTradeName(propertyName).error
-                            );
-                          }}
-                          placeholder="e.g. Pinecrest Residences"
-                          className="bg-transparent border-none outline-none w-full text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:ring-0"
-                        />
-                      </div>
-                      {touchedFields.propertyName && fieldErrors.propertyName && (
-                        <p
-                          id="property-name-error"
-                          role="alert"
-                          className="mt-1 text-[11px] font-medium text-rose-500 flex items-center gap-1"
-                        >
-                          <AlertCircle className="size-3 shrink-0" />
-                          <span>{fieldErrors.propertyName}</span>
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Tagline */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label
-                          htmlFor="tagline-input"
-                          className="text-xs font-medium text-foreground cursor-pointer"
-                        >
-                          Tagline{" "}
-                          <span className="text-muted-foreground font-normal text-[11px]">
-                            (Optional)
-                          </span>
-                        </label>
-                        {tagline.length > 80 && (
-                          <span
-                            className={cn(
-                              "text-[9px] font-mono",
-                              tagline.length > 120
-                                ? "text-rose-500 font-bold"
-                                : "text-muted-foreground"
-                            )}
-                          >
-                            {tagline.length}/120
-                          </span>
-                        )}
-                      </div>
-                      <div
-                        className={cn(
-                          "bg-background border rounded-xl px-3 py-2 transition-all focus-within:ring-2 focus-within:ring-primary/20",
-                          touchedFields.tagline && fieldErrors.tagline
-                            ? "border-rose-500 ring-1 ring-rose-500"
-                            : "border-border hover:border-border/80"
-                        )}
-                      >
-                        <input
-                          id="tagline-input"
-                          type="text"
-                          value={tagline}
-                          maxLength={120}
-                          aria-invalid={!!(touchedFields.tagline && fieldErrors.tagline)}
-                          aria-describedby={
-                            touchedFields.tagline && fieldErrors.tagline
-                              ? "tagline-error"
-                              : undefined
-                          }
-                          onChange={(e) => {
-                            setTagline(e.target.value);
-                            if (touchedFields.tagline) {
-                              setFieldError(
-                                "tagline",
-                                validatePropertyTagline(e.target.value).error
-                              );
-                            }
-                          }}
-                          onBlur={() => {
-                            markFieldTouched("tagline");
-                            setFieldError("tagline", validatePropertyTagline(tagline).error);
-                          }}
-                          placeholder="e.g. Modern apartments & student living"
-                          className="bg-transparent border-none outline-none w-full text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:ring-0"
-                        />
-                      </div>
-                      {touchedFields.tagline && fieldErrors.tagline && (
-                        <p
-                          id="tagline-error"
-                          role="alert"
-                          className="mt-1 text-[11px] font-medium text-rose-500 flex items-center gap-1"
-                        >
-                          <AlertCircle className="size-3 shrink-0" />
-                          <span>{fieldErrors.tagline}</span>
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Logo Customizer Component */}
-                    <div className="p-3.5 rounded-xl bg-muted/40 border border-border/80 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        {logoUrl ? (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img
-                            src={logoUrl}
-                            alt="Uploaded property logo"
-                            className="size-11 rounded-xl object-cover border border-border shadow-xs shrink-0 bg-background"
-                          />
-                        ) : (
-                          <div className="h-11 px-3 rounded-xl border border-border/80 bg-background flex items-center justify-center shadow-xs shrink-0">
-                            <Logo className="h-6 w-20" />
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold text-foreground truncate">
-                            {logoUrl ? "Custom Logo Active" : "Default Wordmark Active"}
-                          </p>
-                          <p className="text-[11px] text-muted-foreground truncate">
-                            {logoUrl
-                              ? "Applied across resident portal and billing receipts"
-                              : "PNG, JPG, or SVG up to 5MB (wordmark used if not uploaded)"}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          aria-label={logoUrl ? "Change property logo" : "Upload property logo"}
-                          className="px-3 py-1.5 rounded-lg text-xs font-medium bg-card hover:bg-muted text-foreground border border-border transition-all flex items-center gap-1.5 shadow-xs active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer"
-                        >
-                          <Upload className="size-3.5" />
-                          <span>{logoUrl ? "Change" : "Upload Logo"}</span>
-                        </button>
-
-                        {logoUrl && (
-                          <button
-                            type="button"
-                            onClick={handleRemoveLogo}
-                            aria-label="Remove uploaded logo"
-                            title="Remove logo"
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none cursor-pointer"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    {fieldErrors.logoUrl && (
-                      <p
-                        id="logo-error"
-                        role="alert"
-                        className="text-[11px] font-medium text-rose-500 flex items-center gap-1 px-1"
-                      >
-                        <AlertCircle className="size-3 shrink-0" />
-                        <span>{fieldErrors.logoUrl}</span>
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="pt-2 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={handleContinueToStep2}
-                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 active:scale-95 shadow-xs focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none cursor-pointer"
-                      style={{
-                        backgroundColor: primaryColor,
-                        color: primaryTextColor,
-                      }}
-                    >
-                      <span>Continue to Theme & Colors</span>
-                      <ArrowRight className="size-3.5" />
-                    </button>
-                  </div>
-                </motion.section>
-              )}
-
-              {/* STEP 2: THEME & COLOR STUDIO */}
-              {currentStep === 2 && (
-                <motion.section
-                  key="step2"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.15 }}
-                  aria-labelledby="step2-heading"
-                  className="bg-card rounded-2xl p-5 sm:p-6 flex flex-col gap-4 border border-border/80 shadow-xs"
-                >
-                  <div className="flex items-center gap-3 pb-3 border-b border-border/60">
-                    <div
-                      className="size-8 rounded-xl bg-muted/70 border border-border flex items-center justify-center shrink-0"
-                      style={{ color: primaryColor }}
-                    >
-                      <Palette className="size-4" />
-                    </div>
-                    <div>
-                      <h2 id="step2-heading" className="text-sm font-semibold text-foreground">
-                        Theme & Colors
-                      </h2>
-                      <p className="text-[11px] text-muted-foreground">
-                        Select default appearance mode and configure brand colors
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* 1. Theme Experience Selector */}
-                  <div
-                    role="radiogroup"
-                    aria-label="Default appearance mode"
-                    className="grid grid-cols-1 sm:grid-cols-2 gap-2.5"
-                  >
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={modePreference === "dark"}
-                      onClick={() => handleModeToggle("dark")}
-                      className={cn(
-                        "p-3 rounded-xl text-left transition-all flex items-center justify-between border cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
-                        modePreference === "dark"
-                          ? "bg-muted/70 border-border shadow-xs"
-                          : "bg-background border-border/70 text-muted-foreground hover:text-foreground"
-                      )}
-                      style={
-                        modePreference === "dark"
-                          ? { borderColor: primaryColor, backgroundColor: `${primaryColor}14` }
-                          : undefined
-                      }
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Moon
-                          className="size-4"
-                          style={modePreference === "dark" ? { color: primaryColor } : undefined}
-                        />
-                        <span className="text-xs font-semibold text-foreground">Dark Mode</span>
-                      </div>
-                      {modePreference === "dark" && (
-                        <Check className="size-3.5 stroke-[3]" style={{ color: primaryColor }} />
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={modePreference === "light"}
-                      onClick={() => handleModeToggle("light")}
-                      className={cn(
-                        "p-3 rounded-xl text-left transition-all flex items-center justify-between border cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
-                        modePreference === "light"
-                          ? "bg-muted/70 border-border shadow-xs"
-                          : "bg-background border-border/70 text-muted-foreground hover:text-foreground"
-                      )}
-                      style={
-                        modePreference === "light"
-                          ? { borderColor: primaryColor, backgroundColor: `${primaryColor}14` }
-                          : undefined
-                      }
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Sun
-                          className="size-4"
-                          style={modePreference === "light" ? { color: primaryColor } : undefined}
-                        />
-                        <span className="text-xs font-semibold text-foreground">Light Mode</span>
-                      </div>
-                      {modePreference === "light" && (
-                        <Check className="size-3.5 stroke-[3]" style={{ color: primaryColor }} />
-                      )}
-                    </button>
-                  </div>
-
-                  {/* 2. Curated Brand Palette Presets */}
-                  <div className="space-y-2">
-                    <span className="text-xs font-medium text-foreground block">
-                      Curated Palettes
-                    </span>
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                      {PALETTE_PRESETS.map((preset) => {
-                        const isPresetActive =
-                          primaryColor.toLowerCase() === preset.primary.toLowerCase() &&
-                          secondaryColor.toLowerCase() === preset.secondary.toLowerCase();
-
-                        return (
-                          <button
-                            key={preset.id}
-                            type="button"
-                            onClick={() => applyPalettePreset(preset)}
-                            aria-label={`Apply ${preset.name} palette`}
-                            className={cn(
-                              "p-2 rounded-xl border text-left transition-all flex flex-col gap-1.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer",
-                              isPresetActive
-                                ? "bg-muted border-border ring-2 ring-primary/40 shadow-xs"
-                                : "bg-card/70 border-border/70 hover:bg-muted/50"
-                            )}
-                          >
-                            <div className="flex items-center gap-1.5">
-                              <span
-                                className="size-3 rounded-full border border-border shadow-2xs"
-                                style={{ backgroundColor: preset.primary }}
-                              />
-                              <span
-                                className="size-3 rounded-full border border-border shadow-2xs"
-                                style={{ backgroundColor: preset.secondary }}
-                              />
-                            </div>
-                            <div>
-                              <span className="text-[11px] font-semibold text-foreground block truncate">
-                                {preset.name}
-                              </span>
-                              <span className="text-[9px] text-muted-foreground block truncate">
-                                {preset.description}
-                              </span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* 3. Color Target Switcher Tabs */}
-                  <div
-                    role="tablist"
-                    aria-label="Color configuration target"
-                    className="bg-muted/50 border border-border/80 rounded-xl p-1 flex gap-1"
-                  >
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={colorTarget === "primary"}
-                      onClick={() => handleTargetTabChange("primary")}
-                      className={cn(
-                        "flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 border cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
-                        colorTarget === "primary"
-                          ? "bg-card text-foreground shadow-xs border-border font-semibold"
-                          : "border-transparent text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <span
-                        className="size-3 rounded-full shrink-0 shadow-2xs"
-                        style={{ backgroundColor: primaryColor }}
-                      />
-                      <span>Primary Brand</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={colorTarget === "secondary"}
-                      onClick={() => handleTargetTabChange("secondary")}
-                      className={cn(
-                        "flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 border cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
-                        colorTarget === "secondary"
-                          ? "bg-card text-foreground shadow-xs border-border font-semibold"
-                          : "border-transparent text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <span
-                        className="size-3 rounded-full shrink-0 shadow-2xs"
-                        style={{ backgroundColor: secondaryColor }}
-                      />
-                      <span>Secondary Accent</span>
-                    </button>
-                  </div>
-
-                  {/* 4. Harmonized Secondary Quick-Picks */}
-                  {colorTarget === "secondary" && (
-                    <div className="p-2.5 rounded-xl bg-muted/30 border border-border/70 space-y-1.5">
-                      <span className="text-[11px] font-medium text-muted-foreground block">
-                        Harmonize with Primary Brand
-                      </span>
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => applyHarmonizedSecondary("analogous", "Analogous")}
-                          className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-card border border-border hover:bg-muted transition-all cursor-pointer"
-                        >
-                          Analogous
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            applyHarmonizedSecondary("complementary", "Complementary")
-                          }
-                          className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-card border border-border hover:bg-muted transition-all cursor-pointer"
-                        >
-                          Complementary
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => applyHarmonizedSecondary("split", "Split-Complementary")}
-                          className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-card border border-border hover:bg-muted transition-all cursor-pointer"
-                        >
-                          Split
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => applyHarmonizedSecondary("monochrome", "Monochromatic")}
-                          className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-card border border-border hover:bg-muted transition-all cursor-pointer"
-                        >
-                          Monochrome
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 5. Complete HSL Sliders & Direct HEX Input */}
-                  <div className="bg-muted/30 rounded-xl p-3.5 space-y-3 border border-border/80">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="size-6 rounded-lg shadow-xs border border-white/20 shrink-0"
-                          style={{ backgroundColor: activeHex }}
-                        />
-                        <div className="relative">
-                          <label htmlFor="hex-color-input" className="sr-only">
-                            HEX Color Code
-                          </label>
-                          <input
-                            id="hex-color-input"
-                            type="text"
-                            value={colorTarget === "primary" ? primaryColor : secondaryColor}
-                            maxLength={7}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              if (colorTarget === "primary") {
-                                setPrimaryColor(val);
-                                const check = validateBrandColor(val, "Primary brand");
-                                if (check.isValid) {
-                                  setFieldError("primaryColor", undefined);
-                                  const hsl = hexToHsl(check.formatted);
-                                  setHue(hsl.h);
-                                  setSaturation(hsl.s);
-                                  setLightness(hsl.l);
-                                  applyBrandCssVariables(check.formatted, secondaryColor);
-                                } else if (touchedFields.primaryColor) {
-                                  setFieldError("primaryColor", check.error);
-                                }
-                              } else {
-                                setSecondaryColor(val);
-                                const check = validateBrandColor(val, "Secondary accent");
-                                if (check.isValid) {
-                                  setFieldError("secondaryColor", undefined);
-                                  const hsl = hexToHsl(check.formatted);
-                                  setHue(hsl.h);
-                                  setSaturation(hsl.s);
-                                  setLightness(hsl.l);
-                                  applyBrandCssVariables(primaryColor, check.formatted);
-                                } else if (touchedFields.secondaryColor) {
-                                  setFieldError("secondaryColor", check.error);
-                                }
-                              }
-                            }}
-                            onBlur={() => {
-                              if (colorTarget === "primary") {
-                                markFieldTouched("primaryColor");
-                                const check = validateBrandColor(primaryColor, "Primary brand");
-                                if (!check.isValid) {
-                                  setFieldError("primaryColor", check.error);
-                                } else {
-                                  setPrimaryColor(check.formatted);
-                                  setFieldError("primaryColor", undefined);
-                                }
-                              } else {
-                                markFieldTouched("secondaryColor");
-                                const check = validateBrandColor(secondaryColor, "Secondary accent");
-                                if (!check.isValid) {
-                                  setFieldError("secondaryColor", check.error);
-                                } else {
-                                  setSecondaryColor(check.formatted);
-                                  setFieldError("secondaryColor", undefined);
-                                }
-                              }
-                            }}
-                            placeholder="#8B5CF6"
-                            className={cn(
-                              "w-24 uppercase font-mono text-xs font-semibold rounded-lg px-2.5 py-1 bg-background border transition-all text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
-                              (colorTarget === "primary" &&
-                                touchedFields.primaryColor &&
-                                fieldErrors.primaryColor) ||
-                                (colorTarget === "secondary" &&
-                                  touchedFields.secondaryColor &&
-                                  fieldErrors.secondaryColor)
-                                ? "border-rose-500 ring-1 ring-rose-500"
-                                : "border-border"
-                            )}
-                            aria-invalid={
-                              !!(
-                                (colorTarget === "primary" &&
-                                  touchedFields.primaryColor &&
-                                  fieldErrors.primaryColor) ||
-                                (colorTarget === "secondary" &&
-                                  touchedFields.secondaryColor &&
-                                  fieldErrors.secondaryColor)
-                              )
-                            }
-                          />
-                        </div>
-                      </div>
-
-                      {/* WCAG Contrast Ratio Indicator */}
-                      <div
-                        className={cn(
-                          "flex items-center gap-1.5 text-[11px] font-mono font-medium",
-                          (colorTarget === "primary" ? primaryContrast : secondaryContrast) >= 3.0
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-amber-600 dark:text-amber-400"
-                        )}
-                      >
-                        <Award className="size-3.5" />
-                        <span>
-                          {colorTarget === "primary" ? primaryContrast : secondaryContrast}:1 (
-                          {(colorTarget === "primary" ? primaryContrast : secondaryContrast) >= 4.5
-                            ? "WCAG AAA"
-                            : (colorTarget === "primary" ? primaryContrast : secondaryContrast) >= 3.0
-                            ? "WCAG AA"
-                            : "Low Contrast"}
-                          )
-                        </span>
-                      </div>
-                    </div>
-
-                    {((colorTarget === "primary" &&
-                      touchedFields.primaryColor &&
-                      fieldErrors.primaryColor) ||
-                      (colorTarget === "secondary" &&
-                        touchedFields.secondaryColor &&
-                        fieldErrors.secondaryColor)) && (
-                      <p
-                        role="alert"
-                        className="text-[11px] font-medium text-rose-500 flex items-center gap-1"
-                      >
-                        <AlertCircle className="size-3 shrink-0" />
-                        <span>
-                          {colorTarget === "primary"
-                            ? fieldErrors.primaryColor
-                            : fieldErrors.secondaryColor}
-                        </span>
-                      </p>
-                    )}
-
-                    {/* Rainbow Hue Slider */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
-                        <label htmlFor="hue-slider" className="cursor-pointer">
-                          Hue
-                        </label>
-                        <span className="font-mono text-xs">{hue}°</span>
-                      </div>
-                      <input
-                        id="hue-slider"
-                        type="range"
-                        min="0"
-                        max="360"
-                        value={hue}
-                        aria-label="Color hue degree"
-                        aria-valuemin={0}
-                        aria-valuemax={360}
-                        aria-valuenow={hue}
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          setHue(val);
-                          updateCurrentTargetFromHsl(val, saturation, lightness);
-                        }}
-                        className="w-full h-2 rounded-lg appearance-none cursor-pointer"
-                        style={{
-                          background:
-                            "linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)",
-                        }}
-                      />
-                    </div>
-
-                    {/* Saturation Slider */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
-                        <label htmlFor="saturation-slider" className="cursor-pointer">
-                          Saturation
-                        </label>
-                        <span className="font-mono text-xs">{saturation}%</span>
-                      </div>
-                      <input
-                        id="saturation-slider"
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={saturation}
-                        aria-label="Color saturation percentage"
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        aria-valuenow={saturation}
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          setSaturation(val);
-                          updateCurrentTargetFromHsl(hue, val, lightness);
-                        }}
-                        className="w-full h-2 rounded-lg appearance-none cursor-pointer"
-                        style={{
-                          background: `linear-gradient(to right, hsl(${hue}, 0%, ${lightness}%), hsl(${hue}, 100%, ${lightness}%))`,
-                        }}
-                      />
-                    </div>
-
-                    {/* Lightness Slider */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
-                        <label htmlFor="lightness-slider" className="cursor-pointer">
-                          Lightness
-                        </label>
-                        <span className="font-mono text-xs">{lightness}%</span>
-                      </div>
-                      <input
-                        id="lightness-slider"
-                        type="range"
-                        min="15"
-                        max="85"
-                        value={lightness}
-                        aria-label="Color lightness percentage"
-                        aria-valuemin={15}
-                        aria-valuemax={85}
-                        aria-valuenow={lightness}
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          setLightness(val);
-                          updateCurrentTargetFromHsl(hue, saturation, val);
-                        }}
-                        className="w-full h-2 rounded-lg appearance-none cursor-pointer"
-                        style={{
-                          background: `linear-gradient(to right, #000000, hsl(${hue}, ${saturation}%, 50%), #ffffff)`,
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-2 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep(1)}
-                      className="py-2 px-4 rounded-xl bg-card hover:bg-muted border border-border active:scale-95 text-xs font-medium transition-all flex items-center gap-1.5 text-foreground shadow-xs focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer"
-                    >
-                      <ArrowLeft className="size-3.5" />
-                      <span>Back to Details</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleContinueToStep3}
-                      className="px-5 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 active:scale-95 shadow-xs focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none cursor-pointer"
-                      style={{
-                        backgroundColor: primaryColor,
-                        color: primaryTextColor,
-                      }}
-                    >
-                      <span>Continue to Review & Launch</span>
-                      <ArrowRight className="size-3.5" />
-                    </button>
-                  </div>
-                </motion.section>
-              )}
-
-              {/* STEP 3: REVIEW & LAUNCH */}
-              {currentStep === 3 && (
-                <motion.section
-                  key="step3"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.15 }}
-                  aria-labelledby="step3-heading"
-                  className="bg-card rounded-2xl p-5 sm:p-7 flex flex-col gap-5 border border-border/80 shadow-xs"
-                >
-                  <div className="flex items-center gap-3 pb-3 border-b border-border/60">
-                    <div
-                      className="size-8 rounded-xl bg-muted/70 border border-border flex items-center justify-center shrink-0"
-                      style={{ color: primaryColor }}
-                    >
-                      <ShieldCheck className="size-4" />
-                    </div>
-                    <div>
-                      <h2 id="step3-heading" className="text-sm font-semibold text-foreground">
-                        Review & Launch
-                      </h2>
-                      <p className="text-[11px] text-muted-foreground">
-                        Review your details and visual identity before launching the portal
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* 3 Summary Cards Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-                    {/* 1. Brand Identity Card */}
-                    <div className="bg-muted/30 border border-border/80 rounded-xl p-4 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between pb-2 border-b border-border/60">
-                          <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-medium">
-                            <Building2 className="size-3.5" />
-                            <span>Brand Identity</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setCurrentStep(1)}
-                            aria-label="Edit property details"
-                            className="text-xs font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded cursor-pointer"
-                          >
-                            <Edit3 className="size-3" />
-                            <span>Edit</span>
-                          </button>
-                        </div>
-
-                        <div className="mt-3 flex items-start gap-3">
-                          {logoUrl ? (
-                            /* eslint-disable-next-line @next/next/no-img-element */
-                            <img
-                              src={logoUrl}
-                              alt="Brand Logo"
-                              className="size-10 rounded-lg object-cover border border-border shrink-0 shadow-xs bg-background"
-                            />
-                          ) : (
-                            <div className="h-10 px-2.5 rounded-lg border border-border/80 bg-background flex items-center justify-center shadow-xs shrink-0">
-                              <Logo className="h-5 w-18" />
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <h3 className="text-xs font-semibold text-foreground truncate">
-                              {propertyName || "Untitled Property"}
-                            </h3>
-                            <p className="text-[10px] text-muted-foreground truncate mt-0.5">
-                              {tagline || "No tagline configured"}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 2. Visual Theme & Palette Card */}
-                    <div className="bg-muted/30 border border-border/80 rounded-xl p-4 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between pb-2 border-b border-border/60">
-                          <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-medium">
-                            <Palette className="size-3.5" />
-                            <span>Theme & Colors</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setCurrentStep(2)}
-                            aria-label="Edit theme and colors"
-                            className="text-xs font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded cursor-pointer"
-                          >
-                            <Edit3 className="size-3" />
-                            <span>Edit</span>
-                          </button>
-                        </div>
-
-                        <div className="mt-3 space-y-2">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-[11px] text-muted-foreground">Primary Brand</span>
-                            <div className="flex items-center gap-1.5">
-                              <span
-                                className="size-3.5 rounded shadow-2xs border border-border"
-                                style={{ backgroundColor: primaryColor }}
-                              />
-                              <span className="font-mono text-xs font-medium text-foreground">
-                                {primaryColor.toUpperCase()}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-[11px] text-muted-foreground">Secondary Accent</span>
-                            <div className="flex items-center gap-1.5">
-                              <span
-                                className="size-3.5 rounded shadow-2xs border border-border"
-                                style={{ backgroundColor: secondaryColor }}
-                              />
-                              <span className="font-mono text-xs font-medium text-foreground">
-                                {secondaryColor.toUpperCase()}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-3 pt-2 border-t border-border/60 flex items-center justify-between text-[11px]">
-                        <span className="text-muted-foreground">Default Mode</span>
-                        <span className="font-medium capitalize text-foreground">
-                          {modePreference} Mode
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 3. Landlord Profile Card */}
-                    <div className="bg-muted/30 border border-border/80 rounded-xl p-4 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between pb-2 border-b border-border/60">
-                          <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-medium">
-                            <UserCheck className="size-3.5" />
-                            <span>Landlord Profile</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                              <Check className="size-3 stroke-[3]" />
-                              <span>Active</span>
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="mt-3 space-y-1.5">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-[11px] text-muted-foreground">Name</span>
-                            <span
-                              className="text-xs font-medium text-foreground truncate max-w-[180px]"
-                              title={
-                                (profile?.full_name &&
-                                !DISALLOWED_PRESEEDED_DATA.adminNames.includes(
-                                  profile.full_name.toLowerCase()
-                                )
-                                  ? profile.full_name
-                                  : "") ||
-                                (user?.user_metadata?.full_name &&
-                                !DISALLOWED_PRESEEDED_DATA.adminNames.includes(
-                                  String(user.user_metadata.full_name).toLowerCase()
-                                )
-                                  ? user.user_metadata.full_name
-                                  : "") ||
-                                "Landlord"
-                              }
-                            >
-                              {(profile?.full_name &&
-                              !DISALLOWED_PRESEEDED_DATA.adminNames.includes(
-                                profile.full_name.toLowerCase()
-                              )
-                                ? profile.full_name
-                                : "") ||
-                                (user?.user_metadata?.full_name &&
-                                !DISALLOWED_PRESEEDED_DATA.adminNames.includes(
-                                  String(user.user_metadata.full_name).toLowerCase()
-                                )
-                                  ? user.user_metadata.full_name
-                                  : "") ||
-                                "Landlord"}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-[11px] text-muted-foreground">Email</span>
-                            <span
-                              className="text-xs font-medium text-foreground truncate max-w-[180px]"
-                              title={profile?.email || user?.email || ""}
-                            >
-                              {profile?.email || user?.email || "—"}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-[11px] text-muted-foreground">Role</span>
-                            <span className="text-xs font-medium text-foreground">
-                              Landlord
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-3 pt-2 border-t border-border/60 flex items-center justify-between text-[11px]">
-                        <span className="text-muted-foreground">Security</span>
-                        <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                          Permanent Credentials Active
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {!isLaunched ? (
-                    <div className="pt-3 flex items-center justify-between">
-                      <button
-                        type="button"
-                        onClick={() => setCurrentStep(2)}
-                        className="px-4 py-2 rounded-xl text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground transition-all flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <ArrowLeft className="size-3.5" />
-                        <span>Back</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        disabled={isLaunching}
-                        onClick={handleLaunchPortal}
-                        className={cn(
-                          "px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 active:scale-95 shadow-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none cursor-pointer",
-                          isLaunching && "opacity-80 cursor-wait"
-                        )}
-                        style={{
-                          backgroundColor: primaryColor,
-                          color: primaryTextColor,
-                        }}
-                      >
-                        {isLaunching ? (
-                          <>
-                            <RefreshCw className="size-3.5 animate-spin" />
-                            <span>Initializing Workspace...</span>
-                          </>
-                        ) : (
-                          <>
-                            <ShieldCheck className="size-3.5" />
-                            <span>Launch Property Portal</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  ) : (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.98 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                        <div>
-                          <h4 className="text-xs font-bold uppercase tracking-wide text-foreground">
-                            Portal Activated Successfully
-                          </h4>
-                          <p className="text-[11px] text-muted-foreground">
-                            Your workspace is ready. Redirecting to your dashboard...
-                          </p>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          router.push("/landlord/dashboard");
-                          if (typeof window !== "undefined") {
-                            window.location.href = "/landlord/dashboard";
-                          }
-                        }}
-                        className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-xs cursor-pointer active:scale-95"
-                        style={{
-                          backgroundColor: primaryColor,
-                          color: primaryTextColor,
-                        }}
-                      >
-                        <span>Open Dashboard</span>
-                        <ArrowRight className="size-3.5" />
-                      </button>
-                    </motion.div>
-                  )}
-                </motion.section>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Right Column: Live Preview Panel - Hidden on Step 3 */}
-          {currentStep !== 3 && (
-            <aside
-              aria-label="Portal Live Preview"
-              className="lg:col-span-5 lg:sticky lg:top-20"
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            /* STEP 3: PROPERTY LOGO (OPTIONAL) */
+            <motion.div
+              key="step-3"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-4 sm:space-y-5"
             >
-              <div className="bg-card rounded-2xl p-4 sm:p-5 flex flex-col gap-3.5 border border-border/80 shadow-xs">
-                {/* Preview Header Bar */}
-                <div className="flex items-center justify-between pb-2.5 border-b border-border/60">
-                  <div className="flex items-center gap-2">
-                    <span className="relative flex size-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full size-2 bg-emerald-500" />
-                    </span>
-                    <span className="text-xs font-semibold text-foreground">
-                      Preview
-                    </span>
-                  </div>
+              <div className="space-y-1 sm:space-y-1.5">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+                  {setupDictionary.step4Logo.title}
+                </h1>
+                <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+                  {setupDictionary.step4Logo.instruction}
+                </p>
+              </div>
 
-                  <span className="text-[11px] font-medium text-muted-foreground capitalize">
-                    {modePreference} mode
-                  </span>
-                </div>
+              {/* Logo Preview & Action Box */}
+              <div className="bg-card rounded-2xl p-5 sm:p-6 border border-border/80 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row items-center gap-5">
+                  {logoUrl ? (
+                    <img
+                      src={logoUrl}
+                      alt="Uploaded Property Logo"
+                      className="size-20 rounded-2xl object-cover border-2 border-border shadow-md bg-background shrink-0"
+                    />
+                  ) : (
+                    <div className="size-20 rounded-2xl border-2 border-dashed border-border/80 bg-muted/30 flex flex-col items-center justify-center text-muted-foreground shrink-0 shadow-inner">
+                      <ImageIcon className="size-7 stroke-[1.5] mb-1" />
+                      <span className="text-[10px] font-bold">No Image</span>
+                    </div>
+                  )}
 
-                {/* Simulated Resident Portal UI Shell */}
-                <div className="rounded-xl border border-border/70 bg-background/60 p-3 sm:p-3.5 space-y-3 shadow-2xs">
-                  {/* Portal Header */}
-                  <div className="flex items-center justify-between pb-2.5 border-b border-border/50">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      {logoUrl ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
-                          src={logoUrl}
-                          alt="Property Logo"
-                          className="size-8 rounded-lg object-cover border border-border shrink-0 bg-background"
-                        />
-                      ) : (
-                        <div className="h-7 px-2 rounded-md border border-border/60 bg-background flex items-center justify-center shadow-2xs shrink-0">
-                          <Logo className="h-4.5 w-16" />
-                        </div>
+                  <div className="flex-1 space-y-2 text-center sm:text-left">
+                    <div>
+                      <p className="text-base sm:text-lg font-bold text-foreground">
+                        {logoUrl
+                          ? setupDictionary.step4Logo.currentLogo
+                          : setupDictionary.step4Logo.defaultLogoActive}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {setupDictionary.step4Logo.fileLimits}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-center sm:justify-start gap-2.5 pt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="min-h-[42px] px-4 rounded-xl bg-muted hover:bg-muted/80 text-foreground border border-border font-bold text-sm transition-all flex items-center gap-2 cursor-pointer shadow-2xs active:scale-95"
+                      >
+                        <Upload className="size-4" />
+                        <span>
+                          {logoUrl
+                            ? setupDictionary.step4Logo.changeButton
+                            : setupDictionary.step4Logo.uploadButton}
+                        </span>
+                      </button>
+
+                      {logoUrl && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveLogo}
+                          className="min-h-[42px] px-3.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold text-sm transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+                        >
+                          <Trash2 className="size-4" />
+                          <span>{setupDictionary.step4Logo.removeButton}</span>
+                        </button>
                       )}
-                      <div className="min-w-0">
-                        <h4 className="text-xs font-semibold text-foreground truncate">
-                          {propertyName || "Property Name"}
-                        </h4>
-                        <p className="text-[10px] text-muted-foreground truncate">
-                          {tagline || "Resident Portal"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Resident Welcome & Payment Card */}
-                  <div
-                    className="rounded-xl p-3 border border-border/60 space-y-2.5 transition-colors"
-                    style={{
-                      background: `linear-gradient(135deg, ${primaryColor}15 0%, transparent 60%, ${secondaryColor}12 100%)`,
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-[10px] text-muted-foreground block">
-                          Welcome back
-                        </span>
-                        <span className="text-xs font-semibold text-foreground">Alex Rivera</span>
-                      </div>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                        <span className="size-1.5 rounded-full bg-emerald-500" />
-                        Active Lease
-                      </span>
-                    </div>
-
-                    <div className="bg-card/90 backdrop-blur-xs border border-border/80 rounded-lg p-2.5 flex items-center justify-between shadow-2xs">
-                      <div>
-                        <p className="text-[10px] text-muted-foreground">Monthly Rent · Unit 204</p>
-                        <p className="text-xs font-bold text-foreground">₱14,500.00</p>
-                      </div>
-                      <span
-                        className="px-3 py-1 rounded-md text-[10px] font-semibold shadow-2xs shrink-0"
-                        style={{ backgroundColor: primaryColor, color: primaryTextColor }}
-                      >
-                        Pay Rent
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Quick Services Row */}
-                  <div className="grid grid-cols-2 gap-2 text-left">
-                    <div className="p-2.5 rounded-lg border border-border/60 bg-muted/20 flex items-center gap-2">
-                      <div
-                        className="size-7 rounded-md flex items-center justify-center shrink-0"
-                        style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}
-                      >
-                        <CreditCard className="size-3.5" />
-                      </div>
-                      <div className="min-w-0">
-                        <span className="text-[11px] font-medium text-foreground block truncate">
-                          Payment History
-                        </span>
-                        <span className="text-[9px] text-muted-foreground block">
-                          All up to date
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="p-2.5 rounded-lg border border-border/60 bg-muted/20 flex items-center gap-2">
-                      <div
-                        className="size-7 rounded-md flex items-center justify-center shrink-0"
-                        style={{ backgroundColor: `${secondaryColor}20`, color: secondaryColor }}
-                      >
-                        <ShieldCheck className="size-3.5" />
-                      </div>
-                      <div className="min-w-0">
-                        <span className="text-[11px] font-medium text-foreground block truncate">
-                          Lease Agreement
-                        </span>
-                        <span className="text-[9px] text-muted-foreground block">
-                          Expires Dec 2026
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Color Swatch Summary */}
-                <div className="pt-2 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground">
-                  <span className="text-[10px] font-medium text-muted-foreground">Active Palette</span>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5 font-mono text-[10px]">
-                      <span
-                        className="size-2.5 rounded-full border border-border shadow-2xs shrink-0"
-                        style={{ backgroundColor: primaryColor }}
-                      />
-                      <span className="text-foreground">{primaryColor}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 font-mono text-[10px]">
-                      <span
-                        className="size-2.5 rounded-full border border-border shadow-2xs shrink-0"
-                        style={{ backgroundColor: secondaryColor }}
-                      />
-                      <span className="text-foreground">{secondaryColor}</span>
                     </div>
                   </div>
                 </div>
               </div>
-            </aside>
-          )}
-        </div>
-      </main>
 
-    </div>
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleContinueFromStep3}
+                  className="w-full min-h-[54px] rounded-2xl bg-primary text-primary-foreground font-black text-lg transition-all hover:bg-primary/95 active:scale-[0.99] flex items-center justify-center gap-3 shadow-md cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  <span>{setupDictionary.step4Logo.reviewAction}</span>
+                  <ArrowRight className="size-6 stroke-[3]" />
+                </button>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => goToStep(2)}
+                    className="min-h-[44px] px-4 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-2 cursor-pointer"
+                  >
+                    <ArrowLeft className="size-4" />
+                    <span>{setupDictionary.common.back}</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+      </div>
+
+      {/* CONFIRMATION / REVIEW MODAL */}
+      <AnimatePresence>
+        {showConfirmationModal && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="review-modal-title"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overscroll-contain animate-in fade-in duration-200"
+            onClick={(e) => {
+              if (e.target === e.currentTarget && !isLaunching) {
+                setShowConfirmationModal(false);
+              }
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.15 }}
+              className="w-full max-w-lg bg-card rounded-3xl border border-border/80 shadow-2xl p-5 sm:p-7 space-y-4 max-h-[92vh] overflow-y-auto"
+            >
+              {/* Modal Header */}
+              <div className="flex items-start justify-between gap-3 border-b border-border/60 pb-3">
+                <div className="space-y-0.5">
+                  <h2 id="review-modal-title" className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+                    {setupDictionary.step6Review.title}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    {setupDictionary.step6Review.instruction}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={isLaunching}
+                  onClick={() => setShowConfirmationModal(false)}
+                  aria-label="Close review modal"
+                  className="size-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/80 flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50 shrink-0"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+
+              {/* Review Details Table */}
+              <div className="bg-muted/30 rounded-2xl border border-border/70 divide-y divide-border/60 overflow-hidden">
+                {/* 1. Property Name */}
+                <div className="p-3 sm:p-3.5 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <span className="text-xs font-bold text-muted-foreground block">
+                      {setupDictionary.step6Review.fields.propertyName}
+                    </span>
+                    <span className="text-sm sm:text-base font-extrabold text-foreground truncate block">
+                      {propertyName || "Not specified"}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={isLaunching}
+                    onClick={() => {
+                      setShowConfirmationModal(false);
+                      goToStep(1);
+                    }}
+                    className="min-h-[36px] px-3 rounded-lg hover:bg-muted text-primary font-bold text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                    aria-label={`Edit ${setupDictionary.step6Review.fields.propertyName}`}
+                  >
+                    <Edit2 className="size-3.5" />
+                    <span>{setupDictionary.common.edit}</span>
+                  </button>
+                </div>
+
+                {/* 2. Theme Color */}
+                <div className="p-3 sm:p-3.5 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <span className="text-xs font-bold text-muted-foreground block">
+                      {setupDictionary.step6Review.fields.themeColor}
+                    </span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span
+                        className="size-4.5 rounded-full border border-background shadow-xs shrink-0"
+                        style={{ backgroundColor: primaryColor }}
+                      />
+                      <span className="text-sm sm:text-base font-bold text-foreground truncate">
+                        {PALETTE_PRESETS.find(
+                          (p) => p.primary.toLowerCase() === primaryColor.toLowerCase()
+                        )?.name || primaryColor}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={isLaunching}
+                    onClick={() => {
+                      setShowConfirmationModal(false);
+                      goToStep(2);
+                    }}
+                    className="min-h-[36px] px-3 rounded-lg hover:bg-muted text-primary font-bold text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                    aria-label={`Edit ${setupDictionary.step6Review.fields.themeColor}`}
+                  >
+                    <Edit2 className="size-3.5" />
+                    <span>{setupDictionary.common.edit}</span>
+                  </button>
+                </div>
+
+                {/* 3. Tagline */}
+                <div className="p-3 sm:p-3.5 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <span className="text-xs font-bold text-muted-foreground block">
+                      {setupDictionary.step6Review.fields.tagline}
+                    </span>
+                    <span className="text-sm sm:text-base font-medium text-foreground truncate block">
+                      {tagline || setupDictionary.step6Review.fields.taglineEmpty}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={isLaunching}
+                    onClick={() => {
+                      setShowConfirmationModal(false);
+                      goToStep(1);
+                    }}
+                    className="min-h-[36px] px-3 rounded-lg hover:bg-muted text-primary font-bold text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                    aria-label={`Edit ${setupDictionary.step6Review.fields.tagline}`}
+                  >
+                    <Edit2 className="size-3.5" />
+                    <span>{setupDictionary.common.edit}</span>
+                  </button>
+                </div>
+
+                {/* 4. Logo */}
+                <div className="p-3 sm:p-3.5 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <span className="text-xs font-bold text-muted-foreground block">
+                      {setupDictionary.step6Review.fields.logo}
+                    </span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {logoUrl ? (
+                        <img
+                          src={logoUrl}
+                          alt="Logo thumbnail"
+                          className="size-6 rounded-md object-cover border border-border shrink-0"
+                        />
+                      ) : (
+                        <div className="size-6 rounded-md bg-muted flex items-center justify-center text-muted-foreground shrink-0">
+                          <ImageIcon className="size-3.5" />
+                        </div>
+                      )}
+                      <span className="text-sm sm:text-base font-medium text-foreground truncate">
+                        {logoUrl
+                          ? setupDictionary.step6Review.fields.logoCustom
+                          : setupDictionary.step6Review.fields.logoDefault}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={isLaunching}
+                    onClick={() => {
+                      setShowConfirmationModal(false);
+                      goToStep(3);
+                    }}
+                    className="min-h-[36px] px-3 rounded-lg hover:bg-muted text-primary font-bold text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                    aria-label={`Edit ${setupDictionary.step6Review.fields.logo}`}
+                  >
+                    <Edit2 className="size-3.5" />
+                    <span>{setupDictionary.common.edit}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Final Submit Primary Action Button */}
+              <div className="space-y-2 pt-1">
+                <button
+                  data-testid="submit-setup-btn"
+                  type="button"
+                  disabled={isLaunching}
+                  onClick={handleLaunchPortal}
+                  className={cn(
+                    "w-full min-h-[54px] rounded-2xl font-black text-base sm:text-lg transition-all flex items-center justify-center gap-3 shadow-lg active:scale-[0.99] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-offset-2",
+                    isLaunching
+                      ? "opacity-75 cursor-wait"
+                      : "cursor-pointer hover:shadow-xl"
+                  )}
+                  style={{
+                    backgroundColor: primaryColor,
+                    color: primaryTextColor,
+                  }}
+                >
+                  {isLaunching ? (
+                    <>
+                      <RefreshCw className="size-5 animate-spin" />
+                      <span>{setupDictionary.step6Review.submitting}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{setupDictionary.step6Review.submitButton}</span>
+                      <ArrowRight className="size-5 sm:size-6 stroke-[3]" />
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isLaunching}
+                  onClick={() => setShowConfirmationModal(false)}
+                  className="w-full min-h-[44px] rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50"
+                >
+                  {setupDictionary.step6Review.closeModal || "Go Back & Edit"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </WizardShell>
   );
 }
 

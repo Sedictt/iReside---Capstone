@@ -536,6 +536,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <input 
                                         id="admin-identity"
                                         type="text" 
+                                        maxLength={50}
                                         value={data?.email || ""}
                                         disabled
                                         className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white/40 cursor-not-allowed font-medium"
@@ -554,6 +555,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         <input 
                                             id="password"
                                             type={showPassword ? "text" : "password"}
+                                            maxLength={16}
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             placeholder="e.g. MyPass@2024"
@@ -615,6 +617,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         <input 
                                             id="confirm-password"
                                             type={showConfirmPassword ? "text" : "password"}
+                                            maxLength={16}
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             placeholder="e.g. MyPass@2024"
@@ -724,8 +727,10 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                     <input
                                                         id="total-units"
                                                         type="number"
+                                                        min="1"
+                                                        max="999"
                                                         value={totalUnits || ""}
-                                                        onChange={(e) => setTotalUnits(e.target.value === "" ? 0 : parseInt(e.target.value) || 0)}
+                                                        onChange={(e) => setTotalUnits(e.target.value === "" ? 0 : Math.min(999, parseInt(e.target.value) || 0))}
                                                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-primary/50 transition-all font-black"
                                                     />
                                                 </div>
@@ -736,8 +741,10 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                     <input
                                                         id="total-floors"
                                                         type="number"
+                                                        min="1"
+                                                        max="100"
                                                         value={totalFloors || ""}
-                                                        onChange={(e) => setTotalFloors(e.target.value === "" ? 0 : parseInt(e.target.value) || 0)}
+                                                        onChange={(e) => setTotalFloors(e.target.value === "" ? 0 : Math.min(100, parseInt(e.target.value) || 0))}
                                                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-primary/50 transition-all font-black"
                                                     />
                                                 </div>
@@ -838,10 +845,12 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                     <input 
                                                         id="base-rent"
                                                         type="text" 
+                                                        inputMode="decimal"
+                                                        maxLength={10}
                                                         value={baseRent === 0 ? "" : baseRent.toLocaleString('en-US')}
                                                         onChange={(e) => {
-                                                            const val = e.target.value.replace(/,/g, "");
-                                                            const num = parseInt(val) || 0;
+                                                            const val = e.target.value.replace(/[^0-9.]/g, "");
+                                                            const num = Math.min(9999999.99, parseFloat(val) || 0);
                                                             setBaseRent(num);
                                                         }}
                                                         placeholder="0.00"
@@ -1281,6 +1290,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 <input 
                                                     id="full-name"
                                                     type="text"
+                                                    maxLength={50}
                                                     value={fullName}
                                                     onChange={(e) => setFullName(e.target.value)}
                                                     placeholder="As shown on official ID"
@@ -1297,9 +1307,11 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 <input 
                                                     id="admin-contact"
                                                     type="tel"
+                                                    inputMode="tel"
+                                                    maxLength={11}
                                                     value={phone}
-                                                    onChange={(e) => setPhone(e.target.value)}
-                                                    placeholder="+63 9xx xxx xxxx"
+                                                    onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 11))}
+                                                    placeholder="09123456789"
                                                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-primary/50 transition-all outline-none font-black"
                                                 />
                                             </div>

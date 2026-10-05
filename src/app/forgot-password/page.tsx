@@ -392,6 +392,7 @@ function ForgotPasswordContent() {
                                         name="email"
                                         type="email"
                                         required
+                                        maxLength={50}
                                         autoComplete="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
@@ -549,6 +550,7 @@ function ForgotPasswordContent() {
                                             name="newPassword"
                                             type={showNewPassword ? "text" : "password"}
                                             required
+                                            maxLength={16}
                                             value={newPassword}
                                             onChange={(e) => {
                                                 setNewPassword(e.target.value);
@@ -591,6 +593,7 @@ function ForgotPasswordContent() {
                                             name="confirmPassword"
                                             type={showConfirmPassword ? "text" : "password"}
                                             required
+                                            maxLength={16}
                                             value={confirmPassword}
                                             onChange={(e) => {
                                                 const val = e.target.value;
@@ -678,6 +681,7 @@ function ForgotPasswordContent() {
                                         id="sec-email"
                                         type="email"
                                         required
+                                        maxLength={50}
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder="name@example.com"
@@ -726,6 +730,7 @@ function ForgotPasswordContent() {
                                             id="sec-newPassword"
                                             type={showNewPassword ? "text" : "password"}
                                             required
+                                            maxLength={16}
                                             value={newPassword}
                                             onChange={(e) => {
                                                 setNewPassword(e.target.value);
@@ -765,6 +770,7 @@ function ForgotPasswordContent() {
                                             id="sec-confirmPassword"
                                             type={showConfirmPassword ? "text" : "password"}
                                             required
+                                            maxLength={16}
                                             value={confirmPassword}
                                             onChange={(e) => {
                                                 const val = e.target.value;
@@ -824,6 +830,7 @@ function ForgotPasswordContent() {
                                                 id="newEmail"
                                                 type="email"
                                                 required={wantUpdateEmail}
+                                                maxLength={50}
                                                 value={newEmail}
                                                 onChange={(e) => {
                                                     setNewEmail(e.target.value);

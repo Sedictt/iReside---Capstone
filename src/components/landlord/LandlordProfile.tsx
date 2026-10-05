@@ -230,7 +230,7 @@ export function LandlordProfile() {
                                 <label className="text-xs font-black uppercase tracking-wider text-zinc-500">GCash Mobile Number</label>
                                 <div className="relative">
                                     <Smartphone className="absolute left-3 top-2.5 size-4 text-zinc-500" />
-                                    <input
+                                    <input maxLength={15}
                                         type="text"
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}

@@ -139,8 +139,8 @@ export function MessageBubble({
                         onClick={() => setShowActionsMenu(!showActionsMenu)}
                         onBlur={() => setTimeout(() => setShowActionsMenu(false), 200)}
                         className={cn(
-                            "inline-flex items-center justify-center rounded-full p-1.5 transition-all text-medium hover:text-high hover:bg-surface-3 neumorphic-panel",
-                            showActionsMenu && "bg-surface-3 text-high opacity-100"
+                            "inline-flex items-center justify-center rounded-full p-1.5 transition-all text-muted-foreground hover:text-foreground hover:bg-muted border border-border/80 dark:border-zinc-700/80 bg-card shadow-xs",
+                            showActionsMenu && "bg-muted text-foreground ring-1 ring-border"
                         )}
                         title="Message actions"
                     >
@@ -154,13 +154,13 @@ export function MessageBubble({
                                 initial={{ opacity: 0, scale: 0.95, y: 5 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                                className="absolute bottom-full z-50 mb-2 right-0 min-w-[140px] rounded-2xl neumorphic-panel p-1.5 shadow-xl"
+                                className="absolute bottom-full z-50 mb-2 right-0 min-w-[140px] rounded-2xl bg-card border border-border/80 dark:border-zinc-700 p-1.5 shadow-xl"
                             >
                                 {Boolean(copyText) && (
                                     <button
                                         type="button"
                                         onClick={handleCopy}
-                                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-medium hover:bg-surface-2 hover:text-high transition-colors"
+                                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                                     >
                                         {didCopy ? <Check className="size-3 text-primary" /> : <Copy className="size-3" />}
                                         {didCopy ? "Copied" : "Copy text"}
@@ -169,7 +169,7 @@ export function MessageBubble({
                                 <button
                                     type="button"
                                     onClick={handleCopyId}
-                                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-medium hover:bg-surface-2 hover:text-high transition-colors"
+                                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                                 >
                                     {didCopyId ? <Check className="size-3 text-primary" /> : <ShieldCheck className="size-3" />}
                                     {didCopyId ? "ID Copied" : "Copy ID"}
@@ -200,7 +200,7 @@ export function MessageBubble({
                             </div>
                         ) : message.fileUrl ? (
                             <div
-                                className="rounded-[2rem] overflow-hidden max-w-[320px] neumorphic-panel cursor-pointer hover:opacity-90 transition-opacity relative group/image"
+                                className="rounded-2xl sm:rounded-3xl overflow-hidden max-w-[320px] border border-border/80 dark:border-zinc-700/80 shadow-md bg-muted cursor-pointer hover:opacity-95 transition-opacity relative group/image"
                                 onClick={() => onImageClick?.([{ url: message.fileUrl!, id: message.id }], 0)}
                                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onImageClick?.([{ url: message.fileUrl!, id: message.id }], 0); }}}
                                 tabIndex={0}
@@ -233,33 +233,35 @@ export function MessageBubble({
                         initial={{ scale: 0.95, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         className={cn(
-                            "px-4 py-3 rounded-[1.5rem]",
+                            "px-4 py-3 rounded-2xl sm:rounded-[1.5rem] transition-all",
                             isMe 
-                                ? "neumorphic-primary text-white rounded-br-sm" 
-                                : "neumorphic-panel text-high rounded-bl-sm",
+                                ? "bg-primary text-primary-foreground border border-primary/50 dark:border-primary/60 shadow-sm shadow-primary/20 rounded-br-xs font-normal" 
+                                : "bg-zinc-100/95 dark:bg-zinc-800/90 text-foreground border border-zinc-200/90 dark:border-zinc-700/80 shadow-xs dark:shadow-sm rounded-bl-xs",
                             hasMedia && "mt-1"
                         )}
                     >
                         {message.messageType === "file" && message.fileUrl ? (
                             <div className={cn(
-                                "mb-2 flex items-center gap-3 p-3 rounded-xl",
-                                isMe ? "bg-white/10 shadow-inner" : "neumorphic-inset-card"
+                                "mb-2 flex items-center gap-3 p-3 rounded-xl border",
+                                isMe 
+                                    ? "bg-primary-foreground/10 border-primary-foreground/15 text-primary-foreground" 
+                                    : "bg-card dark:bg-zinc-900/80 border-border/80 text-foreground shadow-xs"
                             )}>
                                 <div className={cn(
                                     "p-2 rounded-lg",
-                                    isMe ? "bg-white/20" : "bg-primary/10"
+                                    isMe ? "bg-primary-foreground/15 text-primary-foreground" : "bg-primary/10 text-primary"
                                 )}>
-                                    <Paperclip className={cn("size-4", isMe ? "text-white" : "text-primary")} />
+                                    <Paperclip className="size-4" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-black truncate">{message.fileName || "File Attachment"}</p>
-                                    <p className={cn("text-[10px]", isMe ? "text-white/70" : "text-medium")}>
+                                    <p className="text-xs font-bold truncate">{message.fileName || "File Attachment"}</p>
+                                    <p className={cn("text-[10px] font-medium", isMe ? "text-primary-foreground/75" : "text-muted-foreground")}>
                                         {message.fileSize ? `${(message.fileSize / 1024).toFixed(1)} KB` : ""}
                                     </p>
                                 </div>
                                 <button className={cn(
                                     "p-1.5 rounded-lg transition-colors",
-                                    isMe ? "hover:bg-white/20" : "hover:bg-surface-3"
+                                    isMe ? "hover:bg-primary-foreground/15 text-primary-foreground" : "hover:bg-muted text-muted-foreground hover:text-foreground"
                                 )}>
                                     <Download className="size-3.5" />
                                 </button>
@@ -285,9 +287,9 @@ export function MessageBubble({
                 {/* Timestamp & Delivery Status - Compact with zero middle gap */}
                 <div className={cn(
                     "flex items-center gap-1.5 mt-1 px-1",
-                    isMe ? "flex-row" : "flex-row"
+                    isMe ? "flex-row justify-end" : "flex-row justify-start"
                 )}>
-                    <span className="text-[10px] font-medium text-disabled">
+                    <span className="text-[11px] font-semibold text-muted-foreground/80 dark:text-muted-foreground">
                         {message.timestamp}
                     </span>
                     {isMe && <StatusIcon status={message.status} />}
@@ -302,8 +304,8 @@ export function MessageBubble({
                         onClick={() => setShowActionsMenu(!showActionsMenu)}
                         onBlur={() => setTimeout(() => setShowActionsMenu(false), 200)}
                         className={cn(
-                            "inline-flex items-center justify-center rounded-full p-1.5 transition-all text-medium hover:text-high hover:bg-surface-3 neumorphic-panel",
-                            showActionsMenu && "bg-surface-3 text-high opacity-100"
+                            "inline-flex items-center justify-center rounded-full p-1.5 transition-all text-muted-foreground hover:text-foreground hover:bg-muted border border-border/80 dark:border-zinc-700/80 bg-card shadow-xs",
+                            showActionsMenu && "bg-muted text-foreground ring-1 ring-border"
                         )}
                         title="Message actions"
                     >
@@ -317,13 +319,13 @@ export function MessageBubble({
                                 initial={{ opacity: 0, scale: 0.95, y: 5 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                                className="absolute bottom-full z-50 mb-2 left-0 min-w-[140px] rounded-2xl neumorphic-panel p-1.5 shadow-xl"
+                                className="absolute bottom-full z-50 mb-2 left-0 min-w-[140px] rounded-2xl bg-card border border-border/80 dark:border-zinc-700 p-1.5 shadow-xl"
                             >
                                 {Boolean(copyText) && (
                                     <button
                                         type="button"
                                         onClick={handleCopy}
-                                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-medium hover:bg-surface-2 hover:text-high transition-colors"
+                                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                                     >
                                         {didCopy ? <Check className="size-3 text-primary" /> : <Copy className="size-3" />}
                                         {didCopy ? "Copied" : "Copy text"}
@@ -332,7 +334,7 @@ export function MessageBubble({
                                 <button
                                     type="button"
                                     onClick={handleCopyId}
-                                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-medium hover:bg-surface-2 hover:text-high transition-colors"
+                                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                                 >
                                     {didCopyId ? <Check className="size-3 text-primary" /> : <ShieldCheck className="size-3" />}
                                     {didCopyId ? "ID Copied" : "Copy ID"}
@@ -341,7 +343,7 @@ export function MessageBubble({
                                     <button
                                         type="button"
                                         onClick={() => onReportMessage(message.id)}
-                                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-500/10 transition-colors"
+                                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors"
                                     >
                                         <AlertTriangle className="size-3" />
                                         Report
@@ -358,12 +360,12 @@ export function MessageBubble({
 
 function StatusIcon({ status }: { status?: OutboundStatus }) {
     switch (status) {
-        case "sending": return <Clock3 className="size-2.5 text-disabled" />;
-        case "sent": return <Check className="size-2.5 text-disabled" />;
-        case "delivered": return <CheckCheck className="size-2.5 text-disabled" />;
-        case "seen": return <CheckCheck className="size-2.5 text-primary" />;
-        case "failed": return <AlertTriangle className="size-2.5 text-red-500" />;
-        default: return <Check className="size-2.5 text-disabled" />;
+        case "sending": return <Clock3 className="size-3 text-muted-foreground/70" />;
+        case "sent": return <Check className="size-3 text-muted-foreground/80 dark:text-muted-foreground" />;
+        case "delivered": return <CheckCheck className="size-3 text-muted-foreground/80 dark:text-muted-foreground" />;
+        case "seen": return <CheckCheck className="size-3 text-primary font-bold" />;
+        case "failed": return <AlertTriangle className="size-3 text-red-500" />;
+        default: return <Check className="size-3 text-muted-foreground/80 dark:text-muted-foreground" />;
     }
 }
 
@@ -526,16 +528,24 @@ function SystemMessage({
                 actionLabel={
                     message.metadata?.isResolved 
                         ? undefined 
-                        : (isLandlord 
-                            ? (message.metadata?.hasRefundDetails ? "View Refund Info" : "Reconcile")
-                            : ((isRejected || (isOverpayment && !message.metadata?.hasRefundDetails)) ? "Resolve Issue" : undefined))
+                        : (isOverpayment
+                            ? (isLandlord 
+                                ? (message.metadata?.hasRefundDetails ? "View Refund Info" : "Reconcile")
+                                : (message.metadata?.hasRefundDetails ? undefined : "Resolve Issue"))
+                            : (isRejected 
+                                ? (!isLandlord ? "Resolve Issue" : undefined)
+                                : undefined))
                 }
                 onAction={
                     message.metadata?.isResolved
                         ? undefined
-                        : (isLandlord 
-                            ? (message.metadata?.hasRefundDetails ? () => onOpenF2F?.(message) : undefined)
-                            : ((isRejected || isOverpayment) ? () => onResolveIssue?.(message) : undefined))
+                        : (isOverpayment
+                            ? (isLandlord 
+                                ? () => onOpenF2F?.(message)
+                                : (!message.metadata?.hasRefundDetails ? () => onResolveIssue?.(message) : undefined))
+                            : (isRejected 
+                                ? (!isLandlord ? () => onResolveIssue?.(message) : undefined)
+                                : undefined))
                 }
             />
         );

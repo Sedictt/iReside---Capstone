@@ -405,7 +405,7 @@ export default function AdminChatModerationPage() {
                             <div className="space-y-3">
                                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Manual Entry</label>
                                 <div className="flex flex-col gap-3">
-                                    <input
+                                    <input maxLength={60}
                                         value={manualTerm}
                                         onChange={(event) => setManualTerm(event.target.value)}
                                         placeholder="Enter term..."
@@ -425,7 +425,7 @@ export default function AdminChatModerationPage() {
                             <div className="pt-6 border-t border-border/50 dark:border-white/5">
                                 <div className="relative mb-4">
                                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                                    <input
+                                    <input maxLength={60}
                                         type="text"
                                         value={termSearchQuery}
                                         onChange={(e) => setTermSearchQuery(e.target.value)}

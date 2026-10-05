@@ -283,7 +283,7 @@ export function PropertyRulesSelector({
                         Add Custom Rule
                     </label>
                     <form onSubmit={handleAddCustom} className="flex gap-2">
-                        <input
+                        <input maxLength={120}
                             id="custom-rule-input"
                             type="text"
                             value={inputValue}

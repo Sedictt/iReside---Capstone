@@ -157,11 +157,13 @@ export function UnitListingWizard({
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-black">₱</span>
                       <input 
                         type="number" 
+                        min="0"
+                        max="9999999.99"
                         value={monthlyRent} 
                         onChange={(e) => {
-                          const newRent = Number(e.target.value);
+                          const newRent = Math.min(9999999.99, Math.max(0, Number(e.target.value) || 0));
                           setMonthlyRent(newRent);
-                          setAdvanceCost(newRent * advanceMonths);
+                          setAdvanceCost(Math.min(9999999.99, newRent * advanceMonths));
                         }}
                         className="w-full bg-white border border-border rounded-xl py-3 pl-10 pr-4 text-zinc-900 font-medium focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all" 
                       />
@@ -172,7 +174,7 @@ export function UnitListingWizard({
                       <label className="text-xs font-black text-zinc-500 uppercase tracking-wider mb-2 block">Security Deposit</label>
                       <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-black">₱</span>
-                        <input type="number" defaultValue="50000" className="w-full bg-white border border-border rounded-xl py-3 pl-10 pr-4 text-zinc-900 font-medium focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all" />
+                        <input type="number" min="0" max="9999999.99" defaultValue="50000" className="w-full bg-white border border-border rounded-xl py-3 pl-10 pr-4 text-zinc-900 font-medium focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all" />
                       </div>
                     </div>
                     <div>
@@ -184,8 +186,10 @@ export function UnitListingWizard({
                           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-black">₱</span>
                           <input 
                             type="number" 
+                            min="0"
+                            max="9999999.99"
                             value={advanceCost} 
-                            onChange={(e) => setAdvanceCost(Number(e.target.value))}
+                            onChange={(e) => setAdvanceCost(Math.min(9999999.99, Math.max(0, Number(e.target.value) || 0)))}
                             className="w-full bg-white border border-border rounded-xl py-3 pl-10 pr-4 text-zinc-900 font-medium focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all" 
                           />
                         </div>
@@ -274,6 +278,7 @@ export function UnitListingWizard({
                             {slot.icon === 'image' ? (
                                <input 
                                   type="text" 
+                                  maxLength={60}
                                   defaultValue={slot.name} 
                                   onClick={(e) => e.stopPropagation()}
                                   onChange={(e) => {

@@ -539,7 +539,7 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                     <div className="relative group">
                         <div className="absolute -inset-[1px] bg-gradient-to-r from-primary/30 to-blue-500/20 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
                         <div className="relative flex items-end gap-2 bg-background/90 border border-border rounded-2xl p-2 focus-within:border-primary/50 transition-colors backdrop-blur-md">
-                            <textarea
+                            <textarea maxLength={500}
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => {

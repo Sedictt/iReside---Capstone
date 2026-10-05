@@ -30,7 +30,7 @@ import { MiniChatSkeleton } from "@/components/messaging/MiniChatSkeleton";
 import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
-import { getSafeAvatarBgColor } from "@/lib/constants";
+import { getSafeAvatarBgColor, DEFAULT_AVATAR_URL } from "@/lib/constants";
 
 interface ChatUser {
     id: string;
@@ -89,7 +89,7 @@ const DEFAULT_CHAT_STATE: MiniChatState = {
 
 const MESSAGE_CACHE_TTL_MS = 2 * 60 * 1000;
 
-const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
+const FALLBACK_AVATAR = DEFAULT_AVATAR_URL;
 
 const formatConversationTimestamp = (iso: string | null) => {
     if (!iso) {
@@ -1027,7 +1027,7 @@ export function TenantContactsSidebar() {
                                     "absolute left-3 top-1/2 -translate-y-1/2 size-3.5 transition-colors",
                                     searchQuery ? "text-primary" : "text-muted-foreground"
                                 )} />
-                                <input
+                                <input maxLength={60}
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -1426,8 +1426,8 @@ export function TenantContactsSidebar() {
                                         <div className={cn(
                                             "text-sm px-4 py-2.5 rounded-2xl max-w-[85%] border break-words [overflow-wrap:anywhere]",
                                             message.isOwn
-                                                ? "bg-primary text-primary-foreground border-primary/30 rounded-br-sm font-medium shadow-sm transition-all"
-                                                : "bg-card text-foreground border-border rounded-bl-sm",
+                                                ? "bg-primary text-primary-foreground border-primary/50 dark:border-primary/60 rounded-br-sm font-semibold shadow-sm transition-all"
+                                                : "bg-zinc-100/95 dark:bg-zinc-800/90 text-foreground border-zinc-200/90 dark:border-zinc-700/80 rounded-bl-sm shadow-xs",
                                             hasFile && "px-0 py-0 bg-transparent border-none shadow-none text-foreground mr-0",
                                             hasImage && "p-1 bg-card border-border"
                                         )}>
@@ -1516,7 +1516,7 @@ export function TenantContactsSidebar() {
                                         />
                                     </label>
                                     <div className="flex-1 bg-background border border-border rounded-full flex items-center px-3 py-1.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
-                                        <input
+                                        <input maxLength={500}
                                             type="text"
                                             placeholder={chat.isActive ? "Aa" : "Click header to activate"}
                                             disabled={!chat.isActive}
@@ -1661,7 +1661,7 @@ function MiniSystemMessage({ message, router }: { message: MiniChatMessage; rout
         return (
             <NotificationCard
                 message={message}
-                icon={isOverpayment ? <TrendingUp className="size-6 text-white" /> : (isRejected ? <AlertTriangle className="size-6 text-white" /> : <CheckCircle2 className="size-6 text-white" />)}
+                icon={isOverpayment ? <TrendingUp className="size-6" /> : (isRejected ? <AlertTriangle className="size-6" /> : <CheckCircle2 className="size-6" />)}
                 title={isOverpayment 
                     ? (isResolved ? "Reconciliation Complete" : "Overpayment Detected")
                     : (isRejected ? "Payment Rejected" : "Payment Confirmed")
@@ -1678,7 +1678,7 @@ function MiniSystemMessage({ message, router }: { message: MiniChatMessage; rout
         return (
             <NotificationCard
                 message={message}
-                icon={<HandCoins className="size-6 text-white" />}
+                icon={<HandCoins className="size-6" />}
                 title="In-Person Payment"
                 subtitle="Verification Required"
                 variant="warning"
@@ -1691,7 +1691,7 @@ function MiniSystemMessage({ message, router }: { message: MiniChatMessage; rout
         return (
             <NotificationCard
                 message={message}
-                icon={<Bell className="size-6 text-white" />}
+                icon={<Bell className="size-6" />}
                 title="Payment Reminder"
                 subtitle="Notification Sent"
                 variant="default"

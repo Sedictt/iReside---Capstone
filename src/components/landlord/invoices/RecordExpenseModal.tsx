@@ -153,7 +153,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                             <label htmlFor="expense-amount" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Amount (PHP)</label>
                             <div className="relative group">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-black text-muted-foreground group-focus-within:text-primary transition-colors select-none">₱</span>
-                                <input
+                                <input maxLength={10}
                                     id="expense-amount"
                                     type="text"
                                     inputMode="decimal"
@@ -170,7 +170,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                             <label htmlFor="expense-date" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Date Incurred</label>
                             <div className="relative group">
                                 <Calendar className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                <input
+                                <input min="2000-01-01" max="2099-12-31"
                                     id="expense-date"
                                     type="date"
                                     required
@@ -186,7 +186,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                         <label htmlFor="expense-description" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Description</label>
                         <div className="relative group">
                             <Type className="absolute left-4 top-4 size-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                            <textarea
+                            <textarea maxLength={500}
                                 id="expense-description"
                                 required
                                 value={description}

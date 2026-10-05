@@ -140,7 +140,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
  <label htmlFor="rent-adjustment" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
  {settings.adjustment_type === "percentage" ? "Increase (%)" : "Increase (PHP)"}
  </label>
- <input 
+ <input min={-100} max={100} 
  id="rent-adjustment"
  type="number"
  value={settings.base_rent_adjustment}
@@ -164,7 +164,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
  </div>
  ))}
  <div className="flex gap-2">
- <input 
+ <input maxLength={120} 
  type="text"
  placeholder="Add a new rule or term change..."
  value={newRule}
@@ -184,7 +184,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
 
  <section className="space-y-4">
  <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-white/5 pb-2">Landlord's Note to Residents</h4>
- <textarea 
+ <textarea maxLength={500} 
  value={settings.landlord_memo}
  onChange={(e) => setSettings(prev => ({ ...prev, landlord_memo: e.target.value }))}
  placeholder="Explain the changes or provide extra context for renewals..."

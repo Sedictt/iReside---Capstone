@@ -268,7 +268,7 @@ export default function NewMaintenanceRequest() {
                                     <label htmlFor="maintenance-title" className="text-sm font-black uppercase tracking-wider text-muted-foreground ml-1">
                                         Title
                                     </label>
-                                    <input
+                                    <input maxLength={60}
                                         id="maintenance-title"
                                         type="text"
                                         placeholder="e.g., Leaking faucet in the bathroom"
@@ -283,7 +283,7 @@ export default function NewMaintenanceRequest() {
                                     <label htmlFor="maintenance-description" className="text-sm font-black uppercase tracking-wider text-muted-foreground ml-1">
                                         Description
                                     </label>
-                                    <textarea
+                                    <textarea maxLength={500}
                                         id="maintenance-description"
                                         placeholder="Please provide more details about the issue..."
                                         value={description}

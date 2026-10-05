@@ -29,8 +29,10 @@ import {
 	Clock,
 	FileText,
 	QrCode,
+	ExternalLink,
+	ArrowRight,
 	ChevronRight,
-	ExternalLink
+	ChevronDown
 } from "lucide-react";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { m as motion, AnimatePresence } from "framer-motion";
@@ -347,6 +349,7 @@ export function UtilityBillingDashboard() {
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
+	const [filterStatus, setFilterStatus] = useState<"all" | "occupied" | "vacant" | "needs_reading" | "recorded">("all");
 	const [selectedPropertyId, setSelectedPropertyId] = useState<string>("all");
 	const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
 	const [selectedHistoryMonth, setSelectedHistoryMonth] = useState<string | null>(null);
@@ -375,10 +378,15 @@ export function UtilityBillingDashboard() {
 		? selectedPropertyId
 		: (properties[0]?.id || "default");
 
-	const isBillingConfigured = typeof window !== "undefined" && (
-		window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
-		window.localStorage.getItem(`ireside.billing_rails_complete.${activePropertyId}`) === "true" ||
-		properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true")
+	const hasTenantsAnywhere = properties.some((p) => p.hasTenants);
+
+	const isBillingConfigured = Boolean(
+		hasTenantsAnywhere ||
+		(typeof window !== "undefined" && (
+			window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
+			window.localStorage.getItem(`ireside.billing_rails_complete.${activePropertyId}`) === "true" ||
+			properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true")
+		))
 	);
 
 	// Sync local property selection with global navbar selector
@@ -424,7 +432,9 @@ export function UtilityBillingDashboard() {
 	// re-shows the modal until the step is explicitly completed.
 	useEffect(() => {
 		if (typeof window === "undefined") return;
+		const hasTenantsAnywhere = properties.some((p) => p.hasTenants);
 		const isBillingDone =
+			hasTenantsAnywhere ||
 			window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
 			properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true");
 		if (!isBillingDone && !dismissedThisVisit) {
@@ -432,9 +442,16 @@ export function UtilityBillingDashboard() {
 				setIsOnboardingModalOpen(true);
 			}, 600);
 			return () => clearTimeout(timer);
+		} else if (hasTenantsAnywhere) {
+			try {
+				window.localStorage.setItem("ireside.billing_rails_complete", "true");
+				if (activePropertyId && activePropertyId !== "default") {
+					window.localStorage.setItem(`ireside.billing_rails_complete.${activePropertyId}`, "true");
+				}
+			} catch {}
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []); // Run once on mount — dismissedThisVisit reset is handled by component remount
+	}, [properties]);
 
 	// Helper to update both state and monthly draft cache
 	const updateDraftsAndCache = useCallback((newDrafts: ReadingDraft[]) => {
@@ -614,11 +631,66 @@ export function UtilityBillingDashboard() {
 		return () => { alive = false; };
 	}, [activeTab]);
 
-	const filteredDrafts = drafts.filter(d => {
-		const matchesProperty = selectedPropertyId === "all" || d.propertyId === selectedPropertyId;
-		const matchesSearch = d.unitName.toLowerCase().includes(searchQuery.toLowerCase());
-		return matchesProperty && matchesSearch;
-	});
+	// Compute filter pill counts for current property scope
+	const filterCounts = useMemo(() => {
+		const propertyDrafts = drafts.filter(d => selectedPropertyId === "all" || d.propertyId === selectedPropertyId);
+		let occupied = 0;
+		let vacant = 0;
+		let needsReading = 0;
+		let recorded = 0;
+
+		propertyDrafts.forEach(d => {
+			const isOccupied = d.occupancyStatus === "occupied";
+			if (isOccupied) occupied++;
+			else vacant++;
+
+			const waterPrev = d.water.previous || 0;
+			const waterCurr = parseFloat(d.water.current);
+			const hasWater = !isNaN(waterCurr) && waterCurr >= waterPrev;
+			const elecPrev = d.electricity.previous || 0;
+			const elecCurr = parseFloat(d.electricity.current);
+			const hasElec = !isNaN(elecCurr) && elecCurr >= elecPrev;
+			const isComplete = (d.water.exists || hasWater) && (d.electricity.exists || hasElec);
+
+			if (isComplete) recorded++;
+			else needsReading++;
+		});
+
+		return {
+			all: propertyDrafts.length,
+			occupied,
+			vacant,
+			needsReading,
+			recorded,
+		};
+	}, [drafts, selectedPropertyId]);
+
+	const filteredDrafts = useMemo(() => {
+		return drafts.filter(d => {
+			const matchesProperty = selectedPropertyId === "all" || d.propertyId === selectedPropertyId;
+			const query = searchQuery.toLowerCase().trim();
+			const matchesSearch = !query || 
+				d.unitName.toLowerCase().includes(query) || 
+				(d.tenantName && d.tenantName.toLowerCase().includes(query));
+
+			if (!matchesProperty || !matchesSearch) return false;
+
+			const isOccupied = d.occupancyStatus === "occupied";
+			const waterPrev = d.water.previous || 0;
+			const waterCurr = parseFloat(d.water.current);
+			const hasWater = !isNaN(waterCurr) && waterCurr >= waterPrev;
+			const elecPrev = d.electricity.previous || 0;
+			const elecCurr = parseFloat(d.electricity.current);
+			const hasElec = !isNaN(elecCurr) && elecCurr >= elecPrev;
+			const isComplete = (d.water.exists || hasWater) && (d.electricity.exists || hasElec);
+
+			if (filterStatus === "occupied") return isOccupied;
+			if (filterStatus === "vacant") return !isOccupied;
+			if (filterStatus === "needs_reading") return !isComplete;
+			if (filterStatus === "recorded") return isComplete;
+			return true;
+		});
+	}, [drafts, selectedPropertyId, searchQuery, filterStatus]);
 
 	// Compute real-time progress & consumption totals
 	const readingsSummary = useMemo(() => {
@@ -968,7 +1040,7 @@ export function UtilityBillingDashboard() {
 
 			{/* Step-by-step Guided Tour Spotlight */}
 			<UtilityBillingTourSpotlight
-				isOpen={isTourOpen}
+				isOpen={isTourOpen && !isOnboardingModalOpen}
 				currentStepIndex={tourStepIndex}
 				onNext={handleTourNext}
 				onPrev={handleTourPrev}
@@ -988,27 +1060,43 @@ export function UtilityBillingDashboard() {
 		<div className="flex flex-col space-y-8 pb-20 w-full">
 			{/* Re-occurring Setup Banner (shows after dismissal until step is complete) */}
 			{!isBillingConfigured && dismissedThisVisit && (
-				<div className="rounded-2xl border border-primary/20 bg-primary/[0.03] px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-					<div className="flex items-start gap-3">
-						<div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/15 shrink-0 mt-0.5">
-							<Zap className="size-4.5" />
+				<div className="rounded-2xl border border-primary/20 bg-primary/[0.04] px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+					<div className="flex items-start gap-3.5">
+						<div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shrink-0 mt-0.5">
+							<Zap className="size-5" />
 						</div>
 						<div>
-							<p className="text-xs font-black text-foreground">
-								You&apos;re still setting up your billing &amp; utility configuration.
+							<div className="flex items-center gap-2">
+								<span className="text-[11px] font-black uppercase tracking-wider text-primary">
+									Step 3 of 5 • Onboarding
+								</span>
+								<span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+									Water &amp; Electricity Setup
+								</span>
+							</div>
+							<p className="text-sm font-bold text-foreground mt-0.5">
+								Set up your water and electric rates
 							</p>
-							<p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
-								Configure your utility tariffs and confirm your settings to proceed to tenant onboarding.
+							<p className="text-xs text-muted-foreground leading-snug mt-0.5">
+								Make sure your rates are set so bills compute automatically, or continue to add your tenants.
 							</p>
 						</div>
 					</div>
-					<div className="flex items-center gap-2 shrink-0">
+					<div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
 						<button
 							type="button"
-							onClick={() => setIsOnboardingModalOpen(true)}
-							className="h-9 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm flex items-center gap-1.5 active:scale-98"
+							onClick={() => setActiveTab("rates")}
+							className="flex-1 sm:flex-initial h-10 px-4 rounded-xl border border-border/80 bg-card hover:bg-muted text-foreground text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-98"
 						>
-							<span>Resume Setup</span>
+							Check Rates
+						</button>
+						<button
+							type="button"
+							onClick={handleCompleteOnboardingStep}
+							className="flex-1 sm:flex-initial h-10 px-5 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 active:scale-98"
+						>
+							<span>Next: Add Tenants</span>
+							<ArrowRight className="size-3.5" />
 						</button>
 					</div>
 				</div>
@@ -1020,15 +1108,15 @@ export function UtilityBillingDashboard() {
 					<div className="flex items-center gap-2.5">
 						<span className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
 							<Zap className="size-3" />
-							Billing Cycle
+							Monthly Billing Cycle
 						</span>
 						<span className="text-xs font-medium text-muted-foreground">{formattedCycleMonth}</span>
 					</div>
 					<h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-						Utility & Submeter Billing
+						Water &amp; Electricity Billing
 					</h1>
 					<p className="text-xs sm:text-sm text-muted-foreground max-w-2xl">
-						Record room submeters, calculate tenant consumption, and issue itemized monthly invoices in one workflow.
+						Record room meter readings, compute monthly usage, and send clear itemized bills to your tenants.
 					</p>
 				</div>
 
@@ -1042,7 +1130,7 @@ export function UtilityBillingDashboard() {
 									"inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-card/60 px-4 text-xs font-semibold text-foreground transition-all hover:bg-muted active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm relative",
 									isTourOpen && tourStepIndex === 1 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-105 bg-primary/10 border-primary font-bold z-30"
 								)}
-								title="Save submeter readings without issuing invoices yet"
+								title="Save entered readings without sending bills yet"
 							>
 								{isTourOpen && tourStepIndex === 1 && (
 									<span className="relative flex size-2 shrink-0">
@@ -1051,7 +1139,7 @@ export function UtilityBillingDashboard() {
 									</span>
 								)}
 								<Save className="size-3.5 text-muted-foreground" />
-								<span>Save Draft</span>
+								<span>Save Readings</span>
 							</button>
 
 							<button 
@@ -1061,7 +1149,7 @@ export function UtilityBillingDashboard() {
 									"inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-5 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 cursor-pointer relative",
 									isTourOpen && tourStepIndex === 2 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_35px_rgba(155,119,255,0.95)] animate-pulse scale-105 brightness-110 font-black z-30"
 								)}
-								title="Save readings and immediately post itemized invoices to tenants"
+								title="Save readings and send monthly bills to your tenants"
 							>
 								{isTourOpen && tourStepIndex === 2 && (
 									<span className="relative flex size-2 shrink-0">
@@ -1070,100 +1158,115 @@ export function UtilityBillingDashboard() {
 									</span>
 								)}
 								{saving ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
-								<span>Post & Bill Invoices</span>
+								<span>Send Monthly Bills</span>
 							</button>
 						</>
 					)}
 				</div>
 			</div>
 
-			{/* Unified Command Bar */}
-			<div className="relative z-30 overflow-visible flex flex-col gap-3 rounded-2xl border border-border/60 bg-card/40 p-2.5 sm:p-3 backdrop-blur-md lg:flex-row lg:items-center lg:justify-between shadow-sm">
-				{/* Segmented Pill Tabs */}
-				<div className="flex shrink-0 items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-none p-1 sm:p-1.5 rounded-xl bg-muted/40 border border-border/50 min-w-max">
-					{[
-						{ 
-							id: "readings", 
-							label: "Meter Readings", 
-							icon: Zap,
-							badge: `${readingsSummary.recordedCount}/${readingsSummary.totalUnits}`
-						},
-						{ 
-							id: "verify", 
-							label: "Verify Payments", 
-							icon: ShieldCheck,
-							badge: pendingInvoices.length > 0 ? pendingInvoices.length.toString() : undefined,
-							badgeAlert: pendingInvoices.length > 0
-						},
-						{ 
-							id: "rates", 
-							label: "Utility Rates", 
-							icon: Settings2,
-							badge: isRatesDirty ? "Unsaved" : undefined,
-							badgeAlert: isRatesDirty
-						},
-						{ 
-							id: "history", 
-							label: "Billing Archive", 
-							icon: History 
-						}
-					].map((tab) => {
-						const isTabHighlighted = isTourOpen && (
-							(tourStepIndex === 0 && tab.id === "rates") ||
-							((tourStepIndex === 1 || tourStepIndex === 2) && tab.id === "readings")
-						);
+			{/* Tab Navigation */}
+			<div className="flex items-center overflow-x-auto scrollbar-none gap-1 p-1 rounded-xl bg-muted/40 border border-border/50">
+				{[
+					{ 
+						id: "readings", 
+						label: "Meter Readings", 
+						icon: Zap,
+						badge: `${readingsSummary.recordedCount}/${readingsSummary.totalUnits}`
+					},
+					{ 
+						id: "verify", 
+						label: "Payment Proofs", 
+						icon: ShieldCheck,
+						badge: pendingInvoices.length > 0 ? pendingInvoices.length.toString() : undefined,
+						badgeAlert: pendingInvoices.length > 0
+					},
+					{ 
+						id: "rates", 
+						label: "Electricity & Water Rates", 
+						icon: Settings2,
+						badge: isRatesDirty ? "Unsaved" : undefined,
+						badgeAlert: isRatesDirty
+					},
+					{ 
+						id: "history", 
+						label: "Past Bills", 
+						icon: History 
+					}
+				].map((tab) => {
+					const isTabHighlighted = isTourOpen && (
+						(tourStepIndex === 0 && tab.id === "rates") ||
+						((tourStepIndex === 1 || tourStepIndex === 2) && tab.id === "readings")
+					);
 
-						return (
-						<button
-							key={tab.id}
-							onClick={() => setActiveTab(tab.id as any)}
-							className={cn(
-								"flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 sm:px-3.5 sm:py-2 text-xs font-medium transition-all whitespace-nowrap cursor-pointer relative",
-								activeTab === tab.id
-									? "bg-card text-foreground font-semibold shadow-sm border border-border/80"
-									: "text-muted-foreground hover:text-foreground hover:bg-card/40",
-								isTabHighlighted && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_25px_rgba(155,119,255,0.8)] animate-pulse font-bold z-20"
-							)}
+					return (
+					<button
+						key={tab.id}
+						onClick={() => setActiveTab(tab.id as any)}
+						className={cn(
+							"flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 sm:px-3.5 sm:py-2 text-xs font-medium transition-all whitespace-nowrap cursor-pointer relative",
+							activeTab === tab.id
+								? "bg-card text-foreground font-semibold shadow-sm border border-border/80"
+								: "text-muted-foreground hover:text-foreground hover:bg-card/40",
+							isTabHighlighted && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_25px_rgba(155,119,255,0.8)] animate-pulse font-bold z-20"
+						)}
+					>
+						{isTabHighlighted && (
+							<span className="relative flex size-2 shrink-0">
+								<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+								<span className="relative inline-flex rounded-full size-2 bg-primary"></span>
+							</span>
+						)}
+						<tab.icon className={cn("size-3.5 shrink-0", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
+						<span>{tab.label}</span>
+						{tab.badge && (
+							<span className={cn(
+								"px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold",
+								tab.badgeAlert 
+									? "bg-amber-500 text-zinc-950 font-bold animate-pulse" 
+									: activeTab === tab.id 
+										? "bg-primary/15 text-primary" 
+										: "bg-muted text-muted-foreground"
+							)}>
+								{tab.badge}
+							</span>
+						)}
+					</button>
+					);
+				})}
+			</div>
+
+			{/* Contextual Toolbar: Filter + Search + Month (only on Readings tab) */}
+			{activeTab === "readings" && (
+				<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+					{/* Filter Dropdown */}
+					<div className="relative shrink-0">
+						<select
+							value={filterStatus}
+							onChange={(e) => setFilterStatus(e.target.value as any)}
+							className="h-9 w-full sm:w-auto rounded-xl border border-border/70 bg-card pl-3 pr-8 text-xs font-semibold text-foreground focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer appearance-none"
 						>
-							{isTabHighlighted && (
-								<span className="relative flex size-2 shrink-0">
-									<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-									<span className="relative inline-flex rounded-full size-2 bg-primary"></span>
-								</span>
-							)}
-							<tab.icon className={cn("size-3.5 shrink-0", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
-							<span>{tab.label}</span>
-							{tab.badge && (
-								<span className={cn(
-									"px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold",
-									tab.badgeAlert 
-										? "bg-amber-500 text-zinc-950 font-bold animate-pulse" 
-										: activeTab === tab.id 
-											? "bg-primary/15 text-primary" 
-											: "bg-muted text-muted-foreground"
-								)}>
-									{tab.badge}
-								</span>
-							)}
-						</button>
-						);
-					})}
-				</div>
+							<option value="all">All Rooms ({filterCounts.all})</option>
+							<option value="occupied">Occupied ({filterCounts.occupied})</option>
+							<option value="vacant">Vacant ({filterCounts.vacant})</option>
+							<option value="needs_reading">Needs Reading ({filterCounts.needsReading})</option>
+							<option value="recorded">Recorded ({filterCounts.recorded})</option>
+						</select>
+						<ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground pointer-events-none" />
+					</div>
 
-				{/* Search & Cycle Filter */}
-				<div className="relative z-30 flex items-center gap-2.5 w-full lg:w-auto lg:justify-end">
-					{activeTab === "readings" && (
-						<div className="relative flex-1 min-w-[130px] sm:w-56 md:w-64">
-							<Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-							<input 
-								placeholder="Search unit or room..." 
-								value={searchQuery}
-								onChange={(e) => setSearchQuery(e.target.value)}
-								className="h-9.5 w-full rounded-xl border border-border/70 bg-card/60 pl-8.5 pr-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all"
-							/>
-						</div>
-					)}
+					{/* Search Input */}
+					<div className="relative flex-1 min-w-0">
+						<Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+						<input maxLength={60} 
+							placeholder="Search by room or tenant name..." 
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+							className="h-9 w-full rounded-xl border border-border/70 bg-card pl-8.5 pr-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all"
+						/>
+					</div>
 
+					{/* Month Picker */}
 					<MonthPicker
 						value={selectedMonth}
 						onChange={(newMonth) => {
@@ -1185,11 +1288,10 @@ export function UtilityBillingDashboard() {
 							}
 							setSelectedMonth(newMonth);
 						}}
-						className={cn(activeTab !== "readings" && "ml-auto lg:ml-0")}
 						align="right"
 					/>
 				</div>
-			</div>
+			)}
 
 			{/* Content Area */}
 			<AnimatePresence mode="wait">
@@ -1201,76 +1303,90 @@ export function UtilityBillingDashboard() {
 						exit={{ opacity: 0, y: -10 }}
 						className="space-y-6"
 					>
-						{/* Progress & Live Consumption Dashboard */}
-						<div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5 backdrop-blur-sm flex flex-col justify-between">
-								<span className="text-[11px] font-semibold text-muted-foreground">Units Logged</span>
-								<div className="mt-2 flex items-baseline gap-1.5">
-									<span className="text-2xl font-bold font-mono text-foreground">{readingsSummary.recordedCount}</span>
-									<span className="text-xs font-medium text-muted-foreground">/ {readingsSummary.totalUnits} Units</span>
-								</div>
-								<div className="mt-3 h-1.5 w-full bg-muted rounded-full overflow-hidden">
-									<div 
-										className="h-full bg-primary rounded-full transition-all duration-500"
-										style={{ width: `${readingsSummary.totalUnits > 0 ? (readingsSummary.recordedCount / readingsSummary.totalUnits) * 100 : 0}%` }}
-									/>
-								</div>
-							</div>
 
-							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5 backdrop-blur-sm flex flex-col justify-between">
-								<span className="text-[11px] font-semibold text-amber-500 flex items-center gap-1.5">
-									<Zap className="size-3.5" /> Electricity Recorded
-								</span>
-								<div className="mt-2 flex items-baseline gap-1.5">
-									<span className="text-2xl font-bold font-mono text-foreground">{readingsSummary.totalElecKwh.toFixed(1)}</span>
-									<span className="text-xs font-semibold text-muted-foreground">kWh</span>
+						{/* All Rooms Vacant Helpful Callout (removes confusion for empty buildings) */}
+						{filteredDrafts.length > 0 && filteredDrafts.every(d => d.occupancyStatus !== "occupied") && (
+							<div className="rounded-2xl border border-border/80 bg-muted/20 p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+								<div className="space-y-1">
+									<div className="flex items-center gap-2">
+										<span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+											All Rooms Currently Vacant
+										</span>
+									</div>
+									<h3 className="text-base font-bold text-foreground">
+										No tenants have moved in yet
+									</h3>
+									<p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl">
+										Meter readings are only recorded once tenants live in the rooms. For now, check your Electricity &amp; Water Rates below, then proceed to add your tenants.
+									</p>
 								</div>
-								<span className="text-[10px] text-muted-foreground mt-2">Active cycle usage</span>
-							</div>
-
-							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5 backdrop-blur-sm flex flex-col justify-between">
-								<span className="text-[11px] font-semibold text-sky-400 flex items-center gap-1.5">
-									<Droplets className="size-3.5" /> Water Recorded
-								</span>
-								<div className="mt-2 flex items-baseline gap-1.5">
-									<span className="text-2xl font-bold font-mono text-foreground">{readingsSummary.totalWaterM3.toFixed(1)}</span>
-									<span className="text-xs font-semibold text-muted-foreground">m³</span>
+								<div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
+									<button
+										type="button"
+										onClick={() => setActiveTab("rates")}
+										className="flex-1 sm:flex-initial h-10 px-4 rounded-xl border border-border/80 bg-card hover:bg-muted text-foreground text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-98"
+									>
+										Check Rates
+									</button>
+									<button
+										type="button"
+										onClick={handleCompleteOnboardingStep}
+										className="flex-1 sm:flex-initial h-10 px-5 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 active:scale-98"
+									>
+										<span>Next: Add Tenants</span>
+										<ArrowRight className="size-3.5" />
+									</button>
 								</div>
-								<span className="text-[10px] text-muted-foreground mt-2">Active cycle usage</span>
 							</div>
-
-							<div className="rounded-2xl border border-border/60 bg-card/40 p-4 sm:p-5 backdrop-blur-sm flex flex-col justify-between">
-								<span className="text-[11px] font-semibold text-emerald-500 flex items-center gap-1.5">
-									<DollarSign className="size-3.5" /> Est. Utility Billing
-								</span>
-								<div className="mt-2 flex items-baseline gap-1">
-									<span className="text-xs font-bold text-muted-foreground">₱</span>
-									<span className="text-2xl font-bold font-mono text-foreground">{readingsSummary.totalEstimatedUtilRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-								</div>
-								<span className="text-[10px] text-muted-foreground mt-2">Added to tenant invoices</span>
-							</div>
-						</div>
+						)}
 
 						{/* Batch Readings Table */}
-						<div className="rounded-2xl border border-border/60 bg-card/30 backdrop-blur-sm overflow-hidden shadow-sm">
+						<div className="rounded-2xl border border-border/80 bg-card overflow-hidden shadow-xs">
 							<div className="overflow-x-auto">
 								<table className="w-full text-left border-collapse">
 									<thead>
-										<tr className="border-b border-border/60 bg-muted/30">
-											<th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Unit & Base Rent</th>
-											<th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-center">Water Reading (m³)</th>
-											<th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-center">Electricity Reading (kWh)</th>
-											<th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-center">Estimated Total</th>
-											<th className="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-right">Actions</th>
+										<tr className="border-b border-border/70 text-xs font-bold text-muted-foreground">
+											<th className="px-6 py-4 bg-muted/30">Room &amp; Rent</th>
+											<th className="px-6 py-3.5 text-center bg-sky-500/[0.08] dark:bg-sky-500/[0.12] border-x-2 border-sky-500/20 dark:border-sky-500/30">
+												<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/15 dark:bg-sky-500/25 text-sky-800 dark:text-sky-200 border border-sky-500/30 text-xs font-bold shadow-xs">
+													<Droplets className="size-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
+													<span>Water (m³)</span>
+												</div>
+												<div className="text-[10px] font-semibold text-sky-700/80 dark:text-sky-300/80 tracking-normal normal-case mt-1">
+													Previous → Current
+												</div>
+											</th>
+											<th className="px-6 py-3.5 text-center bg-amber-500/[0.08] dark:bg-amber-500/[0.12] border-r-2 border-amber-500/20 dark:border-amber-500/30">
+												<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 dark:bg-amber-500/25 text-amber-900 dark:text-amber-100 border border-amber-500/30 text-xs font-bold shadow-xs">
+													<Zap className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+													<span>Electricity (kWh)</span>
+												</div>
+												<div className="text-[10px] font-semibold text-amber-700/80 dark:text-amber-300/80 tracking-normal normal-case mt-1">
+													Previous → Current
+												</div>
+											</th>
+											<th className="px-6 py-4 text-right bg-muted/30">Total Due</th>
+											<th className="px-6 py-4 text-right bg-muted/30">Actions</th>
 										</tr>
 									</thead>
-									<tbody className="divide-y divide-border/40">
+									<tbody className="divide-y divide-border/50">
 										{filteredDrafts.length === 0 ? (
 											<tr>
-												<td colSpan={5} className="px-6 py-20 text-center">
+												<td colSpan={5} className="px-6 py-16 text-center">
 													<div className="flex flex-col items-center gap-3 text-muted-foreground">
-														<Building2 className="size-12 opacity-20" />
-														<p className="text-sm font-medium">No units found matching your criteria</p>
+														<Building2 className="size-10 opacity-30" />
+														<p className="text-sm font-semibold text-foreground">No rooms found</p>
+														<p className="text-xs text-muted-foreground">No rooms match your current search or filter criteria.</p>
+														<button
+															type="button"
+															onClick={() => {
+																setFilterStatus("all");
+																setSearchQuery("");
+															}}
+															className="mt-1 px-4 py-2 rounded-xl bg-card border border-border/80 hover:bg-muted text-xs font-bold text-foreground transition-all cursor-pointer shadow-xs"
+														>
+															Reset Filters
+														</button>
 													</div>
 												</td>
 											</tr>
@@ -1291,44 +1407,46 @@ export function UtilityBillingDashboard() {
 											const isComplete = (draft.water.exists || hasWater) && (draft.electricity.exists || hasElec);
 
 											return (
-												<tr key={draft.unitId} className="hover:bg-muted/10 transition-colors">
-													{/* Unit Info */}
+												<tr key={draft.unitId} className="hover:bg-muted/20 transition-colors">
+													{/* Room Info */}
 													<td className="px-6 py-4">
-														<div className="flex flex-col gap-0.5">
+														<div className="flex flex-col gap-1">
 															<div className="flex items-center gap-2">
 																<span className="text-sm font-bold text-foreground">{draft.unitName}</span>
 																{draft.occupancyStatus === "occupied" ? (
-																	<span className="text-[10px] font-semibold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-																		Occupied
+																	<span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+																		Occupied {draft.tenantName ? `• ${draft.tenantName}` : ""}
 																	</span>
 																) : (
-																	<span className="text-[10px] font-semibold text-muted-foreground/80 bg-muted/60 px-2 py-0.5 rounded-md border border-border">
+																	<span className="text-[11px] font-medium text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full border border-border/60">
 																		Vacant
 																	</span>
 																)}
 															</div>
 															<span className="text-xs text-muted-foreground">
-																{draft.occupancyStatus === "occupied" && draft.tenantName ? `${draft.tenantName} • ` : ""}
-																Base Rent: ₱{draft.rentAmount.toLocaleString()}
+																Base Rent: ₱{draft.rentAmount.toLocaleString()} / mo
 															</span>
 														</div>
 													</td>
 													
-													{/* Water Reading Column */}
-													<td className="px-6 py-4">
+													{/* Water Reading Column - distinct Sky Blue channel */}
+													<td className="px-6 py-4 bg-sky-500/[0.04] dark:bg-sky-500/[0.08] border-x-2 border-sky-500/20 dark:border-sky-500/30">
 														<div className="flex flex-col items-center gap-1.5">
-															<div className="flex items-center justify-center gap-3">
-																<div className="text-center">
-																	<span className="text-[9px] block text-muted-foreground uppercase font-bold">Prev</span>
-																	<span className="font-mono text-xs text-muted-foreground/80 font-medium">{draft.water.previous}</span>
-																</div>
-																<div className="h-6 w-px bg-border/60" />
-																<div className="text-center">
-																	<span className="text-[9px] block text-sky-400 uppercase font-bold">Curr</span>
-																	{draft.water.exists ? (
-																		<span className="font-mono text-xs font-bold text-sky-400">{draft.water.current}</span>
-																	) : (
+															<div className="flex items-center justify-center gap-2">
+																<span className="font-mono text-xs font-bold text-sky-900 dark:text-sky-100 bg-sky-100/90 dark:bg-sky-900/60 px-2 py-1 rounded-lg border border-sky-200 dark:border-sky-800 min-w-[36px] text-center shadow-2xs">
+																	{draft.water.previous}
+																</span>
+																<span className="text-sky-500 dark:text-sky-400 text-sm font-black">→</span>
+																{draft.water.exists ? (
+																	<span className="inline-flex items-center gap-1 font-mono text-xs font-bold text-sky-800 dark:text-sky-200 bg-sky-500/15 dark:bg-sky-500/25 px-3 py-1.5 rounded-xl border border-sky-500/30 w-32 justify-center shadow-xs">
+																		<Droplets className="size-3 text-sky-500 shrink-0" />
+																		<span>{draft.water.current} m³</span>
+																	</span>
+																) : (
+																	<div className="relative">
 																		<input 
+																			min={0} 
+																			max={9999999} 
 																			type="number" 
 																			value={draft.water.current}
 																			placeholder="0.0"
@@ -1340,34 +1458,40 @@ export function UtilityBillingDashboard() {
 																					updateDraftsAndCache(newDrafts);
 																				}
 																			}}
-																			className="w-24 h-8 rounded-lg border border-border/70 bg-background/80 px-2.5 py-1 text-center font-mono text-xs font-semibold text-sky-400 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 transition-all"
+																			className="w-32 h-9.5 rounded-xl border-2 border-sky-400 dark:border-sky-500 bg-white dark:bg-zinc-900 pl-3 pr-9 text-center font-mono text-xs font-bold text-sky-950 dark:text-sky-100 outline-none focus:border-sky-600 focus:ring-4 focus:ring-sky-500/20 transition-all placeholder:text-sky-300 dark:placeholder:text-sky-700 shadow-2xs"
 																		/>
-																	)}
-																</div>
+																		<span className="absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[10px] font-black bg-sky-500 text-white pointer-events-none select-none shadow-2xs">
+																			m³
+																		</span>
+																	</div>
+																)}
 															</div>
 															{hasWater && waterUsage > 0 && (
-																<span className="text-[10px] font-semibold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-md">
+																<span className="text-[10px] font-bold text-sky-800 dark:text-sky-200 bg-sky-500/20 dark:bg-sky-500/30 px-2.5 py-0.5 rounded-full border border-sky-500/40">
 																	+{waterUsage.toFixed(1)} m³ (₱{waterCost.toFixed(2)})
 																</span>
 															)}
 														</div>
 													</td>
 
-													{/* Electricity Reading Column */}
-													<td className="px-6 py-4">
+													{/* Electricity Reading Column - distinct Amber channel */}
+													<td className="px-6 py-4 bg-amber-500/[0.04] dark:bg-amber-500/[0.08] border-r-2 border-amber-500/20 dark:border-amber-500/30">
 														<div className="flex flex-col items-center gap-1.5">
-															<div className="flex items-center justify-center gap-3">
-																<div className="text-center">
-																	<span className="text-[9px] block text-muted-foreground uppercase font-bold">Prev</span>
-																	<span className="font-mono text-xs text-muted-foreground/80 font-medium">{draft.electricity.previous}</span>
-																</div>
-																<div className="h-6 w-px bg-border/60" />
-																<div className="text-center">
-																	<span className="text-[9px] block text-amber-400 uppercase font-bold">Curr</span>
-																	{draft.electricity.exists ? (
-																		<span className="font-mono text-xs font-bold text-amber-400">{draft.electricity.current}</span>
-																	) : (
+															<div className="flex items-center justify-center gap-2">
+																<span className="font-mono text-xs font-bold text-amber-950 dark:text-amber-100 bg-amber-100/90 dark:bg-amber-900/60 px-2 py-1 rounded-lg border border-amber-200 dark:border-amber-800 min-w-[36px] text-center shadow-2xs">
+																	{draft.electricity.previous}
+																</span>
+																<span className="text-amber-500 dark:text-amber-400 text-sm font-black">→</span>
+																{draft.electricity.exists ? (
+																	<span className="inline-flex items-center gap-1 font-mono text-xs font-bold text-amber-900 dark:text-amber-100 bg-amber-500/15 dark:bg-amber-500/25 px-3 py-1.5 rounded-xl border border-amber-500/30 w-32 justify-center shadow-xs">
+																		<Zap className="size-3 text-amber-500 shrink-0" />
+																		<span>{draft.electricity.current} kWh</span>
+																	</span>
+																) : (
+																	<div className="relative">
 																		<input 
+																			min={0} 
+																			max={9999999} 
 																			type="number" 
 																			value={draft.electricity.current}
 																			placeholder="0.0"
@@ -1379,13 +1503,16 @@ export function UtilityBillingDashboard() {
 																					updateDraftsAndCache(newDrafts);
 																				}
 																			}}
-																			className="w-24 h-8 rounded-lg border border-border/70 bg-background/80 px-2.5 py-1 text-center font-mono text-xs font-semibold text-amber-400 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all"
+																			className="w-32 h-9.5 rounded-xl border-2 border-amber-400 dark:border-amber-500 bg-white dark:bg-zinc-900 pl-3 pr-11 text-center font-mono text-xs font-bold text-amber-950 dark:text-amber-100 outline-none focus:border-amber-600 focus:ring-4 focus:ring-amber-500/20 transition-all placeholder:text-amber-300 dark:placeholder:text-amber-700 shadow-2xs"
 																		/>
-																	)}
-																</div>
+																		<span className="absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-500 text-zinc-950 pointer-events-none select-none shadow-2xs">
+																			kWh
+																		</span>
+																	</div>
+																)}
 															</div>
 															{hasElec && elecUsage > 0 && (
-																<span className="text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md">
+																<span className="text-[10px] font-bold text-amber-900 dark:text-amber-100 bg-amber-500/20 dark:bg-amber-500/30 px-2.5 py-0.5 rounded-full border border-amber-500/40">
 																	+{elecUsage.toFixed(1)} kWh (₱{elecCost.toFixed(2)})
 																</span>
 															)}
@@ -1393,20 +1520,14 @@ export function UtilityBillingDashboard() {
 													</td>
 
 													{/* Total Estimated Calculation */}
-													<td className="px-6 py-4 text-center">
-														<div className="flex flex-col items-center">
-															<span className="text-sm font-bold text-foreground font-mono">
+													<td className="px-6 py-4 text-right">
+														<div className="flex flex-col items-end">
+															<span className="text-sm font-bold text-foreground font-mono tabular-nums">
 																₱{(draft.occupancyStatus === "occupied" ? totalEst : (waterCost + elecCost)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
 															</span>
-															{draft.occupancyStatus === "occupied" ? (
-																(waterCost > 0 || elecCost > 0) && (
-																	<span className="text-[10px] text-muted-foreground font-medium">
-																		Util: +₱{(waterCost + elecCost).toFixed(2)}
-																	</span>
-																)
-															) : (
+															{draft.occupancyStatus === "occupied" && (waterCost > 0 || elecCost > 0) && (
 																<span className="text-[10px] text-muted-foreground font-medium">
-																	Submeter Only (Vacant)
+																	Rent + Utilities
 																</span>
 															)}
 														</div>
@@ -1415,21 +1536,17 @@ export function UtilityBillingDashboard() {
 													{/* Row Status & Quick Edit */}
 													<td className="px-6 py-4 text-right">
 														<div className="flex items-center justify-end gap-2">
-															{isComplete ? (
-																<span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20" title="Both readings recorded for this cycle">
+															{isComplete && (
+																<span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20" title="Both readings recorded for this cycle">
 																	<Check className="size-3" /> Ready
-																</span>
-															) : (
-																<span className="text-[10px] font-medium text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full border border-border/50" title="Pending meter readings">
-																	Pending
 																</span>
 															)}
 															<button 
 																onClick={() => setSelectedUnitId(draft.unitId)}
-																className="inline-flex items-center justify-center size-8 rounded-lg border border-border text-muted-foreground transition-all hover:bg-muted hover:text-foreground cursor-pointer"
-																title="Inspect or adjust unit details"
+																className="inline-flex items-center justify-center size-9 rounded-xl border border-border/80 text-muted-foreground transition-all hover:bg-muted hover:text-foreground cursor-pointer shadow-xs active:scale-95"
+																title="Inspect or adjust room details"
 															>
-																<Edit3 className="size-3.5" />
+																<Edit3 className="size-4" />
 															</button>
 														</div>
 													</td>
@@ -1803,7 +1920,7 @@ function UnitDetailModal({
 									<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground block mb-1">Base Monthly Rent</span>
 									<div className="flex items-baseline gap-1.5">
 										<span className="text-lg font-black text-muted-foreground">₱</span>
-										<input 
+										<input min={0} max={9999999.99} step="0.01" 
 											type="number" 
 											value={draft.rentAmount}
 											onChange={(e) => onUpdate({ rentAmount: parseFloat(e.target.value) || 0 })}
@@ -1927,7 +2044,7 @@ function ResourceSection({
 					<div className="grid grid-cols-2 gap-3">
 						<div className="space-y-1">
 							<label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block">Previous</label>
-							<input 
+							<input min={0} max={9999999} 
 								type="number" 
 								value={draft.previous}
 								onChange={(e) => onUpdate({ previous: parseFloat(e.target.value) || 0 })}
@@ -1936,7 +2053,7 @@ function ResourceSection({
 						</div>
 						<div className="space-y-1">
 							<label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block">Current</label>
-							<input 
+							<input min={0} max={9999999} 
 								type="number" 
 								value={draft.current}
 								placeholder="Enter reading..."
@@ -1952,7 +2069,7 @@ function ResourceSection({
 						<span className={cn("text-[9px] font-black uppercase tracking-widest block opacity-80", accentClass)}>Billing Rate</span>
 						<div className="flex items-center justify-center gap-1 mt-1">
 							<span className="text-sm font-black text-muted-foreground">₱</span>
-							<input 
+							<input min={0} max={99999.99} 
 								type="number" 
 								value={draft.rate}
 								step="0.01"

@@ -69,6 +69,14 @@ function GlassInput({ icon: Icon, label, error, id, nextFieldId, onKeyDown, bloc
         onKeyDown?.(e);
     };
 
+    const isTextType = !props.type || ['text', 'email', 'search', 'tel', 'url'].includes(props.type);
+    const resolvedMaxLength = props.maxLength ?? (
+        props.type === 'email' ? 50 :
+        props.type === 'tel' ? 15 :
+        props.type === 'search' ? 60 :
+        props.type === 'password' ? 16 :
+        isTextType ? 120 : undefined
+    );
     return (
         <div className="space-y-2.5 group">
             {label && (
@@ -84,7 +92,7 @@ function GlassInput({ icon: Icon, label, error, id, nextFieldId, onKeyDown, bloc
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-all duration-500 transform group-focus-within:rotate-[5deg] group-focus-within:scale-110 group-focus-within:text-primary">
                     <Icon size={18} strokeWidth={1.5} />
                 </div>
-                <input
+                <input maxLength={resolvedMaxLength}
                     {...props}
                     id={id}
                     onKeyDown={handleKeyDown}
@@ -294,7 +302,7 @@ export function ApplicationIdentityStep({
                             )}>
                                 <div className="relative">
                                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-                                    <input
+                                    <input maxLength={60}
                                         type="text"
                                         placeholder="Filter unit by name or number..."
                                         value={unitSearchQuery}

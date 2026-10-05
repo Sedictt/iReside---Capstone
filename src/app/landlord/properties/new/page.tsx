@@ -27,7 +27,8 @@ import {
     Eye,
     Save,
     Loader2,
-    HelpCircle
+    HelpCircle,
+    MapPin
 } from "lucide-react";
 import { PropertyAmenitiesSelector } from "@/components/landlord/properties/PropertyAmenitiesSelector";
 import { PropertyRulesSelector } from "@/components/landlord/properties/PropertyRulesSelector";
@@ -44,6 +45,11 @@ import { useProperty } from "@/context/PropertyContext";
 import { playSound } from "@/hooks/useSound";
 import { useAppToast } from "@/hooks/useAppToast";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { 
+    VALENZUELA_BARANGAYS, 
+    formatValenzuelaAddress, 
+    parseValenzuelaAddress 
+} from "@/lib/constants/valenzuela-address";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -103,6 +109,26 @@ function NewAssetContent() {
     const [assetClassGuideOpen, setAssetClassGuideOpen] = useState(false);
     const [assetClassGuideInitialTab, setAssetClassGuideInitialTab] = useState<string>("apartment");
     
+    const [isManualAddress, setIsManualAddress] = useState(false);
+    const [addressCity, setAddressCity] = useState("Valenzuela City");
+    const [addressBarangay, setAddressBarangay] = useState("Karuhatan");
+    const [addressStreet, setAddressStreet] = useState("");
+    const [isCustomPrefix, setIsCustomPrefix] = useState(false);
+
+    const activeBarangay = VALENZUELA_BARANGAYS.find(b => b.name === addressBarangay) || VALENZUELA_BARANGAYS[0];
+
+    const handleStructuredAddressChange = (newStreet: string, newBarangay: string, newCity: string) => {
+        const clampedStreet = newStreet.slice(0, 100);
+        setAddressStreet(clampedStreet);
+        setAddressBarangay(newBarangay);
+        setAddressCity(newCity);
+        const selectedB = VALENZUELA_BARANGAYS.find(b => b.name === newBarangay) || activeBarangay;
+        const full = clampedStreet.trim()
+            ? formatValenzuelaAddress(clampedStreet, newBarangay, newCity, selectedB?.zipCode)
+            : "";
+        handleInputChange("address", full);
+    };
+
     const [formData, setFormData] = useState({
         propertyName: "",
         address: "",
@@ -147,6 +173,11 @@ function NewAssetContent() {
                     if (ct.file_name) contractFile = ct.file_name;
                 }
 
+                const loadedPrefix = p.unit_prefix || (p.type === "dormitory" || p.type === "boarding_house" ? "Room" : "Unit");
+                if (p.unit_prefix && !["Room", "Unit", "Studio", "Door", "Bed"].includes(p.unit_prefix)) {
+                    setIsCustomPrefix(true);
+                }
+
                 setFormData({
                     propertyName: p.name,
                     address: p.address,
@@ -161,10 +192,21 @@ function NewAssetContent() {
                     propertyType: (p.type ?? "apartment") as SupportedPropertyEnum,
                     contractMode,
                     contractFile,
-                    unitPrefix: p.type === "dormitory" || p.type === "boarding_house" ? "Room" : "Unit",
+                    unitPrefix: loadedPrefix,
                     numberingStyle: "floor_based",
                     startingNumber: 101,
                 });
+
+                const parsedAddr = parseValenzuelaAddress(p.address || "");
+                if (parsedAddr.isValenzuela && parsedAddr.barangay) {
+                    setAddressCity(parsedAddr.city || "Valenzuela City");
+                    setAddressBarangay(parsedAddr.barangay);
+                    setAddressStreet(parsedAddr.street);
+                    setIsManualAddress(false);
+                } else if (p.address) {
+                    setIsManualAddress(true);
+                    setAddressStreet(p.address);
+                }
 
                 setExistingImageUrls(Array.isArray(p.images) ? p.images : []);
                 setCoverExistingUrl(Array.isArray(p.images) ? p.images[0] : null);
@@ -238,34 +280,44 @@ function NewAssetContent() {
 
         if (currentStep === 1) {
             if (!formData.propertyName.trim()) {
-                nextErrors.propertyName = "Property designation / name is required.";
+                nextErrors.propertyName = "Please enter your property name.";
             }
-            if (!formData.address.trim()) {
-                nextErrors.address = "Property location / address is required.";
+            if (!isManualAddress) {
+                if (!addressStreet.trim()) {
+                    nextErrors.address = "Please enter your house/building number and street name.";
+                }
+            } else if (!formData.address.trim()) {
+                nextErrors.address = "Please enter the complete property address.";
             }
         } else if (currentStep === 2) {
             const units = parseInt(formData.totalUnits, 10);
             if (isNaN(units) || units < 1) {
-                nextErrors.totalUnits = "Total units must be at least 1.";
+                nextErrors.totalUnits = "Please enter at least 1 room or unit.";
+            } else if (units > 99) {
+                nextErrors.totalUnits = "Total units cannot exceed 99 (2 digits).";
             }
             const floors = parseInt(formData.floorCount, 10);
             if (isNaN(floors) || floors < 1) {
-                nextErrors.floorCount = "Floor count must be at least 1.";
+                nextErrors.floorCount = "Please enter at least 1 floor.";
+            } else if (floors > 99) {
+                nextErrors.floorCount = "Number of floors cannot exceed 99 (2 digits).";
             }
             const occupancy = parseInt(formData.occupancyLimit, 10);
             if (isNaN(occupancy) || occupancy < 1) {
-                nextErrors.occupancyLimit = "Occupancy limit must be at least 1.";
+                nextErrors.occupancyLimit = "Please enter the maximum guests allowed per room.";
+            } else if (occupancy > 99) {
+                nextErrors.occupancyLimit = "Max tenants per room cannot exceed 99 (2 digits).";
             }
             if (!formData.unitPrefix.trim()) {
-                nextErrors.unitPrefix = "Unit prefix is required.";
+                nextErrors.unitPrefix = "Please choose or type a room label (e.g. Room or Unit).";
             }
         } else if (currentStep === 3) {
             if (!formData.baseRent || formData.baseRent <= 0) {
-                nextErrors.baseRent = "Please enter a valid base rent amount greater than ₱0.";
+                nextErrors.baseRent = "Please enter the standard monthly rent amount (greater than ₱0).";
             }
         } else if (currentStep === 4) {
             if (formData.contractMode === "upload" && !formData.contractFile) {
-                nextErrors.contractFile = "Please upload a lease document or switch to Auto-Generate.";
+                nextErrors.contractFile = "Please choose a lease contract file to upload or select Standard Digital Lease.";
             }
         }
 
@@ -290,7 +342,7 @@ function NewAssetContent() {
         if (step > 1) {
             setStep(s => (s - 1) as Step);
         } else if (properties.length === 0) {
-            toast.info("Initial property registration is required before accessing the portal.");
+            toast.info("Please set up your first property to access your dashboard.");
         } else {
             router.push("/landlord/properties");
         }
@@ -439,548 +491,959 @@ function NewAssetContent() {
     };
 
     const STEPS = [
-        { id: 1, label: "Identity", icon: Building2 },
-        { id: 2, label: "Architecture", icon: Grid },
-        { id: 3, label: "Financials", icon: "₱" },
-        { id: 4, label: "Governance", icon: ShieldCheck }
+        { id: 1, label: "Basics", shortTitle: "Property Info", icon: Building2 },
+        { id: 2, label: "Rooms & Floors", shortTitle: "Rooms & Floors", icon: Grid },
+        { id: 3, label: "Rent & Bills", shortTitle: "Rent & Bills", icon: Wallet },
+        { id: 4, label: "Rules & Lease", shortTitle: "Rules & Lease", icon: ShieldCheck }
     ];
+
     return (
-        <div className="min-h-screen pb-20 relative selection:bg-primary/30">
+        <div className="min-h-screen pb-24 relative selection:bg-primary/30">
             <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-                <div className="absolute top-[-10%] right-[-10%] size-[50rem] rounded-full bg-primary/10 blur-[150px] opacity-50 animate-pulse" />
+                <div className="absolute top-[-10%] right-[-10%] size-[50rem] rounded-full bg-primary/10 blur-[150px] opacity-50" />
             </div>
 
-            <div className="max-w-4xl mx-auto px-4 pt-8 space-y-8 animate-in fade-in duration-700">
-                <div className="flex items-center justify-between">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-2 sm:pt-4 space-y-3 sm:space-y-4 animate-in fade-in duration-500">
+                {/* Top Navigation Bar */}
+                <div className="flex items-center justify-between gap-4">
                     {properties.length > 0 ? (
-                        <button onClick={handleBack} className="group flex items-center gap-2 text-sm font-black text-muted-foreground hover:text-foreground transition-all neumorphic-panel px-5 py-2.5 rounded-full border border-border/60 backdrop-blur-xl cursor-pointer">
-                            <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
-                            {step === 1 ? "Cancel" : "Back"}
+                        <button
+                            type="button"
+                            onClick={handleBack}
+                            className="group flex items-center gap-2 text-xs sm:text-sm font-bold text-muted-foreground hover:text-foreground transition-all bg-card/90 hover:bg-card px-3.5 py-1.5 rounded-full border border-border/80 shadow-xs cursor-pointer"
+                        >
+                            <ArrowLeft className="size-3.5 group-hover:-translate-x-1 transition-transform" />
+                            <span>{step === 1 ? "Cancel" : "Back"}</span>
                         </button>
                     ) : step > 1 ? (
-                        <button onClick={handleBack} className="group flex items-center gap-2 text-sm font-black text-muted-foreground hover:text-foreground transition-all neumorphic-panel px-5 py-2.5 rounded-full border border-border/60 backdrop-blur-xl cursor-pointer">
-                            <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
-                            Back
+                        <button
+                            type="button"
+                            onClick={handleBack}
+                            className="group flex items-center gap-2 text-xs sm:text-sm font-bold text-muted-foreground hover:text-foreground transition-all bg-card/90 hover:bg-card px-3.5 py-1.5 rounded-full border border-border/80 shadow-xs cursor-pointer"
+                        >
+                            <ArrowLeft className="size-3.5 group-hover:-translate-x-1 transition-transform" />
+                            <span>Back</span>
                         </button>
                     ) : (
-                        <div className="flex items-center gap-2 text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-4 py-2 rounded-full border border-amber-500/20">
-                            <span>Initial Property Setup (Required)</span>
+                        <div className="flex items-center gap-2 text-xs font-bold text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/25">
+                            <span>First-Time Property Setup</span>
                         </div>
                     )}
-                    <div className="text-[10px] font-black text-primary uppercase tracking-[0.3em] bg-primary/10 px-5 py-2 rounded-full border border-primary/20 backdrop-blur-xl shadow-sm">
-                        {isEditMode ? "Asset Configuration" : "Expansion Wizard"}
+
+                    <div className="flex items-center gap-2 bg-card/90 px-3.5 py-1.5 rounded-full border border-border/80 shadow-xs text-xs font-bold text-foreground">
+                        <span className="size-2 rounded-full bg-primary animate-pulse" />
+                        <span>{isEditMode ? "Edit Property" : "New Property Setup"}</span>
                     </div>
                 </div>
 
-                <div className="bg-card/90 backdrop-blur-2xl border border-border/80 rounded-[2.5rem] overflow-hidden shadow-xl">
-                    <div className="p-10 border-b border-border/60 bg-muted/20">
-                        <div className="flex flex-col md:row md:items-center justify-between gap-10">
-                            <div className="space-y-3">
-                                <h1 className="text-4xl font-black text-foreground tracking-tight">Property Wizard</h1>
-                                <p className="text-muted-foreground text-sm font-medium max-w-md">
-                                    {isEditMode ? "Refining parameters for your asset." : "Establishing a new verified asset profile."}
-                                </p>
+                {/* Main Card Container */}
+                <div className="bg-card border border-border/80 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl">
+                    {/* Header with Title and Stepper */}
+                    <div className="px-6 py-3.5 sm:px-8 sm:py-4 border-b border-border/70 bg-muted/10">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div>
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[11px] font-bold text-primary mb-1">
+                                    <span>Step {step} of 4</span>
+                                    <span className="text-muted-foreground">•</span>
+                                    <span>{STEPS[step - 1].shortTitle}</span>
+                                </div>
+                                <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">
+                                    {isEditMode ? "Edit Property" : "Add New Property"}
+                                </h1>
                             </div>
 
-                            <div className="flex items-center gap-3">
+                            {/* Stepper Progress Indicator */}
+                            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                                 {STEPS.map((s, idx) => (
                                     <div key={s.id} className="flex items-center">
-                                        <div className="flex flex-col items-center gap-2">
-                                            <div className={cn(
-                                                "size-10 rounded-full flex items-center justify-center transition-all duration-500 border font-black",
-                                                step === s.id 
-                                                    ? "bg-primary text-black border-primary shadow-lg ring-4 ring-primary/20" 
-                                                    : step > s.id 
-                                                        ? "neumorphic-inset-card text-primary border-primary/30"
-                                                        : "neumorphic-inset-card text-muted-foreground/40 border-border/50"
-                                            )}>
-                                                {step > s.id ? (
-                                                    <Check className="size-5 text-primary" />
-                                                ) : typeof s.icon === "string" ? (
-                                                    <span className="text-sm font-black">{s.icon}</span>
-                                                ) : (
-                                                    <s.icon className="size-4" />
+                                        <div className="flex flex-col items-center gap-0.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (s.id < step) setStep(s.id as Step);
+                                                }}
+                                                disabled={s.id > step}
+                                                className={cn(
+                                                    "size-8 sm:size-9 rounded-xl flex items-center justify-center transition-all font-bold text-xs",
+                                                    step === s.id
+                                                        ? "bg-primary text-black shadow-xs ring-3 ring-primary/20 scale-105"
+                                                        : step > s.id
+                                                            ? "bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 cursor-pointer"
+                                                            : "bg-muted/50 text-muted-foreground/50 border border-border/40 cursor-not-allowed"
                                                 )}
-                                            </div>
-                                            <span className={cn("text-[9px] font-black uppercase tracking-widest", step === s.id ? "text-primary" : "text-muted-foreground/60")}>{s.label}</span>
+                                                aria-label={`Step ${s.id}: ${s.label}`}
+                                            >
+                                                {step > s.id ? (
+                                                    <Check className="size-3.5 text-primary stroke-[3]" />
+                                                ) : (
+                                                    <span>{s.id}</span>
+                                                )}
+                                            </button>
+                                            <span className={cn(
+                                                "text-[10px] sm:text-[11px] font-semibold whitespace-nowrap text-center transition-colors",
+                                                step === s.id ? "text-primary font-bold" : step > s.id ? "text-foreground" : "text-muted-foreground/60"
+                                            )}>
+                                                {s.label}
+                                            </span>
                                         </div>
-                                        {idx < STEPS.length - 1 && <div className="w-6 h-px bg-border/60 mx-2 -mt-6" />}
+                                        {idx < STEPS.length - 1 && (
+                                            <div className={cn(
+                                                "w-3 sm:w-5 h-0.5 mx-1 -mt-3 transition-colors",
+                                                step > s.id ? "bg-primary/50" : "bg-border/60"
+                                            )} />
+                                        )}
                                     </div>
                                 ))}
                             </div>
                         </div>
                     </div>
 
-                    <div className="p-10 min-h-[400px]">
-                        {/* 1. Identity */}
+                    {/* Step Content Area */}
+                    <div className="p-5 sm:p-6 lg:p-7 min-h-[350px]">
+                        {/* 1. Basics */}
                         {step === 1 && (
-                            <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
-                                <div className="text-center md:text-left">
-                                    <h2 className="text-3xl font-black tracking-tight text-foreground">Property Identity</h2>
-                                    <p className="text-muted-foreground text-sm font-medium mt-1">Establish the visual and formal identity of your asset.</p>
+                            <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
+                                <div>
+                                    <h2 className="text-xl font-bold tracking-tight text-foreground">Property Details</h2>
+                                    <p className="text-muted-foreground text-xs sm:text-sm mt-0.5">
+                                        Enter your property name and address so tenants know where they are moving in.
+                                    </p>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between px-1">
-                                            <div className="flex items-center gap-2">
-                                                <Camera className="size-3.5 text-primary" />
-                                                <label htmlFor="cover-identity" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cover Photo</label>
-                                            </div>
-                                            {mediaFiles.length > 0 && (
-                                                <span className="text-[9px] font-black uppercase tracking-wider text-amber-500 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/30 animate-pulse">
-                                                    New Photo Staged
+
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start pt-1">
+                                    {/* Left column: Name and Address (7 cols) */}
+                                    <div className="lg:col-span-7 space-y-3.5">
+                                        {/* Property Name */}
+                                        <div className="space-y-1">
+                                            <div className="flex items-center justify-between">
+                                                <label htmlFor="property-name" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                                    <span>Property Name</span>
+                                                    <span className="text-rose-500 font-bold">*</span>
+                                                </label>
+                                                <span className="text-[10px] text-muted-foreground font-mono">
+                                                    {formData.propertyName.length}/60
                                                 </span>
+                                            </div>
+                                            <input 
+                                                id="property-name"
+                                                type="text" 
+                                                maxLength={60}
+                                                value={formData.propertyName} 
+                                                onInput={(e) => {
+                                                    if (e.currentTarget.value.length > 60) {
+                                                        e.currentTarget.value = e.currentTarget.value.slice(0, 60);
+                                                    }
+                                                }}
+                                                onChange={e => handleInputChange("propertyName", e.target.value.slice(0, 60))} 
+                                                className={cn(
+                                                    "w-full bg-background border-2 border-border/80 rounded-xl px-3.5 py-2 text-sm font-semibold text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/10",
+                                                    errors.propertyName && "border-rose-500 focus:border-rose-500 focus:ring-rose-500/20"
+                                                )}
+                                                placeholder="e.g. Sunrise Apartments or Villa Teresa" 
+                                            />
+                                            {errors.propertyName ? (
+                                                <p className="text-[11px] font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
+                                                    {errors.propertyName}
+                                                </p>
+                                            ) : (
+                                                <p className="text-[11px] text-muted-foreground">
+                                                    The name your tenants will see for this building. Max 60 characters.
+                                                </p>
                                             )}
                                         </div>
-                                        <div className="relative group cursor-pointer overflow-hidden rounded-[2.5rem] border border-border/60 neumorphic-inset aspect-[16/10]">
-                                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                                                {(mediaPreviewUrls.length > 0 || existingImageUrls.length > 0) ? (
-                                                    <Image src={mediaPreviewUrls[0] || existingImageUrls[0]} alt="Property Cover" fill className="object-cover" />
+
+                                        {/* Property Address */}
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                                    <MapPin className="size-3.5 text-primary" />
+                                                    <span>Complete Address</span>
+                                                    <span className="text-rose-500 font-bold">*</span>
+                                                </label>
+                                                {!isManualAddress ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setIsManualAddress(true)}
+                                                        className="text-[11px] font-semibold text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                                                    >
+                                                        Outside Valenzuela? Click here
+                                                    </button>
                                                 ) : (
-                                                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground/60">
-                                                        <Upload className="size-8 text-muted-foreground/40" />
-                                                        <span className="text-xs font-bold">Click to Upload Cover Photo</span>
-                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setIsManualAddress(false);
+                                                            const full = addressStreet.trim()
+                                                                ? formatValenzuelaAddress(addressStreet, addressBarangay, addressCity, activeBarangay?.zipCode)
+                                                                : "";
+                                                            handleInputChange("address", full);
+                                                        }}
+                                                        className="text-[11px] font-bold text-primary hover:underline cursor-pointer"
+                                                    >
+                                                        ← Valenzuela Address Helper
+                                                    </button>
                                                 )}
                                             </div>
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10 pointer-events-none">
-                                                <div className="neumorphic-panel bg-card/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 text-xs font-bold text-foreground shadow-lg">
-                                                    <Camera className="size-4 text-primary" />
-                                                    <span>Change Cover Photo</span>
+
+                                            {!isManualAddress ? (
+                                                <div className="space-y-2">
+                                                    {/* City & Barangay Dropdowns */}
+                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                        {/* City */}
+                                                        <div className="space-y-1 sm:col-span-1">
+                                                            <label htmlFor="address-city" className="text-[11px] font-semibold text-muted-foreground">City</label>
+                                                            <select
+                                                                id="address-city"
+                                                                value={addressCity}
+                                                                onChange={(e) => {
+                                                                    if (e.target.value === "other") {
+                                                                        setIsManualAddress(true);
+                                                                    } else {
+                                                                        handleStructuredAddressChange(addressStreet, addressBarangay, e.target.value);
+                                                                    }
+                                                                }}
+                                                                className="w-full bg-background border-2 border-border/80 rounded-xl px-3 py-1.5 text-xs font-bold text-foreground outline-none focus:border-primary cursor-pointer"
+                                                            >
+                                                                <option value="Valenzuela City">Valenzuela City</option>
+                                                                <option value="other">Other (Manual)</option>
+                                                            </select>
+                                                        </div>
+
+                                                        {/* Barangay (takes 2 columns for generous room) */}
+                                                        <div className="space-y-1 sm:col-span-2">
+                                                            <label htmlFor="address-barangay" className="text-[11px] font-semibold text-muted-foreground">Barangay</label>
+                                                            <select
+                                                                id="address-barangay"
+                                                                value={addressBarangay}
+                                                                onChange={(e) => handleStructuredAddressChange(addressStreet, e.target.value, addressCity)}
+                                                                className="w-full bg-background border-2 border-border/80 rounded-xl px-3 py-1.5 text-xs font-bold text-foreground outline-none focus:border-primary cursor-pointer truncate"
+                                                            >
+                                                                <optgroup label="District 1 (Polo / North)">
+                                                                    {VALENZUELA_BARANGAYS.filter(b => b.district === 1).map(b => (
+                                                                        <option key={b.name} value={b.name}>
+                                                                            {b.name} (ZIP {b.zipCode})
+                                                                        </option>
+                                                                    ))}
+                                                                </optgroup>
+                                                                <optgroup label="District 2 (Central / East)">
+                                                                    {VALENZUELA_BARANGAYS.filter(b => b.district === 2).map(b => (
+                                                                        <option key={b.name} value={b.name}>
+                                                                            {b.name} (ZIP {b.zipCode})
+                                                                        </option>
+                                                                    ))}
+                                                                </optgroup>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Street Number & Name */}
+                                                    <div className="space-y-1">
+                                                        <div className="flex items-center justify-between">
+                                                            <label htmlFor="address-street" className="text-[11px] font-semibold text-muted-foreground">
+                                                                House / Building No. & Street Name <span className="text-rose-500">*</span>
+                                                            </label>
+                                                            <div className="flex items-center gap-2">
+                                                                {activeBarangay?.popularStreets && activeBarangay.popularStreets.length > 0 && (
+                                                                    <span className="text-[10px] text-muted-foreground">
+                                                                        Suggestions available
+                                                                    </span>
+                                                                )}
+                                                                <span className="text-[10px] text-muted-foreground font-mono">
+                                                                    {addressStreet.length}/100
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <input
+                                                            id="address-street"
+                                                            type="text"
+                                                            list="valenzuela-popular-streets"
+                                                            maxLength={100}
+                                                            value={addressStreet}
+                                                            onInput={(e) => {
+                                                                if (e.currentTarget.value.length > 100) {
+                                                                    e.currentTarget.value = e.currentTarget.value.slice(0, 100);
+                                                                }
+                                                            }}
+                                                            onChange={(e) => handleStructuredAddressChange(e.target.value.slice(0, 100), addressBarangay, addressCity)}
+                                                            placeholder="e.g. 123 MacArthur Highway or Block 4 Lot 12"
+                                                            className={cn(
+                                                                "w-full bg-background border-2 border-border/80 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-semibold text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/10",
+                                                                errors.address && "border-rose-500 focus:border-rose-500 focus:ring-rose-500/20"
+                                                            )}
+                                                        />
+                                                        <datalist id="valenzuela-popular-streets">
+                                                            {activeBarangay?.popularStreets?.map((st) => (
+                                                                <option key={st} value={st} />
+                                                            ))}
+                                                        </datalist>
+
+                                                        {errors.address && (
+                                                            <p className="text-xs font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
+                                                                {errors.address}
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 </div>
+                                            ) : (
+                                                /* Manual Textarea Mode */
+                                                <div className="space-y-1">
+                                                    <textarea 
+                                                        id="property-address"
+                                                        rows={2} 
+                                                        maxLength={120}
+                                                        value={formData.address} 
+                                                        onChange={e => handleInputChange("address", e.target.value)} 
+                                                        className={cn(
+                                                            "w-full bg-background border-2 border-border/80 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-medium text-foreground outline-none resize-none transition-all placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/10",
+                                                            errors.address && "border-rose-500 focus:border-rose-500 focus:ring-rose-500/20"
+                                                        )}
+                                                        placeholder="e.g. 123 Rizal Street, Barangay Poblacion, Meycauayan, Bulacan" 
+                                                    />
+                                                    {errors.address && (
+                                                        <p className="text-xs font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
+                                                            {errors.address}
+                                                        </p>
+                                                    )}
+                                                    <div className="flex items-center justify-end">
+                                                        <span className="text-[10px] text-muted-foreground font-mono">
+                                                            {formData.address?.length || 0} / 120
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Right column: Optional Cover Photo (5 cols) */}
+                                    <div className="lg:col-span-5 space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-1.5">
+                                                <Camera className="size-3.5 text-primary" />
+                                                <label className="text-xs font-bold text-foreground">Building Photo</label>
+                                                <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full border border-border/60">
+                                                    Optional
+                                                </span>
                                             </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-[10px] font-bold text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-md border border-border/60">
+                                                    Max 10MB
+                                                </span>
+                                                {mediaFiles.length > 0 && (
+                                                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                                        Selected
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="relative group overflow-hidden rounded-xl border-2 border-dashed border-border/80 hover:border-primary/60 transition-colors h-[160px] sm:h-[180px] bg-muted/10 flex flex-col items-center justify-center">
+                                            {(mediaPreviewUrls.length > 0 || existingImageUrls.length > 0) ? (
+                                                <>
+                                                    <Image 
+                                                        src={mediaPreviewUrls[0] || existingImageUrls[0]} 
+                                                        alt="Property Cover" 
+                                                        fill 
+                                                        className="object-cover" 
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-3">
+                                                        <label 
+                                                            htmlFor="cover-identity"
+                                                            className="bg-card text-foreground px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md cursor-pointer hover:bg-card/90"
+                                                        >
+                                                            <Camera className="size-3.5 text-primary" />
+                                                            <span>Change Photo</span>
+                                                        </label>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <label 
+                                                    htmlFor="cover-identity"
+                                                    className="flex flex-col items-center justify-center gap-2 p-3 text-center cursor-pointer w-full h-full hover:bg-muted/20 transition-colors"
+                                                >
+                                                    <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+                                                        <Upload className="size-4" />
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-xs font-bold text-foreground block">Choose a Photo</span>
+                                                        <span className="text-[10px] text-muted-foreground mt-0.5 block">
+                                                            JPG, PNG, or WebP (Max 10MB)
+                                                        </span>
+                                                        <span className="text-[10px] text-muted-foreground/70 block mt-0.5">
+                                                            skip and add later
+                                                        </span>
+                                                    </div>
+                                                </label>
+                                            )}
                                             <input 
                                                 id="cover-identity" 
                                                 type="file" 
                                                 accept={MEDIA_ACCEPT_STRINGS.image} 
                                                 onChange={handleMediaFileChange} 
-                                                className="absolute inset-0 opacity-0 cursor-pointer z-20" 
+                                                className="sr-only" 
                                             />
                                         </div>
-                                    </div>
-                                    <div className="space-y-6 neumorphic-panel border border-border/60 rounded-[2.5rem] p-8">
-                                        <div className="space-y-2 relative">
-                                            <div className="flex items-center justify-between px-1">
-                                                <label htmlFor="property-name" className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Designation</label>
+
+                                        {(mediaPreviewUrls.length > 0 || existingImageUrls.length > 0) && (
+                                            <div className="flex items-center justify-between pt-0.5">
+                                                <label 
+                                                    htmlFor="cover-identity"
+                                                    className="text-[11px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
+                                                >
+                                                    <Camera className="size-3" />
+                                                    <span>Change</span>
+                                                </label>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setMediaFiles([]);
+                                                        setMediaPreviewUrls([]);
+                                                        setExistingImageUrls([]);
+                                                        setCoverExistingUrl(null);
+                                                    }}
+                                                    className="text-[11px] font-bold text-rose-500 hover:underline flex items-center gap-1 cursor-pointer"
+                                                >
+                                                    <X className="size-3" />
+                                                    <span>Remove</span>
+                                                </button>
                                             </div>
-                                            <input 
-                                                id="property-name"
-                                                type="text" 
-                                                value={formData.propertyName} 
-                                                onChange={e => handleInputChange("propertyName", e.target.value)} 
-                                                className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/50 ${errors.propertyName ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`} 
-                                                placeholder="e.g. Skyline Residences" 
-                                            />
-                                            {errors.propertyName && (
-                                                <p className="text-[11px] font-bold text-rose-500 px-1 mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                                                    {errors.propertyName}
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div className="space-y-2 relative">
-                                            <div className="flex items-center justify-between px-1">
-                                                <label htmlFor="property-address" className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Location</label>
-                                            </div>
-                                            <textarea 
-                                                id="property-address"
-                                                rows={3} 
-                                                value={formData.address} 
-                                                onChange={e => handleInputChange("address", e.target.value)} 
-                                                className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary/40 resize-none transition-all placeholder:text-muted-foreground/50 ${errors.address ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`} 
-                                                placeholder="Full address…" 
-                                            />
-                                            {errors.address && (
-                                                <p className="text-[11px] font-bold text-rose-500 px-1 mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                                                    {errors.address}
-                                                </p>
-                                            )}
-                                        </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* 2. Architecture */}
+                        {/* 2. Rooms & Floors */}
                         {step === 2 && (
-                            <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
-                                <div className="text-center md:text-left">
-                                    <h2 className="text-3xl font-black tracking-tight text-foreground">Architectural Scope</h2>
-                                    <p className="text-muted-foreground text-sm font-medium mt-1">Define the physical parameters and capacity.</p>
+                            <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
+                                <div>
+                                    <h2 className="text-xl font-bold tracking-tight text-foreground">Rooms & Floors</h2>
+                                    <p className="text-muted-foreground text-xs sm:text-sm mt-0.5">
+                                        Choose your property type and enter how many rooms and floors your building has.
+                                    </p>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                    <div className="neumorphic-panel border border-border/60 rounded-[2rem] p-8 space-y-8">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Home className="size-4 text-primary" />
-                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Asset Class</h3>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setAssetClassGuideInitialTab(formData.propertyType || "apartment");
-                                                    setAssetClassGuideOpen(true);
-                                                }}
-                                                className="flex items-center gap-1.5 text-[10px] font-bold text-primary/80 hover:text-primary transition-colors cursor-pointer group"
-                                            >
-                                                <HelpCircle className="size-3.5 group-hover:scale-110 transition-transform" />
-                                                <span>Class Guide</span>
-                                            </button>
-                                        </div>
-                                        <div className="grid gap-3">
-                                            {[
-                                                { id: "apartment", label: "Apartment", desc: "Multi-family residential unit" },
-                                                { id: "dormitory", label: "Dormitory", desc: "Student housing / Shared rooms" },
-                                                { id: "boarding_house", label: "Boarding House", desc: "Individual room rentals" },
-                                            ].map((opt) => (
-                                                <div
-                                                    key={opt.id}
-                                                    role="button"
-                                                    tabIndex={0}
-                                                    onClick={() => handleInputChange("propertyType", opt.id)}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === "Enter" || e.key === " ") {
-                                                            e.preventDefault();
-                                                            handleInputChange("propertyType", opt.id);
-                                                        }
-                                                    }}
-                                                    className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all text-left group cursor-pointer ${
-                                                        formData.propertyType === opt.id
-                                                            ? "bg-primary/10 border-primary/50 shadow-sm ring-1 ring-primary/20"
-                                                            : "neumorphic-inset-card border-border/40 hover:border-border"
-                                                    }`}
-                                                >
-                                                    <div className="flex items-center gap-4 min-w-0 flex-1">
-                                                        <div className={`size-2.5 rounded-full shrink-0 ${
-                                                            formData.propertyType === opt.id
-                                                                ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]"
-                                                                : "bg-border group-hover:bg-muted-foreground/50 transition-colors"
-                                                        }`} />
-                                                        <div className="min-w-0 flex-1">
-                                                            <p className={`text-sm font-black tracking-tight ${
-                                                                formData.propertyType === opt.id ? "text-primary" : "text-foreground"
-                                                            }`}>
-                                                                {opt.label}
-                                                            </p>
-                                                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-                                                                {opt.desc}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    {formData.propertyType === opt.id && (
-                                                        <CheckCircle2 className="size-5 text-primary shrink-0 ml-3" />
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
+
+                                {/* Property Type Selector - 3 horizontal cards */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                            <Home className="size-3.5 text-primary" />
+                                            <span>Property Type</span>
+                                        </h3>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setAssetClassGuideInitialTab(formData.propertyType || "apartment");
+                                                setAssetClassGuideOpen(true);
+                                            }}
+                                            className="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <HelpCircle className="size-3.5" />
+                                            <span>Type Guide</span>
+                                        </button>
                                     </div>
 
-                                    <div className="neumorphic-panel border border-border/60 rounded-[2rem] p-8 space-y-8">
-                                        <div className="flex items-center gap-2">
-                                            <Grid className="size-4 text-primary" />
-                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Structural Specs</h3>
-                                        </div>
-                                        <div className="grid gap-6">
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground px-1">Units</label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                        {[
+                                            { 
+                                                id: "apartment", 
+                                                label: "Apartment", 
+                                                desc: "Private units with kitchen & bath" 
+                                            },
+                                            { 
+                                                id: "dormitory", 
+                                                label: "Dormitory", 
+                                                desc: "Shared rooms or bedspaces" 
+                                            },
+                                            { 
+                                                id: "boarding_house", 
+                                                label: "Boarding House", 
+                                                desc: "Private rooms in shared home" 
+                                            },
+                                        ].map((opt) => {
+                                            const isSelected = formData.propertyType === opt.id;
+                                            return (
+                                                <button
+                                                    key={opt.id}
+                                                    type="button"
+                                                    onClick={() => handleInputChange("propertyType", opt.id)}
+                                                    className={cn(
+                                                        "p-3 rounded-xl border-2 transition-all text-left cursor-pointer flex flex-col justify-between",
+                                                        isSelected
+                                                            ? "bg-primary/10 border-primary shadow-xs"
+                                                            : "bg-background border-border/80 hover:border-border"
+                                                    )}
+                                                >
+                                                    <div className="flex items-center justify-between w-full mb-1">
+                                                        <span className={cn("text-xs sm:text-sm font-bold", isSelected ? "text-primary" : "text-foreground")}>
+                                                            {opt.label}
+                                                        </span>
+                                                        <div className={cn(
+                                                            "size-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                                                            isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                                        )}>
+                                                            {isSelected && <div className="size-1.5 rounded-full bg-black" />}
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-[11px] text-muted-foreground leading-snug">
+                                                        {opt.desc}
+                                                    </p>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Building Size & Room Naming side by side */}
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-start pt-2 border-t border-border/60">
+                                    {/* Left: Building Size & Capacity (6 cols) */}
+                                    <div className="lg:col-span-6 space-y-3">
+                                        <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                            <Grid className="size-3.5 text-primary" />
+                                            <span>Building Size & Capacity</span>
+                                        </h3>
+
+                                        <div className="space-y-2.5">
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="space-y-1">
+                                                    <label className="text-[11px] font-bold text-foreground">
+                                                        Total Units / Rooms <span className="text-rose-500">*</span>
+                                                    </label>
                                                     <input 
                                                         type="number" 
                                                         min="1"
+                                                        max="99"
+                                                        maxLength={2}
                                                         value={formData.totalUnits}
-                                                        onChange={(e) => handleInputChange("totalUnits", e.target.value)}
-                                                        className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 ${errors.totalUnits ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`}
+                                                        onKeyDown={(e) => {
+                                                            if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+                                                        }}
+                                                        onInput={(e) => {
+                                                            if (e.currentTarget.value.length > 2) {
+                                                                e.currentTarget.value = e.currentTarget.value.slice(0, 2);
+                                                            }
+                                                        }}
+                                                        onChange={(e) => {
+                                                            const raw = e.target.value.replace(/[^0-9]/g, "").slice(0, 2);
+                                                            handleInputChange("totalUnits", raw);
+                                                        }}
+                                                        onBlur={() => {
+                                                            if (!formData.totalUnits || parseInt(formData.totalUnits, 10) < 1) {
+                                                                handleInputChange("totalUnits", "1");
+                                                            }
+                                                        }}
+                                                        className={cn(
+                                                            "w-full bg-background border-2 border-border/80 rounded-xl px-3 py-2 text-sm font-bold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/10",
+                                                            errors.totalUnits && "border-rose-500"
+                                                        )}
                                                     />
                                                     {errors.totalUnits && (
-                                                        <p className="text-[10px] font-bold text-rose-500 px-1 mt-1 animate-in fade-in duration-200">{errors.totalUnits}</p>
+                                                        <p className="text-[10px] font-semibold text-rose-500">{errors.totalUnits}</p>
                                                     )}
                                                 </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground px-1">Floors</label>
+
+                                                <div className="space-y-1">
+                                                    <label className="text-[11px] font-bold text-foreground">
+                                                        Number of Floors <span className="text-rose-500">*</span>
+                                                    </label>
                                                     <input 
                                                         type="number" 
                                                         min="1"
+                                                        max="99"
+                                                        maxLength={2}
                                                         value={formData.floorCount}
-                                                        onChange={(e) => handleInputChange("floorCount", e.target.value)}
-                                                        className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 ${errors.floorCount ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`}
+                                                        onKeyDown={(e) => {
+                                                            if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+                                                        }}
+                                                        onInput={(e) => {
+                                                            if (e.currentTarget.value.length > 2) {
+                                                                e.currentTarget.value = e.currentTarget.value.slice(0, 2);
+                                                            }
+                                                        }}
+                                                        onChange={(e) => {
+                                                            const raw = e.target.value.replace(/[^0-9]/g, "").slice(0, 2);
+                                                            const num = parseInt(raw, 10);
+                                                            const val = num > 99 ? "99" : raw;
+                                                            handleInputChange("floorCount", val);
+                                                        }}
+                                                        onBlur={() => {
+                                                            if (!formData.floorCount || parseInt(formData.floorCount, 10) < 1) {
+                                                                handleInputChange("floorCount", "1");
+                                                            }
+                                                        }}
+                                                        className={cn(
+                                                            "w-full bg-background border-2 border-border/80 rounded-xl px-3 py-2 text-sm font-bold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/10",
+                                                            errors.floorCount && "border-rose-500"
+                                                        )}
                                                     />
                                                     {errors.floorCount && (
-                                                        <p className="text-[10px] font-bold text-rose-500 px-1 mt-1 animate-in fade-in duration-200">{errors.floorCount}</p>
+                                                        <p className="text-[10px] font-semibold text-rose-500">{errors.floorCount}</p>
                                                     )}
                                                 </div>
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground px-1">Max Occupants per Unit</label>
+
+                                            <div className="space-y-1">
+                                                <label className="text-[11px] font-bold text-foreground">
+                                                    Max Tenants per Room <span className="text-rose-500">*</span>
+                                                </label>
                                                 <input 
                                                     type="number" 
                                                     min="1"
+                                                    max="99"
+                                                    maxLength={2}
                                                     value={formData.occupancyLimit}
-                                                    onChange={(e) => handleInputChange("occupancyLimit", e.target.value)}
-                                                    className={`w-full neumorphic-inset rounded-2xl px-6 py-4 text-sm font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 ${errors.occupancyLimit ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`}
+                                                    onKeyDown={(e) => {
+                                                        if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+                                                    }}
+                                                    onInput={(e) => {
+                                                        if (e.currentTarget.value.length > 2) {
+                                                            e.currentTarget.value = e.currentTarget.value.slice(0, 2);
+                                                        }
+                                                    }}
+                                                    onChange={(e) => {
+                                                        const raw = e.target.value.replace(/[^0-9]/g, "").slice(0, 2);
+                                                        handleInputChange("occupancyLimit", raw);
+                                                    }}
+                                                    onBlur={() => {
+                                                        if (!formData.occupancyLimit || parseInt(formData.occupancyLimit, 10) < 1) {
+                                                            handleInputChange("occupancyLimit", "1");
+                                                        }
+                                                    }}
+                                                    className={cn(
+                                                        "w-full bg-background border-2 border-border/80 rounded-xl px-3 py-2 text-sm font-bold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/10",
+                                                        errors.occupancyLimit && "border-rose-500"
+                                                    )}
                                                 />
+                                                <p className="text-[11px] text-muted-foreground">
+                                                    Standard capacity per room (e.g. 1 to 5 people). Max 2 digits.
+                                                </p>
                                                 {errors.occupancyLimit && (
-                                                    <p className="text-[10px] font-bold text-rose-500 px-1 mt-1 animate-in fade-in duration-200">{errors.occupancyLimit}</p>
+                                                    <p className="text-[10px] font-semibold text-rose-500">{errors.occupancyLimit}</p>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Unit Identification & Numbering */}
-                                    <div className="col-span-1 md:col-span-2 neumorphic-panel border border-border/60 rounded-[2rem] p-8 space-y-6">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Hash className="size-4 text-primary" />
-                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Unit Identification & Numbering</h3>
-                                            </div>
-                                            <span className="text-[10px] font-black uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-                                                Customizable
-                                            </span>
-                                        </div>
+                                    {/* Right: Room Naming & Numbering (6 cols) */}
+                                    <div className="lg:col-span-6 space-y-3">
+                                        <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                            <Hash className="size-3.5 text-primary" />
+                                            <span>Room Naming & Numbering</span>
+                                        </h3>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            {/* Prefix Selector */}
-                                            <div className="space-y-3">
-                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground px-1">Unit Prefix / Label</label>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {["Unit", "Room", "Studio", "Apt", "Suite", "Villa", "Bed"].map((preset) => (
+                                        <div className="space-y-2.5">
+                                            {/* Room Label chips & custom input */}
+                                            <div className="space-y-1.5">
+                                                <div className="flex items-center justify-between">
+                                                    <label className="text-[11px] font-bold text-foreground">Room Label</label>
+                                                    {isCustomPrefix && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setIsCustomPrefix(false);
+                                                                handleInputChange("unitPrefix", "Unit");
+                                                            }}
+                                                            className="text-[10px] text-primary hover:underline font-semibold cursor-pointer"
+                                                        >
+                                                            Reset to presets
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                    {["Room", "Unit", "Studio", "Door", "Bed"].map((preset) => (
                                                         <button
                                                             key={preset}
                                                             type="button"
-                                                            onClick={() => handleInputChange("unitPrefix", preset)}
-                                                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
-                                                                formData.unitPrefix === preset
-                                                                    ? "bg-primary text-black shadow-sm"
-                                                                    : "neumorphic-inset-card text-muted-foreground hover:text-foreground"
-                                                            }`}
+                                                            onClick={() => {
+                                                                setIsCustomPrefix(false);
+                                                                handleInputChange("unitPrefix", preset);
+                                                            }}
+                                                            className={cn(
+                                                                "px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                                                                !isCustomPrefix && formData.unitPrefix === preset
+                                                                    ? "bg-primary text-black font-extrabold shadow-xs"
+                                                                    : "bg-background text-foreground hover:bg-muted border border-border/80"
+                                                            )}
                                                         >
                                                             {preset}
                                                         </button>
                                                     ))}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setIsCustomPrefix(true);
+                                                            if (["Room", "Unit", "Studio", "Door", "Bed"].includes(formData.unitPrefix)) {
+                                                                handleInputChange("unitPrefix", "");
+                                                            }
+                                                        }}
+                                                        className={cn(
+                                                            "px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                                                            isCustomPrefix
+                                                                ? "bg-primary text-black font-extrabold shadow-xs"
+                                                                : "bg-background text-muted-foreground hover:text-foreground hover:bg-muted border border-dashed border-border/90"
+                                                        )}
+                                                    >
+                                                        + Custom
+                                                    </button>
                                                 </div>
-                                                <input
-                                                    type="text"
-                                                    value={formData.unitPrefix}
-                                                    onChange={(e) => handleInputChange("unitPrefix", e.target.value)}
-                                                    placeholder="Or type custom prefix (e.g. Tower A-)"
-                                                    className={`w-full neumorphic-inset rounded-2xl px-5 py-3 text-xs font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 placeholder:text-muted-foreground/60 ${errors.unitPrefix ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`}
-                                                />
-                                                {errors.unitPrefix && (
-                                                    <p className="text-[10px] font-bold text-rose-500 px-1 mt-1 animate-in fade-in duration-200">{errors.unitPrefix}</p>
+
+                                                {isCustomPrefix && (
+                                                    <div className="pt-0.5 space-y-1">
+                                                        <div className="relative">
+                                                            <input 
+                                                                type="text"
+                                                                autoFocus
+                                                                maxLength={10}
+                                                                value={formData.unitPrefix}
+                                                                onChange={(e) => handleInputChange("unitPrefix", e.target.value)}
+                                                                placeholder="Type custom label (e.g. Suite, Apt, Pod)"
+                                                                className={cn(
+                                                                    "w-full bg-background border-2 border-border/80 rounded-xl px-3 py-1.5 text-xs font-bold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 pr-14",
+                                                                    errors.unitPrefix && "border-rose-500"
+                                                                )}
+                                                            />
+                                                            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-semibold pointer-events-none">
+                                                                {formData.unitPrefix.length}/10
+                                                            </span>
+                                                        </div>
+                                                        {errors.unitPrefix && (
+                                                            <p className="text-[10px] font-semibold text-rose-500">{errors.unitPrefix}</p>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </div>
 
                                             {/* Numbering Scheme */}
-                                            <div className="space-y-3">
-                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground px-1">Numbering Scheme</label>
+                                            <div className="space-y-1">
+                                                <label className="text-[11px] font-bold text-foreground">Numbering Style</label>
                                                 <div className="grid grid-cols-2 gap-2">
                                                     <button
                                                         type="button"
                                                         onClick={() => handleInputChange("numberingStyle", "floor_based")}
-                                                        className={`p-3 rounded-2xl border text-left transition-all ${
+                                                        className={cn(
+                                                            "p-2.5 rounded-xl border-2 text-left transition-all cursor-pointer",
                                                             formData.numberingStyle === "floor_based"
-                                                                ? "bg-primary/10 border-primary/50 text-foreground"
-                                                                : "neumorphic-inset-card border-border/40 text-muted-foreground hover:text-foreground"
-                                                        }`}
+                                                                ? "bg-primary/10 border-primary"
+                                                                : "bg-background border-border/80 hover:border-border"
+                                                        )}
                                                     >
-                                                        <p className="text-xs font-black">Floor-Based</p>
-                                                        <p className="text-[10px] text-muted-foreground mt-0.5">101, 102 / 201, 202</p>
+                                                        <p className="text-xs font-bold text-foreground">By Floor</p>
+                                                        <p className="text-[10px] text-muted-foreground">101, 102 / 201</p>
                                                     </button>
 
                                                     <button
                                                         type="button"
                                                         onClick={() => handleInputChange("numberingStyle", "sequential")}
-                                                        className={`p-3 rounded-2xl border text-left transition-all ${
+                                                        className={cn(
+                                                            "p-2.5 rounded-xl border-2 text-left transition-all cursor-pointer",
                                                             formData.numberingStyle === "sequential"
-                                                                ? "bg-primary/10 border-primary/50 text-foreground"
-                                                                : "neumorphic-inset-card border-border/40 text-muted-foreground hover:text-foreground"
-                                                        }`}
+                                                                ? "bg-primary/10 border-primary"
+                                                                : "bg-background border-border/80 hover:border-border"
+                                                        )}
                                                     >
-                                                        <p className="text-xs font-black">Sequential</p>
-                                                        <p className="text-[10px] text-muted-foreground mt-0.5">1, 2, 3... or from 101</p>
+                                                        <p className="text-xs font-bold text-foreground">In Order</p>
+                                                        <p className="text-[10px] text-muted-foreground">1, 2, 3...</p>
                                                     </button>
                                                 </div>
-
-                                                {formData.numberingStyle === "sequential" && (
-                                                    <div className="pt-1">
-                                                        <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground px-1">Starting Number</label>
-                                                        <input
-                                                            type="number"
-                                                            value={formData.startingNumber}
-                                                            onChange={(e) => handleInputChange("startingNumber", parseInt(e.target.value) || 1)}
-                                                            className="w-full neumorphic-inset rounded-2xl px-5 py-2.5 text-xs font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 mt-1"
-                                                        />
-                                                    </div>
-                                                )}
                                             </div>
-                                        </div>
 
-                                        {/* Dynamic Live Preview */}
-                                        <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                                                <Eye className="size-3.5 text-primary" />
-                                                <span>Live Preview of Generated Units:</span>
-                                            </div>
-                                            <div className="flex flex-wrap items-center gap-1.5">
-                                                {generateUnitList(
-                                                    Math.min(6, parseInt(formData.totalUnits) || 4),
-                                                    parseInt(formData.floorCount) || 2,
-                                                    {
-                                                        prefix: formData.unitPrefix,
-                                                        numberingStyle: formData.numberingStyle,
-                                                        startingNumber: formData.startingNumber,
-                                                    }
-                                                ).map((item, idx) => (
-                                                    <span key={idx} className="rounded-lg bg-primary/10 border border-primary/20 px-2.5 py-1 text-[10px] font-black text-primary">
-                                                        {item.name}
-                                                    </span>
-                                                ))}
-                                                {(parseInt(formData.totalUnits) || 1) > 6 && (
-                                                    <span className="text-[10px] font-bold text-muted-foreground">
-                                                        +{(parseInt(formData.totalUnits) || 1) - 6} more
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 3. Financials */}
-                        {step === 3 && (
-                            <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
-                                <div className="text-center md:text-left">
-                                    <h2 className="text-3xl font-black tracking-tight text-foreground">Financial Strategy</h2>
-                                    <p className="text-muted-foreground text-sm font-medium mt-1">Configure billing logic and amenities.</p>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">                                     
-                                    <div className="neumorphic-panel border border-border/60 rounded-[2rem] p-7 space-y-6">
-                                        <div className="flex items-center gap-2">
-                                            <Wallet className="size-4 text-primary" />
-                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Billing Strategy</h3>
-                                        </div>
-
-                                        <div className="grid gap-6">
-                                            <div className="grid gap-3">
-                                                <div className="flex items-center justify-between px-1">
-                                                    <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Utility Management</label>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setBillingGuideInitialTab(formData.utilityBilling || "fixed_charge");
-                                                            setBillingGuideOpen(true);
-                                                        }}
-                                                        className="flex items-center gap-1.5 text-[10px] font-bold text-primary/80 hover:text-primary transition-colors cursor-pointer group"
-                                                    >
-                                                        <HelpCircle className="size-3 group-hover:scale-110 transition-transform" />
-                                                        <span>Strategy Guide</span>
-                                                    </button>
+                                            {/* Live Preview Pill */}
+                                            <div className="rounded-xl border border-border/80 bg-muted/15 px-3 py-1.5 flex items-center justify-between gap-2">
+                                                <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
+                                                    <Eye className="size-3.5 text-primary" />
+                                                    <span>Preview:</span>
                                                 </div>
-                                                <div className="grid gap-2.5">
-                                                    {[
+                                                <div className="flex items-center gap-1 overflow-x-auto">
+                                                    {generateUnitList(
+                                                        Math.min(4, parseInt(formData.totalUnits) || 4),
+                                                        parseInt(formData.floorCount) || 2,
                                                         {
-                                                            id: "fixed_charge",
-                                                            label: "Bundled Utilities",
-                                                            desc: "All-inclusive monthly rate",
-                                                        },
-                                                        {
-                                                            id: "individual_meter",
-                                                            label: "Metered Consumption",
-                                                            desc: "Pay-per-use direct billing",
-                                                        },
-                                                        {
-                                                            id: "equal_per_head",
-                                                            label: "Hybrid Strategy",
-                                                            desc: "Fixed base + usage overhead",
-                                                        },
-                                                    ].map((opt) => (
-                                                        <div
-                                                            key={opt.id}
-                                                            role="button"
-                                                            tabIndex={0}
-                                                            onClick={() => handleInputChange("utilityBilling", opt.id)}
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === "Enter" || e.key === " ") {
-                                                                    e.preventDefault();
-                                                                    handleInputChange("utilityBilling", opt.id);
-                                                                }
-                                                            }}
-                                                            className={`w-full flex items-center justify-between p-4 sm:p-5 rounded-2xl border transition-all text-left group cursor-pointer ${
-                                                                formData.utilityBilling === opt.id
-                                                                    ? "bg-primary/10 border-primary/50 shadow-sm ring-1 ring-primary/20"
-                                                                    : "neumorphic-inset-card border-border/40 hover:border-border"
-                                                            }`}
-                                                        >
-                                                            <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                                                                <div className={`size-2.5 rounded-full shrink-0 ${
-                                                                    formData.utilityBilling === opt.id
-                                                                        ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]"
-                                                                        : "bg-border group-hover:bg-muted-foreground/50 transition-colors"
-                                                                }`} />
-                                                                <div className="min-w-0 flex-1 pr-2">
-                                                                    <div className="flex flex-wrap items-center gap-2">
-                                                                        <p className={`text-sm font-black tracking-tight ${
-                                                                            formData.utilityBilling === opt.id ? "text-primary" : "text-foreground"
-                                                                        }`}>
-                                                                            {opt.label}
-                                                                        </p>
-                                                                        <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">
-                                                                            {opt.desc}
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            {formData.utilityBilling === opt.id && (
-                                                                <CheckCircle2 className="size-5 text-primary shrink-0 ml-2" />
-                                                            )}
-                                                        </div>
+                                                            prefix: formData.unitPrefix || "Unit",
+                                                            numberingStyle: formData.numberingStyle,
+                                                            startingNumber: formData.startingNumber,
+                                                        }
+                                                    ).map((item, idx) => (
+                                                        <span key={idx} className="rounded-md bg-primary/15 border border-primary/30 px-2 py-0.5 text-xs font-bold text-primary whitespace-nowrap">
+                                                            {item.name}
+                                                        </span>
                                                     ))}
+                                                    {(parseInt(formData.totalUnits) || 1) > 4 && (
+                                                        <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">
+                                                            +{(parseInt(formData.totalUnits) || 1) - 4} more
+                                                        </span>
+                                                    )}
                                                 </div>
-                                            </div>
-
-                                            <div className="space-y-3">
-                                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground px-1">Standard Base Rent (PHP)</label>
-                                                <div className="relative group">
-                                                    <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none text-xl font-black text-primary/60 group-focus-within:text-primary transition-colors">₱</div>
-                                                    <input 
-                                                        type="text" 
-                                                        value={formData.baseRent === 0 ? "" : formData.baseRent.toLocaleString('en-US')}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value.replace(/,/g, "");
-                                                            const num = parseInt(val) || 0;
-                                                            handleInputChange("baseRent", num);
-                                                        }}
-                                                        placeholder="0.00"
-                                                        className={`w-full neumorphic-inset rounded-2xl pl-12 pr-6 py-5 text-2xl font-black text-foreground outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/40 ${errors.baseRent ? "!border-rose-500 !ring-2 !ring-rose-500/20" : ""}`}
-                                                    />
-                                                </div>
-                                                {errors.baseRent && (
-                                                    <p className="text-[11px] font-bold text-rose-500 px-1 mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                                                        {errors.baseRent}
-                                                    </p>
-                                                )}
                                             </div>
                                         </div>
                                     </div>
-
-                                    <PropertyAmenitiesSelector
-                                        selectedAmenities={formData.amenities}
-                                        onChange={(amenities) => handleInputChange("amenities", amenities)}
-                                        landlordId={user?.id}
-                                    />
                                 </div>
                             </div>
                         )}
 
-                        {/* 4. Rules & Policy */}
-                        {step === 4 && (
-                            <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
-                                <div className="text-center md:text-left">
-                                    <h2 className="text-3xl font-black tracking-tight text-foreground">Rules & Governance</h2>
-                                    <p className="text-muted-foreground text-sm font-medium mt-1">Define property conduct and validate configuration.</p>
+                        {/* 3. Rent & Bills */}
+                        {step === 3 && (
+                            <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
+                                <div>
+                                    <h2 className="text-xl font-bold tracking-tight text-foreground">Rent & Utility Bills</h2>
+                                    <p className="text-muted-foreground text-xs sm:text-sm mt-0.5">
+                                        Set your standard monthly rent and choose how electricity and water will be billed.
+                                    </p>
                                 </div>
-                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                                    {/* Building Rules - Spans 12 columns */}
-                                    <div className="lg:col-span-12">
+
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start pt-1">
+                                    {/* Left: Rent & Utilities (6 cols) */}
+                                    <div className="lg:col-span-6 space-y-3.5">
+                                        {/* Standard Base Rent */}
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                                <span>Standard Monthly Rent</span>
+                                                <span className="text-rose-500 font-bold">*</span>
+                                            </label>
+                                            <div className="relative">
+                                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-xl font-bold text-primary">
+                                                    ₱
+                                                </div>
+                                                <input 
+                                                    type="text" 
+                                                    inputMode="decimal"
+                                                    maxLength={10}
+                                                    value={formData.baseRent === 0 ? "" : formData.baseRent.toLocaleString('en-US')}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value.replace(/[^0-9.]/g, "");
+                                                        const num = Math.min(9999999.99, parseFloat(val) || 0);
+                                                        handleInputChange("baseRent", num);
+                                                    }}
+                                                    placeholder="0.00"
+                                                    className={cn(
+                                                        "w-full bg-background border-2 border-border/80 rounded-xl pl-9 pr-4 py-2 text-xl font-bold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/40",
+                                                        errors.baseRent && "border-rose-500"
+                                                    )}
+                                                />
+                                            </div>
+                                            {errors.baseRent ? (
+                                                <p className="text-[11px] font-semibold text-rose-500 mt-0.5">{errors.baseRent}</p>
+                                            ) : (
+                                                <p className="text-[11px] text-muted-foreground">
+                                                    Base rent per room or unit. You can customize rates for specific rooms later.
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Utility Billing Method */}
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <label className="text-xs font-bold text-foreground">Electricity & Water Billing</label>
+                                                    <p className="text-[10px] text-muted-foreground">How will utility bills be handled?</p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setBillingGuideInitialTab(formData.utilityBilling || "fixed_charge");
+                                                        setBillingGuideOpen(true);
+                                                    }}
+                                                    className="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                                                >
+                                                    <HelpCircle className="size-3.5" />
+                                                    <span>Billing Guide</span>
+                                                </button>
+                                            </div>
+
+                                            <div className="grid gap-2">
+                                                {[
+                                                    {
+                                                        id: "fixed_charge",
+                                                        label: "Utilities Included in Rent",
+                                                        desc: "Water & electricity covered in rent. No meter reading needed.",
+                                                    },
+                                                    {
+                                                        id: "individual_meter",
+                                                        label: "Separate Submeters (Pay per Use)",
+                                                        desc: "Tenants pay monthly based on kWh and m³ submeters.",
+                                                    },
+                                                    {
+                                                        id: "equal_per_head",
+                                                        label: "Split Bills Equally",
+                                                        desc: "Total electricity & water bills divided equally among tenants.",
+                                                    },
+                                                ].map((opt) => {
+                                                    const isSelected = formData.utilityBilling === opt.id;
+                                                    return (
+                                                        <button
+                                                            key={opt.id}
+                                                            type="button"
+                                                            onClick={() => handleInputChange("utilityBilling", opt.id)}
+                                                            className={cn(
+                                                                "w-full flex items-center gap-3 p-2.5 sm:p-3 rounded-xl border-2 transition-all text-left cursor-pointer",
+                                                                isSelected
+                                                                    ? "bg-primary/10 border-primary shadow-xs"
+                                                                    : "bg-background border-border/80 hover:border-border"
+                                                            )}
+                                                        >
+                                                            <div className={cn(
+                                                                "size-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                                                                isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                                            )}>
+                                                                {isSelected && <div className="size-1.5 rounded-full bg-black" />}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center justify-between">
+                                                                    <p className={cn("text-xs sm:text-sm font-bold truncate", isSelected ? "text-primary" : "text-foreground")}>
+                                                                        {opt.label}
+                                                                    </p>
+                                                                    {isSelected && <CheckCircle2 className="size-3.5 text-primary shrink-0 ml-1" />}
+                                                                </div>
+                                                                <p className="text-[11px] text-muted-foreground truncate">
+                                                                    {opt.desc}
+                                                                </p>
+                                                            </div>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Right: Amenities (6 cols) */}
+                                    <div className="lg:col-span-6 space-y-2.5">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-1.5">
+                                                <Layers className="size-3.5 text-primary" />
+                                                <h3 className="text-xs font-bold text-foreground">Property Amenities</h3>
+                                                <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full border border-border/60">
+                                                    Optional
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <PropertyAmenitiesSelector
+                                            selectedAmenities={formData.amenities}
+                                            onChange={(amenities) => handleInputChange("amenities", amenities)}
+                                            landlordId={user?.id}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 4. Rules & Lease */}
+                        {step === 4 && (
+                            <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
+                                <div>
+                                    <h2 className="text-xl font-bold tracking-tight text-foreground">House Rules & Lease Agreement</h2>
+                                    <p className="text-muted-foreground text-xs sm:text-sm mt-0.5">
+                                        Choose rules tenants must follow and how to handle rental agreements.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-4 pt-1">
+                                    {/* Building Rules */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-1.5">
+                                            <ShieldCheck className="size-3.5 text-primary" />
+                                            <h3 className="text-xs font-bold text-foreground">House Rules</h3>
+                                            <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full border border-border/60">
+                                                Optional
+                                            </span>
+                                        </div>
                                         <PropertyRulesSelector
                                             selectedRules={formData.buildingRules}
                                             onChange={(rules) => handleInputChange("buildingRules", rules)}
@@ -988,122 +1451,129 @@ function NewAssetContent() {
                                         />
                                     </div>
 
-                                    {/* Contract Preview - Span 5 */}
-                                    <div className="lg:col-span-5">
-                                        <div className="neumorphic-panel border border-border/60 rounded-[2rem] p-7 space-y-6">
-                                            <div className="flex items-center gap-2">
-                                                <FileText className="size-4 text-primary" />
-                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Final Validation</h3>
-                                            </div>
-                                            
-                                            <div 
-                                                onClick={() => {
-                                                    if (formData.contractMode === "generate") {
-                                                        setIsContractBuilderOpen(true);
-                                                    } else {
-                                                        document.getElementById('contract-upload-input')?.click();
+                                    {/* Lease Agreement Method */}
+                                    <div className="space-y-2 pt-3 border-t border-border/60">
+                                        <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                            <FileText className="size-3.5 text-primary" />
+                                            <span>Rental Contract / Lease Agreement</span>
+                                        </h3>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            {/* Option 1: Auto-generate */}
+                                            <div
+                                                role="button"
+                                                tabIndex={0}
+                                                onClick={() => handleInputChange("contractMode", "generate")}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Enter" || e.key === " ") {
+                                                        e.preventDefault();
+                                                        handleInputChange("contractMode", "generate");
                                                     }
                                                 }}
-                                                className={`relative group cursor-pointer aspect-[16/11] rounded-[2rem] border neumorphic-inset overflow-hidden shadow-xl flex flex-col items-center justify-center gap-3 transition-all hover:border-primary/50 ${errors.contractFile ? "!border-rose-500 !ring-2 !ring-rose-500/20" : "border-border/60"}`}
-                                            >
-                                                <input 
-                                                    id="contract-upload-input"
-                                                    type="file" 
-                                                    onChange={(e) => {
-                                                        const file = handleMediaSelection(e, {
-                                                            preset: "document_only",
-                                                            notify: (msg, desc) => toast.error(desc ? `${msg}: ${desc}` : msg),
-                                                        });
-                                                        if (file) {
-                                                            handleInputChange("contractFile", file.name);
-                                                        }
-                                                    }}
-                                                    className="hidden"
-                                                    accept={MEDIA_ACCEPT_STRINGS.document_only}
-                                                />
-                                                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-foreground/5 pointer-events-none" />
-                                                
-                                                {formData.contractMode === "generate" ? (
-                                                    <>
-                                                        <div className="size-16 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform duration-500">
-                                                            <FileText className="size-8 text-primary" />
-                                                        </div>
-                                                        <div className="text-center px-4 relative z-10">
-                                                            <span className="block text-xs font-black text-foreground uppercase tracking-widest mb-1">Contract Preview</span>
-                                                            <span className="block text-[8px] text-muted-foreground uppercase tracking-widest font-black">
-                                                                Draft Synchronized
-                                                            </span>
-                                                        </div>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <div className={`size-16 rounded-2xl flex items-center justify-center border transition-all group-hover:scale-110 duration-500 ${formData.contractFile ? "bg-primary/20 border-primary/40" : "neumorphic-panel border-border/60"}`}>
-                                                            {formData.contractFile ? <CheckCircle2 className="size-8 text-primary" /> : <Upload className="size-8 text-muted-foreground" />}
-                                                        </div>
-                                                        <div className="text-center px-4">
-                                                            <span className={`block text-xs font-black uppercase tracking-widest ${formData.contractFile ? "text-primary" : "text-muted-foreground"}`}>
-                                                                {formData.contractFile ? "Upload Complete" : "Click to Upload"}
-                                                            </span>
-                                                            {formData.contractFile && <span className="block text-[8px] text-muted-foreground uppercase tracking-widest font-black mt-1 truncate max-w-[150px] mx-auto">{formData.contractFile}</span>}
-                                                        </div>
-                                                    </>
+                                                className={cn(
+                                                    "p-3 rounded-xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between space-y-2",
+                                                    formData.contractMode === "generate"
+                                                        ? "bg-primary/10 border-primary shadow-xs"
+                                                        : "bg-background border-border/80 hover:border-border"
                                                 )}
-
-                                                <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                                                    <div className="bg-foreground text-background px-5 py-2.5 rounded-full flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 shadow-xl">
-                                                        {formData.contractMode === "generate" ? <ShieldCheck className="size-4" /> : <Upload className="size-4" />}
-                                                        <span className="text-[10px] font-black uppercase tracking-widest">
-                                                            {formData.contractMode === "generate" ? "View Generated Draft" : (formData.contractFile ? "Change Document" : "Upload File")}
+                                            >
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className={cn(
+                                                                "size-4 rounded-full border-2 flex items-center justify-center shrink-0",
+                                                                formData.contractMode === "generate" ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                                            )}>
+                                                                {formData.contractMode === "generate" && <div className="size-1.5 rounded-full bg-black" />}
+                                                            </div>
+                                                            <span className="text-xs sm:text-sm font-bold text-foreground">Standard Digital Lease</span>
+                                                        </div>
+                                                        <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                                                            Recommended
                                                         </span>
                                                     </div>
-                                                </div>
-                                            </div>
-                                            {errors.contractFile && (
-                                                <p className="text-[11px] font-bold text-rose-500 px-1 mt-1 text-center animate-in fade-in slide-in-from-top-1 duration-200">
-                                                    {errors.contractFile}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Lease Management Method - Span 7 */}
-                                    <div className="lg:col-span-7">
-                                        <div className="neumorphic-panel border border-border/60 rounded-[2rem] p-7 space-y-6 h-full flex flex-col">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <FilePlus className="size-4 text-primary" />
-                                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Lease Management Method</h3>
-                                                </div>
-                                                <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/5 border border-primary/20 rounded-lg">
-                                                    <div className="size-1.5 rounded-full bg-primary animate-pulse" />
-                                                    <span className="text-[8px] font-black text-primary uppercase tracking-widest">Global Preference</span>
-                                                </div>
-                                            </div>
-                                            
-                                            <div className="grid gap-5 flex-1">
-                                                <div className="flex neumorphic-inset p-1.5 rounded-2xl border border-border/50">
-                                                    {[
-                                                        { id: "generate", label: "Auto-Generate Digital Lease" },
-                                                        { id: "upload", label: "Upload Proprietary Document" }
-                                                    ].map((mode) => (
-                                                        <button 
-                                                            key={mode.id}
-                                                            onClick={() => handleInputChange("contractMode", mode.id as any)}
-                                                            className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${formData.contractMode === mode.id ? "bg-primary text-black shadow-md shadow-primary/20" : "text-muted-foreground hover:text-foreground"}`}
-                                                        >
-                                                            {mode.label}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                <div className="neumorphic-inset-card rounded-2xl p-6 border border-border/50 flex-1 flex flex-col items-center justify-center text-center space-y-3">
-                                                    <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                                        {formData.contractMode === "generate" ? <ShieldCheck className="size-6 text-primary" /> : <Upload className="size-6 text-muted-foreground" />}
-                                                    </div>
-                                                    <p className="text-[11px] text-muted-foreground font-black uppercase tracking-widest leading-relaxed max-w-xs">
-                                                        {formData.contractMode === "generate" 
-                                                            ? "Automatically bind your asset configuration into a legally-compliant digital agreement powered by iReside Smart Draft." 
-                                                            : "Securely host and link your existing physical or PDF-based lease documentation to this property profile."}
+                                                    <p className="text-[11px] text-muted-foreground pl-6 leading-relaxed">
+                                                        Auto-generated standard rental agreement with your rent amount and house rules. No paperwork needed.
                                                     </p>
+                                                </div>
+
+                                                <div className="pl-6">
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setIsContractBuilderOpen(true);
+                                                        }}
+                                                        className="px-3 py-1.5 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                                                    >
+                                                        <Eye className="size-3.5" />
+                                                        <span>Preview Standard Lease</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Option 2: Upload own */}
+                                            <div
+                                                role="button"
+                                                tabIndex={0}
+                                                onClick={() => handleInputChange("contractMode", "upload")}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Enter" || e.key === " ") {
+                                                        e.preventDefault();
+                                                        handleInputChange("contractMode", "upload");
+                                                    }
+                                                }}
+                                                className={cn(
+                                                    "p-3 rounded-xl border-2 text-left transition-all cursor-pointer flex flex-col justify-between space-y-2",
+                                                    formData.contractMode === "upload"
+                                                        ? "bg-primary/10 border-primary shadow-xs"
+                                                        : "bg-background border-border/80 hover:border-border"
+                                                )}
+                                            >
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className={cn(
+                                                                "size-4 rounded-full border-2 flex items-center justify-center shrink-0",
+                                                                formData.contractMode === "upload" ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                                            )}>
+                                                                {formData.contractMode === "upload" && <div className="size-1.5 rounded-full bg-black" />}
+                                                            </div>
+                                                            <span className="text-xs sm:text-sm font-bold text-foreground">Upload My Own Contract</span>
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-[11px] text-muted-foreground pl-6 leading-relaxed">
+                                                        Have your own existing printed or PDF contract? Upload it to use for all leases in this property.
+                                                    </p>
+                                                </div>
+
+                                                <div className="pl-6">
+                                                    <label
+                                                        htmlFor="contract-upload-input"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground border border-border/80 rounded-lg text-xs font-bold cursor-pointer transition-colors"
+                                                    >
+                                                        <Upload className="size-3 text-primary" />
+                                                        <span>{formData.contractFile ? "File: " + formData.contractFile : "Choose PDF"}</span>
+                                                    </label>
+                                                    <input 
+                                                        id="contract-upload-input"
+                                                        type="file" 
+                                                        onChange={(e) => {
+                                                            const file = handleMediaSelection(e, {
+                                                                preset: "document_only",
+                                                                notify: (msg, desc) => toast.error(desc ? `${msg}: ${desc}` : msg),
+                                                            });
+                                                            if (file) {
+                                                                handleInputChange("contractFile", file.name);
+                                                            }
+                                                        }}
+                                                        className="hidden"
+                                                        accept={MEDIA_ACCEPT_STRINGS.document_only}
+                                                    />
+                                                    {errors.contractFile && (
+                                                        <p className="text-xs font-semibold text-rose-500 mt-1">{errors.contractFile}</p>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -1113,24 +1583,53 @@ function NewAssetContent() {
                         )}
                     </div>
 
-                    <div className="p-10 border-t border-border/60 bg-muted/20 flex items-center justify-between">
-                        <button onClick={handleBack} disabled={isSubmitting} className={cn("flex items-center gap-2 text-muted-foreground hover:text-foreground transition-all font-black uppercase text-[11px]", step === 1 ? "opacity-0 pointer-events-none" : "")}>
-                            <ArrowLeft className="size-4" /><span>Back</span>
-                        </button>
+                    {/* Bottom Action Footer */}
+                    <div className="px-6 py-3 sm:px-8 sm:py-3.5 border-t border-border/70 bg-muted/10 flex items-center justify-between gap-4">
+                        {step > 1 ? (
+                            <button
+                                type="button"
+                                onClick={handleBack}
+                                disabled={isSubmitting}
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border/80 text-foreground hover:bg-muted font-bold text-xs sm:text-sm transition-colors cursor-pointer"
+                            >
+                                <ArrowLeft className="size-3.5" />
+                                <span>Back</span>
+                            </button>
+                        ) : properties.length > 0 ? (
+                            <button
+                                type="button"
+                                onClick={handleBack}
+                                disabled={isSubmitting}
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border/80 text-muted-foreground hover:text-foreground hover:bg-muted font-bold text-xs sm:text-sm transition-colors cursor-pointer"
+                            >
+                                <ArrowLeft className="size-3.5" />
+                                <span>Cancel</span>
+                            </button>
+                        ) : (
+                            <div />
+                        )}
+
                         <button 
+                            type="button"
                             onClick={handleNext} 
                             disabled={isSubmitting} 
-                            className="px-10 py-5 bg-primary text-black rounded-2xl font-black uppercase text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                            className="px-6 py-2.5 bg-primary text-black hover:bg-primary/90 rounded-xl font-bold text-sm shadow-md hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 min-w-[140px] cursor-pointer"
                         >
                             {isSubmitting ? (
                                 <>
-                                    <div className="size-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                                    <Loader2 className="size-3.5 animate-spin text-black" />
                                     <span>{saveStage || "Saving..."}</span>
                                 </>
                             ) : step === 4 ? (
-                                <span>{isEditMode ? "Save Changes" : "Save Property"}</span>
+                                <>
+                                    <span>{isEditMode ? "Save Changes" : "Complete & Save Property"}</span>
+                                    <Check className="size-3.5 stroke-[3]" />
+                                </>
                             ) : (
-                                <span>Continue</span>
+                                <>
+                                    <span>Continue</span>
+                                    <ArrowRight className="size-3.5 stroke-[3]" />
+                                </>
                             )}
                         </button>
                     </div>
@@ -1156,7 +1655,7 @@ function NewAssetContent() {
                                 <span className="text-[11px] sm:text-xs font-bold text-foreground truncate max-w-[140px] sm:max-w-none">
                                     {mediaFiles.length > 0 
                                         ? "New cover photo staged" 
-                                        : `Editing: ${formData.propertyName || "Asset"}`}
+                                        : `Editing: ${formData.propertyName || "Property"}`}
                                 </span>
                             </div>
 

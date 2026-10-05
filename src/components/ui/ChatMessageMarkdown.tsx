@@ -147,7 +147,7 @@ export function ChatMessageMarkdown({
               <strong
                 className={cn(
                   "font-black",
-                  isUser ? "text-white" : "text-foreground font-black"
+                  isUser ? "text-primary-foreground font-black" : "text-foreground font-black"
                 )}
               >
                 {children}

@@ -612,7 +612,7 @@ export default function PropertyEnvironmentPage() {
                                         <DollarSign className="size-3 text-amber-500" />
                                         <span>Fixed Monthly Utility Fee (₱)</span>
                                     </label>
-                                    <input
+                                    <input max={9999999.99}
                                         type="number"
                                         min={0}
                                         step={50}

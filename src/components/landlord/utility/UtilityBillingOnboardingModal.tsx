@@ -50,61 +50,61 @@ export function UtilityBillingOnboardingModal({
                 {/* Headings */}
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">
-                            Step 3 of Onboarding
+                        <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">
+                            Step 3 of 5 • Onboarding
                         </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                            Financial &amp; Utility Rails
+                        <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                            Water &amp; Electricity Bills
                         </span>
                     </div>
                     <h1 id="utility-onboarding-modal-title" className="text-2xl sm:text-3xl font-black tracking-tight text-foreground leading-tight">
-                        Set Up Utility Billing
+                        Set Up Water &amp; Electric Rates
                     </h1>
-                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                        Configure electricity and water tariffs{propertyName ? <> for <span className="font-bold text-foreground">{propertyName}</span></> : ""} to prepare automated monthly invoicing. Baseline rates ensure all resident statements are itemized transparently.
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                        Enter your water and electric rates{propertyName ? <> for <span className="font-bold text-foreground">{propertyName}</span></> : ""} so monthly bills compute automatically. If utilities are already included in rent, you can set them to zero.
                     </p>
                 </div>
 
                 {/* 3 Clean Feature Steps Overview */}
-                <div className="space-y-2.5 rounded-2xl border border-border/70 bg-muted/20 p-4 sm:p-5">
+                <div className="space-y-3 rounded-2xl border border-border/70 bg-muted/20 p-4 sm:p-5">
                     <div className="flex items-start gap-3">
-                        <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5 border border-primary/20">
+                        <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5 border border-primary/20">
                             <Zap className="size-4" />
                         </div>
                         <div>
-                            <h3 className="text-xs font-black text-foreground">
-                                1. Tariff Configuration
+                            <h3 className="text-sm font-bold text-foreground">
+                                1. Electric &amp; Water Rates
                             </h3>
-                            <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Set default electricity (₱/kWh) and water (₱/m³) rates, or retain flat zero-cost rates if rent is all-inclusive.
+                            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                                Set standard electricity (₱/kWh) and water (₱/m³) rates, or keep them zero if rent is all-inclusive.
                             </p>
                         </div>
                     </div>
 
                     <div className="flex items-start gap-3">
-                        <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5 border border-primary/20">
+                        <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5 border border-primary/20">
                             <Droplets className="size-4" />
                         </div>
                         <div>
-                            <h3 className="text-xs font-black text-foreground">
-                                2. Submeter Readings
+                            <h3 className="text-sm font-bold text-foreground">
+                                2. Starting Meter Numbers
                             </h3>
-                            <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Enter baseline room meter numbers. iReside automatically calculates monthly consumption deltas.
+                            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                                Type in initial room meter readings. iReside calculates monthly usage automatically.
                             </p>
                         </div>
                     </div>
 
                     <div className="flex items-start gap-3">
-                        <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5 border border-primary/20">
+                        <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5 border border-primary/20">
                             <CheckCircle2 className="size-4" />
                         </div>
                         <div>
-                            <h3 className="text-xs font-black text-foreground">
-                                3. Automated Invoicing
+                            <h3 className="text-sm font-bold text-foreground">
+                                3. Automatic Monthly Bills
                             </h3>
-                            <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Post monthly utility bills directly into resident receipts alongside room rent with itemized breakdown.
+                            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                                Send transparent monthly bills to tenants showing exact meter numbers and charges alongside room rent.
                             </p>
                         </div>
                     </div>
@@ -115,16 +115,16 @@ export function UtilityBillingOnboardingModal({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 inline-flex items-center justify-center h-12 px-5 rounded-2xl border border-border/80 bg-background hover:bg-muted text-xs sm:text-sm font-semibold text-muted-foreground hover:text-foreground transition-all cursor-pointer active:scale-98"
+                        className="flex-1 inline-flex items-center justify-center h-12 px-5 rounded-2xl border border-border/80 bg-background hover:bg-muted text-sm font-semibold text-muted-foreground hover:text-foreground transition-all cursor-pointer active:scale-98"
                     >
                         Maybe Later
                     </button>
                     <button
                         type="button"
                         onClick={onStartTour}
-                        className="group flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-2xl bg-primary text-primary-foreground text-xs sm:text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-105 transition-all cursor-pointer active:scale-98"
+                        className="group flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-2xl bg-primary text-primary-foreground text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-105 transition-all cursor-pointer active:scale-98"
                     >
-                        <span>Start Guided Setup</span>
+                        <span>Start Step-by-Step Setup</span>
                         <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                     </button>
                 </div>

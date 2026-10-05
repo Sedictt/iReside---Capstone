@@ -314,7 +314,7 @@ export function MessageComposer({
                         }}
                     />
                     
-                    <textarea
+                    <textarea maxLength={500}
                         ref={textAreaRef}
                         value={messageInput}
                         onChange={(e) => setMessageInput(e.target.value)}

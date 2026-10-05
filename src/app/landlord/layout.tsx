@@ -18,6 +18,7 @@ import { LandlordUnitMapLightbox } from "@/components/landlord/dashboard/Landlor
 import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { toast } from "sonner";
@@ -100,25 +101,26 @@ function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }
     const hasZeroProperties = isReady && isLandlord && properties.length === 0;
     const isAllowedCreationRoute = pathname === "/landlord/properties/new";
 
+    // Stage 4: Financial rails configured/acknowledged, but 0 tenants registered
+    const hasAtLeastOneTenant = properties.some((p) => 
+        Boolean(p.hasTenants) || 
+        p.units?.some((u) => (u.status || "").toLowerCase() === "occupied")
+    );
+
     // Stage 2: Landlord has registered a property, but unit map is not yet configured
-    const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete) || localMapCompleted;
+    const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete || (p.placedCount ?? 0) > 0 || p.hasTenants) || localMapCompleted;
     const hasPendingUnitMap = isReady && isLandlord && properties.length > 0 && !hasConfiguredMap;
     const isAllowedUnitMapRoute = pathname?.startsWith("/landlord/unit-map");
 
     // Stage 3: Property & Unit map configured, but billing rails pending
-    const hasConfiguredBilling = localBillingCompleted || isBillingDelayed;
-    const hasPendingBillingRails = isReady && isLandlord && properties.length > 0 && hasConfiguredMap && !hasConfiguredBilling;
+    const hasConfiguredBilling = localBillingCompleted || isBillingDelayed || hasAtLeastOneTenant;
+    const hasPendingBillingRails = isReady && isLandlord && properties.length > 0 && hasConfiguredMap && !hasConfiguredBilling && !hasAtLeastOneTenant;
     const isAllowedStage3Route = 
         pathname === "/landlord/dashboard" || 
         pathname?.startsWith("/landlord/properties") || 
         pathname?.startsWith("/landlord/unit-map") || 
         pathname?.startsWith("/landlord/utility-billing");
 
-    // Stage 4: Financial rails configured/acknowledged, but 0 tenants registered
-    const hasAtLeastOneTenant = properties.some((p) => 
-        Boolean(p.hasTenants) || 
-        p.units?.some((u) => (u.status || "").toLowerCase() === "occupied")
-    );
     const hasPendingTenantSetup = isReady && isLandlord && properties.length > 0 && hasConfiguredMap && hasConfiguredBilling && !hasAtLeastOneTenant;
     const isAllowedStage4Route = 
         pathname === "/landlord/dashboard" || 
@@ -167,9 +169,34 @@ export default function LandlordLayout({
 }) {
     const pathname = usePathname();
     
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [sidebarWidth, setSidebarWidth] = useState(280);
     const [isGlobalFullscreen, setIsGlobalFullscreen] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+    // Initialize persisted width
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        try {
+            const savedWidth = window.localStorage.getItem("ireside.sidebar_width");
+            if (savedWidth) {
+                const parsed = parseInt(savedWidth, 10);
+                if (!isNaN(parsed) && parsed >= 240 && parsed <= 300) {
+                    setSidebarWidth(parsed);
+                }
+            }
+        } catch {
+            // Ignore storage errors
+        }
+
+        const handleWidthChange = (e: any) => {
+            if (e.detail && typeof e.detail === "number") {
+                setSidebarWidth(e.detail);
+            }
+        };
+
+        window.addEventListener("sidebar-width-changed" as any, handleWidthChange);
+        return () => window.removeEventListener("sidebar-width-changed" as any, handleWidthChange);
+    }, []);
 
     useEffect(() => {
         const handleToggle = (e: any) => setIsGlobalFullscreen(e.detail);
@@ -201,9 +228,6 @@ export default function LandlordLayout({
                             {/* Desktop Sidebar (hidden on mobile, visible on desktop) */}
                             {showSidebar && (
                                 <Sidebar 
-                                    isCollapsed={isSidebarCollapsed} 
-                                    onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                                    showCollapseToggle={isUnitMap}
                                     className="hidden md:flex"
                                 />
                             )}
@@ -222,6 +246,7 @@ export default function LandlordLayout({
                                         <Logo className="h-16 w-20" />
                                     </div>
                                     <div className="flex items-center gap-3">
+                                        <LanguageToggle variant="compact" />
                                         <ThemeToggle variant="sidebar" />
                                         <ProfileWidget />
                                     </div>
@@ -246,31 +271,25 @@ export default function LandlordLayout({
                             {showSidebar && (
                                 <div 
                                     className={cn(
-                                        "fixed inset-y-0 left-0 z-[49] w-[280px] md:hidden transform transition-transform duration-300 ease-in-out bg-background shadow-2xl flex flex-col",
+                                        "fixed inset-y-0 left-0 z-[49] w-[280px] md:hidden transform transition-transform duration-300 ease-in-out bg-card dark:bg-zinc-900 shadow-2xl flex flex-col",
                                         isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
                                     )}
                                 >
                                     <Sidebar 
-                                        isCollapsed={false}
-                                        onToggleCollapse={() => {}}
-                                        showCollapseToggle={false}
+                                        onCloseMobile={() => setIsMobileSidebarOpen(false)}
                                         className="h-full border-r-0 shadow-none !w-full"
                                     />
-                                    {/* Close Button Inside Mobile Drawer */}
-                                    <button
-                                        onClick={() => setIsMobileSidebarOpen(false)}
-                                        className="absolute top-6 right-4 z-[50] p-2 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors hover:scale-105 active:scale-95"
-                                        aria-label="Close menu"
-                                    >
-                                        <X className="size-4" />
-                                    </button>
                                 </div>
                             )}
 
                             <main 
+                                style={{
+                                    marginLeft: showSidebar 
+                                        ? (typeof window !== "undefined" && window.innerWidth < 768 ? 0 : sidebarWidth) 
+                                        : 0
+                                }}
                                 className={cn(
-                                    "flex-1 overflow-y-auto h-full transition-all duration-300 relative", 
-                                    showSidebar ? (isSidebarCollapsed ? "md:ml-[80px]" : "md:ml-[280px]") : "",
+                                    "flex-1 overflow-y-auto h-full transition-[margin] duration-200 relative", 
                                     showContactsSidebar ? "md:pr-24" : ""
                                 )}
                             >
