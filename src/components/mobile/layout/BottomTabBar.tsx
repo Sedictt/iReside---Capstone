@@ -122,6 +122,7 @@ export function BottomTabBar({ role, badges = {} }: BottomTabBarProps) {
                     <Link
                         key={tab.href}
                         href={tab.href}
+                        prefetch={true}
                         onClick={() => triggerHaptic('light')}
                         className={cn('mobile-tab-item', isActive && 'active')}
                         aria-label={tab.label}

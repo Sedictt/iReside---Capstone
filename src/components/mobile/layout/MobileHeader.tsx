@@ -5,7 +5,6 @@ import { Bell, ChevronLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { triggerHaptic } from '@/lib/haptics'
-
 import { useNotifications } from '@/context/NotificationContext'
 
 interface MobileHeaderProps {
@@ -39,7 +38,10 @@ export function MobileHeader({
     const effectiveCount = notificationCount !== undefined ? notificationCount : unreadCount
 
     const handleBack = () => {
-        if (backHref) {
+        triggerHaptic('light')
+        if (typeof window !== 'undefined' && window.history.length > 1) {
+            router.back()
+        } else if (backHref) {
             router.push(backHref)
         } else {
             router.back()
@@ -51,28 +53,13 @@ export function MobileHeader({
             {/* Left: back button or spacer */}
             <div className="w-10 flex items-center justify-start">
                 {showBack ? (
-                    backHref ? (
-                        <Link
-                            href={backHref}
-                            prefetch={true}
-                            onClick={() => triggerHaptic('light')}
-                            className="flex items-center justify-center w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 active:bg-muted transition-all"
-                            aria-label="Go back"
-                        >
-                            <ChevronLeft size={22} strokeWidth={2} />
-                        </Link>
-                    ) : (
-                        <button
-                            onClick={() => {
-                                triggerHaptic('light');
-                                router.back();
-                            }}
-                            className="flex items-center justify-center w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 active:bg-muted transition-all"
-                            aria-label="Go back"
-                        >
-                            <ChevronLeft size={22} strokeWidth={2} />
-                        </button>
-                    )
+                    <button
+                        onClick={handleBack}
+                        className="flex items-center justify-center w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 active:bg-muted transition-all"
+                        aria-label="Go back"
+                    >
+                        <ChevronLeft size={22} strokeWidth={2} />
+                    </button>
                 ) : null}
             </div>
 
@@ -86,7 +73,8 @@ export function MobileHeader({
                 {rightAction ?? (
                     <Link
                         href={notificationsHref}
-                        className="relative flex items-center justify-center w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        prefetch={true}
+                        className="relative flex items-center justify-center w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 transition-all"
                         aria-label={
                             effectiveCount > 0
                                 ? `${effectiveCount} unread notifications`
