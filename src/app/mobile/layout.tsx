@@ -30,11 +30,11 @@ function MobileLayoutInner({ children }: { children: React.ReactNode }) {
     // Redirect unauthenticated users to login
     useEffect(() => {
         if (!loading && !profile) {
-            router.replace('/login?redirect=/mobile')
+            window.location.replace('/login?redirect=/mobile')
         }
     }, [loading, profile, router])
 
-    if (loading) {
+    if (loading || !profile) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-background">
                 <div className="flex flex-col items-center gap-3">
@@ -50,7 +50,7 @@ function MobileLayoutInner({ children }: { children: React.ReactNode }) {
         )
     }
 
-    if (!profile) return null
+    
 
     const role = profile.role as 'tenant' | 'landlord'
 

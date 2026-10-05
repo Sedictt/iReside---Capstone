@@ -406,6 +406,12 @@ export async function updateSession(request: NextRequest) {
     // If user is not signed in and the current path is not /login, /signup, or /auth, redirect to /login.
     // However, if the request has an existing auth cookie but timed out (likely offline), allow proceeding to cached view.
     if (!user && !isPublicRoute(request.nextUrl.pathname, request)) {
+        if (request.nextUrl.pathname.startsWith('/mobile')) {
+            const url = request.nextUrl.clone();
+            url.pathname = '/login';
+            url.searchParams.set('redirect', request.nextUrl.pathname);
+            return NextResponse.redirect(url);
+        }
         if (hasAuthCookie) {
             return supabaseResponse;
         }
