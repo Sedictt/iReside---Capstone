@@ -185,7 +185,7 @@ export function LandlordMenuView() {
                 },
                 { 
                     label: 'Move-Out Requests', 
-                    href: '/landlord/move-out', 
+                    href: '/mobile/landlord/move-out', 
                     icon: ClipboardList, 
                     urgent: isUrgent('move_out_approved') || isUrgent('move_out_denied'),
                     description: 'Process resident move-out notices, checkout inspections & deposit refunds',
