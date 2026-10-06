@@ -241,7 +241,8 @@ body.mobile-viewport::-webkit-scrollbar {
 
 .mobile-tab-bar {
     position: relative;
-    z-index: 50;
+    z-index: 60;
+    pointer-events: auto;
     width: 100%;
     flex-shrink: 0;
     min-height: calc(var(--bottom-tab-height) + env(safe-area-inset-bottom, 0px));
@@ -254,6 +255,8 @@ body.mobile-viewport::-webkit-scrollbar {
 }
 
 .mobile-tab-item {
+    pointer-events: auto;
+    touch-action: manipulation;
     flex: 1;
     min-width: 0;
     display: flex;

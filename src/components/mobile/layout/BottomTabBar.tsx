@@ -1,7 +1,7 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { triggerHaptic } from '@/lib/haptics'
 import {
@@ -106,10 +106,22 @@ interface BottomTabBarProps {
 
 export function BottomTabBar({ role, badges = {} }: BottomTabBarProps) {
     const pathname = usePathname()
+    const router = useRouter()
     const tabs = role === 'tenant' ? TENANT_TABS : LANDLORD_TABS
 
+    const handleTabClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string, isActive: boolean) => {
+        triggerHaptic('light')
+        if (isActive) {
+            // Already on this tab - allow standard behavior (scroll to top or stay)
+            return
+        }
+        // Force instant client-side push to guarantee redirect
+        e.preventDefault()
+        router.push(href)
+    }
+
     return (
-        <nav className="mobile-tab-bar" aria-label="Main navigation">
+        <nav className="mobile-tab-bar relative z-[60] pointer-events-auto" aria-label="Main navigation">
             {tabs.map((tab) => {
                 const isMenuTab = tab.label === 'Menu'
                 const isActive = pathname?.startsWith(tab.matchPrefix) || 
@@ -123,12 +135,15 @@ export function BottomTabBar({ role, badges = {} }: BottomTabBarProps) {
                         key={tab.href}
                         href={tab.href}
                         prefetch={true}
-                        onClick={() => triggerHaptic('light')}
-                        className={cn('mobile-tab-item', isActive && 'active')}
+                        onClick={(e) => handleTabClick(e, tab.href, !!isActive)}
+                        className={cn(
+                            'mobile-tab-item cursor-pointer touch-manipulation active:scale-95 transition-transform select-none',
+                            isActive && 'active'
+                        )}
                         aria-label={tab.label}
                         aria-current={isActive ? 'page' : undefined}
                     >
-                        <span className="tab-icon relative">
+                        <span className="tab-icon relative pointer-events-none">
                             <Icon
                                 size={22}
                                 strokeWidth={isActive ? 2.5 : 1.8}
@@ -140,7 +155,7 @@ export function BottomTabBar({ role, badges = {} }: BottomTabBarProps) {
                                 </span>
                             )}
                         </span>
-                        <span>{tab.label}</span>
+                        <span className="pointer-events-none font-bold">{tab.label}</span>
                     </Link>
                 )
             })}
