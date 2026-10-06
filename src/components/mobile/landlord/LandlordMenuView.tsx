@@ -152,7 +152,7 @@ export function LandlordMenuView() {
                 },
                 { 
                     label: 'Facilities', 
-                    href: '/landlord/utilities', 
+                    href: '/mobile/utilities', 
                     icon: LayoutGrid,
                     description: 'Track on-site facilities, building amenities & shared utility meters',
                     isExternal: true
@@ -213,7 +213,7 @@ export function LandlordMenuView() {
                 },
                 { 
                     label: 'Utility Billing', 
-                    href: '/landlord/utility-billing', 
+                    href: '/mobile/utilities', 
                     icon: Zap,
                     description: 'Calculate, allocate and bill electricity, water & submeter charges',
                     isExternal: true
