@@ -17,7 +17,7 @@ export default function MobileRootPage() {
         if (loading) return
 
         if (!profile) {
-            router.replace('/login?redirect=/mobile')
+            window.location.replace('/login?redirect=/mobile')
             return
         }
 

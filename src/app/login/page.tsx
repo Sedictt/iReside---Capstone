@@ -388,6 +388,7 @@ function LoginContent() {
         }
     };
 
+
     const completeSuccessfulLogin = async (userData: any, userRole?: string) => {
         const role = userRole || userData?.user_metadata?.role;
         const isClaimed = userData?.user_metadata?.is_account_claimed;
@@ -547,7 +548,9 @@ function LoginContent() {
         setTwoFactorError(null);
     };
 
-    if (!mounted) return null;
+    
+
+
 
     return (
         <div className="min-h-svh w-full flex flex-col justify-between bg-background text-foreground relative selection:bg-primary/25 font-sans">

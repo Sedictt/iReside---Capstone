@@ -30,12 +30,26 @@ const getStatus = (occupied: number, total: number, maintenanceCount: number): P
     return "Stable";
 };
 
+interface CachedOverview {
+    data: any;
+    expiresAt: number;
+}
+const overviewMemoryCache = new Map<string, CachedOverview>();
+
 export const dynamic = "force-dynamic";
 
 export async function GET() {
     const authContext = await requireAuthenticatedUser();
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
+
+    const cached = overviewMemoryCache.get(userId);
+    if (cached && Date.now() < cached.expiresAt) {
+        return NextResponse.json(
+            { properties: cached.data },
+            { headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" } }
+        );
+    }
 
     const { data: properties, error: propertiesError } = await supabase
         .from("properties")
@@ -56,52 +70,41 @@ export async function GET() {
         );
     }
 
-    const { data: units, error: unitsError } = await supabase
-        .from("units")
-        .select("id, property_id, status, rent_amount")
-        .in("property_id", propertyIds);
+    const [unitsResult, policiesResult] = await Promise.all([
+        supabase
+            .from("units")
+            .select("id, property_id, status, rent_amount")
+            .in("property_id", propertyIds),
+        (supabase as any)
+            .from("property_environment_policies")
+            .select("property_id, environment_mode, needs_review, max_occupants_per_unit, utility_policy_mode, utility_split_method")
+            .in("property_id", propertyIds),
+    ]);
 
-    const { data: policies, error: policiesError } = (await (supabase as any)
-        .from("property_environment_policies")
-        .select("property_id, environment_mode, needs_review, max_occupants_per_unit, utility_policy_mode, utility_split_method")
-        .in("property_id", propertyIds)) as {
-        data: Array<{
-            property_id: string;
-            environment_mode: string | null;
-            needs_review: boolean | null;
-            max_occupants_per_unit: number | null;
-            utility_policy_mode: string | null;
-            utility_split_method: string | null;
-        }> | null;
-        error: any;
-    };
-
+    const { data: units, error: unitsError } = unitsResult;
+    const { data: policies } = policiesResult;
     if (unitsError) {
         return NextResponse.json({ error: "Failed to fetch units." }, { status: 500 });
     }
 
     const unitIds = (units ?? []).map((unit) => unit.id);
 
-    const { data: maintenanceRows, error: maintenanceError } =
-        unitIds.length > 0
-            ? await supabase
+    const [maintResult, leasesResult] = unitIds.length > 0
+        ? await Promise.all([
+              supabase
                   .from("maintenance_requests")
                   .select("unit_id, status")
-                  .in("unit_id", unitIds)
-            : { data: [], error: null };
-
-    if (maintenanceError) {
-        return NextResponse.json({ error: "Failed to fetch maintenance data." }, { status: 500 });
-    }
-
-    const { data: leases, error: leasesError } =
-        unitIds.length > 0
-            ? await supabase
+                  .in("unit_id", unitIds),
+              supabase
                   .from("leases")
                   .select("id, unit_id")
                   .eq("landlord_id", userId)
-                  .in("unit_id", unitIds)
-            : { data: [], error: null };
+                  .in("unit_id", unitIds),
+          ])
+        : [{ data: [], error: null }, { data: [], error: null }];
+
+    const { data: maintenanceRows, error: maintenanceError } = maintResult;
+    const { data: leases, error: leasesError } = leasesResult;
 
     if (leasesError) {
         return NextResponse.json({ error: "Failed to fetch leases." }, { status: 500 });
@@ -219,8 +222,13 @@ export async function GET() {
         };
     });
 
+    overviewMemoryCache.set(userId, {
+        data: result,
+        expiresAt: Date.now() + 20_000,
+    });
+
     return NextResponse.json(
         { properties: result },
-        { headers: { "Cache-Control": "private, max-age=10, stale-while-revalidate=60" } }
+        { headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" } }
     );
 }

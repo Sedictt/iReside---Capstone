@@ -56,13 +56,27 @@ const getPaymentCategory = (payment: {
     return null;
 };
 
+interface CachedPaymentsOverview {
+    data: any;
+    expiresAt: number;
+}
+const paymentsOverviewMemoryCache = new Map<string, CachedPaymentsOverview>();
+
 export async function GET(request: Request) {
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 
     const { searchParams } = new URL(request.url);
-    const propertyId = searchParams.get("propertyId");
+    const propertyId = searchParams.get("propertyId") || "all";
+
+    const cacheKey = `${userId}:${propertyId}`;
+    const cached = paymentsOverviewMemoryCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+        return NextResponse.json(cached.data, {
+            headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" }
+        });
+    }
 
     let query = supabase
         .from("payments")
@@ -138,19 +152,17 @@ export async function GET(request: Request) {
         new Set((paymentRows ?? []).map((row) => row.lease_id).filter((value): value is string => Boolean(value)))
     );
 
-    const { data: tenantRows, error: tenantsError } =
+    const [tenantsResult, leasesResult] = await Promise.all([
         tenantIds.length > 0
-            ? await supabase.from("profiles").select("id, full_name, avatar_url, avatar_bg_color").in("id", tenantIds)
-            : { data: [], error: null };
-
-    if (tenantsError) {
-        return NextResponse.json({ error: "Failed to fetch tenant profiles." }, { status: 500 });
-    }
-
-    const { data: leaseRows, error: leasesError } =
+            ? supabase.from("profiles").select("id, full_name, avatar_url, avatar_bg_color").in("id", tenantIds)
+            : Promise.resolve({ data: [], error: null }),
         leaseIds.length > 0
-            ? await supabase.from("leases").select("id, unit_id").in("id", leaseIds)
-            : { data: [], error: null };
+            ? supabase.from("leases").select("id, unit_id").in("id", leaseIds)
+            : Promise.resolve({ data: [], error: null }),
+    ]);
+
+    const { data: tenantRows, error: tenantsError } = tenantsResult;
+    const { data: leaseRows, error: leasesError } = leasesResult;
 
     if (leasesError) {
         return NextResponse.json({ error: "Failed to fetch leases." }, { status: 500 });

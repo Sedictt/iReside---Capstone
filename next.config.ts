@@ -3,7 +3,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Skip rebundling heavy Node.js packages — reduces Turbopack compile time
   serverExternalPackages: ['sharp', 'puppeteer', 'nodemailer', 'jsonwebtoken', 'pdfjs-dist'],
+  // Disable dev indicators (e.g. the floating "● Compiling..." pill that covers mobile UI)
+  devIndicators: false,
   images: {
+    // Disable server-side image proxying/resizing in Node.js.
+    // Client browsers load remote avatars directly, preventing server hangs and 504 timeouts.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',

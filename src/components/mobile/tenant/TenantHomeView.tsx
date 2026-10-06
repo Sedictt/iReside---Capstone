@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { 
-    Building2, 
+    Building2,
+    BookOpen, 
     CreditCard, 
     Wrench, 
     MessageSquare, 
@@ -222,7 +223,7 @@ export function TenantHomeView() {
                         </Link>
 
                         <Link
-                            href="/mobile/tenant/profile"
+                            href="/mobile/tenant/lease"
                             className="p-3 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex flex-col items-center text-center gap-1.5 active:scale-[0.97] transition-all hover:border-primary/40"
                         >
                             <div className="size-9 rounded-xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center shrink-0">
@@ -234,6 +235,29 @@ export function TenantHomeView() {
                         </Link>
                     </div>
                 </div>
+
+                {/* House Rules & Safety Quick Banner */}
+<div className="px-4">
+    <Link
+        href="/mobile/tenant/manual"
+        className="p-3 rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 shadow-xs flex items-center justify-between active:scale-[0.98] transition-all"
+    >
+        <div className="flex items-center gap-2.5">
+            <div className="size-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shrink-0">
+                <BookOpen className="size-4" />
+            </div>
+            <div>
+                <h4 className="text-xs font-bold text-foreground">
+                    House Rules & Emergency Guide
+                </h4>
+                <p className="text-[10px] text-muted-foreground">
+                    Quiet hours, safety protocols & speed dial
+                </p>
+            </div>
+        </div>
+        <ChevronRight className="size-4 text-primary" />
+    </Link>
+</div>
 
                 {/* Landlord Contact Quick Card */}
                 {lease?.landlordName && (

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -109,7 +109,7 @@ export function BottomTabBar({ role, badges = {} }: BottomTabBarProps) {
     const tabs = role === 'tenant' ? TENANT_TABS : LANDLORD_TABS
 
     return (
-        <nav className="mobile-tab-bar" aria-label="Main navigation">
+        <nav className="mobile-tab-bar relative z-[60] pointer-events-auto" aria-label="Main navigation">
             {tabs.map((tab) => {
                 const isMenuTab = tab.label === 'Menu'
                 const isActive = pathname?.startsWith(tab.matchPrefix) || 
@@ -123,7 +123,10 @@ export function BottomTabBar({ role, badges = {} }: BottomTabBarProps) {
                         key={tab.href}
                         href={tab.href}
                         onClick={() => triggerHaptic('light')}
-                        className={cn('mobile-tab-item', isActive && 'active')}
+                        className={cn(
+                            'mobile-tab-item cursor-pointer touch-manipulation active:scale-95 transition-transform',
+                            isActive && 'active'
+                        )}
                         aria-label={tab.label}
                         aria-current={isActive ? 'page' : undefined}
                     >
@@ -139,7 +142,7 @@ export function BottomTabBar({ role, badges = {} }: BottomTabBarProps) {
                                 </span>
                             )}
                         </span>
-                        <span>{tab.label}</span>
+                        <span className="font-bold">{tab.label}</span>
                     </Link>
                 )
             })}

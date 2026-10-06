@@ -5,7 +5,7 @@ import { createServiceRoleSupabaseClient } from '@/lib/supabase/admin'
 import { getCommunityPropertyId } from './queries'
 
 import { revalidatePath } from 'next/cache'
-import { auth } from '@/lib/supabase/middleware'
+import { auth } from '@/lib/supabase/server'
 import type {
     CommunityPost,
     CommunityPostStatus,

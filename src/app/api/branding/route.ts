@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DEFAULT_BRANDING, BrandConfig } from "@/context/BrandContext";
+import { DEFAULT_BRANDING, type BrandConfig } from "@/lib/branding/defaults";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { queueBrandedInstaller } from "@/lib/desktop/queue-branded-installer";
 import { brandingUpdateSchema } from "@/lib/validation/brand-setup";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+
+interface CachedBrandingEntry {
+  payload: BrandConfig;
+  expiresAt: number;
+}
+const brandingMemoryCache = new Map<string, CachedBrandingEntry>();
+
+export function invalidateBrandingCache() {
+  brandingMemoryCache.clear();
+}
 
 /**
  * GET /api/branding
@@ -13,10 +23,19 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
  */
 export async function GET(request: NextRequest) {
   try {
-    const admin = createServiceRoleSupabaseClient();
     const url = new URL(request.url);
     const queryPropertyId = url.searchParams.get("propertyId");
     const queryLandlordId = url.searchParams.get("landlordId");
+
+    const cacheKey = `${queryLandlordId || "auto"}:${queryPropertyId || "auto"}`;
+    const cached = brandingMemoryCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      return NextResponse.json(cached.payload, {
+        headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=120" },
+      });
+    }
+
+    const admin = createServiceRoleSupabaseClient();
 
     let targetLandlordId: string | null = queryLandlordId || null;
     let targetPropertyId: string | null = queryPropertyId || null;
@@ -180,7 +199,14 @@ export async function GET(request: NextRequest) {
       setupCompletedAt: (customTheme as any)?.setup_completed_at ?? (customTheme as any)?.setupCompletedAt ?? null,
     };
 
-    return NextResponse.json(brandingPayload);
+    brandingMemoryCache.set(cacheKey, {
+      payload: brandingPayload,
+      expiresAt: Date.now() + 60_000, // 60s TTL
+    });
+
+    return NextResponse.json(brandingPayload, {
+      headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=120" },
+    });
   } catch (error) {
     console.warn("[GET /api/branding] Error fetching branding:", error);
     return NextResponse.json(DEFAULT_BRANDING);
@@ -332,6 +358,7 @@ export async function POST(request: NextRequest) {
       desktopBuildQueued = true;
     }
 
+    invalidateBrandingCache();
     return NextResponse.json({ ...fullBranding, desktopBuildQueued });
   } catch (error: any) {
     console.error("[POST /api/branding] Error saving branding:", error);

@@ -119,14 +119,14 @@ export function LandlordMenuView() {
                 },
                 { 
                     label: 'Calendar', 
-                    href: '/landlord/calendar', 
+                    href: '/mobile/calendar', 
                     icon: Calendar,
                     description: 'Viewing schedules, property inspections & lease milestone dates',
                     isExternal: true
                 },
                 { 
                     label: 'Community Hub', 
-                    href: '/landlord/community', 
+                    href: '/mobile/community', 
                     icon: Megaphone,
                     description: 'Building announcements, community posts & resident discussions',
                     isExternal: true
@@ -138,7 +138,7 @@ export function LandlordMenuView() {
             items: [
                 { 
                     label: 'Properties', 
-                    href: '/landlord/properties', 
+                    href: '/mobile/landlord/properties', 
                     icon: Building2, 
                     description: 'Manage registered buildings, configure units & set property amenities',
                     isExternal: true
@@ -152,14 +152,14 @@ export function LandlordMenuView() {
                 },
                 { 
                     label: 'Facilities', 
-                    href: '/landlord/utilities', 
+                    href: '/mobile/utilities', 
                     icon: LayoutGrid,
                     description: 'Track on-site facilities, building amenities & shared utility meters',
                     isExternal: true
                 },
                 { 
                     label: 'Applications', 
-                    href: '/landlord/applications', 
+                    href: '/mobile/landlord/applications', 
                     icon: ClipboardList, 
                     badge: counts.applications || undefined, 
                     urgent: isUrgent('application'),
@@ -168,7 +168,7 @@ export function LandlordMenuView() {
                 },
                 { 
                     label: 'Tenants', 
-                    href: '/landlord/tenants', 
+                    href: '/mobile/landlord/tenants', 
                     icon: Users, 
                     warning: isTenantSetupDelayed,
                     warningTooltip: 'Action needed: Begin setting up your tenants to occupy units and activate lease tracking.',
@@ -177,7 +177,7 @@ export function LandlordMenuView() {
                 },
                 { 
                     label: 'Leases', 
-                    href: '/landlord/leases', 
+                    href: '/mobile/landlord/leases', 
                     icon: FileText, 
                     urgent: isUrgent('lease') || isUrgent('lease_renewal_request'),
                     description: 'Digital lease agreements, active contracts & renewal negotiations',
@@ -185,7 +185,7 @@ export function LandlordMenuView() {
                 },
                 { 
                     label: 'Move-Out Requests', 
-                    href: '/landlord/move-out', 
+                    href: '/mobile/landlord/move-out', 
                     icon: ClipboardList, 
                     urgent: isUrgent('move_out_approved') || isUrgent('move_out_denied'),
                     description: 'Process resident move-out notices, checkout inspections & deposit refunds',
@@ -213,7 +213,7 @@ export function LandlordMenuView() {
                 },
                 { 
                     label: 'Utility Billing', 
-                    href: '/landlord/utility-billing', 
+                    href: '/mobile/utilities', 
                     icon: Zap,
                     description: 'Calculate, allocate and bill electricity, water & submeter charges',
                     isExternal: true

@@ -67,7 +67,8 @@ import { SortableActionCard } from '@/components/landlord/dashboard/SortableActi
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropertySelector';
 import { ActionRequired } from '@/components/landlord/dashboard/ActionRequired';
-import { PaymentModal } from '@/components/landlord/dashboard/PaymentModal';
+import { MobilePaymentDrawer } from '@/components/mobile/landlord/MobilePaymentDrawer';
+import { MobileVacantUnitsDrawer } from '@/components/mobile/landlord/MobileVacantUnitsDrawer';
 import { CollectPaymentModal } from '@/components/landlord/dashboard/CollectPaymentModal';
 import { WalkInApplicationModal } from '@/components/landlord/applications/WalkInApplicationModal';
 import { VacantUnitsModal } from '@/components/landlord/dashboard/VacantUnitsModal';
@@ -401,7 +402,7 @@ export function LandlordOverviewView() {
 
     return (
         <PullToRefresh onRefresh={loadAll} className="h-full flex flex-col">
-            <div className="flex-1 min-h-0 flex flex-col gap-4 px-3.5 pt-2.5 pb-6 overflow-y-auto custom-scrollbar-premium">
+            <div className="flex-1 min-h-0 flex flex-col gap-4 px-3.5 pt-2.5 pb-32 overflow-y-auto custom-scrollbar-premium">
                 {/* 1. Property Selector */}
                 <div className="shrink-0">
                     <MobilePropertySelector />
@@ -419,13 +420,12 @@ export function LandlordOverviewView() {
                             sizes="(max-width: 768px) 100vw, 500px"
                             className="object-cover opacity-40 dark:opacity-20 transition-transform duration-[2000ms] group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-tr from-background via-background/90 to-background/30" />
-                        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background/95 via-background/60 to-transparent" />
-                        <div className="absolute -top-12 -right-12 size-40 rounded-full bg-primary/15 blur-[50px] pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
                     </div>
 
-                    {/* Top Row: Date Pill & Banner Customizer Trigger */}
-                    <div className="relative z-10 flex items-center justify-between">
+                    {/* Top Row: Date Pill & Manila Digital Clock + Banner Customizer */}
+                    <div className="relative z-10 flex items-center justify-between gap-2">
+                        {/* Date Pill with Live Indicator */}
                         <div className="flex items-center gap-1.5 rounded-full neumorphic-inset-card px-2.5 py-1">
                             <div className="relative">
                                 <div className="size-1.5 rounded-full bg-primary animate-ping" />
@@ -436,120 +436,118 @@ export function LandlordOverviewView() {
                             </span>
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={() => setIsCustomizerOpen(true)}
-                            className="px-2 py-1 rounded-lg neumorphic-extruded text-[9px] font-bold text-muted-foreground hover:text-foreground flex items-center gap-1 transition-all active:scale-95"
-                            title="Customize banner photo"
-                        >
-                            <Camera className="size-3 text-primary" />
-                            <span>Banner</span>
-                        </button>
-                    </div>
-
-                    {/* Middle Row: Greeting + Mobile Digital Clock */}
-                    <div className="relative z-10 flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground leading-tight">
-                                Welcome back, {formattedFirstName}
-                                <span className="text-primary prose-invert">.</span>
-                            </h1>
-                            <p className="text-[11px] font-medium text-muted-foreground mt-0.5 line-clamp-1">
-                                {overdueCount > 0
-                                    ? `⚠️ ${overdueCount} payment${overdueCount > 1 ? 's are' : ' is'} overdue for review`
-                                    : "Here's what's happening with your properties today."}
-                            </p>
-                        </div>
-
-                        {/* Mobile Digital Clock with 12H/24H Tap Toggle */}
-                        <button
-                            type="button"
-                            onClick={toggleTimeFormat}
-                            className="flex flex-col items-end shrink-0 select-none group active:scale-95 transition-transform"
-                            title={`Click to switch to ${is24Hour ? '12-hour' : '24-hour'} format`}
-                            aria-label="Digital clock toggle"
-                        >
-                            <div className="flex items-baseline gap-1 font-mono text-2xl sm:text-3xl font-black text-foreground tabular-nums group-hover:text-primary transition-colors">
+                        {/* Top-Right: Manila Digital Clock Pill & Banner Edit */}
+                        <div className="flex items-center gap-1.5">
+                            <button
+                                type="button"
+                                onClick={toggleTimeFormat}
+                                className="flex items-center gap-1 px-2.5 py-1 rounded-full neumorphic-inset-card font-mono text-[11px] font-black text-foreground tabular-nums select-none active:scale-95 transition-all"
+                                title={`Tap to switch to ${is24Hour ? '12-hour' : '24-hour'} format`}
+                                aria-label="Digital clock toggle"
+                            >
                                 <span>{hours}:{minutes}</span>
                                 {period ? (
-                                    <span className="text-xs font-black uppercase tracking-wider text-primary">{period}</span>
+                                    <span className="text-[9px] font-black uppercase text-primary">{period}</span>
                                 ) : (
-                                    <span className="text-[9px] font-bold text-muted-foreground bg-muted/40 px-1 py-0.2 rounded">24H</span>
+                                    <span className="text-[8px] font-bold text-muted-foreground">24H</span>
                                 )}
-                            </div>
-                            <span className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground/60">
-                                Manila Time
-                            </span>
-                        </button>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setIsCustomizerOpen(true)}
+                                className="size-7 rounded-full neumorphic-extruded text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95"
+                                title="Customize banner photo"
+                                aria-label="Customize banner photo"
+                            >
+                                <Camera className="size-3 text-primary" />
+                            </button>
+                        </div>
                     </div>
 
-                    {/* Primary Action Buttons Row */}
-                    <div className="relative z-10 grid grid-cols-2 gap-2 mt-1">
+                    {/* Middle Row: Full-Width Prominent Greeting */}
+                    <div className="relative z-10 flex flex-col gap-0.5">
+                        <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground leading-tight">
+                            Welcome back, {formattedFirstName}
+                            <span className="text-primary prose-invert">.</span>
+                        </h1>
+                        <p className="text-xs font-medium text-muted-foreground line-clamp-1">
+                            {overdueCount > 0
+                                ? `⚠️ ${overdueCount} payment${overdueCount > 1 ? 's are' : ' is'} overdue for review`
+                                : "Here's what's happening with your properties today."}
+                        </p>
+                    </div>
+
+                    {/* Primary Companion Action Grid (4-Column Balanced Grid) */}
+                    <div className="relative z-10 grid grid-cols-4 gap-2 mt-1">
+                        {/* 1. Collect Payment */}
                         <button
+                            type="button"
+                            onClick={() => setIsCollectPaymentModalOpen(true)}
+                            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 hover:bg-emerald-500/15 p-2 min-h-[58px] active:scale-95 transition-all text-emerald-600 dark:text-emerald-400 group shadow-2xs"
+                        >
+                            <Banknote className="size-5 text-emerald-500 group-hover:scale-110 transition-transform" />
+                            <span className="text-[10px] font-black uppercase tracking-wider">Collect</span>
+                        </button>
+
+                        {/* 2. Walk-in App */}
+                        <button
+                            type="button"
                             onClick={() => {
                                 setSelectedWalkInUnitId(undefined);
                                 setIsWalkInModalOpen(true);
                             }}
-                            className="flex items-center justify-center gap-2 rounded-xl neumorphic-primary py-2.5 px-3 active:scale-95 transition-all text-primary-foreground font-black text-xs uppercase tracking-wider shadow-sm"
+                            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-primary/25 bg-primary/10 hover:bg-primary/15 p-2 min-h-[58px] active:scale-95 transition-all text-primary group shadow-2xs"
                         >
-                            <UserPlus className="size-4" />
-                            <span>New App</span>
+                            <UserPlus className="size-5 text-primary group-hover:scale-110 transition-transform" />
+                            <span className="text-[10px] font-black uppercase tracking-wider">Walk-In</span>
                         </button>
 
+                        {/* 3. Invite Resident */}
                         <button
-                            onClick={() => setIsCollectPaymentModalOpen(true)}
-                            className="flex items-center justify-center gap-2 rounded-xl neumorphic-extruded border border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 py-2.5 px-3 active:scale-95 transition-all text-emerald-500 font-black text-xs uppercase tracking-wider shadow-sm"
+                            type="button"
+                            onClick={() => setIsInviteModalOpen(true)}
+                            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-violet-500/25 bg-violet-500/10 hover:bg-violet-500/15 p-2 min-h-[58px] active:scale-95 transition-all text-violet-600 dark:text-violet-400 group shadow-2xs"
                         >
-                            <Banknote className="size-4" />
-                            <span>Collect</span>
+                            <QrCode className="size-5 text-violet-500 group-hover:scale-110 transition-transform" />
+                            <span className="text-[10px] font-black uppercase tracking-wider">Invite</span>
                         </button>
+
+                        {/* 4. Building Calendar */}
+                        <Link
+                            href="/mobile/calendar"
+                            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-sky-500/25 bg-sky-500/10 hover:bg-sky-500/15 p-2 min-h-[58px] active:scale-95 transition-all text-sky-600 dark:text-sky-400 group shadow-2xs text-center"
+                        >
+                            <Calendar className="size-5 text-sky-500 group-hover:scale-110 transition-transform" />
+                            <span className="text-[10px] font-black uppercase tracking-wider">Calendar</span>
+                        </Link>
                     </div>
 
-                    {/* Quick Utility Icon Dock */}
-                    <div className="relative z-10 flex items-center justify-between gap-1.5 pt-1 border-t border-border/40">
-                        <button
-                            onClick={() => setIsInviteModalOpen(true)}
-                            title="Generate Referral Invite Link"
-                            className="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl neumorphic-extruded active:scale-95 transition-all"
-                        >
-                            <QrCode className="size-4 text-primary" />
-                            <span className="text-[8px] font-bold text-muted-foreground">Invite</span>
-                        </button>
-
-                        <button
-                            onClick={() => setIsFlyerModalOpen(true)}
-                            title="Generate Lobby QR Flyer Poster"
-                            className="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl neumorphic-extruded active:scale-95 transition-all"
-                        >
-                            <Printer className="size-4 text-foreground" />
-                            <span className="text-[8px] font-bold text-muted-foreground">Flyer</span>
-                        </button>
-
+                    {/* Secondary Mobile Utility Strip (Touch-Accessible >= 44px) */}
+                    <div className="relative z-10 flex items-center justify-between gap-1.5 pt-1.5 border-t border-border/40">
                         <Link
                             href="/mobile/landlord/tickets"
-                            title="Maintenance Queue"
-                            className="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl neumorphic-extruded active:scale-95 transition-all"
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border border-border/50 bg-card/60 text-muted-foreground hover:text-foreground text-[10px] font-bold active:scale-95 transition-all"
                         >
-                            <Wrench className="size-4 text-amber-500" />
-                            <span className="text-[8px] font-bold text-muted-foreground">Tickets</span>
+                            <Wrench className="size-3.5 text-amber-500" />
+                            <span>Tickets</span>
                         </Link>
 
-                        <Link
-                            href="/landlord/unit-map"
-                            title="Unit Map Visualizer"
-                            className="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl neumorphic-extruded active:scale-95 transition-all"
+                        <button
+                            type="button"
+                            onClick={() => setIsFlyerModalOpen(true)}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border border-border/50 bg-card/60 text-muted-foreground hover:text-foreground text-[10px] font-bold active:scale-95 transition-all"
                         >
-                            <Map className="size-4 text-rose-500" />
-                            <span className="text-[8px] font-bold text-muted-foreground">Unit Map</span>
-                        </Link>
+                            <Printer className="size-3.5 text-foreground" />
+                            <span>Flyer</span>
+                        </button>
 
                         <Link
-                            href="/landlord/docs"
-                            title="User Manual & Docs"
-                            className="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl neumorphic-extruded active:scale-95 transition-all"
+                            href="/mobile/tenant/manual"
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border border-border/50 bg-card/60 text-muted-foreground hover:text-foreground text-[10px] font-bold active:scale-95 transition-all"
                         >
-                            <HelpCircle className="size-4 text-indigo-400" />
-                            <span className="text-[8px] font-bold text-muted-foreground">Help</span>
+                            <FolderSearch2 className="size-3.5 text-indigo-400" />
+                            <span>Manual</span>
                         </Link>
                     </div>
                 </div>
@@ -578,7 +576,7 @@ export function LandlordOverviewView() {
                                     Overdue
                                 </span>
                                 <h3 className="text-xl font-black text-foreground mt-0.5 tabular-nums">
-                                    {paymentsState.loading ? '…' : overdueCount}
+                                    {paymentsState.loading ? <span className="inline-block h-6 w-10 rounded-md bg-muted/60 animate-pulse mt-0.5" /> : overdueCount}
                                 </h3>
                                 <p className="text-[9px] text-muted-foreground truncate">Tap to review</p>
                             </div>
@@ -599,7 +597,7 @@ export function LandlordOverviewView() {
                                     Near Due
                                 </span>
                                 <h3 className="text-xl font-black text-foreground mt-0.5 tabular-nums">
-                                    {paymentsState.loading ? '…' : nearDueCount}
+                                    {paymentsState.loading ? <span className="inline-block h-6 w-10 rounded-md bg-muted/60 animate-pulse mt-0.5" /> : nearDueCount}
                                 </h3>
                                 <p className="text-[9px] text-muted-foreground truncate">Next 7 days</p>
                             </div>
@@ -620,7 +618,7 @@ export function LandlordOverviewView() {
                                     Vacant
                                 </span>
                                 <h3 className="text-xl font-black text-foreground mt-0.5 tabular-nums">
-                                    {loadingUnits ? '…' : openUnitsCount}
+                                    {loadingUnits ? <span className="inline-block h-6 w-10 rounded-md bg-muted/60 animate-pulse mt-0.5" /> : openUnitsCount}
                                 </h3>
                                 <p className="text-[9px] text-muted-foreground truncate">Available units</p>
                             </div>
@@ -641,7 +639,7 @@ export function LandlordOverviewView() {
                                     Invites
                                 </span>
                                 <h3 className="text-xl font-black text-foreground mt-0.5 tabular-nums">
-                                    {loadingInvites ? '…' : activeInviteCount}
+                                    {loadingInvites ? <span className="inline-block h-6 w-10 rounded-md bg-muted/60 animate-pulse mt-0.5" /> : activeInviteCount}
                                 </h3>
                                 <p className="text-[9px] text-muted-foreground truncate">Active referral tokens</p>
                             </div>
@@ -961,7 +959,7 @@ export function LandlordOverviewView() {
                         </p>
                         <div className="pt-1 border-t border-border/40">
                             <Link
-                                href="/landlord/tenants?tab=renewals"
+                                href="/mobile/landlord/leases?tab=renewals"
                                 className="w-full block text-center py-2 rounded-xl neumorphic-extruded text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-primary active:scale-95 transition-all"
                             >
                                 View All Renewals
@@ -975,11 +973,14 @@ export function LandlordOverviewView() {
             <LandlordWelcomeLightbox />
 
             {/* 8. All 7 Modals and Overlays */}
-            <PaymentModal
+            <MobilePaymentDrawer
                 isOpen={openPaymentModal !== null}
                 onClose={() => setOpenPaymentModal(null)}
                 category={openPaymentModal}
                 paymentsByCategory={paymentsState.paymentsByCategory}
+                onPaymentSettled={() => {
+                    void loadAll();
+                }}
             />
 
             <WalkInApplicationModal
@@ -995,7 +996,7 @@ export function LandlordOverviewView() {
                 }}
             />
 
-            <VacantUnitsModal
+            <MobileVacantUnitsDrawer
                 isOpen={isVacantUnitsModalOpen}
                 onClose={() => setIsVacantUnitsModalOpen(false)}
                 units={vacantUnitsList}
@@ -1005,52 +1006,69 @@ export function LandlordOverviewView() {
                 }}
             />
 
-            {/* Tenant Referral Invite Manager Modal */}
-            {isInviteModalOpen && (
-                <div className="fixed inset-0 z-[120] flex items-center justify-center p-3">
-                    <button
-                        type="button"
-                        aria-label="Close invite modal"
-                        className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity"
-                        onClick={() => setIsInviteModalOpen(false)}
-                    />
-                    <div className="relative z-10 max-h-[90vh] w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/10 bg-card shadow-2xl flex flex-col">
-                        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-card/95 px-5 py-4 backdrop-blur-xl">
-                            <div className="flex items-center gap-3">
-                                <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                                    <QrCode className="size-5" />
-                                </div>
-                                <div>
-                                    <h2 className="text-base font-black text-foreground">Referral Invite Link</h2>
-                                    <p className="text-[10px] text-muted-foreground">Tokens for new residents</p>
-                                </div>
+            {/* Tenant Referral Invite Manager Bottom Sheet */}
+            <AnimatePresence>
+                {isInviteModalOpen && (
+                    <div className="fixed inset-0 z-[150] flex items-end justify-center">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsInviteModalOpen(false)}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity cursor-pointer"
+                        />
+                        <motion.div
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+                            className="relative z-10 w-full max-w-lg max-h-[88vh] rounded-t-[2.5rem] border-t border-border/80 bg-card text-card-foreground shadow-2xl flex flex-col overflow-hidden"
+                        >
+                            <div className="pt-3 pb-1 shrink-0 flex justify-center">
+                                <div className="w-12 h-1.5 rounded-full bg-muted-foreground/20" />
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => setIsInviteModalOpen(false)}
-                                className="size-8 flex items-center justify-center rounded-xl border border-white/10 bg-card text-muted-foreground hover:text-foreground active:scale-95"
-                            >
-                                <X className="size-4" />
-                            </button>
-                        </div>
+                            <div className="px-5 pt-2 pb-3.5 border-b border-border/50 flex items-center justify-between shrink-0">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="size-10 rounded-2xl bg-violet-500/15 text-violet-500 border border-violet-500/20 flex items-center justify-center shrink-0">
+                                        <QrCode className="size-5" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h2 className="text-base font-black text-foreground truncate">
+                                            Resident Invite Links
+                                        </h2>
+                                        <p className="text-[11px] text-muted-foreground truncate">
+                                            Generate referral tokens for applicant intake
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsInviteModalOpen(false)}
+                                    className="size-9 min-h-[36px] min-w-[36px] rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95 shrink-0"
+                                    aria-label="Close sheet"
+                                >
+                                    <X className="size-4" />
+                                </button>
+                            </div>
 
-                        <div className="p-4 max-h-[calc(90vh-80px)] overflow-y-auto custom-scrollbar-premium">
-                            <TenantInviteManager
-                                availableUnits={filteredUnits}
-                                invites={filteredInvites}
-                                onRefresh={async () => {
-                                    try {
-                                        const response = await fetch("/api/landlord/invites");
-                                        if (!response.ok) return;
-                                        const payload = (await response.json()) as { invites?: typeof tenantInvites };
-                                        setTenantInvites(Array.isArray(payload.invites) ? payload.invites : []);
-                                    } catch {}
-                                }}
-                            />
-                        </div>
+                            <div className="p-4 flex-1 overflow-y-auto custom-scrollbar-premium">
+                                <TenantInviteManager
+                                    availableUnits={filteredUnits}
+                                    invites={filteredInvites}
+                                    onRefresh={async () => {
+                                        try {
+                                            const response = await fetch("/api/landlord/invites");
+                                            if (!response.ok) return;
+                                            const payload = (await response.json()) as { invites?: typeof tenantInvites };
+                                            setTenantInvites(Array.isArray(payload.invites) ? payload.invites : []);
+                                        } catch {}
+                                    }}
+                                />
+                            </div>
+                        </motion.div>
                     </div>
-                </div>
-            )}
+                )}
+            </AnimatePresence>
 
             {/* Collect / Record Payment Modal */}
             <CollectPaymentModal
