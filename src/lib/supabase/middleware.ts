@@ -336,6 +336,15 @@ export async function updateSession(request: NextRequest) {
         if ((is2faPending || (userRequires2fa && !is2faVerified)) && request.nextUrl.pathname.startsWith("/login")) {
             return supabaseResponse;
         }
+        // Priority 1: Honor redirect query parameter if provided
+        const redirectParam = request.nextUrl.searchParams.get("redirect");
+        if (redirectParam && (redirectParam.startsWith("/mobile") || redirectParam.startsWith("/tenant") || redirectParam.startsWith("/landlord"))) {
+            const redirectUrl = request.nextUrl.clone();
+            const [targetPath, targetQuery] = redirectParam.split("?");
+            redirectUrl.pathname = targetPath;
+            redirectUrl.search = targetQuery ? `?${targetQuery}` : "";
+            return NextResponse.redirect(redirectUrl);
+        }
         const url = request.nextUrl.clone();
         if (role === "admin" || role === "landlord") {
             const userEmail = (user.email || "").toLowerCase().trim();
