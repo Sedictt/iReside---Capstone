@@ -119,7 +119,7 @@ export function LandlordMenuView() {
                 },
                 { 
                     label: 'Calendar', 
-                    href: '/landlord/calendar', 
+                    href: '/mobile/calendar', 
                     icon: Calendar,
                     description: 'Viewing schedules, property inspections & lease milestone dates',
                     isExternal: true
