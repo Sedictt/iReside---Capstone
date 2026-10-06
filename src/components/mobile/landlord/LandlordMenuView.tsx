@@ -126,7 +126,7 @@ export function LandlordMenuView() {
                 },
                 { 
                     label: 'Community Hub', 
-                    href: '/landlord/community', 
+                    href: '/mobile/community', 
                     icon: Megaphone,
                     description: 'Building announcements, community posts & resident discussions',
                     isExternal: true
