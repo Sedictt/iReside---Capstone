@@ -138,7 +138,7 @@ export function LandlordMenuView() {
             items: [
                 { 
                     label: 'Properties', 
-                    href: '/landlord/properties', 
+                    href: '/mobile/landlord/properties', 
                     icon: Building2, 
                     description: 'Manage registered buildings, configure units & set property amenities',
                     isExternal: true
