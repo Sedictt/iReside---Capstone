@@ -961,7 +961,7 @@ export function LandlordOverviewView() {
                         </p>
                         <div className="pt-1 border-t border-border/40">
                             <Link
-                                href="/landlord/tenants?tab=renewals"
+                                href="/mobile/landlord/leases?tab=renewals"
                                 className="w-full block text-center py-2 rounded-xl neumorphic-extruded text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-primary active:scale-95 transition-all"
                             >
                                 View All Renewals

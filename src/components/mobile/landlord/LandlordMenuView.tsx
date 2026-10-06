@@ -177,7 +177,7 @@ export function LandlordMenuView() {
                 },
                 { 
                     label: 'Leases', 
-                    href: '/landlord/leases', 
+                    href: '/mobile/landlord/leases', 
                     icon: FileText, 
                     urgent: isUrgent('lease') || isUrgent('lease_renewal_request'),
                     description: 'Digital lease agreements, active contracts & renewal negotiations',
