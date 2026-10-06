@@ -159,7 +159,7 @@ export function LandlordMenuView() {
                 },
                 { 
                     label: 'Applications', 
-                    href: '/landlord/applications', 
+                    href: '/mobile/landlord/applications', 
                     icon: ClipboardList, 
                     badge: counts.applications || undefined, 
                     urgent: isUrgent('application'),
