@@ -168,7 +168,7 @@ export function LandlordMenuView() {
                 },
                 { 
                     label: 'Tenants', 
-                    href: '/landlord/tenants', 
+                    href: '/mobile/landlord/tenants', 
                     icon: Users, 
                     warning: isTenantSetupDelayed,
                     warningTooltip: 'Action needed: Begin setting up your tenants to occupy units and activate lease tracking.',
