@@ -1,40 +1,47 @@
 "use client";
 
 import React, { useState } from "react";
-import { DocAudience } from "@/lib/docs/docsData";
+import type { DocAudience, ManualAudience } from "@/lib/docs/docsData";
 import { EBookReader } from "@/components/landlord/docs/EBookReader";
 import { cn } from "@/lib/utils";
 
 interface DocumentationHubProps {
-  initialAudience?: DocAudience;
-  onNavigateTab?: (tabId: string) => void;
+  initialAudience?: ManualAudience;
+  /** Manuals the reader may switch between. Defaults to all three. */
+  allowedAudiences?: ManualAudience[];
   className?: string;
   defaultBackHref?: string;
   hideBackLink?: boolean;
+  showWrittenGuidesLink?: boolean;
+  initialSearchQuery?: string;
 }
 
+/**
+ * Full-screen interactive manual. Wraps the e-book reader with audience state so
+ * each route (public /docs, /landlord/docs, /tenant/docs) only decides which manuals
+ * are available and where "back" leads.
+ */
 export function DocumentationHub({
   initialAudience = "landlord",
-  onNavigateTab,
+  allowedAudiences,
   className,
   defaultBackHref,
   hideBackLink,
+  showWrittenGuidesLink,
+  initialSearchQuery,
 }: DocumentationHubProps) {
   const [audience, setAudience] = useState<DocAudience>(initialAudience);
 
-  // Derive default back href if not explicitly provided
-  const resolvedBackHref =
-    defaultBackHref ||
-    (initialAudience === "tenant" ? "/tenant/dashboard" : "/landlord/dashboard");
-
   return (
-    <div className={cn("w-full space-y-4", className)}>
+    <div className={cn("h-screen w-full overflow-hidden bg-zinc-100 text-zinc-900", className)}>
       <EBookReader
         audience={audience}
         onAudienceChange={setAudience}
-        onNavigateTab={onNavigateTab}
-        defaultBackHref={resolvedBackHref}
+        allowedAudiences={allowedAudiences}
+        defaultBackHref={defaultBackHref}
         hideBackLink={hideBackLink}
+        showWrittenGuidesLink={showWrittenGuidesLink}
+        initialSearchQuery={initialSearchQuery}
       />
     </div>
   );
