@@ -46,6 +46,8 @@ export function resolveDocsBackLink(options: DocsBackLinkOptions): DocsBackLinkR
     label = "Back to Landlord Dashboard";
   } else if (href.startsWith("/admin")) {
     label = "Back to Admin Console";
+  } else if (href.startsWith("/docs")) {
+    label = "Back to guides";
   } else if (href === "/") {
     label = "Back to Home";
   } else {

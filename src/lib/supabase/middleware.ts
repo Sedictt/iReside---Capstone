@@ -356,6 +356,17 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url);
     }
 
+    // Documentation access: tenants only ever see the tenant manual.
+    if (user) {
+        const docsRedirect = resolveDocsAccessRedirect(request.nextUrl.pathname, role);
+        if (docsRedirect) {
+            const url = request.nextUrl.clone();
+            url.pathname = docsRedirect;
+            url.search = "";
+            return NextResponse.redirect(url);
+        }
+    }
+
     // Role-based portal protection: prevent tenants from accessing landlord or setup routes
     if (user && role === "tenant") {
         if (request.nextUrl.pathname.startsWith("/landlord") || request.nextUrl.pathname.startsWith("/setup")) {
@@ -414,4 +425,24 @@ export const isTenantApiWriteRequest = (request: NextRequest) =>
 export const isExplicitLogoutRequest = (request: NextRequest) =>
     request.nextUrl.pathname.startsWith("/login") &&
     (request.nextUrl.searchParams.has("logout") || request.nextUrl.searchParams.get("sync") === "logout");
+
+export const TENANT_MANUAL_ROUTE = "/tenant/docs";
+
+const isDocsSitePath = (pathname: string) => pathname === "/docs" || pathname.startsWith("/docs/");
+const isLandlordManualPath = (pathname: string) =>
+    pathname === "/landlord/docs" || pathname.startsWith("/landlord/docs/");
+
+/**
+ * Documentation is split into the public documentation site (/docs/*), the landlord
+ * manual (/landlord/docs) and the tenant manual (/tenant/docs, alias /tenant/manual).
+ * Signed-in tenants may only read the tenant manual; everything else sends them there.
+ * Returns the pathname to redirect to, or null when the request may proceed.
+ */
+export const resolveDocsAccessRedirect = (pathname: string, role: string | null | undefined): string | null => {
+    if (role !== "tenant") return null;
+    if (isDocsSitePath(pathname) || isLandlordManualPath(pathname)) {
+        return TENANT_MANUAL_ROUTE;
+    }
+    return null;
+};
 

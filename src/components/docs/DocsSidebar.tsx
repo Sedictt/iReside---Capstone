@@ -40,16 +40,21 @@ export const DOCS_NAV: NavSection[] = [
   {
     title: "Getting Started",
     items: [
-      { 
-        title: "Introduction", 
-        href: "/docs", 
+      {
+        title: "Introduction",
+        href: "/docs/introduction",
         icon: BookOpen,
         subItems: [
-          { title: "What is iReside?", href: "/docs#what-is-ireside" },
-          { title: "Who is This For?", href: "/docs#who-is-this-for" },
-          { title: "Platform Features", href: "/docs#features" },
-          { title: "How it Works", href: "/docs#how-it-works" },
+          { title: "What is iReside?", href: "/docs/introduction#what-is-ireside" },
+          { title: "Who is This For?", href: "/docs/introduction#who-is-this-for" },
+          { title: "Platform Features", href: "/docs/introduction#features" },
+          { title: "How it Works", href: "/docs/introduction#how-it-works" },
         ]
+      },
+      {
+        title: "Interactive Manual",
+        href: "/docs",
+        icon: LayoutGrid,
       },
       {
         title: "Core Features",
