@@ -283,7 +283,6 @@ export function LandlordOverviewView() {
 
     // User greeting name
     const rawName =
-        profile?.first_name ||
         profile?.full_name ||
         user?.user_metadata?.first_name ||
         user?.user_metadata?.full_name ||

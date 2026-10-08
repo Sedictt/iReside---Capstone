@@ -3,22 +3,26 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Building2, ArrowRight, Grid, Wallet, ShieldCheck } from "lucide-react";
-import { useProperty } from "@/context/PropertyContext";
+import { useLandlordSetup } from "@/hooks/useLandlordSetup";
 import { cn } from "@/lib/utils";
 
 export function LandlordWelcomeLightbox() {
     const router = useRouter();
     const pathname = usePathname();
-    const { properties, loading } = useProperty();
+    const setup = useLandlordSetup();
     const [hasMounted, setHasMounted] = useState(false);
 
     useEffect(() => {
         setHasMounted(true);
     }, []);
 
-    // Only display when client mounted, property loading is complete, landlord has zero properties,
-    // and the user is NOT actively on the property creation wizard page
-    const isVisible = hasMounted && !loading && properties.length === 0 && pathname !== "/landlord/properties/new";
+    // Only when the landlord's property list is authoritatively known to be empty.
+    // Loading, failed requests, missing profile, and non-landlord roles never show this.
+    const isVisible =
+        hasMounted &&
+        setup.status === "ready" &&
+        setup.promptStep === "property" &&
+        pathname !== "/landlord/properties/new";
 
     if (!isVisible) return null;
 
@@ -55,17 +59,17 @@ export function LandlordWelcomeLightbox() {
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">
-                            First Step Required
+                            Step 1 of 5
                         </span>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                            Mandatory Setup
+                            Required
                         </span>
                     </div>
                     <h1 id="property-setup-lightbox-title" className="text-2xl sm:text-3xl font-black tracking-tight text-foreground leading-tight">
-                        Set Up Your First Property
+                        Welcome! Let&apos;s set up your workspace
                     </h1>
                     <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                        Welcome to iReside. To start configuring units, recording payments, and inviting tenants, you must register your primary property into the system.
+                        Start by registering your property. Units, payments, and tenants are all organized under it.
                     </p>
                 </div>
 
@@ -127,7 +131,7 @@ export function LandlordWelcomeLightbox() {
                         <ArrowRight className="size-4 relative z-10 transition-transform group-hover:translate-x-1" />
                     </button>
                     <p className="mt-3 text-center text-[10px] font-medium text-muted-foreground/70">
-                        This step cannot be skipped. All operations require an active property profile.
+                        Units, billing, and tenant tools unlock once your first property is registered.
                     </p>
                 </div>
             </div>

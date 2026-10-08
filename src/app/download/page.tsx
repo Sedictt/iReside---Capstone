@@ -13,12 +13,11 @@ import {
   Globe,
   X,
   Check,
-  HardDrive,
   HelpCircle,
-  Package,
   Loader2,
   Copy,
   ExternalLink,
+  ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -26,13 +25,13 @@ import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function AppDownloadPage() {
-
   const [activeModal, setActiveModal] = useState<"qr" | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedApkUrl, setCopiedApkUrl] = useState(false);
   const [isWindowsDownloading, setIsWindowsDownloading] = useState(false);
   const [isAndroidDownloading, setIsAndroidDownloading] = useState(false);
   const [origin, setOrigin] = useState("");
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -67,8 +66,8 @@ export default function AppDownloadPage() {
     if (typeof window !== "undefined") {
       navigator.clipboard.writeText(window.location.origin);
       setCopiedLink(true);
-      toast.success("Web portal URL copied to clipboard", {
-        description: "You can open this link in any browser or share it with residents.",
+      toast.success("Website address copied", {
+        description: "You can now paste and send this link to anyone.",
       });
       setTimeout(() => setCopiedLink(false), 2500);
     }
@@ -78,8 +77,8 @@ export default function AppDownloadPage() {
     if (typeof window !== "undefined") {
       navigator.clipboard.writeText(apkDirectDownloadUrl);
       setCopiedApkUrl(true);
-      toast.success("APK download URL copied to clipboard", {
-        description: "Share this direct download link to install on Android devices.",
+      toast.success("Download link copied", {
+        description: "Paste and send this link to install on any Android phone.",
       });
       setTimeout(() => setCopiedApkUrl(false), 2500);
     }
@@ -97,7 +96,7 @@ export default function AppDownloadPage() {
       };
 
       if (!response.ok || !release.downloadUrl || !release.filename) {
-        throw new Error(release.error || "The Windows installer is not available yet.");
+        throw new Error(release.error || "The Windows installer is being prepared. Please try again shortly.");
       }
 
       const link = document.createElement("a");
@@ -107,12 +106,12 @@ export default function AppDownloadPage() {
       link.click();
       document.body.removeChild(link);
 
-      toast.success("Downloading Windows installer", {
-        description: `${release.filename} for ${release.propertyName || "iReside"} has started downloading.`,
+      toast.success("Downloading Windows app", {
+        description: "Check your computer's Downloads folder to start installing.",
       });
     } catch (error) {
-      toast.error("Windows installer is not ready", {
-        description: error instanceof Error ? error.message : "Please try again shortly or check back later.",
+      toast.error("Download temporarily unavailable", {
+        description: error instanceof Error ? error.message : "Please try again shortly or use the web browser version below.",
       });
     } finally {
       setIsWindowsDownloading(false);
@@ -140,8 +139,8 @@ export default function AppDownloadPage() {
       link.click();
       document.body.removeChild(link);
 
-      toast.success("Downloading Android Package", {
-        description: `${filename} has started downloading.`,
+      toast.success("Downloading Android app", {
+        description: "When the download finishes, tap the notification to install.",
       });
     } catch {
       const fallbackFilename = variant === "debug" ? "iReside-v1.0.0-debug.apk" : "iReside-v1.0.0-release.apk";
@@ -152,18 +151,41 @@ export default function AppDownloadPage() {
       link.click();
       document.body.removeChild(link);
 
-      toast.success("Downloading Android Package", {
-        description: `${fallbackFilename} has started downloading.`,
+      toast.success("Downloading Android app", {
+        description: "When the download finishes, tap the notification to install.",
       });
     } finally {
       setIsAndroidDownloading(false);
     }
   };
 
+  const faqs = [
+    {
+      question: "What if Windows says \"Windows protected your PC\"?",
+      answer: "Don't worry! This is completely normal for newly downloaded software. Simply click \"More info\", then click the \"Run anyway\" button. iReside is safe, verified, and will install right away.",
+    },
+    {
+      question: "How do I install the app on my Android phone?",
+      answer: "Scan the QR code with your phone camera, or click \"Download Android App\". Once downloaded, tap the download notification. If your phone asks permission to install, tap \"Settings\", turn on \"Allow from this source\", and tap \"Install\".",
+    },
+    {
+      question: "Do I need to download both the computer and phone apps?",
+      answer: "No, only download what you need! Most landlords prefer using a computer or laptop for managing rooms and printing receipts, while tenants love using their phone to pay rent and view bills.",
+    },
+    {
+      question: "Can I use both my computer and my phone?",
+      answer: "Yes! Everything connects together in real time. If you update something on your computer, it will automatically show up on your phone.",
+    },
+    {
+      question: "Will my data be lost if I get a new phone or computer?",
+      answer: "No, never! All your properties, tenant records, and payment receipts are safely stored in the cloud. Just log in with your email and password on your new device.",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background text-foreground font-sans flex flex-col transition-colors duration-200">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 flex h-16 sm:h-[4.5rem] items-center justify-between bg-background/95 backdrop-blur-md px-4 sm:px-8 border-b border-border/40 text-foreground neumorphic-panel">
+      <header className="sticky top-0 z-40 flex h-16 sm:h-20 items-center justify-between bg-background/95 backdrop-blur-md px-4 sm:px-8 border-b border-border/40 text-foreground neumorphic-panel">
         <div className="flex items-center gap-4 sm:gap-6">
           <Link
             href="/"
@@ -172,26 +194,9 @@ export default function AppDownloadPage() {
           >
             <Logo className="h-8 w-28 sm:h-9 sm:w-32" />
           </Link>
-          <div className="hidden sm:flex items-center gap-2.5">
-            <div className="h-4 w-px bg-border/60" aria-hidden="true" />
-            <span className="neumorphic-inset px-2.5 py-1 rounded-xl text-xs font-semibold text-primary flex items-center gap-1.5">
-              <Download className="size-3.5" />
-              App Hub
-            </span>
-            <span className="text-xs font-medium text-muted-foreground">
-              Windows & Android Clients
-            </span>
-          </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="/docs"
-            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary hidden sm:inline-flex items-center gap-1"
-          >
-            Documentation
-          </Link>
-
           <ThemeToggle
             className="rounded-xl border border-border/60 bg-background shadow-xs focus-visible:ring-2 focus-visible:ring-primary"
             aria-label="Toggle theme"
@@ -200,293 +205,318 @@ export default function AppDownloadPage() {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-8 py-8 sm:py-14 flex flex-col gap-12">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-8 py-8 sm:py-12 flex flex-col gap-10 sm:gap-14">
         {/* Hero Section */}
         <section className="text-center max-w-2xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 neumorphic-inset px-3.5 py-1.5 rounded-full text-xs font-semibold text-muted-foreground">
-            <Package className="size-3.5 text-primary shrink-0" />
-            <span>Official Client Releases · Windows & Android</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+            <Download className="size-3.5 shrink-0" />
+            <span>Official iReside Apps</span>
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-foreground leading-tight [text-wrap:balance]">
-            Download the iReside Apps
+            Get iReside on Your Device
           </h1>
-          <p className="text-sm sm:text-base font-normal text-muted-foreground max-w-xl mx-auto leading-relaxed [text-wrap:pretty]">
-            Experience the full speed and hardware capabilities of iReside with dedicated native applications for desktop landlords and mobile residents.
+          <p className="text-base sm:text-lg font-normal text-muted-foreground max-w-xl mx-auto leading-relaxed [text-wrap:pretty]">
+            Choose your device below to get started. Everything connects together automatically so your records are always up to date.
           </p>
         </section>
 
         {/* 2-Column Platform Cards Grid */}
-        <section aria-label="Available download platforms" className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 items-stretch max-w-4xl mx-auto w-full">
-          {/* Card 1: Windows Desktop App */}
-          <div className="neumorphic-panel rounded-3xl p-6 sm:p-8 flex flex-col justify-between gap-6 border border-border/50 transition-all hover:-translate-y-1">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="size-12 rounded-2xl neumorphic-inset flex items-center justify-center text-primary">
-                  <Monitor className="size-6" />
+        <section
+          aria-label="Download options"
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 items-stretch max-w-4xl mx-auto w-full"
+        >
+          {/* Card 1: Windows Computer */}
+          <div className="neumorphic-panel rounded-3xl p-6 sm:p-8 flex flex-col justify-between gap-6 border-2 border-blue-500/20 bg-card/60 hover:border-blue-500/40 transition-all shadow-sm">
+            <div className="space-y-5">
+              {/* Header with Icon and Badge */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="size-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                  <Monitor className="size-7" />
                 </div>
-                <span className="neumorphic-inset px-3 py-1 rounded-xl text-xs font-semibold text-primary">
-                  Windows 10 / 11 · 64-bit
+                <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
+                  Best for Landlords
                 </span>
               </div>
 
+              {/* Title & Description */}
               <div>
-                <h2 className="text-xl font-bold tracking-tight text-foreground">
-                  Windows Desktop Client
+                <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                  Windows Computer
                 </h2>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                  Native desktop software engineered for landlords and property management teams.
+                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                  Best for managing rental properties, room layouts, and monthly billing on a desktop PC or laptop.
                 </p>
               </div>
 
-              {/* Specs Pills */}
-              <div className="flex flex-wrap gap-2 pt-1 text-[11px] text-muted-foreground font-medium">
-                <span className="neumorphic-inset px-2.5 py-1 rounded-lg">.exe Installer</span>
-                <span className="neumorphic-inset px-2.5 py-1 rounded-lg">x64 / ARM64</span>
-                <span className="neumorphic-inset px-2.5 py-1 rounded-lg">Real-time Cloud Sync</span>
-              </div>
-
-              {/* Feature Checklist */}
-              <ul className="space-y-2.5 text-xs text-muted-foreground pt-2">
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>Runs as a standalone desktop app with Windows Start Menu and Taskbar integration</span>
+              {/* Benefits Checklist in Layman's Terms */}
+              <ul className="space-y-3 text-sm text-foreground/90 pt-1">
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="size-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                  <span>Large, easy-to-read screen layout for comfortable typing</span>
                 </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>Hardware-accelerated floor planner and multi-window workspace</span>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="size-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                  <span>Interactive room map layout and 1-click printable receipts</span>
                 </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>High-speed local caching with automatic cloud database synchronization</span>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="size-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                  <span>Automatically backs up all your records safely to the cloud</span>
                 </li>
               </ul>
             </div>
 
-            <div className="space-y-2 pt-2">
+            {/* Action Area */}
+            <div className="space-y-2.5 pt-3">
               <button
                 onClick={handleDownloadWindows}
                 disabled={isWindowsDownloading}
-                aria-label="Download Windows desktop installer"
-                className="w-full py-3.5 px-4 rounded-2xl neumorphic-primary active:scale-95 disabled:cursor-wait disabled:opacity-70 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="Download for Windows Computer"
+                className="w-full h-13 min-h-[52px] sm:min-h-[54px] px-6 rounded-2xl neumorphic-primary active:scale-[0.98] disabled:cursor-wait disabled:opacity-70 text-sm font-bold tracking-wide transition-all flex items-center justify-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 shadow-md"
               >
                 {isWindowsDownloading ? (
                   <>
-                    <Loader2 className="size-4 animate-spin" />
-                    <span>Preparing installer...</span>
+                    <Loader2 className="size-5 animate-spin" />
+                    <span>Preparing download...</span>
                   </>
                 ) : (
                   <>
-                    <Download className="size-4" />
-                    <span>Download for Windows (.exe)</span>
+                    <Download className="size-5" />
+                    <span>Download for Windows PC</span>
                   </>
                 )}
               </button>
-              <p className="text-[11px] text-muted-foreground text-center">
-                Windows 10 / 11 · Free Automatic Updates
-              </p>
-            </div>
-          </div>
 
-          {/* Card 2: Android Mobile App */}
-          <div className="neumorphic-panel rounded-3xl p-6 sm:p-8 flex flex-col justify-between gap-6 border border-border/50 transition-all hover:-translate-y-1">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="size-12 rounded-2xl neumorphic-inset flex items-center justify-center text-emerald-500">
-                  <Smartphone className="size-6" />
-                </div>
-                <span className="neumorphic-inset px-3 py-1 rounded-xl text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                  Android 8.0+ · APK
-                </span>
-              </div>
+              <Link
+                href="/"
+                className="w-full h-12 min-h-[48px] px-5 rounded-2xl neumorphic-extruded hover:text-primary active:scale-[0.98] text-sm font-semibold tracking-wide transition-all flex items-center justify-center gap-2 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <Globe className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span>Open in Web Browser Instead</span>
+              </Link>
 
-              <div>
-                <h2 className="text-xl font-bold tracking-tight text-foreground">
-                  Android Mobile Client
-                </h2>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                  Direct installable APK package optimized for tenant portals and on-the-go access.
+              <div className="text-center pt-0.5">
+                <p className="text-xs text-muted-foreground">
+                  Works on Windows 10 & 11 · Free & safe to install
                 </p>
               </div>
 
-              {/* Specs Pills */}
-              <div className="flex flex-wrap gap-2 pt-1 text-[11px] text-muted-foreground font-medium">
-                <span className="neumorphic-inset px-2.5 py-1 rounded-lg">Direct APK Package</span>
-                <span className="neumorphic-inset px-2.5 py-1 rounded-lg">Phones & Tablets</span>
-                <span className="neumorphic-inset px-2.5 py-1 rounded-lg">Push Notifications</span>
+              {/* Reassuring 3-step hint for non-tech users */}
+              <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">3 simple steps: </span>
+                <span>1. Click Download → 2. Open file → 3. Sign in</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Android Phone & Tablet */}
+          <div className="neumorphic-panel rounded-3xl p-6 sm:p-8 flex flex-col justify-between gap-6 border-2 border-emerald-500/20 bg-card/60 hover:border-emerald-500/40 transition-all shadow-sm">
+            <div className="space-y-5">
+              {/* Header with Icon and Badge */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="size-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                  <Smartphone className="size-7" />
+                </div>
+                <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                  Best for Tenants & Mobile
+                </span>
               </div>
 
-              {/* Feature Checklist */}
-              <ul className="space-y-2.5 text-xs text-muted-foreground pt-2">
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>Native camera hardware access for instant payment receipt and document capture</span>
+              {/* Title & Description */}
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                  Android Phone & Tablet
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                  Take iReside with you anywhere. Best for paying rent, sending receipt photos, and receiving urgent alerts.
+                </p>
+              </div>
+
+              {/* Benefits Checklist in Layman's Terms */}
+              <ul className="space-y-3 text-sm text-foreground/90 pt-1">
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  <span>Snap and upload payment receipt photos with your phone camera</span>
                 </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>Real-time push notifications for rent dues, invoices, and notices</span>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  <span>Receive reminder alerts when rent or utility bills are due</span>
                 </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>Full-screen touch interface for maintenance ticketing and real-time chat</span>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  <span>Send direct repair requests and chat without leaving the app</span>
                 </li>
               </ul>
             </div>
 
-            <div className="space-y-2 pt-2">
-              <div className="flex flex-col sm:flex-row gap-2.5">
-                <button
-                  onClick={() => handleDownloadAndroid("release")}
-                  disabled={isAndroidDownloading}
-                  aria-label="Download Android APK file"
-                  className="flex-1 py-3.5 px-4 rounded-2xl neumorphic-primary active:scale-95 disabled:cursor-wait disabled:opacity-70 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                >
-                  {isAndroidDownloading ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" />
-                      <span>Preparing APK...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download className="size-4" />
-                      <span>Download APK (.apk)</span>
-                    </>
-                  )}
-                </button>
+            {/* Action Area */}
+            <div className="space-y-2.5 pt-3">
+              <button
+                onClick={() => handleDownloadAndroid("release")}
+                disabled={isAndroidDownloading}
+                aria-label="Download Android App directly"
+                className="w-full h-13 min-h-[52px] sm:min-h-[54px] px-6 rounded-2xl neumorphic-primary active:scale-[0.98] disabled:cursor-wait disabled:opacity-70 text-sm font-bold tracking-wide transition-all flex items-center justify-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 shadow-md"
+              >
+                {isAndroidDownloading ? (
+                  <>
+                    <Loader2 className="size-5 animate-spin" />
+                    <span>Preparing download...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="size-5" />
+                    <span>Download Android App</span>
+                  </>
+                )}
+              </button>
 
-                <button
-                  onClick={() => setActiveModal("qr")}
-                  aria-label="Open QR code to scan on Android phone"
-                  className="py-3.5 px-4 rounded-2xl neumorphic-extruded hover:text-primary active:scale-95 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                >
-                  <QrCode className="size-4" />
-                  <span>Scan QR</span>
-                </button>
-              </div>
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground px-1 pt-1">
-                <span>Version 1.0.0 · Capacitor Shell (3.2 MB)</span>
+              <button
+                onClick={() => setActiveModal("qr")}
+                aria-label="Scan QR code with phone camera"
+                className="w-full h-12 min-h-[48px] px-5 rounded-2xl neumorphic-extruded hover:text-emerald-600 dark:hover:text-emerald-400 active:scale-[0.98] text-sm font-semibold tracking-wide transition-all flex items-center justify-center gap-2 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+              >
+                <QrCode className="size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>Scan QR with Phone Camera</span>
+              </button>
+
+              <div className="flex items-center justify-between text-xs text-muted-foreground px-1 pt-0.5">
+                <span>Works on all Android phones</span>
                 <button
                   type="button"
                   onClick={() => handleDownloadAndroid("debug")}
                   className="text-primary hover:underline font-medium focus-visible:outline-none"
                 >
-                  Universal APK Fallback
+                  Trouble installing? Tap here
                 </button>
+              </div>
+
+              {/* Reassuring 3-step hint for non-tech users */}
+              <div className="rounded-xl bg-muted/40 border border-border/50 p-3 text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">3 simple steps: </span>
+                <span>1. Scan QR or Download → 2. Tap install → 3. Sign in</span>
               </div>
             </div>
           </div>
         </section>
 
         {/* Universal Web Access Banner */}
-        <section aria-label="Web portal fallback" className="neumorphic-inset rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 max-w-4xl mx-auto w-full text-xs text-muted-foreground">
-          <div className="flex items-center gap-3">
-            <Globe className="size-5 text-primary shrink-0" />
-            <div>
-              <strong className="text-foreground font-semibold">Universal Web Access: </strong>
-              <span>
-                Prefer not to install an application? You can sign in and access the full portal directly in any standard desktop or mobile web browser.
-              </span>
-            </div>
-          </div>
-          <button
-            onClick={handleCopyLink}
-            aria-label="Copy web portal URL to clipboard"
-            className="neumorphic-extruded hover:text-primary active:scale-95 px-3.5 py-2 rounded-xl text-xs font-semibold text-foreground transition-all shrink-0 flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            {copiedLink ? (
-              <>
-                <Check className="size-3.5 text-emerald-500" />
-                <span className="text-emerald-500">Copied!</span>
-              </>
-            ) : (
-              <>
-                <Share2 className="size-3.5" />
-                <span>Copy Portal URL</span>
-              </>
-            )}
-          </button>
-        </section>
-
-        {/* Cloud Architecture & Safety Banner */}
-        <section aria-label="Cloud synchronization architecture" className="neumorphic-extruded rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 border border-border/50 max-w-4xl mx-auto w-full">
+        <section
+          aria-label="Web portal access"
+          className="neumorphic-panel rounded-3xl p-6 sm:p-7 border border-border/60 bg-muted/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 max-w-4xl mx-auto w-full"
+        >
           <div className="flex items-start gap-4">
-            <div className="size-12 sm:size-14 rounded-2xl neumorphic-inset flex items-center justify-center text-primary shrink-0">
-              <HardDrive className="size-6 sm:size-7" />
+            <div className="size-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0 mt-0.5">
+              <Globe className="size-6" />
             </div>
             <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="size-4 text-emerald-500 shrink-0" />
-                <h3 className="text-base font-bold tracking-tight text-foreground">
-                  Zero Local Data Risk · 100% Cloud Synchronized
-                </h3>
-              </div>
-              <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">
-                Your properties, leases, ledger entries, and photos are encrypted and stored safely in the cloud. Reinstalling the app or switching to another device requires zero manual backup or file migration.
+              <h3 className="text-base font-bold text-foreground">
+                Using an iPhone, iPad, Mac, or Chromebook?
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">
+                You can access the full iReside web portal directly in Safari, Chrome, or any browser without installing anything.
               </p>
             </div>
           </div>
+
+          <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
+            <Link
+              href="/"
+              className="flex-1 md:flex-initial min-h-[44px] px-5 rounded-xl neumorphic-primary active:scale-95 text-xs font-bold tracking-wide transition-all flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary shadow-xs"
+            >
+              <span>Open Web Portal</span>
+              <ExternalLink className="size-3.5" />
+            </Link>
+
+            <button
+              onClick={handleCopyLink}
+              aria-label="Copy website address to clipboard"
+              className="min-h-[44px] px-4 rounded-xl neumorphic-extruded hover:text-primary active:scale-95 text-xs font-semibold text-foreground transition-all flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              {copiedLink ? (
+                <>
+                  <Check className="size-4 text-emerald-500" />
+                  <span className="text-emerald-500 font-bold">Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="size-4" />
+                  <span>Copy Link</span>
+                </>
+              )}
+            </button>
+          </div>
         </section>
 
-        {/* FAQ Section */}
+        {/* Safety & Cloud Backup Reassurance */}
+        <section
+          aria-label="Data safety reassurance"
+          className="neumorphic-extruded rounded-3xl p-6 sm:p-8 border border-border/50 max-w-4xl mx-auto w-full flex items-start gap-4 sm:gap-5"
+        >
+          <div className="size-12 sm:size-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+            <ShieldCheck className="size-6 sm:size-7" />
+          </div>
+          <div className="space-y-1.5">
+            <h3 className="text-base sm:text-lg font-bold tracking-tight text-foreground">
+              Your Data is Always Safe and Backed Up
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
+              All your properties, tenant records, payments, and photos are safely stored in the cloud. Even if you switch phones or get a new computer, simply sign in and everything is right there waiting for you.
+            </p>
+          </div>
+        </section>
+
+        {/* Simple Layman's Help & FAQ Section */}
         <section aria-labelledby="faq-heading" className="space-y-6 max-w-4xl mx-auto w-full">
-          <div className="text-center space-y-1">
-            <h2 id="faq-heading" className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              Frequently Asked Questions
+          <div className="text-center space-y-1.5">
+            <h2 id="faq-heading" className="text-2xl font-bold tracking-tight text-foreground">
+              Common Questions & Quick Help
             </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              Everything you need to know about installing and running the iReside applications.
+            <p className="text-sm text-muted-foreground">
+              Simple answers to help you get started without any confusion.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="neumorphic-panel rounded-2xl p-5 border border-border/40 space-y-2">
-              <h3 className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
-                <HelpCircle className="size-4 text-primary shrink-0" />
-                How do I install the Android APK?
-              </h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Download the APK file directly or scan the QR code with your phone. Once downloaded, tap the notification. When Android prompts &apos;Install unknown apps&apos;, enable permissions for your browser or file manager, then tap &apos;Install&apos;.
-              </p>
-            </div>
+          <div className="space-y-3">
+            {faqs.map((faq, index) => {
+              const isOpen = openFaqIndex === index;
+              return (
+                <div
+                  key={index}
+                  className="neumorphic-panel rounded-2xl border border-border/50 overflow-hidden transition-colors"
+                >
+                  <button
+                    onClick={() => setOpenFaqIndex(isOpen ? null : index)}
+                    aria-expanded={isOpen}
+                    className="w-full p-4 sm:p-5 flex items-center justify-between gap-4 text-left font-semibold text-sm sm:text-base text-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    <span className="flex items-center gap-3">
+                      <HelpCircle className="size-5 text-primary shrink-0" />
+                      {faq.question}
+                    </span>
+                    <ChevronDown
+                      className={`size-4 text-muted-foreground shrink-0 transition-transform duration-200 ${
+                        isOpen ? "rotate-180 text-primary" : ""
+                      }`}
+                    />
+                  </button>
 
-            <div className="neumorphic-panel rounded-2xl p-5 border border-border/40 space-y-2">
-              <h3 className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
-                <HelpCircle className="size-4 text-primary shrink-0" />
-                What if Windows SmartScreen shows a warning?
-              </h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Because new application versions may still be building automated cloud reputation with Microsoft Defender, Windows may show a prompt. Click &apos;More info&apos; and select &apos;Run anyway&apos; to finish setup.
-              </p>
-            </div>
-
-            <div className="neumorphic-panel rounded-2xl p-5 border border-border/40 space-y-2">
-              <h3 className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
-                <HelpCircle className="size-4 text-primary shrink-0" />
-                Can I be signed in on multiple devices?
-              </h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Yes. Landlords can operate the Master Dashboard on their desktop PC while receiving payment alerts on their phone. All changes synchronize instantly across all active sessions.
-              </p>
-            </div>
-
-            <div className="neumorphic-panel rounded-2xl p-5 border border-border/40 space-y-2">
-              <h3 className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
-                <HelpCircle className="size-4 text-primary shrink-0" />
-                What are the minimum system requirements?
-              </h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                The desktop client supports Windows 10 (64-bit) and Windows 11. The Android client requires Android 8.0 (Oreo) or higher with camera permissions for payment receipts.
-              </p>
-            </div>
-
-            <div className="neumorphic-panel rounded-2xl p-5 border border-border/40 space-y-2">
-              <h3 className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
-                <HelpCircle className="size-4 text-primary shrink-0" />
-                What if my device shows &apos;Parse Error&apos; or cannot open the package?
-              </h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Ensure the download finishes completely before tapping the notification. If your browser or device skin prevents opening, open the APK from your device&apos;s official &apos;Files&apos; or &apos;Downloads&apos; app, or tap &apos;Universal APK Fallback&apos; directly above.
-              </p>
-            </div>
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-5 pb-5 pt-1 text-sm text-muted-foreground leading-relaxed border-t border-border/30">
+                          {faq.answer}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
           </div>
         </section>
       </main>
@@ -496,18 +526,18 @@ export default function AppDownloadPage() {
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <span>&copy; {new Date().getFullYear()} iReside. All rights reserved.</span>
           <div className="flex items-center gap-4">
-            <Link href="/docs" className="hover:text-foreground transition-colors">
-              Documentation & Handover
+            <Link href="/" className="hover:text-foreground transition-colors">
+              Web Portal Home
             </Link>
             <span aria-hidden="true">&middot;</span>
-            <Link href="/" className="hover:text-foreground transition-colors">
-              Portal Home
+            <Link href="/docs" className="hover:text-foreground transition-colors">
+              User Guide
             </Link>
           </div>
         </div>
       </footer>
 
-      {/* MODAL: QR CODE SCANNER MODAL FOR ANDROID APK DOWNLOAD */}
+      {/* MODAL: SIMPLE PHONE CAMERA QR SCANNER */}
       <AnimatePresence>
         {activeModal === "qr" && (
           <div
@@ -532,91 +562,84 @@ export default function AppDownloadPage() {
               transition={{ duration: 0.2 }}
               className="relative z-10 w-full max-w-sm neumorphic-panel rounded-3xl p-6 sm:p-7 border border-border shadow-2xl flex flex-col items-center gap-5 text-center"
             >
+              {/* Header */}
               <div className="flex items-center justify-between w-full pb-3 border-b border-border/50">
                 <div className="flex items-center gap-2">
-                  <QrCode className="size-4 text-primary shrink-0" />
-                  <h3 id="qr-modal-title" className="text-xs font-bold uppercase tracking-wider text-foreground">
-                    Android APK Download QR
+                  <QrCode className="size-5 text-primary shrink-0" />
+                  <h3 id="qr-modal-title" className="text-sm font-bold text-foreground">
+                    Scan with Your Phone Camera
                   </h3>
                 </div>
                 <button
                   onClick={() => setActiveModal(null)}
-                  className="size-7 rounded-xl neumorphic-inset flex items-center justify-center text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  aria-label="Close QR code dialog"
+                  className="size-8 rounded-xl neumorphic-inset flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  aria-label="Close dialog"
                 >
-                  <X className="size-3.5" />
+                  <X className="size-4" />
                 </button>
               </div>
 
               {/* QR Image Container */}
-              <div className="size-52 rounded-2xl neumorphic-inset p-3 flex items-center justify-center bg-white shadow-inner">
+              <div className="size-60 rounded-2xl p-4 flex items-center justify-center bg-white shadow-md border-2 border-emerald-500/20">
                 {qrCodeApiUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={qrCodeApiUrl}
-                    alt="QR code to download Android APK"
+                    alt="QR code to install Android app"
                     className="size-full object-contain rounded-lg"
                     loading="lazy"
                   />
                 ) : (
                   <div className="size-full flex items-center justify-center text-zinc-400">
-                    <Loader2 className="size-6 animate-spin" />
+                    <Loader2 className="size-8 animate-spin text-primary" />
                   </div>
                 )}
               </div>
 
-              <div className="space-y-1">
-                <p className="text-xs font-bold tracking-tight text-foreground">
-                  Scan to Download APK Directly
-                </p>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Open your Android camera or QR scanner to download the installation package directly to your phone.
-                </p>
+              {/* 3 Simple Instructions */}
+              <div className="w-full bg-muted/30 border border-border/50 rounded-2xl p-3.5 text-left text-xs text-foreground/90 space-y-2">
+                <div className="flex items-center gap-2 font-medium">
+                  <span className="size-5 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-[11px] shrink-0">
+                    1
+                  </span>
+                  <span>Open the <strong>Camera</strong> on your Android phone</span>
+                </div>
+                <div className="flex items-center gap-2 font-medium">
+                  <span className="size-5 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-[11px] shrink-0">
+                    2
+                  </span>
+                  <span>Point it at this QR code</span>
+                </div>
+                <div className="flex items-center gap-2 font-medium">
+                  <span className="size-5 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-[11px] shrink-0">
+                    3
+                  </span>
+                  <span>Tap the link that appears on your screen to install</span>
+                </div>
               </div>
 
-              <div className="flex flex-col gap-2 w-full pt-1">
-                <button
-                  onClick={() => {
-                    handleDownloadAndroid("release");
-                    setActiveModal(null);
-                  }}
-                  className="neumorphic-primary px-4 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider active:scale-95 transition-all w-full flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                >
-                  <Download className="size-3.5" />
-                  <span>Download Release APK</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    handleDownloadAndroid("debug");
-                    setActiveModal(null);
-                  }}
-                  className="neumorphic-extruded px-4 py-2 rounded-2xl text-xs font-semibold active:scale-95 transition-all w-full flex items-center justify-center gap-2 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                >
-                  <Download className="size-3.5 text-primary" />
-                  <span>Download Universal APK (Fallback)</span>
-                </button>
-
+              {/* Actions */}
+              <div className="flex flex-col gap-2.5 w-full pt-1">
                 <button
                   onClick={handleCopyApkLink}
-                  className="neumorphic-extruded px-4 py-2 rounded-2xl text-xs font-semibold active:scale-95 transition-all w-full flex items-center justify-center gap-2 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="min-h-[46px] neumorphic-extruded px-4 py-2.5 rounded-xl text-xs font-semibold active:scale-95 transition-all w-full flex items-center justify-center gap-2 text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   {copiedApkUrl ? (
                     <>
-                      <Check className="size-3.5 text-emerald-500" />
-                      <span className="text-emerald-500">Download Link Copied!</span>
+                      <Check className="size-4 text-emerald-500" />
+                      <span className="text-emerald-500 font-bold">Download Link Copied!</span>
                     </>
                   ) : (
                     <>
-                      <Copy className="size-3.5" />
-                      <span>Copy Download Link</span>
+                      <Copy className="size-4" />
+                      <span>Copy Download Link (to send via Chat/SMS)</span>
                     </>
                   )}
                 </button>
 
                 <button
                   onClick={() => setActiveModal(null)}
-                  className="px-4 py-1.5 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="min-h-[44px] px-4 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   Close
                 </button>

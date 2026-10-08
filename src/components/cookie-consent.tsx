@@ -18,6 +18,9 @@ type ConsentSettings = {
   marketing: boolean
 }
 
+/** Dispatch on `window` to reopen the preferences panel (used by the Privacy Policy page). */
+export const OPEN_COOKIE_PREFERENCES_EVENT = "ireside:open-cookie-preferences"
+
 export function CookieConsent() {
   const [isVisible, setIsVisible] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
@@ -35,6 +38,27 @@ export function CookieConsent() {
       return () => clearTimeout(appearanceDelay)
     }
     setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
+    const reopen = () => {
+      try {
+        const saved = JSON.parse(localStorage.getItem("ireside-consent-v1") ?? "null")
+        if (saved && typeof saved === "object") {
+          setActiveSettings({
+            essential: true,
+            analytics: Boolean(saved.analytics),
+            marketing: Boolean(saved.marketing),
+          })
+        }
+      } catch {
+        // Corrupt or unavailable storage: fall back to the current in-memory defaults.
+      }
+      setIsManaging(true)
+      setIsVisible(true)
+    }
+    window.addEventListener(OPEN_COOKIE_PREFERENCES_EVENT, reopen)
+    return () => window.removeEventListener(OPEN_COOKIE_PREFERENCES_EVENT, reopen)
   }, [])
 
   const commitConsent = (settings: ConsentSettings) => {
@@ -106,7 +130,7 @@ export function CookieConsent() {
                         Privacy Preferences
                       </h3>
                       <p className="text-sm leading-relaxed text-muted-foreground">
-                        We use technical cookies to power the iReside dashboard and optional analytics to improve your property management experience.
+                        iReside uses only essential cookies to keep you signed in and remember your settings. We do not use advertising or third-party tracking.
                       </p>
                       <p className="text-xs text-muted-foreground/60">
                         By continuing, you agree to our{" "}

@@ -28,7 +28,7 @@ import { RoleSidebar, type SidebarNavSection, type SidebarLockStage } from "@/co
 import { PropertySelector } from "@/components/landlord/PropertySelector";
 import { LogoutConfirmationModal } from "@/components/ui/LogoutConfirmationModal";
 import { useNotifications } from "@/context/NotificationContext";
-import { useProperty } from "@/context/PropertyContext";
+import { useLandlordSetup } from "@/hooks/useLandlordSetup";
 import { cn } from "@/lib/utils";
 
 export function Sidebar({
@@ -39,107 +39,12 @@ export function Sidebar({
     className?: string;
 }) {
     const { counts, importantNotifications } = useNotifications();
-    const { properties, loading: propertyLoading, selectedPropertyId } = useProperty();
-    const activePropertyId = selectedPropertyId && selectedPropertyId !== "all" 
-        ? selectedPropertyId 
-        : (properties[0]?.id || "default");
-    const currentProperty = properties.find(p => p.id === activePropertyId) || properties[0];
-    const SCOPED_TENANT_DELAYED_KEY = `ireside.tenant_setup_delayed.${activePropertyId}`;
-    const SCOPED_MAP_SETUP_COMPLETE_KEY = `ireside_map_setup_complete_${activePropertyId}`;
-    const SCOPED_EXPLORE_MODAL_SHOWN_KEY = `ireside.explore_modal_shown.${activePropertyId}`;
-    const SCOPED_AWAITING_TENANT_SETUP_KEY = `ireside.awaiting_tenant_setup.${activePropertyId}`;
-    const SCOPED_BILLING_RAILS_COMPLETE_KEY = `ireside.billing_rails_complete.${activePropertyId}`;
-    const SCOPED_BILLING_RAILS_DELAYED_KEY = `ireside.billing_rails_delayed.${activePropertyId}`;
-
-    const [isTenantSetupDelayed, setIsTenantSetupDelayed] = useState(false);
-    const [isBillingDelayed, setIsBillingDelayed] = useState(false);
-    const [localBillingCompleted, setLocalBillingCompleted] = useState(false);
-    const [isGuidanceSessionActive, setIsGuidanceSessionActive] = useState(false);
-    const [localMapCompleted, setLocalMapCompleted] = useState(false);
-
-    useEffect(() => {
-        const checkDelayed = () => {
-            if (typeof window === "undefined") return;
-            try {
-                const hasAnyTenants = Boolean(
-                    currentProperty?.hasTenants ||
-                    properties.some((p) => p.hasTenants)
-                );
-                const val = window.localStorage.getItem(SCOPED_TENANT_DELAYED_KEY);
-                setIsTenantSetupDelayed(val === "true" && !hasAnyTenants);
-
-                const isBillingDone = 
-                    window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
-                    window.localStorage.getItem(SCOPED_BILLING_RAILS_COMPLETE_KEY) === "true" ||
-                    properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true");
-                setLocalBillingCompleted(Boolean(isBillingDone));
-
-                const isBillingDelayVal = 
-                    window.localStorage.getItem("ireside.billing_rails_delayed") === "true" ||
-                    window.localStorage.getItem(SCOPED_BILLING_RAILS_DELAYED_KEY) === "true";
-                setIsBillingDelayed(Boolean(isBillingDelayVal));
-
-                const guidVal = window.sessionStorage.getItem(`ireside.unit_map_guidance_in_progress.${activePropertyId}`);
-                setIsGuidanceSessionActive(guidVal === "true");
-
-                const isCompletedLocally = 
-                    window.localStorage.getItem(SCOPED_MAP_SETUP_COMPLETE_KEY) === "true" ||
-                    window.localStorage.getItem(SCOPED_EXPLORE_MODAL_SHOWN_KEY) === "true" ||
-                    window.localStorage.getItem(SCOPED_AWAITING_TENANT_SETUP_KEY) === "true" ||
-                    window.localStorage.getItem(`ireside.onboarding_awaiting_tenant_setup.${activePropertyId}`) === "true" ||
-                    properties.some((p) => window.localStorage.getItem(`ireside_map_setup_complete_${p.id}`) === "true");
-                setLocalMapCompleted(Boolean(isCompletedLocally));
-            } catch {
-                setIsTenantSetupDelayed(false);
-                setIsBillingDelayed(false);
-                setLocalBillingCompleted(false);
-                setIsGuidanceSessionActive(false);
-                setLocalMapCompleted(false);
-            }
-        };
-        checkDelayed();
-        window.addEventListener("tenant-setup-delayed-changed", checkDelayed);
-        window.addEventListener("billing-rails-setup-completed", checkDelayed);
-        window.addEventListener("billing-rails-delayed-changed", checkDelayed);
-        window.addEventListener("unit-map-guidance-changed", checkDelayed);
-        window.addEventListener("unit-map-setup-completed", checkDelayed);
-        window.addEventListener("storage", checkDelayed);
-        return () => {
-            window.removeEventListener("tenant-setup-delayed-changed", checkDelayed);
-            window.removeEventListener("billing-rails-setup-completed", checkDelayed);
-            window.removeEventListener("billing-rails-delayed-changed", checkDelayed);
-            window.removeEventListener("unit-map-guidance-changed", checkDelayed);
-            window.removeEventListener("unit-map-setup-completed", checkDelayed);
-            window.removeEventListener("storage", checkDelayed);
-        };
-    }, [SCOPED_TENANT_DELAYED_KEY, SCOPED_MAP_SETUP_COMPLETE_KEY, SCOPED_EXPLORE_MODAL_SHOWN_KEY, SCOPED_AWAITING_TENANT_SETUP_KEY, SCOPED_BILLING_RAILS_COMPLETE_KEY, SCOPED_BILLING_RAILS_DELAYED_KEY, activePropertyId, properties]);
-
-    const hasZeroProperties = !propertyLoading && properties.length === 0;
-
-    // Check if at least one tenant or occupied unit exists across the portfolio
-    const hasAtLeastOneTenant = properties.some((p) => 
-        Boolean(p.hasTenants) || 
-        p.units?.some((u) => (u.status || "").toLowerCase() === "occupied")
-    );
-
-    const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete || (p.placedCount ?? 0) > 0 || p.hasTenants) || localMapCompleted;
-    const hasPendingUnitMap = !propertyLoading && properties.length > 0 && !hasConfiguredMap;
-
-    const hasConfiguredBilling = localBillingCompleted || isBillingDelayed || hasAtLeastOneTenant;
-    const hasPendingBillingRails = !propertyLoading && properties.length > 0 && hasConfiguredMap && !hasConfiguredBilling && !hasAtLeastOneTenant;
-    
-    const hasPendingTenantSetup = !propertyLoading && properties.length > 0 && hasConfiguredMap && hasConfiguredBilling && !hasAtLeastOneTenant;
-
-    const isLocked = hasZeroProperties || hasPendingUnitMap || hasPendingBillingRails || hasPendingTenantSetup;
-    const lockStage: SidebarLockStage = hasZeroProperties
-        ? ("no_property" as const)
-        : hasPendingUnitMap
-            ? ("no_unit_map" as const)
-            : hasPendingBillingRails
-                ? ("no_billing_rails" as const)
-                : hasPendingTenantSetup
-                    ? ("no_tenant" as const)
-                    : null;
+    // Lock stage and tenant reminder come from the shared setup resolver (DB-backed, loading-safe)
+    const setup = useLandlordSetup();
+    const isTenantSetupDelayed = Boolean(setup.steps.find((step) => step.id === "first_tenant")?.deferred);
+    const isBillingDeferred = Boolean(setup.steps.find((step) => step.id === "billing")?.deferred);
+    const lockStage: SidebarLockStage = setup.lockStage;
+    const isLocked = lockStage !== null;
 
     const isUrgent = (type: string) => importantNotifications.some(n => n.type === type);
 
@@ -257,7 +162,7 @@ export function Sidebar({
                     label: "Utility Billing", 
                     href: "/landlord/utility-billing", 
                     icon: Zap,
-                    warning: isBillingDelayed && !localBillingCompleted,
+                    warning: isBillingDeferred,
                     warningTooltip: "Action needed: Configure your payment channels and utility tariffs to automate billing.",
                     description: "Calculate, allocate and bill electricity, water & submeter charges"
                 },

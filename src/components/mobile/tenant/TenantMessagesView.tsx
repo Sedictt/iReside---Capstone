@@ -152,7 +152,7 @@ export function TenantMessagesView() {
                             ...newMsg,
                             sender: {
                                 id: profile?.id || '',
-                                fullName: `${profile?.first_name || 'Tenant'} ${profile?.last_name || ''}`.trim(),
+                                fullName: profile?.full_name || 'Tenant',
                                 avatarUrl: profile?.avatar_url || null,
                                 avatarBgColor: null,
                                 role: 'tenant',

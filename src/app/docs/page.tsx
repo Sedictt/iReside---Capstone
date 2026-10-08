@@ -11,6 +11,7 @@ export default function PublicDocsPageRoute() {
     <div className="h-screen w-full bg-zinc-950 text-foreground overflow-hidden flex flex-col">
       <DocumentationHub
         defaultBackHref="/"
+        hideBackLink={true}
         onNavigateTab={(tabId) => {
           router.push(`/landlord/settings?tab=${tabId}`);
         }}

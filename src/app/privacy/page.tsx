@@ -1,580 +1,643 @@
-"use client"
-
-import { useState, useEffect } from "react"
+import type { Metadata } from "next"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { 
-  ArrowLeft, 
-  Search, 
-  Printer, 
-  Copy, 
-  Check, 
-  Info, 
-  ClipboardCheck, 
-  Settings, 
-  Cookie, 
-  Lock, 
-  ShieldCheck, 
-  Scale, 
-  Clock, 
-  Globe, 
-  RefreshCw, 
-  Mail,
-  Sliders,
-  ChevronRight,
-  BookOpen
-} from "lucide-react"
+import { LegalDocumentShell, type LegalSection } from "@/components/legal/LegalDocumentShell"
+import {
+  LegalLink,
+  LegalList,
+  LegalSubheading,
+  LegalTable,
+} from "@/components/legal/legal-content"
+import { CookiePreferencesButton } from "@/components/legal/CookiePreferencesButton"
 
-interface Section {
-  id: string
-  title: string
-  icon: React.ComponentType<{ className?: string }>
-  content: React.ReactNode
+export const metadata: Metadata = {
+  title: "Privacy Policy | iReside",
+  description:
+    "How iReside collects, uses, shares and protects personal data, and the rights you have under the Philippine Data Privacy Act of 2012.",
 }
 
-export default function PrivacyPage() {
-  const [activeSection, setActiveSection] = useState<string>("intro")
-  const [scrollProgress, setScrollProgress] = useState<number>(0)
-  const [searchQuery, setSearchQuery] = useState<string>("")
-  const [copied, setCopied] = useState<boolean>(false)
-  const [copiedSectionId, setCopiedSectionId] = useState<string | null>(null)
+const PRIVACY_EMAIL = "ireside.official.mail@gmail.com"
+const LAST_UPDATED = "October 8, 2026"
+const LAST_UPDATED_ISO = "2026-10-08"
+const VERSION = "2.0"
 
-  const SECTIONS: Section[] = [
-    {
-      id: "intro",
-      title: "1. Introduction",
-      icon: Info,
-      content: (
-        <p className="leading-relaxed">
-          iReside (&ldquo;we&rdquo;, &ldquo;our&rdquo;, or &ldquo;us&rdquo;) is committed to protecting your privacy. This Privacy Policy 
-          explains how we collect, use, disclose, and safeguard your information when you use our 
-          property management platform.
+const SUMMARY = (
+  <section
+    aria-labelledby="privacy-summary-heading"
+    className="rounded-3xl border border-primary/30 bg-primary/5 p-6 md:p-8 print:border-border print:bg-transparent"
+  >
+    <h2 id="privacy-summary-heading" className="text-xl font-bold font-display text-foreground mb-3">
+      Privacy at a glance
+    </h2>
+    <ul className="list-disc pl-6 space-y-2 text-sm md:text-base text-foreground/80">
+      <li>
+        We collect what is needed to run a rental: your account, applications, leases, payment
+        records, maintenance requests and messages.
+      </li>
+      <li>
+        <strong>We do not sell personal data</strong>, and iReside runs no advertising or
+        third-party analytics trackers.
+      </li>
+      <li>
+        Your landlord sees the information needed to manage your tenancy. Other users only see
+        what the feature they are using requires.
+      </li>
+      <li>
+        The iRis assistant and landlord analytics send data to an AI provider (Groq) to produce
+        answers. <a href="#ai" className="text-primary underline underline-offset-4">See what is sent</a>.
+      </li>
+      <li>
+        You can ask to access, correct, delete or take a copy of your data, and you may complain
+        to the National Privacy Commission.{" "}
+        <a href="#rights" className="text-primary underline underline-offset-4">Your rights</a>.
+      </li>
+    </ul>
+  </section>
+)
+
+const SECTIONS: LegalSection[] = [
+  {
+    id: "scope",
+    title: "Scope and who is responsible",
+    icon: "info",
+    content: (
+      <>
+        <p>
+          This policy explains how personal data is handled when you use iReside through the web
+          app, the Windows desktop app or the Android app. All of them connect to the same
+          service. It is written to follow the Philippine{" "}
+          <strong>Data Privacy Act of 2012 (Republic Act No. 10173)</strong>, its Implementing
+          Rules and Regulations, and the issuances of the National Privacy Commission (NPC).
         </p>
-      )
-    },
-    {
-      id: "collect",
-      title: "2. Information We Collect",
-      icon: ClipboardCheck,
-      content: (
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-base font-bold text-foreground mb-1">2.1 Personal Information</h3>
-            <ul className="list-disc pl-6 space-y-1 text-sm">
-              <li>Name, email address, and contact information</li>
-              <li>Phone number and mailing address</li>
-              <li>Date of birth and identification documents</li>
-              <li>Financial information (bank details, payment history)</li>
-              <li>Employment and income verification data</li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-base font-bold text-foreground mb-1">2.2 Property Information</h3>
-            <ul className="list-disc pl-6 space-y-1 text-sm">
-              <li>Property address and description</li>
-              <li>Lease agreements and terms</li>
-              <li>Maintenance records and communications</li>
-              <li>Payment and transaction history</li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-base font-bold text-foreground mb-1">2.3 Automatically Collected Information</h3>
-            <ul className="list-disc pl-6 space-y-1 text-sm">
-              <li>Device information and browser type</li>
-              <li>Usage patterns and feature interactions</li>
-              <li>IP address and location data</li>
-              <li>Cookies and tracking technologies</li>
-            </ul>
-          </div>
+
+        <LegalSubheading>Who decides how your data is used</LegalSubheading>
+        <p>
+          iReside is delivered as a separate, independent instance for each landlord or property
+          business (see our <Link href="/terms#fees" className="text-primary hover:text-primary-dark font-medium underline underline-offset-4">Terms of Service</Link>).
+          That affects who is responsible for your data:
+        </p>
+        <LegalList>
+          <li>
+            <strong>The Operator</strong> is the landlord or organization that runs the instance
+            you use. The Operator decides what tenant, applicant, lease, billing, maintenance and
+            community data is collected and why, and is the{" "}
+            <em>personal information controller</em> for that data. Your landlord&apos;s contact
+            details are shown in the app.
+          </li>
+          <li>
+            <strong>The iReside development team</strong> builds and maintains the software. We
+            handle personal data in an instance only as needed to deploy, support or troubleshoot
+            it on the Operator&apos;s instructions. We are the controller of messages you send to
+            the contact address below and of this public website.
+          </li>
+        </LegalList>
+        <p>
+          Unless stated otherwise, “we” and “us” in this policy mean the Operator and the
+          iReside development team acting in those roles.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "collect",
+    title: "Information we collect",
+    icon: "collect",
+    content: (
+      <>
+        <p>
+          What we collect depends on how you use iReside. Some of it you give us directly, some
+          is created while you use the service, and some is entered about you by your landlord
+          (for example a walk-in applicant or a manually added tenant).
+        </p>
+        <LegalTable
+          caption="Categories of personal data collected by iReside"
+          columns={["Category", "What it includes"]}
+          rows={[
+            [
+              "Account and profile",
+              "Full name, email address, role (landlord or tenant), profile photo, bio, phone number and address. Your password is handled by our authentication provider and stored only as a hash; we cannot read it.",
+            ],
+            [
+              "Landlord business details",
+              "Business name, business permit number and uploaded permit documents, and the payment-receiving details a landlord chooses to show tenants (bank account details, GCash or Maya QR codes).",
+            ],
+            [
+              "Rental applications and onboarding",
+              "Name, email, phone, employment status and details, monthly income, emergency contact and reference names and phone numbers, desired move-in date, your message, uploaded supporting documents (which may include valid IDs and proof of income, depending on the landlord’s requirements) and application-fee payment proof.",
+            ],
+            [
+              "Lease and tenancy",
+              "Lease terms, rent, deposit and dates; electronic signatures; renewal, move-out and unit-transfer requests; and a signing audit trail that records time, IP address and device.",
+            ],
+            [
+              "Billing and payments",
+              "Invoices and line items, utility meter readings and rates, uploaded proof-of-payment images, official receipts and (for landlords) expense records and exports. iReside does not process card payments or store card numbers; rent is settled directly between landlord and tenant.",
+            ],
+            [
+              "Maintenance requests",
+              "Request description, category, urgency, photos, scheduling and resolution notes.",
+            ],
+            [
+              "Messages and community",
+              "Chat messages and attachments, mute, block and report actions, community posts, comments, reactions, poll votes, photo albums and amenity bookings.",
+            ],
+            [
+              "iRis assistant",
+              "The questions you ask iRis and its replies, which are kept as your chat history.",
+            ],
+            [
+              "Security and device data",
+              "Login sessions (IP address, browser and device), security audit-log entries, one-time passcodes and their expiry, two-factor settings, the Google account email linked for verification, an encrypted account-recovery key and failed-attempt counters.",
+            ],
+            [
+              "Preferences and usage",
+              "In-app notifications, onboarding product-tour progress, and your theme, language, text-size, contrast and cookie choices.",
+            ],
+            [
+              "Device permissions (Android app)",
+              "Camera and photo access, used only when you choose to take or attach a photo.",
+            ],
+          ]}
+        />
+
+        <LegalSubheading>What we do not collect</LegalSubheading>
+        <p>
+          iReside does not request GPS or precise location, your contacts, microphone access,
+          biometric data or payment card numbers, and it does not use advertising identifiers.
+          Addresses in the system are text entered by users, not tracked locations.
+        </p>
+
+        <LegalSubheading>Information about other people</LegalSubheading>
+        <p>
+          If you give us someone else&apos;s details, such as an emergency contact or a
+          reference, you confirm that you are allowed to share them and that they know you did.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "purposes",
+    title: "How and why we use your data",
+    icon: "purpose",
+    content: (
+      <>
+        <p>
+          We use personal data only for the purposes below, which are declared, specific and
+          legitimate under Section 11 of the Data Privacy Act. We rely on the lawful criteria in
+          Sections 12 and 13 of the Act.
+        </p>
+        <LegalTable
+          caption="Purposes of processing and the lawful basis for each"
+          columns={["Purpose", "Examples", "Lawful basis"]}
+          rows={[
+            [
+              "Provide the service",
+              "Creating and securing your account, signing you in, showing you your dashboard.",
+              "Contract, or steps you request before a contract.",
+            ],
+            [
+              "Handle the tenancy",
+              "Processing applications, preparing and signing leases, invoicing, recording payments, handling maintenance and move-outs.",
+              "Contract, and the Operator’s legitimate interests in managing its property.",
+            ],
+            [
+              "Communicate with you",
+              "Notifications, invitations, one-time passcodes, payment reminders and service notices by email or in-app.",
+              "Contract and legitimate interests.",
+            ],
+            [
+              "Keep the platform safe",
+              "Session management, audit logs, abuse and spam filtering, handling user reports.",
+              "Legitimate interests and legal obligations.",
+            ],
+            [
+              "Assistant and analytics features",
+              "Answering your iRis questions; giving landlords plain-language summaries of their own figures.",
+              "Your request when you use the feature, and legitimate interests.",
+            ],
+            [
+              "Improve iReside",
+              "Fixing errors and checking whether the onboarding tour is understandable.",
+              "Legitimate interests.",
+            ],
+            [
+              "Comply with the law",
+              "Responding to lawful orders; keeping records the law requires.",
+              "Legal obligation.",
+            ],
+          ]}
+        />
+        <p>
+          We do not use your data for advertising or marketing, and we will not use it for a
+          different purpose without telling you and, where required, asking for your consent.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "sensitive",
+    title: "Sensitive personal information",
+    icon: "sensitive",
+    content: (
+      <>
+        <p>
+          Under the Data Privacy Act, government-issued identifiers such as passport, driver&apos;s
+          license, SSS, UMID or tax numbers are <strong>sensitive personal information</strong>.
+          iReside does not ask for them itself. A landlord may, however, require valid IDs as part
+          of a rental application, and you upload them to the application.
+        </p>
+        <LegalList>
+          <li>We process sensitive personal information only with your consent or where the law allows it.</li>
+          <li>Uploaded IDs are meant for the landlord reviewing your application. Do not upload more than the landlord asks for.</li>
+          <li>Operators should request only what is necessary and proportionate to screen an applicant, and should not keep IDs longer than needed.</li>
+        </LegalList>
+      </>
+    ),
+  },
+  {
+    id: "sharing",
+    title: "Who we share data with",
+    icon: "sharing",
+    content: (
+      <>
+        <LegalSubheading>Inside your iReside instance</LegalSubheading>
+        <LegalList>
+          <li>
+            <strong>Landlord (Operator):</strong> your profile, application, lease, billing,
+            maintenance requests and messages with them.
+          </li>
+          <li>
+            <strong>Tenants:</strong> your landlord&apos;s name, business and contact details, and
+            property information. Community posts are shared with other residents of that property
+            and its management; some resident posts are held for approval first.
+          </li>
+          <li>
+            <strong>Instance administrators:</strong> reports of abusive messages or posts, and
+            aggregate onboarding-tour usage metrics.
+          </li>
+          <li>
+            <strong>Other participants:</strong> private messages are visible only to the people
+            in that conversation.
+          </li>
+        </LegalList>
+
+        <LegalSubheading>Service providers</LegalSubheading>
+        <p>
+          We use the providers below to run iReside. They process data on our behalf, under their
+          own terms and privacy policies.
+        </p>
+        <LegalTable
+          caption="Third-party service providers used by iReside"
+          columns={["Provider", "What it does for iReside", "Data involved"]}
+          rows={[
+            [
+              "Supabase",
+              "Database, user authentication, file storage and real-time updates.",
+              "All data stored in the platform, including uploaded files.",
+            ],
+            [
+              "Vercel",
+              "Web hosting, server functions, the monthly invoice schedule and hosting of app download files.",
+              "Request data such as IP address in server logs.",
+            ],
+            [
+              "Groq",
+              "AI model that powers iRis and landlord analytics summaries.",
+              "See “AI features” below.",
+            ],
+            [
+              "Google",
+              "Optional “Sign in with Google” verification for two-factor authentication, and Google Fonts for page typography.",
+              "For verification: your Google email, name and profile. For fonts: your IP address and browser details are sent to Google when a page loads.",
+            ],
+            [
+              "Email delivery (SMTP)",
+              "Sends passcodes, invitations, reminders and notices. Gmail by default; an Operator may configure another provider.",
+              "Your email address and the content of the message.",
+            ],
+          ]}
+        />
+
+        <LegalSubheading>Legal and regulatory disclosures</LegalSubheading>
+        <p>
+          We may disclose personal data when required by law, a court order or a lawful request
+          from a government authority, or to establish, exercise or defend legal claims.
+        </p>
+
+        <LegalSubheading>No sale of personal data</LegalSubheading>
+        <p>We do not sell or rent personal data, and we do not share it with advertisers.</p>
+      </>
+    ),
+  },
+  {
+    id: "ai",
+    title: "AI features (iRis)",
+    icon: "ai",
+    content: (
+      <>
+        <p>
+          iReside includes two AI-powered features. Both send data to Groq, a third-party AI
+          provider, to generate a response.
+        </p>
+        <LegalList>
+          <li>
+            <strong>iRis tenant assistant.</strong> When you ask a question, we send Groq your
+            message, up to 80 of your earlier iRis messages, and background about your
+            tenancy so the answer is accurate: your name and contact details, lease and rent
+            information, recent payment status, the property address, your landlord&apos;s
+            contact details, and the building Wi-Fi network name if your landlord has added it. The
+            Wi-Fi password is never sent to Groq; the app adds it to the reply card itself.
+          </li>
+          <li>
+            <strong>Landlord analytics.</strong> When a landlord requests an AI summary, we send
+            aggregated indicators, such as occupancy, earnings, expenses and pending issues. We
+            do not send individual tenant records for this feature.
+          </li>
+        </LegalList>
+        <p>
+          AI replies can be wrong or incomplete and are not legal or financial advice. We do not
+          use AI to approve or reject applications, set rent or make other decisions about you;
+          people make those decisions. Please avoid typing information you would not want
+          processed by a third party into iRis. If the AI service is unavailable, analytics fall
+          back to built-in summaries that do not use Groq.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "cookies",
+    title: "Cookies and local storage",
+    icon: "cookies",
+    content: (
+      <>
+        <p>
+          iReside uses only first-party cookies and browser storage that the service needs to work
+          or to remember your settings. We do not use advertising cookies, third-party analytics
+          or cross-site tracking.
+        </p>
+        <LegalTable
+          caption="Cookies and browser storage used by iReside"
+          columns={["Name", "Purpose", "Type"]}
+          rows={[
+            [
+              "Authentication cookies (names begin with “sb-”)",
+              "Keep you signed in and protect your session. Without them you cannot log in.",
+              "Strictly necessary",
+            ],
+            [
+              "ireside-theme",
+              "Remembers light or dark mode.",
+              "Preference (local storage)",
+            ],
+            [
+              "ireside_font_scale, ireside_font_size, ireside_high_contrast",
+              "Remember your text-size and high-contrast settings.",
+              "Preference (local storage)",
+            ],
+            [
+              "ireside_language",
+              "Remembers English or Filipino.",
+              "Preference (local storage)",
+            ],
+            [
+              "ireside-consent-v1",
+              "Remembers your choice in the cookie banner.",
+              "Preference (local storage)",
+            ],
+            [
+              "Offline cache",
+              "A service worker stores static app files so iReside can open offline. It does not store your personal records.",
+              "Strictly necessary",
+            ],
+          ]}
+        />
+        <p>
+          The cookie banner offers optional “Performance Metrics” and “Personalization” switches.
+          iReside currently has no features that depend on them, so your choice does not change
+          what runs today. We store it on your device and will honor it, and update this policy
+          first, if such features are ever added.
+        </p>
+        <p>
+          Preference items stay on your device until you clear your browser data. Blocking
+          strictly necessary cookies will prevent you from signing in.
+        </p>
+        <div className="not-prose mt-4">
+          <CookiePreferencesButton />
         </div>
-      )
-    },
-    {
-      id: "use",
-      title: "3. How We Use Your Information",
-      icon: Settings,
-      content: (
-        <ul className="list-disc pl-6 space-y-2">
-          <li>Create and manage your account</li>
-          <li>Process rental applications and verify eligibility</li>
-          <li>Facilitate communication between landlords and tenants</li>
-          <li>Process rent payments and security deposits</li>
-          <li>Send notifications and important updates</li>
-          <li>Improve our platform and user experience</li>
-          <li>Comply with legal obligations</li>
-        </ul>
-      )
-    },
-    {
-      id: "cookies",
-      title: "4. Cookies and Tracking",
-      icon: Cookie,
-      content: (
-        <div className="space-y-3">
-          <p>
-            We use cookies and similar technologies to operate our platform, analyze usage, and personalize 
-            your experience. Our cookie categories are:
-          </p>
-          <ul className="list-disc pl-6 space-y-2 mt-2">
-            <li><strong>Essential:</strong> Required for authentication, security, and core functionality</li>
-            <li><strong>Analytics:</strong> Help us understand how you use the platform to improve it</li>
-            <li><strong>Personalization:</strong> Enable tailored features and recommendations</li>
-          </ul>
-          <p className="mt-3">
-            You can manage your cookie preferences through our cookie consent banner or your account settings.
-            Disabling non-essential cookies may affect platform functionality.
-          </p>
-        </div>
-      )
-    },
-    {
-      id: "sharing",
-      title: "5. Information Sharing",
-      icon: ShieldCheck,
-      content: (
-        <div className="space-y-3">
-          <p>We may share your information with:</p>
-          <ul className="list-disc pl-6 space-y-2">
-            <li><strong>Landlords:</strong> Tenant application and verification data</li>
-            <li><strong>Tenants:</strong> Property information and landlord contact details</li>
-            <li><strong>Service Providers:</strong> Payment processors, cloud hosting, and analytics</li>
-            <li><strong>Legal Authorities:</strong> When required by law or to protect rights</li>
-          </ul>
-          <p className="mt-3">
-            We do not sell your personal information to third parties.
-          </p>
-        </div>
-      )
-    },
-    {
-      id: "security",
-      title: "6. Data Security",
-      icon: Lock,
-      content: (
-        <p className="leading-relaxed">
-          We implement appropriate technical and organizational measures to protect your data, including 
-          encryption, secure servers, and access controls. However, no method of transmission over the 
-          Internet is 100% secure.
+      </>
+    ),
+  },
+  {
+    id: "security",
+    title: "How we protect your data",
+    icon: "security",
+    content: (
+      <>
+        <p>
+          We apply organizational, physical and technical safeguards in line with Section 20 of
+          the Data Privacy Act. The measures currently in place include:
         </p>
-      )
-    },
-    {
-      id: "rights",
-      title: "7. Your Rights",
-      icon: Scale,
-      content: (
-        <div className="space-y-3">
-          <p>Depending on your location, you may have the right to:</p>
-          <ul className="list-disc pl-6 space-y-2">
-            <li>Access your personal information</li>
-            <li>Correct inaccurate or incomplete data</li>
-            <li>Delete your personal information</li>
-            <li>Restrict or object to processing</li>
-            <li>Data portability</li>
-            <li>Withdraw consent at any time</li>
-          </ul>
-          <p className="mt-3">
-            To exercise these rights, please contact us at{" "}
-            <a href="mailto:ireside.official.mail@gmail.com" className="text-primary hover:text-primary-dark font-medium underline underline-offset-4">
-              ireside.official.mail@gmail.com
-            </a>
-            .
-          </p>
-        </div>
-      )
-    },
-    {
-      id: "retention",
-      title: "8. Data Retention",
-      icon: Clock,
-      content: (
-        <p className="leading-relaxed">
-          We retain your information for as long as your account is active or as needed to provide 
-          services. We may retain certain information for longer periods for legal compliance, dispute 
-          resolution, or legitimate business purposes.
+        <LegalList>
+          <li>Encryption in transit: iReside is served over HTTPS.</li>
+          <li>Password hashing handled by our authentication provider, so we never see or store your password in plain text.</li>
+          <li>Row-level security in the database, which restricts each record to the users who are entitled to see it (for example, a tenant&apos;s own lease and the landlord who owns it).</li>
+          <li>Phone number and home address are kept in a separate, more restricted profile record.</li>
+          <li>Optional two-factor authentication using an email passcode, with Google account verification also available to landlords.</li>
+          <li>An account-recovery security key stored with AES-256-GCM encryption, with progressive lockout after failed attempts.</li>
+          <li>A list of your signed-in devices in Settings, where you can end any session you do not recognize.</li>
+          <li>Security audit logs for sensitive account actions, in which the IP address is masked.</li>
+          <li>Automated filtering and reporting tools for abusive or spam content in chat.</li>
+        </LegalList>
+        <p>
+          Property photos and branding images are publicly viewable by design, so listings can
+          display them. Do not put personal information in them.
         </p>
-      )
-    },
-    {
-      id: "children",
-      title: "9. Children's Privacy",
-      icon: ShieldCheck,
-      content: (
-        <p className="leading-relaxed">
-          iReside is not intended for users under 18 years of age. We do not knowingly collect 
-          personal information from minors. If we learn that we have collected data from a minor, 
-          we will take steps to delete it.
+
+        <LegalSubheading>What you can do</LegalSubheading>
+        <p>
+          Use a strong, unique password, turn on two-factor authentication, keep your recovery
+          key somewhere safe, sign out on shared devices, and review your active sessions
+          regularly.
         </p>
-      )
-    },
-    {
-      id: "transfers",
-      title: "10. International Transfers",
-      icon: Globe,
-      content: (
-        <p className="leading-relaxed">
-          Your information may be transferred to and processed in countries other than your own. 
-          We ensure appropriate safeguards are in place for such transfers.
+
+        <LegalSubheading>If something goes wrong</LegalSubheading>
+        <p>
+          No system is completely secure. If a personal data breach occurs that requires
+          notification, we will notify the NPC and affected individuals within seventy-two (72)
+          hours of becoming aware of it, as required by NPC Circular 16-03, and tell you what
+          happened and what you can do.
         </p>
-      )
-    },
-    {
-      id: "changes",
-      title: "11. Changes to This Policy",
-      icon: RefreshCw,
-      content: (
-        <p className="leading-relaxed">
-          We may update this Privacy Policy periodically. We will notify you of significant changes 
-          via email or platform notifications. Continued use of iReside after changes constitutes 
-          acceptance of the updated policy.
+      </>
+    ),
+  },
+  {
+    id: "retention",
+    title: "How long we keep data",
+    icon: "retention",
+    content: (
+      <>
+        <p>
+          We keep personal data only as long as needed for the purposes in this policy or as the
+          law requires.
         </p>
-      )
-    },
-    {
-      id: "contact",
-      title: "12. Contact Us",
-      icon: Mail,
-      content: (
-        <p className="leading-relaxed">
-          For questions about this Privacy Policy or to exercise your rights, contact our Data Protection Officer at{" "}
-          <a href="mailto:ireside.official.mail@gmail.com" className="text-primary hover:text-primary-dark font-medium underline underline-offset-4">
-            ireside.official.mail@gmail.com
-          </a>
+        <LegalTable
+          caption="Retention periods by type of data"
+          columns={["Data", "How long we keep it"]}
+          rows={[
+            ["Account and profile", "While your account is active, then until you ask for deletion."],
+            ["Applications", "While needed to decide the application and handle any dispute. Deleted or anonymized on request, unless needed for a legal claim."],
+            ["Leases, invoices, receipts, payment proofs and signing audit trails", "For the tenancy and afterwards for as long as Philippine tax, accounting and civil-law requirements call for."],
+            ["Chat messages and community content", "Until you or a moderator delete them, or your account is removed."],
+            ["iRis chat history", "Until your account is removed or you ask us to delete it."],
+            ["Sessions, passcodes and invitation links", "Sessions last until sign-out or expiry. Passcodes and invitation links expire after a short time."],
+            ["Provider backups", "Copies in provider backups are overwritten on the provider’s normal backup cycle after deletion."],
+          ]}
+        />
+        <p>
+          iReside does not currently delete records automatically on a schedule. Deletion is
+          carried out by the Operator or the iReside team when you make a verified request (see
+          “Your rights”).
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "rights",
+    title: "Your rights",
+    icon: "rights",
+    content: (
+      <>
+        <p>As a data subject under the Data Privacy Act you have the right to:</p>
+        <LegalList>
+          <li><strong>Be informed</strong> about how your data is processed, which this policy aims to do.</li>
+          <li><strong>Access</strong> the personal data we hold about you.</li>
+          <li><strong>Object</strong> to processing, including withdrawing consent at any time where we rely on it.</li>
+          <li><strong>Rectify</strong> inaccurate or incomplete data.</li>
+          <li><strong>Erase or block</strong> your data from our system where it is unlawfully obtained, no longer necessary or you withdraw consent, subject to records we must keep by law.</li>
+          <li><strong>Data portability</strong>: receive your data in a structured, commonly used format.</li>
+          <li><strong>Claim damages</strong> for inaccurate, incomplete, outdated, false or unlawfully obtained data, or unauthorized use of it.</li>
+          <li><strong>Complain</strong> to the National Privacy Commission.</li>
+        </LegalList>
+        <p>
+          Your lawful heirs and assigns may exercise these rights for you after your death or if
+          you become incapacitated. If you are in a country where other privacy laws give you
+          additional rights, contact us and we will handle your request under the law that
+          applies to you.
+        </p>
+
+        <LegalSubheading>How to use your rights</LegalSubheading>
+        <p>
+          You can correct most profile details and review your active sessions directly in
+          Settings. For anything else, including access, copies, deletion or withdrawing consent,
+          email{" "}
+          <LegalLink href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</LegalLink> from the address
+          registered to your account, or ask your landlord. We may need to verify your identity
+          first. We will answer within a reasonable time and tell you if we cannot fully act on
+          a request and why.
+        </p>
+
+        <LegalSubheading>Complaints</LegalSubheading>
+        <p>
+          If you think your data was mishandled, please contact us first so we can try to fix it.
+          You may also file a complaint with the{" "}
+          <LegalLink href="https://privacy.gov.ph" external>
+            National Privacy Commission (privacy.gov.ph)
+          </LegalLink>
           .
         </p>
-      )
-    },
-    {
-      id: "preferences",
-      title: "13. Cookie Preferences",
-      icon: Sliders,
-      content: (
-        <p className="leading-relaxed">
-          You can review and update your cookie preferences at any time through our{" "}
-          <Link href="/terms" className="text-primary hover:text-primary-dark font-medium underline underline-offset-4">cookie consent banner</Link> 
-          {" "}or by managing your browser settings. Note that disabling certain cookies may affect platform functionality.
+      </>
+    ),
+  },
+  {
+    id: "children",
+    title: "Children’s privacy",
+    icon: "children",
+    content: (
+      <p>
+        iReside is meant for adults aged 18 and over and is not directed at children. We do not
+        knowingly collect personal data from anyone under 18. If you believe a minor has given us
+        personal data, contact us and we will delete it.
+      </p>
+    ),
+  },
+  {
+    id: "transfers",
+    title: "Where data is stored",
+    icon: "transfers",
+    content: (
+      <p>
+        Our providers (Supabase, Vercel, Groq and Google) may store or process data on servers
+        outside the Philippines, including in the United States. The region used by an instance
+        depends on how it was set up; the Operator can tell you. We remain responsible for
+        personal data we place with providers and choose providers that offer data-protection
+        terms.
+      </p>
+    ),
+  },
+  {
+    id: "changes",
+    title: "Changes to this policy",
+    icon: "changes",
+    content: (
+      <>
+        <p>
+          We will update this policy when our practices or the law change. The date and version
+          at the top show the latest revision. We will tell you about material changes through an
+          in-app notification or email before they take effect. Where the law requires your
+          consent for a new use of your data, we will ask for it again instead of treating
+          continued use as agreement.
         </p>
-      )
-    }
-  ]
+        <p>
+          <strong>Version 2.0 (October 8, 2026):</strong> rewritten to describe the data iReside
+          actually handles, its service providers and AI features, and your rights under the Data
+          Privacy Act.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "contact",
+    title: "Contact us",
+    icon: "contact",
+    content: (
+      <>
+        <p>
+          For questions about this policy or to exercise your rights, contact our Data Protection
+          Officer at{" "}
+          <LegalLink href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</LegalLink>. For matters
+          about a specific property or tenancy, you can also contact your landlord, who is the
+          Operator of your instance.
+        </p>
+        <p>
+          See also our{" "}
+          <Link
+            href="/terms"
+            className="text-primary hover:text-primary-dark font-medium underline underline-offset-4"
+          >
+            Terms of Service
+          </Link>
+          .
+        </p>
+      </>
+    ),
+  },
+]
 
-  // Update scroll progress bar
-  useEffect(() => {
-    const handleScroll = () => {
-      const totalScroll = document.documentElement.scrollHeight - window.innerHeight
-      if (totalScroll > 0) {
-        setScrollProgress((window.scrollY / totalScroll) * 100)
-      }
-    }
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
-  // Auto-scroll to hash-linked section if present
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.location.hash) {
-      const id = window.location.hash.substring(1)
-      const element = document.getElementById(id)
-      if (element) {
-        setTimeout(() => {
-          element.scrollIntoView({ behavior: "smooth", block: "start" })
-        }, 300)
-      }
-    }
-  }, [])
-
-  // Highlight active section on scroll
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id)
-          }
-        })
-      },
-      {
-        rootMargin: "-20% 0px -60% 0px",
-        threshold: 0.1
-      }
-    )
-
-    SECTIONS.forEach((sec) => {
-      const el = document.getElementById(sec.id)
-      if (el) observer.observe(el)
-    })
-
-    return () => observer.disconnect()
-  }, [])
-
-  const handleCopyLink = () => {
-    if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(window.location.href)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
-  }
-
-  const handleCopySection = (id: string) => {
-    if (typeof window !== "undefined") {
-      const url = `${window.location.origin}${window.location.pathname}#${id}`
-      navigator.clipboard.writeText(url)
-      setCopiedSectionId(id)
-      setTimeout(() => setCopiedSectionId(null), 2000)
-    }
-  }
-
-  const handlePrint = () => {
-    if (typeof window !== "undefined") {
-      window.print()
-    }
-  }
-
-  // Filter sections by search query
-  const filteredSections = SECTIONS.filter((sec) => {
-    const query = searchQuery.toLowerCase()
-    return (
-      sec.title.toLowerCase().includes(query)
-    )
-  })
-
+export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-background relative overflow-x-hidden">
-      {/* Scroll Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 h-1 bg-border/40 z-50">
-        <div 
-          className="h-full bg-primary transition-all duration-75"
-          style={{ width: `${scrollProgress}%` }}
-        />
-      </div>
-
-      {/* Decorative Radial Gradients */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute top-[20%] right-1/4 w-[400px] h-[400px] bg-primary/3 rounded-full blur-[100px] pointer-events-none" />
-
-      {/* Header Panel */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-md sticky top-0 z-30 transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Link href="/">
-              <Button variant="outline" size="sm" className="rounded-xl flex items-center gap-2 border-border shadow-xs hover:border-primary/30">
-                <ArrowLeft className="size-4" />
-                <span className="hidden sm:inline">Back to iReside</span>
-              </Button>
-            </Link>
-            <div className="h-6 w-px bg-border hidden sm:block" />
-            <div className="flex items-center gap-2 text-foreground font-display font-black text-lg tracking-tight select-none">
-              <span className="text-primary font-black">i</span>Reside
-              <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground px-1.5 py-0.5 rounded-md bg-muted">Legal</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="icon-sm" 
-              onClick={handlePrint}
-              title="Print Document"
-              className="rounded-xl border-border shadow-xs hover:border-primary/30 text-muted-foreground hover:text-foreground"
-            >
-              <Printer className="size-4" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleCopyLink}
-              className="rounded-xl border-border shadow-xs hover:border-primary/30 text-muted-foreground hover:text-foreground gap-1.5"
-            >
-              {copied ? (
-                <>
-                  <Check className="size-3.5 text-emerald-500" />
-                  <span className="text-emerald-500 font-medium text-xs">Copied</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="size-3.5" />
-                  <span className="text-xs">Copy Link</span>
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Intro */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-6">
-        <div className="max-w-3xl">
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight font-display text-foreground mb-4">
-            Privacy Policy
-          </h1>
-          <p className="text-muted-foreground text-base leading-relaxed md:text-lg">
-            Please read this policy carefully to understand our data processing and security commitments. Last updated on <span className="text-foreground font-semibold">May 18, 2026</span>.
-          </p>
-        </div>
-
-        {/* Dynamic Controls Bar */}
-        <div className="mt-8 flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center bg-card border border-border p-4 rounded-2xl shadow-xs">
-          {/* Search bar */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <input maxLength={60} 
-              type="text" 
-              placeholder="Search privacy topics (e.g. cookies, GDPR, encryption)..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm bg-background border border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-foreground placeholder:text-muted-foreground transition-all"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Main Contents Grid */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-          
-          {/* Sticky Sidebar Navigation (TOC) */}
-          <aside className="hidden lg:block w-72 shrink-0 sticky top-24 self-start bg-card border border-border rounded-3xl p-5 shadow-xs">
-            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
-              <BookOpen className="size-4 text-primary" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-foreground font-display">Table of Contents</h2>
-            </div>
-            <nav className="space-y-1">
-              {SECTIONS.map((sec) => {
-                const Icon = sec.icon
-                const isActive = activeSection === sec.id
-                return (
-                  <button
-                    key={sec.id}
-                    onClick={() => {
-                      const el = document.getElementById(sec.id)
-                      if (el) {
-                        el.scrollIntoView({ behavior: "smooth", block: "start" })
-                        setActiveSection(sec.id)
-                      }
-                    }}
-                    className={`w-full flex items-center justify-between text-left p-2.5 rounded-xl text-xs font-medium transition-all group ${
-                      isActive 
-                        ? 'bg-primary/10 text-primary' 
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 truncate">
-                      <div className={`p-1.5 rounded-lg transition-colors ${
-                        isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground group-hover:text-foreground'
-                      }`}>
-                        <Icon className="size-3.5" />
-                      </div>
-                      <span className="truncate">{sec.title.split(". ")[1]}</span>
-                    </div>
-                    <ChevronRight className={`size-3 transition-transform ${isActive ? 'translate-x-0.5 opacity-100' : 'opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5'}`} />
-                  </button>
-                )
-              })}
-            </nav>
-          </aside>
-
-          {/* Detailed Content */}
-          <div className="flex-1 max-w-4xl space-y-6">
-            
-            {/* Empty state when filtering */}
-            {filteredSections.length === 0 && (
-              <div className="rounded-3xl border border-dashed border-border bg-card p-12 text-center">
-                <div className="inline-flex items-center justify-center size-12 rounded-2xl bg-amber-500/10 text-amber-500 mb-4">
-                  <Search className="size-6" />
-                </div>
-                <h3 className="text-lg font-bold text-foreground mb-1 font-display">No matches found</h3>
-                <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
-                  We couldn&apos;t find any privacy topics matching &ldquo;{searchQuery}&rdquo;. Try typing terms like &ldquo;cookies&rdquo;, &ldquo;GDPR&rdquo;, or &ldquo;retention&rdquo;.
-                </p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setSearchQuery("")}
-                  className="rounded-xl border-border"
-                >
-                  Clear Search Filter
-                </Button>
-              </div>
-            )}
-
-            {filteredSections.map((sec) => {
-              const Icon = sec.icon
-              const isActive = activeSection === sec.id
-              return (
-                <section 
-                  key={sec.id}
-                  id={sec.id}
-                  className={`group/card relative rounded-3xl border bg-card p-6 md:p-8 shadow-xs transition-all duration-300 scroll-mt-24 ${
-                    isActive 
-                      ? 'border-primary/50 ring-1 ring-primary/20 shadow-md' 
-                      : 'border-border hover:border-primary/30 hover:shadow-md'
-                  }`}
-                >
-                  {/* Decorative corner tag when active */}
-                  {isActive && (
-                    <div className="absolute top-0 right-0 h-12 w-12 overflow-hidden rounded-tr-3xl">
-                      <div className="absolute top-0 right-0 h-4 w-4 bg-primary rotate-45 translate-x-2 -translate-y-2" />
-                    </div>
-                  )}
-
-                  {/* Section Title Header */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-border/60">
-                    <div className="flex items-center gap-4">
-                      <div className={`flex items-center justify-center size-10 rounded-xl transition-colors ${
-                        isActive ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary group-hover/card:scale-105'
-                      }`}>
-                        <Icon className="size-5" />
-                      </div>
-                      <h2 className="text-xl md:text-2xl font-bold font-display text-foreground">
-                        {sec.title}
-                      </h2>
-                    </div>
-
-                    {/* Copy specific section URL */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCopySection(sec.id)}
-                      className="rounded-lg border-border text-muted-foreground hover:text-foreground self-start sm:self-auto gap-1.5 h-7 px-2"
-                      title="Copy link to this section"
-                    >
-                      {copiedSectionId === sec.id ? (
-                        <>
-                          <Check className="size-3.5 text-emerald-500" />
-                          <span className="text-[10px] text-emerald-500 font-medium">Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="size-3.5" />
-                          <span className="text-[10px]">Copy Link</span>
-                        </>
-                      )}
-                    </Button>
-                  </div>
-
-                  {/* detailed legal text */}
-                  <div className="prose prose-slate dark:prose-invert max-w-none text-foreground/80 dark:text-foreground/75 leading-relaxed text-sm md:text-base">
-                    {sec.content}
-                  </div>
-                </section>
-              )
-            })}
-          </div>
-
-        </div>
-      </main>
-
-      {/* Dynamic Floating Action Back to Top */}
-      <div className="fixed bottom-6 right-6 z-40">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => typeof window !== "undefined" && window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="rounded-full shadow-lg border-border bg-card/85 backdrop-blur-md h-9 px-3 gap-1 hover:border-primary text-xs font-semibold"
-        >
-          Back to Top
-        </Button>
-      </div>
-    </div>
+    <LegalDocumentShell
+      title="Privacy Policy"
+      intro={
+        <p>
+          This policy explains what personal data iReside handles, why, who it is shared with, and
+          the choices and rights you have.
+        </p>
+      }
+      lastUpdated={LAST_UPDATED}
+      lastUpdatedIso={LAST_UPDATED_ISO}
+      version={VERSION}
+      searchPlaceholder="Search this policy (e.g. cookies, AI, retention)…"
+      summary={SUMMARY}
+      sections={SECTIONS}
+    />
   )
 }

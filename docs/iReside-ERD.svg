@@ -1,0 +1,857 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2060" height="1708" viewBox="0 0 2060 1708" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="1030.0" y="44" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="22" font-weight="700" fill="#1f2937">iReside Core Database — Entity Relationship Diagram (Crow’s Foot Notation)</text>
+<text x="1030.0" y="66" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12.5" fill="#6b7280">23 core entities spanning the User, Property, Intake &amp; Lease, Billing &amp; Maintenance, and Messaging &amp; Community domains (PostgreSQL / Supabase)</text>
+<path d="M520.0,129.0 L370.0,129.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M510.0,122.0 L510.0,136.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M502.0,122.0 L502.0,136.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M382.0,136.0 L382.0,122.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="394.0" cy="129.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M770.0,129.0 L855.0,129.0 L855.0,147.0 L940.0,147.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M780.0,136.0 L780.0,122.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M788.0,136.0 L788.0,122.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M924.0,147.0 L940.0,140.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M924.0,147.0 L940.0,147.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M924.0,147.0 L940.0,154.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="916.0" cy="147.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M645.0,270.0 L645.0,420.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M638.0,280.0 L652.0,280.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M638.0,288.0 L652.0,288.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M645.0,404.0 L652.0,420.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M645.0,404.0 L645.0,420.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M645.0,404.0 L638.0,420.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="645.0" cy="396.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M545.0,270.0 L545.0,298.0 L24.0,298.0 L24.0,1545.0 L120.0,1545.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M538.0,280.0 L552.0,280.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M538.0,288.0 L552.0,288.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M104.0,1545.0 L120.0,1538.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M104.0,1545.0 L120.0,1545.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M104.0,1545.0 L120.0,1552.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="96.0" cy="1545.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M565.0,270.0 L565.0,314.0 L46.0,314.0 L46.0,1047.0 L120.0,1047.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M558.0,280.0 L572.0,280.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M558.0,288.0 L572.0,288.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M104.0,1047.0 L120.0,1040.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M104.0,1047.0 L120.0,1047.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M104.0,1047.0 L120.0,1054.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="96.0" cy="1047.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M585.0,270.0 L585.0,330.0 L68.0,330.0 L68.0,771.0 L120.0,771.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M578.0,280.0 L592.0,280.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M578.0,288.0 L592.0,288.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M104.0,771.0 L120.0,764.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M104.0,771.0 L120.0,771.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M104.0,771.0 L120.0,778.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="96.0" cy="771.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M605.0,270.0 L605.0,346.0 L90.0,346.0 L90.0,495.0 L120.0,495.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M598.0,280.0 L612.0,280.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M598.0,288.0 L612.0,288.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M104.0,495.0 L120.0,488.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M104.0,495.0 L120.0,495.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M104.0,495.0 L120.0,502.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="96.0" cy="495.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M745.0,270.0 L745.0,298.0 L915.7,298.0 L915.7,771.0 L940.0,771.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M738.0,282.0 L752.0,282.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="745.0" cy="294.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M924.0,771.0 L940.0,764.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M924.0,771.0 L940.0,771.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M924.0,771.0 L940.0,778.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="916.0" cy="771.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M725.0,270.0 L725.0,314.0 L891.4,314.0 L891.4,1047.0 L940.0,1047.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M718.0,280.0 L732.0,280.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M718.0,288.0 L732.0,288.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M924.0,1047.0 L940.0,1040.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M924.0,1047.0 L940.0,1047.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M924.0,1047.0 L940.0,1054.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="916.0" cy="1047.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M705.0,270.0 L705.0,330.0 L1692.5,330.0 L1692.5,645.0 L1730.0,645.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M698.0,280.0 L712.0,280.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M698.0,288.0 L712.0,288.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1714.0,645.0 L1730.0,638.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1714.0,645.0 L1730.0,645.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1714.0,645.0 L1730.0,652.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="1706.0" cy="645.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M685.0,270.0 L685.0,346.0 L1655.0,346.0 L1655.0,813.0 L1730.0,813.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M678.0,280.0 L692.0,280.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M678.0,288.0 L692.0,288.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1714.0,813.0 L1730.0,806.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1714.0,813.0 L1730.0,813.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1714.0,813.0 L1730.0,820.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="1706.0" cy="813.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M645.0,636.0 L645.0,696.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M638.0,646.0 L652.0,646.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M638.0,654.0 L652.0,654.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M645.0,680.0 L652.0,696.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M645.0,680.0 L645.0,696.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M645.0,680.0 L638.0,696.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="645.0" cy="672.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M520.0,459.0 L495.0,459.0 L495.0,1011.0 L520.0,1011.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M510.0,452.0 L510.0,466.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M502.0,452.0 L502.0,466.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M504.0,1011.0 L520.0,1004.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M504.0,1011.0 L520.0,1011.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M504.0,1011.0 L520.0,1018.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="496.0" cy="1011.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M770.0,735.0 L794.3,735.0 L794.3,1197.0 L770.0,1197.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M780.0,742.0 L780.0,728.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M788.0,742.0 L788.0,728.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M782.0,1204.0 L782.0,1190.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="794.0" cy="1197.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M520.0,459.0 L470.0,459.0 L470.0,477.0 L370.0,477.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M510.0,452.0 L510.0,466.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M502.0,452.0 L502.0,466.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M386.0,477.0 L370.0,484.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M386.0,477.0 L370.0,477.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M386.0,477.0 L370.0,470.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="394.0" cy="477.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M520.0,735.0 L445.0,735.0 L445.0,753.0 L370.0,753.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M510.0,728.0 L510.0,742.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M502.0,728.0 L502.0,742.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M386.0,753.0 L370.0,760.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M386.0,753.0 L370.0,753.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M386.0,753.0 L370.0,746.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="394.0" cy="753.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M554.0,636.0 L554.0,666.0 L420.0,666.0 L420.0,1065.0 L370.0,1065.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M547.0,648.0 L561.0,648.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="554.0" cy="660.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M386.0,1065.0 L370.0,1072.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M386.0,1065.0 L370.0,1065.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M386.0,1065.0 L370.0,1058.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="394.0" cy="1065.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M520.0,459.0 L395.0,459.0 L395.0,1287.0 L370.0,1287.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M510.0,452.0 L510.0,466.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M502.0,452.0 L502.0,466.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M386.0,1287.0 L370.0,1294.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M386.0,1287.0 L370.0,1287.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M386.0,1287.0 L370.0,1280.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="394.0" cy="1287.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M245.0,1410.0 L245.0,1470.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M238.0,1420.0 L252.0,1420.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M238.0,1428.0 L252.0,1428.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M245.0,1454.0 L252.0,1470.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M245.0,1454.0 L245.0,1470.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M245.0,1454.0 L238.0,1470.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="245.0" cy="1446.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M770.0,459.0 L818.6,459.0 L818.6,495.0 L940.0,495.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M780.0,466.0 L780.0,452.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M788.0,466.0 L788.0,452.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M924.0,495.0 L940.0,488.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M924.0,495.0 L940.0,495.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M924.0,495.0 L940.0,502.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="916.0" cy="495.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M770.0,735.0 L867.1,735.0 L867.1,753.0 L940.0,753.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M780.0,742.0 L780.0,728.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M788.0,742.0 L788.0,728.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M924.0,753.0 L940.0,746.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M924.0,753.0 L940.0,753.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M924.0,753.0 L940.0,760.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="916.0" cy="753.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M770.0,735.0 L842.9,735.0 L842.9,1029.0 L940.0,1029.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M780.0,742.0 L780.0,728.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M788.0,742.0 L788.0,728.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M924.0,1029.0 L940.0,1022.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M924.0,1029.0 L940.0,1029.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M924.0,1029.0 L940.0,1036.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="916.0" cy="1029.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M1065.0,636.0 L1065.0,696.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M1058.0,648.0 L1072.0,648.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="1065.0" cy="660.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M1065.0,680.0 L1072.0,696.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1065.0,680.0 L1065.0,696.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1065.0,680.0 L1058.0,696.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="1065.0" cy="672.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M1065.0,1206.0 L1065.0,696.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M1072.0,1194.0 L1058.0,1194.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="1065.0" cy="1182.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M1065.0,712.0 L1058.0,696.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1065.0,712.0 L1065.0,696.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1065.0,712.0 L1072.0,696.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="1065.0" cy="720.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M1065.0,1206.0 L1065.0,1266.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M1058.0,1216.0 L1072.0,1216.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1058.0,1224.0 L1072.0,1224.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1065.0,1250.0 L1072.0,1266.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1065.0,1250.0 L1065.0,1266.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1065.0,1250.0 L1058.0,1266.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="1065.0" cy="1242.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M1190.0,1011.0 L1225.0,1011.0 L1225.0,477.0 L1330.0,477.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M1200.0,1018.0 L1200.0,1004.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1208.0,1018.0 L1208.0,1004.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1314.0,477.0 L1330.0,470.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1314.0,477.0 L1330.0,477.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1314.0,477.0 L1330.0,484.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="1306.0" cy="477.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M1190.0,1011.0 L1260.0,1011.0 L1260.0,753.0 L1330.0,753.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M1200.0,1018.0 L1200.0,1004.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1208.0,1018.0 L1208.0,1004.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1314.0,753.0 L1330.0,746.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1314.0,753.0 L1330.0,753.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1314.0,753.0 L1330.0,760.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="1306.0" cy="753.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M1190.0,1011.0 L1295.0,1011.0 L1295.0,1047.0 L1330.0,1047.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M1200.0,1018.0 L1200.0,1004.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1208.0,1018.0 L1208.0,1004.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1314.0,1047.0 L1330.0,1040.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1314.0,1047.0 L1330.0,1047.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1314.0,1047.0 L1330.0,1054.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="1306.0" cy="1047.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M1455.0,930.0 L1455.0,990.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M1448.0,942.0 L1462.0,942.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="1455.0" cy="954.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M1455.0,974.0 L1462.0,990.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1455.0,974.0 L1455.0,990.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1455.0,974.0 L1448.0,990.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="1455.0" cy="966.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M1580.0,735.0 L1617.5,735.0 L1617.5,1341.0 L1580.0,1341.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M1590.0,742.0 L1590.0,728.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1598.0,742.0 L1598.0,728.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1596.0,1341.0 L1580.0,1348.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1596.0,1341.0 L1580.0,1341.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1596.0,1341.0 L1580.0,1334.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="1604.0" cy="1341.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<path d="M1855.0,510.0 L1855.0,570.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M1848.0,520.0 L1862.0,520.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1848.0,528.0 L1862.0,528.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1855.0,554.0 L1862.0,570.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1855.0,554.0 L1855.0,570.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1855.0,554.0 L1848.0,570.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1862.0,548.0 L1848.0,548.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1980.0,459.0 L2016.0,459.0 L2016.0,795.0 L1980.0,795.0" stroke="#374151" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+<path d="M1990.0,466.0 L1990.0,452.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1998.0,466.0 L1998.0,452.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1996.0,795.0 L1980.0,802.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1996.0,795.0 L1980.0,795.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1996.0,795.0 L1980.0,788.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="2004.0" cy="795.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<g class="entity" id="profiles">
+<rect x="520" y="90" width="250" height="180" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M520,120 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="520.65" y="90.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#e8edf5"/>
+<text x="645.0" y="110.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">profiles</text>
+<text x="528" y="133.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="566" y="133.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="762" y="133.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="566" y="151.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">email</text>
+<text x="762" y="151.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="566" y="169.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">full_name</text>
+<text x="762" y="169.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="566" y="187.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">role</text>
+<text x="762" y="187.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">user_role</text>
+<text x="566" y="205.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">phone</text>
+<text x="762" y="205.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="566" y="223.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">avatar_url</text>
+<text x="762" y="223.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="566" y="241.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">business_name</text>
+<text x="762" y="241.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="566" y="259.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">created_at</text>
+<text x="762" y="259.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">timestamptz</text>
+</g>
+<g class="entity" id="user_security_settings">
+<rect x="120" y="90" width="250" height="144" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M120,120 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="120.65" y="90.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#e8edf5"/>
+<text x="245.0" y="110.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">user_security_settings</text>
+<text x="128" y="133.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK, FK</text>
+<text x="166" y="133.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">profile_id</text>
+<text x="362" y="133.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="166" y="151.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">two_factor_enabled</text>
+<text x="362" y="151.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">boolean</text>
+<text x="166" y="169.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">two_factor_email</text>
+<text x="362" y="169.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="166" y="187.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">otp_code</text>
+<text x="362" y="187.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="166" y="205.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">otp_expiry</text>
+<text x="362" y="205.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">timestamptz</text>
+<text x="166" y="223.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">has_changed_password</text>
+<text x="362" y="223.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">boolean</text>
+</g>
+<g class="entity" id="notifications">
+<rect x="940" y="90" width="250" height="162" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M940,120 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="940.65" y="90.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#e8edf5"/>
+<text x="1065.0" y="110.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">notifications</text>
+<text x="948" y="133.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="986" y="133.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="1182" y="133.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="948" y="151.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="986" y="151.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">user_id</text>
+<text x="1182" y="151.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="986" y="169.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">type</text>
+<text x="1182" y="169.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">notification_type</text>
+<text x="986" y="187.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">title</text>
+<text x="1182" y="187.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="986" y="205.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">message</text>
+<text x="1182" y="205.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="986" y="223.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">read</text>
+<text x="1182" y="223.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">boolean</text>
+<text x="986" y="241.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">created_at</text>
+<text x="1182" y="241.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">timestamptz</text>
+</g>
+<g class="entity" id="properties">
+<rect x="520" y="420" width="250" height="216" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M520,450 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="520.65" y="420.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#e6f1e8"/>
+<text x="645.0" y="440.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">properties</text>
+<text x="528" y="463.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="566" y="463.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="762" y="463.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="528" y="481.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="566" y="481.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">landlord_id</text>
+<text x="762" y="481.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="566" y="499.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">name</text>
+<text x="762" y="499.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="566" y="517.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">address</text>
+<text x="762" y="517.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="566" y="535.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">city</text>
+<text x="762" y="535.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="566" y="553.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">type</text>
+<text x="762" y="553.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">property_type</text>
+<text x="566" y="571.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">total_units</text>
+<text x="762" y="571.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">integer</text>
+<text x="566" y="589.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">total_floors</text>
+<text x="762" y="589.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">integer</text>
+<text x="566" y="607.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">base_rent_amount</text>
+<text x="762" y="607.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">numeric</text>
+<text x="566" y="625.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">house_rules</text>
+<text x="762" y="625.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text[]</text>
+</g>
+<g class="entity" id="units">
+<rect x="520" y="696" width="250" height="198" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M520,726 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="520.65" y="696.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#e6f1e8"/>
+<text x="645.0" y="716.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">units</text>
+<text x="528" y="739.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="566" y="739.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="762" y="739.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="528" y="757.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="566" y="757.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">property_id</text>
+<text x="762" y="757.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="566" y="775.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">name</text>
+<text x="762" y="775.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="566" y="793.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">floor</text>
+<text x="762" y="793.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">integer</text>
+<text x="566" y="811.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">status</text>
+<text x="762" y="811.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">unit_status</text>
+<text x="566" y="829.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">rent_amount</text>
+<text x="762" y="829.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">numeric</text>
+<text x="566" y="847.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">beds</text>
+<text x="762" y="847.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">integer</text>
+<text x="566" y="865.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">baths</text>
+<text x="762" y="865.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">integer</text>
+<text x="566" y="883.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">sqft</text>
+<text x="762" y="883.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">integer</text>
+</g>
+<g class="entity" id="property_floor_configs">
+<rect x="520" y="954" width="250" height="144" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M520,984 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="520.65" y="954.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#e6f1e8"/>
+<text x="645.0" y="974.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">property_floor_configs</text>
+<text x="528" y="997.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="566" y="997.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="762" y="997.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="528" y="1015.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="566" y="1015.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">property_id</text>
+<text x="762" y="1015.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="566" y="1033.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">floor_number</text>
+<text x="762" y="1033.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">integer</text>
+<text x="566" y="1051.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">floor_key</text>
+<text x="762" y="1051.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="566" y="1069.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">display_name</text>
+<text x="762" y="1069.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="566" y="1087.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">sort_order</text>
+<text x="762" y="1087.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">integer</text>
+</g>
+<g class="entity" id="unit_map_positions">
+<rect x="520" y="1158" width="250" height="144" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M520,1188 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="520.65" y="1158.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#e6f1e8"/>
+<text x="645.0" y="1178.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">unit_map_positions</text>
+<text x="528" y="1201.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK, FK</text>
+<text x="566" y="1201.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">unit_id</text>
+<text x="762" y="1201.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="566" y="1219.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">floor_key</text>
+<text x="762" y="1219.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="566" y="1237.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">x</text>
+<text x="762" y="1237.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">integer</text>
+<text x="566" y="1255.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">y</text>
+<text x="762" y="1255.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">integer</text>
+<text x="566" y="1273.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">w</text>
+<text x="762" y="1273.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">integer</text>
+<text x="566" y="1291.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">h</text>
+<text x="762" y="1291.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">integer</text>
+</g>
+<g class="entity" id="tenant_intake_invites">
+<rect x="940" y="420" width="250" height="216" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M940,450 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="940.65" y="420.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#fdf1dc"/>
+<text x="1065.0" y="440.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">tenant_intake_invites</text>
+<text x="948" y="463.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="986" y="463.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="1182" y="463.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="948" y="481.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="986" y="481.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">landlord_id</text>
+<text x="1182" y="481.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="948" y="499.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="986" y="499.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">property_id</text>
+<text x="1182" y="499.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="948" y="517.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="986" y="517.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">unit_id</text>
+<text x="1182" y="517.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="986" y="535.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">mode</text>
+<text x="1182" y="535.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="986" y="553.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">token_hash</text>
+<text x="1182" y="553.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="986" y="571.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">status</text>
+<text x="1182" y="571.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="986" y="589.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">max_uses</text>
+<text x="1182" y="589.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">integer</text>
+<text x="986" y="607.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">use_count</text>
+<text x="1182" y="607.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">integer</text>
+<text x="986" y="625.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">expires_at</text>
+<text x="1182" y="625.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">timestamptz</text>
+</g>
+<g class="entity" id="applications">
+<rect x="940" y="696" width="250" height="216" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M940,726 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="940.65" y="696.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#fdf1dc"/>
+<text x="1065.0" y="716.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">applications</text>
+<text x="948" y="739.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="986" y="739.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="1182" y="739.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="948" y="757.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="986" y="757.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">unit_id</text>
+<text x="1182" y="757.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="948" y="775.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="986" y="775.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">applicant_id</text>
+<text x="1182" y="775.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="948" y="793.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="986" y="793.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">landlord_id</text>
+<text x="1182" y="793.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="948" y="811.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="986" y="811.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">invite_id</text>
+<text x="1182" y="811.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="948" y="829.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="986" y="829.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">lease_id</text>
+<text x="1182" y="829.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="986" y="847.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">status</text>
+<text x="1182" y="847.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">application_status</text>
+<text x="986" y="865.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">monthly_income</text>
+<text x="1182" y="865.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">numeric</text>
+<text x="986" y="883.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">employment_status</text>
+<text x="1182" y="883.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="986" y="901.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">move_in_date</text>
+<text x="1182" y="901.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">date</text>
+</g>
+<g class="entity" id="leases">
+<rect x="940" y="972" width="250" height="234" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M940,1002 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="940.65" y="972.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#fdf1dc"/>
+<text x="1065.0" y="992.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">leases</text>
+<text x="948" y="1015.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="986" y="1015.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="1182" y="1015.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="948" y="1033.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="986" y="1033.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">unit_id</text>
+<text x="1182" y="1033.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="948" y="1051.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="986" y="1051.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">tenant_id</text>
+<text x="1182" y="1051.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="948" y="1069.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="986" y="1069.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">landlord_id</text>
+<text x="1182" y="1069.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="986" y="1087.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">status</text>
+<text x="1182" y="1087.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">lease_status</text>
+<text x="986" y="1105.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">start_date</text>
+<text x="1182" y="1105.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">date</text>
+<text x="986" y="1123.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">end_date</text>
+<text x="1182" y="1123.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">date</text>
+<text x="986" y="1141.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">monthly_rent</text>
+<text x="1182" y="1141.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">numeric</text>
+<text x="986" y="1159.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">security_deposit</text>
+<text x="1182" y="1159.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">numeric</text>
+<text x="986" y="1177.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">signed_at</text>
+<text x="1182" y="1177.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">timestamptz</text>
+<text x="986" y="1195.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">signed_document_url</text>
+<text x="1182" y="1195.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+</g>
+<g class="entity" id="lease_signing_audit">
+<rect x="940" y="1266" width="250" height="162" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M940,1296 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="940.65" y="1266.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#fdf1dc"/>
+<text x="1065.0" y="1286.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">lease_signing_audit</text>
+<text x="948" y="1309.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="986" y="1309.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="1182" y="1309.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="948" y="1327.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="986" y="1327.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">lease_id</text>
+<text x="1182" y="1327.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="948" y="1345.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="986" y="1345.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">actor_id</text>
+<text x="1182" y="1345.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="986" y="1363.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">event_type</text>
+<text x="1182" y="1363.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="986" y="1381.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">ip_address</text>
+<text x="1182" y="1381.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">inet</text>
+<text x="986" y="1399.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">user_agent</text>
+<text x="1182" y="1399.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="986" y="1417.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">created_at</text>
+<text x="1182" y="1417.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">timestamptz</text>
+</g>
+<g class="entity" id="move_out_requests">
+<rect x="1330" y="420" width="250" height="216" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M1330,450 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="1330.65" y="420.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#fdf1dc"/>
+<text x="1455.0" y="440.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">move_out_requests</text>
+<text x="1338" y="463.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="1376" y="463.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="1572" y="463.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1338" y="481.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="1376" y="481.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">lease_id</text>
+<text x="1572" y="481.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1338" y="499.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="1376" y="499.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">tenant_id</text>
+<text x="1572" y="499.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1338" y="517.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="1376" y="517.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">landlord_id</text>
+<text x="1572" y="517.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1376" y="535.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">requested_date</text>
+<text x="1572" y="535.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">date</text>
+<text x="1376" y="553.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">status</text>
+<text x="1572" y="553.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">move_out_status</text>
+<text x="1376" y="571.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">reason</text>
+<text x="1572" y="571.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="1376" y="589.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">inspection_date</text>
+<text x="1572" y="589.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">date</text>
+<text x="1376" y="607.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">deposit_refund_amount</text>
+<text x="1572" y="607.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">numeric</text>
+<text x="1376" y="625.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">completed_at</text>
+<text x="1572" y="625.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">timestamptz</text>
+</g>
+<g class="entity" id="payments">
+<rect x="1330" y="696" width="250" height="234" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M1330,726 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="1330.65" y="696.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#f6e8ee"/>
+<text x="1455.0" y="716.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">payments</text>
+<text x="1338" y="739.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="1376" y="739.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="1572" y="739.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1338" y="757.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="1376" y="757.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">lease_id</text>
+<text x="1572" y="757.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1338" y="775.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="1376" y="775.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">tenant_id</text>
+<text x="1572" y="775.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1338" y="793.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="1376" y="793.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">landlord_id</text>
+<text x="1572" y="793.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1376" y="811.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">invoice_number</text>
+<text x="1572" y="811.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="1376" y="829.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">amount</text>
+<text x="1572" y="829.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">numeric</text>
+<text x="1376" y="847.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">paid_amount</text>
+<text x="1572" y="847.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">numeric</text>
+<text x="1376" y="865.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">status</text>
+<text x="1572" y="865.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">payment_status</text>
+<text x="1376" y="883.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">method</text>
+<text x="1572" y="883.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">payment_method</text>
+<text x="1376" y="901.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">due_date</text>
+<text x="1572" y="901.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">date</text>
+<text x="1376" y="919.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">paid_at</text>
+<text x="1572" y="919.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">timestamptz</text>
+</g>
+<g class="entity" id="utility_readings">
+<rect x="1330" y="990" width="250" height="234" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M1330,1020 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="1330.65" y="990.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#f6e8ee"/>
+<text x="1455.0" y="1010.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">utility_readings</text>
+<text x="1338" y="1033.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="1376" y="1033.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="1572" y="1033.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1338" y="1051.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="1376" y="1051.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">lease_id</text>
+<text x="1572" y="1051.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1338" y="1069.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="1376" y="1069.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">unit_id</text>
+<text x="1572" y="1069.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1338" y="1087.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="1376" y="1087.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">property_id</text>
+<text x="1572" y="1087.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1338" y="1105.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="1376" y="1105.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">payment_id</text>
+<text x="1572" y="1105.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1376" y="1123.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">utility_type</text>
+<text x="1572" y="1123.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">utility_type</text>
+<text x="1376" y="1141.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">billing_period_start</text>
+<text x="1572" y="1141.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">date</text>
+<text x="1376" y="1159.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">billing_period_end</text>
+<text x="1572" y="1159.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">date</text>
+<text x="1376" y="1177.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">previous_reading</text>
+<text x="1572" y="1177.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">numeric</text>
+<text x="1376" y="1195.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">current_reading</text>
+<text x="1572" y="1195.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">numeric</text>
+<text x="1376" y="1213.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">computed_charge</text>
+<text x="1572" y="1213.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">numeric</text>
+</g>
+<g class="entity" id="payment_receipts">
+<rect x="1330" y="1284" width="250" height="180" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M1330,1314 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="1330.65" y="1284.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#f6e8ee"/>
+<text x="1455.0" y="1304.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">payment_receipts</text>
+<text x="1338" y="1327.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="1376" y="1327.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="1572" y="1327.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1338" y="1345.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="1376" y="1345.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">payment_id</text>
+<text x="1572" y="1345.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1338" y="1363.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="1376" y="1363.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">tenant_id</text>
+<text x="1572" y="1363.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1338" y="1381.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="1376" y="1381.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">landlord_id</text>
+<text x="1572" y="1381.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1376" y="1399.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">receipt_number</text>
+<text x="1572" y="1399.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="1376" y="1417.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">amount</text>
+<text x="1572" y="1417.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">numeric</text>
+<text x="1376" y="1435.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">method</text>
+<text x="1572" y="1435.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">payment_method</text>
+<text x="1376" y="1453.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">issued_at</text>
+<text x="1572" y="1453.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">timestamptz</text>
+</g>
+<g class="entity" id="maintenance_requests">
+<rect x="120" y="696" width="250" height="234" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M120,726 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="120.65" y="696.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#f6e8ee"/>
+<text x="245.0" y="716.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">maintenance_requests</text>
+<text x="128" y="739.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="166" y="739.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="362" y="739.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="128" y="757.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="166" y="757.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">unit_id</text>
+<text x="362" y="757.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="128" y="775.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="166" y="775.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">tenant_id</text>
+<text x="362" y="775.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="128" y="793.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="166" y="793.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">landlord_id</text>
+<text x="362" y="793.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="166" y="811.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">title</text>
+<text x="362" y="811.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="166" y="829.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">description</text>
+<text x="362" y="829.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="166" y="847.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">category</text>
+<text x="362" y="847.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="166" y="865.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">status</text>
+<text x="362" y="865.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">maintenance_status</text>
+<text x="166" y="883.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">priority</text>
+<text x="362" y="883.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">maintenance_priority</text>
+<text x="166" y="901.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">images</text>
+<text x="362" y="901.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text[]</text>
+<text x="166" y="919.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">resolved_at</text>
+<text x="362" y="919.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">timestamptz</text>
+</g>
+<g class="entity" id="expenses">
+<rect x="120" y="990" width="250" height="180" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M120,1020 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="120.65" y="990.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#f6e8ee"/>
+<text x="245.0" y="1010.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">expenses</text>
+<text x="128" y="1033.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="166" y="1033.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="362" y="1033.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="128" y="1051.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="166" y="1051.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">landlord_id</text>
+<text x="362" y="1051.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="128" y="1069.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="166" y="1069.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">property_id</text>
+<text x="362" y="1069.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="128" y="1087.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="166" y="1087.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">unit_id</text>
+<text x="362" y="1087.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="166" y="1105.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">category</text>
+<text x="362" y="1105.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="166" y="1123.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">amount</text>
+<text x="362" y="1123.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">numeric</text>
+<text x="166" y="1141.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">date_incurred</text>
+<text x="362" y="1141.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">date</text>
+<text x="166" y="1159.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">description</text>
+<text x="362" y="1159.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+</g>
+<g class="entity" id="amenities">
+<rect x="120" y="1230" width="250" height="180" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M120,1260 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="120.65" y="1230.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#ebe6f5"/>
+<text x="245.0" y="1250.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">amenities</text>
+<text x="128" y="1273.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="166" y="1273.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="362" y="1273.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="128" y="1291.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="166" y="1291.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">property_id</text>
+<text x="362" y="1291.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="128" y="1309.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="166" y="1309.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">landlord_id</text>
+<text x="362" y="1309.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="166" y="1327.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">name</text>
+<text x="362" y="1327.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="166" y="1345.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">type</text>
+<text x="362" y="1345.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="166" y="1363.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">price_per_unit</text>
+<text x="362" y="1363.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">numeric</text>
+<text x="166" y="1381.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">capacity</text>
+<text x="362" y="1381.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">integer</text>
+<text x="166" y="1399.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">status</text>
+<text x="362" y="1399.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+</g>
+<g class="entity" id="amenity_bookings">
+<rect x="120" y="1470" width="250" height="198" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M120,1500 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="120.65" y="1470.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#ebe6f5"/>
+<text x="245.0" y="1490.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">amenity_bookings</text>
+<text x="128" y="1513.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="166" y="1513.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="362" y="1513.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="128" y="1531.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="166" y="1531.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">amenity_id</text>
+<text x="362" y="1531.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="128" y="1549.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="166" y="1549.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">tenant_id</text>
+<text x="362" y="1549.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="128" y="1567.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="166" y="1567.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">landlord_id</text>
+<text x="362" y="1567.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="166" y="1585.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">booking_date</text>
+<text x="362" y="1585.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">date</text>
+<text x="166" y="1603.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">start_time</text>
+<text x="362" y="1603.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">time</text>
+<text x="166" y="1621.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">end_time</text>
+<text x="362" y="1621.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">time</text>
+<text x="166" y="1639.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">total_price</text>
+<text x="362" y="1639.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">numeric</text>
+<text x="166" y="1657.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">status</text>
+<text x="362" y="1657.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+</g>
+<g class="entity" id="community_posts">
+<rect x="120" y="420" width="250" height="216" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M120,450 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="120.65" y="420.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#ebe6f5"/>
+<text x="245.0" y="440.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">community_posts</text>
+<text x="128" y="463.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="166" y="463.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="362" y="463.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="128" y="481.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="166" y="481.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">property_id</text>
+<text x="362" y="481.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="128" y="499.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="166" y="499.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">author_id</text>
+<text x="362" y="499.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="166" y="517.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">author_role</text>
+<text x="362" y="517.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">user_role</text>
+<text x="166" y="535.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">type</text>
+<text x="362" y="535.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">post_type_enum</text>
+<text x="166" y="553.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">title</text>
+<text x="362" y="553.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="166" y="571.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">content</text>
+<text x="362" y="571.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="166" y="589.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">is_pinned</text>
+<text x="362" y="589.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">boolean</text>
+<text x="166" y="607.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">status</text>
+<text x="362" y="607.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">post_status_enum</text>
+<text x="166" y="625.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">created_at</text>
+<text x="362" y="625.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">timestamptz</text>
+</g>
+<g class="entity" id="conversations">
+<rect x="1730" y="420" width="250" height="90" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M1730,450 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="1730.65" y="420.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#ebe6f5"/>
+<text x="1855.0" y="440.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">conversations</text>
+<text x="1738" y="463.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="1776" y="463.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="1972" y="463.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1776" y="481.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">created_at</text>
+<text x="1972" y="481.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">timestamptz</text>
+<text x="1776" y="499.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">updated_at</text>
+<text x="1972" y="499.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">timestamptz</text>
+</g>
+<g class="entity" id="conversation_participants">
+<rect x="1730" y="570" width="250" height="108" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M1730,600 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="1730.65" y="570.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#ebe6f5"/>
+<text x="1855.0" y="590.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">conversation_participants</text>
+<text x="1738" y="613.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="1776" y="613.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="1972" y="613.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1738" y="631.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="1776" y="631.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">conversation_id</text>
+<text x="1972" y="631.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1738" y="649.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="1776" y="649.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">user_id</text>
+<text x="1972" y="649.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1776" y="667.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">created_at</text>
+<text x="1972" y="667.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">timestamptz</text>
+</g>
+<g class="entity" id="messages">
+<rect x="1730" y="738" width="250" height="162" rx="3" ry="3" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<path d="M1730,768 h250" stroke="#1f2937" stroke-width="1.3"/>
+<rect x="1730.65" y="738.65" width="248.7" height="28.7" rx="2.5" ry="2.5" fill="#ebe6f5"/>
+<text x="1855.0" y="758.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13.5" font-weight="700" fill="#1f2937">messages</text>
+<text x="1738" y="781.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">PK</text>
+<text x="1776" y="781.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="700" text-decoration="underline" fill="#1f2937">id</text>
+<text x="1972" y="781.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1738" y="799.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="1776" y="799.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">conversation_id</text>
+<text x="1972" y="799.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1738" y="817.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9.5" font-weight="700" fill="#6b7280">FK</text>
+<text x="1776" y="817.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" font-style="italic" fill="#1f2937">sender_id</text>
+<text x="1972" y="817.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">uuid</text>
+<text x="1776" y="835.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">type</text>
+<text x="1972" y="835.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">message_type</text>
+<text x="1776" y="853.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">content</text>
+<text x="1972" y="853.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">text</text>
+<text x="1776" y="871.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">read_at</text>
+<text x="1972" y="871.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">timestamptz</text>
+<text x="1776" y="889.0" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1f2937">created_at</text>
+<text x="1972" y="889.0" text-anchor="end" font-family="Consolas, Menlo, monospace" font-size="10" fill="#6b7280">timestamptz</text>
+</g>
+<rect x="1720" y="950" width="340" height="280" fill="#fafafa" stroke="#1f2937" stroke-width="1"/>
+<text x="1734" y="974" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="700" fill="#1f2937">Legend (Crow’s Foot)</text>
+<path d="M1738,1000 L1788,1000" stroke="#374151" stroke-width="1.4"/>
+<path d="M1778.0,993.0 L1778.0,1007.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1770.0,993.0 L1770.0,1007.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<text x="1804" y="1004" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#1f2937">Exactly one (mandatory)</text>
+<path d="M1738,1026 L1788,1026" stroke="#374151" stroke-width="1.4"/>
+<path d="M1776.0,1019.0 L1776.0,1033.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="1764.0" cy="1026.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<text x="1804" y="1030" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#1f2937">Zero or one (optional)</text>
+<path d="M1738,1052 L1788,1052" stroke="#374151" stroke-width="1.4"/>
+<path d="M1772.0,1052.0 L1788.0,1045.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1772.0,1052.0 L1788.0,1052.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1772.0,1052.0 L1788.0,1059.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<circle cx="1764.0" cy="1052.0" r="4.5" stroke="#374151" stroke-width="1.4" fill="#ffffff"/>
+<text x="1804" y="1056" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#1f2937">Zero or many (optional)</text>
+<path d="M1738,1078 L1788,1078" stroke="#374151" stroke-width="1.4"/>
+<path d="M1772.0,1078.0 L1788.0,1071.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1772.0,1078.0 L1788.0,1078.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1772.0,1078.0 L1788.0,1085.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<path d="M1766.0,1071.0 L1766.0,1085.0" stroke="#374151" stroke-width="1.4" fill="none"/>
+<text x="1804" y="1082" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#1f2937">One or many (mandatory)</text>
+<text x="1734" y="1106" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11" fill="#1f2937"><tspan font-weight="700">PK</tspan> primary key (bold, underlined)  <tspan font-weight="700">FK</tspan> foreign key (italic)</text>
+<text x="1734" y="1128" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11" fill="#1f2937">Domain groups (header tint):</text>
+<rect x="1738" y="1140" width="14" height="11" fill="#e8edf5" stroke="#1f2937" stroke-width="0.8"/>
+<text x="1758" y="1149.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.5" fill="#1f2937">User & Account</text>
+<rect x="1738" y="1158" width="14" height="11" fill="#e6f1e8" stroke="#1f2937" stroke-width="0.8"/>
+<text x="1758" y="1167.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.5" fill="#1f2937">Property, Unit & Blueprint</text>
+<rect x="1738" y="1176" width="14" height="11" fill="#fdf1dc" stroke="#1f2937" stroke-width="0.8"/>
+<text x="1758" y="1185.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.5" fill="#1f2937">Intake & Lease</text>
+<rect x="1738" y="1194" width="14" height="11" fill="#f6e8ee" stroke="#1f2937" stroke-width="0.8"/>
+<text x="1758" y="1203.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.5" fill="#1f2937">Billing & Maintenance</text>
+<rect x="1738" y="1212" width="14" height="11" fill="#ebe6f5" stroke="#1f2937" stroke-width="0.8"/>
+<text x="1758" y="1221.5" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.5" fill="#1f2937">Messaging & Community</text>
+<rect x="1320" y="1514" width="270" height="182" fill="#fafafa" stroke="#1f2937" stroke-width="1"/>
+<text x="1332" y="1538" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="700" fill="#1f2937" xml:space="preserve">Notes</text>
+<text x="1332" y="1556" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.8" font-weight="400" fill="#1f2937" xml:space="preserve">1. Connectors are drawn for the primary (identifying)</text>
+<text x="1332" y="1574" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.8" font-weight="400" fill="#1f2937" xml:space="preserve">   relationship of each foreign key. Duplicated owner</text>
+<text x="1332" y="1592" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.8" font-weight="400" fill="#1f2937" xml:space="preserve">   keys (landlord_id / tenant_id) that exist for row-level</text>
+<text x="1332" y="1610" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.8" font-weight="400" fill="#1f2937" xml:space="preserve">   security are listed as FK attributes without connectors.</text>
+<text x="1332" y="1628" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.8" font-weight="400" fill="#1f2937" xml:space="preserve">2. profiles.id references Supabase auth.users(id).</text>
+<text x="1332" y="1646" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.8" font-weight="400" fill="#1f2937" xml:space="preserve">3. conversation_participants is the associative entity</text>
+<text x="1332" y="1664" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.8" font-weight="400" fill="#1f2937" xml:space="preserve">   resolving the many-to-many between profiles and</text>
+<text x="1332" y="1682" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10.8" font-weight="400" fill="#1f2937" xml:space="preserve">   conversations.</text>
+</svg>

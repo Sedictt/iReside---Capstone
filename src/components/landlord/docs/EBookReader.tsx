@@ -35,7 +35,6 @@ import {
 } from "@/lib/docs/docsData";
 import { generateDocsPdf } from "@/lib/docs/generateDocsPdf";
 import { searchDocs } from "@/lib/docs/searchEngine";
-import { resolveDocsBackLink } from "@/lib/docs/navigation";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -53,6 +52,7 @@ interface EBookReaderProps {
   onNavigateTab?: (tabId: string) => void;
   className?: string;
   defaultBackHref?: string;
+  hideBackLink?: boolean;
 }
 
 // Preloaded Web Audio Context & In-Memory Buffer for Zero-Latency Sound
@@ -153,7 +153,6 @@ export function EBookReader({
   onAudienceChange,
   onNavigateTab,
   className,
-  defaultBackHref,
 }: EBookReaderProps) {
   const pathname = usePathname();
   const { profile } = useAuth();
@@ -224,15 +223,6 @@ export function EBookReader({
   const searchResponse = useMemo(() => {
     return searchDocs(searchQuery, { audience: targetAudience });
   }, [searchQuery, targetAudience]);
-
-  // Back link & label calculation (strictly decoupled from targetAudience)
-  const { href: backHref, label: backLabel } = useMemo(() => {
-    return resolveDocsBackLink({
-      defaultBackHref,
-      pathname,
-      userRole: profile?.role,
-    });
-  }, [defaultBackHref, pathname, profile?.role]);
 
   // Turn Next with Anti-Spam Animation Guard
   const handleTurnNext = () => {
@@ -376,17 +366,8 @@ export function EBookReader({
       {/* 1. TOP HEADER                                                       */}
       {/* =================================================================== */}
       <header className="shrink-0 relative w-full h-14 px-4 sm:px-6 flex items-center justify-between z-30 bg-white/80 backdrop-blur-xl border-b border-zinc-200/80 shadow-xs">
-        {/* Left: Back Link */}
-        <div className="flex items-center">
-          <Link
-            href={backHref}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-zinc-100/90 hover:bg-zinc-200 text-xs font-semibold text-zinc-800 border border-zinc-200/80 transition-all shadow-xs"
-          >
-            <ArrowLeft className="size-3.5 text-zinc-600" />
-            <span className="hidden md:inline">{backLabel}</span>
-            <span className="md:hidden">Back</span>
-          </Link>
-        </div>
+        {/* Left Spacer */}
+        <div className="flex items-center min-w-[36px]" />
 
         {/* Center: Dedicated Audience Tabs (Tenant vs Landlord vs IT) */}
         <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 p-1 rounded-xl bg-zinc-100 border border-zinc-200/80 flex items-center shadow-xs">

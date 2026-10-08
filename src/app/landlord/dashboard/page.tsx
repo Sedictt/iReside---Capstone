@@ -7,6 +7,7 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import { DashboardBanner } from "@/components/landlord/dashboard/DashboardBanner";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useProperty } from "@/context/PropertyContext";
+import { useLandlordSetup } from "@/hooks/useLandlordSetup";
 import {
     CreditCard,
     AlertTriangle,
@@ -126,7 +127,8 @@ export default function LandlordDashboard() {
     const { user, profile } = useAuth();
     const { counts } = useNotifications();
     const { t } = useLanguage();
-    const { selectedPropertyId, properties, refreshProperties } = useProperty();
+    const { selectedPropertyId, properties, refreshProperties, updateSetupStep } = useProperty();
+    const setup = useLandlordSetup();
     const currentProperty = properties.find(p => p.id === selectedPropertyId) || properties[0];
     const [mounted, setMounted] = useState(false);
     const [activeDashboardTab, setActiveDashboardTab] = useState<"cash-flow" | "utilities" | "renewals">("cash-flow");
@@ -136,22 +138,9 @@ export default function LandlordDashboard() {
         : (properties[0]?.id || "default");
     const SCOPED_AWAITING_TENANT_SETUP_KEY = `ireside.onboarding_awaiting_tenant_setup.${activePropertyId}`;
     const SCOPED_TENANT_DELAYED_KEY = `ireside.tenant_setup_delayed.${activePropertyId}`;
-    const SCOPED_BILLING_RAILS_COMPLETE_KEY = `ireside.billing_rails_complete.${activePropertyId}`;
     const SCOPED_BILLING_RAILS_DELAYED_KEY = `ireside.billing_rails_delayed.${activePropertyId}`;
     const SCOPED_DASHBOARD_TOUR_COMPLETE_KEY = `ireside.dashboard_tour_complete.${activePropertyId}`;
     const GLOBAL_DASHBOARD_TOUR_COMPLETE_KEY = "ireside.dashboard_tour_complete";
-    const [, setBillingVersion] = useState(0);
-
-    useEffect(() => {
-        const handleBillingChange = () => setBillingVersion((v) => v + 1);
-        window.addEventListener("billing-rails-setup-completed", handleBillingChange);
-        window.addEventListener("billing-rails-delayed-changed", handleBillingChange);
-        return () => {
-            window.removeEventListener("billing-rails-setup-completed", handleBillingChange);
-            window.removeEventListener("billing-rails-delayed-changed", handleBillingChange);
-        };
-    }, []);
-
     const [isTenantSetupPromptOpen, setIsTenantSetupPromptOpen] = useState(false);
     const [dismissedThisVisit, setDismissedThisVisit] = useState(false);
     const tenantSetupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -324,43 +313,23 @@ export default function LandlordDashboard() {
         properties.some((p) => p.hasTenants || p.units?.some((u) => (u.status || "").toLowerCase() === "occupied"))
     );
 
-    const hasConfiguredMap = Boolean(
-        currentProperty?.isMapSetupComplete ||
-        (currentProperty && (currentProperty.placedCount ?? 0) > 0) ||
-        currentProperty?.hasTenants ||
-        properties.some((p) => p.isMapSetupComplete || (p.placedCount ?? 0) > 0 || p.hasTenants) ||
-        (typeof window !== "undefined" && (
-            window.localStorage.getItem(`ireside_map_setup_complete_${activePropertyId}`) === "true" ||
-            window.localStorage.getItem(`ireside.onboarding_awaiting_tenant_setup.${activePropertyId}`) === "true" ||
-            window.localStorage.getItem(`ireside.awaiting_tenant_setup.${activePropertyId}`) === "true" ||
-            window.localStorage.getItem(`ireside.tenant_setup_delayed.${activePropertyId}`) === "true"
-        ))
-    );
-
-    const hasConfiguredBilling = Boolean(
-        hasAtLeastOneTenant ||
-        properties.some((p) => p.hasTenants) ||
-        (typeof window !== "undefined" && (
-            window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
-            window.localStorage.getItem(SCOPED_BILLING_RAILS_COMPLETE_KEY) === "true" ||
-            window.localStorage.getItem("ireside.billing_rails_delayed") === "true" ||
-            window.localStorage.getItem(SCOPED_BILLING_RAILS_DELAYED_KEY) === "true" ||
-            properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true")
-        ))
-    );
+    // Onboarding decisions come only from the shared setup resolver: authoritative DB state,
+    // persisted deferrals, and loading-safe (nothing prompts until the state is known).
+    const isBillingStepDeferred = Boolean(setup.steps.find((step) => step.id === "billing")?.deferred);
+    const isTenantStepDeferred = Boolean(setup.steps.find((step) => step.id === "first_tenant")?.deferred);
+    const showBillingSetupCard = setup.status === "ready" && setup.nextStep === "billing";
+    const showTenantSetupReminder = setup.status === "ready" && setup.nextStep === "first_tenant" && isTenantStepDeferred;
+    const isSetupSettled =
+        setup.status === "ready" && setup.steps.every((step) => step.complete === true || step.deferred);
 
     const hasCompletedDashboardTour = Boolean(
         backendTourCompleted ||
+        setup.dashboardTourDone ||
         (user?.user_metadata as any)?.dashboard_tour_completed ||
         (user?.user_metadata as any)?.onboarding_completed ||
-        (typeof window !== "undefined" && (
-            window.localStorage.getItem(SCOPED_DASHBOARD_TOUR_COMPLETE_KEY) === "true" ||
-            window.localStorage.getItem(GLOBAL_DASHBOARD_TOUR_COMPLETE_KEY) === "true" ||
-            window.localStorage.getItem("ireside.onboarding_completed") === "true"
-        ))
+        (typeof window !== "undefined" &&
+            window.localStorage.getItem(SCOPED_DASHBOARD_TOUR_COMPLETE_KEY) === "true")
     );
-
-    const hasPendingBillingRails = !loadingUnits && properties.length > 0 && hasConfiguredMap && !hasConfiguredBilling && !hasAtLeastOneTenant;
 
     const handleDelayBillingSetup = () => {
         if (typeof window !== "undefined") {
@@ -371,13 +340,13 @@ export default function LandlordDashboard() {
                 toast.info("Billing setup postponed. Tenant management is now unlocked.");
             } catch {}
         }
+        void updateSetupStep("billing", "defer");
     };
 
     useEffect(() => {
-        if (!mounted || loadingUnits) return;
-        if (typeof window === "undefined") return;
+        if (!mounted) return;
 
-        if (hasPendingBillingRails && !dismissedBillingThisVisit) {
+        if (setup.promptStep === "billing" && !dismissedBillingThisVisit) {
             if (billingSetupTimeoutRef.current) {
                 clearTimeout(billingSetupTimeoutRef.current);
             }
@@ -398,7 +367,7 @@ export default function LandlordDashboard() {
                 billingSetupTimeoutRef.current = null;
             }
         };
-    }, [mounted, loadingUnits, hasPendingBillingRails, dismissedBillingThisVisit]);
+    }, [mounted, setup.promptStep, dismissedBillingThisVisit]);
 
     const handleCloseBillingSetupPrompt = () => {
         if (billingSetupTimeoutRef.current) {
@@ -421,10 +390,9 @@ export default function LandlordDashboard() {
     };
 
     useEffect(() => {
-        if (!mounted || loadingUnits) return;
-        if (typeof window === "undefined") return;
+        if (!mounted) return;
 
-        if (hasConfiguredMap && hasConfiguredBilling && !hasAtLeastOneTenant && !dismissedThisVisit) {
+        if (setup.promptStep === "first_tenant" && !dismissedThisVisit) {
             if (tenantSetupTimeoutRef.current) {
                 clearTimeout(tenantSetupTimeoutRef.current);
             }
@@ -445,7 +413,7 @@ export default function LandlordDashboard() {
                 tenantSetupTimeoutRef.current = null;
             }
         };
-    }, [mounted, loadingUnits, hasConfiguredMap, hasConfiguredBilling, hasAtLeastOneTenant, dismissedThisVisit]);
+    }, [mounted, setup.promptStep, dismissedThisVisit]);
 
     const handleCloseTenantSetupPrompt = () => {
         if (tenantSetupTimeoutRef.current) {
@@ -460,6 +428,7 @@ export default function LandlordDashboard() {
                 window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
             } catch {}
         }
+        void updateSetupStep("first_tenant", "defer");
     };
 
     const handleSelectQuickAdd = () => {
@@ -510,34 +479,28 @@ export default function LandlordDashboard() {
                 window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
             } catch {}
         }
+        void updateSetupStep("first_tenant", "defer");
     };
 
     useEffect(() => {
-        if (!mounted || loadingUnits) return;
+        if (!mounted) return;
         if (typeof window === "undefined") return;
 
-        const isTenantStageSatisfied = hasAtLeastOneTenant || window.localStorage.getItem(SCOPED_TENANT_DELAYED_KEY) === "true";
-
-        // For established landlords (who already have active tenants or properties with tenants),
-        // suppress automatic greeting modal unless they are explicitly in the active onboarding flow
-        const hasAwaitingDashboardTourSignal = typeof window !== "undefined" && (
+        // For established landlords (who already have tenants), suppress the automatic greeting
+        // unless they just finished the onboarding flow in this session
+        const hasAwaitingDashboardTourSignal =
             window.localStorage.getItem("ireside.onboarding_awaiting_dashboard_tour") === "true" ||
-            window.localStorage.getItem(`ireside.onboarding_awaiting_dashboard_tour.${activePropertyId}`) === "true"
-        );
-        const isEstablishedLandlord = hasAtLeastOneTenant || properties.some((p) => p.hasTenants);
+            window.localStorage.getItem(`ireside.onboarding_awaiting_dashboard_tour.${activePropertyId}`) === "true";
 
-        const readyForDashboardTour = 
-            properties.length > 0 &&
-            hasConfiguredMap &&
-            hasConfiguredBilling &&
-            isTenantStageSatisfied &&
+        const readyForDashboardTour =
+            isSetupSettled &&
             !hasCompletedDashboardTour &&
             !dismissedDashboardTourThisVisit &&
             !isDashboardTourOpen &&
             !isTourCompletionOpen &&
             !isTenantSetupPromptOpen &&
             !isBillingSetupPromptOpen &&
-            (!isEstablishedLandlord || hasAwaitingDashboardTourSignal);
+            (!setup.hasTenant || hasAwaitingDashboardTourSignal);
 
         if (readyForDashboardTour) {
             if (dashboardTourTimeoutRef.current) {
@@ -561,20 +524,15 @@ export default function LandlordDashboard() {
         };
     }, [
         mounted,
-        loadingUnits,
-        properties.length,
-        hasConfiguredMap,
-        hasConfiguredBilling,
-        hasAtLeastOneTenant,
+        isSetupSettled,
+        setup.hasTenant,
         hasCompletedDashboardTour,
         dismissedDashboardTourThisVisit,
         isDashboardTourOpen,
         isTourCompletionOpen,
         isTenantSetupPromptOpen,
         isBillingSetupPromptOpen,
-        SCOPED_TENANT_DELAYED_KEY,
         activePropertyId,
-        properties
     ]);
 
     const handleStartTourFromGreeting = () => {
@@ -839,43 +797,61 @@ export default function LandlordDashboard() {
                     onStartTour={handleManualStartTour}
                 />
 
-                {/* Stage 3 Onboarding: Payment & Utility Rails Card */}
-                {hasPendingBillingRails && (
+                {/* Setup progress: next incomplete step. Non-blocking; stays until the real data satisfies it. */}
+                {(showBillingSetupCard || showTenantSetupReminder) && (
                     <div className="relative rounded-[2rem] p-6 sm:p-7 neumorphic-panel border border-primary/20 bg-primary/[0.03] space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div className="flex items-center gap-4">
                                 <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shrink-0">
-                                    <Zap className="size-6" />
+                                    {showBillingSetupCard ? <Zap className="size-6" /> : <CheckCircle2 className="size-6" />}
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                                             Onboarding Step 3 of 5
+                                            {showBillingSetupCard ? "Onboarding Step 3 of 5" : "Onboarding Step 4 of 5"}
+                                        </span>
+                                        <span className="text-[10px] font-bold text-muted-foreground">
+                                            {setup.completedCount} of {setup.totalCount} setup steps done
                                         </span>
                                     </div>
                                     <h3 className="text-lg font-black text-foreground tracking-tight">
-                                        {t("Activate Your Payment & Utility Rails")}
+                                        {showBillingSetupCard ? t("Activate Your Payment & Utility Rails") : t("Add Your First Tenant")}
                                     </h3>
                                     <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 max-w-2xl">
-                                        {t("Set up your GCash QR code and water/electricity tariffs so lease generation and rent billing have valid payment details ready.")}
+                                        {showBillingSetupCard
+                                            ? t("Set up your GCash QR code and water/electricity tariffs so lease generation and rent billing have valid payment details ready.")
+                                            : t("Register a tenant to start lease tracking, rent billing, and the rest of your portal.")}
                                     </p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 w-full sm:w-auto shrink-0">
-                                <button
-                                    type="button"
-                                    onClick={handleDelayBillingSetup}
-                                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground border border-border/60 hover:bg-muted/50 transition-all active:scale-95"
-                                >
-                                    {t("Configure Later")}
-                                </button>
-                                <Link
-                                    href="/landlord/utility-billing"
-                                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:brightness-105 transition-all active:scale-95"
-                                >
-                                    <span>{t("Set Up Billing")}</span>
-                                    <ArrowRight className="size-3.5" />
-                                </Link>
+                                {showBillingSetupCard && !isBillingStepDeferred && (
+                                    <button
+                                        type="button"
+                                        onClick={handleDelayBillingSetup}
+                                        className="px-4 py-2.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground border border-border/60 hover:bg-muted/50 transition-all active:scale-95"
+                                    >
+                                        {t("Configure Later")}
+                                    </button>
+                                )}
+                                {showBillingSetupCard ? (
+                                    <Link
+                                        href="/landlord/utility-billing"
+                                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:brightness-105 transition-all active:scale-95"
+                                    >
+                                        <span>{t("Set Up Billing")}</span>
+                                        <ArrowRight className="size-3.5" />
+                                    </Link>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsTenantSetupPromptOpen(true)}
+                                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:brightness-105 transition-all active:scale-95"
+                                    >
+                                        <span>{t("Add Tenant")}</span>
+                                        <ArrowRight className="size-3.5" />
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
