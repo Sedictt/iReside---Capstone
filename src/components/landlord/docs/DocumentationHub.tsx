@@ -10,6 +10,7 @@ interface DocumentationHubProps {
   onNavigateTab?: (tabId: string) => void;
   className?: string;
   defaultBackHref?: string;
+  hideBackLink?: boolean;
 }
 
 export function DocumentationHub({
@@ -17,6 +18,7 @@ export function DocumentationHub({
   onNavigateTab,
   className,
   defaultBackHref,
+  hideBackLink,
 }: DocumentationHubProps) {
   const [audience, setAudience] = useState<DocAudience>(initialAudience);
 
@@ -32,6 +34,7 @@ export function DocumentationHub({
         onAudienceChange={setAudience}
         onNavigateTab={onNavigateTab}
         defaultBackHref={resolvedBackHref}
+        hideBackLink={hideBackLink}
       />
     </div>
   );

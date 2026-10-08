@@ -33,7 +33,9 @@ function createNodemailerTransporter(user: string, pass: string, host = DEFAULT_
       pass: pass.replace(/['"\s]/g, ""),
     },
     tls: {
-      rejectUnauthorized: false,
+      // Verify the server certificate by default. Set SMTP_TLS_REJECT_UNAUTHORIZED=false
+      // only for a private SMTP relay that uses a self-signed certificate.
+      rejectUnauthorized: process.env.SMTP_TLS_REJECT_UNAUTHORIZED !== "false",
     },
   });
 }

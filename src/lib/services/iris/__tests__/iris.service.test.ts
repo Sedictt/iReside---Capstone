@@ -111,7 +111,7 @@ describe("IrisContextService", () => {
     expect(prompt).toContain("Juan Dela Cruz");
     expect(prompt).toContain("Skyline Realty");
     expect(prompt).toContain("GreenPark_Guest");
-    expect(prompt).toContain("WelcomeHome2024");
+    expect(prompt).not.toContain("WelcomeHome2024");
     expect(prompt).toContain("LANGUAGE MATCHING");
   });
 });

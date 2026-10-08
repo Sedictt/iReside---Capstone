@@ -102,7 +102,7 @@ export function TenantSetupPromptModal({
                                 <Users className="size-6" />
                             </div>
                             <span className="inline-flex items-center text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/25">
-                                Step 4 of Onboarding
+                                Step 4 of 5 • Onboarding
                             </span>
                         </div>
 

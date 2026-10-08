@@ -6,8 +6,9 @@ import { ContactsSidebar } from "@/components/landlord/dashboard/ContactsSidebar
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { AuthProvider, useAuth } from "@/context/AuthContext";
-import { PropertyProvider, useProperty } from "@/context/PropertyContext";
+import { AuthProvider } from "@/context/AuthContext";
+import { PropertyProvider } from "@/context/PropertyContext";
+import { useLandlordSetup } from "@/hooks/useLandlordSetup";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { ProfileCardProvider } from "@/context/ProfileCardContext";
 import { ProfileCard } from "@/components/ui/ProfileCard";
@@ -26,132 +27,42 @@ import { toast } from "sonner";
 function MandatoryPropertySetupGuard({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
-    const { profile, loading: authLoading } = useAuth();
-    const { properties, loading: propertyLoading, selectedPropertyId } = useProperty();
+    // Single source of truth: authoritative DB state + persisted deferrals.
+    // While loading or on error, lockStage is null, so nobody is redirected on missing data.
+    const { lockStage } = useLandlordSetup();
 
-    const [localMapCompleted, setLocalMapCompleted] = useState(false);
-
-    useEffect(() => {
-        const checkLocal = () => {
-            if (typeof window === "undefined") return;
-            try {
-                const activeId = selectedPropertyId && selectedPropertyId !== "all" 
-                    ? selectedPropertyId 
-                    : (properties[0]?.id || "default");
-                const isCompleted = 
-                    window.localStorage.getItem(`ireside_map_setup_complete_${activeId}`) === "true" ||
-                    window.localStorage.getItem(`ireside.explore_modal_shown.${activeId}`) === "true" ||
-                    window.localStorage.getItem(`ireside.awaiting_tenant_setup.${activeId}`) === "true" ||
-                    window.localStorage.getItem(`ireside.onboarding_awaiting_tenant_setup.${activeId}`) === "true" ||
-                    properties.some((p) => window.localStorage.getItem(`ireside_map_setup_complete_${p.id}`) === "true");
-                setLocalMapCompleted(Boolean(isCompleted));
-            } catch {
-                setLocalMapCompleted(false);
-            }
-        };
-        checkLocal();
-        window.addEventListener("unit-map-setup-completed", checkLocal);
-        window.addEventListener("unit-map-guidance-changed", checkLocal);
-        window.addEventListener("storage", checkLocal);
-        return () => {
-            window.removeEventListener("unit-map-setup-completed", checkLocal);
-            window.removeEventListener("unit-map-guidance-changed", checkLocal);
-            window.removeEventListener("storage", checkLocal);
-        };
-    }, [selectedPropertyId, properties]);
-
-    const [localBillingCompleted, setLocalBillingCompleted] = useState(false);
-    const [isBillingDelayed, setIsBillingDelayed] = useState(false);
-
-    useEffect(() => {
-        const checkBilling = () => {
-            if (typeof window === "undefined") return;
-            try {
-                const activeId = selectedPropertyId && selectedPropertyId !== "all" 
-                    ? selectedPropertyId 
-                    : (properties[0]?.id || "default");
-                const isBillingDone = 
-                    window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
-                    window.localStorage.getItem(`ireside.billing_rails_complete.${activeId}`) === "true" ||
-                    properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true");
-                setLocalBillingCompleted(Boolean(isBillingDone));
-
-                const isDelay = 
-                    window.localStorage.getItem("ireside.billing_rails_delayed") === "true" ||
-                    window.localStorage.getItem(`ireside.billing_rails_delayed.${activeId}`) === "true";
-                setIsBillingDelayed(Boolean(isDelay));
-            } catch {
-                setLocalBillingCompleted(false);
-                setIsBillingDelayed(false);
-            }
-        };
-        checkBilling();
-        window.addEventListener("billing-rails-setup-completed", checkBilling);
-        window.addEventListener("billing-rails-delayed-changed", checkBilling);
-        window.addEventListener("storage", checkBilling);
-        return () => {
-            window.removeEventListener("billing-rails-setup-completed", checkBilling);
-            window.removeEventListener("billing-rails-delayed-changed", checkBilling);
-            window.removeEventListener("storage", checkBilling);
-        };
-    }, [selectedPropertyId, properties]);
-
-    const isLandlord = profile?.role === "landlord" || profile?.role === "admin";
-    const isReady = !authLoading && !propertyLoading;
-    const hasZeroProperties = isReady && isLandlord && properties.length === 0;
     const isAllowedCreationRoute = pathname === "/landlord/properties/new";
-
-    // Stage 4: Financial rails configured/acknowledged, but 0 tenants registered
-    const hasAtLeastOneTenant = properties.some((p) => 
-        Boolean(p.hasTenants) || 
-        p.units?.some((u) => (u.status || "").toLowerCase() === "occupied")
-    );
-
-    // Stage 2: Landlord has registered a property, but unit map is not yet configured
-    const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete || (p.placedCount ?? 0) > 0 || p.hasTenants) || localMapCompleted;
-    const hasPendingUnitMap = isReady && isLandlord && properties.length > 0 && !hasConfiguredMap;
     const isAllowedUnitMapRoute = pathname?.startsWith("/landlord/unit-map");
-
-    // Stage 3: Property & Unit map configured, but billing rails pending
-    const hasConfiguredBilling = localBillingCompleted || isBillingDelayed || hasAtLeastOneTenant;
-    const hasPendingBillingRails = isReady && isLandlord && properties.length > 0 && hasConfiguredMap && !hasConfiguredBilling && !hasAtLeastOneTenant;
-    const isAllowedStage3Route = 
-        pathname === "/landlord/dashboard" || 
-        pathname?.startsWith("/landlord/properties") || 
-        pathname?.startsWith("/landlord/unit-map") || 
+    const isAllowedStage3Route =
+        pathname === "/landlord/dashboard" ||
+        pathname?.startsWith("/landlord/properties") ||
+        pathname?.startsWith("/landlord/unit-map") ||
         pathname?.startsWith("/landlord/utility-billing");
-
-    const hasPendingTenantSetup = isReady && isLandlord && properties.length > 0 && hasConfiguredMap && hasConfiguredBilling && !hasAtLeastOneTenant;
-    const isAllowedStage4Route = 
-        pathname === "/landlord/dashboard" || 
-        pathname?.startsWith("/landlord/properties") || 
-        pathname?.startsWith("/landlord/unit-map") || 
-        pathname?.startsWith("/landlord/utility-billing") || 
-        pathname?.startsWith("/landlord/invoices") || 
-        pathname?.startsWith("/landlord/tenants") || 
+    const isAllowedStage4Route =
+        isAllowedStage3Route ||
+        pathname?.startsWith("/landlord/invoices") ||
+        pathname?.startsWith("/landlord/tenants") ||
         pathname?.startsWith("/landlord/applications");
 
     useEffect(() => {
-        if (hasZeroProperties && !isAllowedCreationRoute) {
-            // When zero properties and not on properties/new, keep user routed toward property setup
+        if (lockStage === "no_property" && !isAllowedCreationRoute) {
+            // Zero properties: keep the landlord routed toward property setup
             if (pathname !== "/landlord/dashboard") {
                 router.replace("/landlord/properties/new");
             }
-        } else if (hasPendingUnitMap && !isAllowedUnitMapRoute) {
-            // When property registered but unit map unconfigured, keep user routed toward unit map setup
+        } else if (lockStage === "no_unit_map" && !isAllowedUnitMapRoute) {
+            // Property registered but unit map unconfigured: keep routed toward unit map setup
             if (pathname !== "/landlord/dashboard") {
                 router.replace("/landlord/unit-map");
             }
-        } else if (hasPendingBillingRails && !isAllowedStage3Route) {
-            // Restrict navigation in Stage 3
+        } else if (lockStage === "no_billing_rails" && !isAllowedStage3Route) {
             toast.warning("Configure your payment channels and utility tariffs to unlock operations.");
             router.replace("/landlord/dashboard");
-        } else if (hasPendingTenantSetup && !isAllowedStage4Route) {
-            // Restrict navigation in Stage 4
+        } else if (lockStage === "no_tenant" && !isAllowedStage4Route) {
             toast.warning("Complete property setup and register your first tenant to unlock portal operations.");
             router.replace("/landlord/dashboard");
         }
-    }, [hasZeroProperties, hasPendingUnitMap, hasPendingBillingRails, hasPendingTenantSetup, isAllowedCreationRoute, isAllowedUnitMapRoute, isAllowedStage3Route, isAllowedStage4Route, pathname, router]);
+    }, [lockStage, isAllowedCreationRoute, isAllowedUnitMapRoute, isAllowedStage3Route, isAllowedStage4Route, pathname, router]);
 
     return (
         <>

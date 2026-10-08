@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Map, ArrowRight, Layers, Grid, ShieldCheck } from "lucide-react";
 import { useProperty } from "@/context/PropertyContext";
+import { useLandlordSetup } from "@/hooks/useLandlordSetup";
 import { cn } from "@/lib/utils";
 
 export function LandlordUnitMapLightbox() {
     const router = useRouter();
     const pathname = usePathname();
-    const { properties, loading, selectedPropertyId, setSelectedPropertyId } = useProperty();
+    const { properties, selectedPropertyId, setSelectedPropertyId } = useProperty();
+    const setup = useLandlordSetup();
     const [hasMounted, setHasMounted] = useState(false);
     const [isDismissed, setIsDismissed] = useState(false);
 
@@ -29,16 +31,6 @@ export function LandlordUnitMapLightbox() {
         }
     }, [activePropertyId]);
 
-    const isLocallyComplete = typeof window !== "undefined" && (
-        window.localStorage.getItem(`ireside_map_setup_complete_${activePropertyId}`) === "true" ||
-        window.localStorage.getItem(`ireside.explore_modal_shown.${activePropertyId}`) === "true" ||
-        window.localStorage.getItem(`ireside.awaiting_tenant_setup.${activePropertyId}`) === "true" ||
-        properties.some((p) => window.localStorage.getItem(`ireside_map_setup_complete_${p.id}`) === "true")
-    );
-    const hasConfiguredMap =
-        properties.some((p) => p.isMapSetupComplete || (p.placedCount ?? 0) > 0 || p.hasTenants) ||
-        isLocallyComplete;
-
     const isUnitMapPage = Boolean(pathname?.startsWith("/landlord/unit-map"));
 
     // Display when client mounted, properties loaded, at least 1 property exists, but unit map is not configured,
@@ -46,9 +38,8 @@ export function LandlordUnitMapLightbox() {
     // If on /landlord/unit-map, show greeting until the user clicks "Start Unit Map Setup".
     const isVisible =
         hasMounted &&
-        !loading &&
-        properties.length > 0 &&
-        !hasConfiguredMap &&
+        setup.status === "ready" &&
+        setup.promptStep === "unit_map" &&
         pathname !== "/landlord/properties/new" &&
         (!isUnitMapPage || !isDismissed);
 
@@ -111,7 +102,7 @@ export function LandlordUnitMapLightbox() {
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">
-                            Step 2 of Onboarding
+                            Step 2 of 5 • Unit Map
                         </span>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                             Mandatory Setup

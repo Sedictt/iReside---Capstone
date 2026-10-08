@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -32,7 +32,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropertySelector'
 import { LogoutConfirmationModal } from '@/components/ui/LogoutConfirmationModal'
 import { useNotifications } from '@/context/NotificationContext'
-import { useProperty } from '@/context/PropertyContext'
+import { useLandlordSetup } from '@/hooks/useLandlordSetup'
 import { triggerHaptic } from '@/lib/haptics'
 import { cn } from '@/lib/utils'
 import { signOut } from '@/lib/supabase/client-auth'
@@ -58,38 +58,12 @@ interface MenuSection {
 export function LandlordMenuView() {
     const router = useRouter()
     const { counts, importantNotifications } = useNotifications()
-    const { properties, loading: propertyLoading, selectedPropertyId } = useProperty()
+    const setup = useLandlordSetup()
 
     const [showLogoutModal, setShowLogoutModal] = useState(false)
-    const [isTenantSetupDelayed, setIsTenantSetupDelayed] = useState(false)
-
-    const activePropertyId = selectedPropertyId && selectedPropertyId !== 'all'
-        ? selectedPropertyId
-        : (properties[0]?.id || 'default')
-
-    useEffect(() => {
-        const checkDelayed = () => {
-            if (typeof window === 'undefined') return
-            try {
-                const val = window.localStorage.getItem(`ireside.tenant_setup_delayed.${activePropertyId}`)
-                setIsTenantSetupDelayed(val === 'true')
-            } catch {
-                setIsTenantSetupDelayed(false)
-            }
-        }
-        checkDelayed()
-        window.addEventListener('tenant-setup-delayed-changed', checkDelayed)
-        window.addEventListener('storage', checkDelayed)
-        return () => {
-            window.removeEventListener('tenant-setup-delayed-changed', checkDelayed)
-            window.removeEventListener('storage', checkDelayed)
-        }
-    }, [activePropertyId])
-
-    const hasZeroProperties = !propertyLoading && properties.length === 0
-    const hasConfiguredMap = properties.some((p) => p.isMapSetupComplete)
-    const hasPendingUnitMap = !propertyLoading && properties.length > 0 && !hasConfiguredMap
-    const isLocked = hasZeroProperties || hasPendingUnitMap
+    const isTenantSetupDelayed = Boolean(setup.steps.find((step) => step.id === 'first_tenant')?.deferred)
+    // Mobile only enforces the property / unit-map stages (unknown state never locks)
+    const isLocked = setup.lockStage === 'no_property' || setup.lockStage === 'no_unit_map'
 
     const isUrgent = (type: string) => importantNotifications.some(n => n.type === type)
 
@@ -265,7 +239,7 @@ export function LandlordMenuView() {
         if (isLocked && item.isExternal && item.href !== '/landlord/properties') {
             e.preventDefault()
             toast.warning(
-                hasZeroProperties
+                setup.lockStage === 'no_property'
                     ? 'Property setup required. Please complete your property setup first to unlock portal operations.'
                     : 'Unit map setup required. Please configure your property unit layout first to unlock portal operations.'
             )

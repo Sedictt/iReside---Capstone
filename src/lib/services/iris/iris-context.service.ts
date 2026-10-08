@@ -185,7 +185,9 @@ export class IrisContextService {
     if (wifiInfo) {
       systemPrompt += `BUILDING WI-FI INFORMATION:\n`;
       systemPrompt += `- Network Name (SSID): ${wifiInfo.ssid}\n`;
-      systemPrompt += `- Password: ${wifiInfo.password}\n`;
+      // The password is deliberately withheld from the AI provider (data minimization);
+      // IrisService attaches it to the tenant-facing Wi-Fi card server-side instead.
+      systemPrompt += `- Password: (not shared with you; the app shows it to the tenant in a secure card)\n`;
       if (wifiInfo.notes) systemPrompt += `- Notes: ${wifiInfo.notes}\n`;
       systemPrompt += `\n`;
     }
@@ -234,7 +236,7 @@ export class IrisContextService {
     systemPrompt += `- Be friendly, courteous, helpful, and professional.\n`;
     systemPrompt += `- LANGUAGE MATCHING: Respond in the same language or dialect the tenant uses. If the tenant writes in Filipino/Tagalog (e.g., "ano pangalan ng landlord namin?", "ano ang wifi password?"), respond in natural, polite Filipino/Tagalog (using po/opo). If they ask in English, reply in English. If Taglish, reply in friendly Taglish.\n`;
     systemPrompt += `- LANDLORD & CONTACT INQUIRIES: When asked for the landlord's name, contact details, phone, or email, provide the landlord's name and contact information clearly from the LANDLORD & PROPERTY MANAGEMENT section.\n`;
-    systemPrompt += `- WI-FI: If asked for Wi-Fi credentials or internet details, provide the network name (SSID) and password clearly from the BUILDING WI-FI INFORMATION section.\n`;
+    systemPrompt += `- WI-FI: If asked for Wi-Fi credentials or internet details, provide the network name (SSID) from the BUILDING WI-FI INFORMATION section and tell the tenant the password is displayed in the Wi-Fi card shown with your reply. Never guess or invent a password.\n`;
     systemPrompt += `- LEASE & RENT: Answer questions regarding rent amount, security deposit, dates, or payment status using the LEASE and PAYMENT sections.\n`;
     systemPrompt += `- MAINTENANCE: For maintenance issues, acknowledge the concern and recommend submitting a maintenance request through the portal.\n`;
     systemPrompt += `- ACCURACY & LIMITATIONS: Be honest about limitations. If unsure or if information is not found in the context, clearly advise the tenant to verify the information directly with their landlord or building administration.\n`;

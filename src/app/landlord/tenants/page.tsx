@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback, Suspense } from "react";
 import { Clock, UserPlus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProperty } from "@/context/PropertyContext";
+import { useLandlordSetup } from "@/hooks/useLandlordSetup";
 import { useSearchParams, useRouter } from "next/navigation";
 import { LazyMotion, domAnimation, m } from "framer-motion";
 import { AddTenantModal } from "@/components/landlord/tenants/AddTenantModal";
@@ -34,7 +35,8 @@ function TenantsContent() {
  }
  }, [searchParams, rawTenantId, push]);
 
- const { selectedPropertyId, properties, loading: propertyLoading, refreshProperties } = useProperty();
+ const { selectedPropertyId, properties, refreshProperties, updateSetupStep } = useProperty();
+ const setup = useLandlordSetup();
  const {
      data: tenantsData,
      isLoading: loading,
@@ -104,40 +106,14 @@ function TenantsContent() {
   setDismissedThisVisit(false);
  }, [activePropertyId]);
 
- const hasConfiguredMap = Boolean(
-  currentProperty?.isMapSetupComplete ||
-  (currentProperty && (currentProperty.placedCount ?? 0) > 0) ||
-  (typeof window !== "undefined" && (
-   window.localStorage.getItem(`ireside_map_setup_complete_${activePropertyId}`) === "true" ||
-   window.localStorage.getItem(`ireside.onboarding_awaiting_tenant_setup.${activePropertyId}`) === "true" ||
-   window.localStorage.getItem(`ireside.awaiting_tenant_setup.${activePropertyId}`) === "true" ||
-   window.localStorage.getItem(`ireside.tenant_setup_delayed.${activePropertyId}`) === "true"
-  ))
- );
-
- const hasAtLeastOneTenant = Boolean(
-  (tenants && tenants.length > 0) ||
-  currentProperty?.hasTenants ||
-  properties.some(p => p.hasTenants)
- );
-
- const hasConfiguredBilling = Boolean(
-  hasAtLeastOneTenant ||
-  properties.some((p) => p.hasTenants) ||
-  (typeof window !== "undefined" && (
-   window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
-   window.localStorage.getItem(`ireside.billing_rails_complete.${activePropertyId}`) === "true" ||
-   window.localStorage.getItem("ireside.billing_rails_delayed") === "true" ||
-   window.localStorage.getItem(`ireside.billing_rails_delayed.${activePropertyId}`) === "true" ||
-   properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true")
-  ))
- );
+ // Prompt only when the shared setup state says the tenant step is next (and not deferred).
+ // The directory itself is also checked so a freshly added tenant never re-triggers the prompt.
+ const shouldPromptTenantSetup = setup.promptStep === "first_tenant" && tenants.length === 0;
 
  useEffect(() => {
-  if (loading || propertyLoading) return;
-  if (typeof window === "undefined") return;
+  if (loading) return;
 
-  if (hasConfiguredMap && hasConfiguredBilling && !hasAtLeastOneTenant && !dismissedThisVisit) {
+  if (shouldPromptTenantSetup && !dismissedThisVisit) {
    if (tenantSetupTimeoutRef.current) {
     clearTimeout(tenantSetupTimeoutRef.current);
    }
@@ -158,7 +134,7 @@ function TenantsContent() {
     tenantSetupTimeoutRef.current = null;
    }
   };
- }, [loading, propertyLoading, hasConfiguredMap, hasConfiguredBilling, hasAtLeastOneTenant, dismissedThisVisit]);
+ }, [loading, shouldPromptTenantSetup, dismissedThisVisit]);
 
  const handleCloseTenantSetupPrompt = () => {
   if (tenantSetupTimeoutRef.current) {
@@ -173,6 +149,7 @@ function TenantsContent() {
     window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
    } catch {}
   }
+  void updateSetupStep("first_tenant", "defer");
  };
 
  const handleMaybeLaterTenantSetup = () => {
@@ -188,6 +165,7 @@ function TenantsContent() {
     window.dispatchEvent(new CustomEvent("tenant-setup-delayed-changed"));
    } catch {}
   }
+  void updateSetupStep("first_tenant", "defer");
  };
 
  const handleSelectReusableLink = () => {

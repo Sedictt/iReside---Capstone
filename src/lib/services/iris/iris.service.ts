@@ -66,10 +66,11 @@ export class IrisService {
       .from("iris_chat_messages")
       .select("role, content")
       .eq("user_id", userId)
-      .order("created_at", { ascending: true })
+      .order("created_at", { ascending: false })
       .limit(80);
 
-    ((historyRows ?? []) as Array<{ role: "user" | "assistant"; content: string }>).forEach(
+    // Newest 80 rows were fetched; restore chronological order for the model.
+    ((historyRows ?? []) as Array<{ role: "user" | "assistant"; content: string }>).reverse().forEach(
       (entry) => {
         if (
           (entry.role === "user" || entry.role === "assistant") &&

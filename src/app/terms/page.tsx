@@ -120,8 +120,9 @@ export default function TermsPage() {
       icon: ShieldCheck,
       content: (
         <p className="leading-relaxed">
-          Your use of iReside is also governed by our Privacy Policy. We collect, store, and process 
-          personal data in accordance with applicable privacy laws including GDPR and CCPA. 
+          Your use of iReside is also governed by our Privacy Policy. We collect, store, and process
+          personal data in accordance with applicable privacy laws, principally the Philippine Data
+          Privacy Act of 2012 (Republic Act No. 10173).
           See our <Link href="/privacy" className="text-primary hover:text-primary-dark font-medium underline underline-offset-4">Privacy Policy</Link> for details.
         </p>
       )
@@ -132,9 +133,9 @@ export default function TermsPage() {
       icon: Cookie,
       content: (
         <p className="leading-relaxed">
-          We use cookies and similar technologies to power our platform, analyze usage, and personalize 
-          your experience. You can manage your cookie preferences through our cookie consent banner.
-          Essential cookies are required for platform functionality.
+          We use first-party cookies and browser storage to keep you signed in and remember your
+          settings. We do not use advertising or third-party tracking cookies. You can review your cookie
+          preferences at any time from the Privacy Policy. Essential cookies are required for platform functionality.
         </p>
       )
     },
@@ -157,7 +158,8 @@ export default function TermsPage() {
       content: (
         <p className="leading-relaxed">
           We reserve the right to suspend or terminate accounts that violate these terms, 
-          engage in illegal activity, or harm other users. Users may delete their accounts at any time.
+          engage in illegal activity, or harm other users. You may request deletion of your account
+          and personal data at any time by contacting us or your landlord, as described in our Privacy Policy.
         </p>
       )
     },
@@ -339,7 +341,7 @@ export default function TermsPage() {
             Terms of Service
           </h1>
           <p className="text-muted-foreground text-base leading-relaxed md:text-lg">
-            Please read these terms carefully before accessing or using the platform. Last updated on <span className="text-foreground font-semibold">May 18, 2026</span>.
+            Please read these terms carefully before accessing or using the platform. Last updated on <span className="text-foreground font-semibold">October 8, 2026</span>.
           </p>
         </div>
 

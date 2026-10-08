@@ -39,6 +39,7 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useProperty } from "@/context/PropertyContext";
+import { useLandlordSetup } from "@/hooks/useLandlordSetup";
 import type { BillingWorkspace, InvoiceListItem } from "@/lib/billing/server";
 import { BillingOperationsPanel } from "@/components/landlord/BillingOperationsPanel";
 import { InvoiceModal } from "@/components/landlord/invoices/InvoiceModal";
@@ -343,7 +344,8 @@ function buildDraftsFromWorkspace(
 export function UtilityBillingDashboard() {
 	const searchParams = useSearchParams();
 	const router = useRouter();
-	const { selectedPropertyId: globalPropertyId, properties } = useProperty();
+	const { selectedPropertyId: globalPropertyId, properties, updateSetupStep } = useProperty();
+	const setup = useLandlordSetup();
 	const [activeTab, setActiveTab] = useState<"readings" | "verify" | "rates" | "history">("readings");
 	const [workspace, setWorkspace] = useState<BillingWorkspace | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -378,16 +380,10 @@ export function UtilityBillingDashboard() {
 		? selectedPropertyId
 		: (properties[0]?.id || "default");
 
-	const hasTenantsAnywhere = properties.some((p) => p.hasTenants);
-
-	const isBillingConfigured = Boolean(
-		hasTenantsAnywhere ||
-		(typeof window !== "undefined" && (
-			window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
-			window.localStorage.getItem(`ireside.billing_rails_complete.${activePropertyId}`) === "true" ||
-			properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true")
-		))
-	);
+	// Billing step state from the shared setup resolver (DB payment destination / rates, tenants, persisted choices)
+	const billingStep = setup.steps.find((step) => step.id === "billing");
+	const isBillingStepPending = billingStep?.complete === false;
+	const isBillingStepDeferred = Boolean(billingStep?.deferred);
 
 	// Sync local property selection with global navbar selector
 	useEffect(() => {
@@ -426,32 +422,20 @@ export function UtilityBillingDashboard() {
 		}
 	}, []);
 
-	// --- Onboarding greeting mount effect ---
-	// Show the setup orientation modal on every fresh mount until billing rails are configured.
-	// 'dismissedThisVisit' resets to false on each component mount, so returning to this page always
-	// re-shows the modal until the step is explicitly completed.
+	// --- Onboarding greeting ---
+	// Show the orientation modal only while the billing step is known to be incomplete and has not
+	// been postponed. Unknown state (loading / failed request) never opens it; a postponed step
+	// shows the inline reminder banner instead of interrupting.
 	useEffect(() => {
-		if (typeof window === "undefined") return;
-		const hasTenantsAnywhere = properties.some((p) => p.hasTenants);
-		const isBillingDone =
-			hasTenantsAnywhere ||
-			window.localStorage.getItem("ireside.billing_rails_complete") === "true" ||
-			properties.some((p) => window.localStorage.getItem(`ireside.billing_rails_complete.${p.id}`) === "true");
-		if (!isBillingDone && !dismissedThisVisit) {
-			const timer = setTimeout(() => {
-				setIsOnboardingModalOpen(true);
-			}, 600);
-			return () => clearTimeout(timer);
-		} else if (hasTenantsAnywhere) {
-			try {
-				window.localStorage.setItem("ireside.billing_rails_complete", "true");
-				if (activePropertyId && activePropertyId !== "default") {
-					window.localStorage.setItem(`ireside.billing_rails_complete.${activePropertyId}`, "true");
-				}
-			} catch {}
+		if (!isBillingStepPending || isBillingStepDeferred || dismissedThisVisit) {
+			setIsOnboardingModalOpen(false);
+			return;
 		}
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [properties]);
+		const timer = setTimeout(() => {
+			setIsOnboardingModalOpen(true);
+		}, 600);
+		return () => clearTimeout(timer);
+	}, [isBillingStepPending, isBillingStepDeferred, dismissedThisVisit]);
 
 	// Helper to update both state and monthly draft cache
 	const updateDraftsAndCache = useCallback((newDrafts: ReadingDraft[]) => {
@@ -735,25 +719,36 @@ export function UtilityBillingDashboard() {
 
 	// --- Onboarding Handlers ---
 
-	/** Marks billing rails as complete, emits event, and prompts the choice dialog */
-	const handleCompleteOnboardingStep = () => {
-		try {
-			if (typeof window !== "undefined") {
-				window.localStorage.setItem("ireside.billing_rails_complete", "true");
-				if (activePropertyId && activePropertyId !== "default") {
-					window.localStorage.setItem(`ireside.billing_rails_complete.${activePropertyId}`, "true");
-				}
-				// Mark all known properties
-				properties.forEach((p) => {
-					if (p.id) window.localStorage.setItem(`ireside.billing_rails_complete.${p.id}`, "true");
-				});
-				window.dispatchEvent(new Event("billing-rails-setup-completed"));
-			}
-		} catch {}
+	/** Rates or GCash were saved to the database: the billing step is genuinely complete. */
+	const handleBillingSaved = () => {
 		setIsOnboardingModalOpen(false);
 		setIsTourOpen(false);
 		setDismissedThisVisit(true);
 		setIsCompletionModalOpen(true);
+	};
+
+	/**
+	 * "Next: Add Tenants" / "Complete Step". Completion only ever comes from saved billing data;
+	 * moving on without saving postpones the step (navigation unlocked, dashboard reminder stays).
+	 */
+	const handleCompleteOnboardingStep = () => {
+		if (!isBillingStepPending) {
+			handleBillingSaved();
+			return;
+		}
+		try {
+			window.localStorage.setItem("ireside.billing_rails_delayed", "true");
+			if (activePropertyId && activePropertyId !== "default") {
+				window.localStorage.setItem(`ireside.billing_rails_delayed.${activePropertyId}`, "true");
+			}
+			window.dispatchEvent(new Event("billing-rails-delayed-changed"));
+		} catch {}
+		void updateSetupStep("billing", "defer");
+		setIsOnboardingModalOpen(false);
+		setIsTourOpen(false);
+		setDismissedThisVisit(true);
+		toast.info("Billing setup postponed. Save your rates or GCash details anytime to finish this step.");
+		router.push("/landlord/tenants");
 	};
 
 	const handleProceedToTenantsFromBilling = () => {
@@ -1059,7 +1054,7 @@ export function UtilityBillingDashboard() {
 
 		<div className="flex flex-col space-y-8 pb-20 w-full">
 			{/* Re-occurring Setup Banner (shows after dismissal until step is complete) */}
-			{!isBillingConfigured && dismissedThisVisit && (
+			{isBillingStepPending && (dismissedThisVisit || isBillingStepDeferred) && (
 				<div className="rounded-2xl border border-primary/20 bg-primary/[0.04] px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
 					<div className="flex items-start gap-3.5">
 						<div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shrink-0 mt-0.5">
@@ -1684,8 +1679,7 @@ export function UtilityBillingDashboard() {
 							onSaved={() => {
 								setIsRatesDirty(false);
 								fetchData();
-								const alreadyDone = typeof window !== 'undefined' ? window.localStorage.getItem('ireside.billing_rails_complete') === 'true' : true;
-								if (!alreadyDone) { handleCompleteOnboardingStep(); }
+								if (isBillingStepPending) { handleBillingSaved(); }
 							}}
 						/>
 					</motion.div>
