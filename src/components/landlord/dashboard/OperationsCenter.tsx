@@ -102,7 +102,9 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                 transition={{ type: "spring", stiffness: 420, damping: 25 }}
                 onClick={() => setIsOpen((prev) => !prev)}
                 className={cn(
-                    "fixed bottom-6 right-6 md:right-28 z-[60] group flex items-center gap-2.5 px-4 py-3 min-h-[48px] rounded-full",
+                    // On desktop, stay clear of docked mini chat windows (see MINI_CHAT_DOCK_EXTENT_VAR).
+                    "fixed bottom-6 right-6 md:right-[max(7rem,calc(var(--mini-chat-dock-extent,0px)+1rem))] z-[60] group flex items-center gap-2.5 px-4 py-3 min-h-[48px] rounded-full",
+                    "transition-[right] duration-500 ease-in-out",
                     "bg-primary text-primary-foreground font-bold shadow-[0_10px_30px_rgba(var(--primary-rgb),0.35)]",
                     "hover:bg-primary/95 hover:shadow-[0_14px_35px_rgba(var(--primary-rgb),0.5)]",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
@@ -206,7 +208,7 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                                 mass: isMobile ? 0.9 : 0.75,
                             }}
                             className={cn(
-                                "fixed bottom-20 right-6 md:right-28 z-[70] w-[420px] max-w-[calc(100vw-3rem)]",
+                                "fixed bottom-20 right-6 md:right-[max(7rem,calc(var(--mini-chat-dock-extent,0px)+1rem))] z-[70] w-[420px] max-w-[calc(100vw-3rem)]",
                                 "max-h-[calc(100vh-6.5rem)] overflow-y-auto rounded-3xl p-5 sm:p-6",
                                 "neumorphic-panel bg-card/95 backdrop-blur-xl border border-border/80 shadow-2xl",
                                 "space-y-4",
