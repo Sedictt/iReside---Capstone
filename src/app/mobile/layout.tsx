@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { BottomTabBar } from '@/components/mobile/layout/BottomTabBar'
 import { NotificationProvider } from '@/context/NotificationContext'
@@ -16,6 +16,7 @@ import '../../styles/mobile.css'
 function MobileLayoutInner({ children }: { children: React.ReactNode }) {
     const { profile, loading } = useAuth()
     const router = useRouter()
+    const pathname = usePathname()
 
     // Ensure no outer window scrollbar appears on mobile portal
     useEffect(() => {
@@ -34,25 +35,38 @@ function MobileLayoutInner({ children }: { children: React.ReactNode }) {
         }
     }, [loading, profile, router])
 
-    if (loading || !profile) {
+    const role = profile?.role as 'tenant' | 'landlord' | undefined
+
+    // Role boundary checks for client-side navigation
+    const isTenantOnLandlordRoute = role === 'tenant' && pathname.startsWith('/mobile/landlord')
+    const isLandlordOnTenantRoute = role === 'landlord' && pathname.startsWith('/mobile/tenant')
+
+    useEffect(() => {
+        if (!loading && profile) {
+            if (isTenantOnLandlordRoute) {
+                router.replace('/mobile/tenant/home')
+            } else if (isLandlordOnTenantRoute) {
+                router.replace('/mobile/landlord/overview')
+            }
+        }
+    }, [loading, profile, isTenantOnLandlordRoute, isLandlordOnTenantRoute, router])
+
+    if (loading || !profile || isTenantOnLandlordRoute || isLandlordOnTenantRoute) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-background">
                 <div className="flex flex-col items-center gap-3">
-                    {/* Animated sage green spinner */}
                     <div
-                        className="w-10 h-10 rounded-full border-2 border-muted border-t-[#5e9a7a] animate-spin"
+                        className="w-10 h-10 rounded-full border-2 border-muted border-t-primary animate-spin"
                         role="status"
                         aria-label="Loading"
                     />
-                    <span className="text-sm text-muted-foreground">Loading iReside…</span>
+                    <span className="text-sm text-muted-foreground">
+                        {isTenantOnLandlordRoute || isLandlordOnTenantRoute ? 'Redirecting to your portal…' : 'Loading iReside…'}
+                    </span>
                 </div>
             </div>
         )
     }
-
-    
-
-    const role = profile.role as 'tenant' | 'landlord'
 
     // Only tenant and landlord roles have mobile portal access
     if (role !== 'tenant' && role !== 'landlord') {

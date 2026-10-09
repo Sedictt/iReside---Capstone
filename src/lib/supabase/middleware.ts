@@ -461,11 +461,12 @@ export async function updateSession(request: NextRequest) {
         }
     }
 
-    // Role-based portal protection: prevent tenants from accessing landlord or setup routes
-    if (user && role === "tenant") {
-        if (request.nextUrl.pathname.startsWith("/landlord") || request.nextUrl.pathname.startsWith("/setup")) {
+    // Role-based portal protection: prevent tenants and landlords from crossing portal boundaries
+    if (user && role) {
+        const roleRedirect = resolveRoleAccessRedirect(request.nextUrl.pathname, role);
+        if (roleRedirect) {
             const url = request.nextUrl.clone();
-            url.pathname = "/tenant/dashboard";
+            url.pathname = roleRedirect;
             return NextResponse.redirect(url);
         }
     }
@@ -544,3 +545,61 @@ export const resolveDocsAccessRedirect = (pathname: string, role: string | null 
     return null;
 };
 
+/**
+ * Role-based portal protection across Desktop and Mobile:
+ * Enforces strict portal separation so tenants cannot access landlord routes
+ * and landlords cannot access tenant routes.
+ * Returns the destination pathname to redirect to, or null if access is permitted.
+ */
+export const resolveRoleAccessRedirect = (pathname: string, role: string | null | undefined): string | null => {
+    if (!role) return null;
+
+    // 1. Tenant role boundary enforcement
+    if (role === "tenant") {
+        // Prevent tenant from accessing landlord mobile companion views
+        if (pathname === "/mobile/landlord" || pathname.startsWith("/mobile/landlord/")) {
+            return "/mobile/tenant/home";
+        }
+        // Prevent tenant from accessing desktop landlord, setup, or admin routes
+        if (
+            pathname === "/landlord" ||
+            pathname.startsWith("/landlord/") ||
+            pathname === "/setup" ||
+            pathname.startsWith("/setup/") ||
+            pathname === "/admin" ||
+            pathname.startsWith("/admin/")
+        ) {
+            return "/tenant/dashboard";
+        }
+    }
+
+    // 2. Landlord role boundary enforcement
+    if (role === "landlord") {
+        // Prevent landlord from accessing tenant mobile companion views
+        if (pathname === "/mobile/tenant" || pathname.startsWith("/mobile/tenant/")) {
+            return "/mobile/landlord/overview";
+        }
+        // Prevent landlord from accessing desktop tenant routes or system admin console
+        if (
+            pathname === "/tenant" ||
+            pathname.startsWith("/tenant/") ||
+            pathname === "/admin" ||
+            pathname.startsWith("/admin/")
+        ) {
+            return "/landlord/dashboard";
+        }
+    }
+
+    // 3. Admin role boundary enforcement (system administrators)
+    if (role === "admin") {
+        // Admins accessing tenant routes are redirected to admin dashboard or landlord overview
+        if (pathname === "/mobile/tenant" || pathname.startsWith("/mobile/tenant/")) {
+            return "/mobile/landlord/overview";
+        }
+        if (pathname === "/tenant" || pathname.startsWith("/tenant/")) {
+            return "/admin/dashboard";
+        }
+    }
+
+    return null;
+};
