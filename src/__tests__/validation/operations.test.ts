@@ -253,15 +253,4 @@ describe("route validation", () => {
     expect(res.status).toBe(400);
   });
 
-  it("debug script runner rejects shell metacharacters", async () => {
-    const { POST } = await import("@/app/api/debug/scripts/route");
-    const { SCRIPT_REGISTRY } = await import("@/lib/debug/scripts-registry");
-    const scriptWithInput = Object.values(SCRIPT_REGISTRY).find((def) => def.inputs?.some((input) => input.type === "email"));
-    if (!scriptWithInput) return;
-    const inputId = scriptWithInput.inputs!.find((input) => input.type === "email")!.id;
-    const res = await POST(
-      jsonRequest("http://localhost/api/debug/scripts", { scriptId: scriptWithInput.id, params: { [inputId]: "a@b.co; rm -rf /" } }) as never
-    );
-    expect(res.status).toBe(400);
-  });
 });

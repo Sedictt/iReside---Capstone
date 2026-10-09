@@ -182,7 +182,16 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
                 if (p.isMapSetupComplete || (p.placedCount ?? 0) > 0 || p.hasTenants) {
                     localStorage.setItem(`ireside_map_setup_complete_${p.id}`, 'true')
                 }
+                if (p.hasTenants) {
+                    localStorage.setItem(`ireside.billing_rails_complete.${p.id}`, 'true')
+                }
             })
+            // Self-heal onboarding flags when database records confirm existing tenants
+            if (options.some((p) => p.hasTenants)) {
+                localStorage.setItem('ireside.billing_rails_complete', 'true')
+                localStorage.setItem('ireside.onboarding_completed', 'true')
+                localStorage.setItem('ireside.dashboard_tour_complete', 'true')
+            }
         } catch {}
 
         // Auto-select or validate existing selection

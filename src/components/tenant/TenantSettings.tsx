@@ -216,7 +216,7 @@ function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: s
 
 // --- Main Component ---
 
-export function TenantSettings() {
+export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
     const router = useRouter();
     const { profile, loading, refreshProfile } = useAuth();
     const { t, isFilipino } = useLanguage();

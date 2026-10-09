@@ -5,17 +5,7 @@ import {
     isGuidedTenantProductTourEnabled,
     resolveTenantProductTourEligibility,
 } from "@/lib/product-tour";
-import { createClient } from "@/lib/supabase/server";
 
-export async function auth() {
-    // This is a helper for server actions to get the current user
-    // It returns the user object or null if not authenticated
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
-    return user;
-}
 
 export const TENANT_PRODUCT_TOUR_ROUTE_PREFIX = TENANT_PRODUCT_TOUR_ROUTE;
 const TOUR_AUTO_START_ROUTE_PREFIXES = [
@@ -105,6 +95,87 @@ const withTimeout = <T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
     return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
 };
 
+function decodeUserFromCookies(request: NextRequest): any | null {
+  try {
+    const all = request.cookies.getAll();
+    const tokenCookies = all
+      .filter((c) => c.name.includes("-auth-token") || c.name.startsWith("sb-") || c.name === "supabase-auth-token")
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    if (!tokenCookies.length) return null;
+
+    let combined = "";
+    const chunked = tokenCookies.filter((c) => /\.\d+$/.test(c.name));
+    if (chunked.length) {
+      combined = chunked.map((c) => c.value).join("");
+    } else {
+      const single = tokenCookies.find((c) => c.name.endsWith("-auth-token"));
+      combined = single ? single.value : tokenCookies[0].value;
+    }
+
+    if (!combined) return null;
+
+    let jsonStr = combined;
+    if (combined.startsWith("base64-")) {
+      const base64Data = combined.slice(7);
+      jsonStr = typeof Buffer !== "undefined"
+        ? Buffer.from(base64Data, "base64").toString("utf8")
+        : atob(base64Data);
+    } else {
+      try {
+        jsonStr = decodeURIComponent(combined);
+      } catch {}
+    }
+
+    let parsed: any = null;
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch {}
+
+    let accessToken = "";
+    let userObj: any = null;
+
+    if (parsed) {
+      if (Array.isArray(parsed)) {
+        accessToken = parsed[0];
+      } else if (parsed.access_token) {
+        accessToken = parsed.access_token;
+        userObj = parsed.user;
+      }
+    } else if (combined.startsWith("eyJ")) {
+      accessToken = combined;
+    }
+
+    if (!accessToken) return null;
+
+    const parts = accessToken.split(".");
+    if (parts.length !== 3) return null;
+
+    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const payloadStr = typeof Buffer !== "undefined"
+      ? Buffer.from(parts[1], "base64url").toString("utf8")
+      : atob(b64);
+
+    const payload = JSON.parse(payloadStr);
+
+    if (payload.exp && payload.exp < (Date.now() / 1000) - 30) {
+      return null;
+    }
+
+    const userId = payload.sub || userObj?.id;
+    if (!userId) return null;
+
+    return {
+      id: userId,
+      email: payload.email || userObj?.email || "",
+      user_metadata: payload.user_metadata || userObj?.user_metadata || {},
+      role: payload.role || userObj?.role || "authenticated",
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function updateSession(request: NextRequest) {
     // 1. Fast Path: API routes handle their own auth; bypass middleware to avoid timeouts
     if (request.nextUrl.pathname.startsWith("/api")) {
@@ -158,16 +229,24 @@ export async function updateSession(request: NextRequest) {
         }
     );
 
-    // 3. Resilient auth check with 3.5s timeout protection (avoids 504 GATEWAY_TIMEOUT on Edge)
-    const userResult = hasAuthCookie
-        ? await withTimeout(
-              supabase.auth.getUser(),
-              3500,
-              { data: { user: null }, error: new Error("Auth timeout") } as any
-          )
-        : { data: { user: null }, error: null };
+    // 3. Fast path: Decode session JWT directly from cookie (0ms latency, eliminates Edge WAN timeouts)
+    let user: any = null;
+    if (hasAuthCookie) {
+        user = decodeUserFromCookies(request);
+    }
 
-    const user = userResult?.data?.user ?? null;
+    if (!user && hasAuthCookie) {
+        try {
+            const userResult = await withTimeout(
+                supabase.auth.getUser(),
+                2000,
+                { data: { user: null }, error: new Error("Auth timeout") } as any
+            );
+            user = userResult?.data?.user ?? null;
+        } catch {
+            user = null;
+        }
+    }
 
     let role: string | null = null;
     if (user) {
@@ -256,6 +335,15 @@ export async function updateSession(request: NextRequest) {
     if (user && (request.nextUrl.pathname.startsWith("/login") || request.nextUrl.pathname.startsWith("/signup") || request.nextUrl.pathname.startsWith("/forgot-password"))) {
         if ((is2faPending || (userRequires2fa && !is2faVerified)) && request.nextUrl.pathname.startsWith("/login")) {
             return supabaseResponse;
+        }
+        // Priority 1: Honor redirect query parameter if provided
+        const redirectParam = request.nextUrl.searchParams.get("redirect");
+        if (redirectParam && (redirectParam.startsWith("/mobile") || redirectParam.startsWith("/tenant") || redirectParam.startsWith("/landlord"))) {
+            const redirectUrl = request.nextUrl.clone();
+            const [targetPath, targetQuery] = redirectParam.split("?");
+            redirectUrl.pathname = targetPath;
+            redirectUrl.search = targetQuery ? `?${targetQuery}` : "";
+            return NextResponse.redirect(redirectUrl);
         }
         const url = request.nextUrl.clone();
         if (role === "admin" || role === "landlord") {
@@ -348,6 +436,12 @@ export async function updateSession(request: NextRequest) {
     // If user is not signed in and the current path is not /login, /signup, or /auth, redirect to /login.
     // However, if the request has an existing auth cookie but timed out (likely offline), allow proceeding to cached view.
     if (!user && !isPublicRoute(request.nextUrl.pathname, request)) {
+        if (request.nextUrl.pathname.startsWith('/mobile')) {
+            const url = request.nextUrl.clone();
+            url.pathname = '/login';
+            url.searchParams.set('redirect', request.nextUrl.pathname);
+            return NextResponse.redirect(url);
+        }
         if (hasAuthCookie) {
             return supabaseResponse;
         }
@@ -426,6 +520,10 @@ export const isExplicitLogoutRequest = (request: NextRequest) =>
     request.nextUrl.pathname.startsWith("/login") &&
     (request.nextUrl.searchParams.has("logout") || request.nextUrl.searchParams.get("sync") === "logout");
 
+
+export async function auth() {
+    return null;
+}
 export const TENANT_MANUAL_ROUTE = "/tenant/docs";
 
 const isDocsSitePath = (pathname: string) => pathname === "/docs" || pathname.startsWith("/docs/");

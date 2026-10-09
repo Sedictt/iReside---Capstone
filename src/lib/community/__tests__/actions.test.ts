@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { getPosts } from '../actions'
 
-vi.mock('@/lib/supabase/server')
+vi.mock('@/lib/supabase/server', () => ({
+    createClient: vi.fn(),
+    auth: vi.fn().mockResolvedValue({ id: 'user-2', email: 'test@example.com' })
+}))
 vi.mock('@/lib/community/queries', () => {
     const getTenantPropertyId = vi.fn()
     return {
@@ -11,9 +14,6 @@ vi.mock('@/lib/community/queries', () => {
 })
 vi.mock('next/headers', () => ({
     revalidatePath: vi.fn()
-}))
-vi.mock('@/lib/supabase/middleware', () => ({
-    auth: vi.fn().mockResolvedValue({ id: 'user-2', email: 'test@example.com' })
 }))
 
 describe('getPosts', () => {

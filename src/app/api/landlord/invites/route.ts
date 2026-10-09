@@ -70,10 +70,24 @@ function formatInviteError(
     return fallback;
 }
 
+interface CachedInvites {
+    data: any;
+    expiresAt: number;
+}
+const invitesMemoryCache = new Map<string, CachedInvites>();
+
 export async function GET(request: Request) {
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
+
+    const cached = invitesMemoryCache.get(userId);
+    if (cached && Date.now() < cached.expiresAt) {
+        return NextResponse.json(cached.data, {
+            headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" }
+        });
+    }
+
     const adminClient = createAdminClient();
 
     let invitesData: any = null;

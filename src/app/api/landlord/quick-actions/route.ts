@@ -10,6 +10,12 @@ import { parseJsonBody } from "@/lib/validation/server";
 
 const actionId = z.string({ error: "Action ID must be text." }).trim().min(1, "Action ID is required.").max(64, "Action ID is too long.");
 
+interface CachedQuickActions {
+    config: QuickActionsConfig;
+    expiresAt: number;
+}
+const quickActionsMemoryCache = new Map<string, CachedQuickActions>();
+
 const quickActionsPatchSchema = z.object({
     order: z.array(actionId).max(100, "Too many actions.").optional(),
     hidden: z.array(actionId).max(100, "Too many actions.").optional(),
@@ -37,6 +43,15 @@ export async function GET(request: Request) {
     }
 
     const { userId } = authContext;
+
+    // Check memory cache (30s TTL)
+    const cached = quickActionsMemoryCache.get(userId);
+    if (cached && Date.now() < cached.expiresAt) {
+        return NextResponse.json({ success: true, config: cached.config }, {
+            headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" }
+        });
+    }
+
     const admin = createServiceRoleSupabaseClient();
 
     try {
@@ -57,7 +72,14 @@ export async function GET(request: Request) {
 
         const config: QuickActionsConfig = sanitizeQuickActionsConfig(socialsRecord.quick_actions);
 
-        return NextResponse.json({ success: true, config });
+        quickActionsMemoryCache.set(userId, {
+            config,
+            expiresAt: Date.now() + 30_000,
+        });
+
+        return NextResponse.json({ success: true, config }, {
+            headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" }
+        });
     } catch (err: unknown) {
         console.error("[GET /api/landlord/quick-actions] Error:", err);
         return NextResponse.json(

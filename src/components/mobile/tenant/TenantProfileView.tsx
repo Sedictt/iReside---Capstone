@@ -7,7 +7,9 @@ import { signOut } from '@/lib/supabase/client-auth';
 import Image from 'next/image';
 import Link from 'next/link';
 import { 
-    User, 
+    User,
+    BookOpen,
+    ChevronRight, 
     ShieldCheck, 
     LogOut, 
     Building2, 
@@ -286,6 +288,29 @@ export function TenantProfileView() {
                         </a>
                     </div>
                 </div>
+
+                {/* House Rules & Emergency Handbook Link Card */}
+<div className="px-4">
+    <Link
+        href="/mobile/tenant/manual"
+        className="p-3.5 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex items-center justify-between active:scale-[0.98] transition-all hover:border-primary/40 group"
+    >
+        <div className="flex items-center gap-3">
+            <div className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <BookOpen className="size-4" />
+            </div>
+            <div>
+                <h4 className="text-xs font-bold text-foreground">
+                    House Rules & Safety Manual
+                </h4>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Quiet hours, garbage schedules & emergency hotlines
+                </p>
+            </div>
+        </div>
+        <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
+    </Link>
+</div>
 
                 {/* Sign Out Action */}
                 <div className="px-4 pt-1">

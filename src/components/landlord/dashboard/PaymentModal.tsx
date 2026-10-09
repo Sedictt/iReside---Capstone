@@ -96,7 +96,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="fixed left-1/2 top-1/2 z-[101] flex max-h-[90vh] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-3xl neumorphic-panel"
+                        className="fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:top-auto max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-b-none max-sm:rounded-t-[2.5rem] sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-[101] flex max-h-[88vh] sm:max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl neumorphic-panel"
                     >
                         {/* Header */}
                         <div className="flex shrink-0 items-center justify-between border-b border-neutral-200/50 dark:border-white/5 bg-neutral-100/60 dark:bg-neutral-900/50 p-6 sm:p-8 backdrop-blur-xl">
@@ -140,8 +140,18 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                         {/* List Area */}
                         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 custom-scrollbar-premium bg-gradient-to-b from-transparent to-black/[0.03] dark:to-black/20">
                             {filteredPayments.length === 0 ? (
-                                <div className="rounded-2xl border border-dashed border-neutral-300 dark:border-white/10 bg-neutral-100/30 dark:bg-white/5 p-12 text-center backdrop-blur-sm">
-                                    <p className="text-sm font-black uppercase tracking-widest text-muted-foreground/40">{categoryCopy.emptyState}</p>
+                                <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/5 dark:bg-emerald-500/10 p-8 sm:p-12 text-center backdrop-blur-sm flex flex-col items-center justify-center gap-3">
+                                    <div className="size-12 rounded-2xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center shadow-xs">
+                                        <CheckCircle2 className="size-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm sm:text-base font-black text-foreground">
+                                            {category === 'Overdue' ? 'All Caught Up!' : category === 'Near Due' ? 'Clear Horizon' : 'No Records'}
+                                        </h3>
+                                        <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto leading-relaxed">
+                                            {categoryCopy.emptyState}
+                                        </p>
+                                    </div>
                                 </div>
                             ) : (
                                 filteredPayments.map((payment) => (

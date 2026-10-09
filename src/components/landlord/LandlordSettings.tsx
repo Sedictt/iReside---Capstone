@@ -372,7 +372,7 @@ export function saveCachedSettings(settings: CachedLandlordSettings, userId?: st
 
 // --- Main Component ---
 
-export function LandlordSettings() {
+export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
     const router = useRouter();
     const { user, profile, loading, refreshProfile } = useAuth();
     const { t, isFilipino } = useLanguage();

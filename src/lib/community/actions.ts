@@ -5,7 +5,6 @@ import { createServiceRoleSupabaseClient } from '@/lib/supabase/admin'
 import { getCommunityPropertyId } from './queries'
 
 import { revalidatePath } from 'next/cache'
-import { auth } from '@/lib/supabase/middleware'
 import type { z } from 'zod'
 import {
     communityAnnouncementSchema,
@@ -20,6 +19,7 @@ import {
     communityVoteSchema,
 } from '@/lib/validation/schemas/operations.schema'
 import { zUuid } from '@/lib/validation/zod-fields'
+import { auth } from '@/lib/supabase/server'
 import type {
     CommunityPost,
     CommunityPostStatus,
