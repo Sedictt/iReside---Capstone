@@ -2,13 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { logUserActivity } from "@/lib/audit/audit-logger";
-import { z } from "zod";
-
-const verifyOtpSchema = z.object({
-  newEmail: z.string().trim().email("Please provide a valid email address."),
-  otp: z.string().trim().length(6, "Verification code must be exactly 6 digits."),
-  validateOnly: z.boolean().optional(),
-});
+import { parseJsonBody } from "@/lib/validation/server";
+import { setupVerifyOtpSchema } from "@/lib/validation/schemas/account.schema";
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,20 +18,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let rawBody: unknown;
-    try {
-      rawBody = await request.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
-    }
-
-    const validation = verifyOtpSchema.safeParse(rawBody);
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.issues[0]?.message || "Invalid input fields." },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseJsonBody(request, setupVerifyOtpSchema);
+    if (!parsed.ok) return parsed.response;
+    const validation = parsed;
 
     const { newEmail, otp } = validation.data;
     const normalizedEmail = newEmail.toLowerCase();
@@ -149,7 +133,7 @@ export async function POST(request: NextRequest) {
   } catch (err: any) {
     console.error("[POST /api/setup/email/verify-otp] Error:", err);
     return NextResponse.json(
-      { error: err?.message || "Failed to verify code." },
+      { error: "Failed to verify code." },
       { status: 500 }
     );
   }

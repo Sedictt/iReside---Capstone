@@ -66,6 +66,10 @@ import { generateLeasePdf } from "@/lib/lease-pdf";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
 import type { InvitePaymentTerms } from "@/lib/tenant-invite-payment-terms";
+import { FieldError } from "@/components/ui/field-error";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { MAX_MONEY_AMOUNT, moneyRule, textRule } from "@/lib/validation/rules";
+import { LIFECYCLE_LIMITS } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 // ─── Types ────────────────────────────────────────────────────────────
 type ApplicationStatus =
@@ -407,6 +411,31 @@ export function RentApplications() {
  const [showDeclineConfirm, setShowDeclineConfirm] = useState(false);
  const [declineReason, setDeclineReason] = useState("");
 
+ // Inline validation for the decline / bypass / discrepancy modals (same rules as their API routes).
+ const declineForm = useFormValidation(
+ { declineReason },
+ { declineReason: (value) => textRule(value, { label: "Rejection reason", required: true, max: 250 }) }
+ );
+ const bypassForm = useFormValidation(
+ { bypassReason, bypassPassword },
+ {
+ bypassReason: (value) =>
+ textRule(value, { label: "Bypass reason", required: true, min: LIFECYCLE_LIMITS.bypassReasonMin, max: 250 }),
+ bypassPassword: (value) => (value ? undefined : "Password is required for bypass."),
+ }
+ );
+ const resolutionForm = useFormValidation(
+ { resolutionAmount, resolutionNote, resolutionProofUrl, resolutionAction },
+ {
+ resolutionAmount: (value, all) =>
+ all.resolutionAction === "return_overpayment" || all.resolutionAction === "request_shortfall"
+ ? moneyRule(value, { label: "Amount", positive: true })
+ : undefined,
+ resolutionNote: (value) => textRule(value, { label: "Explanation", required: true, max: 250 }),
+ resolutionProofUrl: (value) => textRule(value, { label: "Reference or link", max: 250 }),
+ }
+ );
+
  // Generate PDF for countersigning
  useEffect(() => {
  const generate = async () => {
@@ -734,6 +763,7 @@ export function RentApplications() {
  };
 
   const openResolutionModal = (req: any) => {
+    resolutionForm.reset();
     setResolutionRequest(req);
     setResolutionAction("return_payment");
     setResolutionAmount("");
@@ -800,15 +830,8 @@ export function RentApplications() {
   };
 
  const runPaymentBypass = async () => {
- if (!selectedApp) return;
- if (!bypassPassword.trim()) {
- setActionError("Password required for cash payment bypass.");
- toast.error("Password required.");
- return;
- }
- if (bypassReason.trim().length < 10) {
- setActionError("Please provide a reason of at least 10 characters.");
- toast.error("Reason must be at least 10 characters.");
+ if (!selectedApp || bypassLoading) return;
+ if (!bypassForm.validateAll()) {
  return;
  }
   setBypassLoading(true);
@@ -820,7 +843,16 @@ export function RentApplications() {
       body: JSON.stringify({ password: bypassPassword, reason: bypassReason }),
     });
     const data = (await response.json().catch(() => ({}))) as any;
-    if (!response.ok) throw new Error(data.error || "Failed bypass");
+    if (!response.ok) {
+      if (data.fieldErrors) {
+        const mapped: Record<string, string> = {};
+        if (data.fieldErrors.reason) mapped.bypassReason = data.fieldErrors.reason;
+        if (data.fieldErrors.password) mapped.bypassPassword = data.fieldErrors.password;
+        bypassForm.setServerErrors(mapped);
+      }
+      throw new Error(data.error || "Failed bypass");
+    }
+    bypassForm.reset();
 
     toast.success("Cash payment bypassed! Application is ready for final approval.");
     setShowBypassModal(false);
@@ -2050,32 +2082,38 @@ export function RentApplications() {
  <span className="text-[10px] font-medium text-muted-foreground/70">{declineReason.length} / 250</span>
  </div>
  <textarea
+ {...declineForm.fieldProps("declineReason")}
  id="rejection-reason"
  maxLength={250}
  value={declineReason}
  placeholder="Enter the reason for declining this application..."
- className="neumorphic-inset w-full py-4 px-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all resize-none"
+ className={cn(
+ "neumorphic-inset w-full py-4 px-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all resize-none",
+ declineForm.errorFor("declineReason") && "ring-1 ring-rose-500/60"
+ )}
  rows={3}
  onChange={(e) => {
  const reason = e.target.value;
  setDeclineReason(reason);
  }}
  />
+ <FieldError id={declineForm.errorId("declineReason")} message={declineForm.errorFor("declineReason")} />
  </div>
  <div className="flex gap-3">
  <button 
  onClick={() => {
  setShowDeclineConfirm(false);
  setDeclineReason("");
- }} 
+ declineForm.reset();
+ }}  
  className="neumorphic-extruded flex-1 py-4 text-xs font-black uppercase tracking-widest text-foreground hover:bg-muted active:scale-95 transition-all cursor-pointer"
  >
  Cancel
  </button>
  <button 
  onClick={async () => {
- if (!declineReason.trim()) {
- setActionError("Please provide a reason for declining.");
+ if (updatingStatusId === selectedApp.id) return;
+ if (!declineForm.validateAll()) {
  return;
  }
  setActionError(null);
@@ -2085,7 +2123,7 @@ export function RentApplications() {
  const response = await fetch(`/api/landlord/applications/${selectedApp.id}/actions`, {
  method: "POST",
  headers: { "Content-Type": "application/json" },
- body: JSON.stringify({ status: "rejected", rejection_reason: declineReason }),
+ body: JSON.stringify({ status: "rejected", rejection_reason: declineReason.trim() }),
  });
  if (!response.ok) throw new Error("Failed to decline application");
  
@@ -2156,27 +2194,40 @@ export function RentApplications() {
  <span className="text-[10px] font-medium text-muted-foreground/70">{bypassReason.length} / 250</span>
  </div>
                     <textarea maxLength={250}
+                      {...bypassForm.fieldProps("bypassReason")}
+                      aria-label="Bypass reason"
                       rows={3}
                       placeholder="e.g., Received full cash payment in person at leasing office on Sep 13."
                       value={bypassReason}
                       onChange={(e) => setBypassReason(e.target.value)}
-                      className="w-full rounded-2xl neumorphic-inset p-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none transition-all"
+                      className={cn(
+                        "w-full rounded-2xl neumorphic-inset p-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none transition-all",
+                        bypassForm.errorFor("bypassReason") && "ring-1 ring-rose-500/60"
+                      )}
                     />
+                    <FieldError id={bypassForm.errorId("bypassReason")} message={bypassForm.errorFor("bypassReason")} />
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Your Account Password</label>
                     <div className="relative">
                       <input
+                        {...bypassForm.fieldProps("bypassPassword")}
+                        aria-label="Your account password"
                         type="password"
-                        maxLength={16}
+                        maxLength={72}
+                        autoComplete="current-password"
                         placeholder="Enter password to authenticate"
                         value={bypassPassword}
                         onChange={(e) => setBypassPassword(e.target.value)}
-                        className="w-full rounded-2xl neumorphic-inset px-4 py-3 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                        className={cn(
+                          "w-full rounded-2xl neumorphic-inset px-4 py-3 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all",
+                          bypassForm.errorFor("bypassPassword") && "ring-1 ring-rose-500/60"
+                        )}
                       />
                       <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                     </div>
+                    <FieldError id={bypassForm.errorId("bypassPassword")} message={bypassForm.errorFor("bypassPassword")} />
                   </div>
                 </div>
 
@@ -2193,7 +2244,7 @@ export function RentApplications() {
                   </button>
                   <button
                     onClick={runPaymentBypass}
-                    disabled={bypassLoading || !bypassPassword.trim() || bypassReason.trim().length < 10}
+                    disabled={bypassLoading}
                     className="flex-1 py-3.5 rounded-2xl bg-primary text-xs font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 hover:bg-primary/90 disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
                     {bypassLoading ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
@@ -2270,15 +2321,22 @@ export function RentApplications() {
                         {resolutionAction === "return_overpayment" ? "Excess Refund Amount (₱)" : "Shortfall Amount Required (₱)"}
                       </label>
                       <input
+                        {...resolutionForm.fieldProps("resolutionAmount")}
+                        aria-label={resolutionAction === "return_overpayment" ? "Excess refund amount" : "Shortfall amount required"}
                         type="number"
+                        inputMode="decimal"
                         min={0}
-                        max={9999999.99}
+                        max={MAX_MONEY_AMOUNT}
                         step="0.01"
                         placeholder="0.00"
                         value={resolutionAmount}
                         onChange={(e) => setResolutionAmount(e.target.value)}
-                        className="w-full rounded-2xl neumorphic-inset px-4 py-3 text-xs font-bold text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                        className={cn(
+                          "w-full rounded-2xl neumorphic-inset px-4 py-3 text-xs font-bold text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all",
+                          resolutionForm.errorFor("resolutionAmount") && "ring-1 ring-rose-500/60"
+                        )}
                       />
+                      <FieldError id={resolutionForm.errorId("resolutionAmount")} message={resolutionForm.errorFor("resolutionAmount")} />
                     </div>
                   )}
 
@@ -2287,12 +2345,18 @@ export function RentApplications() {
                       Explanation for Tenant (Required)
                     </label>
                     <textarea maxLength={250}
+                      {...resolutionForm.fieldProps("resolutionNote")}
+                      aria-label="Explanation for tenant"
                       rows={3}
                       placeholder="Explain the reason for this adjustment or return..."
                       value={resolutionNote}
                       onChange={(e) => setResolutionNote(e.target.value)}
-                      className="w-full rounded-2xl neumorphic-inset p-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none transition-all"
+                      className={cn(
+                        "w-full rounded-2xl neumorphic-inset p-4 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none transition-all",
+                        resolutionForm.errorFor("resolutionNote") && "ring-1 ring-rose-500/60"
+                      )}
                     />
+                    <FieldError id={resolutionForm.errorId("resolutionNote")} message={resolutionForm.errorFor("resolutionNote")} />
                   </div>
 
                   {(resolutionAction === "return_payment" || resolutionAction === "return_overpayment") && (
@@ -2345,13 +2409,19 @@ export function RentApplications() {
                       )}
 
                       <input
+                        {...resolutionForm.fieldProps("resolutionProofUrl")}
+                        aria-label="GCash reference or receipt link"
                         type="text"
                         maxLength={250}
                         placeholder="Or paste GCash ref # or receipt link (optional)"
                         value={resolutionProofUrl}
                         onChange={(e) => setResolutionProofUrl(e.target.value)}
-                        className="w-full rounded-2xl neumorphic-inset px-4 py-2.5 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                        className={cn(
+                          "w-full rounded-2xl neumorphic-inset px-4 py-2.5 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all",
+                          resolutionForm.errorFor("resolutionProofUrl") && "ring-1 ring-rose-500/60"
+                        )}
                       />
+                      <FieldError id={resolutionForm.errorId("resolutionProofUrl")} message={resolutionForm.errorFor("resolutionProofUrl")} />
                     </div>
                   )}
                 </div>
@@ -2369,18 +2439,18 @@ export function RentApplications() {
                   </button>
                   <button
                     onClick={() => {
-                      if (!resolutionNote.trim()) {
-                        setActionError("Explanation note is required.");
+                      if (reviewingReqId === resolutionRequest.id) return;
+                      if (!resolutionForm.validateAll()) {
                         return;
                       }
                       reviewPreApprovalPayment(resolutionRequest.id, resolutionAction, {
-                        note: resolutionNote,
-                        amount: resolutionAmount ? Number(resolutionAmount) : undefined,
-                        refundProofUrl: resolutionProofUrl || undefined,
+                        note: resolutionNote.trim(),
+                        amount: resolutionAmount.trim() ? Number(resolutionAmount) : undefined,
+                        refundProofUrl: resolutionProofUrl.trim() || undefined,
                         refundProofFile: resolutionProofFile,
                       });
                     }}
-                    disabled={reviewingReqId === resolutionRequest.id || !resolutionNote.trim()}
+                    disabled={reviewingReqId === resolutionRequest.id}
                     className="flex-1 py-3.5 rounded-2xl bg-red-600 text-xs font-black uppercase tracking-widest text-white shadow-red-600/20 hover:bg-red-500 disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
                     {reviewingReqId === resolutionRequest.id ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}

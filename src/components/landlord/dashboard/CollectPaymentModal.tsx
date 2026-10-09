@@ -26,6 +26,10 @@ import { cn } from "@/lib/utils";
 import { useProperty } from "@/context/PropertyContext";
 import type { InvoiceListItem } from "@/lib/billing/server";
 import { formatPhpCurrency } from "@/lib/billing/utils";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
+import { dateRule, parseNumericInput, textRule, todayIsoDate } from "@/lib/validation/rules";
+import { BILLING_LIMITS, amountWithinBalanceRule } from "@/lib/validation/schemas/billing.schema";
 
 interface CollectPaymentModalProps {
     isOpen: boolean;
@@ -73,7 +77,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
     const [amount, setAmount] = useState<string>("");
     const [method, setMethod] = useState<PaymentMethodType>("cash");
     const [referenceNumber, setReferenceNumber] = useState("");
-    const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().split("T")[0]);
+    const [paymentDate, setPaymentDate] = useState(() => todayIsoDate());
     const [note, setNote] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
@@ -242,6 +246,18 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
         : 0;
     const isFullyPaid = remainingBalance <= 0 && numAmount > 0;
 
+    const collectValues = useMemo(
+        () => ({ amount, paymentDate, referenceNumber, note, due: invoiceDueAmount }),
+        [amount, paymentDate, referenceNumber, note, invoiceDueAmount],
+    );
+    const collectForm = useFormValidation(collectValues, {
+        amount: (value, all) => amountWithinBalanceRule(value, all.due, { label: "Amount collected" }),
+        paymentDate: (value) =>
+            dateRule(value, { label: "Date received", max: todayIsoDate(), maxMessage: "Date received cannot be in the future." }),
+        referenceNumber: (value) => textRule(value, { label: "Reference number", max: BILLING_LIMITS.reference }),
+        note: (value) => textRule(value, { label: "Note", max: BILLING_LIMITS.collectionNote }),
+    });
+
     // Send Invoice & Reminder to Tenant(s)
     const handleSendInvoice = async () => {
         if (selectedInvoiceIds.length === 0) return;
@@ -279,8 +295,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
             return;
         }
 
-        if (selectedInvoiceIds.length === 1 && numAmount <= 0) {
-            setError("Payment amount must be greater than ₱0.00.");
+        if (selectedInvoiceIds.length === 1 && !collectForm.validateAll()) {
             return;
         }
 
@@ -303,7 +318,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         invoiceId: singleSelectedInvoice.id,
-                        amount: numAmount,
+                        amount: parseNumericInput(amount),
                         method,
                         referenceNumber: referenceNumber.trim() || undefined,
                         paymentDate,
@@ -311,8 +326,11 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                     }),
                 });
 
-                const data = await res.json();
-                if (!res.ok || !data.ok) throw new Error(data.error || "Failed to record payment.");
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.ok) {
+                    collectForm.setServerErrors(data.fieldErrors);
+                    throw new Error(data.error || "Failed to record payment.");
+                }
 
                 setIsConfirmDialogOpen(false);
                 setSuccessResult({
@@ -342,7 +360,8 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                     })
                 );
 
-                const succeeded = results.filter((r) => r.status === "fulfilled").length;
+                // A rejected HTTP response is still a "fulfilled" fetch; only 2xx counts as settled.
+                const succeeded = results.filter((r) => r.status === "fulfilled" && r.value.ok).length;
                 setIsConfirmDialogOpen(false);
                 setSuccessResult({
                     receiptNumber: `BULK-${Date.now().toString().slice(-6)}`,
@@ -687,7 +706,8 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                     </label>
                                                     <div className="relative flex items-center">
                                                         <span className="absolute left-4 text-slate-700 dark:text-neutral-300 font-bold text-base select-none">₱</span>
-                                                        <input maxLength={10}
+                                                        <input maxLength={14}
+                                                            {...collectForm.fieldProps("amount")}
                                                             type="text"
                                                             inputMode="decimal"
                                                             value={amount}
@@ -698,6 +718,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                                 }
                                                             }}
                                                             onBlur={() => {
+                                                                collectForm.touch("amount");
                                                                 const raw = amount.replace(/,/g, "");
                                                                 const parsed = parseFloat(raw);
                                                                 if (!isNaN(parsed) && parsed > 0) {
@@ -705,10 +726,11 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                                 }
                                                             }}
                                                             placeholder="18,200.00"
-                                                            className="w-full pl-9 pr-4 py-3.5 text-base sm:text-lg font-black text-slate-900 dark:text-white bg-slate-50/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all placeholder:text-slate-400 tabular-nums"
+                                                            className={cn("w-full pl-9 pr-4 py-3.5 text-base sm:text-lg font-black text-slate-900 dark:text-white bg-slate-50/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all placeholder:text-slate-400 tabular-nums", collectForm.errorFor("amount") && fieldErrorClass)}
                                                             required
                                                         />
                                                     </div>
+                                                    <FieldError id={collectForm.errorId("amount")} message={collectForm.errorFor("amount")} />
                                                 </div>
 
                                                 {/* Right: 3. PAYMENT METHOD (7 cols) */}
@@ -754,13 +776,15 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                     <label className="text-xs font-semibold text-slate-600 dark:text-neutral-400">
                                                         Reference # (Optional)
                                                     </label>
-                                                    <input maxLength={60}
+                                                    <input maxLength={BILLING_LIMITS.reference}
+                                                        {...collectForm.fieldProps("referenceNumber")}
                                                         type="text"
                                                         value={referenceNumber}
                                                         onChange={(e) => setReferenceNumber(e.target.value)}
                                                         placeholder={method === "gcash" ? "GCash Ref Number" : method === "bank_transfer" ? "Bank Ref Number" : "Cash Receipt / Slip / OR #"}
-                                                        className="w-full px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-white bg-slate-50/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 placeholder:text-slate-400 transition-all"
+                                                        className={cn("w-full px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-white bg-slate-50/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 placeholder:text-slate-400 transition-all", collectForm.errorFor("referenceNumber") && fieldErrorClass)}
                                                     />
+                                                    <FieldError id={collectForm.errorId("referenceNumber")} message={collectForm.errorFor("referenceNumber")} />
                                                 </div>
 
                                                 <div className="space-y-1.5">
@@ -768,14 +792,16 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                         Date Received
                                                     </label>
                                                     <div className="relative flex items-center">
-                                                        <input min="2000-01-01" max="2099-12-31"
+                                                        <input min="2000-01-01" max={todayIsoDate()}
+                                                            {...collectForm.fieldProps("paymentDate")}
                                                             type="date"
                                                             value={paymentDate}
                                                             onChange={(e) => setPaymentDate(e.target.value)}
-                                                            className="w-full px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-white bg-slate-50/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all pr-10"
+                                                            className={cn("w-full px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-white bg-slate-50/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all pr-10", collectForm.errorFor("paymentDate") && fieldErrorClass)}
                                                         />
                                                         <Calendar className="absolute right-3.5 size-4 text-slate-400 dark:text-neutral-500 pointer-events-none" />
                                                     </div>
+                                                    <FieldError id={collectForm.errorId("paymentDate")} message={collectForm.errorFor("paymentDate")} />
                                                 </div>
                                             </div>
 
@@ -785,6 +811,7 @@ export function CollectPaymentModal({ isOpen, onClose, onPaymentRecorded }: Coll
                                                     Notes / Remarks (Optional)
                                                 </label>
                                                 <input maxLength={250}
+                                                    {...collectForm.fieldProps("note")}
                                                     type="text"
                                                     value={note}
                                                     onChange={(e) => setNote(e.target.value)}

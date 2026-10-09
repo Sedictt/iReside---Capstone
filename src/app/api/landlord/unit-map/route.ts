@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { parseJsonBody, parseSearchParams } from "@/lib/validation/server";
+import { unitMapQuerySchema, unitMapSaveSchema } from "@/lib/validation/schemas/properties.schema";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +43,8 @@ export async function GET(request: NextRequest) {
     if (!propertyId) {
         return NextResponse.json({ error: "propertyId is required" }, { status: 400 });
     }
+    const query = parseSearchParams(request.nextUrl.searchParams, unitMapQuerySchema);
+    if (!query.ok) return query.response;
 
     // Fetch property, floor configs, and units concurrently
     const [
@@ -281,28 +285,9 @@ export async function POST(request: NextRequest) {
     if (!("userId" in authContext)) return authContext as any;
     const { userId, supabase } = authContext;
 
-    const body = await request.json() as {
-        propertyId: string;
-        positions?: Array<{ 
-            unitId: string; 
-            floorKey: string; 
-            x: number; 
-            y: number; 
-            w: number; 
-            h: number;
-            metadata?: {
-                beds?: number;
-                baths?: number;
-                sqft?: number;
-            }
-        }>;
-        decorations?: Record<string, unknown>;
-    };
-
-    const { propertyId, positions, decorations } = body;
-    if (!propertyId) {
-        return NextResponse.json({ error: "propertyId is required" }, { status: 400 });
-    }
+    const parsed = await parseJsonBody(request, unitMapSaveSchema);
+    if (!parsed.ok) return parsed.response;
+    const { propertyId, positions, decorations } = parsed.data;
 
     // Verify ownership and fetch current decorations
     const { data: property, error: propError } = await supabase
@@ -343,10 +328,11 @@ export async function POST(request: NextRequest) {
         const rows = validPositions.map(p => ({
             unit_id: p.unitId,
             floor_key: p.floorKey,
-            x: p.x,
-            y: p.y,
-            w: p.w,
-            h: p.h,
+            // unit_map_positions stores integer pixels; canvas drags can produce fractions.
+            x: Math.round(p.x),
+            y: Math.round(p.y),
+            w: Math.max(1, Math.round(p.w)),
+            h: Math.max(1, Math.round(p.h)),
             updated_at: new Date().toISOString(),
         }));
 
@@ -356,7 +342,8 @@ export async function POST(request: NextRequest) {
                 .upsert(rows, { onConflict: "unit_id" }) as any);
 
             if (upsertError) {
-                return NextResponse.json({ error: `Failed to save positions: ${upsertError.message}` }, { status: 500 });
+                console.error("Failed to save unit positions:", upsertError);
+                return NextResponse.json({ error: "Failed to save positions." }, { status: 500 });
             }
         }
 
@@ -370,7 +357,8 @@ export async function POST(request: NextRequest) {
                 .in("unit_id", unplacedUnitIds) as any);
 
             if (deleteError) {
-                return NextResponse.json({ error: `Failed to clear stale positions: ${deleteError.message}` }, { status: 500 });
+                console.error("Failed to clear stale unit positions:", deleteError);
+                return NextResponse.json({ error: "Failed to clear stale positions." }, { status: 500 });
             }
         }
 
@@ -422,199 +410,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true });
 }
 
-/** PATCH /api/landlord/unit-map/floor-configs
- *  Rename a floor
- */
-export async function PATCH(request: NextRequest) {
-    const authContext = await requireAuthenticatedUser(request);
-    if (!("userId" in authContext)) return authContext as any;
-    const { userId, supabase } = authContext;
-
-    const body = await request.json() as {
-        propertyId: string;
-        floorKey: string;
-        displayName: string;
-    };
-
-    const { propertyId, floorKey, displayName } = body;
-    if (!propertyId || !floorKey) {
-        return NextResponse.json({ error: "propertyId and floorKey required" }, { status: 400 });
-    }
-
-    // Verify ownership
-    const { data: property } = await supabase
-        .from("properties")
-        .select("id")
-        .eq("id", propertyId)
-        .eq("landlord_id", userId)
-        .maybeSingle();
-
-    if (!property) {
-        return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
-
-    const { error } = await (supabase
-        .from("property_floor_configs" as any)
-        .update({ display_name: displayName || null } as any)
-        .eq("property_id", propertyId)
-        .eq("floor_key", floorKey) as any);
-
-    if (error) {
-        return NextResponse.json({ error: "Failed to update floor name" }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true });
-}
-
-/** DELETE /api/landlord/unit-map/floor-configs?propertyId=xxx&floorKey=xxx
- *  Remove a floor and move its units to the first available floor
- */
-export async function DELETE(request: NextRequest) {
-    const authContext = await requireAuthenticatedUser(request);
-    if (!("userId" in authContext)) return authContext as any;
-    const { userId, supabase } = authContext;
-
-    const propertyId = request.nextUrl.searchParams.get("propertyId")?.trim();
-    const floorKey = request.nextUrl.searchParams.get("floorKey")?.trim();
-
-    if (!propertyId || !floorKey) {
-        return NextResponse.json({ error: "propertyId and floorKey required" }, { status: 400 });
-    }
-
-    // Verify ownership
-    const { data: property } = await supabase
-        .from("properties")
-        .select("id")
-        .eq("id", propertyId)
-        .eq("landlord_id", userId)
-        .maybeSingle();
-
-    if (!property) {
-        return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
-
-    // Get floor info - normalize the floor_key to lowercase for matching
-    const normalizedFloorKey = floorKey.toLowerCase().trim();
-    
-    // First, get all floors for debugging
-    const { data: allFloors } = await (supabase
-        .from("property_floor_configs" as any)
-        .select("id, floor_number, floor_key")
-        .eq("property_id", propertyId) as any);
-    
-    console.log(`[DELETE Floor] All floors in property:`, allFloors);
-    console.log(`[DELETE Floor] Looking for floor_key='${normalizedFloorKey}'`);
-    
-    let { data: floor, error: findError } = await (supabase
-        .from("property_floor_configs" as any)
-        .select("floor_number")
-        .eq("property_id", propertyId)
-        .eq("floor_key", normalizedFloorKey)
-        .maybeSingle() as any);
-
-    console.log(`[DELETE Floor] Query result:`, { floor, findError });
-
-    // Fallback: If looking for 'ground' and not found, try floor_number: 0
-    if (!floor && normalizedFloorKey === "ground") {
-        console.log(`[DELETE Floor] Fallback: trying floor_number=0`);
-        const { data: fallbackFloor } = await (supabase
-            .from("property_floor_configs" as any)
-            .select("floor_number")
-            .eq("property_id", propertyId)
-            .eq("floor_number", 0)
-            .maybeSingle() as any);
-        console.log(`[DELETE Floor] Fallback result:`, { fallbackFloor });
-        if (fallbackFloor) {
-            floor = fallbackFloor;
-            findError = null;
-        }
-    }
-
-    if (findError || !floor) {
-        console.log(`[DELETE Floor] FAILED - Floor not found`);
-        return NextResponse.json({ 
-            error: "Floor not found", 
-            details: `Looking for key '${normalizedFloorKey}' (or floor 0) in property '${propertyId}'` 
-        }, { status: 404 });
-    }
-
-    // Find first available floor to move units to
-    const { data: otherFloors } = await (supabase
-        .from("property_floor_configs" as any)
-        .select("floor_number")
-        .eq("property_id", propertyId)
-        .neq("floor_key", floorKey)
-        .order("floor_number", { ascending: true })
-        .limit(1) as any);
-
-    if (!otherFloors || otherFloors.length === 0) {
-        return NextResponse.json({ error: "Cannot delete the last floor" }, { status: 400 });
-    }
-
-    const targetFloorNumber = otherFloors[0].floor_number;
-
-    // Run all cleanup operations in parallel
-    const [, , { error }] = await Promise.all([
-        // 1. Move units
-        supabase
-            .from("units")
-            .update({ floor: targetFloorNumber })
-            .eq("property_id", propertyId)
-            .eq("floor", floor.floor_number),
-        // 2. Clear positions
-        supabase
-            .from("unit_map_positions" as any)
-            .delete()
-            .eq("floor_key", floorKey) as any,
-        // 3. Delete floor config
-        supabase
-            .from("property_floor_configs" as any)
-            .delete()
-            .eq("property_id", propertyId)
-            .eq("floor_key", floorKey) as any,
-    ]);
-
-    if (error) {
-        return NextResponse.json({ error: "Failed to delete floor" }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true });
-}
-
-/** PUT /api/landlord/unit-map/floor-configs
- *  Add a new floor
- */
-export async function PUT(request: NextRequest) {
-    const authContext = await requireAuthenticatedUser(request);
-    if (!("userId" in authContext)) return authContext as any;
-    const { userId, supabase } = authContext;
-
-    const body = await request.json() as {
-        propertyId: string;
-        floorNumber: number;
-        displayName?: string;
-    };
-
-    const { propertyId, floorNumber, displayName } = body;
-    if (!propertyId || floorNumber === undefined) {
-        return NextResponse.json({ error: "propertyId and floorNumber required" }, { status: 400 });
-    }
-
-    const floorKey = floorNumber === 0 ? "ground" : `floor${floorNumber}`;
-
-    const { error } = await (supabase
-        .from("property_floor_configs" as any)
-        .insert({
-            property_id: propertyId,
-            floor_number: floorNumber,
-            floor_key: floorKey,
-            display_name: displayName || null,
-            sort_order: floorNumber
-        } as any) as any);
-
-    if (error) {
-        return NextResponse.json({ error: "Failed to add floor" }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true });
-}
+// Legacy aliases: floor-config management lives in ./floor-configs (ownership-checked + validated).
+export { PATCH, DELETE, PUT } from "./floor-configs/route";

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from 'next/image';
-import { useState, useRef, type ChangeEvent } from "react";
+import { useMemo, useState, useRef, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
     Wrench,
@@ -32,6 +32,19 @@ import { OfflineBlobStorage } from "@/lib/offline/offlineStorage";
 import { toast } from "sonner";
 import { WifiOff, MessageSquare } from "lucide-react";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { choiceRule } from "@/lib/validation/rules";
+import {
+    MAINTENANCE_LIMITS,
+    maintenanceDescriptionRule,
+    maintenanceTitleRule,
+} from "@/lib/validation/schemas/operations.schema";
+
+const CATEGORY_IDS = MAINTENANCE_CATEGORIES.map((cat) => cat.id);
+
+/** Thrown for an HTTP error response so it is shown to the user instead of being queued offline. */
+class RequestRejectedError extends Error {}
 export default function NewMaintenanceRequest() {
     const router = useRouter();
     const [title, setTitle] = useState("");
@@ -43,6 +56,13 @@ export default function NewMaintenanceRequest() {
     const [mediaFiles, setMediaFiles] = useState<File[]>([]);
     const [previews, setPreviews] = useState<string[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const formValues = useMemo(() => ({ title, description, category }), [title, description, category]);
+    const form = useFormValidation(formValues, {
+        title: (value) => maintenanceTitleRule(value),
+        description: (value) => maintenanceDescriptionRule(value),
+        category: (value) => choiceRule(value, CATEGORY_IDS, { label: "Category" }),
+    });
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         const rawFiles = Array.from(e.target.files || []);
@@ -90,8 +110,9 @@ export default function NewMaintenanceRequest() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!title || !description || !category) {
-            setError("Please fill in all required fields.");
+        if (isSubmitting) return;
+        if (!form.validateAll()) {
+            setError("Please fix the highlighted fields.");
             return;
         }
 
@@ -146,8 +167,8 @@ export default function NewMaintenanceRequest() {
                 });
 
                 if (!uploadRes.ok) {
-                    const data = await uploadRes.json();
-                    throw new Error(data.error || "Failed to upload images.");
+                    const data = await uploadRes.json().catch(() => ({}));
+                    throw new RequestRejectedError(data.error || "Failed to upload images.");
                 }
 
                 const uploadData = await uploadRes.json();
@@ -168,13 +189,21 @@ export default function NewMaintenanceRequest() {
             });
 
             if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.error || "Failed to submit request.");
+                const data = await response.json().catch(() => ({}));
+                form.setServerErrors(data.fieldErrors);
+                throw new RequestRejectedError(data.error || "Failed to submit request.");
             }
 
             router.push("/tenant/dashboard?maintenance=success");
             router.refresh();
         } catch (err) {
+            // The server answered and rejected the request: show why instead of queueing a retry
+            // that would fail again.
+            if (err instanceof RequestRejectedError) {
+                setError(err.message);
+                toast.error(err.message);
+                return;
+            }
             console.warn("[NewMaintenanceRequest] Online submit failed, enqueuing offline:", err);
             // Fallback to offline queue
             mutationQueue.enqueue(
@@ -268,30 +297,36 @@ export default function NewMaintenanceRequest() {
                                     <label htmlFor="maintenance-title" className="text-sm font-black uppercase tracking-wider text-muted-foreground ml-1">
                                         Title
                                     </label>
-                                    <input maxLength={60}
+                                    <input
+                                        {...form.fieldProps("title")}
+                                        maxLength={MAINTENANCE_LIMITS.title}
                                         id="maintenance-title"
                                         type="text"
                                         placeholder="e.g., Leaking faucet in the bathroom"
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
-                                        className="w-full rounded-2xl px-4 py-3 text-sm focus:outline-none transition-all font-medium neumorphic-inset"
+                                        className={cn("w-full rounded-2xl px-4 py-3 text-sm focus:outline-none transition-all font-medium neumorphic-inset", form.errorFor("title") && "ring-1 ring-rose-500/60")}
                                         required
                                     />
+                                    <FieldError id={form.errorId("title")} message={form.errorFor("title")} />
                                 </div>
 
                                 <div className="space-y-2">
                                     <label htmlFor="maintenance-description" className="text-sm font-black uppercase tracking-wider text-muted-foreground ml-1">
                                         Description
                                     </label>
-                                    <textarea maxLength={500}
+                                    <textarea
+                                        {...form.fieldProps("description")}
+                                        maxLength={MAINTENANCE_LIMITS.description}
                                         id="maintenance-description"
                                         placeholder="Please provide more details about the issue..."
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
                                         rows={4}
-                                        className="w-full rounded-2xl px-4 py-3 text-sm focus:outline-none transition-all font-medium resize-none neumorphic-inset"
+                                        className={cn("w-full rounded-2xl px-4 py-3 text-sm focus:outline-none transition-all font-medium resize-none neumorphic-inset", form.errorFor("description") && "ring-1 ring-rose-500/60")}
                                         required
                                     />
+                                    <FieldError id={form.errorId("description")} message={form.errorFor("description")} />
                                 </div>
                             </div>
 
@@ -300,12 +335,20 @@ export default function NewMaintenanceRequest() {
                                 <label className="text-sm font-black uppercase tracking-wider text-muted-foreground ml-1">
                                     Category
                                 </label>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <div
+                                    role="radiogroup"
+                                    aria-label="Category"
+                                    tabIndex={-1}
+                                    {...form.fieldProps("category")}
+                                    className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+                                >
                                     {MAINTENANCE_CATEGORIES.map((cat) => (
                                         <button
                                             key={cat.id}
                                             type="button"
-                                            onClick={() => setCategory(cat.id)}
+                                            role="radio"
+                                            aria-checked={category === cat.id}
+                                            onClick={() => { setCategory(cat.id); form.touch("category"); }}
                                             className={cn(
                                                 "flex flex-col items-center justify-center p-4 rounded-2xl transition-all gap-2 group",
                                                 category === cat.id
@@ -320,6 +363,7 @@ export default function NewMaintenanceRequest() {
                                         </button>
                                     ))}
                                 </div>
+                                <FieldError id={form.errorId("category")} message={form.errorFor("category")} />
                             </div>
                         </div>
 

@@ -3,15 +3,26 @@ import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import crypto from "crypto";
 import { MAX_FILE_SIZE } from "@/lib/constants";
+import { zEmail, zPersonName, zRequiredPhone, zRequiredText } from "@/lib/validation/zod-fields";
+import { escapeLikePattern } from "@/lib/validation/schemas/account.schema";
 
 const landlordRegistrationSchema = z.object({
-    fullName: z.string().min(2, "Full name is required"),
-    phone: z.string().min(10, "Valid phone number is required"),
-    email: z.string().email("Valid email is required"),
+    fullName: zPersonName("Full name"),
+    phone: zRequiredPhone(),
+    email: zEmail("Email"),
     emailVerified: z.boolean(),
-    propertyName: z.string().min(2, "Property name is required"),
-    propertyAddress: z.string().min(10, "Property address is required"),
+    propertyName: zRequiredText("Property name", 100, 2),
+    propertyAddress: zRequiredText("Property address", 250, 10),
 });
+
+// Identity / permit / ownership documents: images or PDF only.
+const DOCUMENT_EXTENSION_BY_TYPE: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/jpg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "application/pdf": "pdf",
+};
 
 interface UploadedFile {
     name: string;
@@ -20,9 +31,9 @@ interface UploadedFile {
 }
 
 const fileSchema = z.object({
-    name: z.string(),
-    type: z.string(),
-    data: z.string(),
+    name: z.string().trim().min(1).max(255, "File name is too long"),
+    type: z.string().trim().toLowerCase().refine((type) => type in DOCUMENT_EXTENSION_BY_TYPE, "Documents must be a JPG, PNG, WebP or PDF file"),
+    data: z.string().min(1, "File is empty").regex(/^[A-Za-z0-9+/=\s]+$/, "File data is not valid base64"),
 }).optional().refine(file => {
     if (!file) return true;
     // Calculate approximate size from base64 (3/4 of length)
@@ -73,7 +84,7 @@ export async function POST(request: Request) {
         const { data: existingApp } = await adminClient
             .from("landlord_applications")
             .select("id, status, email")
-            .ilike("email", parsed.email)
+            .ilike("email", escapeLikePattern(parsed.email))
             .maybeSingle();
 
         if (existingApp) {
@@ -170,7 +181,7 @@ export async function POST(request: Request) {
             try {
                 console.log(`[Upload] Starting upload for ${folder} (${file.name}, ${file.type}, ${Math.round(file.data.length * 0.75 / 1024)}KB)`);
                 const buffer = Buffer.from(file.data, "base64");
-                const ext = file.type.split("/")[1] || "bin";
+                const ext = DOCUMENT_EXTENSION_BY_TYPE[file.type] ?? "bin";
                 const fileName = `${folder}/${crypto.randomUUID()}.${ext}`;
                 
                 const { data, error } = await adminClient.storage
@@ -254,13 +265,17 @@ export async function POST(request: Request) {
         
         if (error instanceof z.ZodError) {
             return NextResponse.json({ 
-                error: "Invalid form data", 
+                error: error.issues[0]?.message || "Invalid form data", 
                 details: error.issues 
             }, { status: 400 });
         }
 
+        if (error instanceof SyntaxError) {
+            return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400 });
+        }
+
         return NextResponse.json({ 
-            error: error.message || "Failed to submit application" 
+            error: "Failed to submit application" 
         }, { status: 500 });
     }
 }

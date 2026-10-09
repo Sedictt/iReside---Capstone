@@ -41,6 +41,7 @@ import type { BillingWorkspace } from "@/lib/billing/server";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { utilityRateRule } from "@/lib/validation/schemas/properties.schema";
 
 type UtilityConfigDraft = {
  localId: string;
@@ -665,9 +666,19 @@ export function BillingOperationsPanel({
 				});
 				return;
 			}
+		} else {
+			// Same rate rule as /api/landlord/payment-settings (>= 0, at most 2 decimals, numeric(12,2) range).
+			const invalidRate = configs
+				.filter((c) => c.property_id && c.property_id !== "all")
+				.map((c) => utilityRateRule(c.rate_per_unit))
+				.find(Boolean);
+			if (invalidRate) {
+				dispatch({ type: "SET_MESSAGE", payload: { type: "error", value: invalidRate } });
+				return;
+			}
 		}
 		setShowSaveConfirm(true);
-	}, [viewMode, accountName, accountNumber]);
+	}, [viewMode, accountName, accountNumber, configs]);
 
 	const handleConfirmDiscard = useCallback(() => {
 		discard();
@@ -1989,7 +2000,12 @@ function UtilityConfigEditor({
  <span className="text-[10px] font-black text-primary uppercase tracking-widest">{config.utility_type === "water" ? "m³" : "kWh"}</span>
  </div>
  </div>
- {config.rate_per_unit <= 0 && (
+ {utilityRateRule(config.rate_per_unit) ? (
+ <p role="alert" className="mt-1 text-[11px] font-bold text-rose-500 flex items-center gap-1">
+ <AlertCircle className="size-3 shrink-0" />
+ {utilityRateRule(config.rate_per_unit)}
+ </p>
+ ) : config.rate_per_unit <= 0 && (
  <p className="mt-1 text-[11px] font-bold text-amber-500 flex items-center gap-1">
  <AlertCircle className="size-3 shrink-0" />
  Rate must be greater than ₱0.00

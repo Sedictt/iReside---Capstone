@@ -6,6 +6,8 @@ import {
     hashInviteToken,
     type TenantInviteRequirementKey,
 } from "@/lib/tenant-intake-invites";
+import { validateMediaFile } from "@/lib/validation/media-validation";
+import { isUrlToken } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 const BUCKET_NAME = "tenant-invite-documents";
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -67,6 +69,10 @@ export async function POST(
 ) {
     const { token } = await context.params;
 
+    if (!isUrlToken(token)) {
+        return NextResponse.json({ error: "Invite not found." }, { status: 404 });
+    }
+
     try {
         const invite = await loadInviteRecord(token);
         if (!invite) {
@@ -117,6 +123,11 @@ export async function POST(
             }
             if (!file.type || !file.type.startsWith(ALLOWED_IMAGE_PREFIX)) {
                 return NextResponse.json({ error: "Only image uploads are allowed." }, { status: 400 });
+            }
+            // Restrict to raster photo formats (blocks SVG/HTML-in-image payloads on the public bucket).
+            const mediaCheck = validateMediaFile(file, { preset: "image", maxSizeBytes: MAX_FILE_SIZE_BYTES });
+            if (!mediaCheck.isValid) {
+                return NextResponse.json({ error: mediaCheck.error || "Only JPG, PNG, WebP or HEIC photos are allowed." }, { status: 400 });
             }
         }
 

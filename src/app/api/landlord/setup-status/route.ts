@@ -4,6 +4,7 @@ import { requireAuthenticatedUser, requireRole } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureLandlordProductTourState, getLandlordProductTourState } from "@/lib/landlord-product-tour";
 import type { LandlordSetupSignals } from "@/lib/landlord-setup";
+import { parseJsonBody } from "@/lib/validation/server";
 
 /**
  * Landlord setup (onboarding) signals that cannot be derived from the property list.
@@ -74,8 +75,7 @@ export async function GET(request: Request) {
         return NextResponse.json(signals, { headers: NO_STORE });
     } catch (error) {
         console.error("[setup-status GET] Error:", error);
-        const message = error instanceof Error ? error.message : "Failed to load setup status.";
-        return NextResponse.json({ error: message }, { status: 500 });
+        return NextResponse.json({ error: "Failed to load setup status." }, { status: 500 });
     }
 }
 
@@ -95,8 +95,12 @@ export async function POST(request: Request) {
     const { userId } = authContext;
     const admin = createAdminClient();
 
+    // Malformed JSON / unknown steps are a 400, not a 500.
+    const parsed = await parseJsonBody(request, updateSchema);
+    if (!parsed.ok) return parsed.response;
+    const { step, action } = parsed.data;
+
     try {
-        const { step, action } = updateSchema.parse(await request.json());
         const state = await ensureLandlordProductTourState(admin as any, userId);
         const field = step === "billing" ? "billingDeferredAt" : "tenantDeferredAt";
         const setup: SetupMetadata = {
@@ -112,11 +116,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ success: true, setup }, { headers: NO_STORE });
     } catch (error) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: "Invalid request body", details: error.issues }, { status: 400 });
-        }
         console.error("[setup-status POST] Error:", error);
-        const message = error instanceof Error ? error.message : "Failed to update setup status.";
-        return NextResponse.json({ error: message }, { status: 500 });
+        return NextResponse.json({ error: "Failed to update setup status." }, { status: 500 });
     }
 }

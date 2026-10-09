@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 
 import { upsertPaymentReceipt, generateNextMonthInvoice } from "@/lib/billing/server";
 import {
@@ -15,19 +14,62 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/database";
+import { databaseErrorResponse, parseJsonBody, parseWithSchema, type ParseResult } from "@/lib/validation/server";
+import {
+    PROOF_LIMITS,
+    REJECTION_REASON_REQUIRED,
+    invoiceReviewSchema,
+    isUuid,
+    proofFileExtension,
+    proofFileRule, proofContentRule,
+    type InvoiceReviewInput,
+} from "@/lib/validation/schemas/billing.schema";
 
-const reviewSchema = z.object({
-    action: z.enum(["confirm", "confirm_received", "reject", "request_completion"]),
-    note: z.string().max(600).optional(),
-    acceptedAmount: z.number().positive().optional(),
-    amountTag: z.enum(["exact", "partial", "overpaid", "short_paid"]).optional(),
-    nonExactAction: z.enum(["accept_partial", "request_completion", "reject"]).optional(),
-    rejectionReason: z.string().max(500).optional(),
-    issueType: z.enum(["insufficient_amount", "excessive_amount", "not_received", "invalid_proof", "other"]).optional(),
-    shortfallAmount: z.number().optional(),
-    idempotencyKey: z.string().max(120).optional(),
-    refundProofUrl: z.string().optional(),
-});
+/**
+ * Accepts both the web modal's multipart body (`json` field + optional
+ * `refundProofFile`) and a plain JSON body (mobile landlord view).
+ */
+async function readReviewRequest(
+    request: Request,
+): Promise<ParseResult<{ review: InvoiceReviewInput; refundProofFile: File | null }>> {
+    const contentType = request.headers.get("content-type") ?? "";
+
+    if (contentType.includes("application/json")) {
+        const parsed = await parseJsonBody(request, invoiceReviewSchema);
+        if (!parsed.ok) return parsed;
+        return { ok: true, data: { review: parsed.data, refundProofFile: null } };
+    }
+
+    let formData: FormData;
+    try {
+        formData = await request.formData();
+    } catch {
+        return { ok: false, response: NextResponse.json({ error: "Request body is invalid.", fieldErrors: {} }, { status: 400 }) };
+    }
+
+    const rawJson = formData.get("json");
+    let raw: unknown;
+    try {
+        raw = typeof rawJson === "string" ? JSON.parse(rawJson) : undefined;
+    } catch {
+        raw = undefined;
+    }
+    if (!raw || typeof raw !== "object") {
+        return { ok: false, response: NextResponse.json({ error: "Review details are missing or malformed.", fieldErrors: {} }, { status: 400 }) };
+    }
+
+    const parsed = parseWithSchema(invoiceReviewSchema, raw);
+    if (!parsed.ok) return parsed;
+
+    const fileEntry = formData.get("refundProofFile");
+    const refundProofFile = fileEntry instanceof File && fileEntry.size > 0 ? fileEntry : null;
+    const fileError = proofFileRule(refundProofFile, { label: "Refund proof", maxBytes: PROOF_LIMITS.refundProofMaxBytes }) ?? (await proofContentRule(refundProofFile, { label: "Refund proof" }));
+    if (fileError) {
+        return { ok: false, response: NextResponse.json({ error: fileError, fieldErrors: { refundProofFile: fileError } }, { status: 400 }) };
+    }
+
+    return { ok: true, data: { review: parsed.data, refundProofFile } };
+}
 
 type RouteContext = {
     params: Promise<{ id: string }>;
@@ -94,11 +136,15 @@ export async function POST(request: Request, context: RouteContext) {
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 
+    if (!isUuid(id)) {
+        return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
+    }
+
+    const body = await readReviewRequest(request);
+    if (!body.ok) return body.response;
+    const { review: parsed, refundProofFile } = body.data;
+
     try {
-        const formData = await request.formData();
-        const rawJson = formData.get("json") as string;
-        const parsed = reviewSchema.parse(JSON.parse(rawJson));
-        const refundProofFile = formData.get("refundProofFile") as File | null;
 
         const idempotencyKey = request.headers.get("idempotency-key") ?? parsed.idempotencyKey ?? null;
 
@@ -116,21 +162,6 @@ export async function POST(request: Request, context: RouteContext) {
         }
 
         await expireInPersonIntents(adminClient, userId, { landlordId: userId, paymentId: id });
-
-        let refundProofUrl = parsed.refundProofUrl || null;
-        if (refundProofFile && refundProofFile.size > 0) {
-            const fileExt = refundProofFile.name.split('.').pop();
-            const fileName = `refund-proof-${id}-${Date.now()}.${fileExt}`;
-            const { data: uploadData, error: uploadError } = await adminClient.storage
-                .from('payment-proofs')
-                .upload(fileName, refundProofFile);
-            
-            if (uploadError) throw uploadError;
-            const { data: { publicUrl } } = adminClient.storage
-                .from('payment-proofs')
-                .getPublicUrl(uploadData.path);
-            refundProofUrl = publicUrl;
-        }
 
         const { data: payment, error: paymentError } = await adminClient
             .from("payments")
@@ -155,6 +186,29 @@ export async function POST(request: Request, context: RouteContext) {
             payment.workflow_status === "rejected"
         ) {
             return NextResponse.json({ ok: true, idempotent: true, workflowStatus: payment.workflow_status });
+        }
+
+        // A receipted invoice is closed: it cannot be rejected or reopened from review.
+        if (
+            (parsed.action === "reject" || parsed.action === "request_completion") &&
+            payment.workflow_status === "receipted"
+        ) {
+            return NextResponse.json({ error: "This invoice is already finalized." }, { status: 409 });
+        }
+
+        // Upload only after ownership is confirmed and the action is known to proceed.
+        let refundProofUrl = parsed.refundProofUrl || null;
+        if (refundProofFile) {
+            const fileName = `refund-proof-${id}-${Date.now()}.${proofFileExtension(refundProofFile)}`;
+            const { data: uploadData, error: uploadError } = await adminClient.storage
+                .from("payment-proofs")
+                .upload(fileName, refundProofFile, { contentType: refundProofFile.type });
+
+            if (uploadError) throw uploadError;
+            const { data: { publicUrl } } = adminClient.storage
+                .from("payment-proofs")
+                .getPublicUrl(uploadData.path);
+            refundProofUrl = publicUrl;
         }
 
         const beforeState = toWorkflowSnapshot(payment);
@@ -182,7 +236,10 @@ export async function POST(request: Request, context: RouteContext) {
 
         const rejectionReason = parsed.rejectionReason?.trim() || null;
         if (needsReason && !rejectionReason) {
-            return NextResponse.json({ error: "Rejection reason is required." }, { status: 400 });
+            return NextResponse.json(
+                { error: REJECTION_REASON_REQUIRED, fieldErrors: { rejectionReason: REJECTION_REASON_REQUIRED } },
+                { status: 400 },
+            );
         }
 
         const nowIso = new Date().toISOString();
@@ -288,7 +345,16 @@ export async function POST(request: Request, context: RouteContext) {
             .select("id, lease_id, amount, paid_amount, balance_remaining, tenant_id, landlord_id, allow_partial_payments, receipt_number, method, invoice_number, status, workflow_status, intent_method, amount_tag, review_action, payment_submitted_at, rejection_reason, in_person_intent_expires_at")
             .single();
 
-        if (updateError) throw updateError;
+        if (updateError) {
+            console.error("Failed to update reviewed invoice:", updateError);
+            if ((updateError as { code?: string }).code === "23514") {
+                return NextResponse.json(
+                    { error: REJECTION_REASON_REQUIRED, fieldErrors: { rejectionReason: REJECTION_REASON_REQUIRED } },
+                    { status: 400 },
+                );
+            }
+            return databaseErrorResponse(updateError, "Failed to update invoice.");
+        }
 
         let receiptIssued = false;
         if (updatedPayment.workflow_status === "confirmed" && updatedPayment.balance_remaining <= 0) {

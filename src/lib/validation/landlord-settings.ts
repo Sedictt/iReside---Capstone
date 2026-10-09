@@ -14,7 +14,8 @@ import { z } from "zod";
 // Regular Expressions & Constants
 // ---------------------------------------------------------------------------
 
-export const REGEX_NAME = /^[a-zA-Z\s.,'-]+$/;
+// Unicode letters so names like "Peña" or "Nuñez" are accepted.
+export const REGEX_NAME = /^[\p{L}\p{M}\s.,'’-]+$/u;
 export const REGEX_EMAIL = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 export const REGEX_HEX_COLOR = /^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 export const REGEX_PERMIT_NUMBER = /^[a-zA-Z0-9\s\-/.#]+$/;

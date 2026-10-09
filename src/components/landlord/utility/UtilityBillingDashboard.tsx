@@ -38,6 +38,17 @@ import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
+import { parseNumericInput } from "@/lib/validation/rules";
+import { currentReadingRule } from "@/lib/validation/schemas/billing.schema";
+
+type ReadingDraftCell = { previous: number; current: string; exists?: boolean };
+
+/** Inline error for a not-yet-recorded meter reading (blank = not entered, which is allowed). */
+function readingCellError(cell: ReadingDraftCell, label: string) {
+	if (cell.exists) return undefined;
+	return currentReadingRule(cell.current, cell.previous, { label, required: false });
+}
 import { useProperty } from "@/context/PropertyContext";
 import { useLandlordSetup } from "@/hooks/useLandlordSetup";
 import type { BillingWorkspace, InvoiceListItem } from "@/lib/billing/server";
@@ -350,6 +361,9 @@ export function UtilityBillingDashboard() {
 	const [workspace, setWorkspace] = useState<BillingWorkspace | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
+	/** Reading cells (`${unitId}:water|electricity`) the user has left, so errors only show after blur. */
+	const [touchedReadings, setTouchedReadings] = useState<Record<string, boolean>>({});
+	const touchReading = (key: string) => setTouchedReadings((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
 	const [searchQuery, setSearchQuery] = useState("");
 	const [filterStatus, setFilterStatus] = useState<"all" | "occupied" | "vacant" | "needs_reading" | "recorded">("all");
 	const [selectedPropertyId, setSelectedPropertyId] = useState<string>("all");
@@ -812,12 +826,23 @@ export function UtilityBillingDashboard() {
 		const lastDay = new Date(y, m, 0).getDate();
 		const end = `${selectedMonth}-${String(lastDay).padStart(2, "0")}`;
 
+		const invalidKeys: string[] = [];
+		drafts.forEach(d => {
+			if (readingCellError(d.water, "Water reading")) invalidKeys.push(`${d.unitId}:water`);
+			if (readingCellError(d.electricity, "Electricity reading")) invalidKeys.push(`${d.unitId}:electricity`);
+		});
+		if (invalidKeys.length > 0) {
+			setTouchedReadings((prev) => ({ ...prev, ...Object.fromEntries(invalidKeys.map((key) => [key, true])) }));
+			toast.error("Fix the highlighted meter readings before saving.");
+			return;
+		}
+
 		drafts.forEach(d => {
 			const targetId = d.leaseId || d.unitId;
 			if (!targetId) return;
 			if (d.water.current !== "") {
-				const val = parseFloat(d.water.current);
-				if (!isNaN(val)) {
+				const val = parseNumericInput(d.water.current) as number;
+				if (Number.isFinite(val)) {
 					toSave.push({
 						leaseId: targetId,
 						unitId: d.unitId,
@@ -831,8 +856,8 @@ export function UtilityBillingDashboard() {
 				}
 			}
 			if (d.electricity.current !== "") {
-				const val = parseFloat(d.electricity.current);
-				if (!isNaN(val)) {
+				const val = parseNumericInput(d.electricity.current) as number;
+				if (Number.isFinite(val)) {
 					toSave.push({
 						leaseId: targetId,
 						unitId: d.unitId,
@@ -948,6 +973,18 @@ export function UtilityBillingDashboard() {
 		const end = `${selectedMonth}-${String(lastDay).padStart(2, "0")}`;
 		const readingLeaseId = draft.leaseId || draft.unitId;
 
+		const waterError = readingCellError(draft.water, "Water reading");
+		const electricityError = readingCellError(draft.electricity, "Electricity reading");
+		if (waterError || electricityError) {
+			setTouchedReadings((prev) => ({
+				...prev,
+				...(waterError ? { [`${draft.unitId}:water`]: true } : {}),
+				...(electricityError ? { [`${draft.unitId}:electricity`]: true } : {}),
+			}));
+			toast.error(waterError || electricityError);
+			return;
+		}
+
 		if (draft.water.current !== "") {
 			toSave.push({
 				leaseId: readingLeaseId,
@@ -956,7 +993,7 @@ export function UtilityBillingDashboard() {
 				billingPeriodStart: start,
 				billingPeriodEnd: end,
 				previousReading: draft.water.previous,
-				currentReading: parseFloat(draft.water.current) || 0,
+					currentReading: parseNumericInput(draft.water.current) as number,
 				note: ""
 			});
 		}
@@ -968,7 +1005,7 @@ export function UtilityBillingDashboard() {
 				billingPeriodStart: start,
 				billingPeriodEnd: end,
 				previousReading: draft.electricity.previous,
-				currentReading: parseFloat(draft.electricity.current) || 0,
+					currentReading: parseNumericInput(draft.electricity.current) as number,
 				note: ""
 			});
 		}
@@ -1438,13 +1475,19 @@ export function UtilityBillingDashboard() {
 																		<span>{draft.water.current} m³</span>
 																	</span>
 																) : (
-																	<div className="relative">
-																		<input 
-																			min={0} 
-																			max={9999999} 
-																			type="number" 
-																			value={draft.water.current}
-																			placeholder="0.0"
+																		<div className="relative">
+																			<input
+																				min={draft.water.previous || 0}
+																				max={9999999}
+																				step="0.01"
+																				type="number"
+																				inputMode="decimal"
+																				aria-label={`Water reading for ${draft.unitName}`}
+																				aria-invalid={touchedReadings[`${draft.unitId}:water`] && readingCellError(draft.water, "Water reading") ? true : undefined}
+																				aria-describedby={touchedReadings[`${draft.unitId}:water`] && readingCellError(draft.water, "Water reading") ? `reading-${draft.unitId}-water-error` : undefined}
+																				onBlur={() => touchReading(`${draft.unitId}:water`)}
+																				value={draft.water.current}
+																				placeholder="0.0"
 																			onChange={(e) => {
 																				const newDrafts = [...drafts];
 																				const index = drafts.findIndex(d => d.unitId === draft.unitId);
@@ -1453,15 +1496,20 @@ export function UtilityBillingDashboard() {
 																					updateDraftsAndCache(newDrafts);
 																				}
 																			}}
-																			className="w-32 h-9.5 rounded-xl border-2 border-sky-400 dark:border-sky-500 bg-white dark:bg-zinc-900 pl-3 pr-9 text-center font-mono text-xs font-bold text-sky-950 dark:text-sky-100 outline-none focus:border-sky-600 focus:ring-4 focus:ring-sky-500/20 transition-all placeholder:text-sky-300 dark:placeholder:text-sky-700 shadow-2xs"
-																		/>
+																				className={cn("w-32 h-9.5 rounded-xl border-2 border-sky-400 dark:border-sky-500 bg-white dark:bg-zinc-900 pl-3 pr-9 text-center font-mono text-xs font-bold text-sky-950 dark:text-sky-100 outline-none focus:border-sky-600 focus:ring-4 focus:ring-sky-500/20 transition-all placeholder:text-sky-300 dark:placeholder:text-sky-700 shadow-2xs", touchedReadings[`${draft.unitId}:water`] && readingCellError(draft.water, "Water reading") && fieldErrorClass)}
+																			/>
 																		<span className="absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[10px] font-black bg-sky-500 text-white pointer-events-none select-none shadow-2xs">
 																			m³
 																		</span>
 																	</div>
 																)}
 															</div>
-															{hasWater && waterUsage > 0 && (
+																<FieldError
+																	id={`reading-${draft.unitId}-water-error`}
+																	message={touchedReadings[`${draft.unitId}:water`] ? readingCellError(draft.water, "Water reading") : undefined}
+																	className="mt-0 max-w-[11rem] text-[10px]"
+																/>
+																{hasWater && waterUsage > 0 && (
 																<span className="text-[10px] font-bold text-sky-800 dark:text-sky-200 bg-sky-500/20 dark:bg-sky-500/30 px-2.5 py-0.5 rounded-full border border-sky-500/40">
 																	+{waterUsage.toFixed(1)} m³ (₱{waterCost.toFixed(2)})
 																</span>
@@ -1483,13 +1531,19 @@ export function UtilityBillingDashboard() {
 																		<span>{draft.electricity.current} kWh</span>
 																	</span>
 																) : (
-																	<div className="relative">
-																		<input 
-																			min={0} 
-																			max={9999999} 
-																			type="number" 
-																			value={draft.electricity.current}
-																			placeholder="0.0"
+																		<div className="relative">
+																			<input
+																				min={draft.electricity.previous || 0}
+																				max={9999999}
+																				step="0.01"
+																				type="number"
+																				inputMode="decimal"
+																				aria-label={`Electricity reading for ${draft.unitName}`}
+																				aria-invalid={touchedReadings[`${draft.unitId}:electricity`] && readingCellError(draft.electricity, "Electricity reading") ? true : undefined}
+																				aria-describedby={touchedReadings[`${draft.unitId}:electricity`] && readingCellError(draft.electricity, "Electricity reading") ? `reading-${draft.unitId}-electricity-error` : undefined}
+																				onBlur={() => touchReading(`${draft.unitId}:electricity`)}
+																				value={draft.electricity.current}
+																				placeholder="0.0"
 																			onChange={(e) => {
 																				const newDrafts = [...drafts];
 																				const index = drafts.findIndex(d => d.unitId === draft.unitId);
@@ -1498,15 +1552,20 @@ export function UtilityBillingDashboard() {
 																					updateDraftsAndCache(newDrafts);
 																				}
 																			}}
-																			className="w-32 h-9.5 rounded-xl border-2 border-amber-400 dark:border-amber-500 bg-white dark:bg-zinc-900 pl-3 pr-11 text-center font-mono text-xs font-bold text-amber-950 dark:text-amber-100 outline-none focus:border-amber-600 focus:ring-4 focus:ring-amber-500/20 transition-all placeholder:text-amber-300 dark:placeholder:text-amber-700 shadow-2xs"
-																		/>
+																				className={cn("w-32 h-9.5 rounded-xl border-2 border-amber-400 dark:border-amber-500 bg-white dark:bg-zinc-900 pl-3 pr-11 text-center font-mono text-xs font-bold text-amber-950 dark:text-amber-100 outline-none focus:border-amber-600 focus:ring-4 focus:ring-amber-500/20 transition-all placeholder:text-amber-300 dark:placeholder:text-amber-700 shadow-2xs", touchedReadings[`${draft.unitId}:electricity`] && readingCellError(draft.electricity, "Electricity reading") && fieldErrorClass)}
+																			/>
 																		<span className="absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-500 text-zinc-950 pointer-events-none select-none shadow-2xs">
 																			kWh
 																		</span>
 																	</div>
 																)}
 															</div>
-															{hasElec && elecUsage > 0 && (
+																<FieldError
+																	id={`reading-${draft.unitId}-electricity-error`}
+																	message={touchedReadings[`${draft.unitId}:electricity`] ? readingCellError(draft.electricity, "Electricity reading") : undefined}
+																	className="mt-0 max-w-[11rem] text-[10px]"
+																/>
+																{hasElec && elecUsage > 0 && (
 																<span className="text-[10px] font-bold text-amber-900 dark:text-amber-100 bg-amber-500/20 dark:bg-amber-500/30 px-2.5 py-0.5 rounded-full border border-amber-500/40">
 																	+{elecUsage.toFixed(1)} kWh (₱{elecCost.toFixed(2)})
 																</span>
@@ -2014,6 +2073,9 @@ function ResourceSection({
 	const bgClass = isSky ? "dark:border-sky-500/10" : "dark:border-amber-500/10";
 	const accentClass = isSky ? "text-sky-600 dark:text-sky-400" : "text-amber-600 dark:text-amber-400";
 
+	const [currentTouched, setCurrentTouched] = useState(false);
+	const currentError = readingCellError(draft, isSky ? "Water reading" : "Electricity reading");
+	const currentErrorId = `resource-${isSky ? "water" : "electricity"}-current-error`;
 	const prev = draft.previous || 0;
 	const curr = parseFloat(draft.current);
 	const hasValidDelta = !isNaN(curr) && curr >= prev;
@@ -2047,13 +2109,19 @@ function ResourceSection({
 						</div>
 						<div className="space-y-1">
 							<label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block">Current</label>
-							<input min={0} max={9999999} 
-								type="number" 
-								value={draft.current}
-								placeholder="Enter reading..."
-								onChange={(e) => onUpdate({ current: e.target.value })}
-								className={cn("w-full rounded-xl neumorphic-panel px-3 py-2 text-xs font-mono font-black outline-none focus:border-primary", accentClass)}
-							/>
+								<input min={0} max={9999999}
+									type="number"
+									step="0.01"
+									inputMode="decimal"
+									value={draft.current}
+									placeholder="Enter reading..."
+									onChange={(e) => onUpdate({ current: e.target.value })}
+									onBlur={() => setCurrentTouched(true)}
+									aria-invalid={currentTouched && currentError ? true : undefined}
+									aria-describedby={currentTouched && currentError ? currentErrorId : undefined}
+									className={cn("w-full rounded-xl neumorphic-panel px-3 py-2 text-xs font-mono font-black outline-none focus:border-primary", accentClass, currentTouched && currentError && fieldErrorClass)}
+								/>
+								<FieldError id={currentErrorId} message={currentTouched ? currentError : undefined} />
 						</div>
 					</div>
 				</div>

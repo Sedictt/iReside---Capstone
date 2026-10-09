@@ -1,17 +1,11 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { checkImageUpload, IMAGE_UPLOAD_POLICIES } from "@/lib/validation/schemas/account.schema";
 
 const BUCKET_NAME = "brand-logos";
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
-const ALLOWED_IMAGE_PREFIX = "image/";
-
-const sanitizeFileName = (name: string) =>
-  name
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+const UPLOAD_POLICY = IMAGE_UPLOAD_POLICIES.logo;
+const MAX_FILE_SIZE_BYTES = UPLOAD_POLICY.maxBytes;
 
 const ensureBucket = async () => {
   const admin = createServiceRoleSupabaseClient();
@@ -50,28 +44,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "File is required." }, { status: 400 });
     }
 
-    if (file.size <= 0) {
-      return NextResponse.json({ error: "File is empty." }, { status: 400 });
-    }
-
     if (file.size > MAX_FILE_SIZE_BYTES) {
       return NextResponse.json({ error: "File is too large. Max size is 5 MB." }, { status: 400 });
     }
 
-    if (!file.type || !file.type.startsWith(ALLOWED_IMAGE_PREFIX)) {
-      return NextResponse.json({ error: "Only image uploads are allowed." }, { status: 400 });
+    // Validate the real content (magic bytes; SVGs are checked for scripts),
+    // not the client-declared MIME type or file name.
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const check = checkImageUpload(file, new Uint8Array(buffer), UPLOAD_POLICY);
+    if (!check.ok) {
+      return NextResponse.json({ error: check.error }, { status: 400 });
     }
 
     const admin = createServiceRoleSupabaseClient();
     await ensureBucket();
 
     const timestamp = Date.now();
-    const cleanName = sanitizeFileName(file.name || "logo.png");
-    const filePath = `landlords/${userId}/${timestamp}-${cleanName}`;
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const filePath = `landlords/${userId}/${timestamp}-logo${check.extension}`;
 
     const { error: uploadError } = await admin.storage.from(BUCKET_NAME).upload(filePath, buffer, {
-      contentType: file.type,
+      contentType: check.contentType,
       upsert: true,
     });
 
@@ -86,7 +78,7 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error("[POST /api/branding/logo] Upload error:", error);
     return NextResponse.json(
-      { error: error?.message || "Failed to upload logo image" },
+      { error: "Failed to upload logo image" },
       { status: 500 }
     );
   }

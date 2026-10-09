@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { parseJsonBody } from "@/lib/validation/server";
+import { inviteUpdateSchema, isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 export async function PATCH(
     request: Request,
@@ -12,10 +14,12 @@ export async function PATCH(
     const { userId, supabase } = authContext;
     const adminClient = createAdminClient();
 
-    const body = (await request.json().catch(() => ({}))) as { status?: "revoked" };
-    if (body.status !== "revoked") {
-        return NextResponse.json({ error: "Unsupported invite update." }, { status: 400 });
+    if (!isId(id)) {
+        return NextResponse.json({ error: "Invite not found." }, { status: 404 });
     }
+
+    const parsed = await parseJsonBody(request, inviteUpdateSchema);
+    if (!parsed.ok) return parsed.response;
 
     const { data: invite, error: findError } = await adminClient
         .from("tenant_intake_invites" as any)

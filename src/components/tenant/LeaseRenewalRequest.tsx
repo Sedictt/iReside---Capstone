@@ -119,6 +119,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
     }, [leaseId]);
 
     const handleSubmit = async () => {
+        if (submitting) return;
         if (!leaseId) {
             toast.error("Lease ID not found");
             return;
@@ -132,7 +133,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                 body: JSON.stringify({ term_months: selectedTerm })
             });
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
 
             if (!response.ok) {
                 toast.error("Renewal Request Failed", {

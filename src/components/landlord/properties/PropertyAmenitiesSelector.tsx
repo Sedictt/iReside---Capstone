@@ -7,6 +7,9 @@ import { useCustomAmenities } from "@/hooks/useCustomAmenities";
 import { DEFAULT_PROPERTY_AMENITIES } from "@/lib/constants/amenities";
 import { toast } from "sonner";
 import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { PROPERTY_LIMITS, amenityNameRule } from "@/lib/validation/schemas/properties.schema";
 
 interface AmenityChipProps {
     amenity: string;
@@ -147,10 +150,17 @@ export function PropertyAmenitiesSelector({
         }
     };
 
+    // Inline check with the same rule the hook enforces (length + standard/saved duplicates).
+    const addForm = useFormValidation(
+        { customAmenity: inputValue, saved: customAmenities },
+        { customAmenity: (value, all) => (value.trim() ? amenityNameRule(value, all.saved) : undefined) }
+    );
+
     const handleAddCustom = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
         const trimmed = inputValue.trim();
         if (!trimmed) return;
+        if (!addForm.validateAll()) return;
 
         const result = addCustomAmenity(trimmed);
         if (!result.success) {
@@ -165,6 +175,7 @@ export function PropertyAmenitiesSelector({
         }
 
         setInputValue("");
+        addForm.reset();
         toast.success(`"${addedName}" added! It is now saved as a choice for all your properties.`);
     };
 
@@ -284,14 +295,16 @@ export function PropertyAmenitiesSelector({
                 </label>
                 <form onSubmit={handleAddCustom} className="flex gap-2">
                     <input
+                        {...addForm.fieldProps("customAmenity")}
                         id="custom-amenity-input"
                         type="text"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         placeholder="e.g. Rooftop Lounge, Study Hall..."
-                        maxLength={40}
+                        maxLength={PROPERTY_LIMITS.amenityMax}
                         className={cn(
                             "flex-1 rounded-xl px-4 py-3 text-xs font-semibold outline-none transition-all",
+                            addForm.errorFor("customAmenity") && "ring-1 ring-rose-500/50",
                             isDarkVariant
                                 ? "bg-white/5 border border-white/10 text-white placeholder:text-white/20 focus:border-primary/50 focus:ring-2 focus:ring-primary/30"
                                 : "neumorphic-inset text-foreground placeholder:text-muted-foreground/40 focus:ring-2 focus:ring-primary/40 border border-border/30"
@@ -311,6 +324,7 @@ export function PropertyAmenitiesSelector({
                         <span>Add</span>
                     </button>
                 </form>
+                <FieldError id={addForm.errorId("customAmenity")} message={addForm.errorFor("customAmenity")} className="px-1" />
                 <p
                     className={cn(
                         "text-[10px] px-1",

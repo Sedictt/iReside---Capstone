@@ -32,6 +32,10 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 import { POST } from "../../app/api/landlord/tenants/manual/route";
 
+// Property/unit ids are validated as ids at the route boundary.
+const PROPERTY_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+const UNIT_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+
 describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -54,8 +58,8 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
                 fullName: "Lyle Cannon",
                 email: "lyle@example.com",
                 phone: "09123456789",
-                propertyId: "prop-1",
-                unitId: "unit-1",
+                propertyId: PROPERTY_ID,
+                unitId: UNIT_ID,
                 startDate: "2026-10-09",
                 endDate: "2026-07-31", // before start date!
                 monthlyRent: 20000,
@@ -78,8 +82,8 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
                 fullName: "Lyle Cannon",
                 email: "lyle@example.com",
                 phone: "09123456789",
-                propertyId: "prop-1",
-                unitId: "unit-1",
+                propertyId: PROPERTY_ID,
+                unitId: UNIT_ID,
                 startDate: "0019-10-09",
                 endDate: "0019-11-09",
                 monthlyRent: 20000,
@@ -102,8 +106,8 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
                 fullName: "Lyle Cannon",
                 email: "not-an-email",
                 phone: "09123456789",
-                propertyId: "prop-1",
-                unitId: "unit-1",
+                propertyId: PROPERTY_ID,
+                unitId: UNIT_ID,
                 startDate: "2026-10-09",
                 endDate: "2027-10-09",
                 monthlyRent: 20000,
@@ -139,8 +143,9 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
                         eq: vi.fn().mockReturnValue({
                             maybeSingle: vi.fn().mockResolvedValue({
                                 data: {
-                                    id: "unit-1",
-                                    property_id: "prop-1",
+                                    id: UNIT_ID,
+                                    property_id: PROPERTY_ID,
+                                    status: "vacant",
                                     properties: { landlord_id: "landlord-123" },
                                 },
                                 error: null,
@@ -162,6 +167,16 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
             }
             if (table === "leases") {
                 return {
+                    // Live-lease check on the unit (none found).
+                    select: vi.fn().mockReturnValue({
+                        eq: vi.fn().mockReturnValue({
+                            in: vi.fn().mockReturnValue({
+                                limit: vi.fn().mockReturnValue({
+                                    maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+                                }),
+                            }),
+                        }),
+                    }),
                     insert: mockInsertLease,
                 };
             }
@@ -180,8 +195,8 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
                 fullName: "Lyle Cannon",
                 email: "lyle@example.com",
                 phone: "09123456789",
-                propertyId: "prop-1",
-                unitId: "unit-1",
+                propertyId: PROPERTY_ID,
+                unitId: UNIT_ID,
                 startDate: "2026-10-09",
                 endDate: "2027-10-09",
                 monthlyRent: 20000,
@@ -210,8 +225,8 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
                 fullName: "Lyle Cannon 123",
                 email: "lyle@example.com",
                 phone: "09123456789",
-                propertyId: "prop-1",
-                unitId: "unit-1",
+                propertyId: PROPERTY_ID,
+                unitId: UNIT_ID,
                 startDate: "2026-10-09",
                 endDate: "2027-10-09",
                 monthlyRent: 20000,

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 
+const IRIS_ANALYSIS_MAX_PAYLOAD = 100_000;
+
 export const dynamic = "force-dynamic";
 
 const getGroqClient = () => {
@@ -145,14 +147,18 @@ export async function POST(request: Request) {
 
     let statsPayload: unknown = null;
 
-    try {
-        const body = await request.json();
-        const { stats } = body;
-        statsPayload = stats;
+    const body = await request.json().catch(() => null);
+    const stats = body && typeof body === "object" ? (body as { stats?: unknown }).stats : undefined;
+    if (!stats || typeof stats !== "object" || Array.isArray(stats)) {
+        return NextResponse.json({ error: "Missing analytics data" }, { status: 400 });
+    }
+    // The stats are forwarded to the AI model; cap their size.
+    if (JSON.stringify(stats).length > IRIS_ANALYSIS_MAX_PAYLOAD) {
+        return NextResponse.json({ error: "Analytics data is too large." }, { status: 413 });
+    }
 
-        if (!stats) {
-            return NextResponse.json({ error: "Missing analytics data" }, { status: 400 });
-        }
+    try {
+        statsPayload = stats;
 
         const systemPrompt = [
             "You are iRis, a professional but friendly property analysis AI assistant for landlords.",
@@ -166,11 +172,16 @@ export async function POST(request: Request) {
             "Be concise, approachable, and data-driven. Use a reassuring yet professional tone.",
         ].join("\n");
 
+        const statsRecord = stats as Record<string, unknown>;
+        const kpiList = [
+            ...(Array.isArray(statsRecord.primaryKpis) ? statsRecord.primaryKpis : []),
+            ...(Array.isArray(statsRecord.extendedKpis) ? statsRecord.extendedKpis : []),
+        ];
         const userPrompt = `Here are the latest property analytics:
         
-        KPIs: ${JSON.stringify(stats.primaryKpis.concat(stats.extendedKpis))}
-        Operations: ${JSON.stringify(stats.operationalSnapshot)}
-        Financials: ${JSON.stringify(stats.financialChart)}
+        KPIs: ${JSON.stringify(kpiList)}
+        Operations: ${JSON.stringify(statsRecord.operationalSnapshot ?? null)}
+        Financials: ${JSON.stringify(statsRecord.financialChart ?? null)}
         
         Analyze this and provide the JSON response.`;
 

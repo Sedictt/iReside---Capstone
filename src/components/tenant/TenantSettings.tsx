@@ -43,6 +43,19 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { createClient as createStandaloneSupabaseClient } from "@supabase/supabase-js";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import {
+    PASSWORD_MAX_LENGTH,
+    TEXT_LIMITS,
+    confirmMatchRule,
+    newPasswordRule,
+    personNameRule,
+    phoneRule,
+    textRule,
+} from "@/lib/validation/rules";
+import { BIO_MAX_LENGTH, CURRENT_PASSWORD_MAX_LENGTH, currentPasswordRule } from "@/lib/validation/schemas/account.schema";
 import { useAuth } from "@/hooks/useAuth";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
 import { AvatarPicker } from "@/components/profile/AvatarPicker";
@@ -354,6 +367,24 @@ export function TenantSettings() {
         offersPush: false,
     });
 
+    // Inline validation (same rules as the profile API and the other password flows).
+    const profileForm = useFormValidation(formData, {
+        full_name: (value) => personNameRule(value),
+        phone: (value) => phoneRule(value),
+        address: (value) => textRule(value, { label: "Address", max: TEXT_LIMITS.address }),
+        bio: (value) => textRule(value, { label: "Bio", max: BIO_MAX_LENGTH }),
+        emergency_name: (value) => personNameRule(value, { label: "Contact name", required: false }),
+        emergency_phone: (value) => phoneRule(value),
+    });
+    const passwordForm = useFormValidation(
+        { currentPassword, newPassword, confirmPassword },
+        {
+            currentPassword: (value) => currentPasswordRule(value, { label: "Current password" }),
+            newPassword: (value) => newPasswordRule(value, { label: "New password" }),
+            confirmPassword: (value, all) => confirmMatchRule(value, all.newPassword, { label: "New passwords" }),
+        },
+    );
+
     // Data/Export States
     const [deleteConfirmText, setDeleteConfirmText] = useState("");
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -421,7 +452,16 @@ export function TenantSettings() {
     }, [activeTab, activeSubTab]);
 
     const handleSaveProfile = async () => {
-        if (!profile) return;
+        if (!profile || isSaving) return;
+        if (!profileForm.validateAll()) {
+            // Errors may sit on the other Identity sub-tab; bring it into view.
+            const emergencyInvalid = Boolean(profileForm.errors.emergency_name || profileForm.errors.emergency_phone);
+            const profileInvalid = Boolean(profileForm.errors.full_name || profileForm.errors.phone || profileForm.errors.address || profileForm.errors.bio);
+            if (!profileInvalid && emergencyInvalid && activeSubTab !== "Emergency Contact") setActiveSubTab("Emergency Contact");
+            if (profileInvalid && activeSubTab !== "Profile") setActiveSubTab("Profile");
+            toast.error("Please fix the highlighted fields before saving.");
+            return;
+        }
         setIsSaving(true);
         try {
             const socialsWithEmergency = {
@@ -433,8 +473,8 @@ export function TenantSettings() {
             const { error } = await supabase
                 .from("profiles")
                 .update({
-                    full_name: formData.full_name,
-                    bio: formData.bio,
+                    full_name: formData.full_name.trim(),
+                    bio: formData.bio.trim(),
                     socials: socialsWithEmergency,
                 } as any)
                 .eq("id", profile.id);
@@ -457,8 +497,8 @@ export function TenantSettings() {
                 .upsert(
                     {
                         profile_id: profile.id,
-                        phone: formData.phone,
-                        address: formData.address,
+                        phone: formData.phone.trim() || null,
+                        address: formData.address.trim() || null,
                         updated_at: new Date().toISOString(),
                     },
                     { onConflict: "profile_id" }
@@ -476,30 +516,37 @@ export function TenantSettings() {
     };
 
     const handlePasswordUpdate = async () => {
+        if (passwordUpdating) return;
         setPasswordError(null);
         setPasswordSuccess(false);
 
-        if (!currentPassword) {
-            setPasswordError("Please enter your current password.");
-            return;
-        }
-        if (newPassword.length < 6) {
-            setPasswordError("New password must be at least 6 characters.");
-            return;
-        }
-        if (newPassword !== confirmPassword) {
-            setPasswordError("New passwords do not match.");
-            return;
-        }
+        if (!passwordForm.validateAll()) return;
 
         setPasswordUpdating(true);
         try {
+            // The form asks for the current password, so actually verify it
+            // (on a throwaway client so the active session is untouched).
+            const accountEmail = profile?.email;
+            if (accountEmail) {
+                const verifier = createStandaloneSupabaseClient(
+                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+                    { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } },
+                );
+                const { error: verifyError } = await verifier.auth.signInWithPassword({ email: accountEmail, password: currentPassword });
+                if (verifyError) {
+                    passwordForm.setServerErrors({ currentPassword: "Current password is incorrect." });
+                    return;
+                }
+            }
+
             const result = await updateTenantPassword(newPassword);
             if (result.success) {
                 setPasswordSuccess(true);
                 setCurrentPassword("");
                 setNewPassword("");
                 setConfirmPassword("");
+                passwordForm.reset();
             } else {
                 setPasswordError(result.error || "Failed to update password.");
             }
@@ -620,12 +667,16 @@ export function TenantSettings() {
                             <GlassCard title="Profile Information" description="Basic details about you.">
                                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                     <SettingField label="Full Name" icon={User} description="Your verified name.">
-                                        <input maxLength={50}
+                                        <input maxLength={TEXT_LIMITS.personName}
+                                            {...profileForm.fieldProps("full_name")}
+                                            aria-label="Full name"
                                             type="text"
+                                            autoComplete="name"
                                             value={formData.full_name}
                                             onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                            className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("full_name") && "ring-1 ring-rose-500/50")}
                                         />
+                                        <FieldError id={profileForm.errorId("full_name")} message={profileForm.errorFor("full_name")} />
                                     </SettingField>
                                     <SettingField label="Email" icon={Mail} description="Your verified email.">
                                         <input maxLength={50}
@@ -636,29 +687,41 @@ export function TenantSettings() {
                                         />
                                     </SettingField>
                                     <SettingField label="Phone Number" icon={Phone}>
-                                        <input maxLength={15}
+                                        <input maxLength={25}
+                                            {...profileForm.fieldProps("phone")}
+                                            aria-label="Phone number"
                                             type="tel"
+                                            inputMode="tel"
+                                            autoComplete="tel"
                                             value={formData.phone}
                                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                            className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("phone") && "ring-1 ring-rose-500/50")}
                                         />
+                                        <FieldError id={profileForm.errorId("phone")} message={profileForm.errorFor("phone")} />
                                     </SettingField>
                                     <SettingField label="Address" icon={Home}>
-                                        <input maxLength={120}
+                                        <input maxLength={TEXT_LIMITS.address}
+                                            {...profileForm.fieldProps("address")}
+                                            aria-label="Address"
                                             type="text"
+                                            autoComplete="street-address"
                                             value={formData.address}
                                             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                            className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("address") && "ring-1 ring-rose-500/50")}
                                         />
+                                        <FieldError id={profileForm.errorId("address")} message={profileForm.errorFor("address")} />
                                     </SettingField>
                                     <div className="md:col-span-2">
                                         <SettingField label="Bio" icon={FileText} description="Tell landlords a bit about yourself.">
-                                            <textarea maxLength={500}
+                                            <textarea maxLength={BIO_MAX_LENGTH}
+                                                {...profileForm.fieldProps("bio")}
+                                                aria-label="Bio"
                                                 rows={4}
                                                 value={formData.bio}
                                                 onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                                                className="w-full resize-none rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                                className={cn("w-full resize-none rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("bio") && "ring-1 ring-rose-500/50")}
                                             />
+                                            <FieldError id={profileForm.errorId("bio")} message={profileForm.errorFor("bio")} />
                                         </SettingField>
                                     </div>
                                 </div>
@@ -670,20 +733,27 @@ export function TenantSettings() {
                         <GlassCard title="Emergency Contact" description="Someone we can contact in case of emergency.">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <SettingField label="Contact Name" icon={User}>
-                                    <input maxLength={50}
+                                    <input maxLength={TEXT_LIMITS.personName}
+                                        {...profileForm.fieldProps("emergency_name")}
+                                        aria-label="Emergency contact name"
                                         type="text"
                                         value={formData.emergency_name}
                                         onChange={(e) => setFormData({ ...formData, emergency_name: e.target.value })}
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                        className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("emergency_name") && "ring-1 ring-rose-500/50")}
                                     />
+                                    <FieldError id={profileForm.errorId("emergency_name")} message={profileForm.errorFor("emergency_name")} />
                                 </SettingField>
                                 <SettingField label="Contact Phone" icon={Phone}>
-                                    <input maxLength={15}
+                                    <input maxLength={25}
+                                        {...profileForm.fieldProps("emergency_phone")}
+                                        aria-label="Emergency contact phone"
                                         type="tel"
+                                        inputMode="tel"
                                         value={formData.emergency_phone}
                                         onChange={(e) => setFormData({ ...formData, emergency_phone: e.target.value })}
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                        className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("emergency_phone") && "ring-1 ring-rose-500/50")}
                                     />
+                                    <FieldError id={profileForm.errorId("emergency_phone")} message={profileForm.errorFor("emergency_phone")} />
                                 </SettingField>
                             </div>
                         </GlassCard>
@@ -735,12 +805,15 @@ export function TenantSettings() {
                             <div className="space-y-6 max-w-lg">
                                 <SettingField label="Current Password" icon={Key}>
                                     <div className="relative">
-                                        <input maxLength={16} 
+                                        <input maxLength={CURRENT_PASSWORD_MAX_LENGTH}
+                                            {...passwordForm.fieldProps("currentPassword")}
+                                            aria-label="Current password"
                                             type={showCurrentPassword ? "text" : "password"}
+                                            autoComplete="current-password"
                                             value={currentPassword}
                                             onChange={(e) => setCurrentPassword(e.target.value)}
                                             placeholder="••••••••"
-                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary pr-10"
+                                            className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary pr-10", passwordForm.errorFor("currentPassword") && "ring-1 ring-rose-500/50")}
                                         />
                                         <button
                                             type="button"
@@ -750,15 +823,19 @@ export function TenantSettings() {
                                             {showCurrentPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                         </button>
                                     </div>
+                                    <FieldError id={passwordForm.errorId("currentPassword")} message={passwordForm.errorFor("currentPassword")} />
                                 </SettingField>
                                 <SettingField label="New Password" icon={Key}>
                                     <div className="relative">
-                                        <input maxLength={16} 
+                                        <input maxLength={PASSWORD_MAX_LENGTH}
+                                            {...passwordForm.fieldProps("newPassword")}
+                                            aria-label="New password"
                                             type={showNewPassword ? "text" : "password"}
+                                            autoComplete="new-password"
                                             value={newPassword}
                                             onChange={(e) => setNewPassword(e.target.value)}
                                             placeholder="••••••••"
-                                            className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary pr-10"
+                                            className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary pr-10", passwordForm.errorFor("newPassword") && "ring-1 ring-rose-500/50")}
                                         />
                                         <button
                                             type="button"
@@ -768,15 +845,20 @@ export function TenantSettings() {
                                             {showNewPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                         </button>
                                     </div>
+                                    <FieldError id={passwordForm.errorId("newPassword")} message={passwordForm.errorFor("newPassword")} />
                                 </SettingField>
                                 <SettingField label="Confirm New Password" icon={Key}>
-                                    <input maxLength={16} 
+                                    <input maxLength={PASSWORD_MAX_LENGTH}
+                                        {...passwordForm.fieldProps("confirmPassword")}
+                                        aria-label="Confirm new password"
                                         type="password"
+                                        autoComplete="new-password"
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         placeholder="••••••••"
-                                        className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                        className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", passwordForm.errorFor("confirmPassword") && "ring-1 ring-rose-500/50")}
                                     />
+                                    <FieldError id={passwordForm.errorId("confirmPassword")} message={passwordForm.errorFor("confirmPassword")} />
                                 </SettingField>
                                 
                                 {/* Password Strength Indicator */}
@@ -796,7 +878,7 @@ export function TenantSettings() {
                                             ))}
                                         </div>
                                         <p className="text-xs text-muted-foreground">
-                                            {newPassword.length < 6 ? "Weak" : newPassword.length < 10 ? "Fair" : "Strong"} password
+                                            {newPassword.length < 8 ? "Weak" : newPassword.length < 10 ? "Fair" : "Strong"} password
                                         </p>
                                     </div>
                                 )}

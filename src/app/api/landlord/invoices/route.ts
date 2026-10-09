@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
-
 import { expireInPersonIntents } from "@/lib/billing/workflow";
 import { generateMonthlyInvoices, listLandlordInvoices } from "@/lib/billing/server";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { databaseErrorResponse, parseJsonBody } from "@/lib/validation/server";
+import { computeInvoiceTotal, invoiceGenerateSchema } from "@/lib/validation/schemas/billing.schema";
 
 import { 
     getMonthStart, 
@@ -15,21 +15,6 @@ import {
     makeInvoiceNumber, 
     parseLeaseBillingTerms 
 } from "@/lib/billing/utils";
-
-const generateSchema = z.object({
-    billingMonth: z.string().optional(),
-    leaseIds: z.array(z.string().trim().min(1)).optional(),
-    leaseId: z.string().trim().min(1).optional(),
-    dueDate: z.string().optional(),
-    notes: z.string().optional(),
-    items: z.array(
-        z.object({
-            label: z.string().trim().min(1),
-            amount: z.number().nonnegative(),
-            category: z.string().default("rent"),
-        })
-    ).optional(),
-});
 
 export async function GET(request: Request) {
     const authContext = await requireAuthenticatedUser(request);
@@ -59,16 +44,10 @@ export async function POST(request: Request) {
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 
-    try {
-        const rawJson = await request.json();
-        const parsed = generateSchema.safeParse(rawJson);
-        if (!parsed.success) {
-            return NextResponse.json(
-                { error: "Invalid invoice generation payload.", details: parsed.error.flatten() },
-                { status: 400 }
-            );
-        }
+    const parsed = await parseJsonBody(request, invoiceGenerateSchema);
+    if (!parsed.ok) return parsed.response;
 
+    try {
         const billingParams = parsed.data;
         const targetLeaseId = billingParams.leaseId || (billingParams.leaseIds && billingParams.leaseIds.length === 1 ? billingParams.leaseIds[0] : null);
 
@@ -101,7 +80,7 @@ export async function POST(request: Request) {
                 .eq("landlord_id", userId)
                 .single();
 
-            if (leaseErr || !lease) {
+            if (leaseErr || !lease || lease.status !== "active") {
                 return NextResponse.json({ error: "Active lease not found or unauthorized." }, { status: 404 });
             }
 
@@ -111,9 +90,11 @@ export async function POST(request: Request) {
             const terms = parseLeaseBillingTerms((lease as any).terms ?? null);
 
             const defaultDueDate = new Date(cycleStart.getFullYear(), cycleStart.getMonth(), Math.max(1, Math.min(terms.dueDay || 5, 28)));
-            const dueDateIso = billingParams.dueDate ? toIsoDate(new Date(billingParams.dueDate)) : toIsoDate(defaultDueDate);
+            // dueDate is a validated YYYY-MM-DD; use it verbatim (no timezone round-trip).
+            const dueDateIso = billingParams.dueDate ?? toIsoDate(defaultDueDate);
 
-            const subtotal = billingParams.items.reduce((sum, it) => sum + Number(it.amount || 0), 0);
+            // Totals are always recomputed from the validated items, never taken from the client.
+            const subtotal = computeInvoiceTotal(billingParams.items);
             const totalAmount = subtotal;
 
             const invoiceNum = makeInvoiceNumber(crypto.randomUUID(), cycleKey);
@@ -144,7 +125,13 @@ export async function POST(request: Request) {
 
             if (paymentError) {
                 console.error("Failed to insert payment record:", paymentError);
-                throw paymentError;
+                if ((paymentError as { code?: string }).code === "23505") {
+                    return NextResponse.json(
+                        { error: "An invoice for this lease and billing month already exists.", fieldErrors: { billingMonth: "An invoice for this lease and billing month already exists." } },
+                        { status: 409 },
+                    );
+                }
+                return databaseErrorResponse(paymentError, "Failed to generate invoices.");
             }
 
             const itemInsertRows = billingParams.items.map((it, idx) => ({
@@ -159,7 +146,9 @@ export async function POST(request: Request) {
             const { error: itemError } = await supabase.from("payment_items").insert(itemInsertRows);
             if (itemError) {
                 console.error("Failed to insert payment items:", itemError);
-                throw itemError;
+                // Don't leave an invoice without its line items behind.
+                await supabase.from("payments").delete().eq("id", paymentRow.id);
+                return databaseErrorResponse(itemError, "Failed to generate invoices.");
             }
 
             // Create notification for tenant so it immediately appears in their phone portal
@@ -186,7 +175,7 @@ export async function POST(request: Request) {
             });
         }
 
-        const leaseIds = billingParams.leaseIds?.map((id) => id.trim()).filter((id) => id.length > 0);
+        const leaseIds = billingParams.leaseIds;
         const generationResult = await generateMonthlyInvoices(supabase, userId, billingParams.billingMonth, leaseIds);
 
         return NextResponse.json(generationResult);

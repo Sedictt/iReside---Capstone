@@ -2,10 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import crypto from "crypto";
+import { onboardingResendSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
-const resendSchema = z.object({
-    email: z.string().email("Valid email is required"),
-});
+const resendSchema = onboardingResendSchema;
 
 export async function POST(request: Request) {
     try {
@@ -18,7 +17,7 @@ export async function POST(request: Request) {
         const { data: application, error: appError } = await adminClient
             .from("landlord_applications")
             .select("*")
-            .ilike("email", email.toLowerCase())
+            .ilike("email", email.toLowerCase().replace(/[\\%_]/g, (c) => `\\${c}`))
             .eq("status", "approved")
             .maybeSingle();
 
@@ -91,7 +90,7 @@ export async function POST(request: Request) {
         }
 
         return NextResponse.json({ 
-            error: error.message || "Failed to resend link" 
+            error: "Failed to resend link" 
         }, { status: 500 });
     }
 }

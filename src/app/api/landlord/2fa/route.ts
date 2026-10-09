@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { TwoFactorService } from "@/lib/services/auth/two-factor.service";
+import { parseJsonBody } from "@/lib/validation/server";
+import { twoFactorActionSchema } from "@/lib/validation/schemas/account.schema";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -101,7 +103,9 @@ export async function POST(request: Request) {
     const { userId } = authContext;
 
     try {
-        const body = await request.json();
+        const parsed = await parseJsonBody(request, twoFactorActionSchema);
+        if (!parsed.ok) return parsed.response;
+        const body = parsed.data;
         const { action } = body;
         const twoFactorService = new TwoFactorService();
 
@@ -110,7 +114,7 @@ export async function POST(request: Request) {
             return NextResponse.json(result);
         }
 
-        if (action === "verify-otp") {
+        if (body.action === "verify-otp") {
             const { otp } = body;
             const result = await twoFactorService.verifyOTP(userId, otp, { enableOnSuccess: true });
             if (!result.success) {
@@ -122,7 +126,7 @@ export async function POST(request: Request) {
             return NextResponse.json(result);
         }
 
-        if (action === "disable") {
+        if (body.action === "disable") {
             const { password } = body;
             const result = await twoFactorService.disable(userId, password);
             if (!result.success) {
@@ -135,7 +139,7 @@ export async function POST(request: Request) {
     } catch (err: any) {
         console.error("[Landlord 2FA] Error:", err);
         return NextResponse.json(
-            { error: err.message || "An unexpected error occurred" },
+            { error: "An unexpected error occurred" },
             { status: 500 }
         );
     }

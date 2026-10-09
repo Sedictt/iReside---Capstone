@@ -221,8 +221,15 @@ export function AvatarPicker({
                 } else {
                     const errData = await response.json().catch(() => ({}));
                     console.warn("[AvatarPicker] API route returned error:", errData);
+                    // A validation rejection must not be bypassed by the direct client write below.
+                    if (response.status >= 400 && response.status < 500) {
+                        const rejection = new Error(errData.error || "Invalid avatar selection.");
+                        (rejection as Error & { isValidationRejection?: boolean }).isValidationRejection = true;
+                        throw rejection;
+                    }
                 }
             } catch (fetchErr) {
+                if ((fetchErr as { isValidationRejection?: boolean })?.isValidationRejection) throw fetchErr;
                 console.warn("[AvatarPicker] Fetch error, attempting client fallback:", fetchErr);
             }
 

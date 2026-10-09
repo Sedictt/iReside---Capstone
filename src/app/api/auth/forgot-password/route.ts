@@ -1,21 +1,15 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
-import { resetPasswordRequestSchema } from "@/lib/validation/schemas/auth.schema";
+import { escapeLikePattern, passwordResetRequestSchema } from "@/lib/validation/schemas/account.schema";
+import { parseJsonBody } from "@/lib/validation/server";
 import { sendPasswordResetEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-        const validation = resetPasswordRequestSchema.safeParse(body);
+        const parsed = await parseJsonBody(request, passwordResetRequestSchema);
+        if (!parsed.ok) return parsed.response;
 
-        if (!validation.success) {
-            return NextResponse.json(
-                { error: "Invalid email address." },
-                { status: 400 }
-            );
-        }
-
-        const { email } = validation.data;
+        const { email } = parsed.data;
         const normalizedEmail = email.trim().toLowerCase();
 
         const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -29,7 +23,7 @@ export async function POST(request: Request) {
         const { data: profile } = await supabaseAdmin
             .from("profiles")
             .select("full_name")
-            .ilike("email", normalizedEmail)
+            .ilike("email", escapeLikePattern(normalizedEmail))
             .maybeSingle();
 
         if (profile?.full_name?.trim()) {

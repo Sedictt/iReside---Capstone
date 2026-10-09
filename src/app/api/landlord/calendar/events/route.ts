@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseSearchParams } from "@/lib/validation/server";
+import { calendarEventsQuerySchema } from "@/lib/validation/schemas/operations.schema";
 
 export async function GET(request: Request) {
     try {
@@ -8,7 +10,9 @@ export async function GET(request: Request) {
         const { userId, supabase } = authContext;
 
         const { searchParams } = new URL(request.url);
-        const propertyId = searchParams.get("propertyId");
+        const parsedQuery = parseSearchParams(searchParams, calendarEventsQuerySchema);
+        if (!parsedQuery.ok) return parsedQuery.response;
+        const propertyId = parsedQuery.data.propertyId;
 
         // 1. Fetch Payments (Rent & Utilities due dates)
         const paymentsPromise = supabase

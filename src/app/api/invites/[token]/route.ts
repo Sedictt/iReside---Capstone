@@ -20,6 +20,8 @@ import {
 } from "@/lib/tenant-invite-payment-terms";
 import { sendNewApplicationReceivedEmail } from "@/lib/email";
 import type { Database } from "@/types/database";
+import { parseJsonBody } from "@/lib/validation/server";
+import { inviteApplicationSchema, isUrlToken } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 type InviteRecord = {
     id: string;
@@ -105,6 +107,10 @@ export async function GET(
 ) {
     const { token } = await context.params;
     const adminClient = createAdminClient();
+
+    if (!isUrlToken(token)) {
+        return NextResponse.json({ error: "Invite not found." }, { status: 404 });
+    }
 
     try {
         const invite = await loadInviteRecord(token);
@@ -193,6 +199,10 @@ export async function POST(
     const { token } = await context.params;
     const adminClient = createAdminClient();
 
+    if (!isUrlToken(token)) {
+        return NextResponse.json({ error: "Invite not found." }, { status: 404 });
+    }
+
     try {
         const invite = await loadInviteRecord(token);
         if (!invite) {
@@ -204,119 +214,13 @@ export async function POST(
             return NextResponse.json({ error: "Invite is no longer available." }, { status: 410 });
         }
 
-        const body = (await request.json()) as {
-            unit_id?: string;
-            applicant_name?: string;
-            applicant_phone?: string;
-            applicant_email?: string;
-            move_in_date?: string | null;
-            emergency_contact_name?: string | null;
-            emergency_contact_phone?: string | null;
-            employment_info?: {
-                occupation?: string;
-                employer?: string;
-                monthly_income?: number;
-            };
-            requirements_checklist?: Record<string, boolean>;
-            uploaded_documents?: Array<{
-                requirementKey?: string;
-                url?: string;
-            }>;
-            message?: string;
-        };
+        const parsed = await parseJsonBody(request, inviteApplicationSchema);
+        if (!parsed.ok) return parsed.response;
+        const body = parsed.data;
 
-        const occupation = body.employment_info?.occupation?.trim() ?? "";
-        const employer = body.employment_info?.employer?.trim() ?? "";
-        const monthlyIncome = Number(String(body.employment_info?.monthly_income ?? "0").replace(/,/g, ""));
-
-        const applicantName = body.applicant_name?.trim() ?? "";
-        const applicantEmail = body.applicant_email?.trim() ?? "";
-
-        if (!applicantName || !applicantEmail) {
-            return NextResponse.json({ error: "Applicant name and email are required." }, { status: 400 });
-        }
-        if (/\d/.test(applicantName)) {
-            return NextResponse.json({ error: "Applicant name must not contain numbers." }, { status: 400 });
-        }
-        if (applicantName.length < 2 || applicantName.length > 100) {
-            return NextResponse.json({ error: "Applicant name must be 2 to 100 characters." }, { status: 400 });
-        }
-
-        if (!occupation || !employer || !Number.isFinite(monthlyIncome) || monthlyIncome <= 0) {
-            return NextResponse.json({ error: "Employment details are incomplete." }, { status: 400 });
-        }
-        if (occupation.length > 100 || employer.length > 100) {
-            return NextResponse.json({ error: "Occupation and employer must not exceed 100 characters." }, { status: 400 });
-        }
-
-        const PHONE_REGEX_11 = /^(\+?63|0)?9\d{9}$/;
-        const PHONE_REGEX_10 = /^9\d{9}$/;
-        const getDigits = (v: string) => v.replace(/\D/g, "");
-
-        const rawPhone = body.applicant_phone ?? "";
-        const applicantPhone = rawPhone.replace(/\s/g, "").trim();
-        if (applicantPhone && getDigits(applicantPhone).length > 11) {
-            return NextResponse.json({ error: "Applicant phone must be at most 11 digits." }, { status: 400 });
-        }
-        if (applicantPhone) {
-            const digits = getDigits(applicantPhone);
-            if (digits.length === 11 && !PHONE_REGEX_11.test(digits)) {
-                return NextResponse.json({ error: "Invalid Philippine mobile number format." }, { status: 400 });
-            }
-            if (digits.length === 10 && !PHONE_REGEX_10.test(digits)) {
-                return NextResponse.json({ error: "Invalid Philippine mobile number format." }, { status: 400 });
-            }
-            if (digits.length !== 11 && digits.length !== 10) {
-                return NextResponse.json({ error: "Phone must be 10 or 11 digits (Philippine mobile)." }, { status: 400 });
-            }
-        }
-
-        const moveInDate = body.move_in_date?.trim() ?? "";
-        if (moveInDate) {
-            const parsed = new Date(moveInDate);
-            if (isNaN(parsed.getTime())) {
-                return NextResponse.json({ error: "Move-in date must be a valid date." }, { status: 400 });
-            }
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            if (parsed < today) {
-                return NextResponse.json({ error: "Move-in date cannot be in the past." }, { status: 400 });
-            }
-        }
-
-        const ecName = body.emergency_contact_name?.trim() ?? "";
-        if (!ecName) {
-            return NextResponse.json({ error: "Emergency contact name is required." }, { status: 400 });
-        }
-        if (/\d/.test(ecName)) {
-            return NextResponse.json({ error: "Emergency contact name must not contain numbers." }, { status: 400 });
-        }
-        if (ecName.length < 2 || ecName.length > 100) {
-            return NextResponse.json({ error: "Emergency contact name must be 2 to 100 characters." }, { status: 400 });
-        }
-
-        const rawEcPhone = body.emergency_contact_phone ?? "";
-        const ecPhone = rawEcPhone.replace(/\s/g, "").trim();
-        if (!ecPhone) {
-            return NextResponse.json({ error: "Emergency contact phone is required." }, { status: 400 });
-        }
-        if (getDigits(ecPhone).length > 11) {
-            return NextResponse.json({ error: "Emergency contact phone must be at most 11 digits." }, { status: 400 });
-        }
-        const ecDigits = getDigits(ecPhone);
-        if (ecDigits.length === 11 && !PHONE_REGEX_11.test(ecDigits)) {
-            return NextResponse.json({ error: "Invalid Philippine mobile number format." }, { status: 400 });
-        }
-        if (ecDigits.length === 10 && !PHONE_REGEX_10.test(ecDigits)) {
-            return NextResponse.json({ error: "Invalid Philippine mobile number format." }, { status: 400 });
-        }
-        if (ecDigits.length !== 11 && ecDigits.length !== 10) {
-            return NextResponse.json({ error: "Phone must be 10 or 11 digits (Philippine mobile)." }, { status: 400 });
-        }
-
-        if (body.message && body.message.trim().length > 1000) {
-            return NextResponse.json({ error: "Notes must not exceed 1000 characters." }, { status: 400 });
-        }
+        const { occupation, employer, monthly_income: monthlyIncome } = body.employment_info;
+        const applicantName = body.applicant_name;
+        const applicantEmail = body.applicant_email;
 
         let resolvedUnitId = invite.unit_id;
         if (invite.mode === "property") {
@@ -337,6 +241,23 @@ export async function POST(
             return NextResponse.json({ error: "Selected unit is no longer available." }, { status: 400 });
         }
 
+        // Duplicate-submission guard: the same applicant cannot submit twice on one invite link.
+        const { data: existingApplication } = await adminClient
+            .from("applications")
+            .select("id")
+            .eq("invite_id", invite.id)
+            .ilike("applicant_email", applicantEmail)
+            .in("status", ["pending", "reviewing", "payment_pending", "approved"])
+            .limit(1)
+            .maybeSingle();
+
+        if (existingApplication) {
+            return NextResponse.json(
+                { error: "An application from this email was already submitted through this invite." },
+                { status: 409 }
+            );
+        }
+
         const inviteChecklist = {
             ...DEFAULT_CHECKLIST,
             ...(body.requirements_checklist ?? {}),
@@ -344,14 +265,10 @@ export async function POST(
             // Move-in payment is only completed after invoice confirmation, never at application submission.
             move_in_payment: false,
         };
-        const submittedDocuments = Array.isArray(body.uploaded_documents)
-            ? body.uploaded_documents
-                .map((doc) => ({
-                    requirementKey: typeof doc?.requirementKey === "string" ? doc.requirementKey : null,
-                    url: typeof doc?.url === "string" ? doc.url.trim() : "",
-                }))
-                .filter((doc) => doc.url.length > 0 && /^https?:\/\//i.test(doc.url))
-            : [];
+        // Only accept proof links that point at this invite's own upload folder.
+        const submittedDocuments = (body.uploaded_documents ?? []).filter((doc) =>
+            doc.url.includes(`/tenant-invite-documents/${invite.id}/`)
+        );
 
         if (invite.application_type === "online") {
             const requiredKeys = Array.isArray(invite.required_requirements)
@@ -389,10 +306,10 @@ export async function POST(
             invite_id: invite.id,
             applicant_name: applicantName,
             applicant_email: applicantEmail,
-            applicant_phone: body.applicant_phone?.trim() || null,
-            move_in_date: body.move_in_date || null,
-            emergency_contact_name: body.emergency_contact_name?.trim() || null,
-            emergency_contact_phone: body.emergency_contact_phone?.trim() || null,
+            applicant_phone: body.applicant_phone,
+            move_in_date: body.move_in_date,
+            emergency_contact_name: body.emergency_contact_name,
+            emergency_contact_phone: body.emergency_contact_phone,
             employment_info: {
                 occupation,
                 employer,
@@ -405,7 +322,7 @@ export async function POST(
                 ...inviteChecklist,
                 payment_terms: invite.payment_terms ? sanitizePaymentTerms(invite.payment_terms) : null,
             },
-            message: body.message?.trim() || null,
+            message: body.message,
             status: "pending",
             application_source: "invite_link",
         } as any;
@@ -528,10 +445,10 @@ export async function POST(
                     landlordName: landlordFullName,
                     applicantName,
                     applicantEmail,
-                    applicantPhone: body.applicant_phone?.trim() || null,
+                    applicantPhone: body.applicant_phone,
                     propertyName: resolvedPropertyName,
                     unitName: resolvedUnitName,
-                    moveInDate: body.move_in_date || null,
+                    moveInDate: body.move_in_date,
                     dossierUrl,
                 });
                 console.log(`[POST invites] Dispatched new application email to landlord ${landlordEmail}`);

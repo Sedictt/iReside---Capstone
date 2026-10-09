@@ -8,6 +8,15 @@ import { cn } from "@/lib/utils";
 
 import { MoveOutChecklist } from "./MoveOutChecklist";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
+import { FieldError } from "@/components/ui/field-error";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { textRule, todayIsoDate } from "@/lib/validation/rules";
+import {
+    LIFECYCLE_LIMITS,
+    MOVE_OUT_NOTICE_DAYS,
+    addDaysIso,
+    moveOutDateRule,
+} from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 type MoveOutStatus = "pending" | "approved" | "denied" | "completed";
 
@@ -41,6 +50,16 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
     const [reason, setReason] = useState("");
     const [requestedDate, setRequestedDate] = useState("");
 
+    // Same rules as POST /api/tenant/lease/move-out (30-day notice, real date, reason length).
+    const earliestMoveOutDate = addDaysIso(todayIsoDate(), MOVE_OUT_NOTICE_DAYS);
+    const moveOutForm = useFormValidation(
+        { requestedDate, reason },
+        {
+            requestedDate: (value) => moveOutDateRule(value),
+            reason: (value) => textRule(value, { label: "Reason", max: LIFECYCLE_LIMITS.moveOutReason }),
+        }
+    );
+
     useEffect(() => {
         setMounted(true);
     }, []);
@@ -71,8 +90,8 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
 
     const handleRequest = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!requestedDate) {
-            toast.error("Please select a target move-out date");
+        if (isSubmitting) return;
+        if (!moveOutForm.validateAll()) {
             return;
         }
 
@@ -84,8 +103,12 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                 body: JSON.stringify({ reason, requestedDate }),
             });
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Failed to submit request");
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                moveOutForm.setServerErrors(data.fieldErrors);
+                throw new Error(data.error || "Failed to submit request");
+            }
+            moveOutForm.reset();
 
             toast.success("Move-out request submitted successfully");
             setIsOpen(false);
@@ -395,19 +418,25 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <label htmlFor="moveOutDate" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Target Move-Out Date</label>
-                                        <input min={new Date().toISOString().split("T")[0]} max="2099-12-31" 
+                                        <input min={earliestMoveOutDate} max="2100-12-31"
+                                            {...moveOutForm.fieldProps("requestedDate")}
                                             id="moveOutDate"
-                                            type="date" 
+                                            type="date"
                                             required
                                             value={requestedDate}
                                             onChange={(e) => setRequestedDate(e.target.value)}
-                                            className="w-full rounded-xl px-4 py-3 text-sm font-black outline-none transition-all neumorphic-inset"
+                                            className={cn(
+                                                "w-full rounded-xl px-4 py-3 text-sm font-black outline-none transition-all neumorphic-inset",
+                                                moveOutForm.errorFor("requestedDate") && "ring-1 ring-rose-500/60"
+                                            )}
                                         />
+                                        <FieldError id={moveOutForm.errorId("requestedDate")} message={moveOutForm.errorFor("requestedDate")} className="px-1" />
                                     </div>
 
                                     <div className="space-y-2">
                                         <label htmlFor="moveOutReason" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Reason for Leaving (Optional)</label>
-                                        <textarea maxLength={500} 
+                                        <textarea maxLength={LIFECYCLE_LIMITS.moveOutReason}
+                                            {...moveOutForm.fieldProps("reason")}
                                             id="moveOutReason"
                                             rows={3}
                                             value={reason}
@@ -415,6 +444,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                             placeholder="Briefly explain your reason for moving out..."
                                             className="w-full rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all resize-none neumorphic-inset"
                                         />
+                                        <FieldError id={moveOutForm.errorId("reason")} message={moveOutForm.errorFor("reason")} className="px-1" />
                                     </div>
                                 </div>
 

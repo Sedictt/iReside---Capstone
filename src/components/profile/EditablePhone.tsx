@@ -5,6 +5,7 @@ import { Phone, Pencil, Check, X, Loader2, Plus, AlertCircle } from "lucide-reac
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { phoneRule } from "@/lib/validation/rules";
 
 type EditablePhoneProps = {
     initialPhone?: string | null;
@@ -27,17 +28,11 @@ export function EditablePhone({ initialPhone, userId, className }: EditablePhone
         if (error) setError(null);
     };
 
+    // Same phone rule as the settings forms and profile APIs (PH mobile aware).
     const validatePhone = (val: string): boolean => {
-        const digitsOnly = val.replace(/\D/g, "");
-        if (digitsOnly.length === 0) {
-            setError("Phone number is required");
-            return false;
-        }
-        if (digitsOnly.length < 10 || digitsOnly.length > 15) {
-            setError("Please enter a valid phone number (10–15 digits)");
-            return false;
-        }
-        return true;
+        const message = phoneRule(val, { required: true });
+        setError(message ?? null);
+        return !message;
     };
 
     const handleSave = async (e?: React.FormEvent) => {
@@ -78,9 +73,13 @@ export function EditablePhone({ initialPhone, userId, className }: EditablePhone
         return (
             <form onSubmit={handleSave} noValidate className="flex flex-col items-center gap-2 w-full max-w-xs animate-in fade-in">
                 <div className="relative w-full">
-                    <input maxLength={15}
+                    <input maxLength={25}
                         type="tel"
                         inputMode="tel"
+                        autoComplete="tel"
+                        aria-label="Phone number"
+                        aria-invalid={error ? true : undefined}
+                        aria-describedby={error ? `phone-error-${userId}` : undefined}
                         value={tempPhone}
                         onChange={(e) => handlePhoneChange(e.target.value)}
                         onBlur={() => validatePhone(tempPhone)}
@@ -90,7 +89,7 @@ export function EditablePhone({ initialPhone, userId, className }: EditablePhone
                     />
                 </div>
                 {error && (
-                    <div className="flex items-center gap-1.5 text-xs text-red-500 font-medium">
+                    <div id={`phone-error-${userId}`} role="alert" className="flex items-center gap-1.5 text-xs text-red-500 font-medium">
                         <AlertCircle size={13} className="shrink-0" />
                         <span>{error}</span>
                     </div>

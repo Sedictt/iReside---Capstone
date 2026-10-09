@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { zUuid } from "@/lib/validation/zod-fields";
 
 export async function GET(
     _request: Request,
@@ -8,6 +9,9 @@ export async function GET(
     const { id: postId } = await context.params;
     if (!postId) {
         return NextResponse.json({ error: "Missing post ID" }, { status: 400 });
+    }
+    if (!zUuid().safeParse(postId).success) {
+        return NextResponse.json({ error: "Post ID is invalid." }, { status: 400 });
     }
 
     const supabase = (await createClient()) as any;

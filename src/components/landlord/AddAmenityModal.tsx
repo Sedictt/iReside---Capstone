@@ -89,6 +89,11 @@ import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from '@/lib/validation'
 import type { AmenityWithProperty } from '@/types/database'
+import { useFormValidation } from '@/hooks/useFormValidation'
+import { FieldError, fieldErrorClass } from '@/components/ui/field-error'
+import { integerRule, moneyRule, textRule } from '@/lib/validation/rules'
+
+const FACILITY_LIMITS = { name: 60, location: 120, description: 500, maxCapacity: 9999 } as const
 
 interface AddAmenityModalProps {
     isOpen: boolean
@@ -283,6 +288,19 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
         tags: [] as string[],
         image_url: ''
     })
+    const form = useFormValidation(
+        { ...formData, propertyIds: properties.map(p => p.id) },
+        {
+            property_id: (value, all) =>
+                !value ? 'Select a property.' : all.propertyIds.includes(value) ? undefined : 'Select a valid property.',
+            name: (value) => textRule(value, { label: 'Facility name', required: true, min: 2, max: FACILITY_LIMITS.name }),
+            capacity: (value) => integerRule(value, { label: 'Capacity', min: 1, max: FACILITY_LIMITS.maxCapacity }),
+            price_per_unit: (value, all) =>
+                all.unit_type === 'free' ? undefined : moneyRule(value, { label: 'Price', required: false }),
+            location_details: (value) => textRule(value, { label: 'Location', max: FACILITY_LIMITS.location }),
+            description: (value) => textRule(value, { label: 'Description', max: FACILITY_LIMITS.description }),
+        }
+    )
     const [photoFile, setPhotoFile] = useState<File | null>(null)
     const [photoPreview, setPhotoPreview] = useState<string | null>(null)
 
@@ -324,6 +342,8 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
             setPhotoPreview(null);
             setPhotoFile(null);
         }
+        form.reset();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [editingAmenity, isOpen]);
 
     const [searchTerm, setSearchTerm] = useState('')
@@ -380,10 +400,8 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!formData.property_id) {
-            toast.error('Please select a property')
-            return
-        }
+        if (loading) return
+        if (!form.validateAll()) return
 
         try {
             setLoading(true)
@@ -446,7 +464,10 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                 ...formData,
                 landlord_id: landlordId,
                 image_url: finalImageUrl,
-                price_per_unit: formData.price_per_unit === '' ? 0 : Number(formData.price_per_unit),
+                name: formData.name.trim(),
+                location_details: formData.location_details.trim(),
+                description: formData.description.trim(),
+                price_per_unit: formData.unit_type === 'free' || formData.price_per_unit === '' ? 0 : Number(formData.price_per_unit),
                 capacity: Number(formData.capacity)
             };
 
@@ -517,6 +538,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                         placeholder="Select a property"
                                         icon={Building2}
                                     />
+                                    <FieldError id={form.errorId('property_id')} message={form.errorFor('property_id')} />
                                 </div>
 
                                 <div className="space-y-2">
@@ -526,17 +548,19 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                     <div className="relative">
                                         <Zap className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                         <input
+                                            {...form.fieldProps('name')}
                                             id="facility-name"
                                             required
                                             type="text"
-                                            maxLength={60}
+                                            maxLength={FACILITY_LIMITS.name}
                                             autoComplete="off"
                                             placeholder="e.g., Sky Pool, Game Room"
                                             value={formData.name}
                                             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                                            className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                            className={cn("w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4", form.errorFor('name') && fieldErrorClass)}
                                         />
                                     </div>
+                                    <FieldError id={form.errorId('name')} message={form.errorFor('name')} />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
@@ -694,6 +718,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
                                             <input
+                                                {...form.fieldProps('price_per_unit')}
                                                 type="text"
                                                 inputMode="decimal"
                                                 maxLength={10}
@@ -710,8 +735,9 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                                         }
                                                     }
                                                 }}
-                                                className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-8 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                                className={cn("w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-8 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4", form.errorFor('price_per_unit') && fieldErrorClass)}
                                             />
+                                            <FieldError id={form.errorId('price_per_unit')} message={form.errorFor('price_per_unit')} />
                                         </div>
                                         <div className="relative">
                                             <ModernSelect
@@ -765,9 +791,12 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                                 }
                                             }}
                                             onBlur={() => {
+                                                form.touch('location_details')
                                                 setTimeout(() => setShowLocationSuggestions(false), 200)
                                             }}
-                                            className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                            aria-invalid={form.errorFor('location_details') ? true : undefined}
+                                            aria-describedby={form.errorFor('location_details') ? form.errorId('location_details') : undefined}
+                                            className={cn("w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4", form.errorFor('location_details') && fieldErrorClass)}
                                         />
                                         {showLocationSuggestions && filteredLocationSuggestions.length > 0 && (
                                             <div className="absolute z-50 mt-1 w-full rounded-xl border border-border bg-background py-1.5 shadow-lg">
@@ -789,6 +818,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                             </div>
                                         )}
                                     </div>
+                                    <FieldError id={form.errorId('location_details')} message={form.errorFor('location_details')} />
                                 </div>
 
                                 <div className="space-y-2">
@@ -801,13 +831,15 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                         </span>
                                     </div>
                                     <textarea
+                                        {...form.fieldProps('description')}
                                         id="facility-description"
                                         maxLength={500}
                                         placeholder="Describe the facility's features and rules…"
                                         value={formData.description}
                                         onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                        className="min-h-[120px] w-full resize-none rounded-2xl border border-border bg-muted/50 px-5 py-4 text-sm font-medium outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
+                                        className={cn("min-h-[120px] w-full resize-none rounded-2xl border border-border bg-muted/50 px-5 py-4 text-sm font-medium outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4", form.errorFor('description') && fieldErrorClass)}
                                     />
+                                    <FieldError id={form.errorId('description')} message={form.errorFor('description')} />
                                 </div>
 
                                 <div className="space-y-2">

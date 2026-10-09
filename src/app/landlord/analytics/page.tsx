@@ -13,6 +13,10 @@ import { KpiCardSkeleton } from "@/components/landlord/dashboard/KpiCardSkeleton
 import { ChartSkeleton } from "@/components/landlord/dashboard/ChartSkeleton";
 import { FinancialPerformanceChart, type FinancialChartWindowData } from "@/components/landlord/dashboard/FinancialPerformanceChart";
 import { useProperty } from "@/context/PropertyContext";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { dateRangeRule } from "@/lib/validation/rules";
+import { analyticsDateRule } from "@/lib/validation/schemas/operations.schema";
 
 type KpiItem = {
     title: string;
@@ -288,6 +292,12 @@ export default function AnalyticsPage() {
     const [selectedRange, setSelectedRange] = useState<RangeOption["id"]>("30d");
     const [startDate, setStartDate] = useState(formatIsoDate(shiftDays(-29)));
     const [endDate, setEndDate] = useState(formatIsoDate(shiftDays(0)));
+    const rangeValues = useMemo(() => ({ startDate, endDate }), [startDate, endDate]);
+    const rangeForm = useFormValidation(rangeValues, {
+        startDate: (value) => analyticsDateRule(value, "Start date"),
+        endDate: (value, all) => analyticsDateRule(value, "End date") ?? dateRangeRule(all.startDate, value),
+    });
+    const isRangeValid = rangeForm.isValid;
     const [isIrisVisible, setIsIrisVisible] = useState(true);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -623,6 +633,9 @@ export default function AnalyticsPage() {
             // Ignore cache read issues
         }
 
+        // Never query with an incomplete or invalid range; the inputs show why.
+        if (!isRangeValid) return;
+
         const loadOverview = async () => {
             // If we already populated from cache, silently fetch in the background without showing jarring skeletons
             dispatchStats({ type: "LOAD_START", silent: hasCache });
@@ -673,7 +686,7 @@ export default function AnalyticsPage() {
         return () => {
             controller.abort();
         };
-    }, [mounted, startDate, endDate, selectedPropertyId]);
+    }, [mounted, startDate, endDate, selectedPropertyId, isRangeValid]);
 
     useEffect(() => {
         if (!toastMessage) return;
@@ -1047,23 +1060,27 @@ export default function AnalyticsPage() {
                                         <div className="flex-1 flex flex-col gap-2">
                                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Start</span>
                                             <input min="2000-01-01" max="2099-12-31"
+                                                {...rangeForm.fieldProps("startDate")}
                                                 type="date"
                                                 value={startDate}
                                                 onChange={(event) => onStartDateChange(event.target.value)}
                                                 className="neumorphic-inset rounded-xl w-full px-4 py-3 text-sm font-medium"
                                                 aria-label="Report start date"
                                             />
+                                            <FieldError id={rangeForm.errorId("startDate")} message={rangeForm.errorFor("startDate")} />
                                         </div>
                                         <div className="pt-7 text-muted-foreground/40 font-black">–</div>
                                         <div className="flex-1 flex flex-col gap-2">
                                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">End</span>
                                             <input min="2000-01-01" max="2099-12-31"
+                                                {...rangeForm.fieldProps("endDate")}
                                                 type="date"
                                                 value={endDate}
                                                 onChange={(event) => onEndDateChange(event.target.value)}
                                                 className="neumorphic-inset rounded-xl w-full px-4 py-3 text-sm font-medium"
                                                 aria-label="Report end date"
                                             />
+                                            <FieldError id={rangeForm.errorId("endDate")} message={rangeForm.errorFor("endDate")} />
                                         </div>
                                     </div>
                                 </div>

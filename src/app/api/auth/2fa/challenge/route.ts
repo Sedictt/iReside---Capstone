@@ -1,13 +1,21 @@
 import { NextResponse } from "next/server";
 import { TwoFactorService } from "@/lib/services/auth/two-factor.service";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseJsonBody } from "@/lib/validation/server";
+import { twoFactorChallengeSchema } from "@/lib/validation/schemas/account.schema";
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-        const { userId, resend } = body;
+        const parsed = await parseJsonBody(request, twoFactorChallengeSchema);
+        if (!parsed.ok) return parsed.response;
+        const { userId, resend } = parsed.data;
 
-        if (!userId || typeof userId !== "string") {
-            return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+        // The challenge runs right after password sign-in, so a session exists.
+        // Only the signed-in user may trigger (and receive) their own login code.
+        const authContext = await requireAuthenticatedUser(request);
+        if (!("userId" in authContext)) return authContext as Response;
+        if (authContext.userId !== userId) {
+            return NextResponse.json({ error: "You can only verify your own sign-in." }, { status: 403 });
         }
 
         const twoFactorService = new TwoFactorService();
@@ -48,7 +56,7 @@ export async function POST(request: Request) {
     } catch (err: any) {
         console.error("[2FA Challenge] Error:", err);
         return NextResponse.json(
-            { error: err.message || "Failed to initiate two-factor verification" },
+            { error: "Failed to initiate two-factor verification" },
             { status: 500 }
         );
     }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { sendLandlordCredentialsCopy, sendTenantOnboardingReminder } from "@/lib/email";
@@ -13,6 +14,9 @@ function generateTempPassword(): string {
 
 export async function POST(request: Request, context: { params: Promise<{ applicationId: string }> }) {
     const { applicationId } = await context.params;
+    if (!isId(applicationId)) {
+      return NextResponse.json({ error: "Application not found." }, { status: 404 });
+    }
     const adminClient = createServiceRoleSupabaseClient();
 
     const authContext = await requireAuthenticatedUser(request);

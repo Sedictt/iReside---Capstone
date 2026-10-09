@@ -1,11 +1,17 @@
 "use client"
 
-import { useReducer, useRef, FormEvent } from "react"
+import { useMemo, useReducer, useRef, FormEvent } from "react"
 import Image from "next/image"
 import { m as motion, AnimatePresence } from "framer-motion"
 import { ImageIcon, X, Send, Megaphone, BarChart3, MessageSquarePlus } from "lucide-react"
 import { toast } from "sonner"
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation"
+import { useFormValidation } from "@/hooks/useFormValidation"
+import { FieldError } from "@/components/ui/field-error"
+import { COMMUNITY_LIMITS, pollOptionsRule } from "@/lib/validation/schemas/operations.schema"
+
+/** The composer's single text area; poll and announcement text becomes the post title. */
+const COMPOSER_TEXT_MAX = 500
 
 interface CommunityComposerProps {
     isManagementUser: boolean
@@ -64,6 +70,13 @@ export function CommunityComposer({
         selectedPhotos: []
     });
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const composerValues = useMemo(
+        () => ({ composerType: state.composerType, pollOptions: state.pollOptions }),
+        [state.composerType, state.pollOptions]
+    )
+    const form = useFormValidation(composerValues, {
+        pollOptions: (value, all) => (all.composerType === "poll" ? pollOptionsRule(value) : undefined),
+    })
 
     const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const rawFiles = Array.from(e.target.files || []);
@@ -90,7 +103,9 @@ export function CommunityComposer({
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault()
+        if (isSubmitting || uploadingPhotos) return
         if (!state.body.trim() && state.selectedPhotos.length === 0) return
+        if (!form.validateAll()) return
         
         // For polls and announcements, main text area is treated as title/question
         const finalTitle = state.composerType === "discussion" ? "" : state.body.trim()
@@ -108,6 +123,7 @@ export function CommunityComposer({
         dispatch({ type: "SET_BODY", payload: "" })
         dispatch({ type: "SET_POLL_OPTIONS", payload: ["", ""] })
         dispatch({ type: "SET_SELECTED_PHOTOS", payload: [] })
+        form.reset()
     }
 
     return (
@@ -149,7 +165,7 @@ export function CommunityComposer({
                             )}
                         </div>
                         <div className="flex-1 space-y-3">
-                            <textarea maxLength={500}
+                            <textarea maxLength={COMPOSER_TEXT_MAX}
                                 value={state.body}
                                 onChange={(e) => {
                                     dispatch({ type: "SET_BODY", payload: e.target.value })
@@ -169,7 +185,11 @@ export function CommunityComposer({
                                 <div className="space-y-2 pt-2">
                                     {state.pollOptions.map((option: string, index: number) => (
                                         <div key={`poll-option-${index}`} className="group relative">
-                                            <input maxLength={60}
+                                            <input maxLength={COMMUNITY_LIMITS.pollOption}
+                                                {...(index === 0 ? form.fieldProps("pollOptions") : { onBlur: () => form.touch("pollOptions") })}
+                                                aria-label={`Poll option ${index + 1}`}
+                                                aria-invalid={form.errorFor("pollOptions") ? true : undefined}
+                                                aria-describedby={form.errorFor("pollOptions") ? form.errorId("pollOptions") : undefined}
                                                 type="text"
                                                 value={option}
                                                 onChange={(e) => {
@@ -182,12 +202,13 @@ export function CommunityComposer({
                                             />
                                         </div>
                                     ))}
+                                    <FieldError id={form.errorId("pollOptions")} message={form.errorFor("pollOptions")} />
                                     <div className="flex gap-2">
                                         <button
                                             type="button"
-                                            onClick={() => state.pollOptions.length < 5 && dispatch({ type: "SET_POLL_OPTIONS", payload: [...state.pollOptions, ""] })}
+                                            onClick={() => state.pollOptions.length < COMMUNITY_LIMITS.maxPollOptions && dispatch({ type: "SET_POLL_OPTIONS", payload: [...state.pollOptions, ""] })}
                                             className="text-xs font-black text-primary hover:underline disabled:opacity-50"
-                                            disabled={state.pollOptions.length >= 5}
+                                            disabled={state.pollOptions.length >= COMMUNITY_LIMITS.maxPollOptions}
                                         >
                                             + Add Option
                                         </button>

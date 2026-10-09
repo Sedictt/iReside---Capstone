@@ -6,6 +6,20 @@ import { getCommunityPropertyId } from './queries'
 
 import { revalidatePath } from 'next/cache'
 import { auth } from '@/lib/supabase/middleware'
+import type { z } from 'zod'
+import {
+    communityAnnouncementSchema,
+    communityCommentSchema,
+    communityCommentUpdateSchema,
+    communityDiscussionSchema,
+    communityPhotoAlbumSchema,
+    communityPollSchema,
+    communityPostUpdateSchema,
+    communityReactionSchema,
+    communityReportSchema,
+    communityVoteSchema,
+} from '@/lib/validation/schemas/operations.schema'
+import { zUuid } from '@/lib/validation/zod-fields'
 import type {
     CommunityPost,
     CommunityPostStatus,
@@ -141,6 +155,22 @@ async function getAuthenticatedCommunityContext(): Promise<{ userId: string; rol
     const role: CommunityRole = resolvedRole === 'admin' ? 'admin' : resolvedRole === 'landlord' ? 'landlord' : 'tenant'
 
     return { userId: user.id, role }
+}
+
+/**
+ * Server actions are callable with arbitrary payloads, so every input is
+ * validated here; the first issue becomes the thrown, user-facing message.
+ */
+function parseActionInput<S extends z.ZodType>(schema: S, value: unknown): z.output<S> {
+    const result = schema.safeParse(value)
+    if (!result.success) {
+        throw new Error(result.error.issues[0]?.message ?? 'Invalid input.')
+    }
+    return result.data
+}
+
+function assertUuid(value: unknown, label: string): string {
+    return parseActionInput(zUuid(label), value)
 }
 
 function isManagementRole(role: CommunityRole): boolean {
@@ -451,19 +481,13 @@ export async function createDiscussionPost(input: { title: string; content: stri
         throw new Error("Unauthorized")
     }
     const { userId, role } = await getAuthenticatedCommunityContext()
+    const { title, content, propertyId: requestedPropertyId } = parseActionInput(communityDiscussionSchema, input)
 
     const isLandlordOrAdmin = role === 'landlord' || role === 'admin'
 
-    const propertyId = await resolvePropertyIdForPostCreation(userId, role, input.propertyId)
+    const propertyId = await resolvePropertyIdForPostCreation(userId, role, requestedPropertyId ?? undefined)
     if (!propertyId) {
         throw new Error(isLandlordOrAdmin ? 'You need at least one property before posting in the community hub.' : 'You need an active lease before posting in the community hub.')
-    }
-
-    const title = input.title.trim()
-    const content = input.content.trim()
-
-    if (!title && !content) {
-        throw new Error('Discussion post must have either a title or content.')
     }
 
     const supabase = (await createClient()) as any
@@ -498,27 +522,12 @@ export async function createPollPost(input: { title: string; content: string; op
     if (role === 'tenant') {
         throw new Error('Tenants can only create discussion posts.')
     }
+    const { title, content, options: validOptions, propertyId: requestedPropertyId } = parseActionInput(communityPollSchema, input)
 
     const isManagement = isManagementRole(role)
-    const propertyId = await resolvePropertyIdForPostCreation(userId, role, input.propertyId)
+    const propertyId = await resolvePropertyIdForPostCreation(userId, role, requestedPropertyId ?? undefined)
     if (!propertyId) {
         throw new Error(isManagement ? 'You need at least one property before posting in the community hub.' : 'You need an active lease before posting in the community hub.')
-    }
-
-    const title = input.title.trim()
-    const content = input.content.trim()
-    const validOptions = input.options.map(o => o.trim()).filter(Boolean)
-
-    if (!title && !content) {
-        throw new Error('A title or question is required for the poll.')
-    }
-
-    if (validOptions.length < 2) {
-        throw new Error('A poll requires at least 2 options.')
-    }
-
-    if (validOptions.length > 5) {
-        throw new Error('A poll can have at most 5 options.')
     }
 
     const supabase = (await createClient()) as any
@@ -551,18 +560,12 @@ export async function createPhotoAlbumPost(input: { title: string; content: stri
         throw new Error("Unauthorized")
     }
     const { userId, role } = await getAuthenticatedCommunityContext()
+    const { title, content, imageUrls, propertyId: requestedPropertyId } = parseActionInput(communityPhotoAlbumSchema, input)
     const isManagement = isManagementRole(role)
-    const propertyId = await resolvePropertyIdForPostCreation(userId, role, input.propertyId)
+    const propertyId = await resolvePropertyIdForPostCreation(userId, role, requestedPropertyId ?? undefined)
     if (!propertyId) {
         throw new Error(isManagement ? 'You need at least one property before posting in the community hub.' : 'You need an active lease before posting in the community hub.')
     }
-
-    if (!input.imageUrls || input.imageUrls.length === 0) {
-        throw new Error('At least one photo is required for a photo album.')
-    }
-
-    const title = input.title.trim()
-    const content = input.content.trim()
 
     const supabase = (await createClient()) as any
 
@@ -586,8 +589,8 @@ export async function createPhotoAlbumPost(input: { title: string; content: stri
     const { data: album, error: albumError } = await supabase.from('community_albums').insert({
         post_id: post.id,
         property_id: propertyId,
-        cover_photo_url: input.imageUrls[0],
-        photo_count: input.imageUrls.length
+        cover_photo_url: imageUrls[0],
+        photo_count: imageUrls.length
     }).select('id').single()
 
     if (albumError) {
@@ -595,7 +598,7 @@ export async function createPhotoAlbumPost(input: { title: string; content: stri
         throw new Error('Post created, but album record failed.')
     }
 
-    const photoInserts = input.imageUrls.map(url => ({
+    const photoInserts = imageUrls.map(url => ({
         album_id: album.id,
         url,
         uploaded_by: userId
@@ -621,18 +624,11 @@ export async function createAnnouncementPost(input: { title: string; content: st
     if (role === 'tenant') {
         throw new Error('Tenants can only create discussion posts.')
     }
+    const { title, content, propertyId: requestedPropertyId } = parseActionInput(communityAnnouncementSchema, input)
 
-    const isManagement = isManagementRole(role)
-    const propertyId = await resolvePropertyIdForPostCreation(userId, role, input.propertyId)
+    const propertyId = await resolvePropertyIdForPostCreation(userId, role, requestedPropertyId ?? undefined)
     if (!propertyId) {
         throw new Error('You need at least one property before posting in the community hub.')
-    }
-
-    const title = input.title.trim()
-    const content = input.content.trim()
-
-    if (!title && !content) {
-        throw new Error('Announcement must have some content.')
     }
 
     const supabase = (await createClient()) as any
@@ -665,18 +661,15 @@ export async function updateOwnPost(postId: string, input: { title?: string; con
         throw new Error("Unauthorized")
     }
     const userId = await getAuthenticatedUserId()
+    const parsedUpdate = parseActionInput(communityPostUpdateSchema, { postId, ...(input ?? {}) })
     const updates: Record<string, unknown> = {}
 
-    if (typeof input.title === 'string') {
-        const title = input.title.trim()
-        if (!title) {
-            throw new Error('Post title is required.')
-        }
-        updates.title = title
+    if (parsedUpdate.title !== undefined) {
+        updates.title = parsedUpdate.title
     }
 
-    if (typeof input.content === 'string') {
-        updates.content = input.content.trim()
+    if (parsedUpdate.content !== undefined) {
+        updates.content = parsedUpdate.content
     }
 
     if (Object.keys(updates).length === 0) {
@@ -707,6 +700,7 @@ export async function deleteOwnPost(postId: string) {
         throw new Error("Unauthorized")
     }
     const userId = await getAuthenticatedUserId()
+    assertUuid(postId, 'Post')
     const supabase = (await createClient()) as any
 
     const { error } = await supabase
@@ -759,6 +753,10 @@ export async function approveResidentPost(postId: string, approved = true) {
     const { userId, role } = await getAuthenticatedCommunityContext()
     if (!isManagementRole(role)) {
         throw new Error('Only landlords and admins can approve resident posts.')
+    }
+    assertUuid(postId, 'Post')
+    if (typeof approved !== 'boolean') {
+        throw new Error('Approval decision is invalid.')
     }
 
     const supabase = (await createClient()) as any
@@ -814,6 +812,7 @@ export async function toggleReaction(postId: string, reactionType: CommunityReac
         throw new Error("Unauthorized")
     }
     const userId = await getAuthenticatedUserId()
+    parseActionInput(communityReactionSchema, { postId, reactionType })
     const supabase = (await createClient()) as any
 
     const { data: existing, error: existingError } = await supabase
@@ -885,9 +884,24 @@ export async function votePoll(pollId: string, optionIndex: number) {
         throw new Error("Unauthorized")
     }
     const userId = await getAuthenticatedUserId()
+    parseActionInput(communityVoteSchema, { pollId, optionIndex })
     const supabase = (await createClient()) as any
 
-    if (!Number.isInteger(optionIndex) || optionIndex < 0) {
+    // The option must exist on a visible, published poll.
+    const { data: pollPost, error: pollPostError } = await supabase
+        .from('community_posts')
+        .select('id, type, metadata')
+        .eq('id', pollId)
+        .eq('is_approved', true)
+        .eq('status', 'published')
+        .maybeSingle()
+
+    if (pollPostError || !pollPost || pollPost.type !== 'poll') {
+        throw new Error('This poll is no longer available.')
+    }
+
+    const pollOptions = Array.isArray(pollPost.metadata?.options) ? pollPost.metadata.options : []
+    if (optionIndex >= pollOptions.length) {
         throw new Error('Invalid poll option selected.')
     }
 
@@ -987,16 +1001,28 @@ export async function addComment(postId: string, content: string, parentCommentI
     const userId = await getAuthenticatedUserId()
     const supabase = (await createClient()) as any
 
-    const trimmedContent = content.trim()
-    if (!trimmedContent) {
-        throw new Error('Comment cannot be empty.')
+    const parsedComment = parseActionInput(communityCommentSchema, { postId, content, parentCommentId: parentCommentId || null })
+    const trimmedContent = parsedComment.content
+
+    // A reply must target a comment on the same post.
+    if (parsedComment.parentCommentId) {
+        const { data: parentComment } = await supabase
+            .from('community_comments')
+            .select('id')
+            .eq('id', parsedComment.parentCommentId)
+            .eq('post_id', postId)
+            .maybeSingle()
+
+        if (!parentComment) {
+            throw new Error('The comment you are replying to no longer exists.')
+        }
     }
 
     const { error } = await supabase.from('community_comments').insert({
         post_id: postId,
         author_id: userId,
         content: trimmedContent,
-        parent_comment_id: parentCommentId || null
+        parent_comment_id: parsedComment.parentCommentId ?? null
     })
 
     if (error) {
@@ -1082,10 +1108,7 @@ export async function reportPost(postId: string, reason: CommunityReportReason) 
     const userId = await getAuthenticatedUserId()
     const supabase = (await createClient()) as any
 
-    const trimmedReason = reason.trim()
-    if (!trimmedReason) {
-        throw new Error('A report reason is required.')
-    }
+    const { reason: trimmedReason } = parseActionInput(communityReportSchema, { postId, reason })
 
     const { error } = await supabase.from('content_reports').insert({
         post_id: postId,
@@ -1129,6 +1152,7 @@ export async function toggleSavePost(postId: string): Promise<{ saved: boolean }
         throw new Error("Unauthorized")
     }
     const userId = await getAuthenticatedUserId()
+    assertUuid(postId, 'Post')
     const supabase = (await createClient()) as any
 
     const { data: existing } = await supabase
@@ -1176,10 +1200,7 @@ export async function updateComment(commentId: string, content: string) {
     const userId = await getAuthenticatedUserId()
     const supabase = (await createClient()) as any
 
-    const trimmedContent = content.trim()
-    if (!trimmedContent) {
-        throw new Error('Comment cannot be empty.')
-    }
+    const { content: trimmedContent } = parseActionInput(communityCommentUpdateSchema, { commentId, content })
 
     const { error } = await supabase
         .from('community_comments')
@@ -1202,6 +1223,7 @@ export async function deleteComment(commentId: string) {
         throw new Error("Unauthorized")
     }
     const userId = await getAuthenticatedUserId()
+    assertUuid(commentId, 'Comment')
     const supabase = (await createClient()) as any
 
     const { error } = await supabase
@@ -1228,6 +1250,7 @@ export async function togglePinPost(postId: string): Promise<{ isPinned: boolean
     if (!isManagementRole(role)) {
         throw new Error('Only management can pin posts.')
     }
+    assertUuid(postId, 'Post')
 
     const supabase = (await createClient()) as any
 

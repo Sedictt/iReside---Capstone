@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseJsonBody, parseSearchParams } from "@/lib/validation/server";
+import {
+    CALENDAR_NOTE_LIMITS,
+    calendarNoteDeleteQuerySchema,
+    calendarNoteSchema,
+} from "@/lib/validation/schemas/operations.schema";
 
 export const dynamic = "force-dynamic";
 
@@ -47,15 +53,9 @@ export async function POST(request: Request) {
         if (!("userId" in authContext)) return authContext as Response;
         const { userId, supabase } = authContext;
 
-        const body = await request.json();
-        const { id, date, title, description } = body;
-
-        if (!date || typeof date !== "string") {
-            return NextResponse.json({ error: "Date is required." }, { status: 400 });
-        }
-        if (!title || typeof title !== "string" || !title.trim()) {
-            return NextResponse.json({ error: "Note title is required." }, { status: 400 });
-        }
+        const parsed = await parseJsonBody(request, calendarNoteSchema);
+        if (!parsed.ok) return parsed.response;
+        const { id, date, title, description } = parsed.data;
 
         const { data: profile } = await supabase
             .from("profiles")
@@ -71,11 +71,18 @@ export async function POST(request: Request) {
         const noteId = id || `note-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
         const noteIndex = existingNotes.findIndex((n) => n.id === noteId);
 
+        if (noteIndex < 0 && existingNotes.length >= CALENDAR_NOTE_LIMITS.maxNotes) {
+            return NextResponse.json(
+                { error: `You can keep up to ${CALENDAR_NOTE_LIMITS.maxNotes} calendar notes. Delete older notes to add more.` },
+                { status: 400 }
+            );
+        }
+
         const newNote: CalendarNoteRecord = {
             id: noteId,
-            date: date.trim(),
-            title: title.trim(),
-            description: typeof description === "string" ? description.trim() : "",
+            date,
+            title,
+            description,
             created_at: noteIndex >= 0 ? existingNotes[noteIndex].created_at : new Date().toISOString(),
         };
 
@@ -116,11 +123,9 @@ export async function DELETE(request: Request) {
         const { userId, supabase } = authContext;
 
         const { searchParams } = new URL(request.url);
-        const noteId = searchParams.get("id");
-
-        if (!noteId) {
-            return NextResponse.json({ error: "Note ID is required." }, { status: 400 });
-        }
+        const parsedQuery = parseSearchParams(searchParams, calendarNoteDeleteQuerySchema);
+        if (!parsedQuery.ok) return parsedQuery.response;
+        const noteId = parsedQuery.data.id;
 
         const { data: profile } = await supabase
             .from("profiles")

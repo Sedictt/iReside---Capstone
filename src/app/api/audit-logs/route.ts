@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseSearchParams } from "@/lib/validation/server";
+import { auditLogQuerySchema } from "@/lib/validation/schemas/operations.schema";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import type { AuditCategory, AuditSeverity } from "@/lib/audit/audit-logger";
 
@@ -25,11 +27,11 @@ export async function GET(request: Request) {
     const { userId } = authContext;
 
     const url = new URL(request.url);
-    const category = url.searchParams.get("category");
-    const severity = url.searchParams.get("severity");
-    const search = url.searchParams.get("search")?.toLowerCase().trim() || "";
-    const isExport = url.searchParams.get("export") === "csv";
-    const limit = Math.min(parseInt(url.searchParams.get("limit") || "100", 10), 500);
+    const parsedQuery = parseSearchParams(url.searchParams, auditLogQuerySchema);
+    if (!parsedQuery.ok) return parsedQuery.response;
+    const { category, severity, limit } = parsedQuery.data;
+    const search = parsedQuery.data.search.toLowerCase();
+    const isExport = parsedQuery.data.export === "csv";
 
     const adminClient = createServiceRoleSupabaseClient();
     const logs: AuditLogItem[] = [];
@@ -230,7 +232,7 @@ export async function GET(request: Request) {
     } catch (err: any) {
         console.error("Error retrieving audit logs:", err);
         return NextResponse.json(
-            { error: "Failed to retrieve audit logs.", details: err.message },
+            { error: "Failed to retrieve audit logs." },
             { status: 500 }
         );
     }

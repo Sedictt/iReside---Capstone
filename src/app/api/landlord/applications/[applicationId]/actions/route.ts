@@ -19,6 +19,8 @@ import {
     logApplicationPaymentAudit,
     type PaymentPendingConfig,
 } from "@/lib/application-payment-pending";
+import { parseJsonBody } from "@/lib/validation/server";
+import { applicationActionSchema, isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import {
     buildInviteUrl,
     generateInviteToken,
@@ -472,12 +474,14 @@ export async function POST(
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 
-    let body: ActionBody = {};
-    try {
-        body = (await request.json()) as ActionBody;
-    } catch {
-        body = {};
+    if (!isId(applicationId)) {
+        return NextResponse.json({ error: "Application not found." }, { status: 404 });
     }
+
+    const parsed = await parseJsonBody(request, applicationActionSchema);
+    if (!parsed.ok) return parsed.response;
+    // Schema output is structurally compatible; cast to the legacy shape the handler mutates below.
+    const body = parsed.data as unknown as ActionBody;
 
     if (!isAllowedStatus(body.status)) {
         return NextResponse.json({ error: "Invalid application status." }, { status: 400 });
@@ -522,13 +526,19 @@ export async function POST(
         return NextResponse.json({ error: "Application has been withdrawn." }, { status: 409 });
     }
 
+    // Approval creates the tenant account, lease and payment records; repeating it
+    // (double click, stale tab) or rolling it back from here would leave orphaned records.
+    if (application.status === "approved") {
+        return NextResponse.json({ error: "Application is already approved." }, { status: 409 });
+    }
+
     const reviewedAt = new Date().toISOString();
     const updatePayload: Record<string, unknown> = {
         status: body.status,
         reviewed_at: reviewedAt,
     };
     if (body.status === "rejected" && body.rejection_reason) {
-        updatePayload.rejection_reason = body.rejection_reason;
+        updatePayload.rejection_reason = body.rejection_reason.trim();
     }
 
     let paymentPortalUrl: string | null = null;

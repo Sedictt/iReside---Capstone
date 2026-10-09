@@ -6,14 +6,17 @@
 
 import { z } from "zod";
 import { emailSchema, nonEmptyStringSchema } from "./common.schema";
+import { zNewPassword } from "../zod-fields";
+import { zCurrentPassword, zOtp } from "./account.schema";
 
 // ---------------------------------------------------------------------------
 // Login
 // ---------------------------------------------------------------------------
 
+// Login only checks the password; strength rules apply when a password is set.
 export const loginSchema = z.object({
   email: emailSchema,
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: zCurrentPassword("Password"),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
@@ -24,7 +27,7 @@ export type LoginInput = z.infer<typeof loginSchema>;
 
 export const signupSchema = z.object({
   email: emailSchema,
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: zNewPassword("Password"),
   fullName: nonEmptyStringSchema.min(2, "Full name is required"),
   role: z.enum(["tenant", "landlord"]).default("tenant"),
 });
@@ -43,7 +46,7 @@ export type OtpRequestInput = z.infer<typeof otpRequestSchema>;
 
 export const otpVerifySchema = z.object({
   email: emailSchema,
-  otp: z.string().length(6, "OTP must be exactly 6 digits"),
+  otp: zOtp(),
 });
 
 export type OtpVerifyInput = z.infer<typeof otpVerifySchema>;
@@ -53,8 +56,8 @@ export type OtpVerifyInput = z.infer<typeof otpVerifySchema>;
 // ---------------------------------------------------------------------------
 
 export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: z.string().min(6, "New password must be at least 6 characters"),
+  currentPassword: zCurrentPassword("Current password"),
+  newPassword: zNewPassword("New password"),
 });
 
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;

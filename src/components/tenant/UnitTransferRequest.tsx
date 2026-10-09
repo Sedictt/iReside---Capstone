@@ -74,6 +74,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isSubmitting) return;
         if (!selectedUnitId) {
             toast.error("Please select a unit to transfer to");
             return;
@@ -87,7 +88,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                 body: JSON.stringify({ requestedUnitId: selectedUnitId, reason }),
             });
 
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.error || "Failed to submit request");
 
             toast.success("Unit transfer request submitted successfully");

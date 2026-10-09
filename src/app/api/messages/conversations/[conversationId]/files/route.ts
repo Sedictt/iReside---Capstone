@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureUserInConversation } from "@/lib/messages/engine";
 import { redactSensitiveContent } from "@/lib/messages/censorship";
 import type { MessageType } from "@/types/database";
+import { zUuid } from "@/lib/validation/zod-fields";
+import { isSafeImageMimeType } from "@/lib/validation/schemas/operations.schema";
 
 const BUCKET_NAME = "message-files";
 const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024;
@@ -22,7 +24,7 @@ const ALLOWED_MIME_TYPES = new Set([
     "application/x-zip-compressed",
 ]);
 
-const ALLOWED_IMAGE_PREFIX = "image/";
+const MAX_FILE_NAME_LENGTH = 255;
 
 const sanitizeFileName = (name: string) =>
     name
@@ -33,7 +35,7 @@ const sanitizeFileName = (name: string) =>
 
 const isAllowedFileType = (mimeType: string) => {
     if (!mimeType) return false;
-    if (mimeType.startsWith(ALLOWED_IMAGE_PREFIX)) return true;
+    if (isSafeImageMimeType(mimeType)) return true;
     return ALLOWED_MIME_TYPES.has(mimeType);
 };
 
@@ -71,6 +73,9 @@ export async function POST(
     }
 
     const { conversationId } = await context.params;
+    if (!zUuid().safeParse(conversationId).success) {
+        return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
+    }
     const { searchParams } = new URL(request.url);
     const noMessage = searchParams.get("noMessage") === "true";
 
@@ -82,7 +87,10 @@ export async function POST(
             return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
         }
 
-        const formData = await request.formData();
+        const formData = await request.formData().catch(() => null);
+        if (!formData) {
+            return NextResponse.json({ error: "Upload must be sent as form data." }, { status: 400 });
+        }
         const file = formData.get("file");
 
         if (!(file instanceof File)) {
@@ -95,6 +103,10 @@ export async function POST(
 
         if (file.size > MAX_FILE_SIZE_BYTES) {
             return NextResponse.json({ error: "File is too large. Max size is 20 MB." }, { status: 400 });
+        }
+
+        if (file.name.length > MAX_FILE_NAME_LENGTH) {
+            return NextResponse.json({ error: `File name cannot exceed ${MAX_FILE_NAME_LENGTH} characters.` }, { status: 400 });
         }
 
         if (!isAllowedFileType(file.type)) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { m as motion, AnimatePresence } from "framer-motion";
@@ -27,6 +27,14 @@ import {
  Bot
 } from "lucide-react";
 import type { MaintenanceRequest } from "./MaintenanceDashboard";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { choiceRule } from "@/lib/validation/rules";
+import {
+ MAINTENANCE_LIMITS,
+ maintenanceDescriptionRule,
+ maintenanceTitleRule,
+} from "@/lib/validation/schemas/operations.schema";
 
 
 type ProcessPlan = "landlord" | "third_party";
@@ -83,6 +91,15 @@ export function MaintenanceRequestModal({
  const [createPriority, setCreatePriority] = useState<"Critical" | "High" | "Medium" | "Low">("Medium");
  const [isSubmitting, setIsSubmitting] = useState(false);
  const [submitError, setSubmitError] = useState<string | null>(null);
+ const createValues = useMemo(
+  () => ({ unitId: createUnit, title: createTitle, description: createDescription }),
+  [createUnit, createTitle, createDescription],
+ );
+ const createForm = useFormValidation(createValues, {
+  unitId: (value) => choiceRule(value, units.map((unit) => unit.id), { label: "Unit" }),
+  title: (value) => maintenanceTitleRule(value),
+  description: (value) => maintenanceDescriptionRule(value),
+ });
 
  // Action dropdown state
  const [isActionDropdownOpen, setIsActionDropdownOpen] = useState(false);
@@ -134,18 +151,10 @@ export function MaintenanceRequestModal({
  id="create-maintenance-form"
  onSubmit={async (e) => {
  e.preventDefault();
+ if (isSubmitting) return;
  setSubmitError(null);
 
- if (!createUnit.trim()) {
- setSubmitError("Please select a unit.");
- return;
- }
- if (!createTitle.trim()) {
- setSubmitError("Please enter a title.");
- return;
- }
- if (!createDescription.trim()) {
- setSubmitError("Please enter a description.");
+ if (!createForm.validateAll()) {
  return;
  }
 
@@ -164,8 +173,9 @@ export function MaintenanceRequestModal({
  });
 
  if (!response.ok) {
- const body = await response.json().catch(() => ({}));
- throw new Error((body as { error?: string }).error ?? "Failed to create maintenance request.");
+ const body = (await response.json().catch(() => ({}))) as { error?: string; fieldErrors?: Record<string, string> };
+ createForm.setServerErrors(body.fieldErrors);
+ throw new Error(body.error ?? "Failed to create maintenance request.");
  }
 
  const body = (await response.json()) as { request?: MaintenanceRequest };
@@ -192,11 +202,12 @@ export function MaintenanceRequestModal({
  <Home className="size-3.5" />
  </div>
  <select
+ {...createForm.fieldProps("unitId")}
  id="create-unit"
  value={createUnit}
  onChange={(e) => setCreateUnit(e.target.value)}
  required
- className="w-full appearance-none rounded-xl neumorphic-panel/50 py-3.5 pl-[3.25rem] pr-10 text-sm font-black text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all hover:border-border cursor-pointer"
+ className={cn("w-full appearance-none rounded-xl neumorphic-panel/50 py-3.5 pl-[3.25rem] pr-10 text-sm font-black text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all hover:border-border cursor-pointer", createForm.errorFor("unitId") && "ring-1 ring-rose-500/60")}
  >
  <option value="" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Select a unit</option>
  {units.map((unit) => (
@@ -209,6 +220,7 @@ export function MaintenanceRequestModal({
  <ChevronDown className="size-4" />
  </div>
  </div>
+ <FieldError id={createForm.errorId("unitId")} message={createForm.errorFor("unitId")} />
  </div>
 
  {/* Title */}
@@ -220,16 +232,19 @@ export function MaintenanceRequestModal({
  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1.5 neumorphic-inset text-muted-foreground rounded-md group-focus-within:bg-primary/10 group-focus-within:text-primary transition-colors pointer-events-none ">
  <Wrench className="size-3.5" />
  </div>
- <input maxLength={60}
+ <input
+ {...createForm.fieldProps("title")}
+ maxLength={MAINTENANCE_LIMITS.title}
  id="create-title"
  type="text"
  value={createTitle}
  onChange={(e) => setCreateTitle(e.target.value)}
  required
  placeholder="Brief description of the issue"
- className="w-full rounded-xl neumorphic-panel/50 py-3.5 pl-[3.25rem] pr-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all hover:border-border"
+ className={cn("w-full rounded-xl neumorphic-panel/50 py-3.5 pl-[3.25rem] pr-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all hover:border-border", createForm.errorFor("title") && "ring-1 ring-rose-500/60")}
  />
  </div>
+ <FieldError id={createForm.errorId("title")} message={createForm.errorFor("title")} />
  </div>
 
  {/* Priority */}
@@ -263,15 +278,18 @@ export function MaintenanceRequestModal({
  <label htmlFor="create-description" className="mb-2 block text-[10px] font-black uppercase tracking-widest text-muted-foreground">
  Description <span className="text-red-500">*</span>
  </label>
- <textarea maxLength={500}
+ <textarea
+ {...createForm.fieldProps("description")}
+ maxLength={MAINTENANCE_LIMITS.description}
  id="create-description"
  value={createDescription}
  onChange={(e) => setCreateDescription(e.target.value)}
  required
  rows={5}
  placeholder="Provide details about the issue..."
- className="w-full rounded-xl neumorphic-panel/50 py-3.5 px-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all hover:border-border resize-none"
+ className={cn("w-full rounded-xl neumorphic-panel/50 py-3.5 px-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all hover:border-border resize-none", createForm.errorFor("description") && "ring-1 ring-rose-500/60")}
  />
+ <FieldError id={createForm.errorId("description")} message={createForm.errorFor("description")} />
  </div>
 
  {/* Error */}
@@ -374,7 +392,8 @@ export function MaintenanceRequestModal({
  });
 
  if (!response.ok) {
- throw new Error("Failed to update maintenance request.");
+ const errorBody = (await response.json().catch(() => ({}))) as { error?: string };
+ throw new Error(errorBody.error || "Could not sync maintenance update. Please try again.");
  }
 
  const body = (await response.json()) as { request?: Partial<MaintenanceRequest> };
@@ -385,8 +404,8 @@ export function MaintenanceRequestModal({
  } as MaintenanceRequest;
  onRequestUpdated?.(merged);
  return true;
- } catch {
- setFormError("Could not sync maintenance update. Please try again.");
+ } catch (error) {
+ setFormError(error instanceof Error && error.message ? error.message : "Could not sync maintenance update. Please try again.");
  return false;
  } finally {
  setIsSaving(false);
@@ -885,7 +904,7 @@ export function MaintenanceRequestModal({
  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1.5 neumorphic-inset text-muted-foreground rounded-md group-focus-within:bg-primary/10 group-focus-within:text-primary transition-colors pointer-events-none ">
  <UserRound className="size-3.5" />
  </div>
- <input maxLength={50}
+ <input maxLength={MAINTENANCE_LIMITS.thirdPartyName}
  id="repair-person-name"
  type="text"
  value={thirdPartyPerson}

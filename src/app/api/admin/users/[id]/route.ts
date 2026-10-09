@@ -1,14 +1,36 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { zUuid } from "@/lib/validation/zod-fields";
+
+/** Both handlers use the service-role client, so they must be restricted to admins. */
+async function requireAdmin(request: Request): Promise<Response | null> {
+    const authContext = await requireAuthenticatedUser(request);
+    if (!("userId" in authContext)) return authContext as Response;
+    const { data: profile } = await authContext.supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", authContext.userId)
+        .maybeSingle();
+    if (profile?.role !== "admin") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    return null;
+}
 
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const denied = await requireAdmin(request);
+    if (denied) return denied;
+
     try {
         const { id } = await params;
+        if (!zUuid().safeParse(id).success) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
         const adminClient = createServiceRoleSupabaseClient();
-
 
         // Get user profile
         const { data: profile, error: profileError } = await adminClient
@@ -53,10 +75,16 @@ export async function POST(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const denied = await requireAdmin(request);
+    if (denied) return denied;
+
     try {
         const { id } = await params;
-        const body = await request.json();
-        const { action } = body;
+        if (!zUuid().safeParse(id).success) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+        const body = await request.json().catch(() => null);
+        const action = body && typeof body === "object" ? (body as { action?: unknown }).action : undefined;
 
         const adminClient = createServiceRoleSupabaseClient();
 

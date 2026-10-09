@@ -2,6 +2,8 @@ import { NextResponse, NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { RenewalStatus } from "@/types/database";
+import { databaseErrorResponse, parseJsonBody } from "@/lib/validation/server";
+import { isId, renewalTermRule, tenantRenewalRequestSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 /**
  * POST /api/tenant/lease/[id]/renew
@@ -27,16 +29,14 @@ export async function POST(
       );
     }
 
-    // Parse request body
-    const body = await request.json();
-    const { term_months } = body;
-
-    if (!term_months || term_months < 1) {
-      return NextResponse.json(
-        { error: "Valid term_months is required" },
-        { status: 400 }
-      );
+    if (!isId(leaseId)) {
+      return NextResponse.json({ error: "Lease not found or you don't have access" }, { status: 404 });
     }
+
+    // Parse request body (whole months only; decimals/NaN/negatives rejected)
+    const parsed = await parseJsonBody(request, tenantRenewalRequestSchema);
+    if (!parsed.ok) return parsed.response;
+    const { term_months } = parsed.data;
 
     // Fetch lease with property for renewal window check
     const { data: lease, error: leaseError } = await (supabase
@@ -66,8 +66,19 @@ export async function POST(
       );
     }
 
-    // Check renewal window is open
+    // When the landlord configured specific renewal terms, only those can be requested.
     const property = lease.unit?.property;
+    const offeredTerms: number[] = Array.isArray((property?.renewal_settings as any)?.renewal_terms)
+      ? ((property.renewal_settings as any).renewal_terms as Array<{ months?: unknown }>)
+          .map((term) => Number(term?.months))
+          .filter((months) => Number.isInteger(months) && months > 0)
+      : [];
+    const termError = renewalTermRule(term_months, offeredTerms);
+    if (termError) {
+      return NextResponse.json({ error: termError, fieldErrors: { term_months: termError } }, { status: 400 });
+    }
+
+    // Check renewal window is open
     const renewalWindowDays = property?.renewal_window_days || 90;
     const endDate = new Date(lease.end_date);
     const windowOpenDate = new Date(endDate);
@@ -149,10 +160,7 @@ export async function POST(
 
     if (createError) {
       console.error("[renew-lease] Error creating renewal request:", createError);
-      return NextResponse.json(
-        { error: createError.message || "Failed to create renewal request" },
-        { status: 500 }
-      );
+      return databaseErrorResponse(createError, "Failed to create renewal request");
     }
 
     // Notify landlord using adminClient (required for cross-user notifications under RLS)

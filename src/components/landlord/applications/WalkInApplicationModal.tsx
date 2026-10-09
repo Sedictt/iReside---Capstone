@@ -57,6 +57,7 @@ import {
     type WalkInUnit,
     validateFormStep,
 } from "./application-intake-shared";
+import { mapApplicationFieldErrors } from "@/lib/application-intake";
 import {
     pickTemplateAmount,
     ADVANCE_TEMPLATE_KEYS,
@@ -606,6 +607,7 @@ export function WalkInApplicationModal({
                 setFormErrors,
                 validateKeys,
                 requireUnit: !existingApplication,
+                allowPastMoveIn: Boolean(existingApplication),
             });
         }
     }, [existingApplication, formData, selectedUnit, step]);
@@ -653,7 +655,7 @@ export function WalkInApplicationModal({
     }, [formData, leaseData, paymentData]);
 
     const validateStep = (currentStep: number) => {
-        const errors = validateFormStep(currentStep, selectedUnit, formData, { requireUnit: !existingApplication });
+        const errors = validateFormStep(currentStep, selectedUnit, formData, { requireUnit: !existingApplication, allowPastMoveIn: Boolean(existingApplication) });
         if (currentStep === 0 && !existingApplication && selectedUnit) {
             const chosenUnit = units.find((unit) => unit.id === selectedUnit);
             if ((chosenUnit?.status ?? "").toLowerCase() === "occupied") {
@@ -719,8 +721,8 @@ export function WalkInApplicationModal({
             }
         }
 
-        const stepZeroErrors = validateFormStep(0, selectedUnit, formData, { requireUnit: !existingApplication });
-        const stepOneErrors = validateFormStep(1, selectedUnit, formData, { requireUnit: !existingApplication });
+        const stepZeroErrors = validateFormStep(0, selectedUnit, formData, { requireUnit: !existingApplication, allowPastMoveIn: Boolean(existingApplication) });
+        const stepOneErrors = validateFormStep(1, selectedUnit, formData, { requireUnit: !existingApplication, allowPastMoveIn: Boolean(existingApplication) });
         const allErrors = { ...stepZeroErrors, ...stepOneErrors };
 
         if (Object.keys(allErrors).length > 0) {
@@ -801,8 +803,20 @@ export function WalkInApplicationModal({
                 body: JSON.stringify(payload),
             });
 
-            const responseData = await res.json();
-            if (!res.ok) throw new Error(responseData.error || "Failed to save.");
+            const responseData = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                // Show server-side field errors inline on the step that owns them.
+                const mapped = mapApplicationFieldErrors(responseData.fieldErrors);
+                if (mapped.firstStep !== null) {
+                    setFormErrors((prev) => ({ ...prev, ...mapped.errors }));
+                    setTouchedFields((prev) => ({
+                        ...prev,
+                        ...Object.fromEntries(Object.keys(mapped.errors).map((key) => [key, true])),
+                    }));
+                    setStep(mapped.firstStep);
+                }
+                throw new Error(responseData.error || "Failed to save.");
+            }
 
             onSuccess?.();
             if (!existingApplication) {
@@ -1080,7 +1094,7 @@ export function WalkInApplicationModal({
                                                                  const nextUnit = e.target.value;
                                                                  setSelectedUnit(nextUnit);
                                                                  setTouchedFields((prev) => ({ ...prev, unit: true }));
-                                                                 const liveErrors = validateFormStep(step, nextUnit, formData, { requireUnit: !existingApplication });
+                                                                 const liveErrors = validateFormStep(step, nextUnit, formData, { requireUnit: !existingApplication, allowPastMoveIn: Boolean(existingApplication) });
                                                                  const chosen = units.find((u) => u.id === nextUnit);
                                                                  if (chosen && isUnitOccupied(chosen)) {
                                                                      liveErrors.unit = "Selected unit is currently occupied and unavailable.";

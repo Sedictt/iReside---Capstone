@@ -18,6 +18,8 @@ import {
     type InvitePaymentTerms,
     type PaymentPreview,
 } from "@/lib/tenant-invite-payment-terms";
+import { parseJsonBody } from "@/lib/validation/server";
+import { inviteCreateSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 type InviteRow = {
     id: string;
@@ -64,7 +66,8 @@ function formatInviteError(
         return "A matching invite token already exists. Please try again.";
     }
 
-    return error.details ? `${message} (${error.details})` : message;
+    // Never surface raw database messages to the client.
+    return fallback;
 }
 
 export async function GET(request: Request) {
@@ -200,38 +203,15 @@ export async function POST(request: Request) {
     const { userId, supabase } = authContext;
     const adminClient = createAdminClient();
 
-    const body = (await request.json()) as {
-        mode?: TenantInviteMode;
-        applicationType?: TenantInviteApplicationType;
-        requiredRequirements?: TenantInviteRequirementKey[];
-        propertyId?: string;
-        unitId?: string | null;
-        expiresAt?: string | null;
-        paymentTerms?: InvitePaymentTerms | null;
-        previewUnitId?: string | null;
-    };
+    const parsed = await parseJsonBody(request, inviteCreateSchema);
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
 
     const mode = body.mode;
     const applicationType = body.applicationType;
-    const propertyId = body.propertyId;
+    const propertyId = body.propertyId as string;
     const unitId = body.unitId ?? null;
     const paymentTerms = body.paymentTerms ? sanitizePaymentTerms(body.paymentTerms) : null;
-
-    if (mode !== "property" && mode !== "unit") {
-        return NextResponse.json({ error: "Invalid invite mode." }, { status: 400 });
-    }
-
-    if (applicationType !== "face_to_face" && applicationType !== "online" && applicationType !== "existing_tenant") {
-        return NextResponse.json({ error: "Invalid invite application type." }, { status: 400 });
-    }
-
-    if (!propertyId) {
-        return NextResponse.json({ error: "Property is required." }, { status: 400 });
-    }
-
-    if (mode === "unit" && !unitId) {
-        return NextResponse.json({ error: "Unit is required for unit-scoped invites." }, { status: 400 });
-    }
 
     const { data: property, error: propertyError } = await adminClient
         .from("properties")
@@ -274,6 +254,7 @@ export async function POST(request: Request) {
                 .from("units")
                 .select("rent_amount")
                 .eq("id", body.previewUnitId)
+                .eq("property_id", propertyId)
                 .maybeSingle();
             if (pUnit && Number(pUnit.rent_amount) > 0) {
                 previewRentAmount = Number(pUnit.rent_amount);
@@ -293,19 +274,14 @@ export async function POST(request: Request) {
         }
     }
 
+    // Format and "in the future" were validated by the schema.
     const expiresAt = body.expiresAt ? new Date(body.expiresAt) : null;
-    if (expiresAt && Number.isNaN(expiresAt.getTime())) {
-        return NextResponse.json({ error: "Invalid expiration date." }, { status: 400 });
-    }
 
     const token = generateInviteToken();
     const inviteId = crypto.randomUUID();
     const requiredRequirements = applicationType === "online"
-        ? Array.from(new Set((Array.isArray(body.requiredRequirements) ? body.requiredRequirements : []).filter(
-            (item): item is TenantInviteRequirementKey =>
-                typeof item === "string" &&
-                TENANT_INVITE_REQUIREMENT_KEYS.includes(item as TenantInviteRequirementKey) &&
-                item !== "move_in_payment"
+        ? Array.from(new Set((body.requiredRequirements ?? []).filter(
+            (item): item is TenantInviteRequirementKey => item !== "move_in_payment"
         )))
         : [];
 
@@ -340,9 +316,10 @@ export async function POST(request: Request) {
 
     if (insertError) {
         console.error("[landlord invites POST] Failed to create invite:", insertError);
+        const status = insertError.code === "23505" || insertError.code === "23503" ? 409 : 500;
         return NextResponse.json(
             { error: formatInviteError(insertError, "Failed to create invite.") },
-            { status: 500 }
+            { status }
         );
     }
 

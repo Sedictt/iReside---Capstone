@@ -1,17 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { parseJsonBody } from "@/lib/validation/server";
+import { avatarAppearanceSchema, checkImageUpload, IMAGE_UPLOAD_POLICIES } from "@/lib/validation/schemas/account.schema";
 
 const BUCKET_NAME = "profile-avatars";
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
-const ALLOWED_IMAGE_PREFIX = "image/";
-
-const sanitizeFileName = (name: string) =>
-    name
-        .toLowerCase()
-        .replace(/[^a-z0-9._-]/g, "-")
-        .replace(/-+/g, "-")
-        .replace(/^-|-$/g, "");
+const UPLOAD_POLICY = IMAGE_UPLOAD_POLICIES.avatar;
+const MAX_FILE_SIZE_BYTES = UPLOAD_POLICY.maxBytes;
 
 const ensureBucket = async () => {
     const admin = createServiceRoleSupabaseClient();
@@ -44,29 +39,26 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "File is required." }, { status: 400 });
         }
 
-        if (file.size <= 0) {
-            return NextResponse.json({ error: "File is empty." }, { status: 400 });
-        }
-
         if (file.size > MAX_FILE_SIZE_BYTES) {
             return NextResponse.json({ error: "File is too large. Max size is 5 MB." }, { status: 400 });
         }
 
-        if (!file.type || !file.type.startsWith(ALLOWED_IMAGE_PREFIX)) {
-            return NextResponse.json({ error: "Only image uploads are allowed." }, { status: 400 });
+        // Validate the real content (magic bytes), not the client-declared MIME type;
+        // the stored extension/content type come from the detected format.
+        const bytes = await file.arrayBuffer();
+        const check = checkImageUpload(file, new Uint8Array(bytes), UPLOAD_POLICY);
+        if (!check.ok) {
+            return NextResponse.json({ error: check.error }, { status: 400 });
         }
 
         const admin = createServiceRoleSupabaseClient();
         await ensureBucket();
 
         const timestamp = Date.now();
-        const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
-        const safeExt = sanitizeFileName(ext ?? "jpg") || "jpg";
-        const path = `${userId}/${timestamp}-avatar.${safeExt}`;
-        const bytes = await file.arrayBuffer();
+        const path = `${userId}/${timestamp}-avatar${check.extension}`;
 
         const { error: uploadError } = await admin.storage.from(BUCKET_NAME).upload(path, bytes, {
-            contentType: file.type,
+            contentType: check.contentType,
             upsert: true,
         });
 
@@ -104,15 +96,16 @@ export async function PATCH(request: Request) {
         if (!("userId" in authContext)) return authContext as Response;
         const { userId } = authContext;
 
-        const body = await request.json().catch(() => ({}));
-        const { avatar_url, avatar_bg_color } = body;
+        const parsed = await parseJsonBody(request, avatarAppearanceSchema);
+        if (!parsed.ok) return parsed.response;
+        const { avatar_url, avatar_bg_color } = parsed.data;
 
         const updates: Record<string, any> = {
             updated_at: new Date().toISOString(),
         };
 
         if (avatar_url !== undefined) {
-            updates.avatar_url = typeof avatar_url === "string" ? avatar_url.trim() : null;
+            updates.avatar_url = avatar_url;
         }
 
         if (avatar_bg_color !== undefined) {
@@ -137,7 +130,7 @@ export async function PATCH(request: Request) {
         }, { status: 200 });
     } catch (error: any) {
         console.error("[api/profile/avatar PATCH] Unhandled error:", error);
-        return NextResponse.json({ error: error?.message || "Failed to update profile appearance." }, { status: 500 });
+        return NextResponse.json({ error: "Failed to update profile appearance." }, { status: 500 });
     }
 }
 

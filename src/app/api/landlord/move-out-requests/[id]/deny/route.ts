@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseJsonBody } from "@/lib/validation/server";
+import { isId, moveOutDenySchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -12,11 +14,12 @@ export async function PUT(req: Request, { params }: RouteParams) {
 
   try {
     const { id } = await params;
-    const { denial_reason } = await req.json();
-
-    if (!denial_reason) {
-      return NextResponse.json({ error: "Denial reason is required" }, { status: 400 });
+    if (!isId(id)) {
+      return NextResponse.json({ error: "Move-out request not found" }, { status: 404 });
     }
+    const parsed = await parseJsonBody(req, moveOutDenySchema);
+    if (!parsed.ok) return parsed.response;
+    const { denial_reason } = parsed.data;
 
     const selectQuery = supabase
       .from("move_out_requests" as any)
@@ -43,7 +46,10 @@ export async function PUT(req: Request, { params }: RouteParams) {
         .update(updatePayload)
         .eq("id", id);
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error("[move-out-requests deny] Update error:", updateError);
+      return NextResponse.json({ error: "Failed to deny move-out request" }, { status: 500 });
+    }
 
     await supabase.from("notifications").insert({
       user_id: existingRequest.tenant_id,
@@ -55,7 +61,7 @@ export async function PUT(req: Request, { params }: RouteParams) {
 
     return NextResponse.json({ success: true, message: "Move-out request denied" });
   } catch (e: unknown) {
-    const error = e as Error;
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[move-out-requests deny] Unexpected error:", e);
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
   }
 }

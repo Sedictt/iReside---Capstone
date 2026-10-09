@@ -39,6 +39,9 @@ import {
 import { cn } from "@/lib/utils";
 import { generateUnitList, renumberUnitsList, type NumberingStyle } from "@/lib/unit-naming";
 import { useAppToast } from "@/hooks/useAppToast";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
+import { PROPERTY_LIMITS, startingNumberRule, unitPrefixRule } from "@/lib/validation/schemas/properties.schema";
 
 import { SortableUnit, FloorLane, floorDisplayName } from "./components/WizardUnits";
 import type { DbUnit, FloorConfig } from "./components/WizardUnits";
@@ -89,6 +92,14 @@ export function MapSetupWizard({
     const [renumberStyle, setRenumberStyle] = useState<NumberingStyle>("floor_based");
     const [renumberStartingNumber, setRenumberStartingNumber] = useState(101);
     const [isRenumbering, setIsRenumbering] = useState(false);
+    // Same rules as POST /api/landlord/unit-map/batch-rename.
+    const renumberForm = useFormValidation(
+        { prefix: renumberPrefix, startingNumber: renumberStartingNumber, style: renumberStyle },
+        {
+            prefix: (value) => unitPrefixRule(value),
+            startingNumber: (value, all) => (all.style === "sequential" ? startingNumberRule(value) : undefined),
+        }
+    );
     const [unitToDelete, setUnitToDelete] = useState<DbUnit | null>(null);
     const [isDeletingUnit, setIsDeletingUnit] = useState(false);
 
@@ -297,7 +308,16 @@ export function MapSetupWizard({
                 : (floorConfigs.length > 0 
                     ? Math.max(...floorConfigs.map(fc => fc.floor_number)) + 1 
                     : 1);
-            
+
+            if (nextFloorNumber > PROPERTY_LIMITS.maxFloor) {
+                setError(`Floor cannot exceed ${PROPERTY_LIMITS.maxFloor}.`);
+                return;
+            }
+            if (floorConfigs.some(fc => fc.floor_number === nextFloorNumber)) {
+                setError("This floor already exists.");
+                return;
+            }
+
             const newFloor: FloorConfig = {
                 id: `temp-${Date.now()}`,
                 floor_number: nextFloorNumber,
@@ -321,11 +341,12 @@ export function MapSetupWizard({
 
             if (!res.ok) {
                 setFloorConfigs(prev => prev.filter(f => f.id !== newFloor.id));
-                throw new Error("Failed to add floor");
+                const body = await res.json().catch(() => ({}));
+                throw new Error(body?.error || "Failed to add new floor.");
             }
             setError(null);
-        } catch {
-            setError("Failed to add new floor.");
+        } catch (err) {
+            setError(err instanceof Error && err.message ? err.message : "Failed to add new floor.");
         } finally {
             setIsSaving(false);
         }
@@ -441,6 +462,8 @@ export function MapSetupWizard({
     };
 
     const handleApplyRenumber = async () => {
+        if (isRenumbering) return;
+        if (!renumberForm.validateAll()) return;
         setIsRenumbering(true);
         try {
             const res = await fetch("/api/landlord/unit-map/batch-rename", {
@@ -450,11 +473,14 @@ export function MapSetupWizard({
                     propertyId,
                     prefix: renumberPrefix,
                     numberingStyle: renumberStyle,
-                    startingNumber: renumberStartingNumber,
+                    startingNumber: Number.isFinite(renumberStartingNumber) ? renumberStartingNumber : undefined,
                 }),
             });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Failed to rename units.");
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                renumberForm.setServerErrors(data.fieldErrors);
+                throw new Error(data.error || "Failed to rename units.");
+            }
             if (data.units) {
                 setUnits(data.units);
             }
@@ -1226,13 +1252,19 @@ export function MapSetupWizard({
                                             </button>
                                         ))}
                                     </div>
-                                    <input maxLength={10}
+                                    <input
+                                        {...renumberForm.fieldProps("prefix")}
+                                        maxLength={PROPERTY_LIMITS.unitPrefix}
                                         type="text"
                                         value={renumberPrefix}
                                         onChange={(e) => setRenumberPrefix(e.target.value)}
                                         placeholder="Or type custom label (e.g. Rm)"
-                                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-medium text-foreground outline-none focus:border-primary transition-colors"
+                                        className={cn(
+                                            "w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-medium text-foreground outline-none focus:border-primary transition-colors",
+                                            renumberForm.errorFor("prefix") && fieldErrorClass
+                                        )}
                                     />
+                                    <FieldError id={renumberForm.errorId("prefix")} message={renumberForm.errorFor("prefix")} />
                                 </div>
 
                                 {/* Scheme */}
@@ -1271,12 +1303,19 @@ export function MapSetupWizard({
                                     {renumberStyle === "sequential" && (
                                         <div className="pt-1">
                                             <label className="text-[11px] font-semibold text-muted-foreground">Starting Number</label>
-                                            <input min={1} max={9999}
+                                            <input
+                                                {...renumberForm.fieldProps("startingNumber")}
+                                                min={1} max={PROPERTY_LIMITS.maxStartingNumber} step={1}
+                                                inputMode="numeric"
                                                 type="number"
-                                                value={renumberStartingNumber}
-                                                onChange={(e) => setRenumberStartingNumber(parseInt(e.target.value) || 1)}
-                                                className="w-full bg-background border border-border rounded-xl px-4 py-2 text-xs font-medium text-foreground outline-none focus:border-primary mt-1"
+                                                value={Number.isNaN(renumberStartingNumber) ? "" : renumberStartingNumber}
+                                                onChange={(e) => setRenumberStartingNumber(e.target.value === "" ? Number.NaN : Number(e.target.value))}
+                                                className={cn(
+                                                    "w-full bg-background border border-border rounded-xl px-4 py-2 text-xs font-medium text-foreground outline-none focus:border-primary mt-1",
+                                                    renumberForm.errorFor("startingNumber") && fieldErrorClass
+                                                )}
                                             />
+                                            <FieldError id={renumberForm.errorId("startingNumber")} message={renumberForm.errorFor("startingNumber")} />
                                         </div>
                                     )}
                                 </div>
@@ -1294,7 +1333,7 @@ export function MapSetupWizard({
                                             {
                                                 prefix: renumberPrefix,
                                                 numberingStyle: renumberStyle,
-                                                startingNumber: renumberStartingNumber,
+                                                startingNumber: Number.isFinite(renumberStartingNumber) ? renumberStartingNumber : 1,
                                             }
                                         ).map((item, idx) => (
                                             <span key={idx} className="rounded-md bg-primary/10 border border-primary/20 px-2 py-0.5 text-[11px] font-bold text-primary">

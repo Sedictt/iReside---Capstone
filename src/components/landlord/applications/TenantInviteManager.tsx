@@ -6,6 +6,10 @@ import { Building2, Calendar, CircleHelp, Copy, DoorClosed, DoorOpen, History, L
 import { cn } from "@/lib/utils";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useAppToast } from "@/hooks/useAppToast";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
+import { moneyRule, parseNumericInput } from "@/lib/validation/rules";
+import { inviteExpiryRule } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 type InviteMode = "property" | "unit";
 type InviteApplicationType = "online" | "face_to_face";
@@ -143,19 +147,29 @@ export function TenantInviteManager({
     }, [propertyUnits, previewUnitId]);
 
     const currentPaymentTerms = useMemo<InvitePaymentTerms>(() => {
+        // Invalid custom amounts are blocked by inline validation; never coerce them to 0.
+        const parseCustom = (raw: string) => {
+            const value = parseNumericInput(raw);
+            return value !== null && Number.isFinite(value) ? value : null;
+        };
         return {
             advanceMonths,
             securityDepositMonths,
-            customAdvanceAmount:
-                advanceMonths === -1 && customAdvance
-                    ? parseFloat(customAdvance.replace(/[^0-9.]/g, "")) || 0
-                    : null,
-            customSecurityDepositAmount:
-                securityDepositMonths === -1 && customDeposit
-                    ? parseFloat(customDeposit.replace(/[^0-9.]/g, "")) || 0
-                    : null,
+            customAdvanceAmount: advanceMonths === -1 ? parseCustom(customAdvance) : null,
+            customSecurityDepositAmount: securityDepositMonths === -1 ? parseCustom(customDeposit) : null,
         };
     }, [advanceMonths, securityDepositMonths, customAdvance, customDeposit]);
+
+    const inviteForm = useFormValidation(
+        { customAdvance, customDeposit, expiresAt, advanceMonths, securityDepositMonths },
+        {
+            customAdvance: (value, all) =>
+                all.advanceMonths === -1 ? moneyRule(value, { label: "Custom advance amount" }) : undefined,
+            customDeposit: (value, all) =>
+                all.securityDepositMonths === -1 ? moneyRule(value, { label: "Custom security deposit" }) : undefined,
+            expiresAt: (value) => inviteExpiryRule(value),
+        }
+    );
 
     const currentPaymentPreview = useMemo(() => {
         const activePreviewUnitId = mode === "unit" ? unitId : previewUnitId;
@@ -185,8 +199,14 @@ export function TenantInviteManager({
             toast.error("Please select at least one required document.");
             return;
         }
-        if (!expiresAt) {
-            toast.error("Please select an expiration date.");
+        if (submitting) return;
+        if (!inviteForm.validateAll()) {
+            toast.error(
+                inviteForm.errors.customAdvance ||
+                    inviteForm.errors.customDeposit ||
+                    inviteForm.errors.expiresAt ||
+                    "Please fix the highlighted fields."
+            );
             return;
         }
 
@@ -205,11 +225,25 @@ export function TenantInviteManager({
                     unitId: mode === "unit" ? unitId : null,
                     previewUnitId: mode === "property" ? previewUnitId : null,
                     paymentTerms: currentPaymentTerms,
-                    expiresAt: expiresAt || null,
+                    // datetime-local has no zone; send an absolute instant so the server does not reinterpret it.
+                    expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
                 }),
             });
-            const payload = (await response.json()) as { error?: string; invite?: InviteListItem };
+            const payload = (await response.json().catch(() => ({}))) as {
+                error?: string;
+                invite?: InviteListItem;
+                fieldErrors?: Record<string, string>;
+            };
             if (!response.ok || !payload.invite) {
+                if (payload.fieldErrors) {
+                    const mapped: Record<string, string> = {};
+                    const advanceError = payload.fieldErrors["paymentTerms.customAdvanceAmount"];
+                    const depositError = payload.fieldErrors["paymentTerms.customSecurityDepositAmount"];
+                    if (advanceError) mapped.customAdvance = advanceError;
+                    if (depositError) mapped.customDeposit = depositError;
+                    if (payload.fieldErrors.expiresAt) mapped.expiresAt = payload.fieldErrors.expiresAt;
+                    inviteForm.setServerErrors(mapped);
+                }
                 throw new Error(payload.error || "Failed to create invite.");
             }
             setFreshInvite(payload.invite);
@@ -605,13 +639,19 @@ export function TenantInviteManager({
                                             </span>
                                             <input
                                                 type="number"
-                                                min="0" max="9999999.99"
-                                                step="500"
+                                                min="0" max="99999999.99"
+                                                step="0.01"
+                                                {...inviteForm.fieldProps("customAdvance")}
+                                                aria-label="Custom advance amount"
                                                 value={customAdvance}
                                                 onChange={(e) => setCustomAdvance(e.target.value)}
                                                 placeholder="Custom amount"
-                                                className="h-8 w-full rounded-lg border border-border bg-background pl-11 pr-2.5 text-xs font-black text-foreground outline-none focus:border-primary"
+                                                className={cn(
+                                                    "h-8 w-full rounded-lg border border-border bg-background pl-11 pr-2.5 text-xs font-black text-foreground outline-none focus:border-primary",
+                                                    inviteForm.errorFor("customAdvance") && fieldErrorClass
+                                                )}
                                             />
+                                            <FieldError id={inviteForm.errorId("customAdvance")} message={inviteForm.errorFor("customAdvance")} />
                                         </div>
                                     )}
                                 </div>
@@ -653,13 +693,19 @@ export function TenantInviteManager({
                                             </span>
                                             <input
                                                 type="number"
-                                                min="0" max="9999999.99"
-                                                step="500"
+                                                min="0" max="99999999.99"
+                                                step="0.01"
+                                                {...inviteForm.fieldProps("customDeposit")}
+                                                aria-label="Custom security deposit"
                                                 value={customDeposit}
                                                 onChange={(e) => setCustomDeposit(e.target.value)}
                                                 placeholder="Custom amount"
-                                                className="h-8 w-full rounded-lg border border-border bg-background pl-11 pr-2.5 text-xs font-black text-foreground outline-none focus:border-primary"
+                                                className={cn(
+                                                    "h-8 w-full rounded-lg border border-border bg-background pl-11 pr-2.5 text-xs font-black text-foreground outline-none focus:border-primary",
+                                                    inviteForm.errorFor("customDeposit") && fieldErrorClass
+                                                )}
                                             />
+                                            <FieldError id={inviteForm.errorId("customDeposit")} message={inviteForm.errorFor("customDeposit")} />
                                         </div>
                                     )}
                                 </div>
@@ -808,6 +854,7 @@ export function TenantInviteManager({
                                     <Calendar className="size-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
                                 </div>
                                 <input
+                                    {...inviteForm.fieldProps("expiresAt")}
                                     id="expires-at"
                                                 type="datetime-local"
                                                 min={new Date().toISOString().slice(0, 16)}
@@ -822,6 +869,7 @@ export function TenantInviteManager({
                                     [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0"
                                 />
                             </div>
+                            <FieldError id={inviteForm.errorId("expiresAt")} message={inviteForm.errorFor("expiresAt")} />
                             <div className="flex flex-wrap items-center gap-2 pt-1">
                                 {[
                                     { label: "+1 Day", days: 1 },

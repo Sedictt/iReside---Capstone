@@ -19,6 +19,10 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
+import { otpRule } from "@/lib/validation/rules";
+import { CURRENT_PASSWORD_MAX_LENGTH, currentPasswordRule } from "@/lib/validation/schemas/account.schema";
 
 interface SecurityKeyManagementCardProps {
     className?: string;
@@ -47,6 +51,15 @@ export function SecurityKeyManagementCard({
     // Newly generated key after rotation
     const [newSecurityKey, setNewSecurityKey] = useState<string | null>(null);
     const [isAcknowledged, setIsAcknowledged] = useState(false);
+
+    // Re-auth only checks that the current password was entered (no strength rules).
+    const rotateForm = useFormValidation(
+        { currentPassword, otpCode },
+        {
+            currentPassword: (value) => currentPasswordRule(value, { label: "Current password" }),
+            otpCode: (value) => otpRule(value),
+        },
+    );
 
     const fetchStatus = useCallback(async () => {
         try {
@@ -104,17 +117,10 @@ export function SecurityKeyManagementCard({
 
     const handleRotateSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isRotating) return;
         setRotationError(null);
 
-        if (!currentPassword) {
-            setRotationError("Please enter your current account password.");
-            return;
-        }
-
-        if (!otpCode.trim() || otpCode.trim().length !== 6) {
-            setRotationError("Please enter the 6-digit verification code sent to your email.");
-            return;
-        }
+        if (!rotateForm.validateAll()) return;
 
         setIsRotating(true);
         try {
@@ -129,6 +135,7 @@ export function SecurityKeyManagementCard({
 
             const data = await res.json();
             if (!res.ok) {
+                rotateForm.setServerErrors(data.fieldErrors);
                 setRotationError(data.error || "Failed to rotate security key. Please check your credentials.");
             } else if (data.newSecurityKey) {
                 setNewSecurityKey(data.newSecurityKey);
@@ -154,6 +161,7 @@ export function SecurityKeyManagementCard({
         setOtpCode("");
         setOtpSentMessage(null);
         setRotationError(null);
+        rotateForm.reset();
         setNewSecurityKey(null);
         setIsAcknowledged(false);
         fetchStatus();
@@ -342,13 +350,19 @@ export function SecurityKeyManagementCard({
                                             Current Password
                                         </label>
                                         <div className="relative flex items-center">
-                                            <input maxLength={16}
+                                            <input maxLength={CURRENT_PASSWORD_MAX_LENGTH}
+                                                {...rotateForm.fieldProps("currentPassword")}
+                                                aria-label="Current password"
                                                 type={showPassword ? "text" : "password"}
                                                 required
+                                                autoComplete="current-password"
                                                 value={currentPassword}
                                                 onChange={(e) => setCurrentPassword(e.target.value)}
                                                 placeholder="Enter your current password"
-                                                className="h-10 w-full rounded-xl border border-border bg-background pl-3.5 pr-10 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                                className={cn(
+                                                    "h-10 w-full rounded-xl border border-border bg-background pl-3.5 pr-10 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary",
+                                                    rotateForm.errorFor("currentPassword") && fieldErrorClass
+                                                )}
                                             />
                                             <button
                                                 type="button"
@@ -359,6 +373,7 @@ export function SecurityKeyManagementCard({
                                                 {showPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
                                             </button>
                                         </div>
+                                        <FieldError id={rotateForm.errorId("currentPassword")} message={rotateForm.errorFor("currentPassword")} />
                                     </div>
 
                                     {/* Verification Code Field */}
@@ -382,14 +397,22 @@ export function SecurityKeyManagementCard({
                                             </button>
                                         </div>
                                         <input
+                                            {...rotateForm.fieldProps("otpCode")}
+                                            aria-label="Email verification code"
                                             type="text"
+                                            inputMode="numeric"
+                                            autoComplete="one-time-code"
                                             required
                                             maxLength={6}
                                             value={otpCode}
-                                            onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                                            onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                                             placeholder="6-digit verification code"
-                                            className="h-10 w-full rounded-xl border border-border bg-background px-3.5 text-xs text-foreground font-mono tracking-widest placeholder:tracking-normal placeholder:font-sans placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                            className={cn(
+                                                "h-10 w-full rounded-xl border border-border bg-background px-3.5 text-xs text-foreground font-mono tracking-widest placeholder:tracking-normal placeholder:font-sans placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary",
+                                                rotateForm.errorFor("otpCode") && fieldErrorClass
+                                            )}
                                         />
+                                        <FieldError id={rotateForm.errorId("otpCode")} message={rotateForm.errorFor("otpCode")} />
                                         {otpSentMessage && (
                                             <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
                                                 {otpSentMessage}
@@ -408,7 +431,7 @@ export function SecurityKeyManagementCard({
                                         </button>
                                         <button
                                             type="submit"
-                                            disabled={isRotating || !currentPassword || otpCode.length !== 6}
+                                            disabled={isRotating}
                                             className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5"
                                         >
                                             {isRotating ? (

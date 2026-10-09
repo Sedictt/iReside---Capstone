@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { databaseErrorResponse, parseJsonBody } from "@/lib/validation/server";
+import { unitConfigSchema } from "@/lib/validation/schemas/properties.schema";
 
 export const dynamic = "force-dynamic";
 
@@ -20,34 +22,11 @@ export async function POST(request: NextRequest) {
     if (!("userId" in authContext)) return authContext as any;
     const { userId, supabase } = authContext;
 
+    const parsed = await parseJsonBody(request, unitConfigSchema);
+    if (!parsed.ok) return parsed.response;
+    const { propertyId, unitId, applyToAll, beds, baths, sqft, areaSqm } = parsed.data;
+
     try {
-        const body = await request.json();
-        const {
-            propertyId,
-            unitId,
-            applyToAll = false,
-            beds,
-            baths,
-            sqft,
-            areaSqm,
-        } = body as {
-            propertyId: string;
-            unitId?: string;
-            applyToAll?: boolean;
-            beds?: number;
-            baths?: number;
-            sqft?: number | null;
-            areaSqm?: number;
-        };
-
-        if (!propertyId) {
-            return NextResponse.json({ error: "propertyId is required" }, { status: 400 });
-        }
-
-        if (!applyToAll && !unitId) {
-            return NextResponse.json({ error: "unitId is required when not applying to all units" }, { status: 400 });
-        }
-
         // Verify property ownership
         const { data: property, error: propError } = await supabase
             .from("properties")
@@ -71,11 +50,12 @@ export async function POST(request: NextRequest) {
         };
 
         if (typeof beds === "number") {
-            updateData.beds = Math.max(0, Math.round(beds));
+            updateData.beds = beds;
         }
 
+        // units.baths is an integer column; decimals are rejected by the schema instead of failing in the DB.
         if (typeof baths === "number") {
-            updateData.baths = Math.max(0, baths);
+            updateData.baths = baths;
         }
 
         if (resolvedSqft !== undefined) {
@@ -91,10 +71,8 @@ export async function POST(request: NextRequest) {
                 .eq("property_id", propertyId);
 
             if (updateError) {
-                return NextResponse.json(
-                    { error: `Failed to update units: ${updateError.message}` },
-                    { status: 500 }
-                );
+                console.error("Failed to update unit configuration:", updateError);
+                return databaseErrorResponse(updateError, "Failed to update units.");
             }
 
             return NextResponse.json({
@@ -104,17 +82,20 @@ export async function POST(request: NextRequest) {
                 config: { beds: updateData.beds, baths: updateData.baths, sqft: updateData.sqft },
             });
         } else {
-            const { error: updateError } = await (admin
+            const { error: updateError, count } = await (admin
                 .from("units")
-                .update(updateData as any) as any)
+                .update(updateData as any, { count: "exact" }) as any)
                 .eq("id", unitId as string)
                 .eq("property_id", propertyId);
 
             if (updateError) {
-                return NextResponse.json(
-                    { error: `Failed to update unit: ${updateError.message}` },
-                    { status: 500 }
-                );
+                console.error("Failed to update unit configuration:", updateError);
+                return databaseErrorResponse(updateError, "Failed to update unit.");
+            }
+
+            // The unit must belong to the (owned) property named in the request.
+            if (count === 0) {
+                return NextResponse.json({ error: "Unit not found in this property." }, { status: 404 });
             }
 
             return NextResponse.json({
@@ -124,9 +105,10 @@ export async function POST(request: NextRequest) {
                 config: { beds: updateData.beds, baths: updateData.baths, sqft: updateData.sqft },
             });
         }
-    } catch (err: any) {
+    } catch (err) {
+        console.error("Unit configuration error:", err);
         return NextResponse.json(
-            { error: err?.message || "Internal server error" },
+            { error: "Internal server error" },
             { status: 500 }
         );
     }

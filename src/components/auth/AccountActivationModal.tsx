@@ -316,7 +316,7 @@ export function AccountActivationModal({
       return;
     }
 
-    if (!otpCode || otpCode.trim().length !== 6) {
+    if (!/^\d{6}$/.test(otpCode.trim())) {
       setError("Please enter the 6-digit verification code sent to your email.");
       otpInputRef.current?.focus();
       return;
@@ -657,7 +657,8 @@ export function AccountActivationModal({
                         ref={nameInputRef}
                         type="text"
                         required
-                        maxLength={50}
+                        autoComplete="name"
+                        maxLength={70}
                         value={fullName}
                         onChange={(e) => {
                           setFullName(e.target.value);
@@ -685,7 +686,8 @@ export function AccountActivationModal({
                           ref={emailInputRef}
                           type="email"
                           required
-                          maxLength={50}
+                          autoComplete="email"
+                          maxLength={254}
                           value={newEmail}
                           onChange={(e) => {
                             setNewEmail(e.target.value);
@@ -825,7 +827,8 @@ export function AccountActivationModal({
                         ref={passwordInputRef}
                         type={showPassword ? "text" : "password"}
                         required
-                        maxLength={16}
+                        autoComplete="new-password"
+                        maxLength={72}
                         value={newPassword}
                         onChange={(e) => {
                           setNewPassword(e.target.value);
@@ -930,7 +933,8 @@ export function AccountActivationModal({
                         id="admin-confirm-password"
                         type={showConfirmPassword ? "text" : "password"}
                         required
-                        maxLength={16}
+                        autoComplete="new-password"
+                        maxLength={72}
                         value={confirmPassword}
                         onChange={(e) => {
                           setConfirmPassword(e.target.value);

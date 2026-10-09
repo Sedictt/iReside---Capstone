@@ -8,6 +8,18 @@ import {
 import { BILLING_BUCKETS, uploadBillingFile } from "@/lib/billing/storage";
 import { NotificationService } from "@/lib/services/notification/notification.service";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { parseWithSchema } from "@/lib/validation/server";
+import { PROOF_LIMITS, applicationPaymentSubmitSchema, proofFileRule, proofContentRule } from "@/lib/validation/schemas/billing.schema";
+
+/** Escapes user-supplied text before it is interpolated into the landlord email HTML. */
+function escapeHtml(value: string) {
+    return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
 
 type RouteContext = {
     params: Promise<{ token: string }>;
@@ -256,42 +268,46 @@ export async function POST(request: Request, context: RouteContext) {
 
     const { adminClient, application } = portalContext;
 
-    let paymentRequestId = "";
-    let method: PaymentMethodInput | null = null;
-    let referenceNumber: string | null = null;
-    let note: string | null = null;
+    let rawInput: Record<string, unknown>;
     let proofFile: File | null = null;
 
     const contentType = request.headers.get("content-type") ?? "";
-    if (contentType.includes("multipart/form-data")) {
-        const formData = await request.formData();
-        paymentRequestId = String(formData.get("paymentRequestId") ?? "").trim();
-        const methodRaw = String(formData.get("method") ?? "").trim().toLowerCase();
-        if (methodRaw === "gcash" || methodRaw === "cash") method = methodRaw;
-        referenceNumber = String(formData.get("referenceNumber") ?? "").trim() || null;
-        note = String(formData.get("note") ?? "").trim() || null;
-        const uploadedProof = formData.get("proof");
-        proofFile = uploadedProof instanceof File && uploadedProof.size > 0 ? uploadedProof : null;
-    } else {
-        const body = (await request.json()) as {
-            paymentRequestId?: string;
-            method?: string;
-            referenceNumber?: string;
-            note?: string;
-        };
-        paymentRequestId = String(body.paymentRequestId ?? "").trim();
-        const methodRaw = String(body.method ?? "").trim().toLowerCase();
-        if (methodRaw === "gcash" || methodRaw === "cash") method = methodRaw;
-        referenceNumber = typeof body.referenceNumber === "string" ? body.referenceNumber.trim() || null : null;
-        note = typeof body.note === "string" ? body.note.trim() || null : null;
+    try {
+        if (contentType.includes("multipart/form-data")) {
+            const formData = await request.formData();
+            rawInput = {
+                paymentRequestId: formData.get("paymentRequestId"),
+                method: formData.get("method") ?? undefined,
+                referenceNumber: formData.get("referenceNumber"),
+                note: formData.get("note"),
+            };
+            const uploadedProof = formData.get("proof");
+            proofFile = uploadedProof instanceof File && uploadedProof.size > 0 ? uploadedProof : null;
+        } else {
+            const body = await request.json();
+            rawInput = body && typeof body === "object" && !Array.isArray(body) ? (body as Record<string, unknown>) : {};
+        }
+    } catch {
+        return NextResponse.json({ error: "Request body is invalid.", fieldErrors: {} }, { status: 400 });
     }
 
-    if (!method) {
-        return NextResponse.json({ error: "Method must be either GCash or Cash." }, { status: 400 });
+    const parsed = parseWithSchema(applicationPaymentSubmitSchema, rawInput);
+    if (!parsed.ok) return parsed.response;
+    const { paymentRequestId, method } = parsed.data;
+    const referenceNumber = parsed.data.referenceNumber ?? null;
+    const note = parsed.data.note ?? null;
+
+    const proofError = proofFileRule(proofFile, {
+        label: "Payment proof",
+        maxBytes: PROOF_LIMITS.applicationProofMaxBytes,
+        allowPdf: true,
+    }) ?? (await proofContentRule(proofFile, { label: "Payment proof", allowPdf: true }));
+    if (proofError) {
+        return NextResponse.json({ error: proofError, fieldErrors: { proof: proofError } }, { status: 400 });
     }
 
     // Determine target payment requests (unified single-submit vs specific request)
-    const isUnified = !paymentRequestId || paymentRequestId === "all";
+    const isUnified = paymentRequestId === "all";
 
     const reqQuery = adminClient
         .from("application_payment_requests" as any)
@@ -460,6 +476,7 @@ export async function POST(request: Request, context: RouteContext) {
             const propertyTitle = application.unit?.property?.name ?? landlordProf?.business_name ?? "Property";
             const unitTitle = application.unit?.name ?? "Unit";
             const applicantTitle = application.applicant_name ?? "Applicant";
+            const safeReference = referenceNumber ? escapeHtml(referenceNumber) : null;
 
             emailNotificationSuccess = await sendEmail({
                 recipientEmail: resolvedLandlordEmail,
@@ -474,14 +491,14 @@ export async function POST(request: Request, context: RouteContext) {
     <div style="padding:24px;">
       <h2 style="margin:0 0 12px;color:#0f172a;font-size:18px;font-weight:700;">New Proof of Payment Received</h2>
       <p style="margin:0 0 20px;color:#475569;font-size:14px;line-height:1.5;">
-        <strong>${applicantTitle}</strong> has submitted payment verification for <strong>${propertyTitle} (${unitTitle})</strong>.
+        <strong>${escapeHtml(applicantTitle)}</strong> has submitted payment verification for <strong>${escapeHtml(propertyTitle)} (${escapeHtml(unitTitle)})</strong>.
       </p>
       <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:20px;">
         <p style="margin:0 0 6px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Total Amount</p>
         <p style="margin:0 0 14px;font-size:24px;font-weight:900;color:#7c3aed;">${formattedTotal}</p>
         <div style="display:flex;justify-content:space-between;border-top:1px solid #e2e8f0;padding-top:10px;">
           <span style="font-size:13px;color:#64748b;">Txn Ref: <strong style="color:#7c3aed;font-family:Consolas,'Liberation Mono',Menlo,monospace;">${systemTransactionReference}</strong></span>
-          ${referenceNumber ? `<span style="font-size:13px;color:#64748b;">GCash Ref: <strong style="color:#0f172a;font-family:Consolas,'Liberation Mono',Menlo,monospace;">${referenceNumber}</strong></span>` : ""}
+          ${safeReference ? `<span style="font-size:13px;color:#64748b;">GCash Ref: <strong style="color:#0f172a;font-family:Consolas,'Liberation Mono',Menlo,monospace;">${safeReference}</strong></span>` : ""}
         </div>
       </div>
       <p style="margin:0;color:#64748b;font-size:12px;line-height:1.5;">

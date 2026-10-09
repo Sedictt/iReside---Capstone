@@ -1,19 +1,11 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { upsertPaymentReceipt, generateNextMonthInvoice } from "@/lib/billing/server";
 import { insertPaymentAuditEvent, sendPaymentNotifications } from "@/lib/billing/workflow";
 import { logUserActivity } from "@/lib/audit/audit-logger";
-
-const collectPaymentSchema = z.object({
-    invoiceId: z.string().uuid(),
-    amount: z.number().positive(),
-    method: z.enum(["cash", "gcash", "bank_transfer"]).default("cash"),
-    referenceNumber: z.string().max(100).optional().nullable(),
-    paymentDate: z.string().optional(),
-    note: z.string().max(500).optional().nullable(),
-});
+import { databaseErrorResponse, parseJsonBody } from "@/lib/validation/server";
+import { amountWithinBalanceRule, collectPaymentSchema, outstandingBalance, roundCentavos } from "@/lib/validation/schemas/billing.schema";
 
 export async function POST(request: Request) {
     const authContext = await requireAuthenticatedUser(request);
@@ -21,16 +13,10 @@ export async function POST(request: Request) {
     const { userId } = authContext;
     const adminClient = createServiceRoleSupabaseClient();
 
-    try {
-        const body = await request.json();
-        const parsed = collectPaymentSchema.safeParse(body);
-        if (!parsed.success) {
-            return NextResponse.json(
-                { error: "Invalid payment payload.", details: parsed.error.flatten() },
-                { status: 400 }
-            );
-        }
+    const parsed = await parseJsonBody(request, collectPaymentSchema);
+    if (!parsed.ok) return parsed.response;
 
+    try {
         const { invoiceId, amount, method, referenceNumber, paymentDate, note } = parsed.data;
 
         // Fetch payment record
@@ -45,10 +31,22 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Invoice not found or unauthorized." }, { status: 404 });
         }
 
+        // Duplicate-collection guard: a settled invoice cannot be collected again,
+        // and a collection can never push the paid total past the invoice amount.
+        const amountDue = outstandingBalance(payment);
+        if (payment.workflow_status === "receipted" || payment.status === "completed" || amountDue <= 0) {
+            return NextResponse.json({ error: "This invoice is already fully paid." }, { status: 409 });
+        }
+
+        const amountError = amountWithinBalanceRule(amount, amountDue, { label: "Amount collected" });
+        if (amountError) {
+            return NextResponse.json({ error: amountError, fieldErrors: { amount: amountError } }, { status: 400 });
+        }
+
         const nowIso = new Date().toISOString();
         const currentPaid = Number(payment.paid_amount || 0);
-        const newPaidTotal = currentPaid + amount;
-        const newBalanceRemaining = Math.max(0, Number(payment.amount) - newPaidTotal);
+        const newPaidTotal = roundCentavos(currentPaid + amount);
+        const newBalanceRemaining = roundCentavos(Math.max(0, amountDue - amount));
         const isFull = newBalanceRemaining <= 0;
 
         const updatePayload: any = {
@@ -59,6 +57,7 @@ export async function POST(request: Request) {
             method,
             reference_number: referenceNumber || null,
             landlord_confirmed: true,
+            // paymentDate is a validated YYYY-MM-DD that is not in the future.
             paid_at: paymentDate ? new Date(paymentDate).toISOString() : nowIso,
             payment_submitted_at: nowIso,
             payment_note: note || "Direct landlord collection",
@@ -99,7 +98,8 @@ export async function POST(request: Request) {
             .single();
 
         if (updateError) {
-            throw updateError;
+            console.error("[Collect Payment API] Failed to update invoice:", updateError);
+            return databaseErrorResponse(updateError, "Failed to record payment.");
         }
 
         // Auto-generate next month invoice if fully settled

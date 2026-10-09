@@ -6,6 +6,8 @@ import { logAuditEvent, extractIpAddress, extractUserAgent } from "@/lib/audit-l
 import { sendLeaseActivatedNotification } from "@/lib/email";
 import { verifySigningToken } from "@/lib/jwt";
 import { generateLeasePdf } from "@/lib/lease-pdf";
+import { parseWithSchema } from "@/lib/validation/server";
+import { isId, signLeaseBodySchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import {
   LeaseService,
   LeaseNotFoundError,
@@ -40,16 +42,23 @@ export async function POST(
   const supabase = await createClient();
   const adminClient = createAdminClient();
 
-  // Parse request body
-  let body: SignLeaseBody;
+  if (!isId(leaseId)) {
+    return NextResponse.json({ error: "Lease not found" }, { status: 404 });
+  }
+
+  // Parse request body (types + size caps; signature content is validated by LeaseService)
+  let rawBody: unknown;
   try {
-    body = (await request.json()) as SignLeaseBody;
+    rawBody = await request.json();
   } catch {
     return NextResponse.json(
       { error: "Invalid request body" },
       { status: 400 }
     );
   }
+  const parsedBody = parseWithSchema(signLeaseBodySchema, rawBody);
+  if (!parsedBody.ok) return parsedBody.response;
+  const body: SignLeaseBody = parsedBody.data;
 
   const signatureInput = body.landlord_signature || body.landlordSignature;
   const tokenInput = body.signing_token || body.signingToken;
@@ -269,10 +278,15 @@ export async function POST(
     if (pdfBase64Input) {
       try {
         const buffer = Buffer.from(pdfBase64Input, "base64");
-        arrayBuffer = buffer.buffer.slice(
-          buffer.byteOffset,
-          buffer.byteOffset + buffer.byteLength
-        );
+        // Only store what is actually a PDF; anything else falls back to the server-generated copy.
+        if (buffer.byteLength > 0 && buffer.subarray(0, 5).toString("latin1") === "%PDF-") {
+          arrayBuffer = buffer.buffer.slice(
+            buffer.byteOffset,
+            buffer.byteOffset + buffer.byteLength
+          ) as ArrayBuffer;
+        } else {
+          console.warn("[landlord-sign-lease] Ignoring client signed document that is not a PDF.");
+        }
       } catch (b64Err) {
         console.warn("[landlord-sign-lease] Failed to parse client signed PDF base64:", b64Err);
       }

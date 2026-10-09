@@ -1,17 +1,11 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { checkImageUpload, IMAGE_UPLOAD_POLICIES } from "@/lib/validation/schemas/account.schema";
 
 const BUCKET_NAME = "business-permits";
-const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15MB for documents/photos
-const ALLOWED_IMAGE_PREFIX = "image/";
-
-const sanitizeFileName = (name: string) =>
-    name
-        .toLowerCase()
-        .replace(/[^a-z0-9._-]/g, "-")
-        .replace(/-+/g, "-")
-        .replace(/^-|-$/g, "");
+const UPLOAD_POLICY = IMAGE_UPLOAD_POLICIES.permit;
+const MAX_FILE_SIZE_BYTES = UPLOAD_POLICY.maxBytes; // 15MB for documents/photos
 
 const ensureBucket = async () => {
     const admin = createServiceRoleSupabaseClient();
@@ -37,37 +31,38 @@ export async function POST(request: Request) {
     const { userId } = authContext;
 
 
-    const formData = await request.formData();
+    let formData: FormData;
+    try {
+        formData = await request.formData();
+    } catch {
+        return NextResponse.json({ error: "Request must be multipart form data with a file." }, { status: 400 });
+    }
     const file = formData.get("file");
 
     if (!(file instanceof File)) {
         return NextResponse.json({ error: "File is required." }, { status: 400 });
     }
 
-    if (file.size <= 0) {
-        return NextResponse.json({ error: "File is empty." }, { status: 400 });
-    }
-
     if (file.size > MAX_FILE_SIZE_BYTES) {
         return NextResponse.json({ error: "File is too large. Max size is 15 MB." }, { status: 400 });
     }
 
-    if (!file.type || !file.type.startsWith(ALLOWED_IMAGE_PREFIX)) {
-        return NextResponse.json({ error: "Only image uploads are allowed for permit cards." }, { status: 400 });
-    }
-
     try {
+        // Permit cards are photos: validate the real content, not the declared MIME type.
+        const bytes = await file.arrayBuffer();
+        const check = checkImageUpload(file, new Uint8Array(bytes), UPLOAD_POLICY);
+        if (!check.ok) {
+            return NextResponse.json({ error: check.error }, { status: 400 });
+        }
+
         const admin = createServiceRoleSupabaseClient();
         await ensureBucket();
 
         const timestamp = Date.now();
-        const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
-        const safeExt = sanitizeFileName(ext ?? "jpg") || "jpg";
-        const path = `${userId}/${timestamp}-permit.${safeExt}`;
-        const bytes = await file.arrayBuffer();
+        const path = `${userId}/${timestamp}-permit${check.extension}`;
 
         const { error: uploadError } = await admin.storage.from(BUCKET_NAME).upload(path, bytes, {
-            contentType: file.type,
+            contentType: check.contentType,
             upsert: true,
         });
 

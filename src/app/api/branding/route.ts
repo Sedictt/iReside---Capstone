@@ -3,6 +3,7 @@ import { DEFAULT_BRANDING, BrandConfig } from "@/context/BrandContext";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { queueBrandedInstaller } from "@/lib/desktop/queue-branded-installer";
 import { brandingUpdateSchema } from "@/lib/validation/brand-setup";
+import { zodFieldErrors } from "@/lib/validation/server";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -212,12 +213,9 @@ export async function POST(request: NextRequest) {
 
     const validationResult = brandingUpdateSchema.safeParse(rawBody);
     if (!validationResult.success) {
-      const fieldErrors: Record<string, string> = {};
-      for (const issue of validationResult.error.issues) {
-        fieldErrors[issue.path.join(".")] = issue.message;
-      }
+      const fieldErrors = zodFieldErrors(validationResult.error);
       return NextResponse.json(
-        { error: "Validation failed: Please check your branding fields.", details: fieldErrors },
+        { error: "Validation failed: Please check your branding fields.", details: fieldErrors, fieldErrors },
         { status: 400 }
       );
     }
@@ -336,7 +334,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("[POST /api/branding] Error saving branding:", error);
     return NextResponse.json(
-      { error: error?.message || "Failed to update branding" },
+      { error: "Failed to update branding" },
       { status: 500 }
     );
   }

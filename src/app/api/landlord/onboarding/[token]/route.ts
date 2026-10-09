@@ -5,40 +5,25 @@ import { createClient } from "@/lib/supabase/server";
 import { Database, UnitStatus, UserRole } from "@/types/database";
 import { generateSecurityKey, encryptSecurityKey } from "@/lib/security/recovery-keys";
 import { logUserActivity } from "@/lib/audit/audit-logger";
+import { parseJsonBody } from "@/lib/validation/server";
+import { isUrlToken, landlordOnboardingSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 interface RouteParams {
     params: Promise<{ token: string }>;
 }
 
-const onboardingSchema = z.object({
-    password: z.string()
-        .min(8, "Password must be at least 8 characters")
-        .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-        .regex(/[0-9]/, "Password must contain at least one number")
-        .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
-    fullName: z.string().min(2, "Full name is required"),
-    phone: z.string().min(10, "Valid phone number is required"),
-    propertyConfig: z.object({
-        propertyPhoto: z.string().nullable().optional(),
-        profilePhoto: z.string().nullable().optional(),
-        profileBgColor: z.string().nullable().optional(),
-        coverPhoto: z.string().nullable().optional(),
-        totalUnits: z.number().default(1),
-        totalFloors: z.number().default(1),
-        headLimit: z.union([z.number(), z.literal("none")]).default(4),
-        utilityBilling: z.enum(["included_in_rent", "separate_metered", "mixed"]).default("included_in_rent"),
-        baseRent: z.number().default(0),
-        amenities: z.array(z.string()).default([]),
-        house_rules: z.array(z.string()).default([]),
-        contractMode: z.enum(["upload", "generate"]).default("generate"),
-    }).optional(),
-});
+// Shared schema: same password policy as before, plus integer/range/type limits on property setup.
+const onboardingSchema = landlordOnboardingSchema;
 
 export async function GET(request: Request, context: RouteParams) {
     const { token } = await context.params;
     
     if (!token) {
         return NextResponse.json({ error: "Token is required" }, { status: 400 });
+    }
+
+    if (!isUrlToken(token)) {
+        return NextResponse.json({ error: "Invalid or expired onboarding link" }, { status: 401 });
     }
 
     const adminClient = createAdminClient();
@@ -112,9 +97,15 @@ export async function POST(request: Request, context: RouteParams) {
         return NextResponse.json({ error: "Token is required" }, { status: 400 });
     }
 
+    if (!isUrlToken(token)) {
+        return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    }
+
+    const parsedBody = await parseJsonBody(request, onboardingSchema);
+    if (!parsedBody.ok) return parsedBody.response;
+    const parsed = parsedBody.data;
+
     try {
-        const body = await request.json();
-        const parsed = onboardingSchema.parse(body);
 
         const adminClient = createAdminClient();
 
@@ -567,7 +558,7 @@ export async function POST(request: Request, context: RouteParams) {
         }
 
         return NextResponse.json({ 
-            error: error.message || "Failed to complete onboarding" 
+            error: "Failed to complete onboarding" 
         }, { status: 500 });
     }
 }

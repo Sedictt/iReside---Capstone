@@ -1,17 +1,21 @@
 import { NextResponse } from "next/server";
 import { TwoFactorService } from "@/lib/services/auth/two-factor.service";
+import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseJsonBody } from "@/lib/validation/server";
+import { twoFactorVerifyLoginSchema } from "@/lib/validation/schemas/account.schema";
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-        const { userId, otp } = body;
+        const parsed = await parseJsonBody(request, twoFactorVerifyLoginSchema);
+        if (!parsed.ok) return parsed.response;
+        const { userId, otp } = parsed.data;
 
-        if (!userId || typeof userId !== "string") {
-            return NextResponse.json({ error: "User ID is required" }, { status: 400 });
-        }
-
-        if (!otp || typeof otp !== "string") {
-            return NextResponse.json({ error: "Verification code is required" }, { status: 400 });
+        // The verified cookie is bound to a user id, so it may only be issued
+        // for the user who is actually signed in on this browser.
+        const authContext = await requireAuthenticatedUser(request);
+        if (!("userId" in authContext)) return authContext as Response;
+        if (authContext.userId !== userId) {
+            return NextResponse.json({ error: "You can only verify your own sign-in." }, { status: 403 });
         }
 
         const twoFactorService = new TwoFactorService();
@@ -55,7 +59,7 @@ export async function POST(request: Request) {
     } catch (err: any) {
         console.error("[2FA Verify Login] Error:", err);
         return NextResponse.json(
-            { error: err.message || "Failed to verify two-factor code" },
+            { error: "Failed to verify two-factor code" },
             { status: 500 }
         );
     }

@@ -10,6 +10,7 @@ import {
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { logUserActivity } from "@/lib/audit/audit-logger";
+import { isUuid } from "@/lib/validation/schemas/billing.schema";
 
 type RouteContext = {
     params: Promise<{ id: string }>;
@@ -20,8 +21,11 @@ export async function POST(request: Request, context: RouteContext) {
     const adminClient = createServiceRoleSupabaseClient();
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
-    const { userId, supabase } = authContext;
+    const { userId } = authContext;
 
+    if (!isUuid(id)) {
+        return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
+    }
 
     try {
         await expireInPersonIntents(adminClient, userId, { landlordId: userId, paymentId: id });
@@ -44,9 +48,13 @@ export async function POST(request: Request, context: RouteContext) {
         const lastReminded = payment.reminder_sent_at ? new Date(payment.reminder_sent_at).getTime() : 0;
         const now = Date.now();
         // Prevent double-clicking within 5 seconds
-        if (payment.workflow_status === "reminder_sent" && lastReminded > 0 && now - lastReminded < 5000) {
+        if (lastReminded > 0 && now - lastReminded < 5000) {
             return NextResponse.json({ ok: true, idempotent: true, remindedAt: payment.reminder_sent_at });
         }
+
+        // A nudge must not discard a tenant submission that is still waiting for review.
+        const keepsPendingSubmission =
+            payment.workflow_status === "under_review" || payment.workflow_status === "awaiting_in_person";
 
         const beforeState = toWorkflowSnapshot(payment);
         const nowIso = new Date().toISOString();
@@ -55,7 +63,7 @@ export async function POST(request: Request, context: RouteContext) {
         const { data: updatedPayment, error: error } = await adminClient
             .from("payments")
             .update({
-                workflow_status: "reminder_sent",
+                workflow_status: keepsPendingSubmission ? payment.workflow_status : "reminder_sent",
                 reminder_sent_at: nowIso,
                 last_action_at: nowIso,
                 last_action_by: userId,

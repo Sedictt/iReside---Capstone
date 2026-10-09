@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseWithSchema } from "@/lib/validation/server";
+import { isId, moveOutInspectionSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 /**
  * POST /api/landlord/move-out/[id]/inspection
@@ -15,9 +17,21 @@ export async function POST(
   if (!("userId" in authContext)) return authContext as Response;
   const { userId, supabase } = authContext;
 
+  if (!isId(id)) {
+    return NextResponse.json({ error: "Move-out request not found" }, { status: 404 });
+  }
+
+  let rawBody: unknown;
   try {
-    const body = await request.json();
-    const { inspection_date, inspection_notes, inspection_photos, checklist_data, deposit_deductions, deposit_refund_amount } = body;
+    rawBody = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+  const parsed = parseWithSchema(moveOutInspectionSchema, rawBody ?? {});
+  if (!parsed.ok) return parsed.response;
+  const { inspection_date, inspection_notes, inspection_photos, checklist_data, deposit_deductions, deposit_refund_amount } = parsed.data;
+
+  try {
 
     // Verify ownership and status
     const reqQuery = supabase
@@ -97,6 +111,10 @@ export async function GET(
   const authContext = await requireAuthenticatedUser(request);
   if (!("userId" in authContext)) return authContext as Response;
   const { userId, supabase } = authContext;
+
+  if (!isId(id)) {
+    return NextResponse.json({ error: "Move-out request not found" }, { status: 404 });
+  }
 
   try {
 

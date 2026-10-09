@@ -1,22 +1,16 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
-import { otpRequestSchema } from "@/lib/validation/schemas/auth.schema";
+import { escapeLikePattern, passwordResetRequestSchema } from "@/lib/validation/schemas/account.schema";
+import { parseJsonBody } from "@/lib/validation/server";
 import { sendPasswordResetOtpEmail } from "@/lib/email";
 import crypto from "crypto";
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-        const validation = otpRequestSchema.safeParse(body);
+        const parsed = await parseJsonBody(request, passwordResetRequestSchema);
+        if (!parsed.ok) return parsed.response;
 
-        if (!validation.success) {
-            return NextResponse.json(
-                { error: "Please provide a valid email address." },
-                { status: 400 }
-            );
-        }
-
-        const { email } = validation.data;
+        const { email } = parsed.data;
         const normalizedEmail = email.trim().toLowerCase();
 
         const supabaseAdmin = createServiceRoleSupabaseClient();
@@ -25,7 +19,7 @@ export async function POST(request: Request) {
         const { data: profile } = await supabaseAdmin
             .from("profiles")
             .select("id, full_name")
-            .ilike("email", normalizedEmail)
+            .ilike("email", escapeLikePattern(normalizedEmail))
             .maybeSingle();
 
         // Generate 6-digit numeric OTP

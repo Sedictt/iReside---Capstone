@@ -19,6 +19,9 @@ import { createClient } from "@/lib/supabase/client";
 import { Upload, Camera, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
+import { moneyRule } from "@/lib/validation/rules";
+import { BILLING_LIMITS, rejectionReasonRule, roundCentavos } from "@/lib/validation/schemas/billing.schema";
 
 type InvoiceDetail = Awaited<ReturnType<typeof import("@/lib/billing/server").getInvoiceDetailForActor>>;
 
@@ -188,8 +191,10 @@ export function InvoiceModal({
             return;
         }
 
+        if (processingAction) return; // double-click guard
+
         const needsRejectionReason = action === "reject" || action === "request_completion" || mismatchResolution === "reject" || mismatchResolution === "request_completion";
-        if (needsRejectionReason && !rejectionReason.trim()) {
+        if (action !== "remind" && rejectionReasonRule(rejectionReason, { required: needsRejectionReason })) {
             setShowRejectionWarning(true);
             return;
         }
@@ -206,9 +211,10 @@ export function InvoiceModal({
                 action,
                 note: tenantComment || undefined,
                 amountTag,
-                acceptedAmount: shortfallAmount !== "" 
+                // Rounded to centavos: float subtraction must not produce 3+ decimals.
+                acceptedAmount: roundCentavos(shortfallAmount !== ""
                     ? Number(invoice?.totalAmount ?? 0) - Number(shortfallAmount)
-                    : Number(invoice?.totalAmount ?? 0),
+                    : Number(invoice?.totalAmount ?? 0)),
                 mismatchResolution: amountTag !== "exact" && (action === "confirm" || action === "confirm_received")
                     ? mismatchResolution
                     : undefined,
@@ -217,7 +223,7 @@ export function InvoiceModal({
                         ? rejectionReason || undefined
                         : undefined,
                 paymentDiscrepancyType: effectiveIssueType,
-                shortfallAmount: shortfallAmount !== "" ? Number(shortfallAmount) : undefined,
+                shortfallAmount: shortfallAmount !== "" ? roundCentavos(Number(shortfallAmount)) : undefined,
             };
 
             let body: any;
@@ -242,6 +248,7 @@ export function InvoiceModal({
             console.log("[InvoiceModal] API Response:", response.status, response.statusText);
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
+                if (errorData?.fieldErrors?.rejectionReason) setShowRejectionWarning(true);
                 throw new Error(errorData.error || "Failed to process review");
             }
 
@@ -263,7 +270,7 @@ export function InvoiceModal({
             onClose();
         } catch (error: any) {
             console.error("[InvoiceModal] Action failed:", error);
-            alert(error.message || "An unexpected error occurred. Please try again.");
+            toast.error(error.message || "An unexpected error occurred. Please try again.");
         } finally {
             setProcessingAction(null);
         }
@@ -1162,6 +1169,11 @@ function WizardFlow({
     const [step, setStep] = useState<"diagnose" | "adjust" | "resolve" | "communicate">("diagnose");
     const [diagnosis, setDiagnosis] = useState<"amount" | "proof" | "other" | null>(null);
     const [receivedAmount, setReceivedAmount] = useState<number | "">("");
+    const [receivedTouched, setReceivedTouched] = useState(false);
+    const receivedError = moneyRule(receivedAmount, { label: "Amount received", positive: true });
+    const rejectionReasonError = rejectionReasonRule(rejectionReason, {
+        required: mismatchResolution === "reject" || mismatchResolution === "request_completion",
+    });
 
     const handleDiagnosis = (d: "amount" | "proof" | "other") => {
         setDiagnosis(d);
@@ -1236,21 +1248,28 @@ function WizardFlow({
                                 <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Actual Amount Received</p>
                                 <div className="relative group">
                                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-disabled group-focus-within:text-primary transition-colors font-black text-sm">₱</div>
-                                    <input min={0} max={9999999.99} step="0.01" 
+                                    <input min={0} max={9999999.99} step="0.01"
                                         type="number"
+                                        inputMode="decimal"
+                                        aria-label="Actual amount received"
+                                        aria-invalid={receivedTouched && receivedError ? true : undefined}
+                                        aria-describedby={receivedTouched && receivedError ? "invoice-received-amount-error" : undefined}
                                         value={receivedAmount}
                                         onChange={(e) => setReceivedAmount(e.target.value ? Number(e.target.value) : "")}
-                                        className="w-full rounded-xl border border-white/10 bg-surface-3 pl-8 pr-4 py-3 text-sm font-black text-text-high outline-none focus:border-primary/50 transition-all"
+                                        onBlur={() => setReceivedTouched(true)}
+                                        className={cn("w-full rounded-xl border border-white/10 bg-surface-3 pl-8 pr-4 py-3 text-sm font-black text-text-high outline-none focus:border-primary/50 transition-all", receivedTouched && receivedError && fieldErrorClass)}
                                         placeholder="0.00"
                                     />
                                 </div>
+                                <FieldError id="invoice-received-amount-error" message={receivedTouched ? receivedError : undefined} />
                             </div>
                         </div>
 
                         <ActionButton 
                             onClick={() => {
-                                if (receivedAmount === "") return;
-                                const diff = invoice.balanceRemaining - receivedAmount;
+                                setReceivedTouched(true);
+                                if (receivedAmount === "" || receivedError) return;
+                                const diff = roundCentavos(invoice.balanceRemaining - receivedAmount);
                                 setShortfallAmount(diff);
                                 setStep("resolve");
                             }}
@@ -1390,17 +1409,21 @@ function WizardFlow({
 
                         <div className="space-y-4">
                             <div className="relative group">
-                                <textarea maxLength={250} 
-                                    value={rejectionReason} 
-                                    onChange={(event) => setRejectionReason(event.target.value)} 
-                                    rows={3} 
-                                    className="w-full resize-none rounded-2xl border border-white/10 bg-surface-2 px-5 py-4 text-sm text-text-high placeholder:text-text-disabled focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all shadow-inner" 
-                                    placeholder="Add a reason for the tenant (e.g. 'The receipt is unreadable' or 'The amount is missing ₱100')" 
+                                <textarea maxLength={BILLING_LIMITS.rejectionReason}
+                                    value={rejectionReason}
+                                    onChange={(event) => setRejectionReason(event.target.value)}
+                                    aria-label="Reason for the tenant"
+                                    aria-invalid={showRejectionWarning && rejectionReasonError ? true : undefined}
+                                    aria-describedby={showRejectionWarning && rejectionReasonError ? "invoice-rejection-reason-error" : undefined}
+                                    rows={3}
+                                    className={cn("w-full resize-none rounded-2xl border border-white/10 bg-surface-2 px-5 py-4 text-sm text-text-high placeholder:text-text-disabled focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all shadow-inner", showRejectionWarning && rejectionReasonError && fieldErrorClass)}
+                                    placeholder="Add a reason for the tenant (e.g. 'The receipt is unreadable' or 'The amount is missing ₱100')"
                                 />
                                 <div className="absolute right-4 bottom-4 opacity-30 group-focus-within:opacity-100 transition-opacity">
                                     <MessageSquare className="size-4 text-amber-500" />
                                 </div>
                             </div>
+                            <FieldError id="invoice-rejection-reason-error" message={showRejectionWarning ? rejectionReasonError : undefined} />
 
                             <ActionButton 
                                 onClick={() => {

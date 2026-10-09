@@ -55,8 +55,20 @@ export async function GET(request: Request) {
         if (!("userId" in authContext)) return NextResponse.redirect(`${APP_BASE_URL}/landlord/settings?category=Security&subtab=Protection&error=not_authenticated`);
         const { userId, supabase } = authContext;
 
-        const decoded = state ? JSON.parse(Buffer.from(state, "base64").toString()) : {};
-        const callbackUserId = decoded.userId || userId;
+        // The OAuth state is unsigned client-visible data: never let it pick the
+        // account being modified. It may only confirm the signed-in user.
+        let decoded: { userId?: unknown } = {};
+        if (state) {
+            try {
+                decoded = JSON.parse(Buffer.from(state, "base64").toString());
+            } catch {
+                return NextResponse.redirect(`${APP_BASE_URL}/landlord/settings?category=Security&subtab=Protection&error=invalid_state`);
+            }
+        }
+        if (decoded.userId !== undefined && decoded.userId !== userId) {
+            return NextResponse.redirect(`${APP_BASE_URL}/landlord/settings?category=Security&subtab=Protection&error=invalid_state`);
+        }
+        const callbackUserId = userId;
 
         const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
             method: "POST",

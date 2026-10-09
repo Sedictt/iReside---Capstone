@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { 
     AlertTriangle, CheckCircle2, HandCoins, Info, 
     Receipt, X, ArrowUpRight,
@@ -13,6 +13,9 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
+import { REFUND_DETAILS_REQUIRED, gcashNumberRule } from "@/lib/validation/schemas/billing.schema";
 
 export interface PaymentIssueResolverProps {
     message: UiMessage | null;
@@ -27,30 +30,46 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
     const [qrFile, setQrFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const refundValues = useMemo(() => ({ excessAction, gcashNumber, qrFile }), [excessAction, gcashNumber, qrFile]);
+    const refundForm = useFormValidation(refundValues, {
+        gcashNumber: (value, all) => {
+            if (all.excessAction !== "refund") return undefined;
+            if (!String(value ?? "").trim() && !all.qrFile) return REFUND_DETAILS_REQUIRED;
+            return gcashNumberRule(value);
+        },
+    });
+
     if (!message) return null;
 
     const issueType = message.issueType || "other";
     const shortfall = message.shortfallAmount || 0;
 
     const handleExcessSubmit = async () => {
+        if (isSubmitting) return; // double-click guard
+        if (!refundForm.validateAll()) return;
         setIsSubmitting(true);
         try {
             const formData = new FormData();
             formData.append("action", excessAction);
-            if (gcashNumber) formData.append("gcashNumber", gcashNumber);
-            if (qrFile) formData.append("qrFile", qrFile);
+            if (excessAction === "refund" && gcashNumber.trim()) formData.append("gcashNumber", gcashNumber.trim());
+            if (excessAction === "refund" && qrFile) formData.append("qrFile", qrFile);
 
             const response = await fetch(`/api/tenant/payments/${message.invoiceId}/refund-info`, {
                 method: "POST",
                 body: formData
             });
 
-            if (!response.ok) throw new Error("Failed to submit refund info");
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                refundForm.setServerErrors(data?.fieldErrors);
+                throw new Error(data?.error || "Failed to submit refund info");
+            }
 
             onResolved();
             onClose();
         } catch (err) {
             console.error(err);
+            toast.error(err instanceof Error ? err.message : "Failed to submit refund info");
         } finally {
             setIsSubmitting(false);
         }
@@ -188,13 +207,18 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                                     <div className="space-y-4 p-6 rounded-2xl border border-white/5 bg-surface-1 animate-in zoom-in-95 duration-300">
                                         <div className="space-y-2">
                                             <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">GCash Number</p>
-                                            <input maxLength={15} 
+                                            <input maxLength={16}
+                                                {...refundForm.fieldProps("gcashNumber")}
+                                                aria-label="GCash number"
                                                 type="text"
+                                                inputMode="tel"
+                                                autoComplete="tel"
                                                 value={gcashNumber}
                                                 onChange={(e) => setGcashNumber(e.target.value)}
                                                 placeholder="09XX XXX XXXX"
-                                                className="w-full rounded-xl border border-white/10 bg-surface-2 px-4 py-3 text-sm font-black text-text-high outline-none focus:border-primary/50 transition-all"
+                                                className={cn("w-full rounded-xl border border-white/10 bg-surface-2 px-4 py-3 text-sm font-black text-text-high outline-none focus:border-primary/50 transition-all", refundForm.errorFor("gcashNumber") && fieldErrorClass)}
                                             />
+                                            <FieldError id={refundForm.errorId("gcashNumber")} message={refundForm.errorFor("gcashNumber")} />
                                         </div>
                                         <div className="space-y-2">
                                             <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Or Upload QR Code</p>
@@ -220,7 +244,7 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
 
                                 <button 
                                     onClick={handleExcessSubmit}
-                                    disabled={isSubmitting || (excessAction === "refund" && !gcashNumber && !qrFile)}
+                                    disabled={isSubmitting}
                                     className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-2xl shadow-primary/20 hover:-translate-y-1 transition-all active:scale-95 disabled:opacity-50 disabled:translate-y-0"
                                 >
                                     {isSubmitting ? <Loader2 className="size-5 animate-spin" /> : <CheckCircle2 className="size-5" />}

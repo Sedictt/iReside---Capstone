@@ -10,6 +10,8 @@ import { logAuditEvent, extractIpAddress, extractUserAgent } from "@/lib/audit-l
 import { sendTenantSignedNotification } from "@/lib/email";
 import { isValidLeaseStatusTransition, getTransitionErrorMessage } from "@/lib/lease-status-transitions";
 import { generateLeasePdf } from "@/lib/lease-pdf";
+import { parseWithSchema } from "@/lib/validation/server";
+import { isId, signLeaseBodySchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 type SignLeaseBody = {
   tenant_signature?: string;
@@ -34,16 +36,23 @@ export async function POST(
   const { leaseId } = await context.params;
   const supabase = await createClient();
 
-  // Parse request body
-  let body: SignLeaseBody;
+  if (!isId(leaseId)) {
+    return NextResponse.json({ error: "Lease not found" }, { status: 404 });
+  }
+
+  // Parse request body (types + size caps; signature content is checked by validateSignature below)
+  let rawBody: unknown;
   try {
-    body = (await request.json()) as SignLeaseBody;
+    rawBody = await request.json();
   } catch {
     return NextResponse.json(
       { error: "Invalid request body" },
       { status: 400 }
     );
   }
+  const parsedBody = parseWithSchema(signLeaseBodySchema, rawBody);
+  if (!parsedBody.ok) return parsedBody.response;
+  const body: SignLeaseBody = parsedBody.data;
 
   const signatureInput = body.tenant_signature || body.tenantSignature;
   const tokenInput = body.signing_token || body.signingToken;

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { renumberUnitsList } from "@/lib/unit-naming";
+import { parseWithSchema } from "@/lib/validation/server";
+import { findDuplicateName, unitIdSchema } from "@/lib/validation/schemas/properties.schema";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +19,8 @@ export async function DELETE(
     if (!unitId) {
         return NextResponse.json({ error: "unitId is required" }, { status: 400 });
     }
+    const idCheck = parseWithSchema(unitIdSchema, unitId);
+    if (!idCheck.ok) return idCheck.response;
 
     // 1. Verify unit exists
     const { data: unit, error: unitError } = await supabase
@@ -122,6 +126,11 @@ export async function DELETE(
 
     // Auto-renumber remaining units sequentially across floors
     const renumberedUnits = renumberUnitsList(remainingUnits);
+
+    // Keep unit names unique within the property: skip renumbering if it would collide.
+    if (findDuplicateName(renumberedUnits.map((u) => u.name))) {
+        return NextResponse.json({ success: true, units: remainingUnits, totalUnits: newTotalUnits });
+    }
 
     const updatePromises = renumberedUnits.map((u) =>
         admin

@@ -12,6 +12,9 @@ import { uploadBillingFile, BILLING_BUCKETS } from "@/lib/billing/storage";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { sendPaymentReviewResolutionEmail } from "@/lib/email";
+import { validateMediaFile } from "@/lib/validation/media-validation";
+import { parseWithSchema } from "@/lib/validation/server";
+import { isId, paymentReviewSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 type RouteContext = {
     params: Promise<{ applicationId: string; requestId: string }>;
@@ -33,61 +36,69 @@ export async function POST(request: Request, context: RouteContext) {
     if (!("userId" in authContext)) return authContext as Response;
     const { userId } = authContext;
 
-    let action: ReviewAction | undefined;
-    let note = "";
-    let refundProofUrl: string | null = null;
-    let amount: number | null = null;
+    if (!isId(applicationId) || (requestId !== "all" && !isId(requestId))) {
+        return NextResponse.json({ error: "No matching payment requests found." }, { status: 404 });
+    }
+
+    let rawInput: Record<string, unknown>;
+    let proofFile: File | null = null;
 
     const contentType = request.headers.get("content-type") || "";
     if (contentType.includes("multipart/form-data")) {
-        const formData = await request.formData();
-        action = formData.get("action") as ReviewAction;
-        note = String(formData.get("note") || "").trim();
-        const rawAmount = formData.get("amount");
-        if (rawAmount !== null && rawAmount !== undefined && String(rawAmount).trim() !== "") {
-            const parsed = Number(rawAmount);
-            if (!Number.isNaN(parsed)) amount = parsed;
+        let formData: FormData;
+        try {
+            formData = await request.formData();
+        } catch {
+            return NextResponse.json({ error: "Invalid form submission." }, { status: 400 });
         }
-        refundProofUrl = String(formData.get("refundProofUrl") || "").trim() || null;
-
-        const proofFile = formData.get("refundProofFile");
-        if (proofFile instanceof File && proofFile.size > 0) {
-            try {
-                const uploadResult = await uploadBillingFile({
-                    bucketName: BILLING_BUCKETS.paymentProofs,
-                    ownerId: applicationId,
-                    scope: `payment-refund/${applicationId}`,
-                    file: proofFile,
-                });
-                refundProofUrl = uploadResult.publicUrl;
-            } catch (uploadErr) {
-                console.error("[payment-review] Error uploading refund proof file:", uploadErr);
+        const rawAmount = formData.get("amount");
+        rawInput = {
+            action: formData.get("action") ?? undefined,
+            note: formData.get("note") ?? undefined,
+            amount: typeof rawAmount === "string" && rawAmount.trim() !== "" ? rawAmount : undefined,
+            refundProofUrl: formData.get("refundProofUrl") ?? undefined,
+        };
+        const file = formData.get("refundProofFile");
+        if (file instanceof File && file.size > 0) {
+            const check = validateMediaFile(file, { preset: "document_and_image" });
+            if (!check.isValid) {
+                return NextResponse.json(
+                    { error: check.error || "Refund proof must be an image or PDF.", fieldErrors: { refundProofFile: check.error || "Refund proof must be an image or PDF." } },
+                    { status: 400 }
+                );
             }
+            proofFile = file;
         }
     } else {
-        const body = (await request.json()) as { 
-            action?: ReviewAction; 
-            note?: string | null;
-            refundProofUrl?: string | null;
-            amount?: number | null;
-        };
-        action = body.action;
-        note = typeof body.note === "string" ? body.note.trim() : "";
-        refundProofUrl = typeof body.refundProofUrl === "string" ? body.refundProofUrl.trim() || null : null;
-        amount = typeof body.amount === "number" ? body.amount : null;
+        let json: unknown;
+        try {
+            json = await request.json();
+        } catch {
+            return NextResponse.json({ error: "Request body must be valid JSON.", fieldErrors: {} }, { status: 400 });
+        }
+        rawInput = json && typeof json === "object" && !Array.isArray(json) ? (json as Record<string, unknown>) : {};
     }
 
-    const VALID_ACTIONS: ReviewAction[] = [
-        "confirm",
-        "reject",
-        "needs_correction",
-        "return_payment",
-        "return_overpayment",
-        "request_shortfall",
-    ];
+    const parsedInput = parseWithSchema(paymentReviewSchema, rawInput);
+    if (!parsedInput.ok) return parsedInput.response;
 
-    if (!action || !VALID_ACTIONS.includes(action)) {
-        return NextResponse.json({ error: "Invalid review action." }, { status: 400 });
+    const action: ReviewAction = parsedInput.data.action;
+    const note = parsedInput.data.note ?? "";
+    let refundProofUrl: string | null = parsedInput.data.refundProofUrl;
+    const amount: number | null = parsedInput.data.amount ?? null;
+
+    if (proofFile) {
+        try {
+            const uploadResult = await uploadBillingFile({
+                bucketName: BILLING_BUCKETS.paymentProofs,
+                ownerId: applicationId,
+                scope: `payment-refund/${applicationId}`,
+                file: proofFile,
+            });
+            refundProofUrl = uploadResult.publicUrl;
+        } catch (uploadErr) {
+            console.error("[payment-review] Error uploading refund proof file:", uploadErr);
+        }
     }
 
     const { data: application, error: applicationError } = await adminClient

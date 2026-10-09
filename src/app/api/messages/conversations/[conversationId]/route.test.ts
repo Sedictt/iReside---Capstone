@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const CONV_ID = "11111111-1111-4111-8111-111111111111";
+
 const ensureUserInConversationMock = vi.fn();
 const redactWithAiOrFallbackMock = vi.fn();
 const requireAuthenticatedUserMock = vi.fn();
@@ -63,7 +65,7 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
         const singleMock = vi.fn().mockResolvedValue({
             data: {
                 id: "msg-1",
-                conversation_id: "conv-1",
+                conversation_id: CONV_ID,
                 sender_id: "user-1",
                 type: "text",
                 content: "password is Secret123",
@@ -84,7 +86,7 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
 
         const { POST } = await import("./route");
         const response = await POST(
-            new Request("http://localhost/api/messages/conversations/conv-1", {
+            new Request(`http://localhost/api/messages/conversations/${CONV_ID}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -93,7 +95,7 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
                     metadata: { isRedacted: false, redactedContent: "unsafe", customFlag: "keep" },
                 }),
             }),
-            { params: Promise.resolve({ conversationId: "conv-1" }) }
+            { params: Promise.resolve({ conversationId: CONV_ID }) }
         );
 
         expect(response.status).toBe(201);
@@ -125,7 +127,7 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
         const singleMock = vi.fn().mockResolvedValue({
             data: {
                 id: "msg-2",
-                conversation_id: "conv-1",
+                conversation_id: CONV_ID,
                 sender_id: "user-1",
                 type: "text",
                 content: "normal conversation",
@@ -143,7 +145,7 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
 
         const { POST } = await import("./route");
         await POST(
-            new Request("http://localhost/api/messages/conversations/conv-1", {
+            new Request(`http://localhost/api/messages/conversations/${CONV_ID}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -151,7 +153,7 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
                     type: "text",
                 }),
             }),
-            { params: Promise.resolve({ conversationId: "conv-1" }) }
+            { params: Promise.resolve({ conversationId: CONV_ID }) }
         );
 
         const insertedPayload = insertMock.mock.calls[0][0] as Record<string, unknown>;
@@ -183,7 +185,7 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
 
         const { POST } = await import("./route");
         const response = await POST(
-            new Request("http://localhost/api/messages/conversations/conv-1", {
+            new Request(`http://localhost/api/messages/conversations/${CONV_ID}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -191,7 +193,7 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
                     type: "text",
                 }),
             }),
-            { params: Promise.resolve({ conversationId: "conv-1" }) }
+            { params: Promise.resolve({ conversationId: CONV_ID }) }
         );
 
         expect(response.status).toBe(422);
@@ -220,16 +222,16 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
 
         const { POST } = await import("./route");
         const response = await POST(
-            new Request("http://localhost/api/messages/conversations/conv-1", {
+            new Request(`http://localhost/api/messages/conversations/${CONV_ID}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     content: "fuck this",
                     type: "image",
-                    metadata: { filePath: "photos/sample.jpg" },
+                    metadata: { filePath: `${CONV_ID}/user-1/sample.jpg` },
                 }),
             }),
-            { params: Promise.resolve({ conversationId: "conv-1" }) }
+            { params: Promise.resolve({ conversationId: CONV_ID }) }
         );
 
         expect(response.status).toBe(422);
@@ -258,7 +260,7 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
 
         const { POST } = await import("./route");
         const response = await POST(
-            new Request("http://localhost/api/messages/conversations/conv-1", {
+            new Request(`http://localhost/api/messages/conversations/${CONV_ID}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -266,7 +268,7 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
                     type: "text",
                 }),
             }),
-            { params: Promise.resolve({ conversationId: "conv-1" }) }
+            { params: Promise.resolve({ conversationId: CONV_ID }) }
         );
 
         expect(response.status).toBe(422);
@@ -295,7 +297,7 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
 
         const { POST } = await import("./route");
         const response = await POST(
-            new Request("http://localhost/api/messages/conversations/conv-1", {
+            new Request(`http://localhost/api/messages/conversations/${CONV_ID}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -303,7 +305,7 @@ describe("POST /api/messages/conversations/[conversationId]", () => {
                     type: "text",
                 }),
             }),
-            { params: Promise.resolve({ conversationId: "conv-1" }) }
+            { params: Promise.resolve({ conversationId: CONV_ID }) }
         );
 
         expect(response.status).toBe(422);

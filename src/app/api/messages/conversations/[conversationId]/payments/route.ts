@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureUserInConversation, getProfilePreviewMap } from "@/lib/messages/engine";
 import type { Database, PaymentMethod, PaymentStatus } from "@/types/database";
+import { isUuid } from "@/lib/validation/schemas/billing.schema";
 
 type PaymentHistoryEntry = {
     id: string;
@@ -136,6 +137,9 @@ export async function GET(
     }
 
     const { conversationId } = await context.params;
+    if (!isUuid(conversationId)) {
+        return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
+    }
 
     try {
         const supabase = createAdminClient();

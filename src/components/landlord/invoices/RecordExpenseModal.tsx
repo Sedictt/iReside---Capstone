@@ -1,11 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { X, Receipt, CheckCircle2, Calendar, Type } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProperty } from "@/context/PropertyContext";
+import { toast } from "sonner";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
+import { choiceRule, dateRule, moneyRule, parseNumericInput, textRule, todayIsoDate } from "@/lib/validation/rules";
+import { BILLING_LIMITS, EXPENSE_CATEGORIES, EXPENSE_FUTURE_DATE_MESSAGE } from "@/lib/validation/schemas/billing.schema";
 
 interface RecordExpenseModalProps {
     isOpen: boolean;
@@ -16,7 +21,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
     const { selectedPropertyId } = useProperty();
     const [category, setCategory] = useState("maintenance");
     const [amount, setAmount] = useState("");
-    const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+    const [date, setDate] = useState(() => todayIsoDate());
     const [description, setDescription] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [confirming, setConfirming] = useState(false);
@@ -36,8 +41,13 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
         }
     };
 
-    const rawAmount = amount.replace(/,/g, "");
-    const isAmountValid = rawAmount !== "" && !isNaN(parseFloat(rawAmount)) && parseFloat(rawAmount) > 0;
+    const formValues = useMemo(() => ({ category, amount, date, description }), [category, amount, date, description]);
+    const form = useFormValidation(formValues, {
+        category: (value) => choiceRule(value, EXPENSE_CATEGORIES, { label: "Expense category" }),
+        amount: (value) => moneyRule(value, { label: "Amount", positive: true }),
+        date: (value) => dateRule(value, { label: "Date incurred", max: todayIsoDate(), maxMessage: EXPENSE_FUTURE_DATE_MESSAGE }),
+        description: (value) => textRule(value, { label: "Description", required: true, max: BILLING_LIMITS.expenseDescription }),
+    });
 
     if (!isOpen) return null;
 
@@ -51,6 +61,11 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
     const selectedCategory = categories.find((c) => c.id === category);
 
     const handleConfirmedSubmit = async () => {
+        if (isSubmitting) return;
+        if (!form.validateAll()) {
+            setConfirming(false);
+            return;
+        }
         setIsSubmitting(true);
         try {
             const response = await fetch("/api/landlord/expenses", {
@@ -58,23 +73,29 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     category,
-                    amount: parseFloat(amount.replace(/,/g, "")),
+                    amount: parseNumericInput(amount),
                     date_incurred: date,
-                    description,
+                    description: description.trim(),
                     propertyId: selectedPropertyId === "all" ? undefined : selectedPropertyId,
                 }),
             });
-            if (!response.ok) throw new Error("Failed to save expense");
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                form.setServerErrors(data?.fieldErrors);
+                setConfirming(false);
+                throw new Error(data?.error || "Failed to record expense. Please try again.");
+            }
 
             // Reset form
             setAmount("");
             setDescription("");
+            form.reset();
             setConfirming(false);
             if (onSaved) onSaved();
             onClose();
         } catch (error) {
             console.error(error);
-            alert("Failed to record expense. Please try again.");
+            toast.error(error instanceof Error ? error.message : "Failed to record expense. Please try again.");
         } finally {
             setIsSubmitting(false);
         }
@@ -121,7 +142,8 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
 
                 {/* Form */}
                 <form
-                    onSubmit={(e) => { e.preventDefault(); setConfirming(true); }}
+                    onSubmit={(e) => { e.preventDefault(); if (form.validateAll()) setConfirming(true); }}
+                    noValidate
                     className="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-6"
                 >
                     <div className="space-y-3">
@@ -153,32 +175,36 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                             <label htmlFor="expense-amount" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Amount (PHP)</label>
                             <div className="relative group">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-black text-muted-foreground group-focus-within:text-primary transition-colors select-none">₱</span>
-                                <input maxLength={10}
+                                <input maxLength={14}
+                                    {...form.fieldProps("amount")}
                                     id="expense-amount"
                                     type="text"
                                     inputMode="decimal"
                                     required
                                     value={amount}
                                     onChange={handleAmountChange}
-                                    className="w-full rounded-2xl border border-border bg-background py-4 pl-12 pr-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-primary focus:ring-4 focus:ring-primary/10"
+                                    className={cn("w-full rounded-2xl border border-border bg-background py-4 pl-12 pr-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-primary focus:ring-4 focus:ring-primary/10", form.errorFor("amount") && fieldErrorClass)}
                                     placeholder="0.00"
                                 />
                             </div>
+                            <FieldError id={form.errorId("amount")} message={form.errorFor("amount")} />
                         </div>
 
                         <div className="space-y-3">
                             <label htmlFor="expense-date" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Date Incurred</label>
                             <div className="relative group">
                                 <Calendar className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                <input min="2000-01-01" max="2099-12-31"
+                                <input min="2000-01-01" max={todayIsoDate()}
+                                    {...form.fieldProps("date")}
                                     id="expense-date"
                                     type="date"
                                     required
                                     value={date}
                                     onChange={(event) => setDate(event.target.value)}
-                                    className="w-full rounded-2xl border border-border bg-background py-4 pl-12 pr-4 text-sm font-black text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10"
+                                    className={cn("w-full rounded-2xl border border-border bg-background py-4 pl-12 pr-4 text-sm font-black text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10", form.errorFor("date") && fieldErrorClass)}
                                 />
                             </div>
+                            <FieldError id={form.errorId("date")} message={form.errorFor("date")} />
                         </div>
                     </div>
 
@@ -186,22 +212,24 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                         <label htmlFor="expense-description" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Description</label>
                         <div className="relative group">
                             <Type className="absolute left-4 top-4 size-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                            <textarea maxLength={500}
+                            <textarea maxLength={BILLING_LIMITS.expenseDescription}
+                                {...form.fieldProps("description")}
                                 id="expense-description"
                                 required
                                 value={description}
                                 onChange={(event) => setDescription(event.target.value)}
                                 rows={3}
-                                className="w-full resize-none rounded-2xl border border-border bg-background py-4 pl-12 pr-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-primary focus:ring-4 focus:ring-primary/10"
+                                className={cn("w-full resize-none rounded-2xl border border-border bg-background py-4 pl-12 pr-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-primary focus:ring-4 focus:ring-primary/10", form.errorFor("description") && fieldErrorClass)}
                                 placeholder="What was this expense for? (e.g. Fixed leaky faucet in Unit 402)"
                             />
                         </div>
+                        <FieldError id={form.errorId("description")} message={form.errorFor("description")} />
                     </div>
 
                     <div className="pt-4">
                         <button
                             type="submit"
-                            disabled={!isAmountValid || !description}
+                            disabled={isSubmitting}
                             className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 text-sm font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] hover:bg-primary/90 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
                         >
                             <CheckCircle2 className="size-5 transition-transform group-hover:scale-110" />

@@ -19,6 +19,15 @@ import {
     Check,
 } from "lucide-react";
 import type { InvitePaymentTerms } from "@/lib/tenant-invite-payment-terms";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import type { LeaseFormValues } from "./components/LeaseFormFields";
+import {
+    advanceAmountRule,
+    leaseEndDateRule,
+    leaseStartDateRule,
+    monthlyRentRule,
+    securityDepositRule,
+} from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 type ContractTemplateLike = Record<string, unknown>;
 
@@ -211,6 +220,18 @@ export function ContractPreviewModal({
 
     const isFinalApproval = contractData?.application_status === "payment_pending";
 
+    // Same rules as the actions API (lease_data / payment amounts).
+    const leaseForm = useFormValidation<LeaseFormValues>(
+        { leaseStart, leaseEnd, monthlyRent, advanceAmount, securityDeposit },
+        {
+            leaseStart: (value) => leaseStartDateRule(value),
+            leaseEnd: (value, all) => leaseEndDateRule(value, all.leaseStart),
+            monthlyRent: (value) => monthlyRentRule(value),
+            advanceAmount: (value) => advanceAmountRule(value),
+            securityDeposit: (value) => securityDepositRule(value),
+        }
+    );
+
     const canSubmit = useMemo(() => {
         if (isFinalApproval) {
             return !submitting;
@@ -229,6 +250,7 @@ export function ContractPreviewModal({
 
     const handleFinalize = async () => {
         if (!contractData || !canSubmit) return;
+        if (!isFinalApproval && !leaseForm.validateAll()) return;
         setSubmitting(true);
         setError(null);
 
@@ -268,8 +290,20 @@ export function ContractPreviewModal({
                 }),
             });
 
-            const payload = (await response.json()) as ApprovalResult;
+            const payload = (await response.json().catch(() => ({}))) as ApprovalResult & { fieldErrors?: Record<string, string> };
             if (!response.ok) {
+                if (payload.fieldErrors) {
+                    const fe = payload.fieldErrors;
+                    const mapped: Record<string, string> = {};
+                    if (fe["lease_data.start_date"]) mapped.leaseStart = fe["lease_data.start_date"];
+                    if (fe["lease_data.end_date"]) mapped.leaseEnd = fe["lease_data.end_date"];
+                    if (fe["lease_data.monthly_rent"]) mapped.monthlyRent = fe["lease_data.monthly_rent"];
+                    if (fe["advance_payment.amount"]) mapped.advanceAmount = fe["advance_payment.amount"];
+                    if (fe["lease_data.security_deposit"] || fe["security_deposit_payment.amount"]) {
+                        mapped.securityDeposit = fe["lease_data.security_deposit"] || fe["security_deposit_payment.amount"];
+                    }
+                    leaseForm.setServerErrors(mapped);
+                }
                 throw new Error(
                     payload.error ||
                         (isFinalApproval
@@ -408,6 +442,7 @@ export function ContractPreviewModal({
                                 onMonthlyRentChange={setMonthlyRent}
                                 onAdvanceAmountChange={setAdvanceAmount}
                                 onSecurityDepositChange={setSecurityDeposit}
+                                form={isFinalApproval ? undefined : leaseForm}
                             />
 
                             <PolicyConfirmation

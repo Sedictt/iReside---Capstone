@@ -167,7 +167,60 @@ describe("Two-Factor Authentication API Endpoints", () => {
     });
 
     describe("Login 2FA Challenge & Verification", () => {
+        const PROTECTED_USER = "3e4f5a6b-7c8d-4e9f-8a1b-2c3d4e5f6a7c";
+        const UNPROTECTED_USER = "8f9a6c2e-1b3d-4e5f-9a7b-2c3d4e5f6a7b";
+
+        beforeEach(() => {
+            // The challenge follows password sign-in, so the caller has a session.
+            mockRequireAuthenticatedUser.mockResolvedValue({ userId: PROTECTED_USER, userRole: "tenant" });
+        });
+
+        it("rejects a malformed user id with 400 before touching the 2FA service", async () => {
+            const req = new NextRequest("http://localhost:3000/api/auth/2fa/challenge", {
+                method: "POST",
+                body: JSON.stringify({ userId: "not-a-uuid" }),
+            });
+            const res = await challengePost(req);
+            expect(res.status).toBe(400);
+            expect(mockSendOTP).not.toHaveBeenCalled();
+        });
+
+        it("refuses to send a login code for a different user than the signed-in one", async () => {
+            mockRequireAuthenticatedUser.mockResolvedValue({ userId: UNPROTECTED_USER, userRole: "tenant" });
+            const req = new NextRequest("http://localhost:3000/api/auth/2fa/challenge", {
+                method: "POST",
+                body: JSON.stringify({ userId: PROTECTED_USER }),
+            });
+            const res = await challengePost(req);
+            expect(res.status).toBe(403);
+            expect(mockSendOTP).not.toHaveBeenCalled();
+        });
+
+        it("rejects a non 6-digit code on verify-login", async () => {
+            const req = new NextRequest("http://localhost:3000/api/auth/2fa/verify-login", {
+                method: "POST",
+                body: JSON.stringify({ userId: PROTECTED_USER, otp: "12ab" }),
+            });
+            const res = await verifyLoginPost(req);
+            expect(res.status).toBe(400);
+            const data = await res.json();
+            expect(data.fieldErrors.otp).toMatch(/6-digit/);
+            expect(mockVerifyOTP).not.toHaveBeenCalled();
+        });
+
+        it("refuses to issue a verified cookie for another user", async () => {
+            mockRequireAuthenticatedUser.mockResolvedValue({ userId: UNPROTECTED_USER, userRole: "tenant" });
+            const req = new NextRequest("http://localhost:3000/api/auth/2fa/verify-login", {
+                method: "POST",
+                body: JSON.stringify({ userId: PROTECTED_USER, otp: "123456" }),
+            });
+            const res = await verifyLoginPost(req);
+            expect(res.status).toBe(403);
+            expect(res.cookies.get("ireside_2fa_verified")).toBeUndefined();
+        });
+
         it("returns required: false when user has 2FA disabled", async () => {
+            mockRequireAuthenticatedUser.mockResolvedValue({ userId: UNPROTECTED_USER, userRole: "tenant" });
             mockGetStatus.mockResolvedValue({
                 enabled: false,
                 email: null,
@@ -176,7 +229,7 @@ describe("Two-Factor Authentication API Endpoints", () => {
 
             const req = new NextRequest("http://localhost:3000/api/auth/2fa/challenge", {
                 method: "POST",
-                body: JSON.stringify({ userId: "user-unprotected" }),
+                body: JSON.stringify({ userId: "8f9a6c2e-1b3d-4e5f-9a7b-2c3d4e5f6a7b" }),
             });
 
             const res = await challengePost(req);
@@ -199,7 +252,7 @@ describe("Two-Factor Authentication API Endpoints", () => {
 
             const req = new NextRequest("http://localhost:3000/api/auth/2fa/challenge", {
                 method: "POST",
-                body: JSON.stringify({ userId: "user-protected" }),
+                body: JSON.stringify({ userId: "3e4f5a6b-7c8d-4e9f-8a1b-2c3d4e5f6a7c" }),
             });
 
             const res = await challengePost(req);
@@ -224,7 +277,7 @@ describe("Two-Factor Authentication API Endpoints", () => {
 
             const req = new NextRequest("http://localhost:3000/api/auth/2fa/verify-login", {
                 method: "POST",
-                body: JSON.stringify({ userId: "user-protected", otp: "123456" }),
+                body: JSON.stringify({ userId: "3e4f5a6b-7c8d-4e9f-8a1b-2c3d4e5f6a7c", otp: "123456" }),
             });
 
             const res = await verifyLoginPost(req);
@@ -238,7 +291,7 @@ describe("Two-Factor Authentication API Endpoints", () => {
 
             // Verified 2FA session cookie issuance
             const verifiedCookie = res.cookies.get("ireside_2fa_verified");
-            expect(verifiedCookie?.value).toBe("user-protected");
+            expect(verifiedCookie?.value).toBe("3e4f5a6b-7c8d-4e9f-8a1b-2c3d4e5f6a7c");
         });
 
         it("returns error and 400 status when login OTP verification fails", async () => {
@@ -251,7 +304,7 @@ describe("Two-Factor Authentication API Endpoints", () => {
 
             const req = new NextRequest("http://localhost:3000/api/auth/2fa/verify-login", {
                 method: "POST",
-                body: JSON.stringify({ userId: "user-protected", otp: "000000" }),
+                body: JSON.stringify({ userId: "3e4f5a6b-7c8d-4e9f-8a1b-2c3d4e5f6a7c", otp: "000000" }),
             });
 
             const res = await verifyLoginPost(req);
@@ -264,7 +317,7 @@ describe("Two-Factor Authentication API Endpoints", () => {
         it("clears pending and verified cookies on challenge cancel", async () => {
             const req = new NextRequest("http://localhost:3000/api/auth/2fa/cancel", {
                 method: "POST",
-                body: JSON.stringify({ userId: "user-protected" }),
+                body: JSON.stringify({ userId: "3e4f5a6b-7c8d-4e9f-8a1b-2c3d4e5f6a7c" }),
             });
 
             const res = await cancelPost(req);

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { parseJsonBody } from "@/lib/validation/server";
+import { manualTenantSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_ALLOWED_REGEX = /^[+()\-\s\d]+$/;
 
 function generateTempPassword(length = 12): string {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$";
@@ -14,149 +14,39 @@ function generateTempPassword(length = 12): string {
     return password;
 }
 
-function hasValidPhoneFormat(value: string) {
-    const digits = value.replace(/\D/g, "");
-    return PHONE_ALLOWED_REGEX.test(value) && digits.length >= 10 && digits.length <= 15;
-}
-
 export async function POST(request: Request) {
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as any;
     const { userId } = authContext;
     const adminClient = createAdminClient();
 
-    let body: any;
-    try {
-        body = await request.json();
-    } catch {
-        return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
-    }
-
+    const parsed = await parseJsonBody(request, manualTenantSchema);
+    if (!parsed.ok) return parsed.response;
     const {
-        fullName,
-        email,
+        fullName: normalizedName,
+        email: normalizedEmail,
         phone,
-        propertyId,
-        unitId,
+        propertyId: normalizedPropertyId,
+        unitId: normalizedUnitId,
         startDate,
         endDate,
-        monthlyRent,
-        securityDeposit,
-        advancePayment,
-        advanceMonths,
+        monthlyRent: numMonthlyRent,
+        securityDeposit: numSecurityDeposit,
+        advancePayment: numAdvancePayment,
+        advanceMonths: numAdvanceMonths,
         advancePaid,
-        securityDepositMonths,
+        securityDepositMonths: numDepositMonths,
         securityDepositPaid,
-    } = body;
-
-    // --- Input Normalization ---
-    const normalizedName = typeof fullName === "string" ? fullName.trim() : "";
-    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
-    const normalizedPhone = typeof phone === "string" ? phone.trim() : "";
-    const normalizedPropertyId = typeof propertyId === "string" ? propertyId.trim() : "";
-    const normalizedUnitId = typeof unitId === "string" ? unitId.trim() : "";
-
-    // --- Validation: Basic Required Fields ---
-    if (!normalizedName || !normalizedEmail || !normalizedPropertyId || !normalizedUnitId || !startDate || !endDate) {
-        return NextResponse.json(
-            { error: "Full name, email, property, unit, start date, and end date are required." },
-            { status: 400 }
-        );
-    }
-
-    // Full name length
-    if (normalizedName.length < 2 || normalizedName.length > 100) {
-        return NextResponse.json(
-            { error: "Resident full name must be between 2 and 100 characters." },
-            { status: 400 }
-        );
-    }
-
-    // Full name cannot contain digits
-    if (/\d/.test(normalizedName)) {
-        return NextResponse.json(
-            { error: "Resident full name cannot contain numbers." },
-            { status: 400 }
-        );
-    }
-
-    // Email format
-    if (!EMAIL_REGEX.test(normalizedEmail)) {
-        return NextResponse.json(
-            { error: "Please enter a valid email address." },
-            { status: 400 }
-        );
-    }
-
-    // Phone format
-    if (normalizedPhone && !hasValidPhoneFormat(normalizedPhone)) {
-        return NextResponse.json(
-            { error: "Please enter a valid phone number (10 to 15 digits)." },
-            { status: 400 }
-        );
-    }
-
-    // --- Validation: Dates ---
-    const parsedStart = new Date(startDate);
-    const parsedEnd = new Date(endDate);
-
-    if (isNaN(parsedStart.getTime()) || isNaN(parsedEnd.getTime())) {
-        return NextResponse.json(
-            { error: "Please provide valid lease start and end dates." },
-            { status: 400 }
-        );
-    }
-
-    const startYear = parsedStart.getFullYear();
-    const endYear = parsedEnd.getFullYear();
-
-    if (startYear < 1990 || startYear > 2100 || endYear < 1990 || endYear > 2100) {
-        return NextResponse.json(
-            { error: "Dates must include a valid 4-digit year (e.g., 2026)." },
-            { status: 400 }
-        );
-    }
-
-    if (parsedEnd.getTime() <= parsedStart.getTime()) {
-        return NextResponse.json(
-            { error: "Lease end date must be after start date." },
-            { status: 400 }
-        );
-    }
-
-    // --- Validation: Numbers & Payment Configuration ---
-    const numMonthlyRent = Number(monthlyRent);
-    if (!Number.isFinite(numMonthlyRent) || numMonthlyRent <= 0) {
-        return NextResponse.json(
-            { error: "Monthly rent must be greater than zero." },
-            { status: 400 }
-        );
-    }
-
-    const numSecurityDeposit = securityDeposit !== undefined && securityDeposit !== "" ? Number(securityDeposit) : 0;
-    if (!Number.isFinite(numSecurityDeposit) || numSecurityDeposit < 0) {
-        return NextResponse.json(
-            { error: "Security deposit cannot be negative." },
-            { status: 400 }
-        );
-    }
-
-    const numAdvancePayment = advancePayment !== undefined && advancePayment !== "" ? Number(advancePayment) : 0;
-    if (!Number.isFinite(numAdvancePayment) || numAdvancePayment < 0) {
-        return NextResponse.json(
-            { error: "Advance payment cannot be negative." },
-            { status: 400 }
-        );
-    }
-
-    const numAdvanceMonths = typeof advanceMonths === "number" ? advanceMonths : 1;
-    const numDepositMonths = typeof securityDepositMonths === "number" ? securityDepositMonths : 1;
+    } = parsed.data;
+    const normalizedPhone = phone ?? "";
+    // Exact (case-insensitive) match: escape LIKE wildcards so "a_b@x.com" cannot match "axb@x.com".
+    const emailLikePattern = normalizedEmail.replace(/[\\%_]/g, (c) => `\\${c}`);
 
     try {
         // --- Verify Unit Ownership & Availability ---
         const { data: unit, error: unitError } = await adminClient
             .from("units")
-            .select("id, property_id, properties!inner(landlord_id)")
+            .select("id, property_id, status, properties!inner(landlord_id)")
             .eq("id", normalizedUnitId)
             .maybeSingle();
 
@@ -164,9 +54,40 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Selected unit was not found." }, { status: 404 });
         }
 
+        // Ownership must be proven, not assumed when the join is missing.
         const propertyLandlordId = (unit as any)?.properties?.landlord_id;
-        if (propertyLandlordId && propertyLandlordId !== userId) {
+        if (propertyLandlordId !== userId) {
             return NextResponse.json({ error: "Unauthorized access to this property unit." }, { status: 403 });
+        }
+
+        if ((unit as any).property_id !== normalizedPropertyId) {
+            return NextResponse.json(
+                { error: "Selected unit does not belong to the selected property.", fieldErrors: { unitId: "Selected unit does not belong to the selected property." } },
+                { status: 400 }
+            );
+        }
+
+        if ((unit as any).status === "occupied") {
+            return NextResponse.json(
+                { error: "Selected unit is currently occupied.", fieldErrors: { unitId: "Selected unit is currently occupied." } },
+                { status: 409 }
+            );
+        }
+
+        // A unit can only carry one live lease at a time.
+        const { data: liveLease } = await adminClient
+            .from("leases")
+            .select("id")
+            .eq("unit_id", normalizedUnitId)
+            .in("status", ["active", "pending_signature", "pending_tenant_signature", "pending_landlord_signature"])
+            .limit(1)
+            .maybeSingle();
+
+        if (liveLease) {
+            return NextResponse.json(
+                { error: "This unit already has an active or pending lease.", fieldErrors: { unitId: "This unit already has an active or pending lease." } },
+                { status: 409 }
+            );
         }
 
         let tenantId: string;
@@ -182,11 +103,17 @@ export async function POST(request: Request) {
             // Also check profiles table in case listUsers was paginated
             const { data: existingProfile } = await adminClient
                 .from("profiles")
-                .select("id")
-                .ilike("email", normalizedEmail)
+                .select("id, role")
+                .ilike("email", emailLikePattern)
                 .maybeSingle();
 
             if (existingProfile?.id) {
+                if ((existingProfile as any).role === "landlord") {
+                    return NextResponse.json(
+                        { error: "This email belongs to a landlord account and cannot be added as a tenant.", fieldErrors: { email: "This email belongs to a landlord account." } },
+                        { status: 409 }
+                    );
+                }
                 tenantId = existingProfile.id;
             } else {
                 // 2. Create tenant auth account
@@ -204,7 +131,7 @@ export async function POST(request: Request) {
 
                 if (createError) {
                     if (createError.message?.toLowerCase().includes("already registered") || (createError as any).code === "email_exists") {
-                        const { data: fallbackUser } = await adminClient.from("profiles").select("id").ilike("email", normalizedEmail).maybeSingle();
+                        const { data: fallbackUser } = await adminClient.from("profiles").select("id").ilike("email", emailLikePattern).maybeSingle();
                         if (fallbackUser?.id) {
                             tenantId = fallbackUser.id;
                         } else {
@@ -218,6 +145,13 @@ export async function POST(request: Request) {
                 }
             }
         } else {
+            const existingRole = (existingUser.user_metadata as Record<string, unknown> | undefined)?.role;
+            if (existingRole === "landlord") {
+                return NextResponse.json(
+                    { error: "This email belongs to a landlord account and cannot be added as a tenant.", fieldErrors: { email: "This email belongs to a landlord account." } },
+                    { status: 409 }
+                );
+            }
             tenantId = existingUser.id;
         }
 
@@ -350,7 +284,7 @@ export async function POST(request: Request) {
         }
 
         return NextResponse.json(
-            { error: message || "Failed to add tenant manually." },
+            { error: "Failed to add tenant manually." },
             { status: 500 }
         );
     }

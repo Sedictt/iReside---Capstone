@@ -1,5 +1,6 @@
 'use client'
 
+import { applicantNameRule, monthlyRentRule } from '@/lib/validation/schemas/tenant-lifecycle.schema'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { m as motion, AnimatePresence } from "framer-motion"
@@ -595,6 +596,10 @@ export function AddTenantModal({
       errs.fullName = 'Full name must be at least 2 characters.'
     } else if (/\d/.test(name)) {
       errs.fullName = 'Full name cannot contain numbers.'
+    } else {
+      // Same rule as the API: max length + name characters only.
+      const nameError = applicantNameRule(name, { label: 'Full name' })
+      if (nameError) errs.fullName = nameError
     }
 
     const email = formData.email.trim()
@@ -639,6 +644,9 @@ export function AddTenantModal({
 
     if (!currentRent || currentRent <= 0) {
       errs.monthlyRent = 'Monthly rent must be greater than ₱0.'
+    } else {
+      const rentError = monthlyRentRule(currentRent)
+      if (rentError) errs.monthlyRent = rentError
     }
 
     if (advanceAmount === '' || isNaN(parseCurrency(advanceAmount)) || parseCurrency(advanceAmount) < 0) {
@@ -689,9 +697,18 @@ export function AddTenantModal({
         body: JSON.stringify(payload)
       })
 
-      const data = await response.json()
+      const data = await response.json().catch(() => ({}))
 
       if (!response.ok) {
+        // Attach server-side field errors to the matching inputs.
+        if (data.fieldErrors && typeof data.fieldErrors === 'object') {
+          const serverErrs: typeof fieldErrors = {}
+          for (const key of ['fullName', 'email', 'phone', 'propertyId', 'unitId', 'startDate', 'endDate', 'monthlyRent'] as const) {
+            const message = (data.fieldErrors as Record<string, unknown>)[key]
+            if (typeof message === 'string') serverErrs[key] = message
+          }
+          if (Object.keys(serverErrs).length > 0) setFieldErrors(prev => ({ ...prev, ...serverErrs }))
+        }
         throw new Error(data.error || 'Failed to add tenant')
       }
 

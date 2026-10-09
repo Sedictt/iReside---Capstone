@@ -3,6 +3,8 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { generateMonthlyInvoices } from "@/lib/billing/server";
+import { databaseErrorResponse, parseJsonBody } from "@/lib/validation/server";
+import { leaseFinalizeSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 function generateTempPassword(length = 12): string {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$";
@@ -19,7 +21,9 @@ export async function POST(request: Request) {
     const { userId, supabase } = authContext;
     const adminClient = createAdminClient();
 
-    const body = await request.json();
+    const parsed = await parseJsonBody(request, leaseFinalizeSchema);
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     const {
         application_id,
         unit_id,
@@ -30,20 +34,6 @@ export async function POST(request: Request) {
         landlord_signature,
         tenant_signature,
     } = body;
-
-    if (!application_id || !unit_id || !lease_start || !lease_end || !monthly_rent) {
-        return NextResponse.json(
-            { error: "application_id, unit_id, lease_start, lease_end, and monthly_rent are required." },
-            { status: 400 }
-        );
-    }
-
-    if (!landlord_signature || !tenant_signature) {
-        return NextResponse.json(
-            { error: "Both landlord and tenant signatures are required." },
-            { status: 400 }
-        );
-    }
 
     // Fetch the application to get tenant info
     const { data: application, error: appError } = await (supabase
@@ -60,12 +50,33 @@ export async function POST(request: Request) {
     // Fetch unit to get property_id
     const { data: unit, error: unitError } = await adminClient
         .from("units")
-        .select("property_id")
+        .select("property_id, status, properties!inner(landlord_id)")
         .eq("id", unit_id)
         .single();
 
     if (unitError || !unit) {
         return NextResponse.json({ error: "Unit not found." }, { status: 404 });
+    }
+
+    // The unit must belong to the caller and be free for a new lease.
+    if ((unit as any).properties?.landlord_id !== userId) {
+        return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
+    }
+
+    if ((unit as any).status === "occupied") {
+        return NextResponse.json({ error: "Selected unit is currently occupied and unavailable." }, { status: 409 });
+    }
+
+    const { data: liveLease } = await adminClient
+        .from("leases")
+        .select("id")
+        .eq("unit_id", unit_id)
+        .in("status", ["active", "pending_signature", "pending_tenant_signature", "pending_landlord_signature"])
+        .limit(1)
+        .maybeSingle();
+
+    if (liveLease) {
+        return NextResponse.json({ error: "This unit already has an active or pending lease." }, { status: 409 });
     }
 
     // Fetch property environment policy
@@ -165,7 +176,7 @@ export async function POST(request: Request) {
         }
         console.error("Create tenant user error:", createUserError);
         return NextResponse.json(
-            { error: "Failed to create tenant account: " + createUserError.message },
+            { error: "Failed to create tenant account." },
             { status: 500 }
         );
     }
@@ -243,10 +254,7 @@ async function finalizeLease(params: FinalizeLeaseParams) {
 
     if (leaseError) {
         console.error("Create lease error:", leaseError);
-        return NextResponse.json(
-            { error: "Failed to create lease." },
-            { status: 500 }
-        );
+        return databaseErrorResponse(leaseError, "Failed to create lease.");
     }
 
     // 4. Update application: link tenant, set status to approved, mark lease_signed

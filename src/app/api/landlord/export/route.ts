@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { listLandlordInvoices, type InvoiceListItem } from "@/lib/billing/server";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { parseSearchParams } from "@/lib/validation/server";
+import { landlordExportQuerySchema } from "@/lib/validation/schemas/operations.schema";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +14,9 @@ export async function GET(request: Request) {
     const admin = createServiceRoleSupabaseClient();
 
     const { searchParams } = new URL(request.url);
-    const category = searchParams.get("category") || "financials";
-    const range = searchParams.get("range") || "ytd"; // ytd | 12m | all
+    const parsedQuery = parseSearchParams(searchParams, landlordExportQuerySchema);
+    if (!parsedQuery.ok) return parsedQuery.response;
+    const { category, range } = parsedQuery.data; // range: ytd | 12m | all
 
     try {
         if (category === "properties") {

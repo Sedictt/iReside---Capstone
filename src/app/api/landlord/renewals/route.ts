@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { RenewalStatus } from "@/types/database";
+import { parseSearchParams } from "@/lib/validation/server";
+import { landlordRenewalListQuerySchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 /**
  * GET /api/landlord/renewals
@@ -14,6 +16,8 @@ export async function GET(request: Request) {
   const { userId, supabase } = authContext;
 
   const { searchParams } = new URL(request.url);
+  const query = parseSearchParams(searchParams, landlordRenewalListQuerySchema);
+  if (!query.ok) return query.response;
   const statusFilter = searchParams.get("status");
   const propertyId = searchParams.get("propertyId");
 

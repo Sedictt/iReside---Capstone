@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { parseSearchParams } from "@/lib/validation/server";
+import { messageUserSearchQuerySchema, sanitizeSearchTerm } from "@/lib/validation/schemas/operations.schema";
 
 export async function GET(request: Request) {
     const supabase = await createClient();
@@ -14,17 +16,17 @@ export async function GET(request: Request) {
     }
 
     const url = new URL(request.url);
-    const query = (url.searchParams.get("q") ?? "").trim();
-    const limitParam = Number(url.searchParams.get("limit") ?? "8");
-    const limit = Number.isFinite(limitParam) ? Math.max(1, Math.min(20, Math.floor(limitParam))) : 8;
+    const parsedQuery = parseSearchParams(url.searchParams, messageUserSearchQuerySchema);
+    if (!parsedQuery.ok) return parsedQuery.response;
+    const query = sanitizeSearchTerm(parsedQuery.data.q);
+    const { limit } = parsedQuery.data;
 
     if (query.length < 2) {
         return NextResponse.json({ users: [] });
     }
 
     try {
-        const escaped = query.replace(/[%,]/g, "");
-        const searchPattern = `%${escaped}%`;
+        const searchPattern = `%${query}%`;
 
         const { data, error } = await supabase
             .from("profiles")

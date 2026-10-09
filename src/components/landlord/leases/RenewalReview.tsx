@@ -9,6 +9,10 @@ import { useProperty } from "@/context/PropertyContext";
 import RenewalSettingsModal from "./RenewalSettingsModal";
 import { Settings2 } from "lucide-react";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
+import { FieldError } from "@/components/ui/field-error";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { dateRule, moneyRule, parseNumericInput, textRule } from "@/lib/validation/rules";
+import { renewalTermDatesRule } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 interface RenewalRequest {
  id: string;
@@ -77,8 +81,36 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  };
 
  const parseMoney = (val: string) => {
- return parseFloat(val.replace(/,/g, '')) || 0;
+ // Inline validation blocks malformed amounts, so this never silently becomes 0.
+ return parseNumericInput(val) as number;
  };
+
+ // Same rules as POST /api/landlord/renewals/[id] (approve).
+ const renewalForm = useFormValidation(
+ {
+ proposedStartDate,
+ proposedEndDate,
+ proposedRent,
+ proposedDeposit,
+ rejectNotes,
+ currentEndDate: selectedRequest?.current_lease?.end_date ?? "",
+ },
+ {
+ proposedStartDate: (value, all) =>
+ dateRule(value, { label: "New start date" }) ??
+ (renewalTermDatesRule(value, all.proposedEndDate, all.currentEndDate)?.field === "proposed_start_date"
+ ? renewalTermDatesRule(value, all.proposedEndDate, all.currentEndDate)?.message
+ : undefined),
+ proposedEndDate: (value, all) =>
+ dateRule(value, { label: "New end date" }) ??
+ (renewalTermDatesRule(all.proposedStartDate, value, all.currentEndDate)?.field === "proposed_end_date"
+ ? renewalTermDatesRule(all.proposedStartDate, value, all.currentEndDate)?.message
+ : undefined),
+ proposedRent: (value) => moneyRule(value, { label: "Monthly rent", positive: true }),
+ proposedDeposit: (value) => moneyRule(value, { label: "Security deposit" }),
+ rejectNotes: (value) => textRule(value, { label: "Notes", max: 250 }),
+ }
+ );
 
  useEffect(() => {
  fetchRequests();
@@ -172,7 +204,8 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  };
 
  const handleApprove = async () => {
- if (!selectedRequest) return;
+ if (!selectedRequest || submitting) return;
+ if (!renewalForm.validateAll()) return;
  setSubmitting(true);
  try {
  const res = await fetch(`/api/landlord/renewals/${selectedRequest.id}`, {
@@ -186,8 +219,15 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  ...(proposedDeposit && { proposed_security_deposit: parseMoney(proposedDeposit) }),
  })
  });
- const approveResponse = await res.json();
+ const approveResponse = await res.json().catch(() => ({}));
  if (!res.ok) {
+ const fe = approveResponse.fieldErrors ?? {};
+ const mapped: Record<string, string> = {};
+ if (fe.proposed_start_date) mapped.proposedStartDate = fe.proposed_start_date;
+ if (fe.proposed_end_date) mapped.proposedEndDate = fe.proposed_end_date;
+ if (fe.proposed_monthly_rent) mapped.proposedRent = fe.proposed_monthly_rent;
+ if (fe.proposed_security_deposit) mapped.proposedDeposit = fe.proposed_security_deposit;
+ renewalForm.setServerErrors(mapped);
  toast.error("Failed to approve", { description: approveResponse.error });
  return;
  }
@@ -204,7 +244,11 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  };
 
  const handleReject = async () => {
- if (!selectedRequest) return;
+ if (!selectedRequest || submitting) return;
+ if (renewalForm.errors.rejectNotes) {
+ renewalForm.touch("rejectNotes");
+ return;
+ }
  setSubmitting(true);
  try {
  const res = await fetch(`/api/landlord/renewals/${selectedRequest.id}`, {
@@ -212,7 +256,7 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  headers: { "Content-Type": "application/json" },
  body: JSON.stringify({
  action: "reject",
- landlord_notes: rejectNotes
+ landlord_notes: rejectNotes.trim()
  })
  });
  const rejectResponse = await res.json();
@@ -234,6 +278,7 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  };
 
  const openReview = (request: RenewalRequest) => {
+ renewalForm.reset();
  setSelectedRequest(request);
  setProposedStartDate(request.proposed_start_date || "");
  setProposedEndDate(request.proposed_end_date || "");
@@ -468,36 +513,43 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  <div className="grid grid-cols-2 gap-6">
  <div className="space-y-2">
  <label htmlFor="new-start-date" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New Start Date</label>
- <input min="2000-01-01" max="2099-12-31"
+ <input min="1990-01-01" max="2100-12-31"
+ {...renewalForm.fieldProps("proposedStartDate")}
  id="new-start-date"
  type="date"
  value={proposedStartDate}
  onChange={(e) => setProposedStartDate(e.target.value)}
- className="w-full p-4 rounded-2xl neumorphic-panel text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+ className={cn("w-full p-4 rounded-2xl neumorphic-panel text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all", renewalForm.errorFor("proposedStartDate") && "ring-1 ring-rose-500/60")}
  />
+ <FieldError id={renewalForm.errorId("proposedStartDate")} message={renewalForm.errorFor("proposedStartDate")} />
  </div>
  <div className="space-y-2">
  <label htmlFor="new-end-date" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New End Date</label>
- <input min="2000-01-01" max="2099-12-31"
+ <input min="1990-01-01" max="2100-12-31"
+ {...renewalForm.fieldProps("proposedEndDate")}
  id="new-end-date"
  type="date"
  value={proposedEndDate}
  onChange={(e) => setProposedEndDate(e.target.value)}
- className="w-full p-4 rounded-2xl neumorphic-panel text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+ className={cn("w-full p-4 rounded-2xl neumorphic-panel text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all", renewalForm.errorFor("proposedEndDate") && "ring-1 ring-rose-500/60")}
  />
+ <FieldError id={renewalForm.errorId("proposedEndDate")} message={renewalForm.errorFor("proposedEndDate")} />
  </div>
  <div className="space-y-2">
  <label htmlFor="monthly-rent" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Rent (PHP)</label>
  <div className="relative">
  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-black">₱</span>
- <input maxLength={10}
+ <input maxLength={14}
+ {...renewalForm.fieldProps("proposedRent")}
  id="monthly-rent"
  type="text"
+ inputMode="decimal"
  value={proposedRent}
  onChange={(e) => handleMoneyInput(e.target.value, setProposedRent)}
- className="w-full p-4 pl-8 rounded-2xl neumorphic-panel text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+ className={cn("w-full p-4 pl-8 rounded-2xl neumorphic-panel text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none transition-all", renewalForm.errorFor("proposedRent") && "ring-1 ring-rose-500/60")}
  />
  </div>
+ <FieldError id={renewalForm.errorId("proposedRent")} message={renewalForm.errorFor("proposedRent")} />
  </div>
  <div className="space-y-2">
  <div className="flex justify-between items-center">
@@ -511,13 +563,17 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  </div>
  <div className="relative">
  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-black">₱</span>
- <input maxLength={10}
+ <input maxLength={14}
+ {...renewalForm.fieldProps("proposedDeposit")}
+ id="security-deposit"
  type="text"
+ inputMode="decimal"
  value={proposedDeposit}
  onChange={(e) => handleMoneyInput(e.target.value, setProposedDeposit)}
- className="w-full p-4 pl-8 rounded-2xl neumorphic-panel text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+ className={cn("w-full p-4 pl-8 rounded-2xl neumorphic-panel text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none transition-all", renewalForm.errorFor("proposedDeposit") && "ring-1 ring-rose-500/60")}
  />
  </div>
+ <FieldError id={renewalForm.errorId("proposedDeposit")} message={renewalForm.errorFor("proposedDeposit")} />
  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl neumorphic-inset /50">
  <span className="text-[9px] font-black text-muted-foreground uppercase">Current Held:</span>
  <span className="text-[9px] font-black text-foreground">PHP {selectedRequest.current_lease.security_deposit?.toLocaleString()}</span>
@@ -529,6 +585,7 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  <div className="space-y-2">
  <label htmlFor="landlord-notes" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block">Landlord Notes (Optional)</label>
  <textarea maxLength={250}
+ {...renewalForm.fieldProps("rejectNotes")}
  id="landlord-notes"
  value={rejectNotes}
  onChange={(e) => setRejectNotes(e.target.value)}

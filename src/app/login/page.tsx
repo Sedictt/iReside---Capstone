@@ -23,6 +23,13 @@ import { AccountActivationModal } from "@/components/auth/AccountActivationModal
 import { SecurityKeyRecoveryModal } from "@/components/auth/SecurityKeyRecoveryModal";
 import { DISALLOWED_PRESEEDED_DATA } from "@/lib/validation/brand-setup";
 import { OfflineStorage } from "@/lib/offline/offlineStorage";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { emailRule, otpRule } from "@/lib/validation/rules";
+import { CURRENT_PASSWORD_MAX_LENGTH, currentPasswordRule } from "@/lib/validation/schemas/account.schema";
+
+/** Error-state border for the sign-in inputs (matches the auth pages). */
+const AUTH_INPUT_ERROR = "border-red-500 focus:border-red-500 focus:ring-red-500/20";
 
 function clearStaleLandlordData() {
     try {
@@ -73,6 +80,7 @@ function LoginContent() {
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [showActivationModal, setShowActivationModal] = useState(false);
     const [prefilledEmail, setPrefilledEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [mounted, setMounted] = useState(false);
     const [pendingRecovery, setPendingRecovery] = useState<{
         securityKey: string;
@@ -96,6 +104,16 @@ function LoginContent() {
     const [isResendingTwoFactor, setIsResendingTwoFactor] = useState(false);
 
     const passwordInputRef = useRef<HTMLInputElement>(null);
+
+    // Sign-in only checks that a password was entered — strength rules apply
+    // when a password is set (reset / setup / settings), never at login.
+    const loginForm = useFormValidation(
+        { email: prefilledEmail, password },
+        {
+            email: (value) => emailRule(value),
+            password: (value) => currentPasswordRule(value),
+        },
+    );
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectUrl = searchParams.get('redirect');
@@ -121,8 +139,8 @@ function LoginContent() {
                 `Account claimed successfully! Please sign in with your new credentials${emailParam ? ` as ${emailParam}` : ""} to proceed to setup.`
             );
             setTimeout(() => {
+                setPassword("");
                 if (passwordInputRef.current) {
-                    passwordInputRef.current.value = "";
                     passwordInputRef.current.focus();
                 }
             }, 150);
@@ -232,8 +250,8 @@ function LoginContent() {
             `Account claimed successfully! Please sign in with your new credentials as ${email} to proceed to setup.`
         );
         setTimeout(() => {
+            setPassword("");
             if (passwordInputRef.current) {
-                passwordInputRef.current.value = "";
                 passwordInputRef.current.focus();
             }
         }, 150);
@@ -276,8 +294,8 @@ function LoginContent() {
 
         // Fallback for test environments: focus the password field
         setTimeout(() => {
+            setPassword("");
             if (passwordInputRef.current) {
-                passwordInputRef.current.value = "";
                 passwordInputRef.current.focus();
             }
         }, 150);
@@ -285,6 +303,8 @@ function LoginContent() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (loading) return;
+        if (!loginForm.validateAll()) return;
         setError(null);
         setActivationBanner(null);
         setLoading(true);
@@ -465,9 +485,11 @@ function LoginContent() {
     const handleTwoFactorVerify = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!twoFactorChallenge) return;
+        if (twoFactorLoading) return;
         const cleanOtp = twoFactorOtp.replace(/\D/g, "");
-        if (cleanOtp.length !== 6) {
-            setTwoFactorError("Please enter a valid 6-digit verification code.");
+        const otpError = otpRule(cleanOtp);
+        if (otpError) {
+            setTwoFactorError(otpError);
             return;
         }
 
@@ -806,10 +828,12 @@ function LoginContent() {
                                                 id="two-factor-code"
                                                 type="text"
                                                 inputMode="numeric"
-                                                maxLength={8}
+                                                autoComplete="one-time-code"
+                                                maxLength={6}
                                                 autoFocus
+                                                aria-invalid={twoFactorError ? true : undefined}
                                                 value={twoFactorOtp}
-                                                onChange={(e) => setTwoFactorOtp(e.target.value.replace(/\D/g, ''))}
+                                                onChange={(e) => setTwoFactorOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                                 placeholder="000000"
                                                 className="h-14 w-full text-center font-mono text-2xl tracking-[0.5em] rounded-xl border border-border bg-background px-3.5 text-foreground placeholder:text-muted-foreground/40 placeholder:tracking-normal transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                                             />
@@ -916,7 +940,8 @@ function LoginContent() {
                                                 >
                                                     Email Address
                                                 </label>
-                                                <input maxLength={50}
+                                                <input maxLength={254}
+                                                    {...loginForm.fieldProps("email")}
                                                     id="email"
                                                     name="email"
                                                     type="email"
@@ -927,8 +952,12 @@ function LoginContent() {
                                                     value={prefilledEmail}
                                                     onChange={(e) => setPrefilledEmail(e.target.value)}
                                                     placeholder="name@example.com"
-                                                    className="h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                                    className={cn(
+                                                        "h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
+                                                        loginForm.errorFor("email") && AUTH_INPUT_ERROR
+                                                    )}
                                                 />
+                                                <FieldError id={loginForm.errorId("email")} message={loginForm.errorFor("email")} />
                                             </div>
 
                                             {/* Password Field */}
@@ -949,14 +978,21 @@ function LoginContent() {
                                                 </div>
                                                 <div className="relative">
                                                     <input
+                                                        {...loginForm.fieldProps("password")}
                                                         ref={passwordInputRef}
                                                         id="password"
                                                         name="password"
                                                         type={isPasswordVisible ? "text" : "password"}
                                                         required
+                                                        maxLength={CURRENT_PASSWORD_MAX_LENGTH}
                                                         autoComplete="current-password"
+                                                        value={password}
+                                                        onChange={(e) => setPassword(e.target.value)}
                                                         placeholder="••••••••"
-                                                        className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                                        className={cn(
+                                                            "h-11 w-full rounded-xl border border-border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
+                                                            loginForm.errorFor("password") && AUTH_INPUT_ERROR
+                                                        )}
                                                     />
                                                     <button 
                                                         type="button"
@@ -972,6 +1008,7 @@ function LoginContent() {
                                                         )}
                                                     </button>
                                                 </div>
+                                                <FieldError id={loginForm.errorId("password")} message={loginForm.errorFor("password")} />
                                             </div>
                                         </div>
 

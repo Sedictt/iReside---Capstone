@@ -13,6 +13,7 @@ import {
     type WalkInFormData,
     type WalkInUnit,
 } from "@/lib/application-intake";
+import { todayIsoDate } from "@/lib/validation/rules";
 import {
     AlertCircle,
     Briefcase,
@@ -44,7 +45,7 @@ export {
     type WalkInUnit,
 } from "@/lib/application-intake";
 
-const DATE_MIN = new Date().toISOString().split("T")[0];
+const DATE_MIN = todayIsoDate();
 const DATE_MAX = "2099-12-31";
 
 interface GlassInputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -95,6 +96,8 @@ function GlassInput({ icon: Icon, label, error, id, nextFieldId, onKeyDown, bloc
                 <input maxLength={resolvedMaxLength}
                     {...props}
                     id={id}
+                    aria-invalid={error ? true : undefined}
+                    aria-describedby={error ? `${id}-error` : undefined}
                     onKeyDown={handleKeyDown}
                     className={cn(
                         "h-15 w-full rounded-2xl bg-transparent py-4 pl-12 pr-4 text-sm font-medium tracking-tight text-foreground outline-none transition-all placeholder:text-muted-foreground",
@@ -102,7 +105,7 @@ function GlassInput({ icon: Icon, label, error, id, nextFieldId, onKeyDown, bloc
                     )}
                 />
             </div>
-            {error && <p className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{error}</p>}
+            {error && <p id={`${id}-error`} role="alert" className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{error}</p>}
         </div>
     );
 }
@@ -522,10 +525,12 @@ export function ApplicationIdentityStep({
                                 min={DATE_MIN}
                                 max={DATE_MAX}
                                 onChange={(e) => onFieldChange("move_in_date", e.target.value, ["move_in_date"])}
+                                aria-invalid={formErrors.move_in_date ? true : undefined}
+                                aria-describedby={formErrors.move_in_date ? "move-in-date-error" : undefined}
                                 className="h-15 w-full rounded-2xl bg-transparent py-4 pl-12 pr-4 text-sm font-medium tracking-tight text-foreground outline-none transition-all placeholder:text-muted-foreground focus-visible:ring-0 [color-scheme:light] dark:[color-scheme:dark]"
                             />
                         </div>
-                        {formErrors.move_in_date && <p className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{formErrors.move_in_date}</p>}
+                        {formErrors.move_in_date && <p id="move-in-date-error" role="alert" className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{formErrors.move_in_date}</p>}
                     </div>
                 </section>
 
@@ -678,9 +683,10 @@ export function applyLiveFieldValidation(params: {
     setFormErrors: Dispatch<SetStateAction<Partial<Record<FormErrorKey, string>>>>;
     validateKeys: FormErrorKey[];
     requireUnit?: boolean;
+    allowPastMoveIn?: boolean;
 }) {
-    const { nextFormData, step, selectedUnit, setTouchedFields, setFormErrors, validateKeys, requireUnit } = params;
-    const liveErrors = validateFormStep(step, selectedUnit, nextFormData, { requireUnit });
+    const { nextFormData, step, selectedUnit, setTouchedFields, setFormErrors, validateKeys, requireUnit, allowPastMoveIn } = params;
+    const liveErrors = validateFormStep(step, selectedUnit, nextFormData, { requireUnit, allowPastMoveIn });
 
     startTransition(() => {
         setTouchedFields((prev) => {

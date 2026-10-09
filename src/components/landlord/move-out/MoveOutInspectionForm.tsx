@@ -15,6 +15,9 @@ import {
  CheckCircle2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { FieldError } from "@/components/ui/field-error";
+import { MAX_MONEY_AMOUNT, moneyRule, textRule } from "@/lib/validation/rules";
+import { LIFECYCLE_LIMITS } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 interface Deduction {
  id: string;
@@ -52,6 +55,7 @@ export function MoveOutInspectionForm({
 
  const [notes, setNotes] = useState("");
  const [deductions, setDeductions] = useState<Deduction[]>([]);
+ const [validationAttempted, setValidationAttempted] = useState(false);
 
  // Reducer for draft state (notes, deductions, checklist) to avoid multiple setState calls
  type DraftState = { notes: string; deductions: Deduction[]; checklist: Checklist };
@@ -179,12 +183,34 @@ export function MoveOutInspectionForm({
 
  const refundAmount = Math.max(0, originalDeposit - totalDeductions);
 
+ // Per-row rules shared with POST /api/landlord/move-out/[id]/inspection.
+ const deductionErrors = useMemo(() => {
+ const map: Record<string, { description?: string; amount?: string }> = {};
+ for (const deduction of deductions) {
+ const description = textRule(deduction.description, {
+ label: "Deduction description",
+ required: true,
+ max: LIFECYCLE_LIMITS.deductionDescription,
+ });
+ const amount = moneyRule(deduction.amount, { label: "Deduction amount", positive: true });
+ if (description || amount) map[deduction.id] = { description, amount };
+ }
+ return map;
+ }, [deductions]);
+ const notesError = textRule(notes, { label: "Notes", max: LIFECYCLE_LIMITS.inspectionNotes });
+
  const validateForm = () => {
- const hasInvalidDeduction = deductions.some(d => !d.description.trim() || d.amount <= 0);
- if (hasInvalidDeduction) {
+ setValidationAttempted(true);
+ if (Object.keys(deductionErrors).length > 0 || notesError) {
  setError("Please provide a description and a positive amount for all deductions.");
+ const firstInvalid = deductions.find((d) => deductionErrors[d.id]);
+ if (firstInvalid) {
+ const field = deductionErrors[firstInvalid.id]?.description ? "description" : "amount";
+ setTimeout(() => document.getElementById(`deduction-${firstInvalid.id}-${field}`)?.focus(), 0);
+ }
  return false;
  }
+ setError(null);
  return true;
  };
 
@@ -195,6 +221,7 @@ export function MoveOutInspectionForm({
  };
 
  const handleSubmit = async () => {
+ if (loading) return;
  setLoading(true);
  setError(null);
  try {
@@ -284,7 +311,8 @@ export function MoveOutInspectionForm({
 
  <div className="space-y-3">
  <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">General Notes</h3>
- <textarea maxLength={500}
+ <textarea maxLength={LIFECYCLE_LIMITS.inspectionNotes}
+ aria-label="General notes"
  value={notes}
  onChange={(e) => setNotes(e.target.value)}
  placeholder="Record any specific damages or observations..."
@@ -360,27 +388,56 @@ export function MoveOutInspectionForm({
  key={deduction.id}
  initial={{ opacity: 0, x: 10 }}
  animate={{ opacity: 1, x: 0 }}
- className="flex items-center gap-3"
+ className="flex items-start gap-3"
  >
- <input maxLength={120}
+ <div className="flex-1">
+ <input maxLength={LIFECYCLE_LIMITS.deductionDescription}
+ id={`deduction-${deduction.id}-description`}
  type="text"
+ aria-label="Deduction description"
+ aria-invalid={validationAttempted && deductionErrors[deduction.id]?.description ? true : undefined}
+ aria-describedby={validationAttempted && deductionErrors[deduction.id]?.description ? `deduction-${deduction.id}-description-error` : undefined}
  value={deduction.description}
  onChange={(e) => setDeductions(deductions.map(item => item.id === deduction.id ? { ...item, description: e.target.value } : item))}
  placeholder="Damage description"
- className="flex-1 rounded-xl neumorphic-panel px-4 py-2 text-xs font-black focus:border-primary/50 focus:outline-none"
+ className={cn(
+ "w-full rounded-xl neumorphic-panel px-4 py-2 text-xs font-black focus:border-primary/50 focus:outline-none",
+ validationAttempted && deductionErrors[deduction.id]?.description && "ring-1 ring-rose-500/60"
+ )}
  />
- <div className="relative w-32">
+ <FieldError
+ id={`deduction-${deduction.id}-description-error`}
+ message={validationAttempted ? deductionErrors[deduction.id]?.description : undefined}
+ />
+ </div>
+ <div className="w-32">
+ <div className="relative">
  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black">₱</span>
- <input min={0} max={9999999.99} step="0.01"
+ <input min={0} max={MAX_MONEY_AMOUNT} step="0.01"
+ id={`deduction-${deduction.id}-amount`}
  type="number"
+ inputMode="decimal"
+ aria-label="Deduction amount"
+ aria-invalid={validationAttempted && deductionErrors[deduction.id]?.amount ? true : undefined}
+ aria-describedby={validationAttempted && deductionErrors[deduction.id]?.amount ? `deduction-${deduction.id}-amount-error` : undefined}
  value={deduction.amount}
- onChange={(e) => setDeductions(deductions.map(item => item.id === deduction.id ? { ...item, amount: parseFloat(e.target.value) || 0 } : item))}
- className="w-full rounded-xl neumorphic-panel pl-7 pr-3 py-2 text-xs font-black focus:border-primary/50 focus:outline-none"
+ onChange={(e) => setDeductions(deductions.map(item => item.id === deduction.id ? { ...item, amount: e.target.value === "" ? 0 : Number(e.target.value) } : item))}
+ className={cn(
+ "w-full rounded-xl neumorphic-panel pl-7 pr-3 py-2 text-xs font-black focus:border-primary/50 focus:outline-none",
+ validationAttempted && deductionErrors[deduction.id]?.amount && "ring-1 ring-rose-500/60"
+ )}
+ />
+ </div>
+ <FieldError
+ id={`deduction-${deduction.id}-amount-error`}
+ message={validationAttempted ? deductionErrors[deduction.id]?.amount : undefined}
  />
  </div>
  <button
+ type="button"
+ aria-label="Remove deduction"
  onClick={() => setDeductions(deductions.filter(item => item.id !== deduction.id))}
- className="flex size-9 items-center justify-center rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20"
+ className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20"
  >
  <Trash2 className="size-4" />
  </button>

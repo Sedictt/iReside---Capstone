@@ -57,6 +57,9 @@ import { LeasePreviewModal } from "./components/LeasePreviewModal";
 import { VisualPlannerSkeleton } from "./components/VisualPlannerSkeleton";
 import { CanvasQuickMessenger } from "./components/CanvasQuickMessenger";
 import { MapSetupWizard } from "./MapSetupWizard";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { PROPERTY_LIMITS, unitAreaSqmRule, unitBathsRule, unitBedsRule } from "@/lib/validation/schemas/properties.schema";
 import { TenantMapNotReady } from "@/components/tenant/TenantMapNotReady";
 import { MaintenanceRequestModal } from "@/components/landlord/maintenance/MaintenanceRequestModal";
 import type { MaintenanceRequest } from "@/components/landlord/maintenance/MaintenanceDashboard";
@@ -5985,16 +5988,25 @@ const UnitDetailsPanel = ({
     const unitAreaSqm = unit.areaSqm ?? Math.round(unitAreaSqftByType[unit.type] * 0.092903);
 
     const beds = unit.bedrooms !== undefined ? unit.bedrooms : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 3 : 0);
-    const baths = unit.baths !== undefined ? unit.baths : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 2.5 : 1);
+    const baths = unit.baths !== undefined ? unit.baths : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 2 : 1);
     const unitLayoutLabel = unit.type === 'Studio' && beds === 0 ? `Studio - ${baths} Bath` : `${beds} Bed - ${baths} Bath`;
 
     const initialBedrooms = unit.bedrooms !== undefined ? unit.bedrooms : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 3 : 0);
-    const initialBaths = unit.baths !== undefined ? unit.baths : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 2.5 : 1);
+    const initialBaths = unit.baths !== undefined ? unit.baths : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 2 : 1);
     const initialAreaSqm = unit.areaSqm !== undefined ? unit.areaSqm : unitAreaSqm;
 
     const [draftAreaSqm, setDraftAreaSqm] = useState<number | string>(initialAreaSqm);
     const [draftBedrooms, setDraftBedrooms] = useState<number | string>(initialBedrooms);
     const [draftBaths, setDraftBaths] = useState<number | string>(initialBaths);
+    // Same rules as POST /api/landlord/unit-map/config (units.beds/baths/sqft are integer columns).
+    const configForm = useFormValidation(
+        { areaSqm: draftAreaSqm, bedrooms: draftBedrooms, baths: draftBaths },
+        {
+            areaSqm: (value) => unitAreaSqmRule(value),
+            bedrooms: (value) => unitBedsRule(value),
+            baths: (value) => unitBathsRule(value),
+        }
+    );
 
     const [isAskingApplyToAll, setIsAskingApplyToAll] = useState(false);
     const [isSavingConfig, setIsSavingConfig] = useState(false);
@@ -6004,7 +6016,7 @@ const UnitDetailsPanel = ({
     useEffect(() => {
         setDraftAreaSqm(unit.areaSqm !== undefined ? unit.areaSqm : unitAreaSqm);
         setDraftBedrooms(unit.bedrooms !== undefined ? unit.bedrooms : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 3 : 0));
-        setDraftBaths(unit.baths !== undefined ? unit.baths : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 2.5 : 1));
+        setDraftBaths(unit.baths !== undefined ? unit.baths : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 2 : 1));
         setIsAskingApplyToAll(false);
     }, [unit.id, unit.areaSqm, unit.bedrooms, unit.baths, unit.type, unitAreaSqm]);
 
@@ -6018,6 +6030,11 @@ const UnitDetailsPanel = ({
         numDraftBaths !== initialBaths;
 
     const handleExecuteSave = async (applyToAll: boolean) => {
+        if (isSavingConfig) return;
+        if (!configForm.validateAll()) {
+            setIsAskingApplyToAll(false);
+            return;
+        }
         const areaSqmVal = Math.max(0, numDraftAreaSqm);
         const bedroomsVal = Math.max(0, Math.round(numDraftBedrooms));
         const bathsVal = Math.max(0, numDraftBaths);
@@ -6280,54 +6297,60 @@ const UnitDetailsPanel = ({
                             <div>
                                 <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500">Area (sqm)</label>
                                 <input
+                                    {...configForm.fieldProps("areaSqm")}
                                     type="number"
                                     min="0"
-                                    max="9999"
+                                    max={PROPERTY_LIMITS.maxAreaSqm}
                                     step="1"
+                                    inputMode="numeric"
                                     disabled={isSavingConfig}
                                     value={draftAreaSqm}
                                     onChange={(e) => {
-                                        const num = e.target.value === "" ? "" : String(Math.min(9999, Math.max(0, parseInt(e.target.value) || 0)));
-                                        setDraftAreaSqm(num);
+                                        setDraftAreaSqm(e.target.value);
                                         if (configFeedback) setConfigFeedback(null);
                                     }}
-                                    className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
+                                    className={`mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50 ${configForm.errorFor("areaSqm") ? "border-rose-500 dark:border-rose-500" : ""}`}
                                 />
+                                <FieldError id={configForm.errorId("areaSqm")} message={configForm.errorFor("areaSqm")} />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500">Bedrooms</label>
                                     <input
+                                        {...configForm.fieldProps("bedrooms")}
                                         type="number"
                                         min="0"
-                                        max="99"
+                                        max={PROPERTY_LIMITS.maxBeds}
                                         step="1"
+                                        inputMode="numeric"
                                         disabled={isSavingConfig}
                                         value={draftBedrooms}
                                         onChange={(e) => {
-                                            const num = e.target.value === "" ? "" : String(Math.min(99, Math.max(0, parseInt(e.target.value) || 0)));
-                                            setDraftBedrooms(num);
+                                            setDraftBedrooms(e.target.value);
                                             if (configFeedback) setConfigFeedback(null);
                                         }}
-                                        className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
+                                        className={`mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50 ${configForm.errorFor("bedrooms") ? "border-rose-500 dark:border-rose-500" : ""}`}
                                     />
+                                    <FieldError id={configForm.errorId("bedrooms")} message={configForm.errorFor("bedrooms")} />
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500">Baths</label>
                                     <input
+                                        {...configForm.fieldProps("baths")}
                                         type="number"
                                         min="0"
-                                        max="99"
-                                        step="0.5"
+                                        max={PROPERTY_LIMITS.maxBaths}
+                                        step="1"
+                                        inputMode="numeric"
                                         disabled={isSavingConfig}
                                         value={draftBaths}
                                         onChange={(e) => {
-                                            const num = e.target.value === "" ? "" : String(Math.min(99, Math.max(0, parseFloat(e.target.value) || 0)));
-                                            setDraftBaths(num);
+                                            setDraftBaths(e.target.value);
                                             if (configFeedback) setConfigFeedback(null);
                                         }}
-                                        className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50"
+                                        className={`mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800 disabled:opacity-50 ${configForm.errorFor("baths") ? "border-rose-500 dark:border-rose-500" : ""}`}
                                     />
+                                    <FieldError id={configForm.errorId("baths")} message={configForm.errorFor("baths")} />
                                 </div>
                             </div>
 
@@ -6336,7 +6359,9 @@ const UnitDetailsPanel = ({
                                 <div className="flex items-center gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800/60">
                                     <button
                                         type="button"
-                                        onClick={() => setIsAskingApplyToAll(true)}
+                                        onClick={() => {
+                                            if (configForm.validateAll()) setIsAskingApplyToAll(true);
+                                        }}
                                         className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-primary text-white text-xs font-black uppercase tracking-wider transition-all hover:bg-primary/90 active:scale-95 shadow-md shadow-primary/20"
                                     >
                                         <span className="material-icons-round text-base">save</span>
@@ -6349,6 +6374,7 @@ const UnitDetailsPanel = ({
                                             setDraftBedrooms(initialBedrooms);
                                             setDraftBaths(initialBaths);
                                             setIsAskingApplyToAll(false);
+                                            configForm.reset();
                                         }}
                                         className="py-2.5 px-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-black uppercase tracking-wider transition-all active:scale-95"
                                         title="Reset to current values"

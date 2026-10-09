@@ -19,6 +19,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useRouter } from "next/navigation";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
 import { cn } from "@/lib/utils";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { confirmMatchRule, newPasswordRule, PASSWORD_MAX_LENGTH } from "@/lib/validation/rules";
 
 function ResetPasswordContent() {
     const [newPassword, setNewPassword] = useState("");
@@ -30,13 +32,25 @@ function ResetPasswordContent() {
     const [hasSession, setHasSession] = useState(false);
     const [userRole, setUserRole] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [fieldErrors, setFieldErrors] = useState<{ newPassword?: string; confirmPassword?: string }>({});
     const [isSuccess, setIsSuccess] = useState(false);
     const [securityKey, setSecurityKey] = useState<string | null>(null);
     const [isAcknowledged, setIsAcknowledged] = useState(false);
     const [countdown, setCountdown] = useState(3);
     const [mounted, setMounted] = useState(false);
     const router = useRouter();
+
+    // Same new-password policy as setup, settings and the OTP reset flow.
+    const form = useFormValidation(
+        { newPassword, confirmPassword },
+        {
+            newPassword: (value) => newPasswordRule(value),
+            confirmPassword: (value, all) => confirmMatchRule(value, all.newPassword),
+        },
+    );
+    const fieldErrors = {
+        newPassword: form.errorFor("newPassword"),
+        confirmPassword: form.errorFor("confirmPassword"),
+    };
 
     useEffect(() => {
         setMounted(true);
@@ -95,23 +109,10 @@ function ResetPasswordContent() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (loading) return;
         setError(null);
-        setFieldErrors({});
 
-        const errors: { newPassword?: string; confirmPassword?: string } = {};
-
-        if (newPassword.length < 6) {
-            errors.newPassword = "Password must be at least 6 characters long.";
-        }
-
-        if (newPassword !== confirmPassword) {
-            errors.confirmPassword = "Passwords do not match.";
-        }
-
-        if (errors.newPassword || errors.confirmPassword) {
-            setFieldErrors(errors);
-            return;
-        }
+        if (!form.validateAll()) return;
 
         setLoading(true);
 
@@ -282,7 +283,7 @@ function ResetPasswordContent() {
                                     Set New Password
                                 </h1>
                                 <p className="text-xs text-muted-foreground">
-                                    Choose a new password (min. 6 characters).
+                                    Choose a new password (at least 8 characters, with letters and a number or symbol).
                                 </p>
                             </div>
 
@@ -306,19 +307,16 @@ function ResetPasswordContent() {
                                     </label>
                                     <div className="relative flex items-center">
                                         <input
+                                            {...form.fieldProps("newPassword")}
                                             id="new-password"
                                             name="new-password"
                                             type={isPasswordVisible ? "text" : "password"}
                                             required
-                                            maxLength={16}
+                                            maxLength={PASSWORD_MAX_LENGTH}
                                             value={newPassword}
-                                            onChange={(e) => {
-                                                setNewPassword(e.target.value);
-                                                if (fieldErrors.newPassword) setFieldErrors(prev => ({ ...prev, newPassword: undefined }));
-                                            }}
+                                            onChange={(e) => setNewPassword(e.target.value)}
                                             autoComplete="new-password"
                                             placeholder="••••••••"
-                                            aria-invalid={!!fieldErrors.newPassword}
                                             className={cn(
                                                 "h-11 w-full rounded-xl border bg-background pl-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
                                                 fieldErrors.newPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
@@ -334,7 +332,7 @@ function ResetPasswordContent() {
                                         </button>
                                     </div>
                                     {fieldErrors.newPassword && (
-                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                        <p id={form.errorId("newPassword")} role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
                                             <AlertCircle className="size-3.5 shrink-0" />
                                             <span>{fieldErrors.newPassword}</span>
                                         </p>
@@ -350,27 +348,16 @@ function ResetPasswordContent() {
                                     </label>
                                     <div className="relative flex items-center">
                                         <input
+                                            {...form.fieldProps("confirmPassword")}
                                             id="confirm-password"
                                             name="confirm-password"
                                             type={isConfirmVisible ? "text" : "password"}
                                             required
-                                            maxLength={16}
+                                            maxLength={PASSWORD_MAX_LENGTH}
                                             value={confirmPassword}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                setConfirmPassword(val);
-                                                if (fieldErrors.confirmPassword) {
-                                                    setFieldErrors(prev => ({ ...prev, confirmPassword: undefined }));
-                                                }
-                                            }}
-                                            onBlur={() => {
-                                                if (confirmPassword && newPassword && confirmPassword !== newPassword) {
-                                                    setFieldErrors(prev => ({ ...prev, confirmPassword: "Passwords do not match." }));
-                                                }
-                                            }}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
                                             autoComplete="new-password"
                                             placeholder="••••••••"
-                                            aria-invalid={!!fieldErrors.confirmPassword}
                                             className={cn(
                                                 "h-11 w-full rounded-xl border bg-background pl-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
                                                 fieldErrors.confirmPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
@@ -386,7 +373,7 @@ function ResetPasswordContent() {
                                         </button>
                                     </div>
                                     {fieldErrors.confirmPassword && (
-                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                        <p id={form.errorId("confirmPassword")} role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
                                             <AlertCircle className="size-3.5 shrink-0" />
                                             <span>{fieldErrors.confirmPassword}</span>
                                         </p>
@@ -395,7 +382,7 @@ function ResetPasswordContent() {
 
                                 <button
                                     type="submit"
-                                    disabled={loading || newPassword.length < 6}
+                                    disabled={loading}
                                     className="w-full h-10 bg-primary text-primary-foreground font-semibold rounded-xl transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-1"
                                 >
                                     {loading ? (

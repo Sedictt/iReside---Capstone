@@ -23,6 +23,10 @@ import { MoveOutStatusBadge } from "./MoveOutStatusBadge";
 import { MoveOutStatus } from "@/types/database";
 
 import { MoveOutInspectionForm } from "./MoveOutInspectionForm";
+import { FieldError } from "@/components/ui/field-error";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { textRule } from "@/lib/validation/rules";
+import { LIFECYCLE_LIMITS } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 interface MoveOutRequest {
  id: string;
@@ -73,8 +77,14 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  const [isInspecting, setIsInspecting] = useState(false);
  const [denialReason, setDenialReason] = useState("");
  const [error, setError] = useState<string | null>(null);
+ // Same rule as PUT /api/landlord/move-out/[id]/deny.
+ const denyForm = useFormValidation(
+  { denialReason },
+  { denialReason: (value) => textRule(value, { label: "Denial reason", required: true, max: LIFECYCLE_LIMITS.denialReason }) }
+ );
 
  const handleApprove = async () => {
+ if (actionLoading) return;
  if (!window.confirm("Are you sure you want to approve this move-out request? This will align the lease end date with the requested move-out date.")) return;
  
  setActionLoading("approve");
@@ -98,8 +108,8 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  };
 
  const handleDeny = async () => {
- if (!denialReason.trim()) {
- setError("Please provide a reason for denial.");
+ if (actionLoading) return;
+ if (!denyForm.validateAll()) {
  return;
  }
  
@@ -109,13 +119,17 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  const response = await fetch(`/api/landlord/move-out/${request.id}/deny`, {
  method: "PUT",
  headers: { "Content-Type": "application/json" },
- body: JSON.stringify({ denial_reason: denialReason }),
+ body: JSON.stringify({ denial_reason: denialReason.trim() }),
  });
- 
+
  if (!response.ok) {
- const responseData = await response.json();
+ const responseData = await response.json().catch(() => ({}));
+ if (responseData.fieldErrors?.denial_reason) {
+ denyForm.setServerErrors({ denialReason: responseData.fieldErrors.denial_reason });
+ }
  throw new Error(responseData.error || "Failed to deny request");
  }
+ denyForm.reset();
  
  setShowDenyDialog(false);
  onUpdate();
@@ -127,6 +141,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  };
 
  const handleComplete = async () => {
+ if (actionLoading) return;
  if (!window.confirm("Are you sure you want to finalize this move-out? This will terminate the lease and mark the unit as vacant.")) return;
  
  setActionLoading("approve"); // reuse loading state for simplicity or add a new one
@@ -517,12 +532,18 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  </p>
 
  <div className="mt-6">
- <textarea maxLength={250}
+ <textarea maxLength={LIFECYCLE_LIMITS.denialReason}
+ {...denyForm.fieldProps("denialReason")}
+ aria-label="Denial reason"
  value={denialReason}
  onChange={(e) => setDenialReason(e.target.value)}
  placeholder="e.g., Minimum stay requirements not met..."
- className="h-32 w-full rounded-2xl neumorphic-panel p-4 text-sm font-medium text-foreground focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/50"
+ className={cn(
+ "h-32 w-full rounded-2xl neumorphic-panel p-4 text-sm font-medium text-foreground focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/50",
+ denyForm.errorFor("denialReason") && "ring-1 ring-rose-500/60"
+ )}
  />
+ <FieldError id={denyForm.errorId("denialReason")} message={denyForm.errorFor("denialReason")} />
  </div>
 
  <div className="mt-8 flex gap-3">

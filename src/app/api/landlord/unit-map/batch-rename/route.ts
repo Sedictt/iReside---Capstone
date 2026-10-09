@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
-import { generateUnitName, NumberingStyle } from "@/lib/unit-naming";
+import { generateUnitName } from "@/lib/unit-naming";
+import { databaseErrorResponse, parseJsonBody } from "@/lib/validation/server";
+import { batchRenameSchema, findDuplicateName } from "@/lib/validation/schemas/properties.schema";
 
 export const dynamic = "force-dynamic";
 
@@ -10,23 +12,11 @@ export async function POST(request: NextRequest) {
     if (!("userId" in authContext)) return authContext as any;
     const { userId, supabase } = authContext;
 
-    try {
-        const body = await request.json();
-        const {
-            propertyId,
-            prefix = "Unit",
-            numberingStyle = "floor_based",
-            startingNumber = 101,
-        } = body as {
-            propertyId: string;
-            prefix?: string;
-            numberingStyle?: NumberingStyle;
-            startingNumber?: number;
-        };
+    const parsed = await parseJsonBody(request, batchRenameSchema);
+    if (!parsed.ok) return parsed.response;
+    const { propertyId, prefix, numberingStyle, startingNumber } = parsed.data;
 
-        if (!propertyId) {
-            return NextResponse.json({ error: "propertyId is required" }, { status: 400 });
-        }
+    try {
 
         // Verify property ownership
         const { data: property, error: propError } = await supabase
@@ -57,7 +47,8 @@ export async function POST(request: NextRequest) {
         // Group units by floor to number them sequentially within floors or across floors
         const floorGroups = new Map<number, typeof units>();
         for (const u of units) {
-            const f = u.floor || 1;
+            // `?? 1`, not `|| 1`: floor 0 is the ground floor and must keep its "G01" numbering.
+            const f = u.floor ?? 1;
             const existing = floorGroups.get(f) ?? [];
             existing.push(u);
             floorGroups.set(f, existing);
@@ -66,7 +57,7 @@ export async function POST(request: NextRequest) {
         const sortedFloors = Array.from(floorGroups.keys()).sort((a, b) => a - b);
         let overallIndex = 0;
 
-        const updatePromises: Promise<any>[] = [];
+        const renames: Array<{ id: string; name: string }> = [];
 
         for (const floorNum of sortedFloors) {
             const unitsOnFloor = floorGroups.get(floorNum) || [];
@@ -79,19 +70,36 @@ export async function POST(request: NextRequest) {
                     startingNumber,
                 });
 
-                updatePromises.push(
-                    (admin as any)
-                        .from("units")
-                        .update({ name: newName })
-                        .eq("id", unit.id)
-                );
+                renames.push({ id: unit.id, name: newName });
 
                 unitIndexOnFloor++;
                 overallIndex++;
             }
         }
 
-        await Promise.all(updatePromises);
+        // Unit names are unique within a property: refuse a batch that would produce duplicates.
+        const duplicateName = findDuplicateName(renames.map((r) => r.name));
+        if (duplicateName) {
+            return NextResponse.json(
+                { error: `This numbering would give more than one unit the name "${duplicateName}". Choose a different style or starting number.` },
+                { status: 409 }
+            );
+        }
+
+        const results = await Promise.all(
+            renames.map((r) =>
+                (admin as any)
+                    .from("units")
+                    .update({ name: r.name })
+                    .eq("id", r.id)
+                    .eq("property_id", propertyId)
+            )
+        );
+        const failed = results.find((result: { error?: { code?: string } | null }) => result?.error);
+        if (failed) {
+            console.error("Batch rename units error:", failed.error);
+            return databaseErrorResponse(failed.error, "Failed to rename units.");
+        }
 
         // Fetch updated units
         const { data: updatedUnits } = await supabase
@@ -107,7 +115,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
         console.error("Batch rename units error:", error);
         return NextResponse.json(
-            { error: error instanceof Error ? error.message : "Failed to rename units." },
+            { error: "Failed to rename units." },
             { status: 500 }
         );
     }

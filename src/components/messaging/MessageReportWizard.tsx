@@ -23,6 +23,12 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { textRule } from "@/lib/validation/rules";
+import { MESSAGE_LIMITS } from "@/lib/validation/schemas/operations.schema";
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type MessageReportCategory = "spam" | "phishing" | "harassment" | "profanity" | "other";
 
@@ -180,6 +186,24 @@ export function MessageReportWizard({
 
   const canAttachMore = state.screenshots.length < 4;
 
+  const reportValues = useMemo(
+    () => ({ category: state.category, reportedMessageId: state.reportedMessageId, exactMessage: state.exactMessage, details: state.details }),
+    [state.category, state.reportedMessageId, state.exactMessage, state.details]
+  );
+  const form = useFormValidation(reportValues, {
+    reportedMessageId: (value) =>
+      value && !UUID_PATTERN.test(String(value).trim()) ? "Message ID must be a valid message identifier." : undefined,
+    exactMessage: (value, all) => {
+      const lengthError = textRule(value, { label: "Exact content", max: MESSAGE_LIMITS.reportExactMessage });
+      if (lengthError) return lengthError;
+      if (all.category === "profanity" && String(value ?? "").trim().length < 3 && !String(all.reportedMessageId ?? "").trim()) {
+        return "Paste the offending message or a message ID for profanity reports.";
+      }
+      return undefined;
+    },
+    details: (value) => textRule(value, { label: "Details", max: MESSAGE_LIMITS.reportDetails }),
+  });
+
   const hasAnyEvidence = useMemo(() => {
     return Boolean(state.details.trim()) || Boolean(state.exactMessage.trim()) || Boolean(state.reportedMessageId.trim()) || state.screenshots.length > 0;
   }, [state.details, state.exactMessage, state.reportedMessageId, state.screenshots.length]);
@@ -191,6 +215,7 @@ export function MessageReportWizard({
       URL.revokeObjectURL(preview);
     });
     dispatch({ type: "RESET" });
+    form.reset();
   };
 
   const handleClose = () => {
@@ -228,7 +253,8 @@ export function MessageReportWizard({
   };
 
   const submit = async () => {
-    if (!targetUserId || !conversationId) return;
+    if (!targetUserId || !conversationId || state.isSubmitting) return;
+    if (!form.validateAll()) return;
     dispatch({ type: "SET_ERROR", payload: null });
     dispatch({ type: "SET_SUBMITTING", payload: true });
     try {
@@ -241,8 +267,11 @@ export function MessageReportWizard({
       state.screenshots.forEach((s) => formData.append("screenshots", s));
 
       const response = await fetch(`/api/messages/users/${targetUserId}/reports`, { method: "POST", body: formData });
-      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-      if (!response.ok) throw new Error(payload?.error ?? "Failed to submit report.");
+      const payload = (await response.json().catch(() => null)) as { error?: string; fieldErrors?: Record<string, string> } | null;
+      if (!response.ok) {
+        form.setServerErrors(payload?.fieldErrors);
+        throw new Error(payload?.error ?? "Failed to submit report.");
+      }
       handleClose();
     } catch (e) {
       dispatch({ type: "SET_ERROR", payload: e instanceof Error ? e.message : "Failed to submit report." });
@@ -357,6 +386,7 @@ export function MessageReportWizard({
                   </label>
                   <div className="group relative">
                     <input maxLength={60}
+                      {...form.fieldProps("reportedMessageId")}
                       id="message-id"
                       value={state.reportedMessageId}
                       onChange={(e) => dispatch({ type: "SET_REPORTED_MESSAGE_ID", payload: normalizePastedMessageId(e.target.value) })}
@@ -372,6 +402,7 @@ export function MessageReportWizard({
                       <ClipboardPaste className="size-4" />
                     </button>
                   </div>
+                  <FieldError id={form.errorId("reportedMessageId")} message={form.errorFor("reportedMessageId")} />
                   <p className="mt-2 text-[10px] font-medium text-disabled px-1">
                     Enables exact snapshot verification for faster moderation.
                   </p>
@@ -382,12 +413,14 @@ export function MessageReportWizard({
                     Exact Content (Optional)
                   </label>
                   <textarea maxLength={500}
+                    {...form.fieldProps("exactMessage")}
                     id="exact-content"
                     value={state.exactMessage}
                     onChange={(e) => dispatch({ type: "SET_EXACT_MESSAGE", payload: e.target.value })}
                     placeholder="Copy-paste the offending text..."
                     className="w-full h-12 rounded-2xl border border-border bg-surface-2 px-4 py-3 text-sm font-medium focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all resize-none min-h-[48px]"
                   />
+                  <FieldError id={form.errorId("exactMessage")} message={form.errorFor("exactMessage")} />
                 </div>
               </section>
 
@@ -397,12 +430,14 @@ export function MessageReportWizard({
                   Incident Narrative
                 </label>
                 <textarea maxLength={500}
+                  {...form.fieldProps("details")}
                   id="incident-narrative"
                   value={state.details}
                   onChange={(e) => dispatch({ type: "SET_DETAILS", payload: e.target.value })}
                   placeholder="Provide context, dates, or why this behavior is unsafe..."
                   className="w-full rounded-[2rem] border border-border bg-surface-2 p-5 text-sm font-medium focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all h-32 resize-none"
                 />
+                <FieldError id={form.errorId("details")} message={form.errorFor("details")} />
               </section>
 
               {/* Screenshots */}

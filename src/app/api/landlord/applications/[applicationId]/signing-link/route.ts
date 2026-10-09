@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { generateSigningToken } from "@/lib/jwt";
@@ -21,6 +22,9 @@ export async function POST(
   context: { params: Promise<{ applicationId: string }> }
 ) {
   const { applicationId } = await context.params;
+  if (!isId(applicationId)) {
+    return NextResponse.json({ error: "Application not found." }, { status: 404 });
+  }
 
   // Get authenticated user
   const authContext = await requireAuthenticatedUser(request);

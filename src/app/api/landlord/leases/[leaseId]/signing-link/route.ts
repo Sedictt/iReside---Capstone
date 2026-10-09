@@ -7,6 +7,7 @@ import {
   LeaseSigningEligibilityError,
 } from "@/lib/services/lease";
 import { generateSigningLink } from "@/lib/jwt";
+import { isId, signingLinkRoleSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 /**
  * POST /api/landlord/leases/[leaseId]/signing-link
@@ -26,6 +27,10 @@ export async function POST(
   if (!("userId" in authContext)) return authContext as Response;
   const { userId: landlordId, supabase } = authContext;
 
+  if (!isId(leaseId)) {
+    return NextResponse.json({ error: "Lease not found" }, { status: 404 });
+  }
+
   try {
     // Check if role is explicitly requested
     const url = new URL(request.url);
@@ -36,6 +41,10 @@ export async function POST(
       if (body?.role) requestedRole = body.role;
     } catch {
       // Body may be empty
+    }
+
+    if (requestedRole !== null && !signingLinkRoleSchema.safeParse(requestedRole).success) {
+      return NextResponse.json({ error: "Invalid signing role." }, { status: 400 });
     }
 
     // Fetch lease to determine eligibility and role

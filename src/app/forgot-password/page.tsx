@@ -17,9 +17,12 @@ import {
 import { Logo } from "@/components/ui/Logo";
 import { useState, Suspense, useEffect, useRef } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { resetPasswordRequestSchema, otpVerifySchema } from "@/lib/validation/schemas/auth.schema";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { confirmMatchRule, emailRule, newPasswordRule, otpRule, PASSWORD_MAX_LENGTH } from "@/lib/validation/rules";
+import { securityKeyRule } from "@/lib/validation/schemas/account.schema";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
-import { formatSecurityKey, normalizeSecurityKey } from "@/lib/security/recovery-keys";
+import { formatSecurityKey } from "@/lib/security/recovery-keys";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -51,21 +54,32 @@ function ForgotPasswordContent() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [error, setError] = useState<string | null>(null);
-    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
     const [mounted, setMounted] = useState(false);
 
     const otpInputRef = useRef<HTMLInputElement>(null);
 
-    const clearFieldError = (key: string) => {
-        if (fieldErrors[key]) {
-            setFieldErrors(prev => {
-                const next = { ...prev };
-                delete next[key];
-                return next;
-            });
-        }
+    // One validator for every step; each step validates only its own fields.
+    // New passwords follow the same policy as setup and settings.
+    const form = useFormValidation(
+        { email, otp, newPassword, confirmPassword, securityKey: securityKeyInput, newEmail, wantUpdateEmail },
+        {
+            email: (value) => emailRule(value),
+            otp: (value) => otpRule(value),
+            newPassword: (value) => newPasswordRule(value),
+            confirmPassword: (value, all) => confirmMatchRule(value, all.newPassword),
+            securityKey: (value) => securityKeyRule(value),
+            newEmail: (value, all) => (all.wantUpdateEmail ? emailRule(value, { label: "New email address" }) : undefined),
+        },
+    );
+    const fieldErrors: Partial<Record<"email" | "otp" | "newPassword" | "confirmPassword" | "securityKey" | "newEmail", string>> = {
+        email: form.errorFor("email"),
+        otp: form.errorFor("otp"),
+        newPassword: form.errorFor("newPassword"),
+        confirmPassword: form.errorFor("confirmPassword"),
+        securityKey: form.errorFor("securityKey"),
+        newEmail: form.errorFor("newEmail"),
     };
 
     useEffect(() => {
@@ -98,18 +112,12 @@ function ForgotPasswordContent() {
     // Email OTP Flow: Send OTP
     // -------------------------------------------------------------
     const handleSendOtp = async (targetEmail: string) => {
+        if (loading) return;
         setError(null);
+        if (!form.validateFields(["email"])) return;
         setLoading(true);
 
         try {
-            const validation = resetPasswordRequestSchema.safeParse({ email: targetEmail });
-            if (!validation.success) {
-                const issue = validation.error.issues[0];
-                setError(issue ? issue.message : "Please enter a valid email address.");
-                setLoading(false);
-                return;
-            }
-
             const response = await fetch("/api/auth/otp/send", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -119,6 +127,7 @@ function ForgotPasswordContent() {
             const result = await response.json();
 
             if (!response.ok || result.error) {
+                form.setServerErrors(result.fieldErrors);
                 setError(result.error || "Failed to send code. Please try again.");
                 return;
             }
@@ -141,13 +150,10 @@ function ForgotPasswordContent() {
         e.preventDefault();
         setError(null);
 
+        if (loading) return;
         const cleanOtp = otp.trim().replace(/\s+/g, "");
 
-        const validation = otpVerifySchema.safeParse({ email, otp: cleanOtp });
-        if (!validation.success) {
-            setError("Please enter the complete 6-digit code.");
-            return;
-        }
+        if (!form.validateFields(["otp"])) return;
 
         setLoading(true);
 
@@ -161,6 +167,7 @@ function ForgotPasswordContent() {
             const result = await response.json();
 
             if (!response.ok || result.error) {
+                form.setServerErrors(result.fieldErrors);
                 setError(result.error || "Invalid or expired verification code.");
                 return;
             }
@@ -180,21 +187,10 @@ function ForgotPasswordContent() {
     // -------------------------------------------------------------
     const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (loading) return;
         setError(null);
-        setFieldErrors({});
 
-        const newErrors: Record<string, string> = {};
-        if (newPassword.length < 6) {
-            newErrors.newPassword = "Password must be at least 6 characters long.";
-        }
-        if (newPassword !== confirmPassword) {
-            newErrors.confirmPassword = "Passwords do not match.";
-        }
-
-        if (Object.keys(newErrors).length > 0) {
-            setFieldErrors(newErrors);
-            return;
-        }
+        if (!form.validateFields(["newPassword", "confirmPassword"])) return;
 
         setLoading(true);
 
@@ -212,6 +208,7 @@ function ForgotPasswordContent() {
             const result = await response.json();
 
             if (!response.ok || result.error) {
+                form.setServerErrors(result.fieldErrors);
                 setError(result.error || "Failed to reset password. Please try again.");
                 return;
             }
@@ -230,31 +227,10 @@ function ForgotPasswordContent() {
     // -------------------------------------------------------------
     const handleSecurityKeyRecovery = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (loading) return;
         setError(null);
-        setFieldErrors({});
 
-        const newErrors: Record<string, string> = {};
-        const cleanKey = normalizeSecurityKey(securityKeyInput);
-        if (cleanKey.length < 16) {
-            newErrors.securityKey = "Please enter the complete 16-character security key.";
-        }
-
-        if (newPassword.length < 6) {
-            newErrors.newPassword = "Password must be at least 6 characters long.";
-        }
-
-        if (newPassword !== confirmPassword) {
-            newErrors.confirmPassword = "Passwords do not match.";
-        }
-
-        if (wantUpdateEmail && !newEmail.trim().includes("@")) {
-            newErrors.newEmail = "Please enter a valid new email address.";
-        }
-
-        if (Object.keys(newErrors).length > 0) {
-            setFieldErrors(newErrors);
-            return;
-        }
+        if (!form.validateFields(["email", "securityKey", "newPassword", "confirmPassword", "newEmail"])) return;
 
         setLoading(true);
 
@@ -273,6 +249,7 @@ function ForgotPasswordContent() {
             const result = await response.json();
 
             if (!response.ok || result.error) {
+                form.setServerErrors(result.fieldErrors);
                 setError(result.error || "Failed to recover account. Please check your credentials.");
                 return;
             }
@@ -388,17 +365,22 @@ function ForgotPasswordContent() {
                                         Email Address
                                     </label>
                                     <input
+                                        {...form.fieldProps("email")}
                                         id="email"
                                         name="email"
                                         type="email"
                                         required
-                                        maxLength={50}
+                                        maxLength={254}
                                         autoComplete="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder="name@example.com"
-                                        className="h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                        className={cn(
+                                            "h-11 w-full rounded-xl border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
+                                            fieldErrors.email ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
+                                        )}
                                     />
+                                    <FieldError id={form.errorId("email")} message={fieldErrors.email} />
                                 </div>
 
                                 <button
@@ -461,19 +443,25 @@ function ForgotPasswordContent() {
                                         Verification Code
                                     </label>
                                     <input
+                                        {...form.fieldProps("otp")}
                                         ref={otpInputRef}
                                         id="otp"
                                         name="otp"
                                         type="text"
                                         inputMode="numeric"
+                                        autoComplete="one-time-code"
                                         pattern="[0-9]*"
                                         maxLength={6}
                                         required
                                         value={otp}
-                                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                                         placeholder="123456"
-                                        className="h-12 w-full rounded-xl border border-border bg-background px-3 text-center text-xl font-mono font-bold tracking-[6px] text-foreground placeholder:tracking-normal placeholder:font-sans placeholder:text-sm placeholder:font-normal placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                        className={cn(
+                                            "h-12 w-full rounded-xl border bg-background px-3 text-center text-xl font-mono font-bold tracking-[6px] text-foreground placeholder:tracking-normal placeholder:font-sans placeholder:text-sm placeholder:font-normal placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
+                                            fieldErrors.otp ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
+                                        )}
                                     />
+                                    <FieldError id={form.errorId("otp")} message={fieldErrors.otp} />
                                 </div>
 
                                 <button
@@ -546,18 +534,16 @@ function ForgotPasswordContent() {
                                     </label>
                                     <div className="relative">
                                         <input
+                                            {...form.fieldProps("newPassword")}
                                             id="newPassword"
                                             name="newPassword"
                                             type={showNewPassword ? "text" : "password"}
                                             required
-                                            maxLength={16}
+                                            autoComplete="new-password"
+                                            maxLength={PASSWORD_MAX_LENGTH}
                                             value={newPassword}
-                                            onChange={(e) => {
-                                                setNewPassword(e.target.value);
-                                                clearFieldError("newPassword");
-                                            }}
+                                            onChange={(e) => setNewPassword(e.target.value)}
                                             placeholder="••••••••"
-                                            aria-invalid={!!fieldErrors.newPassword}
                                             className={cn(
                                                 "h-11 w-full rounded-xl border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
                                                 fieldErrors.newPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
@@ -574,12 +560,12 @@ function ForgotPasswordContent() {
                                         </button>
                                     </div>
                                     {fieldErrors.newPassword ? (
-                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                        <p id={form.errorId("newPassword")} role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
                                             <AlertCircle className="size-3.5 shrink-0" />
                                             <span>{fieldErrors.newPassword}</span>
                                         </p>
                                     ) : (
-                                        <p className="text-[11px] text-muted-foreground">Minimum 6 characters</p>
+                                        <p className="text-[11px] text-muted-foreground">At least 8 characters, with letters and a number or symbol</p>
                                     )}
                                 </div>
 
@@ -589,26 +575,16 @@ function ForgotPasswordContent() {
                                     </label>
                                     <div className="relative">
                                         <input
+                                            {...form.fieldProps("confirmPassword")}
                                             id="confirmPassword"
                                             name="confirmPassword"
                                             type={showConfirmPassword ? "text" : "password"}
                                             required
-                                            maxLength={16}
+                                            autoComplete="new-password"
+                                            maxLength={PASSWORD_MAX_LENGTH}
                                             value={confirmPassword}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                setConfirmPassword(val);
-                                                if (fieldErrors.confirmPassword) {
-                                                    clearFieldError("confirmPassword");
-                                                }
-                                            }}
-                                            onBlur={() => {
-                                                if (confirmPassword && newPassword && confirmPassword !== newPassword) {
-                                                    setFieldErrors(prev => ({ ...prev, confirmPassword: "Passwords do not match." }));
-                                                }
-                                            }}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
                                             placeholder="••••••••"
-                                            aria-invalid={!!fieldErrors.confirmPassword}
                                             className={cn(
                                                 "h-11 w-full rounded-xl border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
                                                 fieldErrors.confirmPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
@@ -625,7 +601,7 @@ function ForgotPasswordContent() {
                                         </button>
                                     </div>
                                     {fieldErrors.confirmPassword && (
-                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                        <p id={form.errorId("confirmPassword")} role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
                                             <AlertCircle className="size-3.5 shrink-0" />
                                             <span>{fieldErrors.confirmPassword}</span>
                                         </p>
@@ -634,7 +610,7 @@ function ForgotPasswordContent() {
 
                                 <button
                                     type="submit"
-                                    disabled={loading || newPassword.length < 6}
+                                    disabled={loading}
                                     className="w-full h-11 bg-primary text-primary-foreground font-semibold rounded-xl transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm cursor-pointer"
                                 >
                                     {loading ? (
@@ -678,16 +654,25 @@ function ForgotPasswordContent() {
                                         Registered Email Address
                                     </label>
                                     <input
+                                        {...form.fieldProps("email")}
                                         id="sec-email"
                                         type="email"
                                         required
-                                        maxLength={50}
+                                        maxLength={254}
+                                        autoComplete="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder="name@example.com"
-                                        className="h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                        className={cn(
+                                            "h-11 w-full rounded-xl border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
+                                            fieldErrors.email ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
+                                        )}
                                     />
-                                    <p className="text-[11px] text-muted-foreground">The email address associated with your iReside account.</p>
+                                    {fieldErrors.email ? (
+                                        <FieldError id={form.errorId("email")} message={fieldErrors.email} />
+                                    ) : (
+                                        <p className="text-[11px] text-muted-foreground">The email address associated with your iReside account.</p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-1.5">
@@ -695,24 +680,22 @@ function ForgotPasswordContent() {
                                         Security Recovery Key
                                     </label>
                                     <input
+                                        {...form.fieldProps("securityKey")}
                                         id="sec-key"
                                         type="text"
                                         required
                                         maxLength={19}
+                                        autoComplete="off"
                                         value={securityKeyInput}
-                                        onChange={(e) => {
-                                            handleKeyInputChange(e.target.value);
-                                            clearFieldError("securityKey");
-                                        }}
+                                        onChange={(e) => handleKeyInputChange(e.target.value)}
                                         placeholder="XXXX-XXXX-XXXX-XXXX"
-                                        aria-invalid={!!fieldErrors.securityKey}
                                         className={cn(
                                             "h-11 w-full rounded-xl border bg-background px-3.5 text-center font-mono text-base font-bold tracking-wider text-foreground placeholder:tracking-normal placeholder:font-sans placeholder:text-sm placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2 uppercase",
                                             fieldErrors.securityKey ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
                                         )}
                                     />
                                     {fieldErrors.securityKey ? (
-                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                        <p id={form.errorId("securityKey")} role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
                                             <AlertCircle className="size-3.5 shrink-0" />
                                             <span>{fieldErrors.securityKey}</span>
                                         </p>
@@ -727,17 +710,15 @@ function ForgotPasswordContent() {
                                     </label>
                                     <div className="relative">
                                         <input
+                                            {...form.fieldProps("newPassword")}
                                             id="sec-newPassword"
                                             type={showNewPassword ? "text" : "password"}
                                             required
-                                            maxLength={16}
+                                            autoComplete="new-password"
+                                            maxLength={PASSWORD_MAX_LENGTH}
                                             value={newPassword}
-                                            onChange={(e) => {
-                                                setNewPassword(e.target.value);
-                                                clearFieldError("newPassword");
-                                            }}
+                                            onChange={(e) => setNewPassword(e.target.value)}
                                             placeholder="••••••••"
-                                            aria-invalid={!!fieldErrors.newPassword}
                                             className={cn(
                                                 "h-11 w-full rounded-xl border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
                                                 fieldErrors.newPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
@@ -752,12 +733,12 @@ function ForgotPasswordContent() {
                                         </button>
                                     </div>
                                     {fieldErrors.newPassword ? (
-                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                        <p id={form.errorId("newPassword")} role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
                                             <AlertCircle className="size-3.5 shrink-0" />
                                             <span>{fieldErrors.newPassword}</span>
                                         </p>
                                     ) : (
-                                        <p className="text-[11px] text-muted-foreground">Minimum 6 characters</p>
+                                        <p className="text-[11px] text-muted-foreground">At least 8 characters, with letters and a number or symbol</p>
                                     )}
                                 </div>
 
@@ -767,25 +748,15 @@ function ForgotPasswordContent() {
                                     </label>
                                     <div className="relative">
                                         <input
+                                            {...form.fieldProps("confirmPassword")}
                                             id="sec-confirmPassword"
                                             type={showConfirmPassword ? "text" : "password"}
                                             required
-                                            maxLength={16}
+                                            autoComplete="new-password"
+                                            maxLength={PASSWORD_MAX_LENGTH}
                                             value={confirmPassword}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                setConfirmPassword(val);
-                                                if (fieldErrors.confirmPassword) {
-                                                    clearFieldError("confirmPassword");
-                                                }
-                                            }}
-                                            onBlur={() => {
-                                                if (confirmPassword && newPassword && confirmPassword !== newPassword) {
-                                                    setFieldErrors(prev => ({ ...prev, confirmPassword: "Passwords do not match." }));
-                                                }
-                                            }}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
                                             placeholder="••••••••"
-                                            aria-invalid={!!fieldErrors.confirmPassword}
                                             className={cn(
                                                 "h-11 w-full rounded-xl border bg-background px-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
                                                 fieldErrors.confirmPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
@@ -800,7 +771,7 @@ function ForgotPasswordContent() {
                                         </button>
                                     </div>
                                     {fieldErrors.confirmPassword && (
-                                        <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                        <p id={form.errorId("confirmPassword")} role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
                                             <AlertCircle className="size-3.5 shrink-0" />
                                             <span>{fieldErrors.confirmPassword}</span>
                                         </p>
@@ -827,24 +798,21 @@ function ForgotPasswordContent() {
                                                 New Email Address
                                             </label>
                                             <input
+                                                {...form.fieldProps("newEmail")}
                                                 id="newEmail"
                                                 type="email"
                                                 required={wantUpdateEmail}
-                                                maxLength={50}
+                                                maxLength={254}
                                                 value={newEmail}
-                                                onChange={(e) => {
-                                                    setNewEmail(e.target.value);
-                                                    clearFieldError("newEmail");
-                                                }}
+                                                onChange={(e) => setNewEmail(e.target.value)}
                                                 placeholder="new-email@example.com"
-                                                aria-invalid={!!fieldErrors.newEmail}
                                                 className={cn(
                                                     "h-11 w-full rounded-xl border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2",
                                                     fieldErrors.newEmail ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-border focus:border-primary focus:ring-primary/20"
                                                 )}
                                             />
                                             {fieldErrors.newEmail && (
-                                                <p role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
+                                                <p id={form.errorId("newEmail")} role="alert" className="text-[11px] font-medium text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-0.5">
                                                     <AlertCircle className="size-3.5 shrink-0" />
                                                     <span>{fieldErrors.newEmail}</span>
                                                 </p>
@@ -855,7 +823,7 @@ function ForgotPasswordContent() {
 
                                 <button
                                     type="submit"
-                                    disabled={loading || securityKeyInput.replace(/[^a-zA-Z0-9]/g, "").length < 16 || newPassword.length < 6}
+                                    disabled={loading}
                                     className="w-full h-11 bg-primary text-primary-foreground font-semibold rounded-xl transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm cursor-pointer"
                                 >
                                     {loading ? (

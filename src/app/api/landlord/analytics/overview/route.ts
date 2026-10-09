@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseSearchParams } from "@/lib/validation/server";
+import { analyticsOverviewQuerySchema } from "@/lib/validation/schemas/operations.schema";
 
 type ChangeType = "positive" | "negative" | "neutral";
 
@@ -343,10 +345,12 @@ export async function GET(request: Request) {
     const { userId, supabase } = authContext;
 
     const { searchParams } = new URL(request.url);
+    const parsedQuery = parseSearchParams(searchParams, analyticsOverviewQuerySchema);
+    if (!parsedQuery.ok) return parsedQuery.response;
 
-    const requestedEnd = searchParams.get("end");
-    const requestedStart = searchParams.get("start");
-    const propertyId = searchParams.get("propertyId");
+    const requestedEnd = parsedQuery.data.end;
+    const requestedStart = parsedQuery.data.start;
+    const propertyId = parsedQuery.data.propertyId;
 
     const defaultEnd = startOfDay(new Date());
     const defaultStart = addDays(defaultEnd, -29);

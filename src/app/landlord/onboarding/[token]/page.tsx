@@ -43,6 +43,8 @@ import { PropertyRulesSelector } from "@/components/landlord/properties/Property
 import html2canvas from "html2canvas";
 import { LucideIcon } from "lucide-react";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
+import { phoneRule } from "@/lib/validation/rules";
+import { applicantNameRule } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 interface OnboardingData {
     email: string;
@@ -222,8 +224,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                 if (state.profilePhoto) setProfilePhoto(state.profilePhoto);
                 if (state.profileBgColor) setProfileBgColor(state.profileBgColor);
                 if (state.coverPhoto) setCoverPhoto(state.coverPhoto);
-                if (state.password) setPassword(state.password);
-                if (state.confirmPassword) setConfirmPassword(state.confirmPassword);
+                // Passwords are intentionally never persisted to localStorage.
             } catch (err) {
                 console.error("Failed to load persisted state");
             }
@@ -246,8 +247,6 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
             profilePhoto,
             profileBgColor,
             coverPhoto,
-            password,
-            confirmPassword
         };
         localStorage.setItem(`onboarding_progress_${data.email}`, JSON.stringify(state));
     }, [
@@ -264,8 +263,6 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
         profilePhoto,
         profileBgColor,
         coverPhoto,
-        password,
-        confirmPassword
     ]);
 
     const getPasswordStrength = (pwd: string): { score: number; label: string; color: string } => {
@@ -318,8 +315,20 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     };
 
     const handleSubmit = async () => {
+        if (submitting) return;
         if (!fullName || !phone) {
             toast.error("Please fill in all required fields");
+            return;
+        }
+        // Same rules as POST /api/landlord/onboarding/[token].
+        const nameError = applicantNameRule(fullName, { label: "Full name" });
+        if (nameError) {
+            toast.error(nameError);
+            return;
+        }
+        const phoneError = phoneRule(phone, { required: true });
+        if (phoneError) {
+            toast.error(phoneError);
             return;
         }
 

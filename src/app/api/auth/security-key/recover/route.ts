@@ -9,48 +9,17 @@ import {
     normalizeSecurityKey,
 } from "@/lib/security/recovery-keys";
 import { logUserActivity } from "@/lib/audit/audit-logger";
+import { parseJsonBody } from "@/lib/validation/server";
+import { escapeLikePattern, securityKeyRecoverSchema } from "@/lib/validation/schemas/account.schema";
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-        const { email, securityKey, newPassword, newEmail } = body;
-
-        // 1. Basic validation
-        if (!email || !securityKey || !newPassword) {
-            return NextResponse.json(
-                { error: "Email, security key, and new password are required." },
-                { status: 400 }
-            );
-        }
-
-        const normalizedEmail = email.trim().toLowerCase();
+        // 1. Validation: complete 16-char key, new password meets the shared
+        //    policy (8+ chars, letters + number/symbol), optional valid new email.
+        const parsed = await parseJsonBody(request, securityKeyRecoverSchema);
+        if (!parsed.ok) return parsed.response;
+        const { email: normalizedEmail, securityKey, newPassword, newEmail: normalizedNewEmail } = parsed.data;
         const cleanSecurityKey = normalizeSecurityKey(securityKey);
-
-        if (cleanSecurityKey.length < 16) {
-            return NextResponse.json(
-                { error: "Please enter the complete 16-character security key." },
-                { status: 400 }
-            );
-        }
-
-        if (typeof newPassword !== "string" || newPassword.length < 6) {
-            return NextResponse.json(
-                { error: "New password must be at least 6 characters long." },
-                { status: 400 }
-            );
-        }
-
-        let normalizedNewEmail: string | null = null;
-        if (newEmail && typeof newEmail === "string" && newEmail.trim()) {
-            normalizedNewEmail = newEmail.trim().toLowerCase();
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(normalizedNewEmail)) {
-                return NextResponse.json(
-                    { error: "The new email address format is invalid." },
-                    { status: 400 }
-                );
-            }
-        }
 
         const adminClient = createServiceRoleSupabaseClient();
 
@@ -58,7 +27,7 @@ export async function POST(request: Request) {
         const { data: profile, error: profileError } = await adminClient
             .from("profiles")
             .select("id, role, email, full_name")
-            .ilike("email", normalizedEmail)
+            .ilike("email", escapeLikePattern(normalizedEmail))
             .maybeSingle();
 
         if (profileError || !profile) {

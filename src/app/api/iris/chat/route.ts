@@ -5,6 +5,8 @@ import {
     IrisRateLimitError,
     IrisValidationError,
 } from "@/lib/services/iris/iris.errors";
+import { parseJsonBody } from "@/lib/validation/server";
+import { irisChatSchema } from "@/lib/validation/schemas/operations.schema";
 
 export async function POST(request: Request) {
     try {
@@ -12,15 +14,9 @@ export async function POST(request: Request) {
         if (!("userId" in authContext)) return authContext as Response;
         const { userId, supabase } = authContext;
 
-        const body = await request.json();
-        const { message } = body;
-
-        if (!message || typeof message !== "string") {
-            return NextResponse.json(
-                { error: "Message is required and must be a string." },
-                { status: 400 }
-            );
-        }
+        const parsed = await parseJsonBody(request, irisChatSchema);
+        if (!parsed.ok) return parsed.response;
+        const { message } = parsed.data;
 
         const irisService = new IrisService(supabase);
         const result = await irisService.processChatMessage(userId, message);
@@ -34,8 +30,9 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: error.message }, { status: 429 });
         }
 
+        console.error("[POST /api/iris/chat]", error);
         return NextResponse.json(
-            { error: error?.message || "An error occurred while processing your request." },
+            { error: "An error occurred while processing your request." },
             { status: 500 }
         );
     }

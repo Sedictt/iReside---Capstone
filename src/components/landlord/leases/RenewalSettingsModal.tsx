@@ -3,9 +3,15 @@
 import { useState, useEffect } from "react";
 import { X, Save, Plus, Trash2, Settings2, Info } from "lucide-react";
 import { toast } from "sonner";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { cn } from "@/lib/utils";
+import { RENEWAL_LIMITS, renewalAdjustmentRule, renewalRuleTextRule } from "@/lib/validation/schemas/properties.schema";
+import { textRule } from "@/lib/validation/rules";
 
 interface RenewalSettings {
- base_rent_adjustment: number;
+ /** Kept as typed (string) while editing so blanks/invalid input are flagged instead of becoming 0. */
+ base_rent_adjustment: number | string;
  adjustment_type: "percentage" | "fixed";
  new_rules: string[];
  landlord_memo: string;
@@ -31,6 +37,24 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
  const [saving, setSaving] = useState(false);
  const [newRule, setNewRule] = useState("");
 
+ const form = useFormValidation(
+ {
+ base_rent_adjustment: settings.base_rent_adjustment,
+ adjustment_type: settings.adjustment_type,
+ landlord_memo: settings.landlord_memo,
+ new_rules: settings.new_rules,
+ newRule,
+ },
+ {
+ base_rent_adjustment: (value, all) => renewalAdjustmentRule(value, all.adjustment_type),
+ landlord_memo: (value) => textRule(value, { label: "Note", max: RENEWAL_LIMITS.memoMax }),
+ new_rules: (value) =>
+ value.length > RENEWAL_LIMITS.maxRules ? `You can add at most ${RENEWAL_LIMITS.maxRules} rules.` : undefined,
+ // Only checked once something is typed; adding an empty rule is simply ignored.
+ newRule: (value, all) => (value.trim() ? renewalRuleTextRule(value, all.new_rules) : undefined),
+ }
+ );
+
  useEffect(() => {
  if (isOpen && propertyId && propertyId !== "all") {
  fetchSettings();
@@ -43,7 +67,14 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
  const res = await fetch(`/api/landlord/properties/${propertyId}/renewal-settings`);
  if (res.ok) {
  const settingsResponse = await res.json();
- setSettings(settingsResponse);
+ setSettings({
+ base_rent_adjustment: settingsResponse?.base_rent_adjustment ?? 0,
+ adjustment_type: settingsResponse?.adjustment_type === "fixed" ? "fixed" : "percentage",
+ new_rules: Array.isArray(settingsResponse?.new_rules) ? settingsResponse.new_rules : [],
+ landlord_memo: settingsResponse?.landlord_memo ?? "",
+ is_enabled: settingsResponse?.is_enabled ?? true,
+ });
+ form.reset();
  }
  } catch (error) {
  toast.error("Failed to load settings");
@@ -53,6 +84,9 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
  };
 
  const handleSave = async () => {
+ if (saving) return;
+ // A rule typed but not yet added is ignored; only block on fields that are saved.
+ if (!form.validateFields(["base_rent_adjustment", "landlord_memo", "new_rules"])) return;
  setSaving(true);
  try {
  const res = await fetch(`/api/landlord/properties/${propertyId}/renewal-settings`, {
@@ -66,7 +100,14 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
  });
  onClose();
  } else {
- toast.error("Failed to update settings");
+ const errorBody = await res.json().catch(() => ({}));
+ const fieldErrors: Record<string, string> = {};
+ for (const [key, message] of Object.entries((errorBody.fieldErrors ?? {}) as Record<string, string>)) {
+ const field = key.replace(/^settings\./, "").split(".")[0];
+ if (!fieldErrors[field]) fieldErrors[field] = message;
+ }
+ form.setServerErrors(fieldErrors);
+ toast.error(errorBody.error || "Failed to update settings");
  }
  } catch (error) {
  toast.error("An error occurred while saving");
@@ -77,6 +118,11 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
 
  const addRule = () => {
  if (!newRule.trim()) return;
+ if (!form.validateFields(["newRule"])) return;
+ if (settings.new_rules.length >= RENEWAL_LIMITS.maxRules) {
+ toast.error(`You can add at most ${RENEWAL_LIMITS.maxRules} rules.`);
+ return;
+ }
  setSettings(prev => ({ ...prev, new_rules: [...prev.new_rules, newRule.trim()] }));
  setNewRule("");
  };
@@ -140,13 +186,22 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
  <label htmlFor="rent-adjustment" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
  {settings.adjustment_type === "percentage" ? "Increase (%)" : "Increase (PHP)"}
  </label>
- <input min={-100} max={100} 
+ <input
+ {...form.fieldProps("base_rent_adjustment")}
+ min={0}
+ max={settings.adjustment_type === "percentage" ? RENEWAL_LIMITS.maxPercentage : undefined}
+ step="0.01"
+ inputMode="decimal"
  id="rent-adjustment"
  type="number"
  value={settings.base_rent_adjustment}
- onChange={(e) => setSettings(prev => ({ ...prev, base_rent_adjustment: parseFloat(e.target.value) || 0 }))}
- className="w-full p-4 rounded-2xl neumorphic-panel text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none"
+ onChange={(e) => setSettings(prev => ({ ...prev, base_rent_adjustment: e.target.value }))}
+ className={cn(
+ "w-full p-4 rounded-2xl neumorphic-panel text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none",
+ form.errorFor("base_rent_adjustment") && "ring-1 ring-rose-500/50"
+ )}
  />
+ <FieldError id={form.errorId("base_rent_adjustment")} message={form.errorFor("base_rent_adjustment")} />
  </div>
  </div>
  </section>
@@ -164,32 +219,44 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
  </div>
  ))}
  <div className="flex gap-2">
- <input maxLength={120} 
+ <input
+ {...form.fieldProps("newRule")}
+ maxLength={RENEWAL_LIMITS.ruleMax}
  type="text"
  placeholder="Add a new rule or term change..."
  value={newRule}
  onChange={(e) => setNewRule(e.target.value)}
  onKeyDown={(e) => e.key === 'Enter' && addRule()}
- className="flex-1 p-3 rounded-xl neumorphic-panel text-sm outline-none focus:ring-2 focus:ring-primary/20"
+ className={cn(
+ "flex-1 p-3 rounded-xl neumorphic-panel text-sm outline-none focus:ring-2 focus:ring-primary/20",
+ form.errorFor("newRule") && "ring-1 ring-rose-500/50"
+ )}
  />
- <button 
+ <button
  onClick={addRule}
  className="p-3 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all"
  >
  <Plus className="size-5" />
  </button>
  </div>
+ <FieldError id={form.errorId("newRule")} message={form.errorFor("newRule") ?? form.errorFor("new_rules")} />
  </div>
  </section>
 
  <section className="space-y-4">
  <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-white/5 pb-2">Landlord's Note to Residents</h4>
- <textarea maxLength={500} 
+ <textarea
+ {...form.fieldProps("landlord_memo")}
+ maxLength={RENEWAL_LIMITS.memoMax}
  value={settings.landlord_memo}
  onChange={(e) => setSettings(prev => ({ ...prev, landlord_memo: e.target.value }))}
  placeholder="Explain the changes or provide extra context for renewals..."
- className="w-full p-4 rounded-2xl neumorphic-panel text-sm min-h-[120px] outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+ className={cn(
+ "w-full p-4 rounded-2xl neumorphic-panel text-sm min-h-[120px] outline-none focus:ring-2 focus:ring-primary/20 resize-none",
+ form.errorFor("landlord_memo") && "ring-1 ring-rose-500/50"
+ )}
  />
+ <FieldError id={form.errorId("landlord_memo")} message={form.errorFor("landlord_memo")} />
  </section>
  </div>
  )}

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from 'next/image';
-import { useState, useEffect, Suspense, type ChangeEvent } from "react";
+import { useState, useEffect, useMemo, Suspense, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
     Building2,
@@ -45,6 +45,17 @@ import { useProperty } from "@/context/PropertyContext";
 import { playSound } from "@/hooks/useSound";
 import { useAppToast } from "@/hooks/useAppToast";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { textRule } from "@/lib/validation/rules";
+import {
+    baseRentRule,
+    occupancyLimitRule,
+    propertyAddressRule,
+    propertyNameRule,
+    totalFloorsRule,
+    totalUnitsRule,
+    unitPrefixRule,
+} from "@/lib/validation/schemas/properties.schema";
 import { 
     VALENZUELA_BARANGAYS, 
     formatValenzuelaAddress, 
@@ -74,6 +85,31 @@ const DEFAULT_OCCUPANCY: Record<SupportedPropertyEnum, number> = {
 };
 
 const MAX_PROPERTY_UPLOAD_FILES = 12;
+/** Matches the 8 MB per-image limit enforced by /api/landlord/properties/media. */
+const MAX_PROPERTY_IMAGE_BYTES = 8 * 1024 * 1024;
+const MANUAL_ADDRESS_MAX = 120;
+const STREET_MAX = 100;
+
+type WizardField = "propertyName" | "address" | "totalUnits" | "floorCount" | "occupancyLimit" | "unitPrefix" | "baseRent" | "contractFile";
+
+const STEP_FIELDS: Record<Step, WizardField[]> = {
+    1: ["propertyName", "address"],
+    2: ["totalUnits", "floorCount", "occupancyLimit", "unitPrefix"],
+    3: ["baseRent"],
+    4: ["contractFile"],
+};
+
+/** API field names → wizard field names, so server `fieldErrors` land on the right input. */
+const SERVER_FIELD_MAP: Record<string, WizardField> = {
+    name: "propertyName",
+    address: "address",
+    total_units: "totalUnits",
+    total_floors: "floorCount",
+    occupancy_limit: "occupancyLimit",
+    unit_prefix: "unitPrefix",
+    base_rent_amount: "baseRent",
+    contract_file: "contractFile",
+};
 const SAVE_SAFETY_TIMEOUT_MS = 45_000;
 const MEDIA_UPLOAD_TIMEOUT_MS = 25_000;
 const PROPERTY_LOAD_TIMEOUT_MS = 12_000;
@@ -103,7 +139,6 @@ function NewAssetContent() {
     const [mediaPreviewUrls, setMediaPreviewUrls] = useState<string[]>([]);
     const [coverExistingUrl, setCoverExistingUrl] = useState<string | null>(null);
     const [coverNewIndex, setCoverNewIndex] = useState<number | null>(null);
-    const [errors, setErrors] = useState<Record<string, string>>({});
     const [billingGuideOpen, setBillingGuideOpen] = useState(false);
     const [billingGuideInitialTab, setBillingGuideInitialTab] = useState<string>("fixed_charge");
     const [assetClassGuideOpen, setAssetClassGuideOpen] = useState(false);
@@ -149,6 +184,51 @@ function NewAssetContent() {
     });
 
     const hasHydratedEditData = formData.propertyName.trim().length > 0 && formData.address.trim().length > 0;
+
+    // Inline validation: same rules as POST/PUT /api/landlord/properties.
+    const validationValues = useMemo(
+        () => ({
+            propertyName: formData.propertyName,
+            address: isManualAddress ? formData.address : addressStreet,
+            totalUnits: formData.totalUnits,
+            floorCount: formData.floorCount,
+            occupancyLimit: formData.occupancyLimit,
+            unitPrefix: formData.unitPrefix,
+            baseRent: formData.baseRent,
+            contractFile: formData.contractFile,
+            contractMode: formData.contractMode,
+            isManualAddress,
+            fullAddress: formData.address,
+        }),
+        [formData, isManualAddress, addressStreet]
+    );
+    const form = useFormValidation(validationValues, {
+        propertyName: (v) => propertyNameRule(v),
+        address: (v, all) => {
+            if (all.isManualAddress) return propertyAddressRule(v, MANUAL_ADDRESS_MAX);
+            if (!String(v ?? "").trim()) return "Please enter your house/building number and street name.";
+            return textRule(v, { label: "Street address", max: STREET_MAX }) ?? propertyAddressRule(all.fullAddress);
+        },
+        totalUnits: (v) => totalUnitsRule(v),
+        floorCount: (v) => totalFloorsRule(v),
+        occupancyLimit: (v) => occupancyLimitRule(v),
+        unitPrefix: (v) => (String(v ?? "").trim() ? unitPrefixRule(v) : "Please choose or type a room label (e.g. Room or Unit)."),
+        baseRent: (v) => (!v ? "Please enter the standard monthly rent amount (greater than ₱0)." : baseRentRule(v)),
+        contractFile: (v, all) =>
+            all.contractMode === "upload" && !v
+                ? "Please choose a lease contract file to upload or select Standard Digital Lease."
+                : undefined,
+    });
+    const errors: Partial<Record<WizardField, string>> = {
+        propertyName: form.errorFor("propertyName"),
+        address: form.errorFor("address"),
+        totalUnits: form.errorFor("totalUnits"),
+        floorCount: form.errorFor("floorCount"),
+        occupancyLimit: form.errorFor("occupancyLimit"),
+        unitPrefix: form.errorFor("unitPrefix"),
+        baseRent: form.errorFor("baseRent"),
+        contractFile: form.errorFor("contractFile"),
+    };
 
     useEffect(() => {
         if (!isEditMode || !id) return;
@@ -252,21 +332,14 @@ function NewAssetContent() {
     }, [mediaFiles]);
 
     const handleInputChange = (field: string, value: any) => {
+        // Inline errors are derived from the values, so they clear as soon as the input becomes valid.
         setFormData(prev => ({ ...prev, [field]: value }));
-        setErrors(prev => {
-            if (!prev[field] && !(field === "contractMode" && prev.contractFile)) return prev;
-            const next = { ...prev };
-            delete next[field];
-            if (field === "contractMode" && value === "generate") {
-                delete next.contractFile;
-            }
-            return next;
-        });
     };
 
     const handleMediaFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         const selectedFile = handleMediaSelection(e, {
             preset: "image",
+            maxSizeBytes: MAX_PROPERTY_IMAGE_BYTES,
             notify: (msg, desc) => toast.error(desc ? `${msg}: ${desc}` : msg),
         });
         if (!selectedFile) return;
@@ -276,60 +349,12 @@ function NewAssetContent() {
     };
 
     const validateStep = (currentStep: Step): boolean => {
-        const nextErrors: Record<string, string> = {};
-
-        if (currentStep === 1) {
-            if (!formData.propertyName.trim()) {
-                nextErrors.propertyName = "Please enter your property name.";
-            }
-            if (!isManualAddress) {
-                if (!addressStreet.trim()) {
-                    nextErrors.address = "Please enter your house/building number and street name.";
-                }
-            } else if (!formData.address.trim()) {
-                nextErrors.address = "Please enter the complete property address.";
-            }
-        } else if (currentStep === 2) {
-            const units = parseInt(formData.totalUnits, 10);
-            if (isNaN(units) || units < 1) {
-                nextErrors.totalUnits = "Please enter at least 1 room or unit.";
-            } else if (units > 99) {
-                nextErrors.totalUnits = "Total units cannot exceed 99 (2 digits).";
-            }
-            const floors = parseInt(formData.floorCount, 10);
-            if (isNaN(floors) || floors < 1) {
-                nextErrors.floorCount = "Please enter at least 1 floor.";
-            } else if (floors > 99) {
-                nextErrors.floorCount = "Number of floors cannot exceed 99 (2 digits).";
-            }
-            const occupancy = parseInt(formData.occupancyLimit, 10);
-            if (isNaN(occupancy) || occupancy < 1) {
-                nextErrors.occupancyLimit = "Please enter the maximum guests allowed per room.";
-            } else if (occupancy > 99) {
-                nextErrors.occupancyLimit = "Max tenants per room cannot exceed 99 (2 digits).";
-            }
-            if (!formData.unitPrefix.trim()) {
-                nextErrors.unitPrefix = "Please choose or type a room label (e.g. Room or Unit).";
-            }
-        } else if (currentStep === 3) {
-            if (!formData.baseRent || formData.baseRent <= 0) {
-                nextErrors.baseRent = "Please enter the standard monthly rent amount (greater than ₱0).";
-            }
-        } else if (currentStep === 4) {
-            if (formData.contractMode === "upload" && !formData.contractFile) {
-                nextErrors.contractFile = "Please choose a lease contract file to upload or select Standard Digital Lease.";
-            }
-        }
-
-        setErrors(nextErrors);
-
-        if (Object.keys(nextErrors).length > 0) {
-            const firstErrorMessage = Object.values(nextErrors)[0];
-            toast.error(firstErrorMessage);
-            return false;
-        }
-
-        return true;
+        const fields = STEP_FIELDS[currentStep];
+        if (form.validateFields(fields)) return true;
+        // Reveal + focus happen inline; the toast keeps the existing summary feedback.
+        const firstError = fields.map((field) => form.errors[field]).find(Boolean);
+        if (firstError) toast.error(firstError);
+        return false;
     };
 
     const handleNext = () => {
@@ -349,6 +374,7 @@ function NewAssetContent() {
     };
 
     const handleSubmit = async () => {
+        if (isSubmitting) return; // double-click guard
         for (let s = 1; s <= 4; s++) {
             if (!validateStep(s as Step)) {
                 setStep(s as Step);
@@ -429,9 +455,21 @@ function NewAssetContent() {
                 body: JSON.stringify(payload),
             });
 
-            const result = await response.json();
+            const result = await response.json().catch(() => ({}));
 
             if (!response.ok || !result.success) {
+                const serverFieldErrors: Record<string, string> = {};
+                for (const [key, message] of Object.entries((result.fieldErrors ?? {}) as Record<string, string>)) {
+                    const field = SERVER_FIELD_MAP[key.split(".")[0]];
+                    if (field && !serverFieldErrors[field]) serverFieldErrors[field] = message;
+                }
+                if (Object.keys(serverFieldErrors).length > 0) {
+                    const firstStep = ([1, 2, 3, 4] as Step[]).find((s) =>
+                        STEP_FIELDS[s].some((field) => serverFieldErrors[field])
+                    );
+                    if (firstStep) setStep(firstStep);
+                    form.setServerErrors(serverFieldErrors);
+                }
                 throw new Error(result.error || "Failed to save property.");
             }
 
@@ -624,9 +662,10 @@ function NewAssetContent() {
                                                     {formData.propertyName.length}/60
                                                 </span>
                                             </div>
-                                            <input 
+                                            <input
+                                                {...form.fieldProps("propertyName")}
                                                 id="property-name"
-                                                type="text" 
+                                                type="text"
                                                 maxLength={60}
                                                 value={formData.propertyName} 
                                                 onInput={(e) => {
@@ -642,7 +681,7 @@ function NewAssetContent() {
                                                 placeholder="e.g. Sunrise Apartments or Villa Teresa" 
                                             />
                                             {errors.propertyName ? (
-                                                <p className="text-[11px] font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
+                                                <p id={form.errorId("propertyName")} role="alert" className="text-[11px] font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
                                                     {errors.propertyName}
                                                 </p>
                                             ) : (
@@ -754,6 +793,7 @@ function NewAssetContent() {
                                                             </div>
                                                         </div>
                                                         <input
+                                                            {...form.fieldProps("address")}
                                                             id="address-street"
                                                             type="text"
                                                             list="valenzuela-popular-streets"
@@ -778,7 +818,7 @@ function NewAssetContent() {
                                                         </datalist>
 
                                                         {errors.address && (
-                                                            <p className="text-xs font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
+                                                            <p id={form.errorId("address")} role="alert" className="text-xs font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
                                                                 {errors.address}
                                                             </p>
                                                         )}
@@ -787,10 +827,11 @@ function NewAssetContent() {
                                             ) : (
                                                 /* Manual Textarea Mode */
                                                 <div className="space-y-1">
-                                                    <textarea 
+                                                    <textarea
+                                                        {...form.fieldProps("address")}
                                                         id="property-address"
-                                                        rows={2} 
-                                                        maxLength={120}
+                                                        rows={2}
+                                                        maxLength={MANUAL_ADDRESS_MAX}
                                                         value={formData.address} 
                                                         onChange={e => handleInputChange("address", e.target.value)} 
                                                         className={cn(
@@ -800,7 +841,7 @@ function NewAssetContent() {
                                                         placeholder="e.g. 123 Rizal Street, Barangay Poblacion, Meycauayan, Bulacan" 
                                                     />
                                                     {errors.address && (
-                                                        <p className="text-xs font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
+                                                        <p id={form.errorId("address")} role="alert" className="text-xs font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
                                                             {errors.address}
                                                         </p>
                                                     )}
@@ -1009,9 +1050,12 @@ function NewAssetContent() {
                                                         Total Units / Rooms <span className="text-rose-500">*</span>
                                                     </label>
                                                     <input 
+                                                        {...form.fieldProps("totalUnits")}
                                                         type="number" 
                                                         min="1"
                                                         max="99"
+                                                        step="1"
+                                                        inputMode="numeric"
                                                         maxLength={2}
                                                         value={formData.totalUnits}
                                                         onKeyDown={(e) => {
@@ -1027,6 +1071,7 @@ function NewAssetContent() {
                                                             handleInputChange("totalUnits", raw);
                                                         }}
                                                         onBlur={() => {
+                                                            form.touch("totalUnits");
                                                             if (!formData.totalUnits || parseInt(formData.totalUnits, 10) < 1) {
                                                                 handleInputChange("totalUnits", "1");
                                                             }
@@ -1037,7 +1082,7 @@ function NewAssetContent() {
                                                         )}
                                                     />
                                                     {errors.totalUnits && (
-                                                        <p className="text-[10px] font-semibold text-rose-500">{errors.totalUnits}</p>
+                                                        <p id={form.errorId("totalUnits")} role="alert" className="text-[10px] font-semibold text-rose-500">{errors.totalUnits}</p>
                                                     )}
                                                 </div>
 
@@ -1046,9 +1091,12 @@ function NewAssetContent() {
                                                         Number of Floors <span className="text-rose-500">*</span>
                                                     </label>
                                                     <input 
+                                                        {...form.fieldProps("floorCount")}
                                                         type="number" 
                                                         min="1"
                                                         max="99"
+                                                        step="1"
+                                                        inputMode="numeric"
                                                         maxLength={2}
                                                         value={formData.floorCount}
                                                         onKeyDown={(e) => {
@@ -1066,6 +1114,7 @@ function NewAssetContent() {
                                                             handleInputChange("floorCount", val);
                                                         }}
                                                         onBlur={() => {
+                                                            form.touch("floorCount");
                                                             if (!formData.floorCount || parseInt(formData.floorCount, 10) < 1) {
                                                                 handleInputChange("floorCount", "1");
                                                             }
@@ -1076,7 +1125,7 @@ function NewAssetContent() {
                                                         )}
                                                     />
                                                     {errors.floorCount && (
-                                                        <p className="text-[10px] font-semibold text-rose-500">{errors.floorCount}</p>
+                                                        <p id={form.errorId("floorCount")} role="alert" className="text-[10px] font-semibold text-rose-500">{errors.floorCount}</p>
                                                     )}
                                                 </div>
                                             </div>
@@ -1086,9 +1135,12 @@ function NewAssetContent() {
                                                     Max Tenants per Room <span className="text-rose-500">*</span>
                                                 </label>
                                                 <input 
+                                                    {...form.fieldProps("occupancyLimit")}
                                                     type="number" 
                                                     min="1"
                                                     max="99"
+                                                    step="1"
+                                                    inputMode="numeric"
                                                     maxLength={2}
                                                     value={formData.occupancyLimit}
                                                     onKeyDown={(e) => {
@@ -1104,6 +1156,7 @@ function NewAssetContent() {
                                                         handleInputChange("occupancyLimit", raw);
                                                     }}
                                                     onBlur={() => {
+                                                        form.touch("occupancyLimit");
                                                         if (!formData.occupancyLimit || parseInt(formData.occupancyLimit, 10) < 1) {
                                                             handleInputChange("occupancyLimit", "1");
                                                         }
@@ -1117,7 +1170,7 @@ function NewAssetContent() {
                                                     Standard capacity per room (e.g. 1 to 5 people). Max 2 digits.
                                                 </p>
                                                 {errors.occupancyLimit && (
-                                                    <p className="text-[10px] font-semibold text-rose-500">{errors.occupancyLimit}</p>
+                                                    <p id={form.errorId("occupancyLimit")} role="alert" className="text-[10px] font-semibold text-rose-500">{errors.occupancyLimit}</p>
                                                 )}
                                             </div>
                                         </div>
@@ -1190,6 +1243,7 @@ function NewAssetContent() {
                                                     <div className="pt-0.5 space-y-1">
                                                         <div className="relative">
                                                             <input 
+                                                                {...form.fieldProps("unitPrefix")}
                                                                 type="text"
                                                                 autoFocus
                                                                 maxLength={10}
@@ -1206,7 +1260,7 @@ function NewAssetContent() {
                                                             </span>
                                                         </div>
                                                         {errors.unitPrefix && (
-                                                            <p className="text-[10px] font-semibold text-rose-500">{errors.unitPrefix}</p>
+                                                            <p id={form.errorId("unitPrefix")} role="alert" className="text-[10px] font-semibold text-rose-500">{errors.unitPrefix}</p>
                                                         )}
                                                     </div>
                                                 )}
@@ -1303,6 +1357,7 @@ function NewAssetContent() {
                                                     ₱
                                                 </div>
                                                 <input 
+                                                    {...form.fieldProps("baseRent")}
                                                     type="text" 
                                                     inputMode="decimal"
                                                     maxLength={10}
@@ -1320,7 +1375,7 @@ function NewAssetContent() {
                                                 />
                                             </div>
                                             {errors.baseRent ? (
-                                                <p className="text-[11px] font-semibold text-rose-500 mt-0.5">{errors.baseRent}</p>
+                                                <p id={form.errorId("baseRent")} role="alert" className="text-[11px] font-semibold text-rose-500 mt-0.5">{errors.baseRent}</p>
                                             ) : (
                                                 <p className="text-[11px] text-muted-foreground">
                                                     Base rent per room or unit. You can customize rates for specific rooms later.
@@ -1557,6 +1612,7 @@ function NewAssetContent() {
                                                         <span>{formData.contractFile ? "File: " + formData.contractFile : "Choose PDF"}</span>
                                                     </label>
                                                     <input 
+                                                        {...form.fieldProps("contractFile")}
                                                         id="contract-upload-input"
                                                         type="file" 
                                                         onChange={(e) => {
@@ -1572,7 +1628,7 @@ function NewAssetContent() {
                                                         accept={MEDIA_ACCEPT_STRINGS.document_only}
                                                     />
                                                     {errors.contractFile && (
-                                                        <p className="text-xs font-semibold text-rose-500 mt-1">{errors.contractFile}</p>
+                                                        <p id={form.errorId("contractFile")} role="alert" className="text-xs font-semibold text-rose-500 mt-1">{errors.contractFile}</p>
                                                     )}
                                                 </div>
                                             </div>

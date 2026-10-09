@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
-import { PropertyService } from "@/lib/services/property";
+import { parseJsonBody, parseWithSchema } from "@/lib/validation/server";
+import { propertyIdSchema, renewalSettingsPatchSchema } from "@/lib/validation/schemas/properties.schema";
 
 /**
  * GET /api/landlord/properties/[id]/renewal-settings
@@ -15,8 +16,10 @@ export async function GET(
   if (!("userId" in authContext)) return authContext as Response;
   const { userId, supabase } = authContext;
 
+  const idCheck = parseWithSchema(propertyIdSchema, id);
+  if (!idCheck.ok) return idCheck.response;
+
   try {
-    const propertyService = new PropertyService(supabase);
     const { data: property, error } = await supabase
       .from("properties")
       .select("renewal_settings")
@@ -47,29 +50,31 @@ export async function PATCH(
   if (!("userId" in authContext)) return authContext as Response;
   const { userId, supabase } = authContext;
 
-  try {
-    const body = await request.json();
-    const { settings } = body;
+  const idCheck = parseWithSchema(propertyIdSchema, id);
+  if (!idCheck.ok) return idCheck.response;
 
+  const parsed = await parseJsonBody(request, renewalSettingsPatchSchema);
+  if (!parsed.ok) return parsed.response;
+
+  try {
     const { data, error } = await supabase
       .from("properties")
-      .update({ renewal_settings: settings })
+      .update({ renewal_settings: parsed.data.settings })
       .eq("id", id)
       .eq("landlord_id", userId)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       return NextResponse.json({ error: "Failed to update settings" }, { status: 500 });
     }
 
+    if (!data) {
+      return NextResponse.json({ error: "Property not found" }, { status: 404 });
+    }
+
     return NextResponse.json(data.renewal_settings);
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error?.message || "Failed to update settings" },
-      { status: 500 }
-    );
+  } catch {
+    return NextResponse.json({ error: "Failed to update settings" }, { status: 500 });
   }
 }
-
-

@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { otpRule } from "@/lib/validation/rules";
+import { CURRENT_PASSWORD_MAX_LENGTH, currentPasswordRule } from "@/lib/validation/schemas/account.schema";
 
 interface TwoFactorManagementCardProps {
     apiEndpoint: string;
@@ -116,9 +118,11 @@ export function TwoFactorManagementCard({
 
     const handleVerifyOtp = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
+        if (isVerifyingOtp) return;
         const cleanOtp = otpInput.trim();
-        if (cleanOtp.length < 6) {
-            setOtpError("Please enter a 6-digit verification code");
+        const otpRuleError = otpRule(cleanOtp);
+        if (otpRuleError) {
+            setOtpError(otpRuleError);
             return;
         }
 
@@ -156,7 +160,9 @@ export function TwoFactorManagementCard({
 
     const handleDisable2FA = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        if (!disablePassword) {
+        if (isDisabling) return;
+        // Only checks that a password was entered (never strength rules).
+        if (currentPasswordRule(disablePassword, { label: "Account password" })) {
             setDisableError("Please enter your account password");
             return;
         }
@@ -291,17 +297,24 @@ export function TwoFactorManagementCard({
                             <input
                                 type="text"
                                 inputMode="numeric"
-                                maxLength={8}
+                                autoComplete="one-time-code"
+                                maxLength={6}
                                 autoFocus
+                                aria-label="6-digit verification code"
+                                aria-invalid={otpError ? true : undefined}
+                                aria-describedby={otpError ? "two-factor-otp-error" : undefined}
                                 value={otpInput}
-                                onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ""))}
+                                onChange={(e) => {
+                                    setOtpInput(e.target.value.replace(/\D/g, "").slice(0, 6));
+                                    if (otpError) setOtpError(null);
+                                }}
                                 placeholder="000000"
                                 className="w-full text-center font-mono text-2xl tracking-[0.5em] py-3.5 px-4 rounded-xl neumorphic-inset bg-background/50 border border-border/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all placeholder:tracking-normal placeholder:opacity-40"
                             />
                         </div>
 
                         {otpError && (
-                            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-2.5 text-xs text-rose-500">
+                            <div id="two-factor-otp-error" role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-2.5 text-xs text-rose-500">
                                 <AlertCircle className="size-4 shrink-0 mt-0.5" />
                                 <span>{otpError}</span>
                             </div>
@@ -390,9 +403,16 @@ export function TwoFactorManagementCard({
                             <div className="relative">
                                 <input
                                     type={showDisablePassword ? "text" : "password"}
-                                    maxLength={16}
+                                    maxLength={CURRENT_PASSWORD_MAX_LENGTH}
+                                    autoComplete="current-password"
+                                    aria-label="Current account password"
+                                    aria-invalid={disableError ? true : undefined}
+                                    aria-describedby={disableError ? "two-factor-disable-error" : undefined}
                                     value={disablePassword}
-                                    onChange={(e) => setDisablePassword(e.target.value)}
+                                    onChange={(e) => {
+                                        setDisablePassword(e.target.value);
+                                        if (disableError) setDisableError(null);
+                                    }}
                                     placeholder="Enter current password"
                                     className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary pr-10"
                                 />
@@ -406,7 +426,7 @@ export function TwoFactorManagementCard({
                             </div>
 
                             {disableError && (
-                                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-2.5 text-xs text-rose-500">
+                                <div id="two-factor-disable-error" role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-2.5 text-xs text-rose-500">
                                     <AlertCircle className="size-4 shrink-0 mt-0.5" />
                                     <span>{disableError}</span>
                                 </div>

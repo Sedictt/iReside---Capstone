@@ -1,23 +1,37 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { BILLING_BUCKETS, uploadBillingFile } from "@/lib/billing/storage";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { BillingService } from "@/lib/services/payment";
+import { PaymentError } from "@/lib/services/payment/payment.errors";
+import { databaseErrorResponse, parseWithSchema } from "@/lib/validation/server";
+import {
+  PROOF_LIMITS,
+  billingMonthRule,
+  isUuid,
+  proofFileRule, proofContentRule,
+  utilityReadingBulkSchema,
+  utilityReadingSchema,
+  type UtilityReadingInput,
+} from "@/lib/validation/schemas/billing.schema";
 
 export const dynamic = "force-dynamic";
 
-const readingSchema = z.object({
-  leaseId: z.string().trim().min(1, "Lease or unit identifier is required"),
-  unitId: z.string().trim().optional().nullable(),
-  utilityType: z.enum(["water", "electricity"]),
-  billingPeriodStart: z.string(),
-  billingPeriodEnd: z.string(),
-  previousReading: z.coerce.number().min(0),
-  currentReading: z.coerce.number().min(0),
-  note: z.string().max(400).optional().nullable(),
-});
+function badRequest(message: string, fieldErrors: Record<string, string> = {}) {
+  return NextResponse.json({ error: message, fieldErrors }, { status: 400 });
+}
 
-const bulkSchema = z.array(readingSchema);
+/** Service errors carry safe, user-facing messages and their own status; anything else is generic. */
+function readingErrorResponse(error: unknown) {
+  if (error instanceof PaymentError) {
+    return NextResponse.json({ error: error.message }, { status: error.httpStatus });
+  }
+  const code = (error as { code?: string } | null)?.code;
+  if (code === "23514") {
+    return badRequest("Check the readings: the current reading must not be lower than the previous one and the period end must not be before its start.");
+  }
+  if (code) return databaseErrorResponse(error as { code?: string }, "Failed to record utility reading.");
+  return NextResponse.json({ error: "Failed to record utility reading." }, { status: 500 });
+}
 
 export async function POST(request: Request) {
   const authContext = await requireAuthenticatedUser(request);
@@ -25,48 +39,55 @@ export async function POST(request: Request) {
   const { userId, supabase } = authContext;
   const billingService = new BillingService(supabase);
 
-  try {
-    const contentType = request.headers.get("content-type");
+  const contentType = request.headers.get("content-type") ?? "";
+  const { searchParams } = new URL(request.url);
+  const postInvoicesParam = searchParams.get("postInvoices") === "true";
+  const monthParam = searchParams.get("month") ?? undefined;
+  const monthParamError = billingMonthRule(monthParam, { label: "Month" });
+  if (monthParamError) return badRequest(monthParamError, { month: monthParamError });
 
-    const { searchParams } = new URL(request.url);
-    const postInvoicesParam = searchParams.get("postInvoices") === "true";
+  if (contentType.includes("application/json")) {
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return badRequest("Request body must be valid JSON.");
+    }
 
-    if (contentType?.includes("application/json")) {
-      const body = await request.json();
+    const isBulk = Array.isArray(body) || (!!body && typeof body === "object" && Array.isArray((body as { readings?: unknown }).readings));
 
-      let readingsPayload: any[] = [];
-      let shouldPostInvoices = postInvoicesParam;
-      let specifiedMonth: string | undefined = searchParams.get("month") ?? undefined;
+    if (!isBulk) {
+      const parsed = parseWithSchema(utilityReadingSchema, body);
+      if (!parsed.ok) return parsed.response;
+      const payload = parsed.data;
 
-      if (Array.isArray(body)) {
-        readingsPayload = body;
-      } else if (body && typeof body === "object" && Array.isArray(body.readings)) {
-        readingsPayload = body.readings;
-        if (body.postInvoices !== undefined) {
-          shouldPostInvoices = Boolean(body.postInvoices);
-        }
-        if (body.month) {
-          specifiedMonth = String(body.month);
-        }
-      } else {
-        const payload = readingSchema.parse(body);
-        const reading = await billingService.recordUtilityReading(userId, payload);
+      try {
+        const reading = await billingService.recordUtilityReading(userId, toServiceInput(payload));
 
         let invoiceResult = null;
-        if (shouldPostInvoices) {
+        if (postInvoicesParam) {
           const { generateMonthlyInvoices } = await import("@/lib/billing/server");
-          const month = specifiedMonth || payload.billingPeriodStart.slice(0, 7);
+          const month = monthParam || payload.billingPeriodStart.slice(0, 7);
           invoiceResult = await generateMonthlyInvoices(supabase, userId, month, [reading.lease_id || payload.leaseId]);
         }
 
         return NextResponse.json({ reading, invoiceResult });
+      } catch (error) {
+        console.error("Failed to record utility reading:", error);
+        return readingErrorResponse(error);
       }
+    }
 
-      const readings = bulkSchema.parse(readingsPayload);
+    const parsed = parseWithSchema(utilityReadingBulkSchema, Array.isArray(body) ? { readings: body } : body);
+    if (!parsed.ok) return parsed.response;
+    const { readings } = parsed.data;
+    const shouldPostInvoices = parsed.data.postInvoices ?? postInvoicesParam;
+    const specifiedMonth = parsed.data.month ?? monthParam;
+
+    try {
       const results = [];
-
       for (const payload of readings) {
-        const reading = await billingService.recordUtilityReading(userId, payload);
+        const reading = await billingService.recordUtilityReading(userId, toServiceInput(payload));
         results.push(reading);
       }
 
@@ -75,58 +96,79 @@ export async function POST(request: Request) {
         const { generateMonthlyInvoices } = await import("@/lib/billing/server");
         const month = specifiedMonth || readings[0]?.billingPeriodStart?.slice(0, 7);
         const leaseIds = Array.from(
-          new Set(
-            results.map((r) => r.lease_id || readings.find((rd) => rd.leaseId)?.leaseId).filter(Boolean)
-          )
-        ) as string[];
+          new Set(results.map((r) => r.lease_id).filter((id): id is string => isUuid(id))),
+        );
         invoiceResult = await generateMonthlyInvoices(supabase, userId, month, leaseIds);
       }
 
       return NextResponse.json({ readings: results, invoiceResult });
+    } catch (error) {
+      console.error("Failed to record utility readings:", error);
+      return readingErrorResponse(error);
     }
+  }
 
-    // Fallback to FormData (for single reading with proof image)
-    const formData = await request.formData();
-    const payload = readingSchema.parse({
-      leaseId: formData.get("leaseId"),
-      unitId: formData.get("unitId"),
-      utilityType: formData.get("utilityType"),
-      billingPeriodStart: formData.get("billingPeriodStart"),
-      billingPeriodEnd: formData.get("billingPeriodEnd"),
-      previousReading: formData.get("previousReading"),
-      currentReading: formData.get("currentReading"),
-      note: formData.get("note"),
-    });
+  // Fallback to FormData (for single reading with proof image)
+  let formData: FormData;
+  try {
+    formData = await request.formData();
+  } catch {
+    return badRequest("Request body is invalid.");
+  }
 
-    const proof = formData.get("proof");
-    const proofUpload =
-      proof instanceof File && proof.size > 0
-        ? await uploadBillingFile({
-            bucketName: BILLING_BUCKETS.readingProofs,
-            ownerId: userId,
-            scope: payload.leaseId,
-            file: proof,
-          })
-        : null;
+  const parsed = parseWithSchema(utilityReadingSchema, {
+    leaseId: formData.get("leaseId"),
+    unitId: formData.get("unitId"),
+    utilityType: formData.get("utilityType"),
+    billingPeriodStart: formData.get("billingPeriodStart"),
+    billingPeriodEnd: formData.get("billingPeriodEnd"),
+    previousReading: formData.get("previousReading"),
+    currentReading: formData.get("currentReading"),
+    note: formData.get("note"),
+  });
+  if (!parsed.ok) return parsed.response;
+  const payload = parsed.data;
+
+  const proofEntry = formData.get("proof");
+  const proof = proofEntry instanceof File && proofEntry.size > 0 ? proofEntry : null;
+  const proofError = proofFileRule(proof, { label: "Reading proof", maxBytes: PROOF_LIMITS.readingProofMaxBytes }) ?? (await proofContentRule(proof, { label: "Reading proof" }));
+  if (proofError) return badRequest(proofError, { proof: proofError });
+
+  try {
+    const proofUpload = proof
+      ? await uploadBillingFile({
+          bucketName: BILLING_BUCKETS.readingProofs,
+          ownerId: userId,
+          // Never build storage paths from free-form input.
+          scope: isUuid(payload.leaseId) ? payload.leaseId : "unassigned",
+          file: proof,
+        })
+      : null;
 
     const reading = await billingService.recordUtilityReading(userId, {
-      ...payload,
+      ...toServiceInput(payload),
       proofImagePath: proofUpload?.path ?? null,
       proofImageUrl: proofUpload?.publicUrl ?? null,
     });
 
     return NextResponse.json({ reading });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Failed to record utility reading:", error);
-    if (error instanceof z.ZodError) {
-      const msg = error.issues.map((i) => `${i.path.join(".") || "field"}: ${i.message}`).join("; ");
-      return NextResponse.json({ error: msg }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: error?.message || "Failed to record utility reading." },
-      { status: 500 },
-    );
+    return readingErrorResponse(error);
   }
+}
+
+function toServiceInput(payload: UtilityReadingInput) {
+  return {
+    leaseId: payload.leaseId,
+    unitId: payload.unitId ?? null,
+    utilityType: payload.utilityType,
+    billingPeriodStart: payload.billingPeriodStart,
+    billingPeriodEnd: payload.billingPeriodEnd,
+    previousReading: payload.previousReading,
+    currentReading: payload.currentReading,
+    note: payload.note ?? null,
+  };
 }
 
 export async function GET(request: Request) {

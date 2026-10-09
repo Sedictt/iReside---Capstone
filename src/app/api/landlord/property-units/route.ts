@@ -43,7 +43,7 @@ export async function GET(request: Request) {
     } catch (error: any) {
         console.error("[property-units GET] Error:", error);
         return NextResponse.json(
-            { error: error?.message || "Failed to load properties." },
+            { error: "Failed to load properties." },
             { status: 500 }
         );
     }

@@ -4,6 +4,7 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import type { Json } from "@/types/database";
 import { sendTenantCredentials, sendLandlordCredentialsCopy } from "@/lib/email";
 import { generateSigningLink } from "@/lib/jwt";
+import { isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 function generateTempPassword(): string {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$";
@@ -60,6 +61,10 @@ export async function POST(
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 
+    if (!isId(applicationId)) {
+        return NextResponse.json({ error: "Application not found." }, { status: 404 });
+    }
+
     const { data: app, error: appError } = await supabase
         .from("applications")
         .select("id, status, applicant_name, applicant_email, applicant_phone, unit_id, move_in_date, landlord_id")
@@ -73,6 +78,24 @@ export async function POST(
 
     if (app.status === "approved") {
         return NextResponse.json({ error: "Already approved." }, { status: 400 });
+    }
+
+    if (app.status === "rejected" || app.status === "withdrawn") {
+        return NextResponse.json({ error: `A ${app.status} application cannot be approved.` }, { status: 409 });
+    }
+
+    const { data: targetUnit } = await adminClient
+        .from("units")
+        .select("id, status")
+        .eq("id", app.unit_id)
+        .maybeSingle();
+
+    if (!targetUnit) {
+        return NextResponse.json({ error: "Unit not found." }, { status: 404 });
+    }
+
+    if (targetUnit.status === "occupied") {
+        return NextResponse.json({ error: "Selected unit is currently occupied and unavailable." }, { status: 409 });
     }
 
     const tenantEmail = app.applicant_email?.trim();
@@ -185,6 +208,7 @@ export async function POST(
         try {
             await adminClient.auth.admin.deleteUser(tenantId);
         } catch {}
-        return NextResponse.json({ error: err.message || "Bypass failed." }, { status: 500 });
+        console.error("[quick-approve] Failed:", err);
+        return NextResponse.json({ error: "Bypass failed. Please try again." }, { status: 500 });
     }
 }

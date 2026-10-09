@@ -27,6 +27,13 @@ import Link from "next/link";
 import { useCalendarNotes } from "@/hooks/useCalendarNotes";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
+import {
+    CALENDAR_NOTE_LIMITS,
+    calendarNoteDescriptionRule,
+    calendarNoteTitleRule,
+} from "@/lib/validation/schemas/operations.schema";
 
 export interface CalendarEvent {
     id: string;
@@ -163,6 +170,17 @@ export function CalendarView({
     const [noteTitle, setNoteTitle] = useState("");
     const [noteDescription, setNoteDescription] = useState("");
     const [isSavingNote, setIsSavingNote] = useState(false);
+    const noteValues = useMemo(() => ({ title: noteTitle, description: noteDescription }), [noteTitle, noteDescription]);
+    const noteForm = useFormValidation(noteValues, {
+        title: (value) => calendarNoteTitleRule(value),
+        description: (value) => calendarNoteDescriptionRule(value),
+    });
+    const closeNoteForm = () => {
+        setIsAddNoteOpen(false);
+        setNoteTitle("");
+        setNoteDescription("");
+        noteForm.reset();
+    };
 
     // Filter toggles
     const [activeFilters, setActiveFilters] = useState<Record<string, boolean>>({
@@ -346,16 +364,14 @@ export function CalendarView({
 
     // Save personal calendar note
     const handleSaveNote = async () => {
-        if (!noteTitle.trim()) return;
+        if (isSavingNote || !noteForm.validateAll()) return;
         setIsSavingNote(true);
         try {
             const dateKey = formatDateKey(selectedDate);
             const res = await addNote(dateKey, noteTitle, noteDescription);
             if (res.success) {
                 toast.success("Personal note saved.");
-                setNoteTitle("");
-                setNoteDescription("");
-                setIsAddNoteOpen(false);
+                closeNoteForm();
             } else {
                 toast.error(res.error || "Failed to save note.");
             }
@@ -661,39 +677,49 @@ export function CalendarView({
                                             <span>New Note for {selectedDate.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
                                         </span>
                                         <button
-                                            onClick={() => { setIsAddNoteOpen(false); setNoteTitle(""); setNoteDescription(""); }}
+                                            onClick={closeNoteForm}
                                             className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted/40 transition-colors"
                                         >
                                             <X className="size-3.5" />
                                         </button>
                                     </div>
-                                    <input
-                                        type="text"
-                                        placeholder="Note title or reminder (e.g. Schedule delivery)..."
-                                        value={noteTitle}
-                                        onChange={(e) => setNoteTitle(e.target.value)}
-                                        maxLength={80}
-                                        className="w-full rounded-xl px-3.5 py-2 text-xs font-medium text-foreground outline-none border border-border/50 bg-background/60 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 placeholder:text-muted-foreground/60 transition-all"
-                                    />
-                                    <textarea
-                                        placeholder="Optional details, notes, or instructions..."
-                                        value={noteDescription}
-                                        onChange={(e) => setNoteDescription(e.target.value)}
-                                        rows={2}
-                                        maxLength={250}
-                                        className="w-full rounded-xl p-3 text-xs text-foreground outline-none border border-border/50 bg-background/60 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 placeholder:text-muted-foreground/60 resize-none transition-all"
-                                    />
+                                    <div>
+                                        <input
+                                            {...noteForm.fieldProps("title")}
+                                            type="text"
+                                            aria-label="Note title"
+                                            placeholder="Note title or reminder (e.g. Schedule delivery)..."
+                                            value={noteTitle}
+                                            onChange={(e) => setNoteTitle(e.target.value)}
+                                            maxLength={CALENDAR_NOTE_LIMITS.title}
+                                            className={cn("w-full rounded-xl px-3.5 py-2 text-xs font-medium text-foreground outline-none border border-border/50 bg-background/60 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 placeholder:text-muted-foreground/60 transition-all", noteForm.errorFor("title") && fieldErrorClass)}
+                                        />
+                                        <FieldError id={noteForm.errorId("title")} message={noteForm.errorFor("title")} />
+                                    </div>
+                                    <div>
+                                        <textarea
+                                            {...noteForm.fieldProps("description")}
+                                            aria-label="Note details"
+                                            placeholder="Optional details, notes, or instructions..."
+                                            value={noteDescription}
+                                            onChange={(e) => setNoteDescription(e.target.value)}
+                                            rows={2}
+                                            maxLength={CALENDAR_NOTE_LIMITS.description}
+                                            className={cn("w-full rounded-xl p-3 text-xs text-foreground outline-none border border-border/50 bg-background/60 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 placeholder:text-muted-foreground/60 resize-none transition-all", noteForm.errorFor("description") && fieldErrorClass)}
+                                        />
+                                        <FieldError id={noteForm.errorId("description")} message={noteForm.errorFor("description")} />
+                                    </div>
                                     <div className="flex justify-end gap-2 pt-0.5">
                                         <button
                                             type="button"
-                                            onClick={() => { setIsAddNoteOpen(false); setNoteTitle(""); setNoteDescription(""); }}
+                                            onClick={closeNoteForm}
                                             className="px-3 py-1.5 text-xs font-medium rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
                                         >
                                             Cancel
                                         </button>
                                         <button
                                             type="button"
-                                            disabled={!noteTitle.trim() || isSavingNote}
+                                            disabled={isSavingNote}
                                             onClick={handleSaveNote}
                                             className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-amber-500 hover:bg-amber-400 text-black active:scale-95 disabled:opacity-40 shadow-sm transition-all flex items-center gap-1.5"
                                         >

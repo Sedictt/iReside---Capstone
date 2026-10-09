@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -160,6 +161,39 @@ describe("Brand Personalization Auth Guards", () => {
       expect(json.error).toContain("Forbidden");
     });
 
+    it("rejects a file whose bytes are not a real image even if it claims image/png", async () => {
+      mockRequireAuthenticatedUser.mockResolvedValue({
+        userId: "landlord-user-456",
+        userEmail: "landlord@example.com",
+        userRole: "landlord",
+        supabase: {},
+      });
+
+      const formData = new FormData();
+      formData.append("file", new File(["fake-image-bytes"], "logo.png", { type: "image/png" }));
+
+      const res = await logoPost(new Request("http://localhost:3000/api/branding/logo", { method: "POST", body: formData }));
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toMatch(/valid PNG, JPG, WEBP, SVG image/);
+    });
+
+    it("rejects an SVG logo that carries a script", async () => {
+      mockRequireAuthenticatedUser.mockResolvedValue({
+        userId: "landlord-user-456",
+        userEmail: "landlord@example.com",
+        userRole: "landlord",
+        supabase: {},
+      });
+
+      const formData = new FormData();
+      const svg = '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>';
+      formData.append("file", new File([svg], "logo.svg", { type: "image/svg+xml" }));
+
+      const res = await logoPost(new Request("http://localhost:3000/api/branding/logo", { method: "POST", body: formData }));
+      expect(res.status).toBe(400);
+    });
+
     it("allows landlord user to upload logo", async () => {
       mockRequireAuthenticatedUser.mockResolvedValue({
         userId: "landlord-user-456",
@@ -169,7 +203,8 @@ describe("Brand Personalization Auth Guards", () => {
       });
 
       const formData = new FormData();
-      const fakeFile = new File(["fake-image-bytes"], "logo.png", { type: "image/png" });
+      const pngBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0x0d]);
+      const fakeFile = new File([pngBytes], "logo.png", { type: "image/png" });
       formData.append("file", fakeFile);
 
       const req = new Request("http://localhost:3000/api/branding/logo", {

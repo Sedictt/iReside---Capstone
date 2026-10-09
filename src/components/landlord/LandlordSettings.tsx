@@ -702,6 +702,13 @@ export function LandlordSettings() {
                     toast.success("Logo uploaded to cloud! Save changes to apply across all devices.");
                     return;
                 }
+            } else if (res.status === 400) {
+                // The server rejected the file itself (content/type/size): don't keep a local preview of it.
+                const data = await res.json().catch(() => ({}));
+                setPropertyLogoUrl(initialSnapshot?.propertyLogoUrl ?? null);
+                toast.dismiss(uploadToast);
+                toast.error(data.error || "This logo file could not be uploaded.");
+                return;
             }
             toast.dismiss(uploadToast);
             toast.info("Logo preview updated locally. Save all changes to apply.");
@@ -1638,6 +1645,13 @@ export function LandlordSettings() {
 
                 const data = await res.json();
                 if (!res.ok) {
+                    // Attach server-side field errors to the matching inputs
+                    // (API paths use "socials.facebook"; the form uses "socials_facebook").
+                    if (data.fieldErrors && typeof data.fieldErrors === "object") {
+                        for (const [path, message] of Object.entries(data.fieldErrors as Record<string, string>)) {
+                            setFieldError(path.replace(/^socials\./, "socials_"), message);
+                        }
+                    }
                     throw new Error(data.error || "Failed to save profile changes");
                 }
 
@@ -3278,7 +3292,7 @@ export function LandlordSettings() {
                                     error={fieldErrors["newPassword"]}
                                 >
                                     <div className="relative">
-                                        <input maxLength={16} 
+                                        <input maxLength={72}
                                             type={showNewPassword ? "text" : "password"} 
                                             value={newPassword}
                                             onChange={(e) => {
@@ -3371,7 +3385,7 @@ export function LandlordSettings() {
                                     error={fieldErrors["confirmNewPassword"]}
                                 >
                                     <div className="relative">
-                                        <input maxLength={16} 
+                                        <input maxLength={72}
                                             type={showConfirmPassword ? "text" : "password"} 
                                             value={confirmNewPassword}
                                             onChange={(e) => {

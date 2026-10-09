@@ -4,6 +4,7 @@ import { expireInPersonIntents } from "@/lib/billing/workflow";
 import { getInvoiceDetailForActor } from "@/lib/billing/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { isUuid } from "@/lib/validation/schemas/billing.schema";
 
 type RouteContext = {
     params: Promise<{ id: string }>;
@@ -16,6 +17,9 @@ export async function GET(request: Request, context: RouteContext) {
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 
+    if (!isUuid(id)) {
+        return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
+    }
 
     try {
         await expireInPersonIntents(adminClient, userId, { landlordId: userId, paymentId: id });

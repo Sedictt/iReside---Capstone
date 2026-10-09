@@ -19,6 +19,22 @@ import {
   validateHexColor,
   evaluatePasswordStrength,
 } from "./landlord-settings";
+import { newPasswordRule } from "./rules";
+import { imageReferenceRule } from "./schemas/account.schema";
+
+/** Logo / banner reference: http(s) URL, app path, or (logos) a base64 image data URL. */
+const zBrandImage = (label: string, allowDataUrl: boolean) =>
+  z
+    .string()
+    .nullable()
+    .optional()
+    .superRefine((value, ctx) => {
+      const error = imageReferenceRule(value, { label, allowDataUrl });
+      if (error) ctx.addIssue({ code: "custom", message: error });
+    });
+
+/** Unchanged-password placeholder the setup wizard may echo back. */
+const isPasswordPlaceholder = (value: string) => !value.trim() || value.includes("•");
 
 // ---------------------------------------------------------------------------
 // Constants & MIME Types
@@ -535,7 +551,7 @@ export const setupLaunchSchema = z.object({
       .string()
       .trim()
       .regex(REGEX_HEX_COLOR, "Secondary color must be a valid hex color code"),
-    logoUrl: z.string().nullable().optional(),
+    logoUrl: zBrandImage("Logo", true),
     propertyAddress: z
       .string()
       .trim()
@@ -589,11 +605,17 @@ export const setupLaunchSchema = z.object({
       }, {
         message: "Please enter your actual phone number instead of the sample placeholder.",
       }),
+    // Same policy as every other new-password flow; the "••••" placeholder means unchanged.
     password: z
       .string()
-      .min(6, "Password must be at least 6 characters")
+      .max(72, "Password cannot exceed 72 characters.")
       .optional()
-      .nullable(),
+      .nullable()
+      .superRefine((value, ctx) => {
+        if (!value || isPasswordPlaceholder(value)) return;
+        const error = newPasswordRule(value);
+        if (error) ctx.addIssue({ code: "custom", message: error });
+      }),
   }).optional(),
 });
 
@@ -621,8 +643,8 @@ export const brandingUpdateSchema = z.object({
     .trim()
     .regex(REGEX_HEX_COLOR, "Secondary color must be a valid hex color code")
     .optional(),
-  logoUrl: z.string().nullable().optional(),
-  bannerUrl: z.string().nullable().optional(),
+  logoUrl: zBrandImage("Logo", true),
+  bannerUrl: zBrandImage("Banner", true),
   setupCompleted: z.boolean().optional(),
-  setupCompletedAt: z.string().nullable().optional(),
+  setupCompletedAt: z.string().max(64, "Setup completion time is invalid.").nullable().optional(),
 });

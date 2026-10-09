@@ -15,6 +15,10 @@ import {
 import * as LucideIcons from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { m as motion, AnimatePresence } from "framer-motion";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { textRule, todayIsoDate } from "@/lib/validation/rules";
+import { BOOKING_NOTES_MAX, bookingDateRule } from "@/lib/validation/schemas/operations.schema";
 
 interface Amenity {
     id: string;
@@ -88,7 +92,8 @@ const formatBookingDate = (dateStr: string): string => {
 const useClientDate = () => {
     const [clientDate, setClientDate] = useState<string>('');
     useEffect(() => {
-        setClientDate(new Date().toISOString().split('T')[0]);
+        // Business timezone (Asia/Manila), matching the server's "not in the past" check.
+        setClientDate(todayIsoDate());
     }, []);
     return clientDate;
 };
@@ -134,9 +139,16 @@ export default function TenantUtilitiesPage() {
     const [bookingDuration, setBookingDuration] = useState("2 Hours");
     const [bookingNotes, setBookingNotes] = useState("");
     const [submitting, setSubmitting] = useState(false);
+    const [bookingError, setBookingError] = useState<string | null>(null);
 
     // Compute min date once to avoid hydration issues
     const minDate = useClientDate();
+
+    const bookingValues = useMemo(() => ({ bookingDate, bookingNotes }), [bookingDate, bookingNotes]);
+    const bookingForm = useFormValidation(bookingValues, {
+        bookingDate: (value) => bookingDateRule(value, minDate || todayIsoDate()),
+        bookingNotes: (value) => textRule(value, { label: "Notes", max: BOOKING_NOTES_MAX }),
+    });
 
     // Fetch data on mount
     useEffect(() => {
@@ -192,8 +204,10 @@ export default function TenantUtilitiesPage() {
 
     // Handle booking submission
     const handleSubmitBooking = useCallback(async () => {
-        if (!bookingModal || !bookingDate) return;
+        if (!bookingModal || submitting) return;
+        if (!bookingForm.validateAll()) return;
 
+        setBookingError(null);
         setSubmitting(true);
         try {
             // Calculate times based on duration
@@ -218,7 +232,13 @@ export default function TenantUtilitiesPage() {
             });
 
             if (!res.ok) {
-                throw new Error("Failed to create booking");
+                const data = (await res.json().catch(() => ({}))) as { error?: string; fieldErrors?: Record<string, string> };
+                bookingForm.setServerErrors({
+                    ...(data.fieldErrors?.booking_date ? { bookingDate: data.fieldErrors.booking_date } : {}),
+                    ...(data.fieldErrors?.notes ? { bookingNotes: data.fieldErrors.notes } : {}),
+                });
+                setBookingError(data.error || "Failed to create booking");
+                return;
             }
 
             const { booking: newBooking } = await res.json();
@@ -231,12 +251,13 @@ export default function TenantUtilitiesPage() {
             setBookingDate("");
             setBookingDuration("2 Hours");
             setBookingNotes("");
+            bookingForm.reset();
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to create booking");
+            setBookingError(err instanceof Error ? err.message : "Failed to create booking");
         } finally {
             setSubmitting(false);
         }
-    }, [bookingModal, bookingDate, bookingDuration, bookingNotes]);
+    }, [bookingModal, bookingDate, bookingDuration, bookingNotes, bookingForm, submitting]);
 
     // Prepare modal data from amenity
     const openBookingModal = (amenity: Amenity) => {
@@ -255,6 +276,8 @@ export default function TenantUtilitiesPage() {
         setBookingModal(modalData);
         setBookingDate("");
         setBookingNotes("");
+        setBookingError(null);
+        bookingForm.reset();
     };
 
     // Filter amenities by category
@@ -552,15 +575,18 @@ export default function TenantUtilitiesPage() {
                                         <div className="flex items-center gap-2 rounded-xl p-3 neumorphic-inset">
                                             <Calendar className="size-4 text-primary" />
                                             <input
+                                                {...bookingForm.fieldProps("bookingDate")}
                                                 id="booking-date"
-                                                type="date" 
+                                                type="date"
                                                 value={bookingDate}
                                                 onChange={(e) => setBookingDate(e.target.value)}
                                                 min={minDate}
                                                 max="2099-12-31"
+                                                required
                                                 className="bg-transparent text-sm font-medium outline-none"
                                             />
                                         </div>
+                                        <FieldError id={bookingForm.errorId("bookingDate")} message={bookingForm.errorFor("bookingDate")} />
                                     </div>
                                     <div className="flex flex-col gap-1.5">
                                         <label htmlFor="booking-duration" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Duration</label>
@@ -582,14 +608,23 @@ export default function TenantUtilitiesPage() {
 
                                 <div className="flex flex-col gap-1.5">
                                     <label htmlFor="booking-notes" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Notes (Optional)</label>
-                                    <textarea maxLength={500} 
+                                    <textarea
+                                        {...bookingForm.fieldProps("bookingNotes")}
+                                        maxLength={BOOKING_NOTES_MAX}
                                         id="booking-notes"
                                         placeholder="Tell us about your event..."
                                         value={bookingNotes}
                                         onChange={(e) => setBookingNotes(e.target.value)}
-                                        className="min-h-[100px] w-full rounded-xl p-3 text-sm outline-none neumorphic-inset"
+                                        className={cn("min-h-[100px] w-full rounded-xl p-3 text-sm outline-none neumorphic-inset", bookingForm.errorFor("bookingNotes") && "ring-1 ring-rose-500/60")}
                                     />
+                                    <FieldError id={bookingForm.errorId("bookingNotes")} message={bookingForm.errorFor("bookingNotes")} />
                                 </div>
+                                {bookingError && (
+                                    <p role="alert" className="flex items-start gap-1.5 text-xs font-medium text-rose-600 dark:text-rose-400">
+                                        <AlertCircle aria-hidden="true" className="mt-px size-3.5 shrink-0" />
+                                        <span>{bookingError}</span>
+                                    </p>
+                                )}
                             </div>
 
                             <div className="mt-8 flex items-center justify-between border-t border-border pt-6">
@@ -601,7 +636,7 @@ export default function TenantUtilitiesPage() {
                                 </div>
                                 <button 
                                     onClick={handleSubmitBooking}
-                                    disabled={!bookingDate || submitting}
+                                    disabled={submitting}
                                     className="flex items-center gap-2 rounded-2xl px-8 py-3 text-sm font-black transition-all disabled:opacity-50 disabled:cursor-not-allowed neumorphic-primary"
                                 >
                                     {submitting ? (

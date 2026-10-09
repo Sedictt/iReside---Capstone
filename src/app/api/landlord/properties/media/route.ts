@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { inspectImageUpload, propertyIdSchema, type InspectedImage } from "@/lib/validation/schemas/properties.schema";
 
 const BUCKET_NAME = "property-images";
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 const MAX_FILES = 12;
-const ALLOWED_IMAGE_PREFIX = "image/";
 
 const sanitizeFileName = (name: string) =>
     name
@@ -38,11 +38,19 @@ export async function POST(request: Request) {
     const { userId, supabase } = authContext;
 
 
-    const formData = await request.formData();
+    let formData: FormData;
+    try {
+        formData = await request.formData();
+    } catch {
+        return NextResponse.json({ error: "Upload must be sent as form data." }, { status: 400 });
+    }
     const propertyId = formData.get("propertyId");
 
     if (typeof propertyId !== "string" || propertyId.trim().length === 0) {
         return NextResponse.json({ error: "Property id is required." }, { status: 400 });
+    }
+    if (!propertyIdSchema.safeParse(propertyId).success) {
+        return NextResponse.json({ error: "Property ID is invalid." }, { status: 400 });
     }
 
     const { data: property, error: propertyError } = await supabase
@@ -66,18 +74,14 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: `Too many files. Max allowed is ${MAX_FILES}.` }, { status: 400 });
     }
 
+    // Type, extension, size and actual file content (magic bytes) are all checked server-side.
+    const inspected: Array<Extract<InspectedImage, { ok: true }>> = [];
     for (const file of files) {
-        if (file.size <= 0) {
-            return NextResponse.json({ error: "One of the files is empty." }, { status: 400 });
+        const result = await inspectImageUpload(file, { maxBytes: MAX_FILE_SIZE_BYTES, label: `"${file.name || "Image"}"` });
+        if (!result.ok) {
+            return NextResponse.json({ error: result.error }, { status: 400 });
         }
-
-        if (file.size > MAX_FILE_SIZE_BYTES) {
-            return NextResponse.json({ error: "One of the files exceeds the 8 MB size limit." }, { status: 400 });
-        }
-
-        if (!file.type || !file.type.startsWith(ALLOWED_IMAGE_PREFIX)) {
-            return NextResponse.json({ error: "Only image uploads are allowed." }, { status: 400 });
-        }
+        inspected.push(result);
     }
 
     try {
@@ -89,14 +93,12 @@ export async function POST(request: Request) {
 
         for (let index = 0; index < files.length; index += 1) {
             const file = files[index];
-            const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
-            const safeExt = sanitizeFileName(ext ?? "jpg") || "jpg";
-            const safeBase = sanitizeFileName(file.name.replace(/\.[^.]+$/, "")) || `image-${index + 1}`;
-            const path = `${userId}/${propertyId}/${timestamp}-${index + 1}-${safeBase}.${safeExt}`;
-            const bytes = await file.arrayBuffer();
+            const { bytes, contentType, extension } = inspected[index];
+            const safeBase = (sanitizeFileName(file.name.replace(/\.[^.]+$/, "")) || `image-${index + 1}`).slice(0, 80);
+            const path = `${userId}/${propertyId}/${timestamp}-${index + 1}-${safeBase}.${extension}`;
 
             const { error: uploadError } = await admin.storage.from(BUCKET_NAME).upload(path, bytes, {
-                contentType: file.type,
+                contentType,
                 upsert: false,
             });
 

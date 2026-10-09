@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import {
   expireInPersonIntents,
   getInPersonIntentExpiry,
@@ -10,16 +9,12 @@ import {
 } from "@/lib/billing/workflow";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { databaseErrorResponse, parseWithSchema } from "@/lib/validation/server";
+import { isUuid, tenantPaymentIntentSchema } from "@/lib/validation/schemas/billing.schema";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
-
-const intentSchema = z.object({
-  note: z.string().max(600).optional(),
-  selectedItemIds: z.array(z.string()).optional(),
-  selectedReadingIds: z.array(z.string()).optional(),
-});
 
 export async function POST(request: Request, context: RouteContext) {
   const { id } = await context.params;
@@ -28,12 +23,21 @@ export async function POST(request: Request, context: RouteContext) {
   const { userId } = authContext;
   const adminClient = createServiceRoleSupabaseClient();
 
+  if (!isUuid(id)) {
+    return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
+  }
+
+  // An empty body is allowed (all fields optional); malformed fields are not.
+  const rawBody = await request.json().catch(() => ({}));
+  const parsedBody = parseWithSchema(tenantPaymentIntentSchema, rawBody ?? {});
+  if (!parsedBody.ok) return parsedBody.response;
+  const body = parsedBody.data;
+  const note = body.note ?? null;
+  const selectedItemIds = Array.from(new Set(body.selectedItemIds ?? []));
+  const selectedReadingIds = Array.from(new Set(body.selectedReadingIds ?? []));
+
   try {
     await expireInPersonIntents(adminClient, userId, { tenantId: userId, paymentId: id });
-
-
-        const body = intentSchema.parse(await request.json().catch(() => ({})));
-        const note = body.note?.trim() || null;
 
         const { data: payment, error: paymentError } = await adminClient
             .from("payments")
@@ -58,6 +62,36 @@ export async function POST(request: Request, context: RouteContext) {
             });
         }
 
+        // A GCash proof is already awaiting review; a second (cash) intent would double-book it.
+        if (payment.workflow_status === "under_review") {
+            return NextResponse.json(
+                { error: "A payment for this invoice is already awaiting your landlord's review." },
+                { status: 409 },
+            );
+        }
+
+        // Selected line items / readings must belong to this invoice.
+        if (selectedItemIds.length > 0) {
+            const { data: ownedItems, error: itemsError } = await adminClient
+                .from("payment_items")
+                .select("id")
+                .eq("payment_id", payment.id)
+                .in("id", selectedItemIds);
+            if (itemsError || (ownedItems ?? []).length !== selectedItemIds.length) {
+                return NextResponse.json({ error: "Some selected charges do not belong to this invoice." }, { status: 400 });
+            }
+        }
+        if (selectedReadingIds.length > 0) {
+            const { data: ownedReadings, error: readingsError } = await adminClient
+                .from("utility_readings")
+                .select("id")
+                .eq("payment_id", payment.id)
+                .in("id", selectedReadingIds);
+            if (readingsError || (ownedReadings ?? []).length !== selectedReadingIds.length) {
+                return NextResponse.json({ error: "Some selected readings do not belong to this invoice." }, { status: 400 });
+            }
+        }
+
         const beforeState = toWorkflowSnapshot(payment as any);
         const nowIso = new Date().toISOString();
         const expiresAt = getInPersonIntentExpiry();
@@ -74,8 +108,8 @@ export async function POST(request: Request, context: RouteContext) {
                 payment_note: note,
                 metadata: {
                     ...((payment.metadata as any) || {}),
-                    pending_item_ids: body.selectedItemIds || [],
-                    pending_reading_ids: body.selectedReadingIds || [],
+                    pending_item_ids: selectedItemIds,
+                    pending_reading_ids: selectedReadingIds,
                 },
                 rejection_reason: null,
                 review_action: null,
@@ -86,7 +120,10 @@ export async function POST(request: Request, context: RouteContext) {
             .select("id, status, workflow_status, intent_method, amount_tag, review_action, paid_amount, balance_remaining, receipt_number, payment_submitted_at, rejection_reason, in_person_intent_expires_at")
             .single();
 
-        if (updateError) throw updateError;
+        if (updateError) {
+            console.error("Failed to record in-person intent:", updateError);
+            return databaseErrorResponse(updateError, "Failed to trigger in-person payment.");
+        }
 
         await sendPaymentNotifications(
             adminClient,

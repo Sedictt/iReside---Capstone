@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser, requireRole } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
-import { landlordProfilePatchSchema } from "@/lib/validation/landlord-settings";
+import { landlordProfilePatchSchema, escapeLikePattern } from "@/lib/validation/schemas/account.schema";
+import { parseJsonBody, databaseErrorResponse } from "@/lib/validation/server";
 import { DISALLOWED_PRESEEDED_DATA, isPreseededPhone } from "@/lib/validation/brand-setup";
 
 /**
@@ -187,17 +188,11 @@ export async function PATCH(request: Request) {
     const admin = createServiceRoleSupabaseClient();
 
     try {
-        const body = await request.json();
-
-        // 0. Server-side Input Validation
-        const validation = landlordProfilePatchSchema.safeParse(body);
-        if (!validation.success) {
-            const firstError = validation.error.issues[0]?.message || "Invalid input data";
-            return NextResponse.json({ 
-                error: firstError, 
-                details: validation.error.flatten().fieldErrors 
-            }, { status: 400 });
-        }
+        // 0. Server-side Input Validation (same rules as the LandlordSettings form).
+        //    Only validated, trimmed values are used below — never the raw body.
+        const parsed = await parseJsonBody(request, landlordProfilePatchSchema);
+        if (!parsed.ok) return parsed.response;
+        const body = parsed.data;
 
         // 1. Fetch current profile state
         const { data: currentProfile, error: fetchErr } = await admin
@@ -214,10 +209,30 @@ export async function PATCH(request: Request) {
             ? (currentProfile.socials as Record<string, any>)
             : {};
 
+        // An email change must not collide with another account's login email.
+        const requestedEmail = body.email ? body.email : undefined;
+        if (requestedEmail && requestedEmail !== (currentProfile.email || "").toLowerCase().trim()) {
+            const { data: emailOwner } = await admin
+                .from("profiles")
+                .select("id")
+                .ilike("email", escapeLikePattern(requestedEmail))
+                .neq("id", userId)
+                .maybeSingle();
+            if (emailOwner) {
+                return NextResponse.json(
+                    { error: "This email address is already linked to another account.", fieldErrors: { email: "This email address is already linked to another account." } },
+                    { status: 409 }
+                );
+            }
+        }
+
+        // Never let a socials payload overwrite reserved keys (branding, emergency contact, preferences).
+        const { branding: _ignoredBranding, ...incomingSocials } = (body.socials || {}) as Record<string, string>;
+
         // Merge socials and emergency contact
         const mergedSocials = {
             ...currentSocials,
-            ...(body.socials || {}),
+            ...incomingSocials,
             emergency_contact_name: body.emergency_contact_name !== undefined 
                 ? body.emergency_contact_name 
                 : (currentSocials.emergency_contact_name || ""),
@@ -237,11 +252,11 @@ export async function PATCH(request: Request) {
 
         if (body.full_name !== undefined) profileUpdates.full_name = body.full_name;
         if (body.business_name !== undefined) profileUpdates.business_name = body.business_name;
-        if (body.email !== undefined && body.email.trim()) {
-            profileUpdates.email = body.email.toLowerCase().trim();
+        if (requestedEmail) {
+            profileUpdates.email = requestedEmail;
         }
         if (body.phone !== undefined) {
-            const cleanPhone = body.phone ? body.phone.trim() : null;
+            const cleanPhone = body.phone ? body.phone : null;
             profileUpdates.phone = cleanPhone && !isPreseededPhone(cleanPhone) ? cleanPhone : null;
         }
         if (body.address !== undefined) profileUpdates.address = body.address;
@@ -259,12 +274,12 @@ export async function PATCH(request: Request) {
 
         if (updateError) {
             console.error("[landlord/profile PATCH] profiles update error:", updateError);
-            return NextResponse.json({ error: updateError.message || "Failed to update profile" }, { status: 500 });
+            return databaseErrorResponse(updateError, "Failed to update profile");
         }
 
         // 4. Update profile_private (phone, address)
         if (body.phone !== undefined || body.address !== undefined) {
-            const cleanPhone = body.phone !== undefined ? (body.phone && !isPreseededPhone(body.phone.trim()) ? body.phone.trim() : null) : undefined;
+            const cleanPhone = body.phone !== undefined ? (body.phone && !isPreseededPhone(body.phone) ? body.phone : null) : undefined;
             const finalPhone = cleanPhone !== undefined ? cleanPhone : (isPreseededPhone(updatedProfile.phone) ? null : updatedProfile.phone);
             const { error: privateError } = await (admin as any)
                 .from("profile_private")
@@ -313,8 +328,8 @@ export async function PATCH(request: Request) {
                     notification_preferences: body.notification_preferences,
                 }
             };
-            if (body.email !== undefined && body.email.trim()) {
-                authUpdates.email = body.email.toLowerCase().trim();
+            if (requestedEmail) {
+                authUpdates.email = requestedEmail;
                 authUpdates.email_confirm = true;
             }
             await admin.auth.admin.updateUserById(userId, authUpdates);
@@ -336,6 +351,6 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ success: true, profile: consolidated });
     } catch (err: any) {
         console.error("[landlord/profile PATCH] Unhandled error:", err);
-        return NextResponse.json({ error: err?.message || "Internal server error saving landlord profile" }, { status: 500 });
+        return NextResponse.json({ error: "Internal server error saving landlord profile" }, { status: 500 });
     }
 }

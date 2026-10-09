@@ -1,7 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { RenewalStatus } from "@/types/database";
+import type { Json, RenewalStatus } from "@/types/database";
+import { parseJsonBody } from "@/lib/validation/server";
+import { isId, renewalDecisionSchema, renewalTermDatesRule } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
 /**
  * GET /api/landlord/renewals/[id]
@@ -15,6 +17,10 @@ export async function GET(
   const authContext = await requireAuthenticatedUser(request);
   if (!("userId" in authContext)) return authContext as Response;
   const { supabase } = authContext;
+
+  if (!isId(id)) {
+    return NextResponse.json({ error: "Renewal request not found" }, { status: 404 });
+  }
 
   try {
     const { data: request, error } = await supabase
@@ -68,10 +74,19 @@ export async function POST(
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 
+    if (!isId(id)) {
+      return NextResponse.json({ error: "Renewal request not found" }, { status: 404 });
+    }
+
+    // Validate the decision payload before touching the request.
+    const parsed = await parseJsonBody(request, renewalDecisionSchema);
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
+
     // Get renewal request
     const { data: renewalRequest, error: fetchError } = await supabase
       .from("renewal_requests")
-      .select("*, current_lease:leases!renewal_requests_current_lease_id_fkey (unit:units!inner (property:properties!inner (landlord_id)))")
+      .select("*, current_lease:leases!renewal_requests_current_lease_id_fkey (unit_id, start_date, end_date, unit:units!inner (property:properties!inner (landlord_id)))")
       .eq("id", id)
       .single();
 
@@ -99,19 +114,36 @@ export async function POST(
       );
     }
 
-    const body = await request.json();
-    const { action } = body;
-
-    if (action === "approve") {
+    if (body.action === "approve") {
       // Update renewal request with proposed terms
       const { proposed_start_date, proposed_end_date, proposed_monthly_rent, proposed_security_deposit, terms_json } = body;
+
+      // Validate the effective term (overrides fall back to the tenant's proposal) before any write,
+      // so a bad term cannot leave the request "approved" without a lease.
+      const currentLeaseDates = renewalRequest.current_lease as any;
+      const effectiveStart = proposed_start_date || renewalRequest.proposed_start_date;
+      const effectiveEnd = proposed_end_date || renewalRequest.proposed_end_date;
+      const dateProblem = renewalTermDatesRule(effectiveStart, effectiveEnd, currentLeaseDates?.end_date ?? null);
+      if (dateProblem) {
+        return NextResponse.json(
+          { error: dateProblem.message, fieldErrors: { [dateProblem.field]: dateProblem.message } },
+          { status: 400 }
+        );
+      }
+      const effectiveRent = Number(proposed_monthly_rent ?? renewalRequest.proposed_monthly_rent);
+      if (!Number.isFinite(effectiveRent) || effectiveRent <= 0) {
+        return NextResponse.json(
+          { error: "Proposed monthly rent must be greater than ₱0.", fieldErrors: { proposed_monthly_rent: "Proposed monthly rent must be greater than ₱0." } },
+          { status: 400 }
+        );
+      }
 
       const updateData: any = {
         status: "approved" as RenewalStatus,
         ...(proposed_start_date && { proposed_start_date }),
         ...(proposed_end_date && { proposed_end_date }),
-        ...(proposed_monthly_rent && { proposed_monthly_rent }),
-        ...(proposed_security_deposit && { proposed_security_deposit }),
+        ...(proposed_monthly_rent !== undefined && { proposed_monthly_rent }),
+        ...(proposed_security_deposit !== undefined && { proposed_security_deposit }),
         ...(terms_json && { terms_json }),
       };
 
@@ -137,11 +169,11 @@ export async function POST(
         tenant_id: renewalRequest.tenant_id,
         landlord_id: userId,
         status: "draft" as any,
-        start_date: proposed_start_date || renewalRequest.proposed_start_date,
-        end_date: proposed_end_date || renewalRequest.proposed_end_date,
-        monthly_rent: proposed_monthly_rent || renewalRequest.proposed_monthly_rent,
-        security_deposit: proposed_security_deposit || renewalRequest.proposed_security_deposit,
-        terms: terms_json || renewalRequest.terms_json,
+        start_date: effectiveStart as string,
+        end_date: effectiveEnd as string,
+        monthly_rent: effectiveRent,
+        security_deposit: Number(proposed_security_deposit ?? renewalRequest.proposed_security_deposit ?? 0),
+        terms: (terms_json || renewalRequest.terms_json) as Json,
       };
 
       const { data: lease, error: leaseError } = await supabase
@@ -186,7 +218,7 @@ export async function POST(
         new_lease: lease
       });
 
-    } else if (action === "reject") {
+    } else if (body.action === "reject") {
       const { landlord_notes } = body;
 
       const { data: updated, error: updateError } = await supabase

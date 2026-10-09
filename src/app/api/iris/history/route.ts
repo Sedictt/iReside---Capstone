@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { IrisService } from "@/lib/services/iris";
+import { parseSearchParams } from "@/lib/validation/server";
+import { irisHistoryQuerySchema } from "@/lib/validation/schemas/operations.schema";
 
 export async function GET(request: Request) {
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 
-    const { searchParams } = new URL(request.url);
-    const limitParam = Number(searchParams.get("limit") ?? 100);
+    const parsedQuery = parseSearchParams(new URL(request.url).searchParams, irisHistoryQuerySchema);
+    if (!parsedQuery.ok) return parsedQuery.response;
+    const limitParam = parsedQuery.data.limit;
 
     try {
         const irisService = new IrisService(supabase);
@@ -16,8 +19,9 @@ export async function GET(request: Request) {
 
         return NextResponse.json({ messages });
     } catch (error: any) {
+        console.error("[GET /api/iris/history]", error);
         return NextResponse.json(
-            { error: error?.message || "Failed to fetch iRis chat history." },
+            { error: "Failed to fetch iRis chat history." },
             { status: 500 }
         );
     }

@@ -10,15 +10,8 @@ import {
   isPreseededPhone,
 } from "@/lib/validation/brand-setup";
 import { generateSecurityKey, encryptSecurityKey } from "@/lib/security/recovery-keys";
-import { z } from "zod";
-
-const accountClaimSchema = z.object({
-  fullName: z.string().trim().min(2, "Full name must be at least 2 characters."),
-  newEmail: z.string().trim().email("Please provide a valid email address."),
-  otp: z.string().trim().length(6, "Verification code must be exactly 6 digits."),
-  newPassword: z.string().min(8, "Password must be at least 8 characters long."),
-  confirmPassword: z.string().min(1, "Please confirm your password."),
-});
+import { parseJsonBody } from "@/lib/validation/server";
+import { accountClaimSchema, escapeLikePattern } from "@/lib/validation/schemas/account.schema";
 
 /**
  * POST /api/setup/account/claim
@@ -39,43 +32,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let rawBody: unknown;
-    try {
-      rawBody = await request.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
-    }
+    const parsed = await parseJsonBody(request, accountClaimSchema);
+    if (!parsed.ok) return parsed.response;
 
-    const validation = accountClaimSchema.safeParse(rawBody);
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.issues[0]?.message || "Invalid input fields." },
-        { status: 400 }
-      );
-    }
-
-    const { fullName, newEmail, otp, newPassword, confirmPassword } = validation.data;
+    const { fullName, newEmail, otp, newPassword, confirmPassword } = parsed.data;
     const normalizedEmail = newEmail.toLowerCase().trim();
 
     // Check custom domain & placeholder validation
     const nameCheck = validateAdminFullName(fullName);
     if (!nameCheck.isValid) {
-      return NextResponse.json({ error: nameCheck.error }, { status: 400 });
+      return NextResponse.json({ error: nameCheck.error, fieldErrors: { fullName: nameCheck.error } }, { status: 400 });
     }
 
     const emailCheck = validateAdminEmail(normalizedEmail);
     if (!emailCheck.isValid) {
-      return NextResponse.json({ error: emailCheck.error }, { status: 400 });
+      return NextResponse.json({ error: emailCheck.error, fieldErrors: { newEmail: emailCheck.error } }, { status: 400 });
     }
 
     const passwordCheck = validateAdminPassword(newPassword);
     if (!passwordCheck.isValid) {
-      return NextResponse.json({ error: passwordCheck.error }, { status: 400 });
+      return NextResponse.json({ error: passwordCheck.error, fieldErrors: { newPassword: passwordCheck.error } }, { status: 400 });
     }
 
     const confirmCheck = validateConfirmPassword(newPassword, confirmPassword);
     if (!confirmCheck.isValid) {
-      return NextResponse.json({ error: confirmCheck.error }, { status: 400 });
+      return NextResponse.json({ error: confirmCheck.error, fieldErrors: { confirmPassword: confirmCheck.error } }, { status: 400 });
     }
 
     const adminClient = createServiceRoleSupabaseClient();
@@ -119,7 +100,7 @@ export async function POST(request: NextRequest) {
     const { data: existingProfile } = await adminClient
       .from("profiles")
       .select("id")
-      .ilike("email", normalizedEmail)
+      .ilike("email", escapeLikePattern(normalizedEmail))
       .neq("id", userId)
       .maybeSingle();
 
@@ -270,7 +251,7 @@ export async function POST(request: NextRequest) {
   } catch (err: any) {
     console.error("[POST /api/setup/account/claim] Unexpected error:", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "An unexpected error occurred during account claiming." },
+      { error: "An unexpected error occurred during account claiming." },
       { status: 500 }
     );
   }

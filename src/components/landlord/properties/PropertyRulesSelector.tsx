@@ -7,6 +7,9 @@ import { useCustomRules } from "@/hooks/useCustomRules";
 import { DEFAULT_PROPERTY_RULES } from "@/lib/constants/rules";
 import { toast } from "sonner";
 import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError } from "@/components/ui/field-error";
+import { PROPERTY_LIMITS, houseRuleTextRule } from "@/lib/validation/schemas/properties.schema";
 
 interface RuleChipProps {
     rule: string;
@@ -147,10 +150,17 @@ export function PropertyRulesSelector({
         }
     };
 
+    // Inline check with the same rule the hook enforces (length + standard/saved duplicates).
+    const addForm = useFormValidation(
+        { customRule: inputValue, saved: customRules },
+        { customRule: (value, all) => (value.trim() ? houseRuleTextRule(value, all.saved) : undefined) }
+    );
+
     const handleAddCustom = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
         const trimmed = inputValue.trim();
         if (!trimmed) return;
+        if (!addForm.validateAll()) return;
 
         const result = addCustomRule(trimmed);
         if (!result.success) {
@@ -165,6 +175,7 @@ export function PropertyRulesSelector({
         }
 
         setInputValue("");
+        addForm.reset();
         toast.success(`"${addedName}" added! It is now saved as a choice for all your properties.`);
     };
 
@@ -283,7 +294,9 @@ export function PropertyRulesSelector({
                         Add Custom Rule
                     </label>
                     <form onSubmit={handleAddCustom} className="flex gap-2">
-                        <input maxLength={120}
+                        <input
+                            {...addForm.fieldProps("customRule")}
+                            maxLength={PROPERTY_LIMITS.ruleMax}
                             id="custom-rule-input"
                             type="text"
                             value={inputValue}
@@ -291,6 +304,7 @@ export function PropertyRulesSelector({
                             placeholder="e.g. No Videoke Starting 10pm to 9am"
                             className={cn(
                                 "flex-1 rounded-xl px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all",
+                                addForm.errorFor("customRule") && "ring-1 ring-rose-500/50",
                                 isDarkVariant
                                     ? "bg-white/5 border border-white/10 text-white placeholder:text-white/20"
                                     : "neumorphic-inset text-foreground placeholder:text-muted-foreground/50 border-0"
@@ -310,6 +324,7 @@ export function PropertyRulesSelector({
                             <span>Add Rule</span>
                         </button>
                     </form>
+                    <FieldError id={addForm.errorId("customRule")} message={addForm.errorFor("customRule")} className="px-1" />
                     <p
                         className={cn(
                             "text-[10px] px-1",

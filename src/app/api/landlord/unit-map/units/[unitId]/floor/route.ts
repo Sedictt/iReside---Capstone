@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { renumberUnitsList } from "@/lib/unit-naming";
+import { parseJsonBody, parseWithSchema } from "@/lib/validation/server";
+import { findDuplicateName, unitFloorSchema, unitIdSchema } from "@/lib/validation/schemas/properties.schema";
 
 export const dynamic = "force-dynamic";
 
@@ -14,12 +16,12 @@ export async function PATCH(
     if (!("userId" in authContext)) return authContext as any;
     const { userId, supabase } = authContext;
 
-    const body = await request.json() as { floor: number; autoRenumber?: boolean };
-    const { floor, autoRenumber = true } = body;
+    const idCheck = parseWithSchema(unitIdSchema, unitId);
+    if (!idCheck.ok) return idCheck.response;
 
-    if (floor === undefined || floor === null) {
-        return NextResponse.json({ error: "floor is required" }, { status: 400 });
-    }
+    const parsed = await parseJsonBody(request, unitFloorSchema);
+    if (!parsed.ok) return parsed.response;
+    const { floor, autoRenumber } = parsed.data;
 
     // Verify the unit belongs to a property owned by the landlord
     const { data: unit, error: unitError } = await supabase
@@ -85,6 +87,12 @@ export async function PATCH(
     });
 
     const renumbered = renumberUnitsList(sortedForRenumber);
+
+    // Unit names must stay unique within the property: if renumbering would collide
+    // (e.g. with kept names of unassigned units), keep the floor move but leave names as they are.
+    if (findDuplicateName(renumbered.map((u) => u.name))) {
+        return NextResponse.json({ success: true, units: allUnits, renumbered: false });
+    }
 
     const updatePromises = renumbered.map((u) =>
         admin

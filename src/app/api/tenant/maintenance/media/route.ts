@@ -1,11 +1,12 @@
+import { extensionForImageType, fileContentMatchesType } from "@/lib/validation/upload";
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/supabase/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { MAINTENANCE_LIMITS, isSafeImageMimeType } from "@/lib/validation/schemas/operations.schema";
 
 const BUCKET_NAME = "maintenance-images";
-const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
-const MAX_FILES = 5;
-const ALLOWED_IMAGE_PREFIX = "image/";
+const MAX_FILE_SIZE_BYTES = MAINTENANCE_LIMITS.imageBytes;
+const MAX_FILES = MAINTENANCE_LIMITS.maxImages;
 
 const sanitizeFileName = (name: string) =>
     name
@@ -35,7 +36,10 @@ const ensureBucket = async () => {
 export async function POST(request: Request) {
     const { user, supabase: authClient } = await requireUser();
 
-    const formData = await request.formData();
+    const formData = await request.formData().catch(() => null);
+    if (!formData) {
+        return NextResponse.json({ error: "Upload must be sent as form data." }, { status: 400 });
+    }
     const files = formData.getAll("files").filter((item): item is File => item instanceof File);
 
     if (files.length === 0) {
@@ -55,8 +59,11 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "One of the files exceeds the 8 MB size limit." }, { status: 400 });
         }
 
-        if (!file.type || !file.type.startsWith(ALLOWED_IMAGE_PREFIX)) {
-            return NextResponse.json({ error: "Only image uploads are allowed." }, { status: 400 });
+        if (!isSafeImageMimeType(file.type)) {
+            return NextResponse.json({ error: "Only JPG, PNG, WebP, GIF, or HEIC images are allowed." }, { status: 400 });
+        }
+        if (!(await fileContentMatchesType(file))) {
+            return NextResponse.json({ error: "One of the files is not a valid image. Upload the original photo." }, { status: 400 });
         }
     }
 
@@ -69,8 +76,7 @@ export async function POST(request: Request) {
 
         for (let index = 0; index < files.length; index += 1) {
             const file = files[index];
-            const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
-            const safeExt = sanitizeFileName(ext ?? "jpg") || "jpg";
+            const safeExt = extensionForImageType(file.type);
             const safeBase = sanitizeFileName(file.name.replace(/\.[^.]+$/, "")) || `image-${index + 1}`;
             const path = `${user.id}/maintenance/${timestamp}-${index + 1}-${safeBase}.${safeExt}`;
             const bytes = await file.arrayBuffer();

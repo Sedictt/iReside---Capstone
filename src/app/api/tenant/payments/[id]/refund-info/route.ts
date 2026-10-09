@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { parseWithSchema } from "@/lib/validation/server";
+import {
+  PROOF_LIMITS,
+  REFUND_DETAILS_REQUIRED,
+  isUuid,
+  proofFileExtension,
+  proofFileRule, proofContentRule,
+  refundInfoSchema,
+} from "@/lib/validation/schemas/billing.schema";
 
 export async function POST(
   request: Request,
@@ -11,12 +20,36 @@ export async function POST(
   if (!("userId" in authContext)) return authContext as Response;
   const { userId, supabase } = authContext;
 
-  try {
-    const formData = await request.formData();
-    const action = formData.get("action") as "credit" | "refund";
-    const gcashNumber = formData.get("gcashNumber") as string;
-    const qrFile = formData.get("qrFile") as File | null;
+  if (!isUuid(id)) {
+    return NextResponse.json({ error: "Payment not found" }, { status: 404 });
+  }
 
+  let formData: FormData;
+  try {
+    formData = await request.formData();
+  } catch {
+    return NextResponse.json({ error: "Request body is invalid.", fieldErrors: {} }, { status: 400 });
+  }
+
+  const parsed = parseWithSchema(refundInfoSchema, {
+    action: formData.get("action") ?? undefined,
+    gcashNumber: formData.get("gcashNumber"),
+  });
+  if (!parsed.ok) return parsed.response;
+  const { action, gcashNumber } = parsed.data;
+
+  const qrEntry = formData.get("qrFile");
+  const qrFile = qrEntry instanceof File && qrEntry.size > 0 ? qrEntry : null;
+  const qrError = proofFileRule(qrFile, { label: "GCash QR code", maxBytes: PROOF_LIMITS.refundQrMaxBytes }) ?? (await proofContentRule(qrFile, { label: "GCash QR code" }));
+  if (qrError) {
+    return NextResponse.json({ error: qrError, fieldErrors: { qrFile: qrError } }, { status: 400 });
+  }
+
+  if (action === "refund" && !gcashNumber && !qrFile) {
+    return NextResponse.json({ error: REFUND_DETAILS_REQUIRED, fieldErrors: { gcashNumber: REFUND_DETAILS_REQUIRED } }, { status: 400 });
+  }
+
+  try {
     const { data: payment, error: fetchError } = await supabase
       .from("payments")
       .select("id, metadata, tenant_id, landlord_id, invoice_number")
@@ -24,21 +57,25 @@ export async function POST(
       .single();
 
     if (fetchError || !payment) {
-      return new NextResponse("Payment not found", { status: 404 });
+      return NextResponse.json({ error: "Payment not found" }, { status: 404 });
     }
 
     if (payment.tenant_id !== userId) {
-      return new NextResponse("Unauthorized", { status: 403 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    // Once the landlord has settled the refund the preference is locked.
+    if ((payment.metadata as any)?.refund_proof_url) {
+      return NextResponse.json({ error: "This refund has already been processed." }, { status: 409 });
     }
 
 
         let qrUrl = null;
         if (qrFile) {
-            const fileExt = qrFile.name.split(".").pop();
-            const fileName = `refund-qr-${payment.id}-${Date.now()}.${fileExt}`;
+            const fileName = `refund-qr-${payment.id}-${Date.now()}.${proofFileExtension(qrFile)}`;
             const { data: uploadData, error: uploadError } = await supabase.storage
                 .from("payment-proofs")
-                .upload(fileName, qrFile);
+                .upload(fileName, qrFile, { contentType: qrFile.type });
 
             if (uploadError) throw uploadError;
             
@@ -169,6 +206,6 @@ export async function POST(
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Refund info submission error:", error);
-        return new NextResponse("Internal Server Error", { status: 500 });
+        return NextResponse.json({ error: "Failed to submit refund details." }, { status: 500 });
     }
 }

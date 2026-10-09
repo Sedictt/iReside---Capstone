@@ -1,7 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
-import { findDirectConversation } from "@/lib/messages/engine";
+import { ensureUserInConversation, findDirectConversation } from "@/lib/messages/engine";
+import { parseJsonBody, parseSearchParams } from "@/lib/validation/server";
+import { sanitizeSearchTerm, unitMessageSendSchema, unitMessagesQuerySchema } from "@/lib/validation/schemas/operations.schema";
+
+type ServiceClient = ReturnType<typeof createServiceRoleSupabaseClient>;
+
+/** Latest tenant on a unit, only when the unit belongs to one of this landlord's properties. */
+async function findTenantForOwnedUnit(supabase: ServiceClient, landlordId: string, unitId: string): Promise<string | null> {
+    const { data: unit } = await supabase
+        .from("units")
+        .select("id, properties!inner(landlord_id)")
+        .eq("id", unitId)
+        .eq("properties.landlord_id", landlordId)
+        .maybeSingle();
+    if (!unit) return null;
+
+    const { data: lease } = await supabase
+        .from("leases")
+        .select("tenant_id")
+        .eq("unit_id", unitId)
+        .eq("landlord_id", landlordId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+    return lease?.tenant_id ?? null;
+}
+
+/** True when the given user is (or was) a tenant on one of this landlord's leases. */
+async function isLandlordTenant(supabase: ServiceClient, landlordId: string, tenantId: string): Promise<boolean> {
+    const { data } = await supabase
+        .from("leases")
+        .select("id")
+        .eq("landlord_id", landlordId)
+        .eq("tenant_id", tenantId)
+        .limit(1)
+        .maybeSingle();
+    return Boolean(data);
+}
 
 export const dynamic = "force-dynamic";
 
@@ -10,43 +47,40 @@ export async function GET(request: NextRequest) {
     if (!("userId" in authContext)) return authContext as any;
     const { userId } = authContext;
 
-    const unitId = request.nextUrl.searchParams.get("unitId");
-    const tenantName = request.nextUrl.searchParams.get("tenantName")?.trim();
-
-    if (!unitId && !tenantName) {
-        return NextResponse.json({ error: "unitId or tenantName is required" }, { status: 400 });
-    }
+    const parsedQuery = parseSearchParams(request.nextUrl.searchParams, unitMessagesQuerySchema);
+    if (!parsedQuery.ok) return parsedQuery.response;
+    const { unitId, tenantName } = parsedQuery.data;
 
     try {
         const supabase = createServiceRoleSupabaseClient();
         let tenantUserId: string | null = null;
 
-        // 1. Try finding tenant from active lease on this unit
+        // 1. Try finding tenant from the latest lease on this (owned) unit
         if (unitId) {
-            const { data: lease } = await supabase
-                .from("leases")
-                .select("tenant_id")
-                .eq("unit_id", unitId)
-                .order("created_at", { ascending: false })
-                .limit(1)
-                .maybeSingle();
-
-            if (lease?.tenant_id) {
-                tenantUserId = lease.tenant_id;
-            }
+            tenantUserId = await findTenantForOwnedUnit(supabase, userId, unitId);
         }
 
-        // 2. Fallback: Search profile by tenantName if lease tenant_id was not directly available
-        if (!tenantUserId && tenantName) {
-            const { data: profile } = await supabase
-                .from("profiles")
-                .select("id")
-                .ilike("full_name", `%${tenantName}%`)
-                .limit(1)
-                .maybeSingle();
+        // 2. Fallback: match the tenant by name, limited to this landlord's own tenants
+        const safeTenantName = tenantName ? sanitizeSearchTerm(tenantName) : "";
+        if (!tenantUserId && safeTenantName) {
+            const { data: landlordLeases } = await supabase
+                .from("leases")
+                .select("tenant_id")
+                .eq("landlord_id", userId);
+            const tenantIds = Array.from(new Set((landlordLeases ?? []).map((lease) => lease.tenant_id).filter(Boolean)));
 
-            if (profile?.id) {
-                tenantUserId = profile.id;
+            if (tenantIds.length > 0) {
+                const { data: profile } = await supabase
+                    .from("profiles")
+                    .select("id")
+                    .in("id", tenantIds)
+                    .ilike("full_name", `%${safeTenantName}%`)
+                    .limit(1)
+                    .maybeSingle();
+
+                if (profile?.id) {
+                    tenantUserId = profile.id;
+                }
             }
         }
 
@@ -158,29 +192,27 @@ export async function POST(request: NextRequest) {
     const { userId } = authContext;
 
     try {
-        const body = await request.json();
-        const { unitId, tenantUserId: providedTenantId, conversationId: providedConvId, content } = body;
-
-        const trimmedContent = content?.trim();
-        if (!trimmedContent) {
-            return NextResponse.json({ error: "Message content is required" }, { status: 400 });
-        }
+        const parsed = await parseJsonBody(request, unitMessageSendSchema);
+        if (!parsed.ok) return parsed.response;
+        const { unitId, tenantUserId: providedTenantId, conversationId: providedConvId, content: trimmedContent } = parsed.data;
 
         const supabase = createServiceRoleSupabaseClient();
-        let convId = providedConvId;
+        let convId = providedConvId ?? null;
 
-        // Create conversation if needed
-        if (!convId) {
-            let targetTenantId = providedTenantId;
+        if (convId) {
+            // Only post into conversations the landlord is part of.
+            const isMember = await ensureUserInConversation(supabase, convId, userId);
+            if (!isMember) {
+                return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
+            }
+        } else {
+            // Create conversation if needed
+            let targetTenantId = providedTenantId ?? null;
+            if (targetTenantId && !(await isLandlordTenant(supabase, userId, targetTenantId))) {
+                return NextResponse.json({ error: "You can only message your own tenants." }, { status: 403 });
+            }
             if (!targetTenantId && unitId) {
-                const { data: lease } = await supabase
-                    .from("leases")
-                    .select("tenant_id")
-                    .eq("unit_id", unitId)
-                    .order("created_at", { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
-                targetTenantId = lease?.tenant_id;
+                targetTenantId = await findTenantForOwnedUnit(supabase, userId, unitId);
             }
 
             if (!targetTenantId) {

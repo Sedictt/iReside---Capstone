@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -12,6 +13,9 @@ export async function GET(
     context: { params: Promise<{ id: string }> }
 ) {
     const { id: tenantId } = await context.params;
+    if (!isId(tenantId)) {
+      return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
+    }
     const authContext = await requireAuthenticatedUser(request);
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense, use, useMemo } from "react";
+import { validateSignature } from "@/lib/signature-validation";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { generateLeasePdf, exportLeaseDocumentElementToPdf } from "@/lib/lease-pdf";
@@ -202,6 +203,13 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
   const handleSigned = async (signedBlob: Blob, signatureDataUrl?: string) => {
     if (!leaseId || !token || !signatureDataUrl) {
       toast.error("Signature data is missing. Please try signing again.");
+      return;
+    }
+
+    // Same checks the sign API runs (PNG data URL, size, dimensions, not blank).
+    const signatureCheck = await validateSignature(signatureDataUrl);
+    if (!signatureCheck.valid) {
+      toast.error(signatureCheck.error || "Invalid signature. Please sign again.");
       return;
     }
 

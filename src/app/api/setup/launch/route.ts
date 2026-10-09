@@ -6,6 +6,8 @@ import { DEFAULT_BRANDING, BrandConfig } from "@/context/BrandContext";
 import { generateSecurityKey, encryptSecurityKey } from "@/lib/security/recovery-keys";
 import { logUserActivity } from "@/lib/audit/audit-logger";
 import { setupLaunchSchema, DISALLOWED_PRESEEDED_DATA, isPreseededPhone } from "@/lib/validation/brand-setup";
+import { zodFieldErrors } from "@/lib/validation/server";
+import { newPasswordRule } from "@/lib/validation/rules";
 
 interface SetupLaunchPayload {
   branding: {
@@ -51,15 +53,12 @@ export async function POST(request: NextRequest) {
 
     const validationResult = setupLaunchSchema.safeParse(rawBody);
     if (!validationResult.success) {
-      const fieldErrors: Record<string, string> = {};
-      for (const issue of validationResult.error.issues) {
-        const path = issue.path.join(".");
-        fieldErrors[path] = issue.message;
-      }
+      const fieldErrors = zodFieldErrors(validationResult.error);
       return NextResponse.json(
         {
           error: "Validation failed: Please check your input fields.",
           details: fieldErrors,
+          fieldErrors,
         },
         { status: 400 }
       );
@@ -83,10 +82,13 @@ export async function POST(request: NextRequest) {
     const adminFullName = body.admin?.fullName?.trim();
     const adminPhone = body.admin?.phone?.trim();
 
-    const newPassword = body.admin?.password?.trim();
-    const newEmail = body.admin?.email?.trim();
+    // Passwords are not trimmed: spaces are significant characters.
+    const newPassword = body.admin?.password ?? undefined;
+    const newEmail = body.admin?.email?.trim().toLowerCase();
 
-    const hasPasswordUpdate = Boolean(newPassword && newPassword.length >= 6 && !newPassword.includes("•"));
+    // The schema already enforces the shared new-password policy; the "••••"
+    // placeholder means the password is unchanged.
+    const hasPasswordUpdate = Boolean(newPassword && !newPassword.includes("•") && !newPasswordRule(newPassword));
     const hasEmailUpdate = Boolean(newEmail && newEmail.includes("@") && !newEmail.includes("turnkey.local") && newEmail !== authContext.userEmail);
 
     // 1. Always update Supabase Auth User Metadata to mark workspace setup complete
@@ -359,7 +361,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("[POST /api/setup/launch] Error:", error);
     return NextResponse.json(
-      { error: error?.message || "Internal server error during setup launch" },
+      { error: "Internal server error during setup launch" },
       { status: 500 }
     );
   }

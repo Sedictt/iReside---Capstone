@@ -42,6 +42,7 @@ import {
     type WalkInUnit,
     validateFormStep,
 } from "@/components/landlord/applications/application-intake-shared";
+import { mapApplicationFieldErrors } from "@/lib/application-intake";
 import { cn } from "@/lib/utils";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -301,6 +302,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
     };
 
     const handleSubmit = async () => {
+        if (submitting) return;
         const stepZeroErrors = validateFormStep(0, selectedUnit, formData);
         const stepOneErrors = validateFormStep(1, selectedUnit, formData);
         const allErrors = { ...stepZeroErrors, ...stepOneErrors };
@@ -343,15 +345,25 @@ export function InviteApplicationClient({ token }: { token: string }) {
                     emergency_contact_phone: formData.emergency_contact_phone,
                     employment_info: {
                         ...formData.employment_info,
-                        monthly_income: Number(String(formData.employment_info.monthly_income).replace(/,/g, "")) || 0,
+                        // Validated above; the API parses "45,000" itself and rejects anything malformed.
+                        monthly_income: String(formData.employment_info.monthly_income).replace(/,/g, ""),
                     },
                     requirements_checklist: formData.requirements_checklist,
                     uploaded_documents: uploadedDocuments,
                     message: formData.message,
                 }),
             });
-            const payload = (await response.json()) as { error?: string };
+            const payload = (await response.json().catch(() => ({}))) as { error?: string; fieldErrors?: Record<string, string> };
             if (!response.ok) {
+                const mapped = mapApplicationFieldErrors(payload.fieldErrors);
+                if (mapped.firstStep !== null) {
+                    setFormErrors((prev) => ({ ...prev, ...mapped.errors }));
+                    setTouchedFields((prev) => ({
+                        ...prev,
+                        ...Object.fromEntries(Object.keys(mapped.errors).map((key) => [key, true])),
+                    }));
+                    setStep(mapped.firstStep);
+                }
                 throw new Error(payload.error || "Failed to submit application.");
             }
             setSubmitted(true);

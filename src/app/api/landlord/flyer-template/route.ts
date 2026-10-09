@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { parseJsonBody } from "@/lib/validation/server";
+import { flyerPropertyKeySchema, flyerTemplateSaveSchema } from "@/lib/validation/schemas/properties.schema";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +13,9 @@ export async function GET(request: NextRequest) {
 
     // Check query params for optional propertyId
     const { searchParams } = new URL(request.url);
-    const propertyId = searchParams.get("propertyId") || "default";
+    const requestedKey = searchParams.get("propertyId") || "default";
+    // Unknown/malformed keys fall back to the landlord's default template rather than querying with them.
+    const propertyId = flyerPropertyKeySchema.safeParse(requestedKey).success ? requestedKey : "default";
 
     // 1. Try to load from specific property map_decorations if propertyId provided
     if (propertyId && propertyId !== "default") {
@@ -19,6 +23,7 @@ export async function GET(request: NextRequest) {
         .from("properties")
         .select("map_decorations")
         .eq("id", propertyId)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
       const propTemplate = (property?.map_decorations as Record<string, unknown>)?.flyer_template;
@@ -69,12 +74,9 @@ export async function POST(request: NextRequest) {
     if (!("userId" in authContext)) return authContext as Response;
     const { userId, supabase } = authContext;
 
-    const body = await request.json();
-    const { propertyId = "default", template } = body;
-
-    if (!template) {
-      return NextResponse.json({ error: "Template data is required." }, { status: 400 });
-    }
+    const parsed = await parseJsonBody(request, flyerTemplateSaveSchema);
+    if (!parsed.ok) return parsed.response;
+    const { propertyId, template } = parsed.data;
 
     const updatedTemplateWithDate = {
       ...template,
@@ -110,21 +112,24 @@ export async function POST(request: NextRequest) {
         .from("properties")
         .select("map_decorations")
         .eq("id", targetPropertyId)
+        .eq("landlord_id", userId)
         .maybeSingle();
 
-      if (prop) {
-        const currentDecorations = (prop.map_decorations as Record<string, unknown>) || {};
-        await supabase
-          .from("properties")
-          .update({
-            map_decorations: {
-              ...currentDecorations,
-              flyer_template: updatedTemplateWithDate,
-            } as any,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", targetPropertyId);
+      if (!prop) {
+        return NextResponse.json({ error: "Property not found or access denied." }, { status: 404 });
       }
+
+      const currentDecorations = (prop.map_decorations as Record<string, unknown>) || {};
+      await supabase
+        .from("properties")
+        .update({
+          map_decorations: {
+            ...currentDecorations,
+            flyer_template: updatedTemplateWithDate,
+          } as any,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", targetPropertyId);
     }
 
     // 2. Clean up legacy flyer_templates from auth user_metadata so JWT cookie doesn't exceed 8KB/16KB limit (HTTP 431)

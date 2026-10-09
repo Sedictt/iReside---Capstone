@@ -1,3 +1,14 @@
+import { emailRule } from "@/lib/validation/rules";
+import {
+    applicantNameRule,
+    applicationMessageRule,
+    employerRule,
+    monthlyIncomeRule,
+    moveInDateRule,
+    occupationRule,
+    phMobileRule,
+} from "@/lib/validation/schemas/tenant-lifecycle.schema";
+
 export interface WalkInUnit {
     id: string;
     name: string;
@@ -105,114 +116,95 @@ export const DEFAULT_EMPLOYMENT: EmploymentInfo = {
     monthly_income: "",
 };
 
-const PHONE_REGEX_11 = /^(\+?63|0)?9\d{9}$/;
-const PHONE_REGEX_10 = /^9\d{9}$/;
-
 export function getPhoneDigits(value: string) {
     return value.replace(/\D/g, "");
 }
 
+/** Philippine mobile number check shared with the invite/walk-in API schemas. */
 export function validatePhone(value: string): string | undefined {
-    const digits = getPhoneDigits(value);
-    if (digits.length === 11 && PHONE_REGEX_11.test(digits)) return undefined;
-    if (digits.length === 10 && PHONE_REGEX_10.test(digits)) return undefined;
-    return "Enter a valid Philippine mobile number (e.g. 09171234567).";
+    return phMobileRule(value, { required: true });
 }
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export interface ValidateFormStepOptions {
+    requireUnit?: boolean;
+    /** Allow a move-in date before today (editing an existing application). Defaults to false. */
+    allowPastMoveIn?: boolean;
+}
 
+/**
+ * Step-level validation for the walk-in / invite / add-tenant wizards. Uses the
+ * same rule functions as the API schemas so inline and server errors agree.
+ */
 export function validateFormStep(
     currentStep: number,
     selectedUnit: string,
     formData: WalkInFormData,
-    options?: {
-        requireUnit?: boolean;
-    }
+    options?: ValidateFormStepOptions
 ): Partial<Record<FormErrorKey, string>> {
     const errors: Partial<Record<FormErrorKey, string>> = {};
     const requireUnit = options?.requireUnit ?? true;
+    const set = (key: FormErrorKey, message: string | undefined) => {
+        if (message) errors[key] = message;
+    };
 
     if (currentStep === 0) {
-        const name = formData.applicant_name.trim();
-        const email = formData.applicant_email.trim();
-        const phone = formData.applicant_phone.trim();
-
         if (requireUnit && !selectedUnit) {
             errors.unit = "Please select a unit.";
         }
 
-        if (!name) {
-            errors.applicant_name = "Applicant name is required.";
-        } else if (/\d/.test(name)) {
-            errors.applicant_name = "Name must not contain numbers.";
-        } else if (name.length < 2 || name.length > 100) {
-            errors.applicant_name = "Name must be between 2 and 100 characters.";
-        }
-
-        if (!email) {
-            errors.applicant_email = "Email is required.";
-        } else if (!EMAIL_REGEX.test(email)) {
-            errors.applicant_email = "Enter a valid email address.";
-        }
-
-        if (phone) {
-            const phoneError = validatePhone(phone);
-            if (phoneError) errors.applicant_phone = phoneError;
-        }
-
-        if (!formData.move_in_date) {
-            errors.move_in_date = "Move-in date is required.";
-        }
-
-        const ecName = formData.emergency_contact_name.trim();
-        if (!ecName) {
-            errors.emergency_contact_name = "Emergency contact name is required.";
-        } else if (/\d/.test(ecName)) {
-            errors.emergency_contact_name = "Name must not contain numbers.";
-        } else if (ecName.length < 2 || ecName.length > 100) {
-            errors.emergency_contact_name = "Name must be between 2 and 100 characters.";
-        }
-
-        const ecPhone = formData.emergency_contact_phone.trim();
-        if (!ecPhone) {
-            errors.emergency_contact_phone = "Emergency contact number is required.";
-        } else {
-            const phoneError = validatePhone(ecPhone);
-            if (phoneError) errors.emergency_contact_phone = phoneError;
-        }
+        set("applicant_name", applicantNameRule(formData.applicant_name));
+        set("applicant_email", emailRule(formData.applicant_email, { label: "Email" }));
+        set("applicant_phone", phMobileRule(formData.applicant_phone));
+        set("move_in_date", moveInDateRule(formData.move_in_date, { allowPast: options?.allowPastMoveIn ?? false }));
+        set("emergency_contact_name", applicantNameRule(formData.emergency_contact_name, { label: "Emergency contact name" }));
+        set(
+            "emergency_contact_phone",
+            phMobileRule(formData.emergency_contact_phone, { required: true, label: "Emergency contact number" })
+        );
     }
 
     if (currentStep === 1) {
-        const occupation = formData.employment_info.occupation.trim();
-        const employer = formData.employment_info.employer.trim();
-        const incomeRaw = String(formData.employment_info.monthly_income).trim();
-        const incomeNumber = Number(incomeRaw.replace(/,/g, ""));
-        const messageLength = formData.message.trim().length;
-
-        if (!occupation) {
-            errors.occupation = "Occupation is required.";
-        } else if (occupation.length < 2 || occupation.length > 100) {
-            errors.occupation = "Occupation must be 2 to 100 characters.";
-        }
-
-        if (!employer) {
-            errors.employer = "Employer is required.";
-        } else if (employer.length < 2 || employer.length > 100) {
-            errors.employer = "Employer must be 2 to 100 characters.";
-        }
-
-        if (!incomeRaw) {
-            errors.monthly_income = "Monthly income is required.";
-        } else if (!Number.isFinite(incomeNumber) || incomeNumber <= 0) {
-            errors.monthly_income = "Monthly income must be a positive number.";
-        } else if (incomeNumber > 10_000_000) {
-            errors.monthly_income = "Monthly income looks too high.";
-        }
-
-        if (messageLength > 1000) {
-            errors.message = "Notes must not exceed 1000 characters.";
-        }
+        set("occupation", occupationRule(formData.employment_info.occupation));
+        set("employer", employerRule(formData.employment_info.employer));
+        set("monthly_income", monthlyIncomeRule(formData.employment_info.monthly_income));
+        set("message", applicationMessageRule(formData.message));
     }
 
     return errors;
+}
+
+const SERVER_FIELD_TO_FORM_KEY: Record<string, FormErrorKey> = {
+    unit_id: "unit",
+    applicant_name: "applicant_name",
+    applicant_email: "applicant_email",
+    applicant_phone: "applicant_phone",
+    move_in_date: "move_in_date",
+    emergency_contact_name: "emergency_contact_name",
+    emergency_contact_phone: "emergency_contact_phone",
+    "employment_info.occupation": "occupation",
+    "employment_info.employer": "employer",
+    "employment_info.monthly_income": "monthly_income",
+    message: "message",
+};
+
+const STEP_ONE_KEYS: FormErrorKey[] = ["occupation", "employer", "monthly_income", "message"];
+
+/**
+ * Maps API `fieldErrors` (dot paths) onto the wizard's error keys and reports
+ * which step holds the first one, so the wizard can jump back and show it inline.
+ */
+export function mapApplicationFieldErrors(fieldErrors: unknown): {
+    errors: Partial<Record<FormErrorKey, string>>;
+    firstStep: number | null;
+} {
+    const errors: Partial<Record<FormErrorKey, string>> = {};
+    if (!fieldErrors || typeof fieldErrors !== "object") return { errors, firstStep: null };
+    for (const [path, message] of Object.entries(fieldErrors as Record<string, unknown>)) {
+        const key = SERVER_FIELD_TO_FORM_KEY[path];
+        if (key && typeof message === "string" && !errors[key]) errors[key] = message;
+    }
+    const keys = Object.keys(errors) as FormErrorKey[];
+    if (keys.length === 0) return { errors, firstStep: null };
+    const firstStep = keys.some((key) => !STEP_ONE_KEYS.includes(key)) ? 0 : 1;
+    return { errors, firstStep };
 }

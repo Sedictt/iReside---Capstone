@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
+import { inspectImageUpload } from "@/lib/validation/schemas/properties.schema";
 
 export const dynamic = "force-dynamic";
 
@@ -27,31 +28,33 @@ export async function POST(request: NextRequest) {
     if (!("userId" in authContext)) return authContext as Response;
     const { userId } = authContext;
 
-    const formData = await request.formData();
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch {
+      return NextResponse.json({ error: "Upload must be sent as form data." }, { status: 400 });
+    }
     const file = formData.get("file");
 
     if (!(file instanceof File)) {
       return NextResponse.json({ error: "No image file provided." }, { status: 400 });
     }
 
-    if (!file.type.startsWith("image/")) {
-      return NextResponse.json({ error: "Only image files are permitted." }, { status: 400 });
-    }
-
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      return NextResponse.json({ error: "Image file size exceeds 8MB limit." }, { status: 400 });
+    // Type, extension, size and actual content are checked (previously any image/* incl. SVG was accepted).
+    const inspected = await inspectImageUpload(file, { maxBytes: MAX_FILE_SIZE_BYTES, label: "Background image" });
+    if (!inspected.ok) {
+      return NextResponse.json({ error: inspected.error }, { status: 400 });
     }
 
     await ensureBucket();
     const admin = createServiceRoleSupabaseClient();
 
-    const fileExt = file.name.split(".").pop() || "png";
-    const fileName = `flyer_bg_${userId}_${Date.now()}.${fileExt}`;
+    const fileName = `flyer_bg_${userId}_${Date.now()}.${inspected.extension}`;
     const filePath = `flyer-backgrounds/${fileName}`;
-    const bytes = Buffer.from(await file.arrayBuffer());
+    const bytes = Buffer.from(inspected.bytes);
 
     const { error: uploadError } = await admin.storage.from(BUCKET_NAME).upload(filePath, bytes, {
-      contentType: file.type,
+      contentType: inspected.contentType,
       upsert: true,
     });
 

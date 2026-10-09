@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { requireAuthenticatedUser, requireRole } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { generateUnitList } from "@/lib/unit-naming";
+import { databaseErrorResponse, parseJsonBody } from "@/lib/validation/server";
+import { propertyCreateSchema } from "@/lib/validation/schemas/properties.schema";
+
+const normalizeKey = (value: string | null | undefined) => (value ?? "").trim().replace(/\s+/g, " ").toLowerCase();
 
 export async function POST(request: Request) {
     const authContext = await requireAuthenticatedUser(request);
@@ -9,33 +13,47 @@ export async function POST(request: Request) {
     const { userId, supabase } = authContext;
 
     try {
-        const body = await request.json();
-        const {
-            name,
-            address,
-            type,
-            total_units,
-            total_floors,
-            base_rent_amount,
-            description,
-            amenities,
-            house_rules,
-            images,
-            contract_mode,
-            contract_file,
-            occupancy_limit,
-            utility_billing,
-            city,
-            unit_prefix,
-            numbering_style,
-            starting_number,
-        } = body;
+        requireRole(authContext, "landlord", "admin");
+    } catch (e) {
+        return e instanceof Response ? e : NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
-        if (!name || typeof name !== "string" || !name.trim()) {
-            return NextResponse.json({ error: "Property name is required." }, { status: 400 });
-        }
-        if (!address || typeof address !== "string" || !address.trim()) {
-            return NextResponse.json({ error: "Property address is required." }, { status: 400 });
+    const parsed = await parseJsonBody(request, propertyCreateSchema);
+    if (!parsed.ok) return parsed.response;
+    const {
+        name,
+        address,
+        type,
+        total_units,
+        total_floors,
+        base_rent_amount,
+        description,
+        amenities,
+        house_rules,
+        images,
+        contract_mode,
+        contract_file,
+        occupancy_limit,
+        utility_billing,
+        city,
+        unit_prefix,
+        numbering_style,
+        starting_number,
+    } = parsed.data;
+
+    try {
+        // Duplicate-submission guard: the same landlord registering the same name at the same address.
+        const { data: ownedProperties, error: ownedError } = await supabase
+            .from("properties")
+            .select("id, name, address")
+            .eq("landlord_id", userId);
+        if (ownedError) return databaseErrorResponse(ownedError, "Failed to create property.");
+        const duplicate = (ownedProperties ?? []).find(
+            (property) => normalizeKey(property.name) === normalizeKey(name) && normalizeKey(property.address) === normalizeKey(address)
+        );
+        if (duplicate) {
+            const message = "You already have a property with this name and address.";
+            return NextResponse.json({ error: message, fieldErrors: { name: message } }, { status: 409 });
         }
 
         const admin = createServiceRoleSupabaseClient();
@@ -48,30 +66,30 @@ export async function POST(request: Request) {
         const landlordBranding = (landlordProf?.socials as Record<string, unknown>)?.branding;
 
         const insertPayload: Record<string, any> = {
-            name: name.trim(),
-            address: address.trim(),
-            type: type || "apartment",
-            total_units: parseInt(String(total_units || 1), 10) || 1,
-            total_floors: parseInt(String(total_floors || 1), 10) || 1,
-            base_rent_amount: parseFloat(String(base_rent_amount || 0)) || 0,
+            name,
+            address,
+            type,
+            total_units,
+            total_floors,
+            base_rent_amount,
             description: description ?? "",
-            amenities: Array.isArray(amenities) ? amenities : [],
-            house_rules: Array.isArray(house_rules) ? house_rules : [],
+            amenities,
+            house_rules,
             landlord_id: userId,
             city: city || "Valenzuela",
-            images: Array.isArray(images) ? images : [],
+            images,
             ...(landlordBranding ? { map_decorations: { branding: landlordBranding } } : {}),
         };
 
         if (contract_mode === "generate") {
             insertPayload.contract_template = {
                 answers: {
-                    rent: String(base_rent_amount || 0),
-                    occupancy_limit: String(occupancy_limit || 5),
-                    utility_split_method: utility_billing || "fixed_charge",
-                    utilities: Array.isArray(amenities) ? amenities : [],
+                    rent: String(base_rent_amount),
+                    occupancy_limit: String(occupancy_limit),
+                    utility_split_method: utility_billing,
+                    utilities: amenities,
                 },
-                customClauses: (Array.isArray(house_rules) ? house_rules : []).map((rule: string, idx: number) => ({
+                customClauses: house_rules.map((rule: string, idx: number) => ({
                     id: idx,
                     title: "Building Rule",
                     description: rule,
@@ -94,7 +112,8 @@ export async function POST(request: Request) {
             .single();
 
         if (insertError || !newProp) {
-            return NextResponse.json({ error: `Failed to create property: ${insertError?.message}` }, { status: 500 });
+            console.error("Failed to create property:", insertError);
+            return databaseErrorResponse(insertError, "Failed to create property.");
         }
 
         const propertyId = newProp.id;
@@ -109,8 +128,8 @@ export async function POST(request: Request) {
         await (admin as any).from("property_environment_policies").upsert(
             {
                 property_id: propertyId,
-                environment_mode: type || "apartment",
-                max_occupants_per_unit: parseInt(String(occupancy_limit || 5), 10) || 5,
+                environment_mode: type,
+                max_occupants_per_unit: occupancy_limit,
                 utility_policy_mode: mapping.mode,
                 utility_split_method: mapping.split,
                 needs_review: false,
@@ -120,16 +139,16 @@ export async function POST(request: Request) {
         );
 
         // Sync Units & Floor Configs
-        const targetUnits = parseInt(String(total_units || 1), 10) || 1;
-        const targetFloors = parseInt(String(total_floors || 1), 10) || 1;
-        const targetRent = parseFloat(String(base_rent_amount || 0)) || 0;
-        const propType = type || "apartment";
+        const targetUnits = total_units;
+        const targetFloors = total_floors;
+        const targetRent = base_rent_amount;
+        const propType = type;
 
         const prefix = unit_prefix || (propType === "dormitory" ? "Room" : propType === "boarding_house" ? "Room" : "Unit");
         const generatedList = generateUnitList(targetUnits, targetFloors, {
             prefix,
-            numberingStyle: numbering_style || "floor_based",
-            startingNumber: starting_number || 101,
+            numberingStyle: numbering_style,
+            startingNumber: starting_number,
         });
 
         const unitsToCreate = generatedList.map((item) => ({
@@ -161,7 +180,7 @@ export async function POST(request: Request) {
     } catch (error) {
         console.error("Failed to create property:", error);
         return NextResponse.json(
-            { error: error instanceof Error ? error.message : "Failed to create property." },
+            { error: "Failed to create property." },
             { status: 500 }
         );
     }

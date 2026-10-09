@@ -26,6 +26,11 @@ import { applyBrandCssVariables, getContrastTextColor, getMonogramInitials } fro
 import { ThemeToggle } from "@/components/theme-toggle";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { cn } from "@/lib/utils";
+import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
+import { textRule } from "@/lib/validation/rules";
+import { BILLING_LIMITS } from "@/lib/validation/schemas/billing.schema";
 
 type PaymentRequestItem = {
     id: string;
@@ -271,6 +276,16 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
         return true;
     }, [method, hasProof, hasReference]);
 
+    const portalValues = useMemo(() => ({ method, referenceNumber, note, hasProof }), [method, referenceNumber, note, hasProof]);
+    const portalForm = useFormValidation(portalValues, {
+        referenceNumber: (value, all) => {
+            if (all.method === "gcash" && !String(value ?? "").trim()) return "Reference number is required for GCash submissions.";
+            return textRule(value, { label: "Reference number", max: BILLING_LIMITS.reference });
+        },
+        hasProof: (value, all) => (all.method === "gcash" && !value ? "Upload your GCash receipt to continue." : undefined),
+        note: (value) => textRule(value, { label: "Note", max: BILLING_LIMITS.applicationNote }),
+    });
+
     const brandPrimary = payload?.branding?.primaryColor || "#c4b0ff";
     const contrastColor = getContrastTextColor(brandPrimary);
 
@@ -297,6 +312,11 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
     const executeSubmit = async () => {
         if (!payload) return;
+        if (isSubmitting) return; // double-click guard
+        if (!portalForm.validateAll()) {
+            setShowConfirmModal(false);
+            return;
+        }
         setIsSubmitting(true);
         setError(null);
         setSuccessMessage(null);
@@ -316,7 +336,8 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                 body: formData,
             });
 
-            const result = (await response.json()) as {
+            const result = (await response.json().catch(() => ({}))) as {
+                fieldErrors?: Record<string, string>;
                 error?: string;
                 transactionReference?: string;
                 requests?: PaymentRequestItem[];
@@ -324,6 +345,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
             };
 
             if (!response.ok) {
+                portalForm.setServerErrors(result.fieldErrors);
                 throw new Error(result.error || "Failed to submit payment proof.");
             }
 
@@ -851,16 +873,18 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                             </label>
                                             <div className="relative">
                                                 <input maxLength={60}
+                                                    {...portalForm.fieldProps("referenceNumber")}
                                                     type="text"
                                                     value={referenceNumber}
                                                     onChange={(e) => setReferenceNumber(e.target.value)}
                                                     placeholder={method === "gcash" ? "e.g. 1002 9384 1029 1" : "Optional cash memo or receipt number"}
-                                                    className="w-full rounded-2xl border border-zinc-300 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950/70 px-4 py-3 text-xs sm:text-sm font-semibold text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition"
+                                                    className={cn("w-full rounded-2xl border border-zinc-300 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950/70 px-4 py-3 text-xs sm:text-sm font-semibold text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition", portalForm.errorFor("referenceNumber") && fieldErrorClass)}
                                                 />
                                                 {referenceNumber.trim().length > 0 && (
                                                     <Check className="absolute right-3.5 top-3.5 size-4 text-emerald-500" />
                                                 )}
                                             </div>
+                                            <FieldError id={portalForm.errorId("referenceNumber")} message={portalForm.errorFor("referenceNumber")} />
                                         </div>
 
                                         {/* File Upload Dropzone */}
@@ -871,10 +895,12 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
 
                                             <input
                                                 ref={fileInputRef}
+                                                {...portalForm.fieldProps("hasProof")}
                                                 type="file"
+                                                aria-label="Proof of payment receipt"
                                                 accept={MEDIA_ACCEPT_STRINGS.document_and_image}
                                                 onChange={(e) => handleFileSelected(e.target.files?.[0] ?? null)}
-                                                className="hidden"
+                                                className="sr-only"
                                             />
 
                                             {!proofFile && !existingProofUrl ? (
@@ -959,12 +985,15 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                             )}
                                         </div>
 
+                                        <FieldError id={portalForm.errorId("hasProof")} message={portalForm.errorFor("hasProof")} />
+
                                         {/* Optional Transfer Note */}
                                         <div>
                                             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
                                                 Transfer Note (Optional)
                                             </label>
                                             <input maxLength={250}
+                                                {...portalForm.fieldProps("note")}
                                                 type="text"
                                                 value={note}
                                                 onChange={(e) => setNote(e.target.value)}
@@ -983,8 +1012,10 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 <div className="pt-4">
                                     <button
                                         type="button"
-                                        disabled={!canSubmit || isSubmitting}
-                                        onClick={() => setShowConfirmModal(true)}
+                                        disabled={isSubmitting}
+                                        onClick={() => {
+                                            if (portalForm.validateAll()) setShowConfirmModal(true);
+                                        }}
                                         className="w-full relative flex items-center justify-center gap-2 rounded-2xl py-3.5 sm:py-4 px-5 font-bold text-xs sm:text-sm tracking-wide transition shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 hover:scale-[1.01] active:scale-[0.99]"
                                         style={{
                                             backgroundColor: brandPrimary,

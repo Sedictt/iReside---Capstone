@@ -13,6 +13,10 @@ import { toast } from "sonner";
 import { OfflineStorage, OfflineBlobStorage } from "@/lib/offline/offlineStorage";
 import { mutationQueue } from "@/lib/offline/mutationQueue";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
+import { textRule } from "@/lib/validation/rules";
+import { BILLING_LIMITS } from "@/lib/validation/schemas/billing.schema";
 
 type InvoiceDetail = NonNullable<Awaited<ReturnType<typeof import("@/lib/billing/server").getInvoiceDetailForActor>>>;
 
@@ -517,6 +521,17 @@ function CheckoutPageContent() {
         return Math.max(0, totalSelected - invoice.paidAmount);
     }, [invoice, selectedItemIds, selectedReadingIds]);
 
+    const paymentValues = useMemo(() => ({ referenceNumber, receipt, note }), [referenceNumber, receipt, note]);
+    const paymentForm = useFormValidation(paymentValues, {
+        referenceNumber: (value) => {
+            if (method !== "gcash") return undefined;
+            if (!String(value ?? "").trim()) return "Reference number is required for GCash submissions.";
+            return textRule(value, { label: "Reference number", max: BILLING_LIMITS.reference });
+        },
+        receipt: (value) => (method === "gcash" && !value ? "A clear payment proof image is required." : undefined),
+        note: (value) => textRule(value, { label: "Note", max: BILLING_LIMITS.paymentNote }),
+    });
+
     const stageOfflinePayment = async (finalAmount: number, isFullPayment: boolean) => {
         if (!invoice) return;
 
@@ -570,6 +585,8 @@ function CheckoutPageContent() {
     const submitPayment = async () => {
         if (!invoice) return;
         if (method !== "gcash") return;
+        if (submitting) return; // double-click guard
+        if (!paymentForm.validateAll()) return;
         setSubmitting(true);
         try {
             if (isFaceToFacePreview) {
@@ -601,16 +618,26 @@ function CheckoutPageContent() {
             if (!isFullPayment || partialAmount) formData.append("partialAmount", finalAmount.toString());
             if (receipt) formData.append("receipt", receipt);
 
+            let response: Response | null = null;
             try {
-                const response = await fetch(`/api/tenant/payments/${invoice.id}/submit`, {
+                response = await fetch(`/api/tenant/payments/${invoice.id}/submit`, {
                     method: "POST",
                     body: formData,
                 });
-                if (!response.ok) {
-                    throw new Error(`Server returned ${response.status}`);
-                }
             } catch (networkErr) {
                 console.warn("[Checkout] Online submit failed, falling back to offline queue:", networkErr);
+            }
+
+            if (response && response.status >= 400 && response.status < 500) {
+                // The server rejected the submission (validation / duplicate / ownership):
+                // show why instead of queueing a request that can never succeed.
+                const data = await response.json().catch(() => ({}));
+                paymentForm.setServerErrors(data?.fieldErrors);
+                toast.error(data?.error || "Your payment could not be submitted. Check the details and try again.");
+                return;
+            }
+
+            if (!response || !response.ok) {
                 await stageOfflinePayment(finalAmount, isFullPayment);
             }
             setSubmitted(true);
@@ -642,7 +669,11 @@ function CheckoutPageContent() {
                     paymentMethod: "in_person"
                 }),
             });
-            if (!response.ok) throw new Error();
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                toast.error(data?.error || "Could not notify your landlord. Please try again.");
+                return;
+            }
             const payload = await response.json();
             setInvoice((current) =>
                 current
@@ -809,12 +840,14 @@ function CheckoutPageContent() {
                                         <div className="space-y-6 rounded-[2rem] p-8 backdrop-blur-3xl neumorphic-panel">
                                             <div className="space-y-5">
                                                 <Field label="Reference number">
-                                                    <input maxLength={60} 
-                                                        value={referenceNumber} 
-                                                        onChange={(event) => setReferenceNumber(event.target.value)} 
-                                                        className="w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10" 
-                                                        placeholder="13-digit GCash Ref #" 
+                                                    <input maxLength={60}
+                                                        {...paymentForm.fieldProps("referenceNumber")}
+                                                        value={referenceNumber}
+                                                        onChange={(event) => setReferenceNumber(event.target.value)}
+                                                        className={cn("w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10", paymentForm.errorFor("referenceNumber") && fieldErrorClass)}
+                                                        placeholder="13-digit GCash Ref #"
                                                     />
+                                                    <FieldError id={paymentForm.errorId("referenceNumber")} message={paymentForm.errorFor("referenceNumber")} />
                                                 </Field>
                                                 
                                                 <Field label="Transaction Receipt">
@@ -830,23 +863,27 @@ function CheckoutPageContent() {
                                                                 {receipt ? receipt.name : "Upload Screenshot"}
                                                             </p>
                                                             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                                                JPG, PNG or PDF up to 5MB
+                                                                JPG, PNG or WebP up to 5MB
                                                             </p>
                                                         </div>
-                                                        <input 
-                                                            type="file" 
-                                                            accept={MEDIA_ACCEPT_STRINGS.document_and_image} 
-                                                            className="hidden" 
+                                                        <input
+                                                            {...paymentForm.fieldProps("receipt")}
+                                                            type="file"
+                                                            accept={MEDIA_ACCEPT_STRINGS.image}
+                                                            className="sr-only"
                                                             onChange={(event) => {
+                                                                // Images only: the landlord reviews the proof as an image and the server rejects other types.
                                                                 const validFile = handleMediaSelection(event, {
-                                                                    preset: "document_and_image",
+                                                                    preset: "image",
                                                                     maxSizeBytes: 5 * 1024 * 1024,
                                                                     notify: (message, description) => toast.error(message, { description }),
                                                                 });
                                                                 setReceipt(validFile);
-                                                            }} 
+                                                                paymentForm.touch("receipt");
+                                                            }}
                                                         />
                                                     </label>
+                                                    <FieldError id={paymentForm.errorId("receipt")} message={paymentForm.errorFor("receipt")} />
                                                 </Field>
                                             </div>
                                         </div>
@@ -1143,11 +1180,11 @@ function CheckoutPageContent() {
 
                             {method === "gcash" && (
                                 <button 
-                                    onClick={submitPayment} 
-                                    disabled={submitting || !receipt || !referenceNumber.trim() || amountDue === 0} 
+                                    onClick={submitPayment}
+                                    disabled={submitting || amountDue === 0}
                                     className={cn(
                                         "group flex w-full items-center justify-center gap-3 rounded-full py-5 text-sm font-black transition-all shadow-xl",
-                                        submitting || !receipt || !referenceNumber.trim() || amountDue === 0
+                                        submitting || amountDue === 0
                                             ? "cursor-not-allowed border border-border/50 bg-background/50 text-muted-foreground shadow-none" 
                                             : "bg-gradient-to-r from-primary to-blue-600 text-white hover:scale-[1.02] hover:shadow-primary/25 active:scale-95"
                                     )}

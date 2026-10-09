@@ -1,21 +1,15 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
-import { otpVerifySchema } from "@/lib/validation/schemas/auth.schema";
+import { escapeLikePattern, passwordResetOtpVerifySchema } from "@/lib/validation/schemas/account.schema";
+import { parseJsonBody } from "@/lib/validation/server";
 import { createPasswordResetToken } from "@/lib/auth/reset-token";
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-        const validation = otpVerifySchema.safeParse(body);
+        const parsed = await parseJsonBody(request, passwordResetOtpVerifySchema);
+        if (!parsed.ok) return parsed.response;
 
-        if (!validation.success) {
-            return NextResponse.json(
-                { error: "Invalid email or OTP code. Code must be 6 digits." },
-                { status: 400 }
-            );
-        }
-
-        const { email, otp } = validation.data;
+        const { email, otp } = parsed.data;
         const normalizedEmail = email.trim().toLowerCase();
         const normalizedOtp = otp.trim();
 
@@ -25,7 +19,7 @@ export async function POST(request: Request) {
         const { data: profile } = await supabaseAdmin
             .from("profiles")
             .select("id")
-            .ilike("email", normalizedEmail)
+            .ilike("email", escapeLikePattern(normalizedEmail))
             .maybeSingle();
 
         if (!profile?.id) {
