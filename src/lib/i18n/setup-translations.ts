@@ -157,7 +157,7 @@ export const setupDictionary = {
     step2Instruction: "Choose a private password that you will use to sign in to your landlord account in the future.",
     passwordLabel: "New Password",
     passwordPlaceholder: "At least 8 characters",
-    passwordHelper: "Use at least 8 characters with both letters and numbers.",
+    passwordHelper: "Use at least 8 characters with letters and a number or symbol. Avoid common words, repeated characters, and your name or email.",
     confirmPasswordLabel: "Re-enter Your Password",
     confirmPasswordPlaceholder: "Re-enter your password",
     showPassword: "Show password",

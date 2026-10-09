@@ -1420,11 +1420,16 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
         }
     }, [activeTab, activeSubTab]);
 
+    const passwordContext = {
+        name: formData.full_name || profile?.full_name,
+        email: user?.email || profile?.email,
+    };
+
     const handleUpdatePassword = async (e: React.FormEvent) => {
         e.preventDefault();
         markFieldTouched("newPassword");
         markFieldTouched("confirmNewPassword");
-        const pairCheck = validatePasswordPair(newPassword, confirmNewPassword);
+        const pairCheck = validatePasswordPair(newPassword, confirmNewPassword, passwordContext);
         if (!pairCheck.isValid) {
             setFieldError("newPassword", pairCheck.newPasswordError);
             setFieldError("confirmNewPassword", pairCheck.confirmPasswordError);
@@ -3299,17 +3304,17 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                 const val = e.target.value;
                                                 setNewPassword(val);
                                                 if (fieldErrors["newPassword"]) {
-                                                    const pair = validatePasswordPair(val, confirmNewPassword);
+                                                    const pair = validatePasswordPair(val, confirmNewPassword, passwordContext);
                                                     setFieldError("newPassword", pair.newPasswordError);
                                                 }
                                                 if (confirmNewPassword && fieldErrors["confirmNewPassword"]) {
-                                                    const pair = validatePasswordPair(val, confirmNewPassword);
+                                                    const pair = validatePasswordPair(val, confirmNewPassword, passwordContext);
                                                     setFieldError("confirmNewPassword", pair.confirmPasswordError);
                                                 }
                                             }}
                                             onBlur={() => {
                                                 markFieldTouched("newPassword");
-                                                const pair = validatePasswordPair(newPassword, confirmNewPassword);
+                                                const pair = validatePasswordPair(newPassword, confirmNewPassword, passwordContext);
                                                 setFieldError("newPassword", pair.newPasswordError);
                                             }}
                                             placeholder="••••••••" 
@@ -3333,7 +3338,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
 
                                 {/* Password Strength Meter & Live Checklist */}
                                 {newPassword.length > 0 && (() => {
-                                    const strength = evaluatePasswordStrength(newPassword);
+                                    const strength = evaluatePasswordStrength(newPassword, passwordContext);
                                     return (
                                         <div className="space-y-2.5 rounded-xl neumorphic-panel p-3.5 animate-in fade-in duration-200">
                                             <div className="flex items-center justify-between text-xs">
@@ -3373,7 +3378,14 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                     <CheckCircle2 className={cn("size-3 shrink-0", strength.checks.hasNumberOrSymbol ? "text-emerald-500" : "opacity-40")} />
                                                     <span>Number or symbol</span>
                                                 </div>
+                                                <div className={cn("col-span-2 flex items-center gap-1.5 font-medium", (strength.checks.isNotCommon && strength.checks.isNotRepetitive && strength.checks.isNotPersonal) ? "text-emerald-500" : "text-muted-foreground")}>
+                                                    <CheckCircle2 className={cn("size-3 shrink-0", (strength.checks.isNotCommon && strength.checks.isNotRepetitive && strength.checks.isNotPersonal) ? "text-emerald-500" : "opacity-40")} />
+                                                    <span>Not common, repetitive, or your name/email</span>
+                                                </div>
                                             </div>
+                                            {strength.error && (
+                                                <p className="text-[11px] font-semibold text-rose-500" role="alert">{strength.error}</p>
+                                            )}
                                         </div>
                                     );
                                 })()}
@@ -3392,13 +3404,13 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                 const val = e.target.value;
                                                 setConfirmNewPassword(val);
                                                 if (fieldErrors["confirmNewPassword"]) {
-                                                    const pair = validatePasswordPair(newPassword, val);
+                                                    const pair = validatePasswordPair(newPassword, val, passwordContext);
                                                     setFieldError("confirmNewPassword", pair.confirmPasswordError);
                                                 }
                                             }}
                                             onBlur={() => {
                                                 markFieldTouched("confirmNewPassword");
-                                                const pair = validatePasswordPair(newPassword, confirmNewPassword);
+                                                const pair = validatePasswordPair(newPassword, confirmNewPassword, passwordContext);
                                                 setFieldError("confirmNewPassword", pair.confirmPasswordError);
                                             }}
                                             placeholder="••••••••" 

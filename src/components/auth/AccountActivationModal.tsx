@@ -27,6 +27,7 @@ import {
   validateAdminEmail,
   validateAdminPassword,
   validateConfirmPassword,
+  isStarterLoginEmail,
 } from "@/lib/validation/brand-setup";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
 import { createClient } from "@/lib/supabase/client";
@@ -36,7 +37,6 @@ interface AccountActivationModalProps {
   isOpen: boolean;
   onComplete: (newEmail: string, newPassword?: string) => Promise<void> | void;
   initialFullName?: string;
-  initialEmail?: string;
 }
 
 const CLAIM_STORAGE_KEY = "ireside_claim_draft";
@@ -45,7 +45,6 @@ export function AccountActivationModal({
   isOpen,
   onComplete,
   initialFullName,
-  initialEmail,
 }: AccountActivationModalProps) {
   const [step, setStep] = useState<1 | 2>(1);
   const [fullName, setFullName] = useState("");
@@ -159,7 +158,8 @@ export function AccountActivationModal({
       if (raw) {
         const draft = JSON.parse(raw);
         if (draft.fullName) setFullName(draft.fullName);
-        if (draft.newEmail) setNewEmail(draft.newEmail);
+        // Never restore a starter/practice login address into the email field.
+        if (draft.newEmail && !isStarterLoginEmail(draft.newEmail)) setNewEmail(draft.newEmail);
         if (draft.otpCode) setOtpCode(draft.otpCode);
         if (draft.step) setStep(draft.step);
       }
@@ -183,7 +183,9 @@ export function AccountActivationModal({
     }
   }, [isOpen, isSuccess, fullName, newEmail, otpCode, step]);
 
-  // Smart prefill for full name and email once on modal open
+  // Prefill the full name once on modal open. The email is intentionally left
+  // blank: the only address we know is the starter/practice login, and
+  // pre-filling it led landlords to submit it as their real account email.
   useEffect(() => {
     if (!hasPrefilledRef.current && isOpen) {
       if (initialFullName) {
@@ -193,16 +195,14 @@ export function AccountActivationModal({
           setFullName(initialFullName.trim());
         }
       }
-      if (initialEmail && !initialEmail.includes("turnkey.local")) {
-        setNewEmail(initialEmail.trim());
-      }
       hasPrefilledRef.current = true;
     }
-  }, [isOpen, initialFullName, initialEmail]);
+  }, [isOpen, initialFullName]);
 
   if (!isOpen) return null;
 
-  const passwordStrength = evaluatePasswordStrength(newPassword);
+  const passwordStrength = evaluatePasswordStrength(newPassword, { name: fullName, email: newEmail });
+  const isPasswordAcceptable = newPassword.length > 0 && !passwordStrength.error;
 
   const handleSendOtp = async () => {
     setError(null);
@@ -337,7 +337,7 @@ export function AccountActivationModal({
     e.preventDefault();
     setError(null);
 
-    const passCheck = validateAdminPassword(newPassword);
+    const passCheck = validateAdminPassword(newPassword, false, { name: fullName, email: newEmail });
     if (!passCheck.isValid) {
       setError(passCheck.error || "Password does not meet security requirements.");
       passwordInputRef.current?.focus();
@@ -885,15 +885,50 @@ export function AccountActivationModal({
                               {passwordStrength.label}
                             </span>
                           </span>
-                          <span
-                            className={cn(
-                              "font-bold",
-                              newPassword.length >= 8 ? "text-emerald-500" : "text-muted-foreground"
-                            )}
-                          >
-                            {newPassword.length >= 8 ? "✓ 8+ chars" : "• Needs 8+ chars"}
+                          <span className="text-xs text-muted-foreground">
+                            {passwordStrength.error
+                              ? "Fix the items below to continue"
+                              : passwordStrength.score >= 3
+                              ? "Meets requirements"
+                              : "Add length or variety to strengthen"}
                           </span>
                         </div>
+                        <ul
+                          className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs sm:text-sm"
+                          aria-label="Password requirements"
+                        >
+                          {[
+                            { ok: passwordStrength.checks.hasMinLength, text: "At least 8 characters" },
+                            { ok: passwordStrength.checks.hasLetter, text: "Includes letters" },
+                            { ok: passwordStrength.checks.hasNumberOrSymbol, text: "Includes a number or symbol" },
+                            {
+                              ok:
+                                passwordStrength.checks.isNotCommon &&
+                                passwordStrength.checks.isNotRepetitive &&
+                                passwordStrength.checks.isNotPersonal,
+                              text: "Not common, repetitive, or your name/email",
+                            },
+                          ].map((item) => (
+                            <li
+                              key={item.text}
+                              className={cn(
+                                "flex items-center gap-1.5 font-medium",
+                                item.ok ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
+                              )}
+                            >
+                              <Check
+                                className={cn("size-3.5 shrink-0 stroke-[3]", item.ok ? "" : "opacity-30")}
+                                aria-hidden="true"
+                              />
+                              <span>{item.text}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        {passwordStrength.error && (
+                          <p className="text-xs sm:text-sm font-semibold text-rose-600 dark:text-rose-400" role="alert">
+                            {passwordStrength.error}
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -970,7 +1005,7 @@ export function AccountActivationModal({
                     </button>
                     <button
                       type="submit"
-                      disabled={isSubmitting || !newPassword || confirmPassword !== newPassword}
+                      disabled={isSubmitting || !isPasswordAcceptable || confirmPassword !== newPassword}
                       className="min-h-[56px] flex-1 rounded-2xl bg-primary text-primary-foreground font-black text-lg transition-all hover:bg-primary/95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-md cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary"
                     >
                       {isSubmitting ? (

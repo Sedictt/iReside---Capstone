@@ -14,6 +14,7 @@
  */
 
 import { REGEX_EMAIL, REGEX_NAME, validatePhoneNumber } from "./landlord-settings";
+import { getPasswordPolicyError, type PasswordContext } from "./password-policy";
 
 export type FieldRuleResult = string | undefined;
 
@@ -84,19 +85,19 @@ export function phoneRule(value: unknown, { required = false } = {}): FieldRuleR
   return check.isValid ? undefined : check.error;
 }
 
-/** New-password policy: matches the setup wizard and settings (8+ chars, letters and numbers/symbols). */
-export const PASSWORD_MIN_LENGTH = 8;
-export const PASSWORD_MAX_LENGTH = 72; // bcrypt input limit used by Supabase Auth
+/**
+ * New-password policy shared by the setup wizard, account claim, settings and
+ * reset flows. See `./password-policy` for the full rule set (length, letters
+ * plus number/symbol, not common, not repetitive, not built from name/email).
+ */
+export { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "./password-policy";
 
-export function newPasswordRule(value: unknown, { label = "Password" } = {}): FieldRuleResult {
+export function newPasswordRule(
+  value: unknown,
+  { label = "Password", context }: { label?: string; context?: PasswordContext } = {}
+): FieldRuleResult {
   if (isBlank(value)) return `${label} is required.`;
-  const password = String(value);
-  if (password.length < PASSWORD_MIN_LENGTH) return `${label} must be at least ${PASSWORD_MIN_LENGTH} characters.`;
-  if (password.length > PASSWORD_MAX_LENGTH) return `${label} cannot exceed ${PASSWORD_MAX_LENGTH} characters.`;
-  if (!/[a-zA-Z]/.test(password) || !/[\d\W_]/.test(password)) {
-    return `${label} must include letters and at least one number or symbol.`;
-  }
-  return undefined;
+  return getPasswordPolicyError(String(value), { label, context });
 }
 
 export function confirmMatchRule(value: unknown, original: unknown, { label = "Passwords" } = {}): FieldRuleResult {

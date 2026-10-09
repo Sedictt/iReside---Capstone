@@ -20,6 +20,7 @@ import {
   evaluatePasswordStrength,
 } from "./landlord-settings";
 import { newPasswordRule } from "./rules";
+import { getPasswordPolicyError, type PasswordContext } from "./password-policy";
 import { imageReferenceRule } from "./schemas/account.schema";
 
 /** Logo / banner reference: http(s) URL, app path, or (logos) a base64 image data URL. */
@@ -258,10 +259,23 @@ export function validateAdminFullName(value: string): { isValid: boolean; error?
  * Validates the Landlord Email.
  * Required, valid email format, must not use pre-seeded dummy email.
  */
+/**
+ * Starter/practice login addresses handed out with unclaimed landlord accounts.
+ * These are never a landlord's real inbox, so they must never be accepted as the
+ * claimed account email or pre-filled into the claim form.
+ */
+export function isStarterLoginEmail(value: string): boolean {
+  const email = value.trim().toLowerCase();
+  if (!email) return false;
+  if (DISALLOWED_PRESEEDED_DATA.emails.includes(email)) return true;
+  if (email.endsWith("@turnkey.local")) return true;
+  return /^practice\.(landlord|tenant|admin)\d*@ireside\.ph$/.test(email);
+}
+
 export function validateAdminEmail(value: string): { isValid: boolean; error?: string } {
   const base = validateEmail(value);
   if (!base.isValid) return base;
-  if (DISALLOWED_PRESEEDED_DATA.emails.includes(value.trim().toLowerCase())) {
+  if (isStarterLoginEmail(value)) {
     return { isValid: false, error: "Please enter your actual working email address instead of the sample placeholder." };
   }
   return { isValid: true };
@@ -319,7 +333,8 @@ export function validateAdminPhone(value: string): { isValid: boolean; error?: s
  */
 export function validateAdminPassword(
   password: string,
-  isExistingPlaceholder = false
+  isExistingPlaceholder = false,
+  context?: PasswordContext
 ): { isValid: boolean; error?: string } {
   const trimmed = password ?? "";
   if (isExistingPlaceholder && (trimmed === "••••••••••••" || !trimmed)) {
@@ -328,13 +343,8 @@ export function validateAdminPassword(
   if (!trimmed) {
     return { isValid: false, error: "Master password is required." };
   }
-  if (trimmed.length < 8) {
-    return { isValid: false, error: "Password must be at least 8 characters long." };
-  }
-  if (!/[a-zA-Z]/.test(trimmed) || !/[\d\W_]/.test(trimmed)) {
-    return { isValid: false, error: "Password must contain both letters and numbers or symbols." };
-  }
-  return { isValid: true };
+  const error = getPasswordPolicyError(trimmed, { label: "Password", context });
+  return error ? { isValid: false, error } : { isValid: true };
 }
 
 /**

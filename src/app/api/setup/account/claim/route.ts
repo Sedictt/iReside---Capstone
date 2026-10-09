@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: emailCheck.error, fieldErrors: { newEmail: emailCheck.error } }, { status: 400 });
     }
 
-    const passwordCheck = validateAdminPassword(newPassword);
+    const passwordCheck = validateAdminPassword(newPassword, false, { name: fullName, email: normalizedEmail });
     if (!passwordCheck.isValid) {
       return NextResponse.json({ error: passwordCheck.error, fieldErrors: { newPassword: passwordCheck.error } }, { status: 400 });
     }

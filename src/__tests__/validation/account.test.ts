@@ -31,7 +31,8 @@ describe("password policy", () => {
     const base = { email: "a@b.co", resetToken: "tok" };
     expect(passwordResetSchema.safeParse({ ...base, newPassword: "abc12" }).success).toBe(false);
     expect(passwordResetSchema.safeParse({ ...base, newPassword: "abcdefgh" }).success).toBe(false);
-    expect(passwordResetSchema.safeParse({ ...base, newPassword: "abcdefg1" }).success).toBe(true);
+    expect(passwordResetSchema.safeParse({ ...base, newPassword: "abcdefg1" }).success).toBe(false); // alphabet run
+    expect(passwordResetSchema.safeParse({ ...base, newPassword: "lofty8key" }).success).toBe(true);
     expect(passwordResetSchema.safeParse({ ...base, newPassword: "a1".repeat(37) }).success).toBe(false); // 74 > 72
     expect(changePasswordSchema.safeParse({ currentPassword: "x", newPassword: "short1" }).success).toBe(false);
   });
@@ -56,7 +57,8 @@ describe("password policy", () => {
     const branding = { propertyName: "Acme Lofts", primaryColor: "#112233", secondaryColor: "#445566" };
     expect(setupLaunchSchema.safeParse({ branding, admin: { password: "••••••••••••" } }).success).toBe(true);
     expect(setupLaunchSchema.safeParse({ branding, admin: { password: "abc123" } }).success).toBe(false);
-    expect(setupLaunchSchema.safeParse({ branding, admin: { password: "abcdef12" } }).success).toBe(true);
+    expect(setupLaunchSchema.safeParse({ branding, admin: { password: "abcdef12" } }).success).toBe(false); // alphabet run
+    expect(setupLaunchSchema.safeParse({ branding, admin: { password: "acme-lofts8" } }).success).toBe(true);
   });
 });
 

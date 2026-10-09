@@ -31,6 +31,18 @@ describe("AccountActivationModal Component", () => {
     });
   });
 
+  it("opens with an empty email field and ignores a stored starter/practice draft email", () => {
+    sessionStorage.setItem(
+      "ireside_claim_draft",
+      JSON.stringify({ fullName: "Bryan Benedict", newEmail: "practice.landlord14@ireside.ph", otpCode: "", step: 1 })
+    );
+    render(<AccountActivationModal isOpen={true} onComplete={mockOnComplete} initialFullName="Bryan Benedict" />);
+
+    expect(screen.getByPlaceholderText("landlord@example.com")).toHaveValue("");
+    expect(screen.getByRole("button", { name: /Send Code/i })).toBeDisabled();
+    sessionStorage.removeItem("ireside_claim_draft");
+  });
+
   it("does not render when isOpen is false", () => {
     render(<AccountActivationModal isOpen={false} onComplete={mockOnComplete} />);
     expect(screen.queryByRole("dialog")).toBeNull();

@@ -263,6 +263,15 @@ describe("Brand Setup Validation Module", () => {
       expect(validateAdminEmail("landlord@reyesresidences.com").error).toContain("sample placeholder");
     });
 
+    it("rejects any numbered practice/starter login address, not just the listed ones", () => {
+      expect(validateAdminEmail("practice.landlord14@ireside.ph").isValid).toBe(false);
+      expect(validateAdminEmail("Practice.Landlord99@iReside.ph").isValid).toBe(false);
+      expect(validateAdminEmail("practice.tenant5@ireside.ph").isValid).toBe(false);
+      expect(validateAdminEmail("anything@turnkey.local").isValid).toBe(false);
+      expect(validateAdminEmail("practice.landlord14@ireside.ph").error).toContain("sample placeholder");
+      expect(validateAdminEmail("practice.landlord@gmail.com").isValid).toBe(true);
+    });
+
     it("accepts valid email format", () => {
       expect(validateAdminEmail("admin@pinecrestsuites.ph").isValid).toBe(true);
     });

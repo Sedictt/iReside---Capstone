@@ -1059,7 +1059,6 @@ function LoginContent() {
                 isOpen={showActivationModal}
                 onComplete={handleActivationComplete}
                 initialFullName={unclaimedUserData?.fullName}
-                initialEmail={unclaimedUserData?.email}
             />
 
             {/* Security Recovery Key Lightbox Modal (rendered after refresh) */}
