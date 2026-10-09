@@ -118,7 +118,7 @@ export function PropertySelector({ className }: { className?: string } = {}) {
             </button>
 
             {isOpen && (
-                <div className="absolute z-[200] mt-2 left-0 right-0 top-full w-full overflow-hidden rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-xl shadow-xl p-2 animate-in fade-in zoom-in-95 duration-150 origin-top-left">
+                <div className="absolute z-[200] mt-2 left-0 right-0 top-full w-full overflow-hidden rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-xl glass-premium shadow-xl p-2 animate-in fade-in zoom-in-95 duration-150 origin-top-left">
                     <div className="relative mb-2 px-1 pt-1">
                         <Search className="absolute left-3.5 top-1/2 mt-0.5 size-3.5 -translate-y-1/2 text-muted-foreground/50" />
                         <input maxLength={60}

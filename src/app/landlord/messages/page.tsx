@@ -777,7 +777,7 @@ setPaymentHistoryLoading(true);
     }, [activeContact?.participantUserId, refreshConversations, updateActiveContactActionState]);
 
     const openReportWizard = useCallback((messageId?: string) => {
-        setReportMessageId(messageId);
+        setReportMessageId(typeof messageId === "string" ? messageId : undefined);
         setShowReportWizard(true);
     }, []);
 

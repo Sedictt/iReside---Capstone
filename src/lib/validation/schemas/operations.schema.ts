@@ -49,7 +49,7 @@ const zOptionalUuidFilter = (label: string) =>
     .optional()
     .nullable()
     .transform((value) => (value && value !== "all" ? value : null))
-    .refine((value) => value === null || z.uuid().safeParse(value).success, `${label} is invalid.`);
+    .refine((value) => value === null || z.guid().safeParse(value).success, `${label} is invalid.`);
 
 /** Bounded integer query param (strings from URLSearchParams) with a default. */
 export const zQueryInt = (label: string, { min, max, fallback }: { min: number; max: number; fallback: number }) =>
@@ -468,7 +468,7 @@ export const conversationCreateSchema = z.object({
     .array(z.string({ error: "Participant is invalid." }).trim(), { error: "At least one participant is required." })
     .max(MESSAGE_LIMITS.participants, `A conversation can have at most ${MESSAGE_LIMITS.participants} participants.`)
     .superRefine((ids, ctx) => {
-      if (ids.some((id) => !z.uuid().safeParse(id).success)) {
+      if (ids.some((id) => !z.guid().safeParse(id).success)) {
         ctx.addIssue({ code: "custom", message: "Participant is invalid." });
       }
     }),
@@ -497,7 +497,7 @@ export const messageReportSchema = z
       .optional()
       .nullable()
       .transform((value) => value || null)
-      .refine((value) => value === null || z.uuid().safeParse(value).success, "Conversation is invalid."),
+      .refine((value) => value === null || z.guid().safeParse(value).success, "Conversation is invalid."),
     category: z.enum(MESSAGE_REPORT_CATEGORIES, { error: "Select a valid report category." }),
     details: z
       .string()
@@ -519,7 +519,7 @@ export const messageReportSchema = z
       .optional()
       .nullable()
       .transform((value) => value || "")
-      .refine((value) => !value || z.uuid().safeParse(value).success, "Message ID must be a valid message identifier."),
+      .refine((value) => !value || z.guid().safeParse(value).success, "Message ID must be a valid message identifier."),
   });
 
 export const messageUserSearchQuerySchema = z.object({
@@ -533,7 +533,7 @@ const zLenientUnitId = z
   .trim()
   .optional()
   .nullable()
-  .transform((value) => (value && z.uuid().safeParse(value).success ? value : null));
+  .transform((value) => (value && z.guid().safeParse(value).success ? value : null));
 
 export const unitMessagesQuerySchema = z
   .object({

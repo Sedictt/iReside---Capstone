@@ -61,6 +61,10 @@ export async function GET(request: Request) {
             .eq("id", userId)
             .single();
 
+        // A query failure (e.g. a timeout) is not "not found"; PGRST116 means no row.
+        if (profileError && profileError.code !== "PGRST116") {
+            return NextResponse.json({ error: "Quick actions are temporarily unavailable. Please try again." }, { status: 503 });
+        }
         if (profileError || !profile) {
             return NextResponse.json({ error: "Profile not found" }, { status: 404 });
         }
@@ -119,6 +123,10 @@ export async function PATCH(request: Request) {
             .eq("id", userId)
             .single();
 
+        // A query failure (e.g. a timeout) is not "not found"; PGRST116 means no row.
+        if (profileError && profileError.code !== "PGRST116") {
+            return NextResponse.json({ error: "Quick actions are temporarily unavailable. Please try again." }, { status: 503 });
+        }
         if (profileError || !profile) {
             return NextResponse.json({ error: "Profile not found" }, { status: 404 });
         }

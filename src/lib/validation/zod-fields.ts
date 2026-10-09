@@ -121,4 +121,4 @@ export const zOptionalIsoDate = (label: string) =>
     .refine((value) => !value || isValidIsoDate(value), `${label} must be a valid date.`)
     .transform((value) => (value ? value : null));
 
-export const zUuid = (label = "ID") => z.uuid({ error: `${label} is invalid.` });
+export const zUuid = (label = "ID") => z.guid({ error: `${label} is invalid.` });

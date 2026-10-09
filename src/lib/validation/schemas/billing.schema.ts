@@ -232,7 +232,7 @@ export async function proofContentRule(file: Blob | null | undefined, { label = 
 }
 
 /** True for a UUID route param / id (used to 404 malformed ids before they reach Postgres). */
-export const isUuid = (value: unknown): value is string => z.uuid().safeParse(value).success;
+export const isUuid = (value: unknown): value is string => z.guid().safeParse(value).success;
 
 // ---------------------------------------------------------------------------
 // Zod field helpers
@@ -310,7 +310,7 @@ const zJsonUuidList = (label: string) =>
                 ctx.addIssue({ code: "custom", message: `${label} are invalid.` });
                 return z.NEVER;
             }
-            const result = z.array(z.uuid()).max(BILLING_LIMITS.maxSelectedIds).safeParse(parsed);
+            const result = z.array(z.guid()).max(BILLING_LIMITS.maxSelectedIds).safeParse(parsed);
             if (!result.success) {
                 ctx.addIssue({ code: "custom", message: `${label} are invalid.` });
                 return z.NEVER;
@@ -319,7 +319,7 @@ const zJsonUuidList = (label: string) =>
         });
 
 const zUuidList = (label: string) =>
-    z.array(z.uuid({ error: `${label} are invalid.` }), { error: `${label} are invalid.` }).max(BILLING_LIMITS.maxSelectedIds, `Too many ${label.toLowerCase()}.`);
+    z.array(z.guid({ error: `${label} are invalid.` }), { error: `${label} are invalid.` }).max(BILLING_LIMITS.maxSelectedIds, `Too many ${label.toLowerCase()}.`);
 
 // ---------------------------------------------------------------------------
 // Invoices
@@ -498,7 +498,7 @@ export const applicationPaymentSubmitSchema = z
             .string()
             .trim()
             .nullish()
-            .refine((value) => !value || value === "all" || z.uuid().safeParse(value).success, "Payment request is invalid.")
+            .refine((value) => !value || value === "all" || z.guid().safeParse(value).success, "Payment request is invalid.")
             .transform((value) => (value ? value : "all")),
         method: z.preprocess(
             (value) => (typeof value === "string" ? value.trim().toLowerCase() : value),
@@ -587,6 +587,6 @@ export const propertyFilterQuerySchema = z
             .string()
             .trim()
             .optional()
-            .refine((value) => !value || value === "all" || z.uuid().safeParse(value).success, "Property is invalid."),
+            .refine((value) => !value || value === "all" || z.guid().safeParse(value).success, "Property is invalid."),
     })
     .loose();

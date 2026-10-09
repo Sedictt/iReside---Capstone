@@ -61,7 +61,7 @@ function LeasesContent() {
 
  const [searchQuery, setSearchQuery] = useState("");
  const [sortBy, setSortBy] = useState<string>("default");
- const [view, setView] = useViewMode("ireside:leases-view", "grid");
+ const [view, setView] = useViewMode("ireside:leases-view", "list");
 
  const [activeTab, setActiveTab] = useState<"active" | "renewals" | "history">(
  "active",
