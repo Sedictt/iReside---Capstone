@@ -26,6 +26,7 @@ import { triggerHaptic } from '@/lib/haptics';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import LeaseModal from '@/components/tenant/LeaseModal';
 import MoveOutRequest from '@/components/tenant/MoveOutRequest';
+import { MobileAmenityBookingDrawer } from '@/components/mobile/tenant/MobileAmenityBookingDrawer';
 import { LeaseData } from '@/types/lease';
 import { getSafeAvatarBgColor } from '@/lib/constants';
 import { toast } from 'sonner';
@@ -59,6 +60,8 @@ export function TenantLeaseView() {
     const [submittingRenewal, setSubmittingRenewal] = useState(false);
     const [showRules, setShowRules] = useState(false);
     const [showAmenities, setShowAmenities] = useState(false);
+    const [isAmenityDrawerOpen, setIsAmenityDrawerOpen] = useState(false);
+    const [selectedAmenityId, setSelectedAmenityId] = useState<string | null>(null);
 
     const fetchLeaseData = async () => {
         try {
@@ -201,7 +204,7 @@ export function TenantLeaseView() {
                         <span>Message Landlord</span>
                     </Link>
                 </div>
-            </PullToRefresh>
+        </PullToRefresh>
         );
     }
 
@@ -576,15 +579,36 @@ export function TenantLeaseView() {
                                 {showAmenities ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
                             </button>
                             {showAmenities && (
-                                <div className="px-4 pb-3.5 pt-1 border-t border-border/40 flex flex-wrap gap-1.5">
-                                    {lease.unit.property.amenities.map((amenity) => (
-                                        <span
-                                            key={amenity.id}
-                                            className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-muted/60 text-foreground border border-border/40"
-                                        >
-                                            {amenity.name}
-                                        </span>
-                                    ))}
+                                <div className="px-4 pb-3.5 pt-1 border-t border-border/40 flex flex-col gap-2.5">
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {lease.unit.property.amenities.map((amenity) => (
+                                            <button
+                                                key={amenity.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    triggerHaptic('light');
+                                                    setSelectedAmenityId(amenity.id);
+                                                    setIsAmenityDrawerOpen(true);
+                                                }}
+                                                className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-muted/60 hover:bg-muted text-foreground border border-border/40 active:scale-95 transition-all flex items-center gap-1"
+                                            >
+                                                <span>{amenity.name}</span>
+                                                <ArrowUpRight className="size-2.5 text-muted-foreground" />
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            triggerHaptic('medium');
+                                            setSelectedAmenityId(null);
+                                            setIsAmenityDrawerOpen(true);
+                                        }}
+                                        className="w-full py-2 px-3 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold flex items-center justify-center gap-1.5 active:scale-98 transition-all"
+                                    >
+                                        <Calendar className="size-3.5" />
+                                        <span>Reserve Facility / View Schedule</span>
+                                    </button>
                                 </div>
                             )}
                         </div>
@@ -695,6 +719,16 @@ export function TenantLeaseView() {
                     </div>
                 </div>
             )}
+
+            {/* Mobile Amenity Booking Drawer */}
+            <MobileAmenityBookingDrawer
+                isOpen={isAmenityDrawerOpen}
+                onClose={() => {
+                    setIsAmenityDrawerOpen(false);
+                    setSelectedAmenityId(null);
+                }}
+                initialAmenityId={selectedAmenityId}
+            />
         </PullToRefresh>
     );
 }

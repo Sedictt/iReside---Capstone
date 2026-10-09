@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { 
     Building2,
+    Sparkles,
     BookOpen, 
     CreditCard, 
     Wrench, 
@@ -21,6 +22,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
+import { triggerHaptic } from '@/lib/haptics';
+import { MobileAmenityBookingDrawer } from './MobileAmenityBookingDrawer';
 
 interface LeaseInfo {
     id: string;
@@ -63,6 +66,7 @@ export function TenantHomeView() {
     const { profile, user } = useAuth();
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isAmenityDrawerOpen, setIsAmenityDrawerOpen] = useState(false);
 
     const rawName = 
         (data as any)?.userName ||
@@ -196,7 +200,7 @@ export function TenantHomeView() {
 
                 {/* Quick Action Shortcuts Grid */}
                 <div className="px-4">
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-4 gap-2">
                         <Link
                             href="/mobile/tenant/maintenance"
                             className="p-3 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex flex-col items-center text-center gap-1.5 active:scale-[0.97] transition-all hover:border-primary/40"
@@ -205,9 +209,25 @@ export function TenantHomeView() {
                                 <Wrench className="size-4" />
                             </div>
                             <span className="text-[11px] font-bold text-foreground leading-tight">
-                                Request Repair
+                                Repair
                             </span>
                         </Link>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                triggerHaptic('light');
+                                setIsAmenityDrawerOpen(true);
+                            }}
+                            className="p-3 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex flex-col items-center text-center gap-1.5 active:scale-[0.97] transition-all hover:border-primary/40"
+                        >
+                            <div className="size-9 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                                <Sparkles className="size-4" />
+                            </div>
+                            <span className="text-[11px] font-bold text-foreground leading-tight">
+                                Amenities
+                            </span>
+                        </button>
 
                         <Link
                             href="/mobile/tenant/messages"
@@ -217,7 +237,7 @@ export function TenantHomeView() {
                                 <MessageSquare className="size-4" />
                             </div>
                             <span className="text-[11px] font-bold text-foreground leading-tight">
-                                Message Landlord
+                                Messages
                             </span>
                         </Link>
 
@@ -229,7 +249,7 @@ export function TenantHomeView() {
                                 <FileText className="size-4" />
                             </div>
                             <span className="text-[11px] font-bold text-foreground leading-tight">
-                                View Lease
+                                My Lease
                             </span>
                         </Link>
                     </div>
@@ -257,6 +277,33 @@ export function TenantHomeView() {
         <ChevronRight className="size-4 text-primary" />
     </Link>
 </div>
+
+                {/* Amenities & Facility Booking Quick Banner */}
+                <div className="px-4">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            triggerHaptic('light');
+                            setIsAmenityDrawerOpen(true);
+                        }}
+                        className="w-full p-3 rounded-2xl bg-gradient-to-r from-purple-500/10 via-primary/5 to-transparent border border-purple-500/20 shadow-xs flex items-center justify-between active:scale-[0.98] transition-all text-left"
+                    >
+                        <div className="flex items-center gap-2.5">
+                            <div className="size-8 rounded-xl bg-purple-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                <Sparkles className="size-4" />
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-bold text-foreground">
+                                    Property Amenities & Facility Booking
+                                </h4>
+                                <p className="text-[10px] text-muted-foreground">
+                                    Reserve clubhouse, pool, lounge & gym slots
+                                </p>
+                            </div>
+                        </div>
+                        <ChevronRight className="size-4 text-primary" />
+                    </button>
+                </div>
 
                 {/* Landlord Contact Quick Card */}
                 {lease?.landlordName && (
@@ -322,6 +369,11 @@ export function TenantHomeView() {
                     )}
                 </div>
             </div>
+            {/* Amenity Booking Drawer */}
+            <MobileAmenityBookingDrawer
+                isOpen={isAmenityDrawerOpen}
+                onClose={() => setIsAmenityDrawerOpen(false)}
+            />
         </PullToRefresh>
     );
 }
