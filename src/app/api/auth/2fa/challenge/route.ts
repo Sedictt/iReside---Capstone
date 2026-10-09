@@ -12,7 +12,8 @@ export async function POST(request: Request) {
 
         // The challenge runs right after password sign-in, so a session exists.
         // Only the signed-in user may trigger (and receive) their own login code.
-        const authContext = await requireAuthenticatedUser(request);
+        // The device is not verified yet at this point, so pending 2FA is allowed here.
+        const authContext = await requireAuthenticatedUser(request, { allowPendingTwoFactor: true });
         if (!("userId" in authContext)) return authContext as Response;
         if (authContext.userId !== userId) {
             return NextResponse.json({ error: "You can only verify your own sign-in." }, { status: 403 });

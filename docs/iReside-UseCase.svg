@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2160" height="1955" viewBox="0 0 2160 1955" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif">
+<defs><marker id="open" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#374151" stroke-width="1.3"/></marker><marker id="tri" markerWidth="14" markerHeight="14" refX="13" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L13,7 L1,13 Z" fill="#ffffff" stroke="#374151" stroke-width="1.3"/></marker></defs>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="1080.0" y="44" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="22" font-weight="700" fill="#1f2937">iReside — UML Use Case Diagram</text>
+<text x="1080.0" y="66" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12.5" fill="#6b7280">Tenant and Landlord interactions grouped by the nine DFD Level-1 processes</text>
+<rect x="300" y="215" width="1520" height="1590" fill="#ffffff" stroke="#1f2937" stroke-width="1.6"/>
+<text x="1060.0" y="245" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15" font-weight="700" fill="#1f2937">iReside Property Management System</text>
+<path d="M340,265 h435.8 v28 h1004.2 v94 h-1440 Z" fill="#f8fafc" stroke="#6b7280" stroke-width="1.1"/>
+<rect x="340" y="265" width="435.8" height="28" fill="#e8edf5" stroke="#6b7280" stroke-width="1.1"/>
+<text x="350" y="284" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="700" fill="#1f2937">P1.0 / P8.0 / P9.0  Account, Authentication &amp; Communication</text>
+<path d="M658.0,413 h371.0 v28 h433.0 v164 h-804 Z" fill="#f8fafc" stroke="#6b7280" stroke-width="1.1"/>
+<rect x="658.0" y="413" width="371.0" height="28" fill="#e6f1e8" stroke="#6b7280" stroke-width="1.1"/>
+<text x="668.0" y="432" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="700" fill="#1f2937">P2.0 / P3.0  Property, Unit &amp; Blueprint Management</text>
+<path d="M658.0,631 h248.6 v28 h555.4 v164 h-804 Z" fill="#f8fafc" stroke="#6b7280" stroke-width="1.1"/>
+<rect x="658.0" y="631" width="248.6" height="28" fill="#fdf1dc" stroke="#6b7280" stroke-width="1.1"/>
+<text x="668.0" y="650" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="700" fill="#1f2937">P4.0  Rental Application &amp; Intake</text>
+<path d="M658.0,849 h241.4 v28 h562.6 v234 h-804 Z" fill="#f8fafc" stroke="#6b7280" stroke-width="1.1"/>
+<rect x="658.0" y="849" width="241.4" height="28" fill="#fdf1dc" stroke="#6b7280" stroke-width="1.1"/>
+<text x="668.0" y="868" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="700" fill="#1f2937">P5.0  Lease &amp; Tenancy Management</text>
+<path d="M658.0,1137 h255.8 v28 h548.2 v304 h-804 Z" fill="#f8fafc" stroke="#6b7280" stroke-width="1.1"/>
+<rect x="658.0" y="1137" width="255.8" height="28" fill="#f6e8ee" stroke="#6b7280" stroke-width="1.1"/>
+<text x="668.0" y="1156" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="700" fill="#1f2937">P6.0  Billing, Payments &amp; Expenses</text>
+<path d="M658.0,1495 h277.40000000000003 v28 h526.5999999999999 v94 h-804 Z" fill="#f8fafc" stroke="#6b7280" stroke-width="1.1"/>
+<rect x="658.0" y="1495" width="277.40000000000003" height="28" fill="#f6e8ee" stroke="#6b7280" stroke-width="1.1"/>
+<text x="668.0" y="1514" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="700" fill="#1f2937">P7.0  Maintenance &amp; Incident Handling</text>
+<path d="M658.0,1643 h255.8 v28 h548.2 v94 h-804 Z" fill="#f8fafc" stroke="#6b7280" stroke-width="1.1"/>
+<rect x="658.0" y="1643" width="255.8" height="28" fill="#ebe6f5" stroke="#6b7280" stroke-width="1.1"/>
+<text x="668.0" y="1662" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="700" fill="#1f2937">P9.0  Community &amp; Amenity Services</text>
+<path d="M120,1061.0 L120,132 L1034.0,132" stroke="#374151" stroke-width="1.3" fill="none" marker-end="url(#tri)"/>
+<path d="M2000,1061.0 L2000,132 L1086.0,132" stroke="#374151" stroke-width="1.3" fill="none" marker-end="url(#tri)"/>
+<path d="M1060.0,162.0 L486.0,311.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1060.0,162.0 L715.6,311.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1060.0,162.0 L945.2,311.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1060.0,162.0 L1174.8,311.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1060.0,162.0 L1404.4,311.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1060.0,162.0 L1634.0,311.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M138.0,1101.0 L698.0,486.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M138.0,1101.0 L698.0,556.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M138.0,1101.0 L698.0,739.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M138.0,1101.0 L698.0,922.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M138.0,1101.0 L698.0,992.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M138.0,1101.0 L698.0,1062.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M138.0,1101.0 L698.0,1280.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M138.0,1101.0 L698.0,1350.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M138.0,1101.0 L698.0,1568.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M138.0,1101.0 L698.0,1716.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1982.0,1101.0 L1422.0,486.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1982.0,1101.0 L1422.0,556.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1982.0,1101.0 L1422.0,704.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1982.0,1101.0 L1422.0,774.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1982.0,1101.0 L1422.0,922.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1982.0,1101.0 L1422.0,992.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1982.0,1101.0 L1422.0,1062.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1982.0,1101.0 L1422.0,1210.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1982.0,1101.0 L1422.0,1280.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1982.0,1101.0 L1422.0,1350.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1982.0,1101.0 L1422.0,1420.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1982.0,1101.0 L1422.0,1568.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M1982.0,1101.0 L1422.0,1716.0" stroke="#374151" stroke-width="1.3"/>
+<path d="M609.6,338.0 L592.0,338.0" stroke="#374151" stroke-width="1.3" stroke-dasharray="6 4" marker-end="url(#open)"/>
+<text x="600.8" y="303.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11" font-style="italic" fill="#1f2937">«extend»</text>
+<path d="M1316.0,1253.0 L1316.0,1237.0" stroke="#374151" stroke-width="1.3" stroke-dasharray="6 4" marker-end="url(#open)"/>
+<text x="1328.0" y="1249.0" text-anchor="start" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11" font-style="italic" fill="#1f2937">«extend»</text>
+<ellipse cx="486.0" cy="338.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="486.0" y="342.5" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Register / Log In</text>
+<ellipse cx="715.6" cy="338.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="715.6" y="335.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Verify Two-Factor</text>
+<text x="715.6" y="350.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">OTP Code</text>
+<ellipse cx="945.2" cy="338.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="945.2" y="335.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Manage Profile &amp;</text>
+<text x="945.2" y="350.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Security Settings</text>
+<ellipse cx="1174.8" cy="338.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="1174.8" y="335.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Send &amp; Receive</text>
+<text x="1174.8" y="350.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Messages</text>
+<ellipse cx="1404.4" cy="338.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="1404.4" y="335.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Post to Community</text>
+<text x="1404.4" y="350.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Feed</text>
+<ellipse cx="1634.0" cy="338.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="1634.0" y="335.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Receive In-App</text>
+<text x="1634.0" y="350.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Notifications</text>
+<ellipse cx="804.0" cy="486.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="804.0" y="483.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Browse Available</text>
+<text x="804.0" y="498.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Units &amp; Policies</text>
+<ellipse cx="804.0" cy="556.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="804.0" y="553.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">View Interactive</text>
+<text x="804.0" y="568.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Unit Map</text>
+<ellipse cx="1316.0" cy="486.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="1316.0" y="483.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Manage Properties</text>
+<text x="1316.0" y="498.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">&amp; Units</text>
+<ellipse cx="1316.0" cy="556.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="1316.0" y="553.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Design Floor Layout</text>
+<text x="1316.0" y="568.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">(Blueprint)</text>
+<ellipse cx="804.0" cy="739.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="804.0" y="736.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Submit Rental</text>
+<text x="804.0" y="751.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Application</text>
+<ellipse cx="1316.0" cy="704.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="1316.0" y="701.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Issue Tenant Intake</text>
+<text x="1316.0" y="716.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Invite</text>
+<ellipse cx="1316.0" cy="774.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="1316.0" y="771.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Review &amp; Decide</text>
+<text x="1316.0" y="786.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Application</text>
+<ellipse cx="804.0" cy="922.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="804.0" y="919.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Sign Lease</text>
+<text x="804.0" y="934.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Digitally</text>
+<ellipse cx="804.0" cy="992.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="804.0" y="989.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Request Lease</text>
+<text x="804.0" y="1004.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Renewal</text>
+<ellipse cx="804.0" cy="1062.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="804.0" y="1059.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Request</text>
+<text x="804.0" y="1074.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Move-Out</text>
+<ellipse cx="1316.0" cy="922.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="1316.0" y="919.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Create &amp; Issue</text>
+<text x="1316.0" y="934.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Lease Contract</text>
+<ellipse cx="1316.0" cy="992.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="1316.0" y="989.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Countersign</text>
+<text x="1316.0" y="1004.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Lease</text>
+<ellipse cx="1316.0" cy="1062.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="1316.0" y="1059.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Process Move-Out</text>
+<text x="1316.0" y="1074.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">&amp; Deposit Refund</text>
+<ellipse cx="804.0" cy="1280.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="804.0" y="1277.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Pay Rent / Submit</text>
+<text x="804.0" y="1292.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Payment Proof</text>
+<ellipse cx="804.0" cy="1350.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="804.0" y="1347.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">View Invoices</text>
+<text x="804.0" y="1362.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">&amp; Receipts</text>
+<ellipse cx="1316.0" cy="1210.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="1316.0" y="1207.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Generate Monthly</text>
+<text x="1316.0" y="1222.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Invoice</text>
+<ellipse cx="1316.0" cy="1280.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="1316.0" y="1277.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Record Utility</text>
+<text x="1316.0" y="1292.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Meter Readings</text>
+<ellipse cx="1316.0" cy="1350.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="1316.0" y="1347.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Confirm Payment &amp;</text>
+<text x="1316.0" y="1362.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Issue Receipt</text>
+<ellipse cx="1316.0" cy="1420.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="1316.0" y="1417.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Record Property</text>
+<text x="1316.0" y="1432.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Expenses</text>
+<ellipse cx="804.0" cy="1568.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="804.0" y="1565.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Submit Maintenance</text>
+<text x="804.0" y="1580.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Request</text>
+<ellipse cx="1316.0" cy="1568.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="1316.0" y="1565.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Triage &amp; Resolve</text>
+<text x="1316.0" y="1580.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Maintenance Request</text>
+<ellipse cx="804.0" cy="1716.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="804.0" y="1713.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Book Shared</text>
+<text x="804.0" y="1728.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Amenity</text>
+<ellipse cx="1316.0" cy="1716.0" rx="106.0" ry="27.0" fill="#ffffff" stroke="#1f2937" stroke-width="1.3"/>
+<text x="1316.0" y="1713.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">Manage Amenities</text>
+<text x="1316.0" y="1728.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" fill="#1f2937">&amp; Bookings</text>
+<circle cx="1060.0" cy="100" r="9" stroke="#1f2937" stroke-width="1.6" fill="none" fill="#ffffff"/>
+<path d="M1060.0,109 L1060.0,140 M1044.0,120 L1076.0,120 M1060.0,140 L1046.0,162 M1060.0,140 L1074.0,162" stroke="#1f2937" stroke-width="1.6" fill="none"/>
+<text x="1086.0" y="106" text-anchor="start" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="700" fill="#1f2937">User</text>
+<circle cx="120" cy="1071.0" r="9" stroke="#1f2937" stroke-width="1.6" fill="none" fill="#ffffff"/>
+<path d="M120,1080.0 L120,1111.0 M104,1091.0 L136,1091.0 M120,1111.0 L106,1133.0 M120,1111.0 L134,1133.0" stroke="#1f2937" stroke-width="1.6" fill="none"/>
+<text x="120" y="1153.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="700" fill="#1f2937">Tenant</text>
+<circle cx="2000" cy="1071.0" r="9" stroke="#1f2937" stroke-width="1.6" fill="none" fill="#ffffff"/>
+<path d="M2000,1080.0 L2000,1111.0 M1984,1091.0 L2016,1091.0 M2000,1111.0 L1986,1133.0 M2000,1111.0 L2014,1133.0" stroke="#1f2937" stroke-width="1.6" fill="none"/>
+<text x="2000" y="1153.0" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="700" fill="#1f2937">Landlord</text>
+<rect x="300" y="1835" width="760" height="96" fill="#fafafa" stroke="#1f2937" stroke-width="1"/>
+<text x="314" y="1857" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="700" fill="#1f2937">Legend (UML 2.5 Use Case Diagram)</text>
+<path d="M318.0,1881.0 L378.0,1881.0" stroke="#374151" stroke-width="1.3"/>
+<text x="392" y="1885" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#1f2937">Association: actor participates in use case</text>
+<path d="M318.0,1901.0 L378.0,1901.0" stroke="#374151" stroke-width="1.3" stroke-dasharray="6 4" marker-end="url(#open)"/>
+<text x="392" y="1905" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#1f2937">«extend»: optional behaviour inserted at an extension point</text>
+<path d="M318.0,1921.0 L378.0,1921.0" stroke="#374151" stroke-width="1.3" marker-end="url(#tri)"/>
+<text x="392" y="1925" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#1f2937">Generalisation: Tenant and Landlord are specialisations of User</text>
+<text x="700" y="1885" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#1f2937">Packages correspond to DFD Level-1 processes P1.0–P9.0.</text>
+<text x="700" y="1905" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11.5" fill="#1f2937">Shared use cases (top row) are inherited by both actors via User.</text>
+</svg>

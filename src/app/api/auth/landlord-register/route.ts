@@ -52,7 +52,20 @@ const landlordRegistrationWithFilesSchema = landlordRegistrationSchema.extend({
 // Next.js App Router handles body size limits via next.config.js or defaults. 
 // The 'config' export is deprecated in Route Handlers.
 
+// This unauthenticated endpoint backs the deprecated self-service landlord
+// signup (components/deprecated/LandlordSignup). It trusts a client-supplied
+// `emailVerified` flag and creates auth users for arbitrary addresses, so it
+// stays disabled unless the operator explicitly opts in.
+const isLegacyRegistrationEnabled = () => process.env.ENABLE_LEGACY_LANDLORD_REGISTRATION === "true";
+
 export async function POST(request: Request) {
+    if (!isLegacyRegistrationEnabled()) {
+        return NextResponse.json(
+            { error: "Self-service landlord registration is disabled. Please contact the operator to be onboarded." },
+            { status: 410 }
+        );
+    }
+
     try {
         const contentType = request.headers.get("content-type") || "";
         
@@ -108,16 +121,13 @@ export async function POST(request: Request) {
         const existingAuthUser = users.find(u => u.email?.toLowerCase() === parsed.email.toLowerCase());
 
         if (existingAuthUser) {
-            userId = existingAuthUser.id;
-            console.log(`[Register] Using existing auth user: ${userId}`);
-            
-            // Update role to landlord in metadata if not already
-            await adminClient.auth.admin.updateUserById(userId, {
-                user_metadata: { 
-                    ...existingAuthUser.user_metadata,
-                    role: 'landlord' 
-                }
-            });
+            // Never mutate an existing account from an unauthenticated request:
+            // flipping its role to landlord here let anyone escalate (or hijack)
+            // an account just by knowing its email address.
+            return NextResponse.json(
+                { error: "An account with this email already exists. Please log in or contact the operator." },
+                { status: 409 }
+            );
         } else {
             // Create auth user with unconfirmed email (will be confirmed later)
             const { data: authData, error: authError } = await adminClient.auth.admin.createUser({

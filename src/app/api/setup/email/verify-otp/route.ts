@@ -4,6 +4,7 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { logUserActivity } from "@/lib/audit/audit-logger";
 import { parseJsonBody } from "@/lib/validation/server";
 import { setupVerifyOtpSchema } from "@/lib/validation/schemas/account.schema";
+import { evaluateOtpAttempt, persistOtpAttempt } from "@/lib/security/otp-verification";
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,19 +49,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check code match
-    if (securitySettings.otp_code !== otp) {
-      return NextResponse.json(
-        { error: "Incorrect verification code. Please check and try again." },
-        { status: 400 }
-      );
-    }
+    // Constant-time code check with a hard ceiling on failed guesses per code.
+    const attempt = evaluateOtpAttempt({
+      storedCode: securitySettings.otp_code,
+      storedExpiry: securitySettings.otp_expiry,
+      providedOtp: otp,
+    });
 
-    // Check expiration
-    if (!securitySettings.otp_expiry || new Date() > new Date(securitySettings.otp_expiry)) {
+    if (!attempt.ok) {
+      await persistOtpAttempt(adminClient as any, userId, attempt.nextStoredCode);
+      const message =
+        attempt.reason === "mismatch"
+          ? "Incorrect verification code. Please check and try again."
+          : attempt.reason === "expired"
+            ? "Verification code has expired. Please request a new code."
+            : attempt.reason === "locked"
+              ? "Too many failed attempts. Please request a new verification code."
+              : "No pending email verification code found. Please request a new code.";
       return NextResponse.json(
-        { error: "Verification code has expired. Please request a new code." },
-        { status: 400 }
+        { error: message, remainingAttempts: attempt.remainingAttempts },
+        { status: attempt.reason === "locked" ? 429 : 400 }
       );
     }
 

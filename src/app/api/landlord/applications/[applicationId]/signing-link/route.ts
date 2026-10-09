@@ -3,6 +3,7 @@ import { isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { generateSigningToken } from "@/lib/jwt";
+import { generateTemporaryPassword } from "@/lib/security/passwords";
 
 import { hashToken } from "@/lib/jwt";
 import { logAuditEvent } from "@/lib/audit-logging";
@@ -83,7 +84,7 @@ export async function POST(
       // Create tenant account automatically if it doesn't exist
       console.log(`[signing-link] No profile found for ${application.applicant_email}. Provisioning account...`);
       const adminClient = createServiceRoleSupabaseClient();
-      const tempPassword = Math.random().toString(36).slice(-12);
+      const tempPassword = generateTemporaryPassword(12);
 
       
       const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({

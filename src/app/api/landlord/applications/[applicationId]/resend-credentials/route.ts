@@ -4,12 +4,13 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { sendLandlordCredentialsCopy, sendTenantOnboardingReminder } from "@/lib/email";
 import { TENANT_PRODUCT_TOUR_ROUTE } from "@/lib/product-tour";
+import { generateTemporaryPassword } from "@/lib/security/passwords";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
+/** Temporary password from a CSPRNG (see lib/security/passwords). */
 function generateTempPassword(): string {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$";
-    return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+    return generateTemporaryPassword(12);
 }
 
 export async function POST(request: Request, context: { params: Promise<{ applicationId: string }> }) {

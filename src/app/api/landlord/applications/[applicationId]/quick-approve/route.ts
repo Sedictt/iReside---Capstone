@@ -5,10 +5,11 @@ import type { Json } from "@/types/database";
 import { sendTenantCredentials, sendLandlordCredentialsCopy } from "@/lib/email";
 import { generateSigningLink } from "@/lib/jwt";
 import { isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { generateTemporaryPassword } from "@/lib/security/passwords";
 
+/** Temporary password from a CSPRNG (see lib/security/passwords). */
 function generateTempPassword(): string {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$";
-    return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+    return generateTemporaryPassword(12);
 }
 
 async function createLeaseRecord(

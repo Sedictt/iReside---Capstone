@@ -6,14 +6,28 @@
  * caller's identity and returns typed context, or throws a
  * response that the caller can return directly.
  *
+ * Security model:
+ * - The session JWT is cryptographically verified via `auth.getClaims()`.
+ *   The payload is never trusted on its own: a cookie is attacker-controlled
+ *   input, and an unverified decode would let anyone impersonate any user id.
+ * - The caller's role comes from `profiles.role` (protected by a DB trigger),
+ *   never from `user_metadata`, which any signed-in user can edit themselves.
+ * - Accounts with two-factor enabled must present the signed verified-device
+ *   cookie, so 2FA cannot be skipped by calling the API directly.
+ *
  * @module lib/api/auth-guard
  */
 
+import { createHash } from "node:crypto";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, UserRole } from "@/types/database";
-import { apiUnauthorized, apiForbidden, apiNotFound } from "./response";
+import { apiError, apiUnauthorized, apiForbidden, apiNotFound } from "./response";
 import { cookies } from "next/headers";
+import {
+  TWO_FACTOR_VERIFIED_COOKIE,
+  verifyTwoFactorVerifiedCookieValue,
+} from "@/lib/security/two-factor-cookie";
 
 // ---------------------------------------------------------------------------
 // Types & In-Memory Deduplication Cache
@@ -27,113 +41,159 @@ export interface AuthenticatedContext {
   readonly supabase: SupabaseClient<Database>;
 }
 
-/** Full user profile from the database. */
-type UserProfile = Database["public"]["Tables"]["profiles"]["Row"];
+export interface RequireAuthOptions {
+  /**
+   * Allow a caller whose account has 2FA enabled but who has not yet completed
+   * the OTP challenge on this device. Only the 2FA challenge/verify endpoints
+   * themselves should set this.
+   */
+  allowPendingTwoFactor?: boolean;
+}
 
-interface CachedAuthSession {
+interface VerifiedIdentity {
   userId: string;
   userEmail: string;
   userRole: UserRole;
+  twoFactorEnabled: boolean;
+}
+
+interface CachedIdentity extends VerifiedIdentity {
   expiresAt: number;
 }
 
-// In-memory token cache (60s TTL) - sub-millisecond responses for parallel or rapid sequential API calls
-const authSessionCache = new Map<string, CachedAuthSession>();
-// In-flight deduplication - when multiple parallel requests arrive, only 1 network call runs
-const inFlightAuthRequests = new Map<string, Promise<{ userId: string; userEmail: string; userRole: UserRole } | null>>();
+const VALID_ROLES: readonly UserRole[] = ["admin", "landlord", "tenant"];
+const IDENTITY_CACHE_TTL_MS = 60_000;
+const IDENTITY_CACHE_MAX_ENTRIES = 2_000;
+const CLAIMS_TIMEOUT_MS = 12_000;
+const PROFILE_TIMEOUT_MS = 3_000;
 
-function extractSessionFromCookies(cookieStore: any): { userId: string; userEmail: string; userRole: UserRole } | null {
+// Verified identities, keyed by a hash of the auth cookies. Only identities
+// that passed signature verification are ever stored here.
+const identityCache = new Map<string, CachedIdentity>();
+// In-flight deduplication: parallel requests with the same cookies share one verification.
+const inFlightVerifications = new Map<string, Promise<VerifiedIdentity | null>>();
+
+type CookieStore = { getAll(): Array<{ name: string; value: string }>; get(name: string): { value: string } | undefined };
+
+const isAuthCookie = (name: string) =>
+  name.includes("-auth-token") || name.startsWith("sb-") || name === "supabase-auth-token";
+
+function buildCacheKey(cookieStore: CookieStore): string | null {
   try {
-    const all = cookieStore.getAll();
-    const tokenCookies = all
-      .filter((c: any) => c.name.includes("-auth-token") || c.name.startsWith("sb-") || c.name === "supabase-auth-token")
-      .sort((a: any, b: any) => a.name.localeCompare(b.name));
-
+    const tokenCookies = cookieStore
+      .getAll()
+      .filter((cookie) => isAuthCookie(cookie.name))
+      .sort((left, right) => left.name.localeCompare(right.name));
     if (!tokenCookies.length) return null;
-
-    let combined = "";
-    const chunked = tokenCookies.filter((c: any) => /\.\d+$/.test(c.name));
-    if (chunked.length) {
-      combined = chunked.map((c: any) => c.value).join("");
-    } else {
-      const single = tokenCookies.find((c: any) => c.name.endsWith("-auth-token"));
-      combined = single ? single.value : tokenCookies[0].value;
-    }
-
-    if (!combined) return null;
-
-    let jsonStr = combined;
-    if (combined.startsWith("base64-")) {
-      jsonStr = Buffer.from(combined.slice(7), "base64").toString("utf8");
-    } else {
-      try {
-        jsonStr = decodeURIComponent(combined);
-      } catch {}
-    }
-
-    let parsed: any = null;
-    try {
-      parsed = JSON.parse(jsonStr);
-    } catch {}
-
-    let accessToken = "";
-    let userObj: any = null;
-
-    if (parsed) {
-      if (Array.isArray(parsed)) {
-        accessToken = parsed[0];
-      } else if (parsed.access_token) {
-        accessToken = parsed.access_token;
-        userObj = parsed.user;
-      }
-    } else if (combined.startsWith("eyJ")) {
-      accessToken = combined;
-    }
-
-    if (!accessToken) return null;
-
-    const parts = accessToken.split(".");
-    if (parts.length !== 3) return null;
-    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
-
-    // Check expiration with 30s buffer
-    if (payload.exp && payload.exp < (Date.now() / 1000) - 30) {
-      return null;
-    }
-
-    const userId = payload.sub || userObj?.id;
-    if (!userId) return null;
-
-    const email = payload.email || userObj?.email || "";
-    const roleCandidate =
-      payload.user_metadata?.role ||
-      userObj?.user_metadata?.role ||
-      payload.role ||
-      "landlord";
-
-    const userRole = (["admin", "landlord", "tenant"].includes(roleCandidate)
-      ? roleCandidate
-      : "landlord") as UserRole;
-
-    return {
-      userId,
-      userEmail: email,
-      userRole,
-    };
+    const material = tokenCookies.map((cookie) => `${cookie.name}=${cookie.value}`).join(";");
+    // Hash so raw session tokens are never held in the cache map.
+    return createHash("sha256").update(material).digest("hex");
   } catch {
     return null;
   }
 }
 
-function extractAuthCacheKey(cookieStore: any): string | null {
+function readCache(cacheKey: string): VerifiedIdentity | null {
+  const cached = identityCache.get(cacheKey);
+  if (!cached) return null;
+  if (Date.now() >= cached.expiresAt) {
+    identityCache.delete(cacheKey);
+    return null;
+  }
+  return cached;
+}
+
+function writeCache(cacheKey: string, identity: VerifiedIdentity): void {
+  if (identityCache.size >= IDENTITY_CACHE_MAX_ENTRIES) {
+    const oldestKey = identityCache.keys().next().value;
+    if (oldestKey !== undefined) identityCache.delete(oldestKey);
+  }
+  identityCache.set(cacheKey, { ...identity, expiresAt: Date.now() + IDENTITY_CACHE_TTL_MS });
+}
+
+/** Test/maintenance hook: drop every cached identity (e.g. after a role change). */
+export function clearAuthIdentityCache(): void {
+  identityCache.clear();
+  inFlightVerifications.clear();
+}
+
+function withTimeout<T>(promise: Promise<T>, milliseconds: number, fallback: T): Promise<T> {
+  let timeoutId: NodeJS.Timeout | undefined;
+  const timeout = new Promise<T>((resolve) => {
+    timeoutId = setTimeout(() => resolve(fallback), milliseconds);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timeoutId) clearTimeout(timeoutId);
+  });
+}
+
+const toRole = (value: unknown): UserRole | null =>
+  typeof value === "string" && (VALID_ROLES as readonly string[]).includes(value) ? (value as UserRole) : null;
+
+/**
+ * Loads the authoritative role and 2FA state from `profiles`. The profile row
+ * is the source of truth: `user_metadata.role` is user-editable and must not
+ * decide authorization. On lookup failure we fall back to least privilege.
+ */
+async function loadProfileSecurity(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  claims: Record<string, unknown>,
+): Promise<{ userRole: UserRole; twoFactorEnabled: boolean }> {
+  const metadata = (claims.user_metadata ?? {}) as Record<string, unknown>;
+  const fallback = {
+    userRole: "tenant" as UserRole,
+    twoFactorEnabled: metadata.two_factor_enabled === true,
+  };
+
   try {
-    const all = cookieStore.getAll();
-    const tokenCookies = all.filter((c: any) =>
-      c.name.includes("-auth-token") || c.name.startsWith("sb-") || c.name === "supabase-auth-token"
+    const query = supabase
+      .from("profiles")
+      .select("role, two_factor_enabled")
+      .eq("id", userId)
+      .maybeSingle();
+    const result = await withTimeout(
+      query as unknown as Promise<{ data: { role?: string | null; two_factor_enabled?: boolean | null } | null; error: unknown }>,
+      PROFILE_TIMEOUT_MS,
+      { data: null, error: new Error("Profile lookup timed out") },
     );
-    if (!tokenCookies.length) return null;
-    return tokenCookies.map((c: any) => `${c.name}=${c.value}`).join(";");
+
+    if (result.error || !result.data) return fallback;
+
+    return {
+      userRole: toRole(result.data.role) ?? "tenant",
+      twoFactorEnabled: result.data.two_factor_enabled === true || fallback.twoFactorEnabled,
+    };
   } catch {
+    return fallback;
+  }
+}
+
+/** Verifies the session JWT signature and resolves the caller's identity. */
+async function verifyIdentity(supabase: SupabaseClient<Database>): Promise<VerifiedIdentity | null> {
+  try {
+    const claimsResult = await withTimeout(
+      supabase.auth.getClaims(),
+      CLAIMS_TIMEOUT_MS,
+      { data: null, error: new Error("Auth verification timed out") } as Awaited<ReturnType<typeof supabase.auth.getClaims>>,
+    );
+
+    if (claimsResult.error || !claimsResult.data?.claims) return null;
+
+    const claims = claimsResult.data.claims as Record<string, unknown>;
+    const userId = typeof claims.sub === "string" ? claims.sub : "";
+    if (!userId) return null;
+
+    const { userRole, twoFactorEnabled } = await loadProfileSecurity(supabase, userId, claims);
+
+    return {
+      userId,
+      userEmail: typeof claims.email === "string" ? claims.email : "",
+      userRole,
+      twoFactorEnabled,
+    };
+  } catch (error) {
+    console.warn("[requireAuthenticatedUser] Auth verification error:", error);
     return null;
   }
 }
@@ -145,121 +205,61 @@ function extractAuthCacheKey(cookieStore: any): string | null {
 /**
  * Requires a valid authenticated session.
  *
- * Verifies JWT tokens directly from cookies with 0ms latency,
- * falling back to Supabase auth with request deduplication and caching.
+ * Verifies the JWT signature (locally when the project uses asymmetric signing
+ * keys), resolves the role from the database, and enforces two-factor
+ * verification for accounts that enabled it. Verified identities are cached
+ * in memory for 60 seconds per cookie set.
  *
  * @param _authRequest - Optional. Reserved for future per-request validation.
+ * @param options      - See {@link RequireAuthOptions}.
  * @returns AuthenticatedContext with userId, userRole, and supabase client.
  *          Returns a 401 NextResponse if the caller is not authenticated.
  */
 export async function requireAuthenticatedUser(
   _authRequest?: Request,
+  options: RequireAuthOptions = {},
 ): Promise<AuthenticatedContext | Response> {
-  const cookieStore = await cookies();
-  const cacheKey = extractAuthCacheKey(cookieStore);
-
-  // 1. Check in-memory session cache (0ms instant resolution)
-  if (cacheKey) {
-    const cached = authSessionCache.get(cacheKey);
-    if (cached && Date.now() < cached.expiresAt) {
-      const supabase = await createServerSupabaseClient();
-      return {
-        userId: cached.userId,
-        userEmail: cached.userEmail,
-        userRole: cached.userRole,
-        supabase,
-      };
-    }
-  }
-
-  // 2. Fast Path: Decode session JWT directly from cookie (0ms, 100% resilient to network drops)
-  const cookieSession = extractSessionFromCookies(cookieStore);
-  if (cookieSession) {
-    if (cacheKey) {
-      authSessionCache.set(cacheKey, {
-        userId: cookieSession.userId,
-        userEmail: cookieSession.userEmail,
-        userRole: cookieSession.userRole,
-        expiresAt: Date.now() + 60_000, // 60s TTL
-      });
-    }
-
-    const supabase = await createServerSupabaseClient();
-    return {
-      userId: cookieSession.userId,
-      userEmail: cookieSession.userEmail,
-      userRole: cookieSession.userRole,
-      supabase,
-    };
-  }
-
-  // 3. Fallback: Network validation via Supabase Auth with deduplication
+  const cookieStore = (await cookies()) as unknown as CookieStore;
   const supabase = await createServerSupabaseClient();
+  const cacheKey = buildCacheKey(cookieStore);
 
-  let authPromise: Promise<{ userId: string; userEmail: string; userRole: UserRole } | null>;
+  let identity: VerifiedIdentity | null = cacheKey ? readCache(cacheKey) : null;
 
-  if (cacheKey && inFlightAuthRequests.has(cacheKey)) {
-    authPromise = inFlightAuthRequests.get(cacheKey)!;
-  } else {
-    authPromise = (async () => {
-      try {
-        let timeoutId: NodeJS.Timeout;
-        const timeoutPromise = new Promise<{ data: { user: null }; error: Error }>((resolve) => {
-          timeoutId = setTimeout(() => {
-            resolve({ data: { user: null }, error: new Error("Auth request timed out") });
-          }, 12000);
-        });
-
-        const userPromise = supabase.auth.getUser();
-        const { data: { user }, error: authenticationError } = await Promise.race([userPromise, timeoutPromise]).finally(() => {
-          clearTimeout(timeoutId);
-        });
-
-        if (authenticationError || !user) {
-          return null;
-        }
-
-        const role = await resolveUserRole(supabase, user);
-
-        const resolved = {
-          userId: user.id,
-          userEmail: user.email ?? "",
-          userRole: role,
-        };
-
-        if (cacheKey) {
-          authSessionCache.set(cacheKey, {
-            ...resolved,
-            expiresAt: Date.now() + 60_000,
-          });
-        }
-
-        return resolved;
-      } catch (err) {
-        console.warn("[requireAuthenticatedUser] Auth error or timeout:", err);
-        return null;
-      } finally {
-        if (cacheKey) {
-          inFlightAuthRequests.delete(cacheKey);
-        }
-      }
-    })();
-
-    if (cacheKey) {
-      inFlightAuthRequests.set(cacheKey, authPromise);
+  if (!identity) {
+    let verification: Promise<VerifiedIdentity | null>;
+    if (cacheKey && inFlightVerifications.has(cacheKey)) {
+      verification = inFlightVerifications.get(cacheKey)!;
+    } else {
+      verification = verifyIdentity(supabase).finally(() => {
+        if (cacheKey) inFlightVerifications.delete(cacheKey);
+      });
+      if (cacheKey) inFlightVerifications.set(cacheKey, verification);
     }
+
+    identity = await verification;
+    if (!identity) {
+      return apiUnauthorized("Authentication required");
+    }
+    if (cacheKey) writeCache(cacheKey, identity);
   }
 
-  const result = await authPromise;
-
-  if (!result || !result.userId) {
-    return apiUnauthorized("Authentication required");
+  if (identity.twoFactorEnabled && !options.allowPendingTwoFactor) {
+    const verifiedCookie = cookieStore.get(TWO_FACTOR_VERIFIED_COOKIE)?.value;
+    const isDeviceVerified = await verifyTwoFactorVerifiedCookieValue(verifiedCookie, identity.userId);
+    if (!isDeviceVerified) {
+      return apiError(
+        "UNAUTHORIZED",
+        "Two-factor verification is required before this action can be performed.",
+        401,
+        { code: "TWO_FACTOR_REQUIRED" },
+      );
+    }
   }
 
   return {
-    userId: result.userId,
-    userEmail: result.userEmail,
-    userRole: result.userRole,
+    userId: identity.userId,
+    userEmail: identity.userEmail,
+    userRole: identity.userRole,
     supabase,
   };
 }
@@ -349,39 +349,5 @@ export async function requireAccessToLease(
     if (!propertyOwnership) {
       throw apiForbidden("You do not own the property this lease belongs to");
     }
-  }
-}
-
-async function resolveUserRole(
-  supabase: SupabaseClient<Database>,
-  user: { id: string; user_metadata?: Record<string, unknown> },
-): Promise<UserRole> {
-  const metadataRole = user.user_metadata?.role;
-  if (
-    typeof metadataRole === "string" &&
-    ["admin", "landlord", "tenant"].includes(metadataRole)
-  ) {
-    return metadataRole as UserRole;
-  }
-
-  try {
-    let timeoutId: NodeJS.Timeout;
-    const timeoutPromise = new Promise<any>((resolve) => {
-      timeoutId = setTimeout(() => resolve({ data: null }), 3000);
-    });
-
-    const roleQuery = supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    const { data: profile } = await Promise.race([roleQuery, timeoutPromise]).finally(() => {
-      clearTimeout(timeoutId);
-    });
-
-    return (profile?.role as UserRole) ?? (user.user_metadata?.role as UserRole) ?? "tenant";
-  } catch {
-    return (user.user_metadata?.role as UserRole) ?? "tenant";
   }
 }

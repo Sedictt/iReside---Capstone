@@ -5,6 +5,11 @@ import {
     isGuidedTenantProductTourEnabled,
     resolveTenantProductTourEligibility,
 } from "@/lib/product-tour";
+import {
+    TWO_FACTOR_PENDING_COOKIE,
+    TWO_FACTOR_VERIFIED_COOKIE,
+    verifyTwoFactorVerifiedCookieValue,
+} from "@/lib/security/two-factor-cookie";
 
 
 export const TENANT_PRODUCT_TOUR_ROUTE_PREFIX = TENANT_PRODUCT_TOUR_ROUTE;
@@ -69,8 +74,13 @@ const PUBLIC_EXACT_ROUTES = [
     "/favicon.ico",
 ];
 
+// The boneyard skeleton generator (dev tooling, see boneyard.config.json) needs
+// to render protected pages without a session. That bypass must never exist in
+// production: `?boneyard=true` would otherwise disable auth gating for any page.
+const isBoneyardCaptureAllowed = () => process.env.NODE_ENV !== "production";
+
 export const isPublicRoute = (pathname: string, request?: NextRequest) => {
-    if (request && (
+    if (request && isBoneyardCaptureAllowed() && (
         request.headers.get("user-agent")?.includes("boneyard") ||
         request.headers.get("x-boneyard") === "true" ||
         request.nextUrl.searchParams.get("boneyard") === "true"
@@ -95,85 +105,48 @@ const withTimeout = <T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
     return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
 };
 
-function decodeUserFromCookies(request: NextRequest): any | null {
-  try {
-    const all = request.cookies.getAll();
-    const tokenCookies = all
-      .filter((c) => c.name.includes("-auth-token") || c.name.startsWith("sb-") || c.name === "supabase-auth-token")
-      .sort((a, b) => a.name.localeCompare(b.name));
+const AUTH_VERIFY_TIMEOUT_MS = 2500;
+const AUTH_TIMEOUT = Symbol("auth-timeout");
 
-    if (!tokenCookies.length) return null;
+type MiddlewareUser = {
+    id: string;
+    email: string;
+    user_metadata: Record<string, any>;
+    role: string;
+};
 
-    let combined = "";
-    const chunked = tokenCookies.filter((c) => /\.\d+$/.test(c.name));
-    if (chunked.length) {
-      combined = chunked.map((c) => c.value).join("");
-    } else {
-      const single = tokenCookies.find((c) => c.name.endsWith("-auth-token"));
-      combined = single ? single.value : tokenCookies[0].value;
-    }
-
-    if (!combined) return null;
-
-    let jsonStr = combined;
-    if (combined.startsWith("base64-")) {
-      const base64Data = combined.slice(7);
-      jsonStr = typeof Buffer !== "undefined"
-        ? Buffer.from(base64Data, "base64").toString("utf8")
-        : atob(base64Data);
-    } else {
-      try {
-        jsonStr = decodeURIComponent(combined);
-      } catch {}
-    }
-
-    let parsed: any = null;
+/**
+ * Resolves the signed-in user from a cryptographically verified session JWT.
+ *
+ * `getClaims()` verifies the token signature locally against the project's
+ * JWKS (one cached network fetch every 10 minutes), so it stays fast at the
+ * edge while never trusting an attacker-controlled cookie payload. Returns
+ * `null` for a missing/invalid session, or `AUTH_TIMEOUT` when verification
+ * could not complete in time (offline / upstream stall).
+ */
+async function resolveVerifiedUser(supabase: any): Promise<MiddlewareUser | null | typeof AUTH_TIMEOUT> {
     try {
-      parsed = JSON.parse(jsonStr);
-    } catch {}
+        const result = await withTimeout<any>(
+            supabase.auth.getClaims(),
+            AUTH_VERIFY_TIMEOUT_MS,
+            AUTH_TIMEOUT,
+        );
+        if (result === AUTH_TIMEOUT) return AUTH_TIMEOUT;
 
-    let accessToken = "";
-    let userObj: any = null;
+        const claims = result?.data?.claims;
+        if (result?.error || !claims || typeof claims.sub !== "string" || !claims.sub) {
+            return null;
+        }
 
-    if (parsed) {
-      if (Array.isArray(parsed)) {
-        accessToken = parsed[0];
-      } else if (parsed.access_token) {
-        accessToken = parsed.access_token;
-        userObj = parsed.user;
-      }
-    } else if (combined.startsWith("eyJ")) {
-      accessToken = combined;
+        return {
+            id: claims.sub,
+            email: typeof claims.email === "string" ? claims.email : "",
+            user_metadata: claims.user_metadata && typeof claims.user_metadata === "object" ? claims.user_metadata : {},
+            role: typeof claims.role === "string" ? claims.role : "authenticated",
+        };
+    } catch {
+        return null;
     }
-
-    if (!accessToken) return null;
-
-    const parts = accessToken.split(".");
-    if (parts.length !== 3) return null;
-
-    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const payloadStr = typeof Buffer !== "undefined"
-      ? Buffer.from(parts[1], "base64url").toString("utf8")
-      : atob(b64);
-
-    const payload = JSON.parse(payloadStr);
-
-    if (payload.exp && payload.exp < (Date.now() / 1000) - 30) {
-      return null;
-    }
-
-    const userId = payload.sub || userObj?.id;
-    if (!userId) return null;
-
-    return {
-      id: userId,
-      email: payload.email || userObj?.email || "",
-      user_metadata: payload.user_metadata || userObj?.user_metadata || {},
-      role: payload.role || userObj?.role || "authenticated",
-    };
-  } catch {
-    return null;
-  }
 }
 
 export async function updateSession(request: NextRequest) {
@@ -229,22 +202,15 @@ export async function updateSession(request: NextRequest) {
         }
     );
 
-    // 3. Fast path: Decode session JWT directly from cookie (0ms latency, eliminates Edge WAN timeouts)
-    let user: any = null;
+    // 3. Verify the session JWT signature (never trust the cookie payload as-is).
+    let user: MiddlewareUser | null = null;
+    let authVerificationTimedOut = false;
     if (hasAuthCookie) {
-        user = decodeUserFromCookies(request);
-    }
-
-    if (!user && hasAuthCookie) {
-        try {
-            const userResult = await withTimeout(
-                supabase.auth.getUser(),
-                2000,
-                { data: { user: null }, error: new Error("Auth timeout") } as any
-            );
-            user = userResult?.data?.user ?? null;
-        } catch {
-            user = null;
+        const verified = await resolveVerifiedUser(supabase);
+        if (verified === AUTH_TIMEOUT) {
+            authVerificationTimedOut = true;
+        } else {
+            user = verified;
         }
     }
 
@@ -272,11 +238,15 @@ export async function updateSession(request: NextRequest) {
         supabaseResponse.cookies.delete(ROLE_COOKIE_NAME);
     }
 
-    // 2FA pending & positive verification enforcement:
-    const is2faPending = request.cookies.get("ireside_2fa_pending")?.value === "true";
-    const verified2faUserId = request.cookies.get("ireside_2fa_verified")?.value;
+    // 2FA pending & positive verification enforcement.
+    // The verified-device cookie is HMAC-signed and bound to the user id; an
+    // unsigned value is rejected so it cannot be planted from dev tools.
+    const is2faPending = request.cookies.get(TWO_FACTOR_PENDING_COOKIE)?.value === "true";
+    const verified2faCookie = request.cookies.get(TWO_FACTOR_VERIFIED_COOKIE)?.value;
     const userRequires2fa = user?.user_metadata?.two_factor_enabled === true;
-    const is2faVerified = Boolean(user && verified2faUserId === user.id);
+    const is2faVerified = Boolean(
+        user && userRequires2fa && (await verifyTwoFactorVerifiedCookieValue(verified2faCookie, user.id))
+    );
 
     // If 2FA is required and not verified, or challenge is pending: restrict access to login/api/public
     if (is2faPending || (userRequires2fa && !is2faVerified)) {
@@ -434,7 +404,8 @@ export async function updateSession(request: NextRequest) {
     }
 
     // If user is not signed in and the current path is not /login, /signup, or /auth, redirect to /login.
-    // However, if the request has an existing auth cookie but timed out (likely offline), allow proceeding to cached view.
+    // Only when verification *timed out* (likely offline) do we let a cookie-bearing request through to the
+    // cached client view; API routes still enforce auth. An invalid or expired session is redirected.
     if (!user && !isPublicRoute(request.nextUrl.pathname, request)) {
         if (request.nextUrl.pathname.startsWith('/mobile')) {
             const url = request.nextUrl.clone();
@@ -442,7 +413,7 @@ export async function updateSession(request: NextRequest) {
             url.searchParams.set('redirect', request.nextUrl.pathname);
             return NextResponse.redirect(url);
         }
-        if (hasAuthCookie) {
+        if (hasAuthCookie && authVerificationTimedOut) {
             return supabaseResponse;
         }
         const url = request.nextUrl.clone();

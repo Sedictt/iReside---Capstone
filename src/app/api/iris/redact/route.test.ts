@@ -1,8 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// The endpoint calls a paid AI provider, so it requires a signed-in user.
+vi.mock("@/lib/api/auth-guard", () => ({
+    requireAuthenticatedUser: vi.fn(async () => ({
+        userId: "user-1",
+        userEmail: "user@example.com",
+        userRole: "tenant",
+        supabase: {},
+    })),
+}));
+
 describe("POST /api/iris/redact", () => {
     beforeEach(() => {
-        vi.resetAllMocks();
         vi.resetModules();
     });
 

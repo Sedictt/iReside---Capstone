@@ -12,8 +12,14 @@ export async function POST(request: Request) {
         const { email } = parsed.data;
         const normalizedEmail = email.trim().toLowerCase();
 
-        const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-        const redirectTo = `${origin}/auth/callback?type=recovery&next=/auth/reset-password`;
+        // The recovery link must point at *our* configured origin. The Origin
+        // header is attacker-controlled and is only used when no app URL is set.
+        const origin =
+            process.env.NEXT_PUBLIC_APP_URL ||
+            process.env.NEXT_PUBLIC_SITE_URL ||
+            request.headers.get("origin") ||
+            "http://localhost:3000";
+        const redirectTo = `${origin.replace(/\/+$/, "")}/auth/callback?type=recovery&next=/auth/reset-password`;
 
         const supabaseAdmin = createServiceRoleSupabaseClient();
 

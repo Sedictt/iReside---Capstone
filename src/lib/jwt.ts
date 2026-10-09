@@ -8,10 +8,18 @@ import crypto from 'crypto';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
-const FALLBACK_JWT_SECRET = 'iReside-dev-fallback-secret-2024';
-const JWT_SECRET = process.env.JWT_SECRET || FALLBACK_JWT_SECRET;
+// Local-development convenience only. In production a missing secret fails
+// closed: a public fallback would let anyone forge lease signing links.
+const DEV_FALLBACK_JWT_SECRET = 'iReside-dev-fallback-secret-2024';
 
-const getJwtSecret = (): string => JWT_SECRET;
+const getJwtSecret = (): string => {
+  const configured = process.env.JWT_SECRET?.trim();
+  if (configured) return configured;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET must be configured in production: lease signing links cannot be issued or verified without it.');
+  }
+  return DEV_FALLBACK_JWT_SECRET;
+};
 
 interface SigningTokenPayload {
   leaseId: string;

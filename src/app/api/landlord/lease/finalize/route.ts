@@ -5,14 +5,11 @@ import { createClient } from "@/lib/supabase/server";
 import { generateMonthlyInvoices } from "@/lib/billing/server";
 import { databaseErrorResponse, parseJsonBody } from "@/lib/validation/server";
 import { leaseFinalizeSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { generateTemporaryPassword } from "@/lib/security/passwords";
 
+/** Temporary password from a CSPRNG (see lib/security/passwords). */
 function generateTempPassword(length = 12): string {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$";
-    let password = "";
-    for (let i = 0; i < length; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return password;
+    return generateTemporaryPassword(length);
 }
 
 export async function POST(request: Request) {

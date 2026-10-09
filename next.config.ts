@@ -35,6 +35,20 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Baseline browser hardening for every response. A full Content-Security-Policy
+        // is intentionally not set here (inline scripts, fonts and Supabase would need an
+        // allow-list); frame-ancestors alone blocks clickjacking without that risk.
+        source: '/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=(self), payment=(), usb=()' },
+          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
+        ],
+      },
+      {
         source: '/downloads/:path*.apk',
         headers: [
           {

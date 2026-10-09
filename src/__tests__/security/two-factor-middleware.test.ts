@@ -1,12 +1,14 @@
+// @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
+import { createTwoFactorVerifiedCookieValue } from "@/lib/security/two-factor-cookie";
 
-// Mock @supabase/ssr
-const mockGetUser = vi.fn();
+// Mock @supabase/ssr: the middleware verifies the session through getClaims().
+const mockGetClaims = vi.fn();
 vi.mock("@supabase/ssr", () => ({
     createServerClient: () => ({
         auth: {
-            getUser: mockGetUser,
+            getClaims: mockGetClaims,
         },
         from: () => ({
             select: () => ({
@@ -19,7 +21,16 @@ vi.mock("@supabase/ssr", () => ({
     }),
 }));
 
-import { updateSession } from "@/lib/supabase/middleware";
+import { updateSession, isPublicRoute } from "@/lib/supabase/middleware";
+
+const verifiedClaims = (id: string, user_metadata: Record<string, unknown>) => ({
+    data: {
+        claims: { sub: id, email: "landlord@example.com", role: "authenticated", user_metadata },
+        header: { alg: "ES256" },
+        signature: new Uint8Array(),
+    },
+    error: null,
+});
 
 describe("Middleware Two-Factor Authentication Enforcement", () => {
     beforeEach(() => {
@@ -38,37 +49,17 @@ describe("Middleware Two-Factor Authentication Enforcement", () => {
     };
 
     it("redirects 2FA-enabled user to /login when ireside_2fa_verified is missing", async () => {
-        mockGetUser.mockResolvedValue({
-            data: {
-                user: {
-                    id: "user-2fa-enabled",
-                    email: "landlord@example.com",
-                    user_metadata: { role: "landlord", two_factor_enabled: true },
-                },
-            },
-            error: null,
-        });
+        mockGetClaims.mockResolvedValue(verifiedClaims("user-2fa-enabled", { role: "landlord", two_factor_enabled: true }));
 
         const req = createRequest("http://localhost:3000/landlord/dashboard");
         const res = await updateSession(req);
 
-        // Expect redirect to /login
         expect(res.status).toBe(307);
-        const location = res.headers.get("location");
-        expect(location).toContain("/login");
+        expect(res.headers.get("location")).toContain("/login");
     });
 
-    it("allows access to protected route when ireside_2fa_verified matches user id", async () => {
-        mockGetUser.mockResolvedValue({
-            data: {
-                user: {
-                    id: "user-2fa-enabled",
-                    email: "landlord@example.com",
-                    user_metadata: { role: "landlord", two_factor_enabled: true },
-                },
-            },
-            error: null,
-        });
+    it("redirects when ireside_2fa_verified is an unsigned user id", async () => {
+        mockGetClaims.mockResolvedValue(verifiedClaims("user-2fa-enabled", { role: "landlord", two_factor_enabled: true }));
 
         const req = createRequest("http://localhost:3000/landlord/dashboard", {
             "sb-token": "valid-auth-token",
@@ -77,22 +68,25 @@ describe("Middleware Two-Factor Authentication Enforcement", () => {
         });
         const res = await updateSession(req);
 
-        // Expect not redirecting (request is allowed through)
-        const location = res.headers.get("location");
-        expect(location).toBeNull();
+        expect(res.status).toBe(307);
+        expect(res.headers.get("location")).toContain("/login");
+    });
+
+    it("allows access to protected route when the signed ireside_2fa_verified cookie matches the user", async () => {
+        mockGetClaims.mockResolvedValue(verifiedClaims("user-2fa-enabled", { role: "landlord", two_factor_enabled: true }));
+
+        const req = createRequest("http://localhost:3000/landlord/dashboard", {
+            "sb-token": "valid-auth-token",
+            "ireside_2fa_verified": await createTwoFactorVerifiedCookieValue("user-2fa-enabled"),
+            "ireside_setup_completed": "true",
+        });
+        const res = await updateSession(req);
+
+        expect(res.headers.get("location")).toBeNull();
     });
 
     it("redirects when ireside_2fa_pending is true even if user tries to reach dashboard", async () => {
-        mockGetUser.mockResolvedValue({
-            data: {
-                user: {
-                    id: "user-pending",
-                    email: "landlord@example.com",
-                    user_metadata: { role: "landlord" },
-                },
-            },
-            error: null,
-        });
+        mockGetClaims.mockResolvedValue(verifiedClaims("user-pending", { role: "landlord" }));
 
         const req = createRequest("http://localhost:3000/landlord/dashboard", {
             "sb-token": "valid-auth-token",
@@ -101,21 +95,11 @@ describe("Middleware Two-Factor Authentication Enforcement", () => {
         const res = await updateSession(req);
 
         expect(res.status).toBe(307);
-        const location = res.headers.get("location");
-        expect(location).toContain("/login");
+        expect(res.headers.get("location")).toContain("/login");
     });
 
     it("keeps user on /login when 2FA is required and unverified without redirecting to dashboard", async () => {
-        mockGetUser.mockResolvedValue({
-            data: {
-                user: {
-                    id: "user-2fa-enabled",
-                    email: "landlord@example.com",
-                    user_metadata: { role: "landlord", two_factor_enabled: true },
-                },
-            },
-            error: null,
-        });
+        mockGetClaims.mockResolvedValue(verifiedClaims("user-2fa-enabled", { role: "landlord", two_factor_enabled: true }));
 
         const req = createRequest("http://localhost:3000/login", {
             "sb-token": "valid-auth-token",
@@ -123,8 +107,45 @@ describe("Middleware Two-Factor Authentication Enforcement", () => {
         });
         const res = await updateSession(req);
 
-        // Should not redirect to dashboard
-        const location = res.headers.get("location");
-        expect(location).toBeNull();
+        expect(res.headers.get("location")).toBeNull();
+    });
+});
+
+describe("Middleware session verification", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it("redirects to /login when the session cookie fails signature verification", async () => {
+        mockGetClaims.mockResolvedValue({ data: null, error: new Error("invalid signature") });
+
+        const req = new NextRequest("http://localhost:3000/landlord/dashboard");
+        req.cookies.set("sb-token", "forged-token");
+        const res = await updateSession(req);
+
+        expect(res.status).toBe(307);
+        expect(res.headers.get("location")).toContain("/login");
+    });
+
+    it("lets a cookie-bearing request through only when verification timed out", async () => {
+        mockGetClaims.mockImplementation(() => new Promise(() => { /* never resolves */ }));
+
+        const req = new NextRequest("http://localhost:3000/landlord/dashboard");
+        req.cookies.set("sb-token", "maybe-offline");
+        const res = await updateSession(req);
+
+        expect(res.headers.get("location")).toBeNull();
+    }, 10000);
+
+    it("does not honour the boneyard capture bypass in production", () => {
+        const req = new NextRequest("http://localhost:3000/landlord/dashboard?boneyard=true");
+        const original = process.env.NODE_ENV;
+        (process.env as any).NODE_ENV = "production";
+        try {
+            expect(isPublicRoute("/landlord/dashboard", req)).toBe(false);
+        } finally {
+            (process.env as any).NODE_ENV = original;
+        }
+        expect(isPublicRoute("/landlord/dashboard", req)).toBe(true);
     });
 });

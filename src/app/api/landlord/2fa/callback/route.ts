@@ -1,6 +1,9 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { OAUTH_STATE_COOKIE, OAUTH_STATE_COOKIE_PATH } from "@/lib/security/oauth-state";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -51,22 +54,35 @@ export async function GET(request: Request) {
     }
 
     try {
+        const cookieStore = await cookies();
         const authContext = await requireAuthenticatedUser(request);
         if (!("userId" in authContext)) return NextResponse.redirect(`${APP_BASE_URL}/landlord/settings?category=Security&subtab=Protection&error=not_authenticated`);
-        const { userId, supabase } = authContext;
+        const { userId } = authContext;
 
-        // The OAuth state is unsigned client-visible data: never let it pick the
-        // account being modified. It may only confirm the signed-in user.
-        let decoded: { userId?: unknown } = {};
-        if (state) {
-            try {
-                decoded = JSON.parse(Buffer.from(state, "base64").toString());
-            } catch {
-                return NextResponse.redirect(`${APP_BASE_URL}/landlord/settings?category=Security&subtab=Protection&error=invalid_state`);
-            }
+        // The OAuth state is client-visible data: never let it pick the account
+        // being modified. It must name the signed-in user AND carry the nonce that
+        // was set in this browser's HttpOnly cookie when the flow started, so a
+        // callback URL crafted by someone else cannot bind their Google account
+        // (and therefore their mailbox) to this user's 2FA.
+        const invalidStateRedirect = () =>
+            NextResponse.redirect(`${APP_BASE_URL}/landlord/settings?category=Security&subtab=Protection&error=invalid_state`);
+
+        let decoded: { userId?: unknown; nonce?: unknown } = {};
+        if (!state) return invalidStateRedirect();
+        try {
+            decoded = JSON.parse(Buffer.from(state, "base64url").toString());
+        } catch {
+            return invalidStateRedirect();
         }
-        if (decoded.userId !== undefined && decoded.userId !== userId) {
-            return NextResponse.redirect(`${APP_BASE_URL}/landlord/settings?category=Security&subtab=Protection&error=invalid_state`);
+        const expectedNonce = cookieStore.get(OAUTH_STATE_COOKIE)?.value;
+        if (
+            decoded.userId !== userId ||
+            typeof decoded.nonce !== "string" ||
+            !expectedNonce ||
+            decoded.nonce.length !== expectedNonce.length ||
+            !timingSafeEqual(Buffer.from(decoded.nonce), Buffer.from(expectedNonce))
+        ) {
+            return invalidStateRedirect();
         }
         const callbackUserId = userId;
 
@@ -118,7 +134,10 @@ export async function GET(request: Request) {
             return NextResponse.redirect(`${APP_BASE_URL}/landlord/settings?category=Security&subtab=Protection&error=save_failed`);
         }
 
-        return NextResponse.redirect(`${APP_BASE_URL}/landlord/settings?category=Security&subtab=Protection&gmail_connected=true&auto_send_otp=true`);
+        const successResponse = NextResponse.redirect(`${APP_BASE_URL}/landlord/settings?category=Security&subtab=Protection&gmail_connected=true&auto_send_otp=true`);
+        // The nonce is single-use.
+        successResponse.cookies.set(OAUTH_STATE_COOKIE, "", { path: OAUTH_STATE_COOKIE_PATH, maxAge: 0, expires: new Date(0) });
+        return successResponse;
     } catch (err) {
         console.error("[2fa-callback] Error:", err);
         return NextResponse.redirect(`${APP_BASE_URL}/landlord/settings?category=Security&subtab=Protection&error=callback_failed`);

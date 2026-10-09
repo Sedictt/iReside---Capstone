@@ -45,7 +45,10 @@ export async function signUp(formData: FormData) {
     const email = formData.get('email') as string
     const password = formData.get('password') as string
     const fullName = formData.get('full_name') as string
-    const role = (formData.get('role') as string) || 'tenant'
+    // Self-service sign-up only ever creates tenants. Landlord accounts are
+    // provisioned through the vetted onboarding flow; a client-supplied role
+    // would otherwise be copied into the profile by the new-user trigger.
+    const role = 'tenant'
 
     const { error } = await supabase.auth.signUp({
         email,

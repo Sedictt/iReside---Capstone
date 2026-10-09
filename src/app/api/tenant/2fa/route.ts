@@ -3,6 +3,11 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { TwoFactorService } from "@/lib/services/auth/two-factor.service";
 import { parseJsonBody } from "@/lib/validation/server";
 import { twoFactorActionSchema } from "@/lib/validation/schemas/account.schema";
+import {
+    TWO_FACTOR_VERIFIED_COOKIE,
+    createTwoFactorVerifiedCookieValue,
+    twoFactorVerifiedCookieOptions,
+} from "@/lib/security/two-factor-cookie";
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -48,7 +53,15 @@ export async function POST(request: Request) {
                     { status: 400 }
                 );
             }
-            return NextResponse.json(result);
+            // 2FA is now enforced for this account: mark the current device as
+            // verified so the user is not locked out of the API mid-session.
+            const response = NextResponse.json(result);
+            response.cookies.set(
+                TWO_FACTOR_VERIFIED_COOKIE,
+                await createTwoFactorVerifiedCookieValue(userId),
+                twoFactorVerifiedCookieOptions(),
+            );
+            return response;
         }
 
         if (body.action === "disable") {

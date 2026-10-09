@@ -16,6 +16,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTwoFactorOTP } from "@/lib/email";
+import { generateNumericOtp } from "@/lib/security/passwords";
+import { otpMatches } from "@/lib/security/otp-verification";
 
 export interface TwoFactorState {
     enabled: boolean;
@@ -194,7 +196,8 @@ export class TwoFactorService {
         }
 
         const recipientEmail = settings?.two_factor_email || profile.two_factor_email || profile.email;
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        // CSPRNG: Math.random() output is predictable and unsuitable for codes.
+        const otp = generateNumericOtp();
         const otpExpiry = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString();
 
         // Persist OTP in both user_security_settings and profiles
@@ -306,7 +309,7 @@ export class TwoFactorService {
             };
         }
 
-        if (storedCode !== cleanOtp) {
+        if (!otpMatches(storedCode, cleanOtp)) {
             const nextFailed = currentFailed + 1;
             recordFailedAttempt(userId);
             const remaining = Math.max(0, MAX_VERIFICATION_ATTEMPTS - nextFailed);

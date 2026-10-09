@@ -4,7 +4,18 @@ import { sendRegistrationOTP } from "@/lib/email";
 import { parseJsonBody } from "@/lib/validation/server";
 import { registrationOtpSchema } from "@/lib/validation/schemas/account.schema";
 
+// Only backs the deprecated self-service landlord signup; without the opt-in it
+// would be an open relay that emails codes to any address on request.
+const isLegacyRegistrationEnabled = () => process.env.ENABLE_LEGACY_LANDLORD_REGISTRATION === "true";
+
 export async function POST(request: Request) {
+    if (!isLegacyRegistrationEnabled()) {
+        return NextResponse.json(
+            { error: "Self-service landlord registration is disabled." },
+            { status: 410 }
+        );
+    }
+
     try {
         const parsed = await parseJsonBody(request, registrationOtpSchema);
         if (!parsed.ok) return parsed.response;

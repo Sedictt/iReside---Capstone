@@ -3,6 +3,7 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import type { ApplicationStatus, PaymentMethod, Json } from "@/types/database";
 import { makeInvoiceNumber, makeReceiptNumber } from "@/lib/billing/utils";
+import { generateTemporaryPassword } from "@/lib/security/passwords";
 
 import { 
     sendTenantCredentials, 
@@ -69,9 +70,9 @@ const isAllowedStatus = (value: unknown): value is ApplicationStatus =>
     typeof value === "string" && ALLOWED_STATUSES.includes(value as ApplicationStatus);
 
 /** Generate a random temporary password */
+/** Temporary password from a CSPRNG (see lib/security/passwords). */
 function generateTempPassword(): string {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$";
-    return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+    return generateTemporaryPassword(12);
 }
 
 /** Create lease record with calculated end_date and lease agreement terms */

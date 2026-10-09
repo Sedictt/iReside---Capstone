@@ -3,15 +3,12 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseJsonBody } from "@/lib/validation/server";
 import { manualTenantSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { generateTemporaryPassword } from "@/lib/security/passwords";
 
 
+/** Temporary password from a CSPRNG (see lib/security/passwords). */
 function generateTempPassword(length = 12): string {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$";
-    let password = "";
-    for (let i = 0; i < length; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return password;
+    return generateTemporaryPassword(length);
 }
 
 export async function POST(request: Request) {
