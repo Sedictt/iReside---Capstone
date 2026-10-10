@@ -24,7 +24,8 @@ import {
     Sparkles,
     Key,
     Home,
-    Trash2
+    Trash2,
+    Zap
 } from 'lucide-react';
 import { useProperty } from '@/context/PropertyContext';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
@@ -32,6 +33,15 @@ import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropert
 import { triggerHaptic } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+
+interface ClearanceData {
+    rent_settled: boolean;
+    utilities_settled: boolean;
+    outstanding_balance: number;
+    water_balance: number;
+    electricity_balance: number;
+    pending_readings: number;
+}
 
 interface MoveOutRequestItem {
     id: string;
@@ -96,6 +106,15 @@ export function LandlordMoveOutView() {
     const [inspectionNotes, setInspectionNotes] = useState('');
     const [deductionAmount, setDeductionAmount] = useState('');
     const [submitting, setSubmitting] = useState(false);
+
+    // Clearance & Balance State
+    const [clearanceData, setClearanceData] = useState<ClearanceData | null>(null);
+    const [loadingClearance, setLoadingClearance] = useState(false);
+
+    // Denial Modal State
+    const [activeDenialReq, setActiveDenialReq] = useState<MoveOutRequestItem | null>(null);
+    const [denialReason, setDenialReason] = useState('');
+    const [inspectionDate, setInspectionDate] = useState(() => new Date().toISOString().split('T')[0]);
 
     const fetchRequests = useCallback(async () => {
         try {
@@ -187,12 +206,99 @@ export function LandlordMoveOutView() {
         }
     };
 
-    // Open Walkthrough Inspection Drawer
-    const openInspectionDrawer = (req: MoveOutRequestItem) => {
+    // Handle Move-Out Denial
+    const handleDenyNotice = async () => {
+        if (!activeDenialReq) return;
+        if (!denialReason.trim()) {
+            toast.error('Please specify a reason for declining the notice.');
+            return;
+        }
+
+        setSubmitting(true);
+        triggerHaptic('medium');
+
+        try {
+            const res = await fetch(`/api/landlord/move-out/${activeDenialReq.id}/deny`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ denial_reason: denialReason.trim() }),
+            });
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || 'Failed to decline move-out notice');
+            }
+
+            toast.success('Move-out notice declined and tenant notified.');
+            setActiveDenialReq(null);
+            setDenialReason('');
+            fetchRequests();
+        } catch (err: any) {
+            toast.error(err.message || 'Action failed');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    // Open Walkthrough Inspection Drawer & Fetch Real-Time Clearance
+    const openInspectionDrawer = async (req: MoveOutRequestItem) => {
         triggerHaptic('light');
         setActiveInspectionReq(req);
         setInspectionNotes(req.inspection_notes || '');
         setDeductionAmount(req.deductions ? String(req.deductions) : '');
+        setInspectionDate(req.inspection_date || new Date().toISOString().split('T')[0]);
+        setClearanceData(null);
+        setLoadingClearance(true);
+
+        try {
+            const res = await fetch(`/api/landlord/move-out/${req.id}/inspection`, { cache: 'no-store' });
+            if (res.ok) {
+                const data = await res.json();
+                setClearanceData(data);
+            }
+        } catch (err) {
+            console.error('Failed to fetch clearance data:', err);
+        } finally {
+            setLoadingClearance(false);
+        }
+    };
+
+    // Save Inspection Record Only
+    const handleSaveInspectionDraft = async () => {
+        if (!activeInspectionReq) return;
+        setSubmitting(true);
+        triggerHaptic('light');
+
+        try {
+            const deductionVal = parseFloat(deductionAmount) || 0;
+            const depositVal = activeInspectionReq.lease?.security_deposit || 0;
+            const refundVal = Math.max(0, depositVal - deductionVal);
+
+            const res = await fetch(`/api/landlord/move-out/${activeInspectionReq.id}/inspection`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    inspection_date: inspectionDate,
+                    inspection_notes: inspectionNotes.trim() || 'Walkthrough completed via mobile companion.',
+                    checklist_data: checklistState,
+                    deposit_deductions: deductionVal,
+                    deposit_refund_amount: refundVal,
+                }),
+            });
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || 'Failed to save inspection draft');
+            }
+
+            toast.success('Inspection record updated successfully.');
+            setActiveInspectionReq(null);
+            fetchRequests();
+        } catch (err: any) {
+            toast.error(err.message || 'Failed to save inspection');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     // Submit Inspection & Finalize
@@ -480,14 +586,28 @@ export function LandlordMoveOutView() {
                                     {/* Action Row */}
                                     <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-white/5">
                                         {isPending ? (
-                                            <button
-                                                disabled={submitting}
-                                                onClick={() => handleApproveNotice(req)}
-                                                className="py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-xs"
-                                            >
-                                                <Check className="size-3.5" />
-                                                Acknowledge & Schedule
-                                            </button>
+                                            <div className="flex items-center gap-1.5">
+                                                <button
+                                                    disabled={submitting}
+                                                    onClick={() => handleApproveNotice(req)}
+                                                    className="py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-xs"
+                                                >
+                                                    <Check className="size-3.5" />
+                                                    Acknowledge & Schedule
+                                                </button>
+                                                <button
+                                                    disabled={submitting}
+                                                    onClick={() => {
+                                                        triggerHaptic('light');
+                                                        setActiveDenialReq(req);
+                                                        setDenialReason('');
+                                                    }}
+                                                    className="py-2 px-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-1 active:scale-95 transition-all"
+                                                >
+                                                    <XCircle className="size-3.5" />
+                                                    Decline
+                                                </button>
+                                            </div>
                                         ) : isApproved ? (
                                             <button
                                                 onClick={() => openInspectionDrawer(req)}
@@ -600,6 +720,98 @@ export function LandlordMoveOutView() {
                                 </div>
                             </div>
 
+                            {/* Financial Clearance & Utility Verification Audit */}
+                            <div className="p-3.5 rounded-2xl bg-muted/40 border border-border/70 space-y-2 text-xs">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                                        <DollarSign className="size-3 text-primary" />
+                                        Clearance & Dues Audit
+                                    </span>
+                                    {loadingClearance && (
+                                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                            <RefreshCw className="size-2.5 animate-spin" />
+                                            Auditing balances...
+                                        </span>
+                                    )}
+                                </div>
+
+                                {clearanceData ? (
+                                    <div className="space-y-2 pt-1">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-muted-foreground">Unpaid Rental Balance:</span>
+                                            <span className={cn(
+                                                "font-bold flex items-center gap-1",
+                                                clearanceData.outstanding_balance > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"
+                                            )}>
+                                                {clearanceData.outstanding_balance > 0 ? (
+                                                    <>
+                                                        <AlertCircle className="size-3" />
+                                                        {formatCurrency(clearanceData.outstanding_balance)}
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <CheckCircle2 className="size-3" />
+                                                        Settled (₱0.00)
+                                                    </>
+                                                )}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-muted-foreground">Unbilled Utilities (Water & Power):</span>
+                                            <span className={cn(
+                                                "font-bold flex items-center gap-1",
+                                                (clearanceData.water_balance + clearanceData.electricity_balance) > 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"
+                                            )}>
+                                                {(clearanceData.water_balance + clearanceData.electricity_balance) > 0 ? (
+                                                    <>
+                                                        <Zap className="size-3" />
+                                                        {formatCurrency(clearanceData.water_balance + clearanceData.electricity_balance)}
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <CheckCircle2 className="size-3" />
+                                                        All Billed
+                                                    </>
+                                                )}
+                                            </span>
+                                        </div>
+
+                                        {/* 1-Tap Shortcut to Apply Total Unpaid Dues to Deductions */}
+                                        {(clearanceData.outstanding_balance + clearanceData.water_balance + clearanceData.electricity_balance) > 0 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    triggerHaptic('light');
+                                                    const totalDues = clearanceData.outstanding_balance + clearanceData.water_balance + clearanceData.electricity_balance;
+                                                    setDeductionAmount(String(totalDues));
+                                                    toast.info(`Applied ${formatCurrency(totalDues)} unpaid dues to deductions.`);
+                                                }}
+                                                className="w-full mt-1 py-1.5 px-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-bold flex items-center justify-center gap-1 active:scale-98 transition-all border border-amber-500/20"
+                                            >
+                                                <DollarSign className="size-3" />
+                                                <span>Apply Unpaid Dues ({formatCurrency(clearanceData.outstanding_balance + clearanceData.water_balance + clearanceData.electricity_balance)}) to Deductions</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                ) : !loadingClearance && (
+                                    <p className="text-[11px] text-muted-foreground italic">No automated dues recorded on active ledger.</p>
+                                )}
+                            </div>
+
+                            {/* Inspection Date Picker */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                    Walkthrough Date
+                                </label>
+                                <input
+                                    type="date"
+                                    value={inspectionDate}
+                                    onChange={(e) => setInspectionDate(e.target.value)}
+                                    className="w-full p-2.5 rounded-xl bg-card border border-border/70 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                />
+                            </div>
+
                             {/* Deductions & Security Deposit Calculator */}
                             <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 space-y-2.5 text-xs">
                                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
@@ -667,6 +879,93 @@ export function LandlordMoveOutView() {
                                         <>
                                             <Check className="size-4" />
                                             Complete & Release Unit
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {/* MOVE-OUT DENIAL MODAL DRAWER */}
+                {activeDenialReq && (
+                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+                        <div className="w-full sm:max-w-md bg-background rounded-t-3xl sm:rounded-2xl p-5 border border-slate-200 dark:border-white/10 shadow-xl flex flex-col gap-3.5 animate-in slide-in-from-bottom duration-200">
+                            {/* Header */}
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="size-9 rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20 flex items-center justify-center shrink-0">
+                                        <XCircle className="size-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-black text-foreground">
+                                            Decline Move-Out Notice
+                                        </h3>
+                                        <p className="text-[11px] text-muted-foreground">
+                                            Unit {activeDenialReq.lease?.unit?.name || 'N/A'} • {activeDenialReq.lease?.tenant?.full_name || 'Resident'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setActiveDenialReq(null)}
+                                    className="p-1.5 rounded-full hover:bg-muted text-muted-foreground"
+                                >
+                                    <X className="size-4" />
+                                </button>
+                            </div>
+
+                            {/* Notice Context */}
+                            <div className="p-3 rounded-xl bg-muted/40 border border-border/70 text-xs space-y-1">
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Requested Departure:</span>
+                                    <span className="font-bold text-foreground">{formatDate(activeDenialReq.intended_move_out_date)}</span>
+                                </div>
+                                {activeDenialReq.reason && (
+                                    <div className="text-[11px] text-muted-foreground italic pt-1 border-t border-border/40">
+                                        &ldquo;{activeDenialReq.reason}&rdquo;
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Denial Reason Input */}
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-foreground flex items-center gap-1">
+                                    <span>Reason for Declining</span>
+                                    <span className="text-rose-500">*</span>
+                                </label>
+                                <textarea
+                                    value={denialReason}
+                                    onChange={(e) => setDenialReason(e.target.value)}
+                                    rows={3}
+                                    placeholder="e.g. 30-day notice minimum not satisfied; active lease term valid until end of quarter."
+                                    className="w-full p-3 rounded-xl bg-card border border-border/70 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-rose-500"
+                                />
+                                <p className="text-[10px] text-muted-foreground">
+                                    This explanation will be delivered directly to the tenant's mobile notifications.
+                                </p>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex items-center gap-2 pt-1">
+                                <button
+                                    disabled={submitting}
+                                    type="button"
+                                    onClick={() => setActiveDenialReq(null)}
+                                    className="flex-1 py-2.5 rounded-xl border border-border text-xs font-bold text-muted-foreground hover:text-foreground active:scale-98 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    disabled={submitting || !denialReason.trim()}
+                                    type="button"
+                                    onClick={handleDenyNotice}
+                                    className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold active:scale-98 transition-all flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50"
+                                >
+                                    {submitting ? (
+                                        <RefreshCw className="size-4 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <XCircle className="size-4" />
+                                            <span>Confirm Decline</span>
                                         </>
                                     )}
                                 </button>

@@ -214,6 +214,7 @@ export function LandlordOverviewView() {
     });
     const [loadingUnits, setLoadingUnits] = useState(true);
     const [loadingInvites, setLoadingInvites] = useState(true);
+    const [pendingMoveOutCount, setPendingMoveOutCount] = useState(0);
     const [availableUnits, setAvailableUnits] = useState<Array<{
         id: string;
         name: string;
@@ -299,10 +300,11 @@ export function LandlordOverviewView() {
                 ? `?propertyId=${selectedPropertyId}`
                 : '';
 
-            const [paymentsRes, unitsRes, invitesRes] = await Promise.allSettled([
+            const [paymentsRes, unitsRes, invitesRes, moveOutRes] = await Promise.allSettled([
                 fetch(`/api/landlord/payments/overview${queryParam}`).then(r => r.ok ? r.json() : Promise.reject(r)),
                 fetch('/api/landlord/properties/overview').then(r => r.ok ? r.json() : Promise.reject(r)),
                 fetch('/api/landlord/invites').then(r => r.ok ? r.json() : Promise.reject(r)),
+                fetch('/api/landlord/move-out?status=pending').then(r => r.ok ? r.json() : Promise.reject(r)),
             ]);
 
             if (paymentsRes.status === 'fulfilled') {
@@ -348,6 +350,16 @@ export function LandlordOverviewView() {
                 setTenantInvites([]);
             }
             setLoadingInvites(false);
+
+            if (moveOutRes.status === 'fulfilled' && Array.isArray(moveOutRes.value)) {
+                const list = moveOutRes.value;
+                const count = (!selectedPropertyId || selectedPropertyId === 'all')
+                    ? list.length
+                    : list.filter((r: any) => r.lease?.unit?.property?.id === selectedPropertyId || r.property_id === selectedPropertyId).length;
+                setPendingMoveOutCount(count);
+            } else {
+                setPendingMoveOutCount(0);
+            }
         } catch (err) {
             console.error('[MobileOverview] Error loading data:', err);
         }
@@ -656,6 +668,27 @@ export function LandlordOverviewView() {
                     </h3>
 
                     <div className="flex flex-col gap-2">
+                        {/* High Priority: Move-Out Notice Alert */}
+                        {pendingMoveOutCount > 0 ? (
+                            <div className="neumorphic-panel rounded-2xl p-3 border-l-4 border-l-amber-500 flex items-center justify-between gap-3">
+                                <div className="min-w-0 flex-1">
+                                    <span className="text-[8px] font-black uppercase tracking-widest text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                                        Move-Out Notice
+                                    </span>
+                                    <h4 className="text-xs font-black text-foreground mt-1 truncate">
+                                        {pendingMoveOutCount} Pending Move-Out Request{pendingMoveOutCount > 1 ? 's' : ''}
+                                    </h4>
+                                    <p className="text-[10px] text-muted-foreground">Tenant notice submitted. Review & schedule inspection.</p>
+                                </div>
+                                <Link
+                                    href="/mobile/landlord/move-out"
+                                    className="shrink-0 px-3 py-1.5 rounded-xl neumorphic-primary text-[10px] font-black uppercase text-primary-foreground tracking-wider active:scale-95"
+                                >
+                                    Review
+                                </Link>
+                            </div>
+                        ) : null}
+
                         {/* High Priority: Overdue Invoices Alert */}
                         {overdueCount > 0 ? (
                             <div className="neumorphic-panel rounded-2xl p-3 border-l-4 border-l-red-500 flex items-center justify-between gap-3">
@@ -699,7 +732,7 @@ export function LandlordOverviewView() {
                         ) : null}
 
                         {/* Low Priority / Healthy Check */}
-                        {overdueCount === 0 && openUnitsCount === 0 ? (
+                        {overdueCount === 0 && openUnitsCount === 0 && pendingMoveOutCount === 0 ? (
                             <div className="neumorphic-panel rounded-2xl p-3 border-l-4 border-l-emerald-500 flex items-center justify-between gap-3">
                                 <div className="min-w-0 flex-1">
                                     <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">
