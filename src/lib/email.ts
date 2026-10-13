@@ -1,7 +1,27 @@
 "use server";
 
 import { sendEmail } from "./email/transport";
-import { escapeHtml as esc } from "./security/html";
+import { getAppBaseUrl } from "./app-url";
+import {
+    esc,
+    renderEmail,
+    greeting,
+    paragraph,
+    muted,
+    heading,
+    eyebrow,
+    card,
+    detailList,
+    keyValueRows,
+    button,
+    linkFallback,
+    otpBox,
+    credential,
+    bulletList,
+    divider,
+    peso,
+    longDate,
+} from "./email/layout";
 
 export async function sendTenantCredentials({
     to,
@@ -25,91 +45,47 @@ export async function sendTenantCredentials({
 }) {
     const subject = "Welcome to iReside — Your Account is Ready";
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>Welcome to iReside — Your Account is Ready</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-    <div style="background-color:#c4b0ff;padding:24px 32px;">
-      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-      <p style="margin:4px 0 0;color:#1e1b4b;font-size:12px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:2px;">Tenant Portal Access</p>
-    </div>
-    <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi <strong>${esc(tenantName)}</strong>,</p>
-      <p style="margin:0 0 24px;color:#52525b;font-size:14px;line-height:1.6;">
-        Your application has been approved. Your iReside tenant account is ready — use the credentials below to sign in.
-      </p>
+    const leaseBlock = leaseDetails
+        ? card(
+              detailList(
+                  [
+                      { label: "Property", value: leaseDetails.property_name },
+                      { label: "Unit", value: leaseDetails.unit_name },
+                      { label: "Move-in Date", value: longDate(leaseDetails.move_in_date) },
+                      { label: "Monthly Rent", value: peso(leaseDetails.monthly_rent) },
+                  ],
+                  { title: "Your Lease Details" },
+              ),
+          )
+        : "";
 
-      ${leaseDetails ? `
-      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 16px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#7c3aed;">Your Lease Details</p>
-        <div style="margin-bottom:12px;">
-          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Property</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${esc(leaseDetails.property_name)}</p>
-        </div>
-        <div style="margin-bottom:12px;">
-          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Unit</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${esc(leaseDetails.unit_name)}</p>
-        </div>
-        <div style="margin-bottom:12px;">
-          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Move-in Date</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${new Date(leaseDetails.move_in_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        </div>
-        <div>
-          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Monthly Rent</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">₱${leaseDetails.monthly_rent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-        </div>
-      </div>
-      ` : ""}
+    const signingBlock = signingLink
+        ? card(
+              `<p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1e1b4b;">Sign Your Lease Agreement</p>
+               ${paragraph("Your lease is ready for your signature. Please review and sign the agreement to complete your onboarding.", { marginBottom: 20 })}
+               ${button(signingLink, "Sign Lease Agreement →", { center: true, marginBottom: 0 })}`,
+              { tone: "brand", center: true, padding: 24 },
+          )
+        : "";
 
-      ${signingLink ? `
-      <div style="background-color:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
-        <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1e1b4b;">📝 Sign Your Lease Agreement</p>
-        <p style="margin:0 0 20px;font-size:13px;color:#475569;line-height:1.5;">
-          Your lease is ready for your signature. Please review and sign the agreement to complete your onboarding.
-        </p>
-        <a href="${esc(signingLink)}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
-          Sign Lease Agreement &rarr;
-        </a>
-      </div>
-      ` : ""}
+    const inviteBlock = inviteUrl
+        ? `${button(inviteUrl, "Set Your Password →", { tone: "dark" })}${linkFallback(inviteUrl, "Or copy this link:")}`
+        : "";
 
-      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">Email</p>
-        <p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#0f172a;font-family:Consolas,'Liberation Mono',Menlo,monospace;">${esc(to)}</p>
-        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">Temporary Password</p>
-        <p style="margin:0;font-size:18px;font-weight:900;color:#0f172a;font-family:Consolas,'Liberation Mono',Menlo,monospace;letter-spacing:2px;">${esc(tempPassword)}</p>
-      </div>
-
-      ${inviteUrl ? `
-      <div style="margin-bottom:24px;">
-        <a href="${esc(inviteUrl)}" style="display:inline-block;background-color:#09090b;color:#ffffff;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;letter-spacing:-0.2px;">
-          Set Your Password &rarr;
-        </a>
-      </div>
-      <p style="margin:0 0 24px;color:#71717a;font-size:12px;">Or copy this link: <a href="${esc(inviteUrl)}" style="color:#7c3aed;word-break:break-all;">${esc(inviteUrl)}</a></p>
-      ` : ""}
-
-      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
-        Please change your password after your first login. If you did not expect this email, you can safely ignore it.
-      </p>
-    </div>
-    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
-      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
-    </div>
-  </div>
-</body>
-</html>`;
+    const html = renderEmail({
+        title: subject,
+        preheader: "Your application was approved. Here are your tenant portal credentials.",
+        header: { eyebrow: "Tenant Portal Access" },
+        body: `
+            ${greeting(tenantName)}
+            ${paragraph("Your application has been approved. Your iReside tenant account is ready — use the credentials below to sign in.")}
+            ${leaseBlock}
+            ${signingBlock}
+            ${card(`${credential("Email", to)}${credential("Temporary Password", tempPassword, { large: true, last: true })}`)}
+            ${inviteBlock}
+            ${muted("Please change your password after your first login. If you did not expect this email, you can safely ignore it.")}
+        `,
+    });
 
     const text = `Hi ${tenantName},\n\nYour iReside tenant account is ready.\n\n${leaseDetails ? `LEASE DETAILS:\nProperty: ${leaseDetails.property_name}\nUnit: ${leaseDetails.unit_name}\nMove-in Date: ${new Date(leaseDetails.move_in_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\nMonthly Rent: ₱${leaseDetails.monthly_rent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n\n` : ""}${signingLink ? `SIGN YOUR LEASE:\n${signingLink}\n\n` : ""}LOGIN CREDENTIALS:\nEmail: ${to}\nTemporary Password: ${tempPassword}\n${inviteUrl ? `\nSet your password: ${inviteUrl}\n` : ""}\nPlease change your password after first login.\n\n— iReside`;
 
@@ -133,47 +109,18 @@ export async function sendLandlordCredentialsCopy({
 }) {
     const subject = `Tenant Account Created — ${tenantName}`;
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>Tenant Account Created — ${esc(tenantName)}</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-    <div style="background-color:#f8fafc;padding:20px 32px;border-bottom:1px solid #e4e4e7;">
-      <h1 style="margin:0;color:#09090b;font-size:18px;font-weight:800;">iReside — Landlord Copy</h1>
-    </div>
-    <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:15px;color:#18181b;">Hi <strong>${esc(landlordName)}</strong>,</p>
-      <p style="margin:0 0 24px;color:#52525b;font-size:14px;line-height:1.6;">
-        A tenant account has been created for <strong style="color:#0f172a;">${esc(tenantName)}</strong>. Keep these credentials as a backup in case the tenant did not receive their email.
-      </p>
-
-      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">Tenant Email</p>
-        <p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#0f172a;font-family:Consolas,'Liberation Mono',Menlo,monospace;">${esc(tenantEmail)}</p>
-        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">Temporary Password</p>
-        <p style="margin:0;font-size:18px;font-weight:900;color:#0f172a;font-family:Consolas,'Liberation Mono',Menlo,monospace;letter-spacing:2px;">${esc(tempPassword)}</p>
-      </div>
-
-      ${inviteUrl ? `<p style="margin:0 0 24px;color:#71717a;font-size:12px;">Password reset link: <a href="${esc(inviteUrl)}" style="color:#7c3aed;word-break:break-all;">${esc(inviteUrl)}</a></p>` : ""}
-
-      <p style="margin:0;color:#71717a;font-size:12px;">Share these credentials with the tenant only if they did not receive their welcome email.</p>
-    </div>
-    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
-      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
-    </div>
-  </div>
-</body>
-</html>`;
+    const html = renderEmail({
+        title: subject,
+        preheader: `Backup credentials for ${tenantName}'s tenant account.`,
+        header: { eyebrow: "Landlord Copy", tone: "neutral" },
+        body: `
+            ${greeting(landlordName)}
+            ${paragraph(`A tenant account has been created for <strong style="color:#0f172a;">${esc(tenantName)}</strong>. Keep these credentials as a backup in case the tenant did not receive their email.`)}
+            ${card(`${credential("Tenant Email", tenantEmail)}${credential("Temporary Password", tempPassword, { large: true, last: true })}`)}
+            ${inviteUrl ? linkFallback(inviteUrl, "Password reset link:") : ""}
+            ${muted("Share these credentials with the tenant only if they did not receive their welcome email.")}
+        `,
+    });
 
     const text = `Hi ${landlordName},\n\nTenant account created for ${tenantName}.\n\nEmail: ${tenantEmail}\nTemp Password: ${tempPassword}\n${inviteUrl ? `Reset link: ${inviteUrl}\n` : ""}\n— iReside`;
 
@@ -205,83 +152,44 @@ export async function sendSigningLinkEmail({
 }) {
     const subject = "Your Lease Agreement is Ready for Signature";
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>Your Lease Agreement is Ready for Signature</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-    <div style="background-color:#c4b0ff;padding:24px 32px;">
-      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-      <p style="margin:4px 0 0;color:#1e1b4b;font-size:12px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:2px;">Lease Agreement</p>
-    </div>
-    <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi <strong>${esc(tenantName)}</strong>,</p>
-      <p style="margin:0 0 24px;color:#52525b;font-size:14px;line-height:1.6;">
-        Congratulations! Your lease application has been approved. Your lease agreement is ready for your signature. Please review and sign to complete your rental agreement.
-      </p>
-
-      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 16px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#7c3aed;">Property Details</p>
-        <div style="margin-bottom:12px;">
-          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Property</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${esc(propertyName)}</p>
-        </div>
-        <div style="margin-bottom:12px;">
-          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Unit</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${esc(unitName)}</p>
-        </div>
-        <div style="margin-bottom:12px;">
-          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Monthly Rent</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">₱${rentAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-        </div>
-        <div>
-          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Security Deposit</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">₱${depositAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-        </div>
-      </div>
-
-      <div style="background-color:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
-        <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1e1b4b;">📝 Review and Sign Your Lease</p>
-        <p style="margin:0 0 20px;font-size:13px;color:#475569;line-height:1.5;">
-          Please review the full lease agreement and provide your electronic signature to complete the rental process.
-        </p>
-        <a href="${esc(signingUrl)}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
-          Sign Lease Agreement &rarr;
-        </a>
-      </div>
-
-      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">⏰ Link Expires</p>
-        <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a;">${expiresAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        <p style="margin:4px 0 0;font-size:12px;color:#71717a;">Please sign before this date to avoid expiration.</p>
-      </div>
-
-      <div style="padding:20px;background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:24px;">
-        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">Landlord Contact</p>
-        <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#0f172a;">${esc(landlordName)}</p>
-        <p style="margin:0;font-size:13px;color:#52525b;">${esc(landlordEmail)}</p>
-      </div>
-
-      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
-        If you have any questions about the lease terms, please contact your landlord directly. This signing link is unique to you and should not be shared.
-      </p>
-    </div>
-    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
-      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
-    </div>
-  </div>
-</body>
-</html>`;
+    const html = renderEmail({
+        title: subject,
+        preheader: `Review and sign your lease for ${propertyName} (${unitName}).`,
+        header: { eyebrow: "Lease Agreement" },
+        body: `
+            ${greeting(tenantName)}
+            ${paragraph("Congratulations! Your lease application has been approved. Your lease agreement is ready for your signature. Please review and sign to complete your rental agreement.")}
+            ${card(
+                detailList(
+                    [
+                        { label: "Property", value: propertyName },
+                        { label: "Unit", value: unitName },
+                        { label: "Monthly Rent", value: peso(rentAmount) },
+                        { label: "Security Deposit", value: peso(depositAmount) },
+                    ],
+                    { title: "Property Details" },
+                ),
+            )}
+            ${card(
+                `<p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1e1b4b;">Review and Sign Your Lease</p>
+                 ${paragraph("Please review the full lease agreement and provide your electronic signature to complete the rental process.", { marginBottom: 20 })}
+                 ${button(signingUrl, "Sign Lease Agreement →", { center: true, marginBottom: 0 })}`,
+                { tone: "brand", center: true, padding: 24 },
+            )}
+            ${linkFallback(signingUrl, "Or copy this link:")}
+            ${card(
+                `${eyebrow("Link Expires")}
+                 <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a;">${esc(longDate(expiresAt))}</p>
+                 ${muted("Please sign before this date to avoid expiration.")}`,
+            )}
+            ${card(
+                `${eyebrow("Landlord Contact")}
+                 <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#0f172a;">${esc(landlordName)}</p>
+                 <p style="margin:0;font-size:13px;color:#52525b;word-break:break-all;">${esc(landlordEmail)}</p>`,
+            )}
+            ${muted("If you have any questions about the lease terms, please contact your landlord directly. This signing link is unique to you and should not be shared.")}
+        `,
+    });
 
     const text = `Hi ${tenantName},\n\nYour lease application has been approved! Your lease agreement is ready for signature.\n\nPROPERTY DETAILS:\nProperty: ${propertyName}\nUnit: ${unitName}\nMonthly Rent: ₱${rentAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\nSecurity Deposit: ₱${depositAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n\nSIGN LEASE AGREEMENT:\n${signingUrl}\n\nLink expires: ${expiresAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n\nLANDLORD CONTACT:\n${landlordName}\n${landlordEmail}\n\n— iReside`;
 
@@ -303,55 +211,26 @@ export async function sendTenantSignedNotification({
 }) {
     const subject = `Tenant Signed Lease — ${tenantName}`;
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>Tenant Signed Lease — ${esc(tenantName)}</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-    <div style="background-color:#f8fafc;padding:20px 32px;border-bottom:1px solid #e4e4e7;">
-      <h1 style="margin:0;color:#09090b;font-size:18px;font-weight:800;">iReside — Lease Update</h1>
-    </div>
-    <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:15px;color:#18181b;">Hi <strong>${esc(landlordName)}</strong>,</p>
-      <p style="margin:0 0 24px;color:#52525b;font-size:14px;line-height:1.6;">
-        <strong style="color:#0f172a;">${esc(tenantName)}</strong> has signed their lease agreement. Please review and countersign to activate the lease.
-      </p>
+    const actionBlock = signingUrl
+        ? card(
+              `<p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1e1b4b;">Countersign the Lease</p>
+               ${paragraph("The tenant has completed their portion. Use the button below to review and provide your signature.", { marginBottom: 20 })}
+               ${button(signingUrl, "Countersign Lease →", { center: true, marginBottom: 0 })}`,
+              { tone: "brand", center: true, padding: 24 },
+          ) + linkFallback(signingUrl, "Or copy this link:")
+        : muted("Log in to your landlord dashboard to countersign the lease.");
 
-      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">Lease ID</p>
-        <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;font-family:Consolas,'Liberation Mono',Menlo,monospace;">${esc(leaseId)}</p>
-      </div>
-
-      ${signingUrl ? `
-      <div style="background-color:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
-        <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#1e1b4b;">📝 Countersign the Lease</p>
-        <p style="margin:0 0 20px;font-size:13px;color:#475569;line-height:1.5;">
-          The tenant has completed their portion. Use the button below to review and provide your signature.
-        </p>
-        <a href="${esc(signingUrl)}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
-          Countersign Lease &rarr;
-        </a>
-      </div>
-      ` : `
-      <p style="margin:0;color:#71717a;font-size:12px;">Log in to your landlord dashboard to countersign the lease.</p>
-      `}
-    </div>
-    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
-      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
-    </div>
-  </div>
-</body>
-</html>`;
+    const html = renderEmail({
+        title: subject,
+        preheader: `${tenantName} has signed. Countersign to activate the lease.`,
+        header: { eyebrow: "Lease Update", tone: "neutral" },
+        body: `
+            ${greeting(landlordName)}
+            ${paragraph(`<strong style="color:#0f172a;">${esc(tenantName)}</strong> has signed their lease agreement. Please review and countersign to activate the lease.`)}
+            ${card(credential("Lease ID", leaseId, { last: true }))}
+            ${actionBlock}
+        `,
+    });
 
     const text = `Hi ${landlordName},\n\n${tenantName} has signed their lease agreement.\n\nLease ID: ${leaseId}\n\n${signingUrl ? `Countersign here: ${signingUrl}` : 'Log in to your landlord dashboard to countersign the lease.'}\n\n— iReside`;
 
@@ -373,57 +252,26 @@ export async function sendLeaseActivatedNotification({
 }) {
     const subject = "Your Lease is Now Active";
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>Your Lease is Now Active</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-    <div style="background-color:#c4b0ff;padding:24px 32px;">
-      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-      <p style="margin:4px 0 0;color:#1e1b4b;font-size:12px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:2px;">Lease Activated</p>
-    </div>
-    <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi <strong>${esc(tenantName)}</strong>,</p>
-      <p style="margin:0 0 24px;color:#52525b;font-size:14px;line-height:1.6;">
-        Great news! Your lease agreement has been fully signed and is now active. Welcome to your new home!
-      </p>
-
-      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 16px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#7c3aed;">Your Lease Details</p>
-        <div style="margin-bottom:12px;">
-          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Property</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${esc(propertyName)}</p>
-        </div>
-        <div style="margin-bottom:12px;">
-          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Unit</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${esc(unitName)}</p>
-        </div>
-        <div>
-          <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Move-in Date</p>
-          <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${new Date(moveInDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        </div>
-      </div>
-
-      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
-        You can now access your tenant portal to view payments, submit maintenance requests, and communicate with your landlord.
-      </p>
-    </div>
-    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
-      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
-    </div>
-  </div>
-</body>
-</html>`;
+    const html = renderEmail({
+        title: subject,
+        preheader: `Welcome home! Your lease for ${propertyName} (${unitName}) is active.`,
+        header: { eyebrow: "Lease Activated" },
+        body: `
+            ${greeting(tenantName)}
+            ${paragraph("Great news! Your lease agreement has been fully signed and is now active. Welcome to your new home!")}
+            ${card(
+                detailList(
+                    [
+                        { label: "Property", value: propertyName },
+                        { label: "Unit", value: unitName },
+                        { label: "Move-in Date", value: longDate(moveInDate) },
+                    ],
+                    { title: "Your Lease Details" },
+                ),
+            )}
+            ${muted("You can now access your tenant portal to view payments, submit maintenance requests, and communicate with your landlord.")}
+        `,
+    });
 
     const text = `Hi ${tenantName},\n\nYour lease agreement has been fully signed and is now active!\n\nPROPERTY DETAILS:\nProperty: ${propertyName}\nUnit: ${unitName}\nMove-in Date: ${new Date(moveInDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n\nWelcome to your new home! You can now access your tenant portal to manage your lease.\n\n— iReside`;
 
@@ -445,64 +293,22 @@ export async function sendTenantOnboardingReminder({
 }) {
     const subject = "Continue your iReside onboarding";
 
-    const credentialBlock = tempPassword
-        ? `
-      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px;">
-        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">Temporary Password</p>
-        <p style="margin:0;font-size:18px;font-weight:900;color:#0f172a;font-family:Consolas,'Liberation Mono',Menlo,monospace;letter-spacing:2px;">${tempPassword}</p>
-      </div>
-      `
-        : "";
-
-    const inviteBlock = inviteUrl
-        ? `
-      <p style="margin:16px 0 0;color:#71717a;font-size:12px;">
-        Set or reset your password:
-        <a href="${inviteUrl}" style="color:#7c3aed;word-break:break-all;">${inviteUrl}</a>
-      </p>
-      `
-        : "";
-
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>Continue your iReside onboarding</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-    <div style="background-color:#c4b0ff;padding:24px 32px;">
-      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-      <p style="margin:4px 0 0;color:#1e1b4b;font-size:12px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:2px;">Onboarding Reminder</p>
-    </div>
-    <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi <strong>${esc(tenantName)}</strong>,</p>
-      <p style="margin:0 0 20px;color:#52525b;font-size:14px;line-height:1.6;">
-        Your tenant account is ready, but onboarding is still incomplete. Please continue onboarding to unlock your full tenant portal access.
-      </p>
-
-      ${esc(credentialBlock)}
-
-      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:24px;text-align:center;">
-        <a href="${esc(onboardingUrl)}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
-          Continue Onboarding
-        </a>
-        ${esc(inviteBlock)}
-      </div>
-    </div>
-    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
-      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
-    </div>
-  </div>
-</body>
-</html>`;
+    const html = renderEmail({
+        title: subject,
+        preheader: "Your tenant account is ready, but onboarding is still incomplete.",
+        header: { eyebrow: "Onboarding Reminder" },
+        body: `
+            ${greeting(tenantName)}
+            ${paragraph("Your tenant account is ready, but onboarding is still incomplete. Please continue onboarding to unlock your full tenant portal access.", { marginBottom: 20 })}
+            ${tempPassword ? card(credential("Temporary Password", tempPassword, { large: true, last: true }), { marginBottom: 20 }) : ""}
+            ${card(
+                `${button(onboardingUrl, "Continue Onboarding", { center: true, marginBottom: inviteUrl ? 16 : 0 })}
+                 ${inviteUrl ? muted(`Set or reset your password:<br><a href="${esc(inviteUrl)}" target="_blank" rel="noopener noreferrer" style="color:#7c3aed;word-break:break-all;">${esc(inviteUrl)}</a>`, { center: true }) : ""}`,
+                { center: true, padding: 24 },
+            )}
+            ${linkFallback(onboardingUrl, "Or copy this link:")}
+        `,
+    });
 
     const text = `Hi ${tenantName},
 
@@ -542,56 +348,28 @@ export async function sendProspectPaymentRequestEmail({
         minute: "2-digit",
     });
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>Action Required: Submit Move-in Payment</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-    <div style="background-color:#c4b0ff;padding:24px 32px;">
-      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;">iReside</h1>
-      <p style="margin:4px 0 0;color:#1e1b4b;font-size:12px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:2px;">Payment Confirmation Step</p>
-    </div>
-    <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi <strong>${esc(applicantName)}</strong>,</p>
-      <p style="margin:0 0 18px;color:#52525b;font-size:14px;line-height:1.6;">
-        Your application for <strong style="color:#0f172a;">${esc(propertyName)} - ${esc(unitName)}</strong> has passed review.
-        To continue, please submit move-in payment details for verification.
-      </p>
-      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:20px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#7c3aed;">Required Amounts</p>
-        <p style="margin:0 0 6px;color:#0f172a;font-size:14px;">Advance Rent: <strong>PHP ${advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></p>
-        <p style="margin:0;color:#0f172a;font-size:14px;">Security Deposit: <strong>PHP ${securityAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></p>
-      </div>
-      <div style="text-align:center;margin-bottom:16px;">
-        <a href="${esc(paymentPortalUrl)}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
-          Open Payment Portal &rarr;
-        </a>
-      </div>
-      <p style="margin:0 0 20px;color:#71717a;font-size:12px;word-break:break-all;text-align:center;">
-        Or click or copy this direct link:<br />
-        <a href="${esc(paymentPortalUrl)}" style="color:#7c3aed;text-decoration:underline;">${esc(paymentPortalUrl)}</a>
-      </p>
-      <p style="margin:0 0 10px;color:#71717a;font-size:12px;">This secure link expires on <strong style="color:#0f172a;">${esc(expiresLabel)}</strong>.</p>
-      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
-        We will only finalize approval after both required payments are landlord-confirmed.
-      </p>
-    </div>
-    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
-      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
-    </div>
-  </div>
-</body>
-</html>`;
+    const html = renderEmail({
+        title: "Action Required: Submit Move-in Payment",
+        preheader: `Your application for ${propertyName} - ${unitName} passed review. Submit your move-in payment to continue.`,
+        header: { eyebrow: "Payment Confirmation Step" },
+        body: `
+            ${greeting(applicantName)}
+            ${paragraph(`Your application for <strong style="color:#0f172a;">${esc(propertyName)} - ${esc(unitName)}</strong> has passed review. To continue, please submit move-in payment details for verification.`, { marginBottom: 18 })}
+            ${card(
+                `${eyebrow("Required Amounts", "#7c3aed")}
+                 <div style="height:4px;line-height:4px;font-size:4px;">&nbsp;</div>
+                 ${keyValueRows([
+                     { label: "Advance Rent", value: `PHP ${advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
+                     { label: "Security Deposit", value: `PHP ${securityAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
+                 ])}`,
+                { marginBottom: 20, padding: 18 },
+            )}
+            ${button(paymentPortalUrl, "Open Payment Portal →", { center: true, marginBottom: 16 })}
+            ${linkFallback(paymentPortalUrl, "Or click or copy this direct link:")}
+            ${muted(`This secure link expires on <strong style="color:#0f172a;">${esc(expiresLabel)}</strong>.`, { marginBottom: 10 })}
+            ${muted("We will only finalize approval after both required payments are landlord-confirmed.")}
+        `,
+    });
 
     const text = `Hi ${applicantName},
 
@@ -621,46 +399,20 @@ export async function sendRegistrationOTP({
 }) {
     const subject = `${otp} is your iReside verification code`;
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>Verify your email</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <div style="max-width:480px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-    <div style="background-color:#c4b0ff;padding:24px 32px;text-align:center;">
-      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-    </div>
-    <div style="padding:32px;text-align:center;">
-      <h2 style="margin:0 0 8px;font-size:18px;font-weight:700;color:#09090b;">Verify your email</h2>
-      <p style="margin:0 0 28px;color:#52525b;font-size:14px;line-height:1.6;">
-        Use the verification code below to continue your landlord registration.
-      </p>
+    const html = renderEmail({
+        title: "Verify your email",
+        preheader: `${otp} is your iReside verification code. It expires in 10 minutes.`,
+        header: { align: "center" },
+        width: 480,
+        body: `
+            ${heading("Verify your email", { center: true })}
+            <p style="margin:0 0 28px;color:#52525b;font-size:14px;line-height:1.6;text-align:center;">Use the verification code below to continue your landlord registration.</p>
+            ${otpBox(otp)}
+            ${muted("This code will expire in 10 minutes. If you did not request this code, please ignore this email.", { center: true })}
+        `,
+    });
 
-      <div style="background-color:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:24px;margin-bottom:28px;">
-        <span style="font-size:32px;font-weight:900;color:#09090b;font-family:Consolas,'Liberation Mono',Menlo,monospace;letter-spacing:8px;margin-left:8px;">${esc(otp)}</span>
-      </div>
-
-      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
-        This code will expire in 10 minutes. If you did not request this code, please ignore this email.
-      </p>
-    </div>
-    <div style="padding:16px;background-color:#fafafa;text-align:center;border-top:1px solid #f4f4f5;">
-      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
-    </div>
-  </div>
-</body>
-</html>`;
-
-const text = `Your iReside verification code is: ${otp}\n\nThis code expires in 10 minutes.`;
+    const text = `Your iReside verification code is: ${otp}\n\nThis code expires in 10 minutes.`;
 
     await sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
@@ -676,10 +428,10 @@ export async function sendTwoFactorOTP({
 }) {
     const subject = `${otp} is your iReside two-factor verification code`;
 
-    const title = action === "enable" 
-        ? "Enable Two-Factor Authentication" 
-        : action === "login" 
-        ? "Two-Factor Authentication Sign-In" 
+    const title = action === "enable"
+        ? "Enable Two-Factor Authentication"
+        : action === "login"
+        ? "Two-Factor Authentication Sign-In"
         : "Two-Factor Security Verification";
 
     const description = action === "enable"
@@ -688,45 +440,18 @@ export async function sendTwoFactorOTP({
         ? "Use the verification code below to complete your sign-in to your iReside account."
         : "Use the verification code below to verify your identity for Two-Factor Authentication.";
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>${esc(title)}</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <div style="max-width:480px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-    <div style="background-color:#c4b0ff;padding:24px 32px;text-align:center;">
-      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-      <p style="margin:4px 0 0;color:#1e1b4b;font-size:12px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:1.5px;">Two-Factor Authentication</p>
-    </div>
-    <div style="padding:32px;text-align:center;">
-      <h2 style="margin:0 0 8px;font-size:18px;font-weight:700;color:#09090b;">${esc(title)}</h2>
-      <p style="margin:0 0 28px;color:#52525b;font-size:14px;line-height:1.6;">
-        ${esc(description)}
-      </p>
-
-      <div style="background-color:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:24px;margin-bottom:28px;">
-        <span style="font-size:32px;font-weight:900;color:#09090b;font-family:Consolas,'Liberation Mono',Menlo,monospace;letter-spacing:8px;margin-left:8px;">${esc(otp)}</span>
-      </div>
-
-      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
-        This code will expire in 5 minutes. If you did not request this code, please secure your account credentials immediately.
-      </p>
-    </div>
-    <div style="padding:16px;background-color:#fafafa;text-align:center;border-top:1px solid #f4f4f5;">
-      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
-    </div>
-  </div>
-</body>
-</html>`;
+    const html = renderEmail({
+        title,
+        preheader: `${otp} is your two-factor code. It expires in 5 minutes.`,
+        header: { eyebrow: "Two-Factor Authentication", align: "center" },
+        width: 480,
+        body: `
+            ${heading(title, { center: true })}
+            <p style="margin:0 0 28px;color:#52525b;font-size:14px;line-height:1.6;text-align:center;">${esc(description)}</p>
+            ${otpBox(otp)}
+            ${muted("This code will expire in 5 minutes. If you did not request this code, please secure your account credentials immediately.", { center: true })}
+        `,
+    });
 
     const text = `${title}\n\n${description}\n\nVerification Code: ${otp}\n\nThis code will expire in 5 minutes. If you did not request this code, please secure your account credentials immediately.\n\n© ${new Date().getFullYear()} iReside Property Management`;
 
@@ -742,44 +467,18 @@ export async function sendEmailVerificationOTP({
 }) {
     const subject = `${otp} is your iReside email verification code`;
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>Verify your new email address</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <div style="max-width:480px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-    <div style="background-color:#c4b0ff;padding:24px 32px;text-align:center;">
-      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-    </div>
-    <div style="padding:32px;text-align:center;">
-      <h2 style="margin:0 0 8px;font-size:18px;font-weight:700;color:#09090b;">Verify Your New Email</h2>
-      <p style="margin:0 0 28px;color:#52525b;font-size:14px;line-height:1.6;">
-        Use the single-use verification code below to verify and link your new email address to your iReside landlord account.
-      </p>
-
-      <div style="background-color:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:24px;margin-bottom:28px;">
-        <span style="font-size:32px;font-weight:900;color:#09090b;font-family:Consolas,'Liberation Mono',Menlo,monospace;letter-spacing:8px;margin-left:8px;">${esc(otp)}</span>
-      </div>
-
-      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
-        This code expires in 10 minutes. If you did not request to link this email address, you can safely ignore this message.
-      </p>
-    </div>
-    <div style="padding:16px;background-color:#fafafa;text-align:center;border-top:1px solid #f4f4f5;">
-      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
-    </div>
-  </div>
-</body>
-</html>`;
+    const html = renderEmail({
+        title: "Verify your new email address",
+        preheader: `${otp} is your email verification code. It expires in 10 minutes.`,
+        header: { align: "center" },
+        width: 480,
+        body: `
+            ${heading("Verify Your New Email", { center: true })}
+            <p style="margin:0 0 28px;color:#52525b;font-size:14px;line-height:1.6;text-align:center;">Use the single-use verification code below to verify and link your new email address to your iReside landlord account.</p>
+            ${otpBox(otp)}
+            ${muted("This code expires in 10 minutes. If you did not request to link this email address, you can safely ignore this message.", { center: true })}
+        `,
+    });
 
     const text = `Your iReside email verification code is: ${otp}\n\nThis code expires in 10 minutes.`;
 
@@ -797,59 +496,32 @@ export async function sendLandlordRegistrationApproved({
 }) {
     const subject = "Your Landlord Registration is Approved — You can now access iReside";
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>Landlord Access Approved</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-    <div style="background-color:#c4b0ff;padding:24px 32px;">
-      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-      <p style="margin:4px 0 0;color:#1e1b4b;font-size:12px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:2px;">Landlord Access Approved</p>
-    </div>
-    <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi <strong>${esc(landlordName)}</strong>,</p>
-      <p style="margin:0 0 24px;color:#52525b;font-size:14px;line-height:1.6;">
-        Great news! Your landlord registration has been approved. You now have full access to the iReside landlord portal.
-      </p>
-
-      <div style="background-color:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
-        <p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#1e1b4b;">Start Managing Your Properties</p>
-        <a href="${esc(loginUrl)}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
-          Go to Landlord Dashboard &rarr;
-        </a>
-      </div>
-
-      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#7c3aed;">What you can do now</p>
-        <ul style="margin:0;padding-left:20px;color:#475569;font-size:13px;line-height:1.8;">
-          <li>Add and manage your properties</li>
-          <li>Create units and list them for rent</li>
-          <li>Invite tenants and process applications</li>
-          <li>Track payments and generate invoices</li>
-          <li>Handle maintenance requests</li>
-        </ul>
-      </div>
-
-      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
-        Log in with the credentials you created during registration. If you need help getting started, check out our landlord guide in the dashboard.
-      </p>
-    </div>
-    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
-      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
-    </div>
-  </div>
-</body>
-</html>`;
+    const html = renderEmail({
+        title: "Landlord Access Approved",
+        preheader: "Your landlord registration has been approved. Sign in to start managing your properties.",
+        header: { eyebrow: "Landlord Access Approved" },
+        body: `
+            ${greeting(landlordName)}
+            ${paragraph("Great news! Your landlord registration has been approved. You now have full access to the iReside landlord portal.")}
+            ${card(
+                `<p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#1e1b4b;">Start Managing Your Properties</p>
+                 ${button(loginUrl, "Go to Landlord Dashboard →", { center: true, marginBottom: 0 })}`,
+                { tone: "brand", center: true, padding: 24 },
+            )}
+            ${card(
+                `${eyebrow("What you can do now", "#7c3aed")}
+                 <div style="height:6px;line-height:6px;font-size:6px;">&nbsp;</div>
+                 ${bulletList([
+                     "Add and manage your properties",
+                     "Create units and list them for rent",
+                     "Invite tenants and process applications",
+                     "Track payments and generate invoices",
+                     "Handle maintenance requests",
+                 ])}`,
+            )}
+            ${muted("Log in with the credentials you created during registration. If you need help getting started, check out our landlord guide in the dashboard.")}
+        `,
+    });
 
     const text = `Hi ${landlordName},
 
@@ -885,64 +557,37 @@ export async function sendLandlordOnboardingMagicLink({
 }) {
     const subject = "Complete Your Landlord Setup — Action Required";
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>Complete Your Landlord Setup</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-    <div style="background-color:#c4b0ff;padding:24px 32px;">
-      <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-      <p style="margin:4px 0 0;color:#1e1b4b;font-size:12px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:2px;">Complete Your Setup</p>
-    </div>
-    <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:16px;color:#18181b;">Hi <strong>${esc(landlordName)}</strong>,</p>
-      <p style="margin:0 0 24px;color:#52525b;font-size:14px;line-height:1.6;">
-        Great news! Your landlord registration has been approved. To access your landlord dashboard, you need to complete a quick setup process.
-      </p>
-
-      <div style="background-color:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
-        <p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#1e1b4b;">Set Up Your Account</p>
-        <a href="${esc(onboardingUrl)}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
-          Complete Setup &rarr;
-        </a>
-      </div>
-
-      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">⏰ Link Expires</p>
-        <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a;">${esc(expiresAt)}</p>
-        <p style="margin:4px 0 0;font-size:12px;color:#71717a;">Please complete your setup before the link expires.</p>
-      </div>
-
-      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0 0 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#7c3aed;">What you'll do</p>
-        <ul style="margin:0;padding-left:20px;color:#475569;font-size:13px;line-height:1.8;">
-          <li>Create your account password</li>
-          <li>Verify your property details</li>
-          <li>Configure billing settings</li>
-          <li>Set up your profile</li>
-        </ul>
-      </div>
-
-      <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">
-        If you didn't expect this email or have questions, please contact support.
-      </p>
-    </div>
-    <div style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
-      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
-    </div>
-  </div>
-</body>
-</html>`;
+    const html = renderEmail({
+        title: "Complete Your Landlord Setup",
+        preheader: `Your registration is approved. Complete setup before ${expiresAt}.`,
+        header: { eyebrow: "Complete Your Setup" },
+        body: `
+            ${greeting(landlordName)}
+            ${paragraph("Great news! Your landlord registration has been approved. To access your landlord dashboard, you need to complete a quick setup process.")}
+            ${card(
+                `<p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#1e1b4b;">Set Up Your Account</p>
+                 ${button(onboardingUrl, "Complete Setup →", { center: true, marginBottom: 0 })}`,
+                { tone: "brand", center: true, padding: 24 },
+            )}
+            ${linkFallback(onboardingUrl, "Or copy this link:")}
+            ${card(
+                `${eyebrow("Link Expires")}
+                 <p style="margin:0;font-size:14px;font-weight:700;color:#0f172a;">${esc(expiresAt)}</p>
+                 ${muted("Please complete your setup before the link expires.")}`,
+            )}
+            ${card(
+                `${eyebrow("What you'll do", "#7c3aed")}
+                 <div style="height:6px;line-height:6px;font-size:6px;">&nbsp;</div>
+                 ${bulletList([
+                     "Create your account password",
+                     "Verify your property details",
+                     "Configure billing settings",
+                     "Set up your profile",
+                 ])}`,
+            )}
+            ${muted("If you didn't expect this email or have questions, please contact support.")}
+        `,
+    });
 
     const text = `Hi ${landlordName},
 
@@ -976,69 +621,25 @@ export async function sendPasswordResetEmail({
     userName?: string;
 }) {
     const subject = "Reset your iReside password";
-    const greeting = userName?.trim() ? `Hi ${userName.trim()},` : "Hello,";
+    const greetingText = userName?.trim() ? `Hi ${userName.trim()},` : "Hello,";
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>Reset your iReside password</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:520px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:12px;overflow:hidden;">
-    <tr>
-      <td style="padding:32px 32px 28px;">
-        <h1 style="margin:0 0 24px;color:#09090b;font-size:22px;font-weight:700;letter-spacing:-0.4px;">iReside</h1>
+    const html = renderEmail({
+        title: subject,
+        preheader: "We received a request to reset your password. This link expires in 1 hour.",
+        header: { eyebrow: "Password Reset", tone: "neutral" },
+        width: 520,
+        footer: `© ${new Date().getFullYear()} iReside. All rights reserved.`,
+        body: `
+            ${greeting(userName)}
+            ${paragraph("We received a request to reset the password for your account. Click the button below to choose a new password:")}
+            ${button(resetLink, "Reset password", { tone: "dark", marginBottom: 28 })}
+            <p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#71717a;">This link will expire in 1 hour. If you didn't ask to reset your password, you can safely ignore this email.</p>
+            ${divider()}
+            ${linkFallback(resetLink)}
+        `,
+    });
 
-        <p style="margin:0 0 16px;font-size:15px;line-height:1.5;color:#18181b;">${esc(greeting)}</p>
-        <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#52525b;">
-          We received a request to reset the password for your account. Click the button below to choose a new password:
-        </p>
-
-        <!-- Button -->
-        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
-          <tr>
-            <td align="left" bgcolor="#09090b" style="border-radius:8px;">
-              <a href="${esc(resetLink)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 24px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;background-color:#09090b;">
-                Reset password
-              </a>
-            </td>
-          </tr>
-        </table>
-
-        <p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#71717a;">
-          This link will expire in 1 hour. If you didn't ask to reset your password, you can safely ignore this email.
-        </p>
-
-        <hr style="border:none;border-top:1px solid #f4f4f5;margin:24px 0 20px;" />
-
-        <p style="margin:0;font-size:12px;line-height:1.5;color:#a1a1aa;">
-          Button not working? Paste this link into your browser:<br />
-          <a href="${esc(resetLink)}" target="_blank" rel="noopener noreferrer" style="color:#2563eb;word-break:break-all;text-decoration:underline;">
-            ${esc(resetLink)}
-          </a>
-        </p>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:left;">
-        <p style="margin:0;font-size:12px;color:#a1a1aa;">
-          &copy; ${new Date().getFullYear()} iReside. All rights reserved.
-        </p>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
-
-    const text = `${greeting}
+    const text = `${greetingText}
 
 We received a request to reset the password for your iReside account.
 
@@ -1062,67 +663,26 @@ export async function sendPasswordResetOtpEmail({
     userName?: string;
 }) {
     const subject = `${otp} is your iReside reset code`;
-    const greeting = userName?.trim() ? `Hi ${userName.trim()},` : "Hello,";
+    const greetingText = userName?.trim() ? `Hi ${userName.trim()},` : "Hello,";
     const formattedOtp = otp.length === 6 ? `${otp.slice(0, 3)} ${otp.slice(3)}` : otp;
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>Your iReside verification code</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:480px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:12px;overflow:hidden;">
-    <tr>
-      <td style="padding:32px 32px 28px;">
-        <h1 style="margin:0 0 20px;color:#09090b;font-size:22px;font-weight:700;letter-spacing:-0.4px;">iReside</h1>
+    const html = renderEmail({
+        title: "Your iReside verification code",
+        preheader: `${formattedOtp} is your password reset code. It expires in 10 minutes.`,
+        header: { eyebrow: "Password Reset", tone: "neutral" },
+        width: 480,
+        footer: `© ${new Date().getFullYear()} iReside. All rights reserved.`,
+        body: `
+            ${greeting(userName)}
+            ${paragraph("Enter the verification code below to reset your password:")}
+            ${otpBox(formattedOtp)}
+            <p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#71717a;">This code expires in <strong>10 minutes</strong> and can only be used once.</p>
+            ${divider()}
+            ${muted("If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.")}
+        `,
+    });
 
-        <p style="margin:0 0 12px;font-size:15px;line-height:1.5;color:#18181b;">${esc(greeting)}</p>
-        <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#52525b;">
-          Enter the verification code below to reset your password:
-        </p>
-
-        <!-- OTP Display Box -->
-        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;">
-          <tr>
-            <td align="center" style="background-color:#fafafa;border:1px dashed #d4d4d8;border-radius:10px;padding:18px 24px;">
-              <span style="font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:32px;font-weight:700;letter-spacing:6px;color:#09090b;">
-                ${esc(formattedOtp)}
-              </span>
-            </td>
-          </tr>
-        </table>
-
-        <p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#71717a;">
-          This code expires in <strong>10 minutes</strong> and can only be used once.
-        </p>
-
-        <hr style="border:none;border-top:1px solid #f4f4f5;margin:24px 0 20px;" />
-
-        <p style="margin:0;font-size:12px;line-height:1.5;color:#a1a1aa;">
-          If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
-        </p>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:left;">
-        <p style="margin:0;font-size:12px;color:#a1a1aa;">
-          &copy; ${new Date().getFullYear()} iReside. All rights reserved.
-        </p>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
-
-    const text = `${greeting}
+    const text = `${greetingText}
 
 Your password reset verification code is:
 
@@ -1145,71 +705,38 @@ export async function sendPasswordResetConfirmationEmail({
     userName?: string;
 }) {
     const subject = "Your iReside password was successfully changed";
-    const greeting = userName?.trim() ? `Hi ${userName.trim()},` : "Hello,";
+    const greetingText = userName?.trim() ? `Hi ${userName.trim()},` : "Hello,";
     const formattedDate = new Date().toLocaleString("en-US", {
         dateStyle: "medium",
         timeStyle: "short",
     });
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const resetUrl = `${appUrl}/forgot-password?email=${encodeURIComponent(to)}`;
+    const resetUrl = `${getAppBaseUrl()}/forgot-password?email=${encodeURIComponent(to)}`;
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>Your password was changed</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:480px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:12px;overflow:hidden;">
-    <tr>
-      <td style="padding:32px 32px 28px;">
-        <h1 style="margin:0 0 20px;color:#09090b;font-size:22px;font-weight:700;letter-spacing:-0.4px;">iReside</h1>
+    const html = renderEmail({
+        title: "Your password was changed",
+        preheader: `Your iReside password was updated on ${formattedDate}.`,
+        header: { eyebrow: "Security Notice", tone: "neutral" },
+        width: 480,
+        footer: `© ${new Date().getFullYear()} iReside. All rights reserved.`,
+        body: `
+            ${greeting(userName)}
+            ${paragraph(`The password for your iReside account was successfully updated on <strong>${esc(formattedDate)}</strong>.`, { marginBottom: 20 })}
+            ${card(
+                `<p style="margin:0;font-size:13px;line-height:1.5;color:#18181b;"><strong>Did you make this change?</strong><br>
+                 <span style="color:#71717a;">If so, no further action is needed and you can safely sign in with your new password.</span></p>`,
+                { marginBottom: 20, padding: 16 },
+            )}
+            ${card(
+                `<p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#991b1b;font-weight:700;">Is this not you?</p>
+                 <p style="margin:0 0 14px;font-size:12px;line-height:1.5;color:#7f1d1d;">If you did not perform this update, someone else may have gained unauthorized access to your credentials. Reset your password immediately to secure your account.</p>
+                 ${button(resetUrl, "Reset Password Now →", { tone: "danger", small: true, marginBottom: 0 })}`,
+                { tone: "danger", marginBottom: 0, padding: 16 },
+            )}
+        `,
+    });
 
-        <p style="margin:0 0 12px;font-size:15px;line-height:1.5;color:#18181b;">${esc(greeting)}</p>
-        <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#52525b;">
-          The password for your iReside account was successfully updated on <strong>${esc(formattedDate)}</strong>.
-        </p>
-
-        <div style="background-color:#fafafa;border:1px solid #e4e4e7;border-radius:8px;padding:16px;margin-bottom:20px;">
-          <p style="margin:0;font-size:13px;line-height:1.5;color:#18181b;">
-            <strong>Did you make this change?</strong><br />
-            <span style="color:#71717a;">If so, no further action is needed and you can safely sign in with your new password.</span>
-          </p>
-        </div>
-
-        <div style="background-color:#fef2f2;border:1px solid #fee2e2;border-radius:8px;padding:16px;margin-bottom:20px;">
-          <p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#991b1b;font-weight:700;">
-            Is this not you?
-          </p>
-          <p style="margin:0 0 14px;font-size:12px;line-height:1.5;color:#7f1d1d;">
-            If you did not perform this update, someone else may have gained unauthorized access to your credentials. Reset your password immediately to secure your account.
-          </p>
-          <a href="${esc(resetUrl)}" style="display:inline-block;background-color:#ef4444;color:#ffffff;font-size:13px;font-weight:700;padding:10px 18px;border-radius:8px;text-decoration:none;">
-            Reset Password Now &rarr;
-          </a>
-        </div>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:16px 32px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:left;">
-        <p style="margin:0;font-size:12px;color:#a1a1aa;">
-          &copy; ${new Date().getFullYear()} iReside. All rights reserved.
-        </p>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
-
-    const text = `${greeting}
+    const text = `${greetingText}
 
 The password for your iReside account was successfully updated on ${formattedDate}.
 
@@ -1242,63 +769,28 @@ export async function sendApplicationRejectedEmail({
     const subject = `Application Status Update — ${propertyName}${unitName ? ` (${unitName})` : ""}`;
     const cleanUnit = unitName ? ` (${unitName})` : "";
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>Application Status Update</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:520px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-    <tr>
-      <td style="background-color:#ef4444;padding:20px 24px;">
-        <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-        <p style="margin:2px 0 0;color:#ffffff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.9;">Rental Application Status</p>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:28px 24px;">
-        <p style="margin:0 0 14px;font-size:15px;line-height:1.5;color:#18181b;">Hi <strong>${esc(applicantName)}</strong>,</p>
-        <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#52525b;">
-          Thank you for your interest in leasing at <strong>${esc(propertyName)}${esc(cleanUnit)}</strong>. The property manager has reviewed your application and regrettably was unable to approve it at this time.
-        </p>
-
-        <!-- Rejection Reason Card -->
-        <div style="background-color:#fef2f2;border:1px solid #fee2e2;border-radius:12px;padding:16px;margin-bottom:24px;">
-          <p style="margin:0 0 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#b91c1c;">Reason from Landlord</p>
-          <p style="margin:0;font-size:14px;line-height:1.5;color:#7f1d1d;font-weight:600;">${esc(rejectionReason)}</p>
-        </div>
-
-        ${resubmitUrl ? `
-        <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;text-align:center;margin-bottom:24px;">
-          <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#0f172a;">Would you like to re-submit or apply again?</p>
-          <p style="margin:0 0 16px;font-size:12px;color:#475569;line-height:1.5;">You may update your details or apply for another available unit using the link below.</p>
-          <a href="${esc(resubmitUrl)}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:14px;padding:12px 24px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
-            Submit New Application &rarr;
-          </a>
-        </div>
-        ` : ""}
-
-        <p style="margin:0;font-size:12px;line-height:1.6;color:#71717a;">
-          If you have questions regarding this decision, please reach out directly to the landlord or property management office.
-        </p>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:16px 24px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
-        <p style="margin:0;font-size:11px;color:#a1a1aa;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+    const html = renderEmail({
+        title: "Application Status Update",
+        preheader: `An update on your application for ${propertyName}${cleanUnit}.`,
+        header: { eyebrow: "Rental Application Status", tone: "danger" },
+        width: 520,
+        body: `
+            ${greeting(applicantName)}
+            ${paragraph(`Thank you for your interest in leasing at <strong>${esc(propertyName)}${esc(cleanUnit)}</strong>. The property manager has reviewed your application and regrettably was unable to approve it at this time.`, { marginBottom: 20 })}
+            ${card(
+                `${eyebrow("Reason from Landlord", "#b91c1c")}
+                 <p style="margin:0;font-size:14px;line-height:1.5;color:#7f1d1d;font-weight:600;">${esc(rejectionReason)}</p>`,
+                { tone: "danger", padding: 16 },
+            )}
+            ${resubmitUrl ? card(
+                `<p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#0f172a;">Would you like to re-submit or apply again?</p>
+                 <p style="margin:0 0 16px;font-size:12px;color:#475569;line-height:1.5;">You may update your details or apply for another available unit using the link below.</p>
+                 ${button(resubmitUrl, "Submit New Application →", { center: true, marginBottom: 0 })}`,
+                { center: true },
+            ) : ""}
+            ${muted("If you have questions regarding this decision, please reach out directly to the landlord or property management office.")}
+        `,
+    });
 
     const text = `Hi ${applicantName},
 
@@ -1336,107 +828,62 @@ export async function sendPaymentReviewResolutionEmail({
     paymentPortalUrl?: string | null;
 }) {
     const cleanUnit = unitName ? ` (${unitName})` : "";
-    const peso = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
-    const formattedAmount = typeof amount === "number" ? peso.format(amount) : null;
+    const pesoFormat = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
+    const formattedAmount = typeof amount === "number" ? pesoFormat.format(amount) : null;
 
     let subject = `Payment Update — ${propertyName}${cleanUnit}`;
     let title = "Payment Status Update";
     let message = `An update has been issued regarding your payment for ${propertyName}${cleanUnit}.`;
-    let headerColor = "#3b82f6"; // blue default
+    let tone: "info" | "danger" | "success" | "warning" = "info";
 
     if (resolutionType === "returned") {
         subject = `Payment Returned — ${propertyName}${cleanUnit}`;
         title = "Payment Proof Returned";
         message = `Your payment of ${formattedAmount ?? "the submitted amount"} has been returned by your landlord.`;
-        headerColor = "#ef4444"; // red
+        tone = "danger";
     } else if (resolutionType === "overpayment_refunded") {
         subject = `Overpayment Refund Issued — ${propertyName}${cleanUnit}`;
         title = "Overpayment Refund Issued";
         message = `Your payment was verified, and an excess refund of ${formattedAmount ?? "the overpaid amount"} has been returned.`;
-        headerColor = "#10b981"; // emerald
+        tone = "success";
     } else if (resolutionType === "shortfall_requested") {
         subject = `Remaining Balance Required — ${propertyName}${cleanUnit}`;
         title = "Additional Payment Required";
         message = `Your landlord verified your partial payment, but an outstanding balance of ${formattedAmount ?? "the remaining amount"} is still required.`;
-        headerColor = "#f59e0b"; // amber
+        tone = "warning";
     }
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>${esc(title)}</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:520px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-    <tr>
-      <td style="background-color:${esc(headerColor)};padding:20px 24px;">
-        <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-        <p style="margin:2px 0 0;color:#ffffff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.9;">Payment Reconciliation</p>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:28px 24px;">
-        <p style="margin:0 0 14px;font-size:15px;line-height:1.5;color:#18181b;">Hi <strong>${esc(applicantName)}</strong>,</p>
-        <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#52525b;">${esc(message)}</p>
+    const rows: Array<{ label: string; value: string; mono?: boolean; accent?: boolean }> = [
+        { label: "System Reference", value: transactionReference, mono: true, accent: true },
+    ];
+    if (formattedAmount) rows.push({ label: "Amount", value: formattedAmount });
 
-        <!-- Transaction Details Card -->
-        <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:20px;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-            <span style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">System Reference</span>
-            <span style="font-size:12px;font-weight:700;color:#7c3aed;font-family:Consolas,'Liberation Mono',Menlo,monospace;">${esc(transactionReference)}</span>
-          </div>
-          ${formattedAmount ? `
-          <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-            <span style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Amount</span>
-            <span style="font-size:15px;font-weight:900;color:#0f172a;">${esc(formattedAmount)}</span>
-          </div>
-          ` : ""}
-          ${note ? `
-          <div style="border-top:1px solid #e2e8f0;padding-top:10px;margin-top:10px;">
-            <span style="font-size:11px;color:#64748b;text-transform:uppercase;display:block;margin-bottom:4px;font-weight:600;">Landlord Note</span>
-            <span style="font-size:13px;color:#334155;line-height:1.5;">${esc(note)}</span>
-          </div>
-          ` : ""}
-        </div>
-
-        ${proofUrl ? `
-        <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:24px;text-align:center;">
-          <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#0f172a;">Attached Refund / Return Receipt</p>
-          <a href="${esc(proofUrl)}" target="_blank" style="display:inline-block;background-color:#ffffff;color:#0f172a;font-size:12px;font-weight:700;padding:10px 18px;border-radius:8px;text-decoration:none;border:1px solid #cbd5e1;">
-            View Receipt Proof &rarr;
-          </a>
-        </div>
-        ` : ""}
-
-        ${paymentPortalUrl ? `
-        <div style="text-align:center;margin-bottom:24px;">
-          <a href="${esc(paymentPortalUrl)}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
-            Open Payment Portal &rarr;
-          </a>
-        </div>
-        ` : ""}
-
-        <p style="margin:0;font-size:12px;line-height:1.6;color:#71717a;">
-          If you have any questions, please contact your landlord or property administrator.
-        </p>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:16px 24px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
-        <p style="margin:0;font-size:11px;color:#a1a1aa;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+    const html = renderEmail({
+        title,
+        preheader: message,
+        header: { eyebrow: "Payment Reconciliation", tone },
+        width: 520,
+        body: `
+            ${greeting(applicantName)}
+            ${heading(title)}
+            ${paragraph(esc(message), { marginBottom: 20 })}
+            ${card(
+                `${keyValueRows(rows)}
+                 ${note ? `<div style="border-top:1px solid #e2e8f0;padding-top:10px;margin-top:10px;">
+                   <span style="font-size:11px;color:#64748b;text-transform:uppercase;display:block;margin-bottom:4px;font-weight:600;letter-spacing:0.5px;">Landlord Note</span>
+                   <span style="font-size:13px;color:#334155;line-height:1.5;">${esc(note)}</span>
+                 </div>` : ""}`,
+                { marginBottom: 20, padding: 18 },
+            )}
+            ${proofUrl ? card(
+                `<p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#0f172a;">Attached Refund / Return Receipt</p>
+                 ${button(proofUrl, "View Receipt Proof →", { tone: "outline", small: true, center: true, marginBottom: 0 })}`,
+                { center: true, padding: 16 },
+            ) : ""}
+            ${paymentPortalUrl ? button(paymentPortalUrl, "Open Payment Portal →", { center: true }) + linkFallback(paymentPortalUrl, "Or copy this link:") : ""}
+            ${muted("If you have any questions, please contact your landlord or property administrator.")}
+        `,
+    });
 
     const text = `Hi ${applicantName},
 
@@ -1472,83 +919,27 @@ export async function sendNewApplicationReceivedEmail({
     const cleanUnit = unitName ? ` (${unitName})` : "";
     const subject = `New Application Received — ${propertyName}${cleanUnit}`;
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>New Tenant Application</title>
-  <style>
-    :root { color-scheme: light; supported-color-schemes: light; }
-  </style>
-</head>
-<body style="margin:0;padding:40px 16px;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
-  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:520px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-    <tr>
-      <td style="background-color:#c4b0ff;padding:24px 28px;">
-        <h1 style="margin:0;color:#000000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-        <p style="margin:4px 0 0;color:#1e1b4b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;opacity:0.85;">New Tenant Application</p>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:28px 24px;">
-        <p style="margin:0 0 14px;font-size:15px;line-height:1.5;color:#18181b;">Hi <strong>${esc(landlordName)}</strong>,</p>
-        <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#52525b;">
-          You have received a new rental application for <strong>${esc(propertyName)}${esc(cleanUnit)}</strong>.
-        </p>
+    const rows: Array<{ label: string; value: string; accent?: boolean; strong?: boolean }> = [
+        { label: "Applicant Name", value: applicantName },
+        { label: "Email", value: applicantEmail, accent: true, strong: false },
+    ];
+    if (applicantPhone) rows.push({ label: "Phone", value: applicantPhone, strong: false });
+    if (moveInDate) rows.push({ label: "Target Move-In", value: moveInDate, strong: false });
+    rows.push({ label: "Property / Unit", value: `${propertyName}${cleanUnit}` });
 
-        <!-- Applicant Summary Card -->
-        <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
-            <tr>
-              <td style="padding-bottom:10px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Applicant Name</td>
-              <td style="padding-bottom:10px;font-size:13px;font-weight:700;color:#0f172a;text-align:right;">${esc(applicantName)}</td>
-            </tr>
-            <tr>
-              <td style="padding-bottom:10px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Email</td>
-              <td style="padding-bottom:10px;font-size:13px;font-weight:600;color:#7c3aed;text-align:right;">${esc(applicantEmail)}</td>
-            </tr>
-            ${applicantPhone ? `
-            <tr>
-              <td style="padding-bottom:10px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Phone</td>
-              <td style="padding-bottom:10px;font-size:13px;color:#0f172a;text-align:right;">${esc(applicantPhone)}</td>
-            </tr>
-            ` : ""}
-            ${moveInDate ? `
-            <tr>
-              <td style="padding-bottom:10px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Target Move-In</td>
-              <td style="padding-bottom:10px;font-size:13px;color:#0f172a;text-align:right;">${esc(moveInDate)}</td>
-            </tr>
-            ` : ""}
-            <tr>
-              <td style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Property / Unit</td>
-              <td style="font-size:13px;font-weight:700;color:#0f172a;text-align:right;">${esc(propertyName)}${esc(cleanUnit)}</td>
-            </tr>
-          </table>
-        </div>
-
-        <div style="text-align:center;margin-bottom:24px;">
-          <a href="${esc(dossierUrl)}" style="display:inline-block;background-color:#7c3aed;color:#ffffff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.2px;">
-            Review Application Dossier &rarr;
-          </a>
-        </div>
-
-        <p style="margin:0;font-size:12px;line-height:1.6;color:#71717a;">
-          You can approve, request payment, or decline this application with feedback directly from your landlord command center.
-        </p>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:16px 24px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
-        <p style="margin:0;font-size:11px;color:#a1a1aa;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+    const html = renderEmail({
+        title: "New Tenant Application",
+        preheader: `${applicantName} applied for ${propertyName}${cleanUnit}.`,
+        header: { eyebrow: "New Tenant Application" },
+        width: 520,
+        body: `
+            ${greeting(landlordName)}
+            ${paragraph(`You have received a new rental application for <strong>${esc(propertyName)}${esc(cleanUnit)}</strong>.`, { marginBottom: 20 })}
+            ${card(keyValueRows(rows))}
+            ${button(dossierUrl, "Review Application Dossier →", { center: true })}
+            ${muted("You can approve, request payment, or decline this application with feedback directly from your landlord command center.")}
+        `,
+    });
 
     const text = `Hi ${landlordName},
 
@@ -1564,5 +955,55 @@ Review the application dossier here: ${dossierUrl}
     return sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
 }
 
+export async function sendPaymentProofSubmittedEmail({
+    to,
+    applicantName,
+    propertyName,
+    unitName,
+    formattedTotal,
+    method,
+    systemTransactionReference,
+    externalReference,
+    reviewUrl,
+}: {
+    to: string;
+    applicantName: string;
+    propertyName: string;
+    unitName: string;
+    formattedTotal: string;
+    method?: string | null;
+    systemTransactionReference: string;
+    externalReference?: string | null;
+    reviewUrl?: string | null;
+}) {
+    const subject = `Payment Proof Submitted — ${propertyName} (${unitName})`;
 
+    const rows: Array<{ label: string; value: string; mono?: boolean; accent?: boolean; strong?: boolean }> = [
+        { label: "Txn Ref", value: systemTransactionReference, mono: true, accent: true },
+    ];
+    if (externalReference) rows.push({ label: "GCash Ref", value: externalReference, mono: true });
+    if (method) rows.push({ label: "Method", value: method, strong: false });
 
+    const html = renderEmail({
+        title: "New Proof of Payment Received",
+        preheader: `${applicantName} submitted ${formattedTotal} for ${propertyName} (${unitName}).`,
+        header: { eyebrow: "Move-In Payment Verification" },
+        width: 520,
+        body: `
+            ${heading("New Proof of Payment Received")}
+            ${paragraph(`<strong>${esc(applicantName)}</strong> has submitted payment verification for <strong>${esc(propertyName)} (${esc(unitName)})</strong>.`, { marginBottom: 20 })}
+            ${card(
+                `${eyebrow("Total Amount")}
+                 <p style="margin:0 0 14px;font-size:24px;line-height:1.2;font-weight:900;color:#7c3aed;">${esc(formattedTotal)}</p>
+                 <div style="border-top:1px solid #e2e8f0;padding-top:12px;">${keyValueRows(rows)}</div>`,
+                { marginBottom: 20, padding: 16 },
+            )}
+            ${reviewUrl ? button(reviewUrl, "Review Payment →", { center: true }) : ""}
+            ${muted("Please review the submitted receipt in your Landlord Operations dashboard to confirm or decline the payment.")}
+        `,
+    });
+
+    const text = `Payment proof submitted by ${applicantName} for ${propertyName} (${unitName}).\nTotal Amount: ${formattedTotal}\n${method ? `Method: ${method}\n` : ""}Txn Ref: ${systemTransactionReference}${externalReference ? `\nGCash Ref: ${externalReference}` : ""}${reviewUrl ? `\n\nReview: ${reviewUrl}` : ""}\n\n— iReside Property Management`;
+
+    return sendEmail({ recipientEmail: to, subject, htmlBody: html, textBody: text });
+}

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { zUuid } from "@/lib/validation/zod-fields";
+import { buildAppUrl } from "@/lib/app-url";
 
 /** Both handlers use the service-role client, so they must be restricted to admins. */
 async function requireAdmin(request: Request): Promise<Response | null> {
@@ -135,8 +136,7 @@ export async function POST(
 
             // Send the onboarding email
             const { sendLandlordOnboardingMagicLink } = await import("@/lib/email");
-            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ireside.app";
-            const onboardingUrl = `${baseUrl}/landlord/onboarding/${onboardingToken}`;
+            const onboardingUrl = buildAppUrl(`/landlord/onboarding/${onboardingToken}`);
 
             const expiresAtFormatted = new Date(expiresAt).toLocaleDateString('en-US', { 
                 month: 'long', 

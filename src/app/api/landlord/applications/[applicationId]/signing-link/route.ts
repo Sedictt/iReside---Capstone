@@ -8,6 +8,7 @@ import { generateTemporaryPassword } from "@/lib/security/passwords";
 import { hashToken } from "@/lib/jwt";
 import { logAuditEvent } from "@/lib/audit-logging";
 import { sendSigningLinkEmail } from "@/lib/email";
+import { getAppBaseUrl } from "@/lib/app-url";
 
 /**
  * POST /api/landlord/applications/[applicationId]/signing-link
@@ -386,8 +387,7 @@ export async function POST(
   }
 
   // Generate signing URL
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const signingUrl = `${baseUrl}/signing/tenant/${application.lease_id}?token=${token}`;
+  const signingUrl = `${getAppBaseUrl(new URL(request.url).origin)}/signing/tenant/${application.lease_id}?token=${token}`;
 
   // Send signing link email to tenant
   const propertyName = lease?.units?.properties?.name || "Property";

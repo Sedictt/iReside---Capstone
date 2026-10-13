@@ -3,6 +3,7 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { escapeLikePattern, passwordResetRequestSchema } from "@/lib/validation/schemas/account.schema";
 import { parseJsonBody } from "@/lib/validation/server";
 import { sendPasswordResetEmail } from "@/lib/email";
+import { buildAuthCallbackUrl } from "@/lib/app-url";
 
 export async function POST(request: Request) {
     try {
@@ -13,13 +14,9 @@ export async function POST(request: Request) {
         const normalizedEmail = email.trim().toLowerCase();
 
         // The recovery link must point at *our* configured origin. The Origin
-        // header is attacker-controlled and is only used when no app URL is set.
-        const origin =
-            process.env.NEXT_PUBLIC_APP_URL ||
-            process.env.NEXT_PUBLIC_SITE_URL ||
-            request.headers.get("origin") ||
-            "http://localhost:3000";
-        const redirectTo = `${origin.replace(/\/+$/, "")}/auth/callback?type=recovery&next=/auth/reset-password`;
+        // header is attacker-controlled and is only used when no app URL is set
+        // (and never when it points at localhost in production).
+        const redirectTo = buildAuthCallbackUrl("/auth/reset-password", "recovery", request.headers.get("origin"));
 
         const supabaseAdmin = createServiceRoleSupabaseClient();
 

@@ -19,6 +19,7 @@ import {
     type InvitePaymentTerms,
 } from "@/lib/tenant-invite-payment-terms";
 import { sendNewApplicationReceivedEmail } from "@/lib/email";
+import { buildAppUrl } from "@/lib/app-url";
 import type { Database } from "@/types/database";
 import { parseJsonBody } from "@/lib/validation/server";
 import { inviteApplicationSchema, isUrlToken } from "@/lib/validation/schemas/tenant-lifecycle.schema";
@@ -437,8 +438,7 @@ export async function POST(
             }
 
             if (landlordEmail) {
-                const reqUrl = new URL(request.url);
-                const dossierUrl = `${reqUrl.origin}/landlord/applications?id=${application.id}`;
+                const dossierUrl = buildAppUrl(`/landlord/applications?id=${application.id}`, new URL(request.url).origin);
 
                 await sendNewApplicationReceivedEmail({
                     to: landlordEmail,

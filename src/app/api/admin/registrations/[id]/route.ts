@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ApplicationStatus, UserRole } from "@/types/database";
 import crypto from "crypto";
+import { buildAppUrl } from "@/lib/app-url";
 
 const MUTABLE_STATUSES: ApplicationStatus[] = ["pending", "reviewing", "approved", "rejected"];
 
@@ -138,8 +139,7 @@ export async function PATCH(
         console.log(`[Admin Registration] Attempting to send onboarding email to ${targetEmail} (${targetName})`);
 
         if (targetEmail && targetName) {
-            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ireside.app";
-            const onboardingUrl = `${baseUrl}/landlord/onboarding/${onboardingToken}`;
+            const onboardingUrl = buildAppUrl(`/landlord/onboarding/${onboardingToken}`);
             
             const expiresAtFormatted = new Date(expiresAt).toLocaleDateString('en-US', { 
                 month: 'long', 

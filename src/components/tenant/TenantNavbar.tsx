@@ -27,6 +27,7 @@ import {
     Download,
     AlertTriangle,
     Calendar,
+    Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -79,6 +80,86 @@ function formatTimeAgo(value: string) {
         month: "short",
         day: "numeric",
     });
+}
+
+type TenantPropertyInfo = { name: string; detail: string | null };
+
+// Kept at module scope so the sidebar doesn't refetch (and flash) when it remounts between pages.
+let cachedTenantProperty: { userId: string; info: TenantPropertyInfo | null } | null = null;
+
+function useTenantProperty() {
+    const { user } = useAuth();
+    const userId = user?.id;
+    const cached = userId && cachedTenantProperty?.userId === userId ? cachedTenantProperty.info : undefined;
+    const [property, setProperty] = useState<TenantPropertyInfo | null | undefined>(cached);
+
+    useEffect(() => {
+        if (!userId) return;
+        if (cachedTenantProperty?.userId === userId) {
+            setProperty(cachedTenantProperty.info);
+            return;
+        }
+        let cancelled = false;
+
+        fetch("/api/tenant/lease")
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                const unit = data?.lease?.unit;
+                const prop = unit?.property;
+                const info: TenantPropertyInfo | null = prop?.name
+                    ? { name: prop.name, detail: [unit?.name, prop.city].filter(Boolean).join(" · ") || null }
+                    : null;
+                cachedTenantProperty = { userId, info };
+                if (!cancelled) setProperty(info);
+            })
+            .catch(() => {
+                if (!cancelled) setProperty(null);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [userId]);
+
+    return property;
+}
+
+function TenantPropertyHeader({ size = "md" }: { size?: "sm" | "md" }) {
+    const property = useTenantProperty();
+
+    if (property === undefined) {
+        return (
+            <div className="flex items-center gap-2.5 min-w-0 w-full">
+                <Skeleton className={cn("shrink-0 rounded-xl", size === "sm" ? "size-7" : "size-9")} />
+                <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-3 w-3/4 rounded-full" />
+                    {size === "md" && <Skeleton className="h-2.5 w-1/2 rounded-full opacity-60" />}
+                </div>
+            </div>
+        );
+    }
+
+    if (!property) {
+        return <BrandLogo size={size} className="w-full min-w-0" />;
+    }
+
+    return (
+        <div className="flex items-center gap-2.5 min-w-0 w-full overflow-hidden">
+            <div className={cn("flex shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary", size === "sm" ? "size-7" : "size-9")}>
+                <Building2 className={size === "sm" ? "size-4" : "size-5"} />
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col text-left overflow-hidden">
+                <span className={cn("block truncate font-black tracking-tight text-foreground", size === "sm" ? "text-xs" : "text-sm leading-tight")} title={property.name}>
+                    {property.name}
+                </span>
+                {property.detail && (
+                    <span className="block truncate text-[10px] font-medium leading-tight text-muted-foreground" title={property.detail}>
+                        {property.detail}
+                    </span>
+                )}
+            </div>
+        </div>
+    );
 }
 
 const NAV_SECTIONS = [
@@ -254,7 +335,7 @@ export function TenantSidebar() {
             <header className="md:hidden sticky top-0 z-[90] h-16 border-b border-border/80 bg-background">
                 <div className="h-full px-4 flex items-center justify-between gap-3">
                     <Link href="/tenant/dashboard" className="flex items-center min-w-0 flex-1 overflow-hidden">
-                        <BrandLogo size="sm" className="w-full min-w-0" />
+                        <TenantPropertyHeader size="sm" />
                     </Link>
                     <div className="flex items-center gap-2 sm:gap-3">
                         <LanguageToggle variant="compact" />
@@ -328,7 +409,7 @@ export function TenantSidebar() {
             <aside className="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 flex-col text-foreground neumorphic-panel" data-tour-id="tour-tenant-navigation">
                 <div className="h-20 px-5 border-b border-border/70 flex items-center justify-between gap-2">
                     <div className="flex items-center min-w-0 flex-1 overflow-hidden">
-                        <BrandLogo size="md" className="w-full min-w-0" />
+                        <TenantPropertyHeader />
                     </div>
                     <ThemeToggle variant="sidebar" dataTourId="tour-theme-toggle" className="shrink-0" />
                 </div>
@@ -473,7 +554,7 @@ export function TenantSidebar() {
                 >
                     <div className="mb-6 flex items-center justify-between">
                         <Link href="/tenant/dashboard" className="flex items-center min-w-0" onClick={() => setIsMobileOpen(false)}>
-                            <BrandLogo size="md" />
+                            <TenantPropertyHeader />
                         </Link>
                         <button
                             type="button"

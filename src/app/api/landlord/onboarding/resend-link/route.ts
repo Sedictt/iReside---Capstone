@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import crypto from "crypto";
 import { onboardingResendSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { buildAppUrl } from "@/lib/app-url";
 
 const resendSchema = onboardingResendSchema;
 
@@ -66,9 +67,7 @@ export async function POST(request: Request) {
         }
 
         // Send new magic link email
-        const onboardingUrl = process.env.NEXT_PUBLIC_BASE_URL 
-            ? `${process.env.NEXT_PUBLIC_BASE_URL}/landlord/onboarding/${onboardingToken}` 
-            : `https://ireside.app/landlord/onboarding/${onboardingToken}`;
+        const onboardingUrl = buildAppUrl(`/landlord/onboarding/${onboardingToken}`);
 
         const expiresAtFormatted = new Date(expiresAt).toLocaleDateString('en-US', { 
             month: 'long', 

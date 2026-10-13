@@ -21,6 +21,7 @@ import {
     type PaymentPendingConfig,
 } from "@/lib/application-payment-pending";
 import { parseJsonBody } from "@/lib/validation/server";
+import { getAppBaseUrl, buildAuthCallbackUrl } from "@/lib/app-url";
 import { applicationActionSchema, isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import {
     buildInviteUrl,
@@ -657,8 +658,7 @@ export async function POST(
             },
         });
 
-        const reqUrl = new URL(request.url);
-        paymentPortalUrl = buildPortalUrl(reqUrl.origin, token);
+        paymentPortalUrl = buildPortalUrl(getAppBaseUrl(new URL(request.url).origin), token);
 
         if (applicantEmail) {
             try {
@@ -693,7 +693,7 @@ export async function POST(
         // If rejected, dispatch notification email with decline reason and resubmission invite link
         if (body.status === "rejected" && application.applicant_email) {
             try {
-                const reqUrl = new URL(request.url);
+                const appOrigin = getAppBaseUrl(new URL(request.url).origin);
                 let resubmitUrl: string | null = null;
 
                 const propertyId = (application as any).unit?.property?.id;
@@ -711,7 +711,7 @@ export async function POST(
                         .maybeSingle() as any;
 
                     if (inviteRow?.public_token) {
-                        resubmitUrl = buildInviteUrl(reqUrl.origin, inviteRow.public_token);
+                        resubmitUrl = buildInviteUrl(appOrigin, inviteRow.public_token);
                     } else {
                         // Create a fresh active invite so the applicant always has a direct application link to reapply
                         const token = generateInviteToken();
@@ -731,13 +731,13 @@ export async function POST(
                             status: "active",
                         });
                         if (!inviteErr) {
-                            resubmitUrl = buildInviteUrl(reqUrl.origin, token);
+                            resubmitUrl = buildInviteUrl(appOrigin, token);
                         }
                     }
                 }
 
                 if (!resubmitUrl) {
-                    resubmitUrl = `${reqUrl.origin}/`;
+                    resubmitUrl = `${appOrigin}/`;
                 }
 
                 const propertyName = (application as any).unit?.property?.name || "Property";
@@ -1008,6 +1008,7 @@ export async function POST(
                     const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
                         type: "recovery",
                         email: tenantEmail,
+                        options: { redirectTo: buildAuthCallbackUrl("/auth/reset-password") },
                     });
                     if (linkError) {
                         console.error("[actions] generateLink error:", linkError);

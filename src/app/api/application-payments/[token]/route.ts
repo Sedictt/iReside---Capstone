@@ -11,16 +11,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { parseWithSchema } from "@/lib/validation/server";
 import { PROOF_LIMITS, applicationPaymentSubmitSchema, proofFileRule, proofContentRule } from "@/lib/validation/schemas/billing.schema";
 
-/** Escapes user-supplied text before it is interpolated into the landlord email HTML. */
-function escapeHtml(value: string) {
-    return value
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-}
-
 type RouteContext = {
     params: Promise<{ token: string }>;
 };
@@ -472,45 +462,26 @@ export async function POST(request: Request, context: RouteContext) {
         }
 
         if (resolvedLandlordEmail) {
-            const { sendEmail } = await import("@/lib/email/transport");
+            const { sendPaymentProofSubmittedEmail } = await import("@/lib/email");
+            const { buildAppUrl } = await import("@/lib/app-url");
             const propertyTitle = application.unit?.property?.name ?? landlordProf?.business_name ?? "Property";
             const unitTitle = application.unit?.name ?? "Unit";
             const applicantTitle = application.applicant_name ?? "Applicant";
-            const safeReference = referenceNumber ? escapeHtml(referenceNumber) : null;
+            const reviewUrl = buildAppUrl(
+                `/landlord/applications?id=${application.id}`,
+                new URL(request.url).origin,
+            );
 
-            emailNotificationSuccess = await sendEmail({
-                recipientEmail: resolvedLandlordEmail,
-                subject: `Payment Proof Submitted — ${propertyTitle} (${unitTitle})`,
-                htmlBody: `
-<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background-color:#f4f4f5;color:#18181b;padding:32px 16px;">
-  <div style="max-width:520px;margin:0 auto;background-color:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-    <div style="background-color:#c4b0ff;padding:20px 24px;">
-      <h1 style="margin:0;color:#000000;font-size:20px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
-      <p style="margin:2px 0 0;color:#1e1b4b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.85;">Move-In Payment Verification</p>
-    </div>
-    <div style="padding:24px;">
-      <h2 style="margin:0 0 12px;color:#0f172a;font-size:18px;font-weight:700;">New Proof of Payment Received</h2>
-      <p style="margin:0 0 20px;color:#475569;font-size:14px;line-height:1.5;">
-        <strong>${escapeHtml(applicantTitle)}</strong> has submitted payment verification for <strong>${escapeHtml(propertyTitle)} (${escapeHtml(unitTitle)})</strong>.
-      </p>
-      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:20px;">
-        <p style="margin:0 0 6px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Total Amount</p>
-        <p style="margin:0 0 14px;font-size:24px;font-weight:900;color:#7c3aed;">${formattedTotal}</p>
-        <div style="display:flex;justify-content:space-between;border-top:1px solid #e2e8f0;padding-top:10px;">
-          <span style="font-size:13px;color:#64748b;">Txn Ref: <strong style="color:#7c3aed;font-family:Consolas,'Liberation Mono',Menlo,monospace;">${systemTransactionReference}</strong></span>
-          ${safeReference ? `<span style="font-size:13px;color:#64748b;">GCash Ref: <strong style="color:#0f172a;font-family:Consolas,'Liberation Mono',Menlo,monospace;">${safeReference}</strong></span>` : ""}
-        </div>
-      </div>
-      <p style="margin:0;color:#64748b;font-size:12px;line-height:1.5;">
-        Please review the submitted receipt in your Landlord Operations dashboard to confirm or decline the payment.
-      </p>
-    </div>
-    <div style="padding:14px 24px;background-color:#fafafa;border-top:1px solid #f4f4f5;text-align:center;">
-      <p style="margin:0;color:#a1a1aa;font-size:11px;">&copy; ${new Date().getFullYear()} iReside Property Management</p>
-    </div>
-  </div>
-</div>`,
-                textBody: `Payment proof submitted by ${applicantTitle} for ${propertyTitle} (${unitTitle}).\nTotal Amount: ${formattedTotal}\nMethod: ${method}\nTxn Ref: ${systemTransactionReference}\nGCash Ref: ${referenceNumber || "N/A"}\nPlease log in to review.`,
+            emailNotificationSuccess = await sendPaymentProofSubmittedEmail({
+                to: resolvedLandlordEmail,
+                applicantName: applicantTitle,
+                propertyName: propertyTitle,
+                unitName: unitTitle,
+                formattedTotal,
+                method,
+                systemTransactionReference,
+                externalReference: referenceNumber,
+                reviewUrl,
             });
             console.log(`[POST application-payments] Landlord payment email sent to ${resolvedLandlordEmail}: ${emailNotificationSuccess}`);
         } else {

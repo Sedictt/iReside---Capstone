@@ -1,12 +1,11 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import { getAppBaseUrl } from '@/lib/app-url';
 
 /**
  * JWT utilities for lease signing links
  * Provides secure token generation and verification for tenant lease signing
  */
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 // Local-development convenience only. In production a missing secret fails
 // closed: a public fallback would let anyone forge lease signing links.
@@ -116,7 +115,7 @@ export function verifySigningToken(token: string): VerifyTokenResult {
  */
 export function generateSigningLink(leaseId: string, tenantId: string): string {
   const token = generateSigningToken(leaseId, tenantId, 'tenant');
-  return `${APP_URL}/signing/tenant/${leaseId}?token=${token}`;
+  return `${getAppBaseUrl()}/signing/tenant/${leaseId}?token=${token}`;
 }
 
 /**
@@ -127,7 +126,7 @@ export function generateSigningLink(leaseId: string, tenantId: string): string {
  */
 export function generateLandlordSigningLink(leaseId: string, landlordId: string): string {
   const token = generateSigningToken(leaseId, landlordId, 'landlord');
-  return `${APP_URL}/signing/landlord/${leaseId}?token=${token}`;
+  return `${getAppBaseUrl()}/signing/landlord/${leaseId}?token=${token}`;
 }
 
 /**

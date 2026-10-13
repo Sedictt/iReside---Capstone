@@ -12,6 +12,7 @@ import { uploadBillingFile, BILLING_BUCKETS } from "@/lib/billing/storage";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { sendPaymentReviewResolutionEmail } from "@/lib/email";
+import { getAppBaseUrl } from "@/lib/app-url";
 import { validateMediaFile } from "@/lib/validation/media-validation";
 import { parseWithSchema } from "@/lib/validation/server";
 import { isId, paymentReviewSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
@@ -247,7 +248,7 @@ export async function POST(request: Request, context: RouteContext) {
                     } as any)
                     .eq("id", application.id);
 
-                paymentPortalUrl = buildPortalUrl(new URL(request.url).origin, token);
+                paymentPortalUrl = buildPortalUrl(getAppBaseUrl(new URL(request.url).origin), token);
             }
 
             await sendPaymentReviewResolutionEmail({

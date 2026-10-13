@@ -4,6 +4,7 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import type { Json } from "@/types/database";
 import { sendTenantCredentials, sendLandlordCredentialsCopy } from "@/lib/email";
 import { generateSigningLink } from "@/lib/jwt";
+import { buildAuthCallbackUrl } from "@/lib/app-url";
 import { isId } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { generateTemporaryPassword } from "@/lib/security/passwords";
 
@@ -155,6 +156,7 @@ export async function POST(
             const linkResult = await adminClient.auth.admin.generateLink({
                 type: "recovery",
                 email: tenantEmail,
+                options: { redirectTo: buildAuthCallbackUrl("/auth/reset-password") },
             });
             inviteUrl = (linkResult as any)?.properties?.action_link;
         } catch {

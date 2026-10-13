@@ -11,6 +11,7 @@ import { NotificationProvider } from "@/context/NotificationContext";
 import { ProfileCardProvider } from "@/context/ProfileCardContext";
 import { ProfileCard } from "@/components/ui/ProfileCard";
 import { NotificationBanner } from "@/components/navigation/NotificationBanner";
+import { PendingLeaseSignatureBanner } from "@/components/tenant/PendingLeaseSignatureBanner";
 
 export default function TenantLayout({
     children,
@@ -54,6 +55,7 @@ export default function TenantLayout({
                                 !useImmersiveLayout && "w-full px-4 sm:px-6 lg:px-8 md:pr-[104px] lg:pr-[112px]"
                             )}>
                                 <NotificationBanner />
+                                {!useImmersiveLayout && <PendingLeaseSignatureBanner />}
                             </div>
                             <Suspense fallback={
                                 <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">

@@ -5,8 +5,7 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { sendLandlordCredentialsCopy, sendTenantOnboardingReminder } from "@/lib/email";
 import { TENANT_PRODUCT_TOUR_ROUTE } from "@/lib/product-tour";
 import { generateTemporaryPassword } from "@/lib/security/passwords";
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+import { buildAppUrl, buildAuthCallbackUrl } from "@/lib/app-url";
 
 /** Temporary password from a CSPRNG (see lib/security/passwords). */
 function generateTempPassword(): string {
@@ -105,6 +104,7 @@ export async function POST(request: Request, context: { params: Promise<{ applic
         const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
             type: "recovery",
             email: tenantEmail,
+            options: { redirectTo: buildAuthCallbackUrl("/auth/reset-password") },
         });
         if (linkError) {
             console.error("[resend-credentials] generateLink error:", linkError);
@@ -172,6 +172,7 @@ export async function POST(request: Request, context: { params: Promise<{ applic
         const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
             type: "recovery",
             email: tenantEmail,
+            options: { redirectTo: buildAuthCallbackUrl("/auth/reset-password") },
         });
         if (linkError) {
             console.error("[resend-credentials] generateLink error:", linkError);
@@ -192,7 +193,7 @@ export async function POST(request: Request, context: { params: Promise<{ applic
         .eq("id", userId)
         .maybeSingle();
 
-    const onboardingUrl = `${APP_URL}${TENANT_PRODUCT_TOUR_ROUTE}`;
+    const onboardingUrl = buildAppUrl(TENANT_PRODUCT_TOUR_ROUTE);
 
     try {
         await sendTenantOnboardingReminder({
