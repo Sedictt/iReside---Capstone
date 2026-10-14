@@ -8,6 +8,7 @@ import {
     Globe,
     ExternalLink
 } from "lucide-react";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type Socials = {
     facebook?: string;
@@ -23,6 +24,7 @@ type ReadOnlySocialsProps = {
 }
 
 export function ReadOnlySocials({ socials, className = "" }: ReadOnlySocialsProps) {
+    const { t } = useLanguageContext();
     const socialIcons = [
         { key: 'facebook' as keyof Socials, icon: Facebook, label: 'Facebook' },
         { key: 'instagram' as keyof Socials, icon: Instagram, label: 'Instagram' },
@@ -47,7 +49,7 @@ export function ReadOnlySocials({ socials, className = "" }: ReadOnlySocialsProp
                         target="_blank"
                         rel="noopener noreferrer"
                         className="size-12 rounded-2xl neumorphic-inset-card hover:neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all duration-300 group/social shadow-sm hover:-translate-y-1"
-                        title={social.label}
+                        title={t(social.label)}
                     >
                         <social.icon size={20} className="group-hover/social:scale-110 transition-transform" />
                     </a>

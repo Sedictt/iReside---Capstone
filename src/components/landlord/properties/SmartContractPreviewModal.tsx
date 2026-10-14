@@ -3,6 +3,7 @@
 import { X, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LeaseDocument } from "@/components/lease/LeaseDocument";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type SupportedPropertyEnum = "apartment" | "dormitory" | "boarding_house";
 
@@ -27,13 +28,16 @@ export function SmartContractPreviewModal({
     data,
     landlordName = "Authorized Landlord"
 }: SmartContractPreviewModalProps) {
+    const { t } = useLanguageContext();
     if (!isOpen) return null;
 
     // Construct the standard LeaseData expected by LeaseDocument
     const leaseData = {
         id: "DRAFT-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
         start_date: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD
-        end_date: new Date(Date.now() + 31536000000).toLocaleDateString('en-CA'), // +1 year
+        // Previews show the default open-ended (month-to-month) term.
+        end_date: null,
+        term_type: 'open_ended' as const,
         monthly_rent: data.baseRent,
         security_deposit: data.baseRent * 2,
         signed_at: null,
@@ -86,7 +90,7 @@ export function SmartContractPreviewModal({
             <button 
                 className="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity cursor-default" 
                 onClick={onClose}
-                aria-label="Close contract preview"
+                aria-label={t("Close contract preview")}
             />
 
             <div className={cn(
@@ -101,12 +105,13 @@ export function SmartContractPreviewModal({
                                 <Shield className="size-5 text-primary" />
                             </div>
                             <div>
-                                <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Digital Asset Agreement</h3>
-                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Universal iReside Format</p>
+                                <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{t("Digital Asset Agreement")}</h3>
+                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{t("Universal iReside Format")}</p>
                             </div>
                         </div>
                         <button
                             onClick={onClose}
+                            aria-label={t("Close")}
                             className="size-10 rounded-full neumorphic-inset-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                         >
                             <X className="size-5" />
@@ -125,13 +130,13 @@ export function SmartContractPreviewModal({
                 <div className="p-6 border-t border-border/60 bg-card flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
                          <div className="size-2 rounded-full bg-primary animate-pulse" />
-                         <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest italic">Draft is synchronized with real-time property rules.</p>
+                         <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest italic">{t("Draft is synchronized with real-time property rules.")}</p>
                     </div>
                     <button
                         onClick={onClose}
                         className="px-8 py-3 bg-primary text-black rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all"
                     >
-                        Acknowledged
+                        {t("contract.acknowledged", undefined, "Acknowledged")}
                     </button>
                 </div>
             </div>

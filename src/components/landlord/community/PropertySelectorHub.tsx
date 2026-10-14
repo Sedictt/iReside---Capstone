@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface PropertySelectorHubProps {
     title?: string;
@@ -38,6 +39,7 @@ export function PropertySelectorHub({
     badgeText = "Property Feed"
 }: PropertySelectorHubProps) {
     const { properties, setSelectedPropertyId, loading } = useProperty();
+    const { t } = useLanguageContext();
     const [searchQuery, setSearchQuery] = useState("");
     const [activePropertyIndex, setActivePropertyIndex] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -74,7 +76,7 @@ export function PropertySelectorHub({
                     <div className="size-16 animate-pulse rounded-2xl bg-primary/20 flex items-center justify-center">
                         <ShieldCheck className="size-8 text-primary" />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground animate-pulse">Syncing Portfolio</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground animate-pulse">{t("Syncing Portfolio")}</p>
                 </div>
             </div>
         );
@@ -86,15 +88,15 @@ export function PropertySelectorHub({
                 <div className="mb-8 flex size-24 items-center justify-center rounded-[2rem] border border-border/40 bg-card/60 shadow-2xl backdrop-blur-xl">
                     <Building2 className="size-10 text-primary" />
                 </div>
-                <h1 className="mb-4 text-3xl font-black tracking-tight text-foreground md:text-5xl">No properties detected</h1>
+                <h1 className="mb-4 text-3xl font-black tracking-tight text-foreground md:text-5xl">{t("No properties detected")}</h1>
                 <p className="mb-10 max-w-md text-sm font-medium text-muted-foreground leading-relaxed">
-                    The Community Hub requires a specific property context. Please register a property to begin managing its residents and discussions.
+                    {t("The Community Hub requires a specific property context. Please register a property to begin managing its residents and discussions.")}
                 </p>
                 <Link 
                     href="/landlord/properties"
                     className="group flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-sm font-black uppercase tracking-widest text-primary-foreground transition-all hover:scale-[1.02] active:scale-95"
                 >
-                    Initialize First Property
+                    {t("Initialize First Property")}
                     <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                 </Link>
             </div>
@@ -126,8 +128,8 @@ export function PropertySelectorHub({
                             {icon}
                         </div>
                         <div>
-                            <h2 className="text-xl font-black tracking-tight text-foreground">{title}</h2>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">Portfolio Selection</p>
+                            <h2 className="text-xl font-black tracking-tight text-foreground">{t(title)}</h2>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">{t("Portfolio Selection")}</p>
                         </div>
                     </div>
 
@@ -140,7 +142,7 @@ export function PropertySelectorHub({
                                 setSearchQuery(e.target.value);
                                 setActivePropertyIndex(0);
                             }}
-                            placeholder="Find property..."
+                            placeholder={t("Find property...")}
                             className="h-12 w-full rounded-2xl border-none neumorphic-inset pl-12 pr-4 text-sm font-black text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all"
                         />
                     </div>
@@ -189,7 +191,7 @@ export function PropertySelectorHub({
                         {filteredProperties.length === 0 && (
                             <div className="py-12 text-center">
                                 <SearchX className="mx-auto size-10 text-muted-foreground/30" />
-                                <p className="mt-4 text-xs font-black text-muted-foreground/60 uppercase tracking-widest">No matches found</p>
+                                <p className="mt-4 text-xs font-black text-muted-foreground/60 uppercase tracking-widest">{t("No matches found")}</p>
                             </div>
                         )}
                     </div>
@@ -197,7 +199,7 @@ export function PropertySelectorHub({
 
                 <div className="border-t border-border/40 p-6">
                     <Link href="/landlord/dashboard" className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70 transition-colors hover:text-primary">
-                        Exit Selection
+                        {t("Exit Selection")}
                     </Link>
                 </div>
             </aside>
@@ -238,7 +240,7 @@ export function PropertySelectorHub({
                                                     <MapPin className="size-6" />
                                                 </div>
                                                 <div className="flex flex-col">
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Verified Location</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/70">{t("Verified Location")}</span>
                                                     <span className="text-sm font-black tracking-tight text-white">{activeProperty.address}</span>
                                                 </div>
                                             </div>
@@ -250,25 +252,25 @@ export function PropertySelectorHub({
                                         <div className="mb-auto">
                                             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
                                                 <MessageSquare className="size-3" />
-                                                {badgeText}
+                                                {t(badgeText)}
                                             </div>
                                             <h1 className="property-stage-content text-4xl font-black tracking-tight text-foreground">
                                                 {activeProperty.name}
                                             </h1>
                                             <p className="property-stage-content mt-4 text-sm font-medium text-muted-foreground leading-relaxed">
-                                                {description}
+                                                {t(description)}
                                             </p>
 
                                             <div className="mt-8 grid grid-cols-2 gap-4">
                                                 <div className="property-stage-content flex flex-col gap-1 rounded-2xl border-none neumorphic-inset p-4 transition-all">
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">Units</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">{t("Units")}</span>
                                                     <div className="flex items-center gap-2">
                                                         <Home className="size-4 text-primary" />
                                                         <span className="text-lg font-black text-foreground">{activeProperty.units?.length || 0}</span>
                                                     </div>
                                                 </div>
                                                 <div className="property-stage-content flex flex-col gap-1 rounded-2xl border-none neumorphic-inset p-4 transition-all">
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">Residents</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">{t("Residents")}</span>
                                                     <div className="flex items-center gap-2">
                                                         <Users className="size-4 text-emerald-500" />
                                                         <span className="text-lg font-black text-foreground">
@@ -284,7 +286,7 @@ export function PropertySelectorHub({
                                                 onClick={() => setSelectedPropertyId(activeProperty.id)}
                                                 className="group flex w-full items-center justify-between rounded-2xl neumorphic-extruded p-5 text-sm font-black uppercase tracking-widest text-primary transition-all hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
                                             >
-                                                {buttonText}
+                                                {t(buttonText)}
                                                 <div className="flex size-8 items-center justify-center rounded-xl neumorphic-inset-card transition-transform group-hover:translate-x-1">
                                                     <ArrowRight className="size-5" />
                                                 </div>

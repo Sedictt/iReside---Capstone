@@ -17,6 +17,8 @@ import {
 import { Logo } from "@/components/ui/Logo";
 import { useState, Suspense, useEffect, useRef } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { FieldError } from "@/components/ui/field-error";
 import { confirmMatchRule, emailRule, newPasswordRule, otpRule, PASSWORD_MAX_LENGTH } from "@/lib/validation/rules";
@@ -25,12 +27,14 @@ import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard
 import { formatSecurityKey } from "@/lib/security/recovery-keys";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { tr } from "@/hooks/useLanguage";
 
 type RecoveryMode = "EMAIL_OTP" | "SECURITY_KEY";
 type Step = "EMAIL" | "OTP" | "NEW_PASSWORD" | "SUCCESS" | "KEY_RESET" | "KEY_NEW_KEY";
 
 function ForgotPasswordContent() {
     const router = useRouter();
+    const { t } = useLanguageContext();
     const searchParams = useSearchParams();
     const queryEmail = searchParams.get("email") || "";
 
@@ -73,13 +77,14 @@ function ForgotPasswordContent() {
             newEmail: (value, all) => (all.wantUpdateEmail ? emailRule(value, { label: "New email address" }) : undefined),
         },
     );
+    const tOpt = (message?: string) => (message ? t(message) : undefined);
     const fieldErrors: Partial<Record<"email" | "otp" | "newPassword" | "confirmPassword" | "securityKey" | "newEmail", string>> = {
-        email: form.errorFor("email"),
-        otp: form.errorFor("otp"),
-        newPassword: form.errorFor("newPassword"),
-        confirmPassword: form.errorFor("confirmPassword"),
-        securityKey: form.errorFor("securityKey"),
-        newEmail: form.errorFor("newEmail"),
+        email: tOpt(form.errorFor("email")),
+        otp: tOpt(form.errorFor("otp")),
+        newPassword: tOpt(form.errorFor("newPassword")),
+        confirmPassword: tOpt(form.errorFor("confirmPassword")),
+        securityKey: tOpt(form.errorFor("securityKey")),
+        newEmail: tOpt(form.errorFor("newEmail")),
     };
 
     useEffect(() => {
@@ -128,7 +133,7 @@ function ForgotPasswordContent() {
 
             if (!response.ok || result.error) {
                 form.setServerErrors(result.fieldErrors);
-                setError(result.error || "Failed to send code. Please try again.");
+                setError(tr(result.error || "Failed to send code. Please try again."));
                 return;
             }
 
@@ -168,7 +173,7 @@ function ForgotPasswordContent() {
 
             if (!response.ok || result.error) {
                 form.setServerErrors(result.fieldErrors);
-                setError(result.error || "Invalid or expired verification code.");
+                setError(tr(result.error || "Invalid or expired verification code."));
                 return;
             }
 
@@ -209,7 +214,7 @@ function ForgotPasswordContent() {
 
             if (!response.ok || result.error) {
                 form.setServerErrors(result.fieldErrors);
-                setError(result.error || "Failed to reset password. Please try again.");
+                setError(tr(result.error || "Failed to reset password. Please try again."));
                 return;
             }
 
@@ -250,13 +255,13 @@ function ForgotPasswordContent() {
 
             if (!response.ok || result.error) {
                 form.setServerErrors(result.fieldErrors);
-                setError(result.error || "Failed to recover account. Please check your credentials.");
+                setError(tr(result.error || "Failed to recover account. Please check your credentials."));
                 return;
             }
 
             setReplacementKey(result.newSecurityKey);
             setStep("KEY_NEW_KEY");
-            toast.success("Account recovered successfully!");
+            toast.success(t("Account recovered successfully!"));
         } catch (err) {
             console.error("[ForgotPassword] Security key recovery error:", err);
             setError("An unexpected error occurred. Please try again.");
@@ -286,8 +291,9 @@ function ForgotPasswordContent() {
                         className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5"
                     >
                         <ArrowLeft className="size-3.5" />
-                        Back to Login
+                        {t("Back to Login")}
                     </Link>
+                    <LanguageToggle variant="compact" />
                     <ThemeToggle className="rounded-xl border border-border bg-card/80" />
                 </div>
             </header>
@@ -312,7 +318,7 @@ function ForgotPasswordContent() {
                                 }`}
                             >
                                 <Mail className="size-3.5" />
-                                <span>Email Code</span>
+                                <span>{t("Email Code")}</span>
                             </button>
 
                             <button
@@ -329,7 +335,7 @@ function ForgotPasswordContent() {
                                 }`}
                             >
                                 <KeyRound className="size-3.5" />
-                                <span>Security Key</span>
+                                <span>{t("Security Key")}</span>
                             </button>
                         </div>
                     )}
@@ -342,17 +348,17 @@ function ForgotPasswordContent() {
                                     <Mail className="size-5" />
                                 </div>
                                 <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                                    Forgot Password
+                                    {t("Forgot Password")}
                                 </h1>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    Enter your email address and we'll send you a 6-digit verification code.
+                                    {t("Enter your email address and we'll send you a 6-digit verification code.")}
                                 </p>
                             </div>
 
                             {error && (
                                 <div role="alert" className="p-3 rounded-xl bg-red-500/10 border border-red-500/25 flex items-start gap-2 text-red-600 dark:text-red-400 text-xs">
                                     <AlertCircle className="size-4 shrink-0 mt-0.5" />
-                                    <p className="font-medium leading-relaxed">{error}</p>
+                                    <p className="font-medium leading-relaxed">{t(error)}</p>
                                 </div>
                             )}
 
@@ -362,7 +368,7 @@ function ForgotPasswordContent() {
                             }}>
                                 <div className="space-y-1.5">
                                     <label htmlFor="email" className="block text-xs font-medium text-foreground">
-                                        Email Address
+                                        {t("Email Address")}
                                     </label>
                                     <input
                                         {...form.fieldProps("email")}
@@ -391,10 +397,10 @@ function ForgotPasswordContent() {
                                     {loading ? (
                                         <>
                                             <Loader2 className="size-4 animate-spin" />
-                                            <span>Sending code...</span>
+                                            <span>{t("Sending code...")}</span>
                                         </>
                                     ) : (
-                                        <span>Send verification code</span>
+                                        <span>{t("Send verification code")}</span>
                                     )}
                                 </button>
                             </form>
@@ -409,7 +415,7 @@ function ForgotPasswordContent() {
                                     }}
                                     className="text-xs text-muted-foreground hover:text-primary transition-colors font-medium cursor-pointer"
                                 >
-                                    Lost access to your email? <span className="underline font-bold">Recover with Security Key</span>
+                                    {t("Lost access to your email?")} <span className="underline font-bold">{t("Recover with Security Key")}</span>
                                 </button>
                             </div>
                         </div>
@@ -423,24 +429,24 @@ function ForgotPasswordContent() {
                                     <KeyRound className="size-5" />
                                 </div>
                                 <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                                    Enter 6-Digit Code
+                                    {t("Enter 6-Digit Code")}
                                 </h1>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    We sent a verification code to <span className="font-medium text-foreground">{email}</span>.
+                                    {t("We sent a verification code to")} <span className="font-medium text-foreground">{email}</span>.
                                 </p>
                             </div>
 
                             {error && (
                                 <div role="alert" className="p-3 rounded-xl bg-red-500/10 border border-red-500/25 flex items-start gap-2 text-red-600 dark:text-red-400 text-xs">
                                     <AlertCircle className="size-4 shrink-0 mt-0.5" />
-                                    <p className="font-medium leading-relaxed">{error}</p>
+                                    <p className="font-medium leading-relaxed">{t(error)}</p>
                                 </div>
                             )}
 
                             <form className="space-y-4" onSubmit={handleVerifyOtp}>
                                 <div className="space-y-1.5">
                                     <label htmlFor="otp" className="block text-xs font-medium text-foreground">
-                                        Verification Code
+                                        {t("Verification Code")}
                                     </label>
                                     <input
                                         {...form.fieldProps("otp")}
@@ -472,10 +478,10 @@ function ForgotPasswordContent() {
                                     {loading ? (
                                         <>
                                             <Loader2 className="size-4 animate-spin" />
-                                            <span>Verifying...</span>
+                                            <span>{t("Verifying...")}</span>
                                         </>
                                     ) : (
-                                        <span>Verify Code</span>
+                                        <span>{t("Verify Code")}</span>
                                     )}
                                 </button>
                             </form>
@@ -490,7 +496,7 @@ function ForgotPasswordContent() {
                                     }}
                                     className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                                 >
-                                    Use different email
+                                    {t("Use different email")}
                                 </button>
 
                                 <button
@@ -499,7 +505,7 @@ function ForgotPasswordContent() {
                                     onClick={() => handleSendOtp(email)}
                                     className="text-primary hover:underline font-medium disabled:text-muted-foreground/60 disabled:no-underline disabled:cursor-not-allowed cursor-pointer"
                                 >
-                                    {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
+                                    {resendCooldown > 0 ? t("Resend in {seconds}s", { seconds: resendCooldown }) : t("Resend code")}
                                 </button>
                             </div>
                         </div>
@@ -513,24 +519,24 @@ function ForgotPasswordContent() {
                                     <KeyRound className="size-5" />
                                 </div>
                                 <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                                    Set New Password
+                                    {t("Set New Password")}
                                 </h1>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    Verification complete! Enter your new password below.
+                                    {t("Verification complete! Enter your new password below.")}
                                 </p>
                             </div>
 
                             {error && (
                                 <div role="alert" className="p-3 rounded-xl bg-red-500/10 border border-red-500/25 flex items-start gap-2 text-red-600 dark:text-red-400 text-xs">
                                     <AlertCircle className="size-4 shrink-0 mt-0.5" />
-                                    <p className="font-medium leading-relaxed">{error}</p>
+                                    <p className="font-medium leading-relaxed">{t(error)}</p>
                                 </div>
                             )}
 
                             <form className="space-y-4" onSubmit={handleResetPassword} noValidate>
                                 <div className="space-y-1.5">
                                     <label htmlFor="newPassword" className={cn("block text-xs font-semibold select-none transition-colors", fieldErrors.newPassword ? "text-red-600 dark:text-red-400" : "text-foreground/90")}>
-                                        New Password
+                                        {t("New Password")}
                                     </label>
                                     <div className="relative">
                                         <input
@@ -553,7 +559,7 @@ function ForgotPasswordContent() {
                                             type="button"
                                             onClick={() => setShowNewPassword(!showNewPassword)}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
-                                            aria-label={showNewPassword ? "Hide password" : "Show password"}
+                                            aria-label={showNewPassword ? t("Hide password") : t("Show password")}
                                             aria-pressed={showNewPassword}
                                         >
                                             {showNewPassword ? <EyeOff className="size-4.5" /> : <Eye className="size-4.5" />}
@@ -565,13 +571,13 @@ function ForgotPasswordContent() {
                                             <span>{fieldErrors.newPassword}</span>
                                         </p>
                                     ) : (
-                                        <p className="text-[11px] text-muted-foreground">At least 8 characters, with letters and a number or symbol</p>
+                                        <p className="text-[11px] text-muted-foreground">{t("At least 8 characters, with letters and a number or symbol")}</p>
                                     )}
                                 </div>
 
                                 <div className="space-y-1.5">
                                     <label htmlFor="confirmPassword" className={cn("block text-xs font-semibold select-none transition-colors", fieldErrors.confirmPassword ? "text-red-600 dark:text-red-400" : "text-foreground/90")}>
-                                        Confirm Password
+                                        {t("Confirm Password")}
                                     </label>
                                     <div className="relative">
                                         <input
@@ -594,7 +600,7 @@ function ForgotPasswordContent() {
                                             type="button"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
-                                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                            aria-label={showConfirmPassword ? t("Hide password") : t("Show password")}
                                             aria-pressed={showConfirmPassword}
                                         >
                                             {showConfirmPassword ? <EyeOff className="size-4.5" /> : <Eye className="size-4.5" />}
@@ -616,10 +622,10 @@ function ForgotPasswordContent() {
                                     {loading ? (
                                         <>
                                             <Loader2 className="size-4 animate-spin" />
-                                            <span>Saving password...</span>
+                                            <span>{t("Saving password...")}</span>
                                         </>
                                     ) : (
-                                        <span>Update Password</span>
+                                        <span>{t("Update Password")}</span>
                                     )}
                                 </button>
                             </form>
@@ -634,24 +640,24 @@ function ForgotPasswordContent() {
                                     <ShieldCheck className="size-5" />
                                 </div>
                                 <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                                    Security Key Recovery
+                                    {t("Security Key Recovery")}
                                 </h1>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    Use your single-use security key to verify your identity and regain access without needing your email inbox.
+                                    {t("Use your single-use security key to verify your identity and regain access without needing your email inbox.")}
                                 </p>
                             </div>
 
                             {error && (
                                 <div role="alert" className="p-3 rounded-xl bg-red-500/10 border border-red-500/25 flex items-start gap-2 text-red-600 dark:text-red-400 text-xs">
                                     <AlertCircle className="size-4 shrink-0 mt-0.5" />
-                                    <p className="font-medium leading-relaxed">{error}</p>
+                                    <p className="font-medium leading-relaxed">{t(error)}</p>
                                 </div>
                             )}
 
                             <form className="space-y-4" onSubmit={handleSecurityKeyRecovery} noValidate>
                                 <div className="space-y-1.5">
                                     <label htmlFor="sec-email" className="block text-xs font-semibold text-foreground">
-                                        Registered Email Address
+                                        {t("Registered Email Address")}
                                     </label>
                                     <input
                                         {...form.fieldProps("email")}
@@ -671,13 +677,13 @@ function ForgotPasswordContent() {
                                     {fieldErrors.email ? (
                                         <FieldError id={form.errorId("email")} message={fieldErrors.email} />
                                     ) : (
-                                        <p className="text-[11px] text-muted-foreground">The email address associated with your iReside account.</p>
+                                        <p className="text-[11px] text-muted-foreground">{t("The email address associated with your iReside account.")}</p>
                                     )}
                                 </div>
 
                                 <div className="space-y-1.5">
                                     <label htmlFor="sec-key" className={cn("block text-xs font-semibold transition-colors", fieldErrors.securityKey ? "text-red-600 dark:text-red-400" : "text-foreground")}>
-                                        Security Recovery Key
+                                        {t("Security Recovery Key")}
                                     </label>
                                     <input
                                         {...form.fieldProps("securityKey")}
@@ -700,13 +706,13 @@ function ForgotPasswordContent() {
                                             <span>{fieldErrors.securityKey}</span>
                                         </p>
                                     ) : (
-                                        <p className="text-[11px] text-muted-foreground">Your 16-character single-use security key.</p>
+                                        <p className="text-[11px] text-muted-foreground">{t("Your 16-character single-use security key.")}</p>
                                     )}
                                 </div>
 
                                 <div className="space-y-1.5 pt-1">
                                     <label htmlFor="sec-newPassword" className={cn("block text-xs font-semibold transition-colors", fieldErrors.newPassword ? "text-red-600 dark:text-red-400" : "text-foreground")}>
-                                        New Password
+                                        {t("New Password")}
                                     </label>
                                     <div className="relative">
                                         <input
@@ -738,13 +744,13 @@ function ForgotPasswordContent() {
                                             <span>{fieldErrors.newPassword}</span>
                                         </p>
                                     ) : (
-                                        <p className="text-[11px] text-muted-foreground">At least 8 characters, with letters and a number or symbol</p>
+                                        <p className="text-[11px] text-muted-foreground">{t("At least 8 characters, with letters and a number or symbol")}</p>
                                     )}
                                 </div>
 
                                 <div className="space-y-1.5">
                                     <label htmlFor="sec-confirmPassword" className={cn("block text-xs font-semibold transition-colors", fieldErrors.confirmPassword ? "text-red-600 dark:text-red-400" : "text-foreground")}>
-                                        Confirm New Password
+                                        {t("Confirm New Password")}
                                     </label>
                                     <div className="relative">
                                         <input
@@ -788,14 +794,14 @@ function ForgotPasswordContent() {
                                             className="size-4 rounded border-border text-primary focus:ring-primary/20 cursor-pointer"
                                         />
                                         <span className="text-xs font-semibold text-foreground">
-                                            I lost permanent access to this email and want to update my email address
+                                            {t("I lost permanent access to this email and want to update my email address")}
                                         </span>
                                     </label>
 
                                     {wantUpdateEmail && (
                                         <div className="space-y-1.5 pl-6 animate-in fade-in-50">
                                             <label htmlFor="newEmail" className={cn("block text-xs font-medium transition-colors", fieldErrors.newEmail ? "text-red-600 dark:text-red-400" : "text-foreground")}>
-                                                New Email Address
+                                                {t("New Email Address")}
                                             </label>
                                             <input
                                                 {...form.fieldProps("newEmail")}
@@ -829,10 +835,10 @@ function ForgotPasswordContent() {
                                     {loading ? (
                                         <>
                                             <Loader2 className="size-4 animate-spin" />
-                                            <span>Verifying & Recovering...</span>
+                                            <span>{t("Verifying & Recovering...")}</span>
                                         </>
                                     ) : (
-                                        <span>Recover Account</span>
+                                        <span>{t("Recover Account")}</span>
                                     )}
                                 </button>
                             </form>
@@ -847,10 +853,10 @@ function ForgotPasswordContent() {
                                     <CheckCircle2 className="size-6" />
                                 </div>
                                 <h1 className="text-xl font-bold tracking-tight text-foreground">
-                                    Account Recovered Successfully
+                                    {t("Account Recovered Successfully")}
                                 </h1>
                                 <p className="text-xs text-muted-foreground">
-                                    Your password has been reset. As your previous security key was consumed, your new single-use security key has been generated.
+                                    {t("Your password has been reset. As your previous security key was consumed, your new single-use security key has been generated.")}
                                 </p>
                             </div>
 
@@ -858,8 +864,8 @@ function ForgotPasswordContent() {
                                 securityKey={replacementKey}
                                 isAcknowledged={isReplacementAcknowledged}
                                 onToggleAcknowledge={setIsReplacementAcknowledged}
-                                title="Your New Security Key"
-                                description="Save this new key immediately. It replaces your consumed key and will not be displayed again."
+                                title={t("Your New Security Key")}
+                                description={t("Save this new key immediately. It replaces your consumed key and will not be displayed again.")}
                                 accountEmail={wantUpdateEmail ? newEmail : email}
                             />
 
@@ -867,12 +873,12 @@ function ForgotPasswordContent() {
                                 type="button"
                                 disabled={!isReplacementAcknowledged}
                                 onClick={() => {
-                                    toast.success("Account recovery complete. Please sign in with your new credentials.");
+                                    toast.success(t("Account recovery complete. Please sign in with your new credentials."));
                                     router.push("/login");
                                 }}
                                 className="w-full h-11 bg-primary text-primary-foreground font-semibold rounded-xl text-sm transition-colors hover:bg-primary/90 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                             >
-                                <span>Proceed to Sign In</span>
+                                <span>{t("Proceed to Sign In")}</span>
                                 <ArrowRight className="size-4" />
                             </button>
                         </div>
@@ -887,10 +893,10 @@ function ForgotPasswordContent() {
 
                             <div className="space-y-1.5">
                                 <h1 className="text-xl font-bold tracking-tight text-foreground">
-                                    Password Reset Complete
+                                    {t("Password Reset Complete")}
                                 </h1>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    Your password has been updated. You can now sign in with your new credentials.
+                                    {t("Your password has been updated. You can now sign in with your new credentials.")}
                                 </p>
                             </div>
 
@@ -899,7 +905,7 @@ function ForgotPasswordContent() {
                                     href="/login"
                                     className="w-full h-11 bg-primary text-primary-foreground font-semibold rounded-xl text-sm transition-colors hover:bg-primary/90 flex items-center justify-center gap-2"
                                 >
-                                    <span>Sign In Now</span>
+                                    <span>{t("Sign In Now")}</span>
                                     <ArrowRight className="size-4" />
                                 </Link>
                             </div>
@@ -912,9 +918,9 @@ function ForgotPasswordContent() {
             <footer className="w-full max-w-lg mx-auto py-6 flex items-center justify-between text-xs text-muted-foreground/70">
                 <p>&copy; {new Date().getFullYear()} iReside</p>
                 <div className="flex items-center gap-4">
-                    <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-                    <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-                    <Link href="/help" className="hover:text-foreground transition-colors">Help</Link>
+                    <Link href="/privacy" className="hover:text-foreground transition-colors">{t("Privacy")}</Link>
+                    <Link href="/terms" className="hover:text-foreground transition-colors">{t("Terms")}</Link>
+                    <Link href="/help" className="hover:text-foreground transition-colors">{t("Help")}</Link>
                 </div>
             </footer>
         </div>

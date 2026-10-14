@@ -27,7 +27,15 @@ import {
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { triggerHaptic } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
+import { useLanguageContext } from '@/context/LanguageContext';
 import { toast } from 'sonner';
+import { tr } from '@/hooks/useLanguage';
+
+const UNIT_STATUS_LABELS: Record<string, string> = {
+    occupied: 'Occupied',
+    vacant: 'Vacant',
+    maintenance: 'Maintenance',
+};
 
 interface PropertyUnitItem {
     id: string;
@@ -54,6 +62,7 @@ interface PropertyCardData {
 
 export function LandlordPropertiesView() {
     const router = useRouter();
+    const { t } = useLanguageContext();
 
     const [properties, setProperties] = useState<PropertyCardData[]>([]);
     const [loading, setLoading] = useState(true);
@@ -89,7 +98,7 @@ export function LandlordPropertiesView() {
             setProperties(merged);
         } catch (err) {
             console.error('Error fetching landlord properties:', err);
-            toast.error('Failed to load properties');
+            toast.error(tr('Failed to load properties'));
         } finally {
             setLoading(false);
         }
@@ -164,9 +173,9 @@ export function LandlordPropertiesView() {
         const url = `${window.location.origin}/apply`;
         if (navigator.clipboard) {
             navigator.clipboard.writeText(url);
-            toast.success(`Application link copied for ${propName} - Unit ${unitName}!`);
+            toast.success(t('Application link copied for {property} - Unit {unit}!', { property: propName, unit: unitName }));
         } else {
-            toast.info('Application link: /apply');
+            toast.info(t('Application link: {link}', { link: '/apply' }));
         }
     };
 
@@ -176,8 +185,8 @@ export function LandlordPropertiesView() {
                 {/* Header Title & Refresh Button */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-base font-black text-foreground">Property Portfolio</h2>
-                        <p className="text-xs text-muted-foreground">Building & unit availability status</p>
+                        <h2 className="text-base font-black text-foreground">{t("Property Portfolio")}</h2>
+                        <p className="text-xs text-muted-foreground">{t("Building & unit availability status")}</p>
                     </div>
                     <button
                         onClick={() => {
@@ -185,7 +194,7 @@ export function LandlordPropertiesView() {
                             fetchProperties();
                         }}
                         className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-card text-muted-foreground hover:text-foreground active:scale-95 transition-all shadow-2xs"
-                        aria-label="Refresh properties"
+                        aria-label={t("Refresh properties")}
                     >
                         <RefreshCw className={cn("size-4", loading && "animate-spin text-primary")} />
                     </button>
@@ -194,17 +203,17 @@ export function LandlordPropertiesView() {
                 {/* Portfolio Summary Metrics Bar */}
                 <div className="grid grid-cols-4 gap-2">
                     <div className="p-2.5 rounded-2xl bg-card border border-slate-200 dark:border-white/10 flex flex-col justify-between">
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Properties</span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{t("Properties")}</span>
                         <span className="text-lg font-black text-foreground mt-0.5">{portfolioMetrics.totalBuildings}</span>
                     </div>
 
                     <div className="p-2.5 rounded-2xl bg-card border border-slate-200 dark:border-white/10 flex flex-col justify-between">
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Total Units</span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{t("Total Units")}</span>
                         <span className="text-lg font-black text-foreground mt-0.5">{portfolioMetrics.totalUnits}</span>
                     </div>
 
                     <div className="p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col justify-between">
-                        <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Occupancy</span>
+                        <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">{t("Occupancy")}</span>
                         <span className="text-lg font-black text-foreground mt-0.5">{portfolioMetrics.overallOccupancy}%</span>
                     </div>
 
@@ -220,7 +229,7 @@ export function LandlordPropertiesView() {
                                 : "bg-card border-slate-200 dark:border-white/10"
                         )}
                     >
-                        <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Vacant</span>
+                        <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">{t("Vacant")}</span>
                         <div className="flex items-center justify-between">
                             <span className="text-lg font-black text-foreground mt-0.5">{portfolioMetrics.totalVacant}</span>
                             {portfolioMetrics.totalVacant > 0 && (
@@ -237,7 +246,7 @@ export function LandlordPropertiesView() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search property, address, or unit..."
+                        placeholder={t("Search property, address, or unit...")}
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
                     />
                     {searchQuery && (
@@ -264,7 +273,7 @@ export function LandlordPropertiesView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        All ({properties.length})
+                        {t('All ({count})', { count: properties.length })}
                     </button>
                     <button
                         onClick={() => {
@@ -278,7 +287,7 @@ export function LandlordPropertiesView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Has Vacancies
+                        {t('Has Vacancies')}
                         {portfolioMetrics.totalVacant > 0 && (
                             <span className="ml-1 px-1.5 py-0.2 rounded-full bg-blue-500 text-white text-[9px] font-black">
                                 {portfolioMetrics.totalVacant}
@@ -297,7 +306,7 @@ export function LandlordPropertiesView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        100% Full
+                        {t('100% Full')}
                     </button>
                 </div>
 
@@ -306,9 +315,9 @@ export function LandlordPropertiesView() {
                     {filteredProperties.length === 0 ? (
                         <div className="p-8 text-center rounded-2xl bg-card border border-slate-200 dark:border-white/10 flex flex-col items-center gap-2.5">
                             <Building2 className="size-10 text-muted-foreground/40 stroke-1" />
-                            <h4 className="text-sm font-bold text-foreground">No Properties Found</h4>
+                            <h4 className="text-sm font-bold text-foreground">{t("No Properties Found")}</h4>
                             <p className="text-xs text-muted-foreground max-w-xs">
-                                {searchQuery ? 'No buildings or units match your search criteria.' : 'No properties found in this category.'}
+                                {searchQuery ? t('No buildings or units match your search criteria.') : t('No properties found in this category.')}
                             </p>
                         </div>
                     ) : (
@@ -357,7 +366,7 @@ export function LandlordPropertiesView() {
                                                         ? "bg-blue-500/80 text-white"
                                                         : "bg-amber-500/80 text-white"
                                                 )}>
-                                                    {property.status}
+                                                    {t(property.status)}
                                                 </span>
                                             </div>
 
@@ -385,16 +394,16 @@ export function LandlordPropertiesView() {
                                     <div className="p-3.5 space-y-2.5">
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="text-[11px] font-semibold text-muted-foreground">
-                                                Unit Occupancy ({occupied}/{total})
+                                                {t('Unit Occupancy ({occupied}/{total})', { occupied, total })}
                                             </span>
                                             <div className="flex items-center gap-2 text-[10px] font-bold">
-                                                <span className="text-emerald-600 dark:text-emerald-400">{occupied} Occupied</span>
+                                                <span className="text-emerald-600 dark:text-emerald-400">{t('{count} Occupied', { count: occupied })}</span>
                                                 <span>•</span>
-                                                <span className="text-blue-600 dark:text-blue-400">{vacant} Vacant</span>
+                                                <span className="text-blue-600 dark:text-blue-400">{t('{count} Vacant', { count: vacant })}</span>
                                                 {maintenance > 0 && (
                                                     <>
                                                         <span>•</span>
-                                                        <span className="text-amber-600 dark:text-amber-400">{maintenance} Repairs</span>
+                                                        <span className="text-amber-600 dark:text-amber-400">{t('{count} Repairs', { count: maintenance })}</span>
                                                     </>
                                                 )}
                                             </div>
@@ -419,7 +428,7 @@ export function LandlordPropertiesView() {
                                                 onClick={() => togglePropertyAccordion(property.id)}
                                                 className="text-xs font-bold text-primary flex items-center gap-1 active:scale-95 transition-all"
                                             >
-                                                {isExpanded ? 'Hide Units' : `View All ${units.length || total} Units`}
+                                                {isExpanded ? t('Hide Units') : t('View All {count} Units', { count: units.length || total })}
                                                 <ChevronRight className={cn("size-3.5 transition-transform", isExpanded && "rotate-90")} />
                                             </button>
 
@@ -429,14 +438,14 @@ export function LandlordPropertiesView() {
                                                     className="p-1.5 rounded-lg bg-slate-100 dark:bg-white/5 text-muted-foreground hover:text-foreground text-[11px] font-semibold flex items-center gap-1"
                                                 >
                                                     <Users className="size-3" />
-                                                    Tenants
+                                                    {t('Tenants')}
                                                 </Link>
                                                 <Link
                                                     href="/mobile/landlord/leases"
                                                     className="p-1.5 rounded-lg bg-slate-100 dark:bg-white/5 text-muted-foreground hover:text-foreground text-[11px] font-semibold flex items-center gap-1"
                                                 >
                                                     <Key className="size-3" />
-                                                    Leases
+                                                    {t('Leases')}
                                                 </Link>
                                             </div>
                                         </div>
@@ -446,12 +455,12 @@ export function LandlordPropertiesView() {
                                     {isExpanded && (
                                         <div className="p-3.5 pt-0 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02] space-y-2 animate-in slide-in-from-top-2 duration-150">
                                             <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider pt-2">
-                                                Units Directory ({units.length})
+                                                {t('Units Directory ({count})', { count: units.length })}
                                             </div>
 
                                             {units.length === 0 ? (
                                                 <div className="p-4 text-center text-xs text-muted-foreground">
-                                                    No individual units configured for this building.
+                                                    {t('No individual units configured for this building.')}
                                                 </div>
                                             ) : (
                                                 <div className="space-y-1.5">
@@ -472,11 +481,11 @@ export function LandlordPropertiesView() {
                                                                     )} />
                                                                     <div>
                                                                         <span className="font-bold text-foreground">
-                                                                            Unit {unit.name}
+                                                                            {t('Unit {unit}', { unit: unit.name })}
                                                                         </span>
                                                                         {unit.rentAmount ? (
                                                                             <span className="text-muted-foreground ml-2 text-[11px]">
-                                                                                {formatCurrency(unit.rentAmount)}/mo
+                                                                                {t('{amount}/mo', { amount: formatCurrency(unit.rentAmount) })}
                                                                             </span>
                                                                         ) : null}
                                                                     </div>
@@ -491,14 +500,14 @@ export function LandlordPropertiesView() {
                                                                             ? "bg-blue-500/15 text-blue-600 dark:text-blue-400"
                                                                             : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
                                                                     )}>
-                                                                        {unit.status}
+                                                                        {t(UNIT_STATUS_LABELS[unit.status] ?? unit.status)}
                                                                     </span>
 
                                                                     {isVacant && (
                                                                         <button
                                                                             onClick={(e) => copyInviteLink(e, property.name, unit.name)}
                                                                             className="p-1 rounded-md text-muted-foreground hover:text-foreground active:scale-95"
-                                                                            title="Copy Application Link"
+                                                                            title={t("Copy Application Link")}
                                                                         >
                                                                             <Share2 className="size-3.5" />
                                                                         </button>

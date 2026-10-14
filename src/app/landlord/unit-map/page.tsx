@@ -8,6 +8,7 @@ import { PropertySelectorHub } from "@/components/landlord/community/PropertySel
 import { useProperty } from "@/context/PropertyContext";
 import { Map } from "lucide-react";
 import { VisualPlannerSkeleton } from "@/components/landlord/visual-planner/components/VisualPlannerSkeleton";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 function UnitMapContent() {
     const searchParams = useSearchParams();
@@ -15,16 +16,17 @@ function UnitMapContent() {
     const isPreviewEmptyFloor = preview === "empty-floor" || preview === "setup" || preview === "true";
 
     const { selectedPropertyId, loading, properties, setSelectedPropertyId } = useProperty();
+    const { t } = useLanguageContext();
 
     // When "All Properties" is selected, always show the property picker
     if (selectedPropertyId === "all") {
         return (
             <PropertySelectorHub 
-                title="2D Room Map"
-                description="Select a property to view and manage its unit map layout."
-                buttonText="Open Room Map"
+                title={t("2D Room Map")}
+                description={t("Select a property to view and manage its unit map layout.")}
+                buttonText={t("Open Room Map")}
                 icon={<Map className="size-6" />}
-                badgeText="Unit Map"
+                badgeText={t("Unit Map")}
             />
         );
     }
@@ -41,7 +43,7 @@ function UnitMapContent() {
             <div className="flex flex-col h-full">
                 <MapSetupWizard
                     propertyId="preview-property"
-                    propertyName="Skyline Residences (Preview)"
+                    propertyName={t("Skyline Residences (Preview)")}
                     previewEmptyFloors={true}
                     onSetupComplete={() => {}}
                 />
@@ -56,11 +58,11 @@ function UnitMapContent() {
     if (!activePropertyId) {
         return (
             <PropertySelectorHub 
-                title="2D Room Map"
-                description="Select a property to view and manage its unit map layout."
-                buttonText="Open Room Map"
+                title={t("2D Room Map")}
+                description={t("Select a property to view and manage its unit map layout.")}
+                buttonText={t("Open Room Map")}
                 icon={<Map className="size-6" />}
-                badgeText="Unit Map"
+                badgeText={t("Unit Map")}
             />
         );
     }

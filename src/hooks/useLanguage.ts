@@ -5,6 +5,7 @@ import {
   translate,
   DEFAULT_LANGUAGE,
   SUPPORTED_LANGUAGES,
+  LANGUAGE_LOCALES,
   type SupportedLanguage,
   type TranslationParams,
 } from "@/lib/i18n";
@@ -101,6 +102,19 @@ function subscribe(callback: () => void): () => void {
   };
 }
 
+/** Current UI language outside React (non-reactive). Prefer the hook inside components. */
+export function getCurrentLanguage(): SupportedLanguage {
+  return typeof window === "undefined" ? DEFAULT_LANGUAGE : getSnapshot();
+}
+
+/**
+ * Translate outside a component (toast messages in plain helpers, module-level utilities).
+ * Inside components use `t` from useLanguageContext so text re-renders on language change.
+ */
+export function tr(keyOrPhrase: string, params?: TranslationParams, fallback?: string): string {
+  return translate(keyOrPhrase, getCurrentLanguage(), params, fallback);
+}
+
 export function setLanguageDirect(lang: SupportedLanguage) {
   currentLanguage = lang;
   syncDocumentAttributes(lang);
@@ -147,6 +161,7 @@ export function useLanguage() {
 
   return {
     language,
+    locale: LANGUAGE_LOCALES[language],
     isFilipino: language === "fil",
     isEnglish: language === "en",
     setLanguage,

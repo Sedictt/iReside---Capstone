@@ -32,8 +32,10 @@ import {
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { toast } from "sonner";
 import { generateLeasePdf, exportLeaseDocumentElementToPdf } from "@/lib/lease-pdf";
+import { formatLeaseDate, leaseEndState, type LeaseTermLike } from "@/lib/lease-term";
 import { LeaseDocument, type LeaseDocumentProps } from "@/components/lease/LeaseDocument";
 import {
  DropdownMenu,
@@ -51,10 +53,27 @@ import ActiveLeasesTab from "@/components/landlord/leases/ActiveLeasesTab";
 import ArchiveTab from "@/components/landlord/leases/ArchiveTab";
 import { ViewToggle } from "@/components/shared/ViewToggle";
 import { useViewMode } from "@/hooks/useViewMode";
+import { tr } from "@/hooks/useLanguage";
 
 function LeasesContent() {
  const searchParams = useSearchParams();
  const { back } = useRouter();
+ const { t, locale, language } = useLanguageContext();
+
+ /** Localized short term label ("Open-ended", "Ends Mar 15, 2027", ...). */
+ const leaseTermLabel = (termLease: LeaseTermLike) => {
+ const state = leaseEndState(termLease);
+ switch (state.kind) {
+ case "open_ended":
+ return t("Open-ended");
+ case "moving_out":
+ return t("Moving out {date}", { date: formatLeaseDate(state.endDate, undefined, language) });
+ case "fixed":
+ return t("Ends {date}", { date: formatLeaseDate(state.endDate, undefined, language) });
+ case "ended":
+ return t("Ended {date}", { date: formatLeaseDate(state.endDate, undefined, language) });
+ }
+ };
  const leaseId = searchParams.get("id");
  const unitId = searchParams.get("unitId");
  const { selectedPropertyId, setSelectedPropertyId, properties } = useProperty();
@@ -80,7 +99,8 @@ function LeasesContent() {
      id: lease.id,
      status: lease.status,
      start_date: lease.start_date,
-     end_date: lease.end_date,
+     end_date: lease.end_date ?? null,
+     term_type: lease.term_type ?? lease.termType ?? lease.lease_term ?? null,
      monthly_rent: Number(lease.monthly_rent || 0),
      security_deposit: Number(lease.security_deposit || 0),
      terms: lease.terms,
@@ -123,13 +143,13 @@ function LeasesContent() {
  try {
  const res = await fetch(`/api/landlord/leases/${id}`);
  if (!res.ok) {
- if (res.status === 404) throw new Error("Lease not found");
- throw new Error("Failed to fetch lease details");
+ if (res.status === 404) throw new Error(t("Lease not found"));
+ throw new Error(t("Failed to fetch lease details"));
  }
  const leaseDetails = await res.json();
  setLease(leaseDetails);
  } catch (err: any) {
- setError(err.message);
+ setError(tr(err.message));
  } finally {
  setLoading(false);
  }
@@ -143,8 +163,8 @@ function LeasesContent() {
  };
 
  const formatDate = (dateString: string) => {
- if (!dateString) return "N/A";
- return new Date(dateString).toLocaleDateString("en-US", {
+ if (!dateString) return t("N/A");
+ return new Date(dateString).toLocaleDateString(locale, {
  month: "short",
  day: "numeric",
  year: "numeric",
@@ -164,7 +184,7 @@ function LeasesContent() {
     if (!terms) {
       return (
         <p className="text-sm italic text-muted-foreground">
-          Standard residential tenancy terms apply.
+          {t("Standard residential tenancy terms apply.")}
         </p>
       );
     }
@@ -245,7 +265,7 @@ function LeasesContent() {
       if (!hasStructuredContent) {
         return (
           <p className="text-sm italic text-muted-foreground">
-            Standard residential tenancy terms apply.
+            {t("Standard residential tenancy terms apply.")}
           </p>
         );
       }
@@ -261,14 +281,13 @@ function LeasesContent() {
                 </div>
                 <div className="min-w-0 space-y-0.5">
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                    Rent Due Day
+                    {t("Rent Due Day")}
                   </p>
                   <p className="text-sm font-black text-foreground sm:text-base">
-                    {Number(dueDay)}
-                    {getOrdinalSuffix(Number(dueDay))} of every month
+                    {t("{ordinal} of every month", { ordinal: `${Number(dueDay)}${getOrdinalSuffix(Number(dueDay))}` })}
                   </p>
                   <p className="text-[11px] font-medium text-muted-foreground">
-                    Monthly recurring schedule
+                    {t("Monthly recurring schedule")}
                   </p>
                 </div>
               </div>
@@ -281,7 +300,7 @@ function LeasesContent() {
                 </div>
                 <div className="min-w-0 space-y-0.5">
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                    Late Payment Fee
+                    {t("Late Payment Fee")}
                   </p>
                   <p className="text-sm font-black text-foreground sm:text-base">
                     {typeof lateFee === "number"
@@ -290,10 +309,10 @@ function LeasesContent() {
                   </p>
                   <p className="text-[11px] font-medium text-muted-foreground">
                     {gracePeriod
-                      ? `After ${gracePeriod} day(s) grace period`
+                      ? t("After {days} day(s) grace period", { days: String(gracePeriod) })
                       : lateFeeDay
-                        ? `Applied on day ${lateFeeDay}`
-                        : "Charged when payment is overdue"}
+                        ? t("Applied on day {day}", { day: String(lateFeeDay) })
+                        : t("Charged when payment is overdue")}
                   </p>
                 </div>
               </div>
@@ -317,15 +336,15 @@ function LeasesContent() {
                 </div>
                 <div className="min-w-0 space-y-0.5">
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                    Partial Payments
+                    {t("Partial Payments")}
                   </p>
                   <p className="text-sm font-black text-foreground sm:text-base">
-                    {allowPartial ? "Allowed" : "Not Allowed"}
+                    {allowPartial ? t("Allowed") : t("Not Allowed")}
                   </p>
                   <p className="text-[11px] font-medium text-muted-foreground">
                     {allowPartial
-                      ? "Installment payments accepted"
-                      : "Full billing balance required"}
+                      ? t("Installment payments accepted")
+                      : t("Full billing balance required")}
                   </p>
                 </div>
               </div>
@@ -336,7 +355,7 @@ function LeasesContent() {
           {utilitiesDesc && (
             <div className="rounded-2xl neumorphic-inset p-4">
               <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-primary">
-                Utility Policy
+                {t("Utility Policy")}
               </p>
               <p className="text-xs font-medium leading-relaxed text-foreground/90">
                 {utilitiesDesc}
@@ -348,7 +367,7 @@ function LeasesContent() {
           {rules && rules.length > 0 && (
             <div className="rounded-2xl neumorphic-inset p-4">
               <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-primary">
-                House Rules & Stipulations
+                {t("House Rules & Stipulations")}
               </p>
               <ul className="list-disc space-y-1.5 pl-4 text-xs font-medium text-muted-foreground">
                 {rules.map((rule: string, idx: number) => (
@@ -364,7 +383,7 @@ function LeasesContent() {
           {notes && (
             <div className="rounded-2xl neumorphic-inset p-4">
               <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-primary">
-                Additional Terms & Provisions
+                {t("Additional Terms & Provisions")}
               </p>
               <p className="whitespace-pre-wrap text-xs font-medium leading-relaxed text-foreground/90">
                 {typeof notes === "string"
@@ -388,8 +407,8 @@ function LeasesContent() {
                   <span className="text-xs font-bold text-foreground">
                     {typeof val === "boolean"
                       ? val
-                        ? "Yes"
-                        : "No"
+                        ? t("Yes")
+                        : t("No")
                       : typeof val === "object"
                         ? JSON.stringify(val)
                         : String(val)}
@@ -404,7 +423,7 @@ function LeasesContent() {
 
     return (
       <p className="text-sm italic text-muted-foreground">
-        Standard residential tenancy terms apply.
+        {t("Standard residential tenancy terms apply.")}
       </p>
     );
   };
@@ -426,21 +445,21 @@ function LeasesContent() {
       if (!res.ok) {
         const errorResponse = await res.json().catch(() => ({}));
         throw new Error(
-          errorResponse.error || "Failed to generate tenant signing link"
+          errorResponse.error || t("Failed to generate tenant signing link")
         );
       }
 
       const signingResponse = await res.json();
       if (!signingResponse.signingUrl) {
-        throw new Error("No signing link returned from server");
+        throw new Error(t("No signing link returned from server"));
       }
 
       await navigator.clipboard.writeText(signingResponse.signingUrl);
       setCopyLinkSuccess(true);
-      toast.success("Tenant digital signing link copied to clipboard!");
+      toast.success(t("Tenant digital signing link copied to clipboard!"));
       setTimeout(() => setCopyLinkSuccess(false), 3000);
     } catch (err: any) {
-      toast.error(err.message || "Failed to copy signing link");
+      toast.error(tr(err.message || t("Failed to copy signing link")));
     } finally {
       setCopyLinkLoading(false);
     }
@@ -486,7 +505,8 @@ function LeasesContent() {
         pdfBlob = await generateLeasePdf({
           id: lease.id,
           startDate: formatFullDate(lease.start_date),
-          endDate: formatFullDate(lease.end_date),
+          endDate: lease.end_date ? formatFullDate(lease.end_date) : null,
+          termType: lease.term_type ?? lease.termType ?? lease.lease_term ?? null,
           monthlyRent: Number(lease.monthly_rent || 0),
           securityDeposit: Number(lease.security_deposit || 0),
           property: {
@@ -525,10 +545,10 @@ function LeasesContent() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success("Official Lease Agreement PDF exported successfully!");
+      toast.success(t("Official Lease Agreement PDF exported successfully!"));
     } catch (err) {
       console.error("[Export PDF] Failed:", err);
-      toast.error("Failed to export lease PDF. Please try again.");
+      toast.error(t("Failed to export lease PDF. Please try again."));
     } finally {
       setIsExportingPdf(false);
     }
@@ -542,28 +562,28 @@ function LeasesContent() {
  className="mb-6 flex items-center gap-2 text-sm font-black text-muted-foreground transition-colors hover:text-foreground"
  >
  <ArrowLeft className="size-4" />
- Back to Leases
+ {t("Back to Leases")}
  </button>
 
  {loading ? (
  <div className="flex h-96 flex-col items-center justify-center gap-4">
  <LoadingSpinner size="md" className="text-primary" />
  <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">
- Loading Lease Record...
+ {t("Loading Lease Record...")}
  </p>
  </div>
  ) : error ? (
  <div className="flex h-96 flex-col items-center justify-center gap-4 rounded-[2.5rem] border border-red-500/20 bg-red-500/5 text-center">
  <AlertCircle className="size-12 text-red-500" />
  <h3 className="text-xl font-black text-foreground">
- Error Loading Lease
+ {t("Error Loading Lease")}
  </h3>
  <p className="text-sm text-muted-foreground">{error}</p>
  <button
  onClick={() => void fetchLease(leaseId)}
  className="mt-4 rounded-xl bg-red-500 px-6 py-2 text-sm font-black text-white transition-all hover:bg-red-600"
  >
- Try Again
+ {t("Try Again")}
  </button>
  </div>
  ) : lease ? (
@@ -582,17 +602,17 @@ function LeasesContent() {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <p className="text-xs font-black uppercase tracking-widest text-amber-500">
-                          Awaiting Tenant Signature
+                          {t("Awaiting Tenant Signature")}
                         </p>
                         <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-500">
-                          Action Required
+                          {t("Action Required")}
                         </span>
                       </div>
                       <p className="text-base font-black text-foreground">
-                        Digital Signing Link for {lease.tenant?.full_name || "Tenant"}
+                        {t("Digital Signing Link for {name}", { name: lease.tenant?.full_name || t("Tenant") })}
                       </p>
                       <p className="text-xs font-medium text-muted-foreground">
-                        Copy the online digital signing link to send to the tenant so they can sign on their phone or computer.
+                        {t("Copy the online digital signing link to send to the tenant so they can sign on their phone or computer.")}
                       </p>
                     </div>
                   </div>
@@ -609,7 +629,7 @@ function LeasesContent() {
                     ) : (
                       <Copy className="size-4 text-black" />
                     )}
-                    <span>{copyLinkSuccess ? "Link Copied!" : "Copy Signing Link"}</span>
+                    <span>{copyLinkSuccess ? t("Link Copied!") : t("Copy Signing Link")}</span>
                   </button>
                 </div>
               </div>
@@ -621,12 +641,12 @@ function LeasesContent() {
                   <div className="space-y-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-3">
                       <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-                        Lease Agreement
+                        {t("Lease Agreement")}
                       </h1>
                       <LeaseStatusBadge status={lease.status} />
                     </div>
                     <p className="text-xs font-mono text-muted-foreground">
-                      ID: <span className="font-semibold text-foreground">{lease.id ? (lease.id.length > 16 ? lease.id.slice(0, 8).toUpperCase() : lease.id) : "N/A"}</span>
+                      {t("ID:")} <span className="font-semibold text-foreground">{lease.id ? (lease.id.length > 16 ? lease.id.slice(0, 8).toUpperCase() : lease.id) : t("N/A")}</span>
                     </p>
                   </div>
 
@@ -644,7 +664,7 @@ function LeasesContent() {
                         )}
                       >
                         <FileText className="size-3.5" />
-                        Agreement
+                        {t("Agreement")}
                       </button>
                       <button
                         type="button"
@@ -657,7 +677,7 @@ function LeasesContent() {
                         )}
                       >
                         <LayoutDashboard className="size-3.5" />
-                        Overview
+                        {t("Overview")}
                       </button>
                     </div>
 
@@ -666,14 +686,14 @@ function LeasesContent() {
                       onClick={handleExportPdf}
                       disabled={isExportingPdf}
                       className="flex h-10 items-center gap-2 rounded-xl neumorphic-panel px-4 text-xs font-black uppercase tracking-widest transition-all hover:neumorphic-inset disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-                      title="Export official Lease Agreement PDF"
+                      title={t("Export official Lease Agreement PDF")}
                     >
                       {isExportingPdf ? (
                         <Loader2 className="size-3.5 animate-spin text-primary" />
                       ) : (
                         <Download className="size-3.5" />
                       )}
-                      <span>{isExportingPdf ? "Exporting..." : "Export PDF"}</span>
+                      <span>{isExportingPdf ? t("Exporting...") : t("Export PDF")}</span>
                     </button>
                   </div>
                 </div>
@@ -697,7 +717,7 @@ function LeasesContent() {
                 <div className="grid grid-cols-1 gap-12 p-8 md:grid-cols-2">
                   <div className="space-y-6">
                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                      Parties Involved
+                      {t("Parties Involved")}
                     </h3>
                     <div className="space-y-4">
                       <div className="flex items-start gap-4">
@@ -706,7 +726,7 @@ function LeasesContent() {
                         </div>
                         <div>
                           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                            Tenant
+                            {t("Tenant")}
                           </p>
                           <p className="text-lg font-black text-foreground">
                             {lease.tenant?.full_name}
@@ -722,7 +742,7 @@ function LeasesContent() {
                         </div>
                         <div>
                           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                            Landlord
+                            {t("Landlord")}
                           </p>
                           <p className="text-lg font-black text-foreground">
                             {lease.landlord?.full_name}
@@ -737,7 +757,7 @@ function LeasesContent() {
 
                   <div className="space-y-6">
                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                      Premises Details
+                      {t("Premises Details")}
                     </h3>
                     <div className="space-y-4">
                       <div className="flex items-start gap-4">
@@ -746,7 +766,7 @@ function LeasesContent() {
                         </div>
                         <div>
                           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                            Property
+                            {t("Property")}
                           </p>
                           <p className="text-lg font-black text-foreground">
                             {lease.unit?.property?.name}
@@ -762,10 +782,10 @@ function LeasesContent() {
                         </div>
                         <div>
                           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                            Unit
+                            {t("Unit")}
                           </p>
                           <p className="text-lg font-black text-foreground">
-                            Unit {lease.unit?.name}
+                            {t("Unit {name}", { name: lease.unit?.name ?? "" })}
                           </p>
                         </div>
                       </div>
@@ -776,16 +796,19 @@ function LeasesContent() {
                 <div className="grid grid-cols-1 gap-8 border-t border-border p-8 sm:grid-cols-3">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                      Term Period
+                      {t("Term Period")}
                     </p>
                     <p className="text-sm font-black text-foreground">
                       {formatDate(lease.start_date)} -{" "}
-                      {formatDate(lease.end_date)}
+                      {lease.end_date ? formatDate(lease.end_date) : t("Open-ended")}
+                    </p>
+                    <p className="text-[11px] font-medium text-muted-foreground">
+                      {leaseTermLabel({ term_type: lease.term_type ?? lease.termType ?? lease.lease_term, end_date: lease.end_date, start_date: lease.start_date })}
                     </p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                      Monthly Rent
+                      {t("Monthly Rent")}
                     </p>
                     <p className="text-sm font-black text-foreground">
                       {formatCurrency(lease.monthly_rent)}
@@ -793,7 +816,7 @@ function LeasesContent() {
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                      Security Deposit
+                      {t("Security Deposit")}
                     </p>
                     <p className="text-sm font-black text-foreground">
                       {formatCurrency(lease.security_deposit)}
@@ -807,7 +830,7 @@ function LeasesContent() {
           {leaseViewMode === "overview" && (
             <div className="rounded-[2.5rem] neumorphic-panel p-8">
               <h3 className="mb-6 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                Lease Terms & Conditions
+                {t("Lease Terms & Conditions")}
               </h3>
               {renderLeaseTerms(lease.terms)}
             </div>
@@ -841,7 +864,7 @@ function LeasesContent() {
   <div className="rounded-3xl neumorphic-panel p-6">
   <div className="mb-4 flex items-center justify-between">
   <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-  Audit Trail
+  {t("Audit Trail")}
   </h3>
   <History className="size-4 text-muted-foreground/50" />
   </div>
@@ -850,7 +873,7 @@ function LeasesContent() {
 
   <div className="space-y-4 rounded-3xl neumorphic-panel p-6">
   <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-  Signature Status
+  {t("Signature Status")}
   </h3>
  <div className="space-y-4">
  <div className="flex items-center justify-between rounded-2xl neumorphic-inset p-4">
@@ -871,12 +894,12 @@ function LeasesContent() {
  </div>
  <div>
  <p className="text-xs font-black text-foreground">
- Tenant
+ {t("Tenant")}
  </p>
  <p className="text-[10px] font-medium text-muted-foreground">
  {lease.tenant_signed_at
- ? `Signed ${formatDate(lease.tenant_signed_at)}`
- : "Pending Signature"}
+ ? t("Signed {date}", { date: formatDate(lease.tenant_signed_at) })
+ : t("Pending Signature")}
  </p>
  </div>
  </div>
@@ -900,12 +923,12 @@ function LeasesContent() {
  </div>
  <div>
  <p className="text-xs font-black text-foreground">
- Landlord
+ {t("Landlord")}
  </p>
  <p className="text-[10px] font-medium text-muted-foreground">
  {lease.landlord_signed_at
- ? `Signed ${formatDate(lease.landlord_signed_at)}`
- : "Pending Signature"}
+ ? t("Signed {date}", { date: formatDate(lease.landlord_signed_at) })
+ : t("Pending Signature")}
  </p>
  </div>
  </div>
@@ -925,12 +948,12 @@ function LeasesContent() {
                 ) : copyLinkSuccess ? (
                   <>
                     <Check className="size-4 text-emerald-500" />
-                    <span>Link Copied</span>
+                    <span>{t("Link Copied")}</span>
                   </>
                 ) : (
                   <>
                     <Copy className="size-4" />
-                    <span>Copy Signing Link</span>
+                    <span>{t("Copy Signing Link")}</span>
                   </>
                 )}
               </button>
@@ -954,18 +977,18 @@ function LeasesContent() {
  if (!res.ok) {
  const errorResponse = await res.json();
  throw new Error(
- errorResponse.error || "Failed to generate signing link",
+ errorResponse.error || t("Failed to generate signing link"),
  );
  }
  const signingResponse = await res.json();
  if (signingResponse.signingUrl) {
  window.location.href = signingResponse.signingUrl;
  } else {
- throw new Error("No signing URL returned");
+ throw new Error(t("No signing URL returned"));
  }
  } catch (err: any) {
  setError(
- err.message || "Failed to generate signing link",
+ err.message || t("Failed to generate signing link"),
  );
  setCountersignLoading(false);
  }
@@ -974,8 +997,8 @@ function LeasesContent() {
  className="w-full rounded-2xl neumorphic-primary px-6 py-4 text-xs font-black uppercase tracking-widest shadow-primary/20 transition-all hover:bg-primary/90 disabled:opacity-50"
  >
  {countersignLoading
- ? "Generating Link..."
- : "Countersign Lease"}
+ ? t("Generating Link...")
+ : t("Countersign Lease")}
  </button>
  )}
  </div>
@@ -992,10 +1015,10 @@ function LeasesContent() {
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div className="space-y-1">
           <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-            Lease Hub
+            {t("Lease Hub")}
           </h1>
           <p className="text-sm font-medium text-muted-foreground">
-            Monitor and manage all tenancy agreements across your portfolio.
+            {t("Monitor and manage all tenancy agreements across your portfolio.")}
           </p>
         </div>
 
@@ -1005,7 +1028,7 @@ function LeasesContent() {
             className="group flex h-11 items-center gap-2 rounded-2xl neumorphic-panel px-4 text-xs font-black uppercase tracking-widest text-muted-foreground transition-all hover:border-primary/30 hover:neumorphic-inset hover:text-foreground active:scale-95 cursor-pointer"
           >
             <RefreshCw className="size-4 transition-transform group-hover:rotate-180 duration-500" />
-            Refresh
+            {t("Refresh")}
           </button>
         </div>
       </div>
@@ -1030,7 +1053,7 @@ function LeasesContent() {
               )}
             >
               <tab.icon className={cn("size-3.5", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
-              <span>{tab.label}</span>
+              <span>{t(tab.label)}</span>
             </button>
           ))}
         </div>
@@ -1041,7 +1064,7 @@ function LeasesContent() {
             <Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
             <input maxLength={60} 
               type="text" 
-              placeholder="Search tenant or unit..." 
+              placeholder={t("Search tenant or unit...")} 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="h-9.5 sm:h-10 w-full rounded-xl neumorphic-extruded pl-9 pr-3 text-xs font-bold text-foreground focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/50"
@@ -1055,7 +1078,7 @@ function LeasesContent() {
               onChange={(e) => setSelectedPropertyId(e.target.value as any)}
               className="bg-transparent text-xs font-bold text-foreground focus:outline-none cursor-pointer pr-1 truncate max-w-[100px] sm:max-w-[140px]"
             >
-              <option value="all" className="bg-background text-foreground dark:bg-zinc-900 dark:text-white">All Properties</option>
+              <option value="all" className="bg-background text-foreground dark:bg-zinc-900 dark:text-white">{t("All Properties")}</option>
               {properties.map(p => (
                 <option key={p.id} value={p.id} className="bg-background text-foreground dark:bg-zinc-900 dark:text-white">{p.name}</option>
               ))}
@@ -1065,8 +1088,8 @@ function LeasesContent() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button 
-                title="Refine filters"
-                aria-label="Refine filters"
+                title={t("Refine filters")}
+                aria-label={t("Refine filters")}
                 className={cn(
                   "flex size-9.5 sm:size-10 shrink-0 items-center justify-center rounded-xl neumorphic-extruded transition-all cursor-pointer",
                   sortBy !== "default" ? "text-primary border border-primary/30" : "text-muted-foreground hover:neumorphic-inset hover:text-foreground"
@@ -1078,13 +1101,13 @@ function LeasesContent() {
             <DropdownMenuContent align="end" className="w-64 p-2 rounded-2xl neumorphic-panel border border-border">
               <div className="px-3 py-2">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
-                  Refine Results
+                  {t("Refine Results")}
                 </p>
               </div>
               <DropdownMenuSeparator className="mx-2 bg-border" />
               
               <div className="mt-2 px-3 pb-1">
-                <p className="text-[11px] font-bold text-muted-foreground/70">Sort by Rent</p>
+                <p className="text-[11px] font-bold text-muted-foreground/70">{t("Sort by Rent")}</p>
               </div>
               <DropdownMenuItem 
                 onClick={() => setSortBy("rent-desc")}
@@ -1094,8 +1117,8 @@ function LeasesContent() {
                   <ArrowUp01 className="size-4" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-xs">High to Low</span>
-                  <span className="text-[9px] text-muted-foreground">Highest rent first</span>
+                  <span className="font-semibold text-xs">{t("High to Low")}</span>
+                  <span className="text-[9px] text-muted-foreground">{t("Highest rent first")}</span>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem 
@@ -1106,15 +1129,15 @@ function LeasesContent() {
                   <ArrowDown10 className="size-4" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-xs">Low to High</span>
-                  <span className="text-[9px] text-muted-foreground">Lowest rent first</span>
+                  <span className="font-semibold text-xs">{t("Low to High")}</span>
+                  <span className="text-[9px] text-muted-foreground">{t("Lowest rent first")}</span>
                 </div>
               </DropdownMenuItem>
 
               <DropdownMenuSeparator className="mx-2 my-2 bg-border" />
               
               <div className="mt-2 px-3 pb-1">
-                <p className="text-[11px] font-bold text-muted-foreground/70">Lease Expiry</p>
+                <p className="text-[11px] font-bold text-muted-foreground/70">{t("Lease end")}</p>
               </div>
               <DropdownMenuItem 
                 onClick={() => setSortBy("date-asc")}
@@ -1124,8 +1147,8 @@ function LeasesContent() {
                   <CalendarRange className="size-4" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-xs">Soonest First</span>
-                  <span className="text-[9px] text-muted-foreground">Urgent renewals top</span>
+                  <span className="font-semibold text-xs">{t("Soonest First")}</span>
+                  <span className="text-[9px] text-muted-foreground">{t("Dated terms first, open-ended last")}</span>
                 </div>
               </DropdownMenuItem>
 
@@ -1138,7 +1161,7 @@ function LeasesContent() {
                 <div className="flex size-8 items-center justify-center rounded-lg bg-destructive/10">
                   <RotateCcw className="size-4" />
                 </div>
-                <span className="font-black uppercase tracking-wider text-[10px]">Reset All Filters</span>
+                <span className="font-black uppercase tracking-wider text-[10px]">{t("Reset All Filters")}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

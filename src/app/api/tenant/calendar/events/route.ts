@@ -45,6 +45,7 @@ export async function GET(request: Request) {
                 id,
                 start_date,
                 end_date,
+                term_type,
                 monthly_rent,
                 status,
                 unit:units (
@@ -168,18 +169,21 @@ export async function GET(request: Request) {
                 });
             }
 
+            // Open-ended leases have no end date until a move-out is agreed; an end
+            // date on an open-ended lease is the approved move-out date, not an expiry.
             if (l.end_date) {
+                const isMoveOut = l.term_type !== "fixed";
                 events.push({
                     id: `lease-end-${l.id}`,
-                    title: `Lease Expiration`,
+                    title: isMoveOut ? `Move-out` : `Lease Expiration`,
                     date: l.end_date,
                     type: "lease",
-                    status: "Expiring",
+                    status: isMoveOut ? "Moving Out" : "Expiring",
                     leaseStatus: l.status,
                     propertyName: l.unit?.property?.name,
                     unitName: l.unit?.name,
                     detailsUrl: `/tenant/lease`,
-                    actionLabel: 'Review Renewal',
+                    actionLabel: isMoveOut ? 'View Lease' : 'Review Renewal',
                     rawEvent: l
                 });
             }

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { CheckCircle2, ArrowRight, Loader2, Download } from "lucide-react";
 import { SecurityKeyDisplayCard, downloadSecurityKeyFile } from "@/components/auth/SecurityKeyDisplayCard";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export interface SecurityKeyRecoveryModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export function SecurityKeyRecoveryModal({
   onProceed,
   isRedirecting = false,
 }: SecurityKeyRecoveryModalProps) {
+  const { t } = useLanguageContext();
   const [isSecurityKeyAcknowledged, setIsSecurityKeyAcknowledged] = useState(false);
   const [hasDownloaded, setHasDownloaded] = useState(false);
 
@@ -48,10 +50,10 @@ export function SecurityKeyRecoveryModal({
               id="security-recovery-modal-title"
               className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground"
             >
-              Account Claimed Successfully
+              {t("Account Claimed Successfully")}
             </h2>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Workspace linked to <span className="font-bold text-foreground break-all">{accountEmail}</span>
+              {t("Workspace linked to")} <span className="font-bold text-foreground break-all">{accountEmail}</span>
             </p>
           </div>
         </div>
@@ -64,8 +66,8 @@ export function SecurityKeyRecoveryModal({
             setHasDownloaded(true);
             setIsSecurityKeyAcknowledged(true);
           }}
-          title="Emergency Spare Key (Landlord Security Recovery Key)"
-          description="Just like a spare key to your house, keep this safe so you never get locked out. If you ever forget your password or lose access to your email, this code lets you unlock your account."
+          title={t("Emergency Spare Key (Landlord Security Recovery Key)")}
+          description={t("Just like a spare key to your house, keep this safe so you never get locked out. If you ever forget your password or lose access to your email, this code lets you unlock your account.")}
           accountEmail={accountEmail}
         />
 
@@ -85,18 +87,18 @@ export function SecurityKeyRecoveryModal({
             {isRedirecting ? (
               <>
                 <Loader2 className="size-5 animate-spin" />
-                <span>Connecting to Sign In...</span>
+                <span>{t("Connecting to Sign In...")}</span>
               </>
             ) : (
               <>
-                <span>Proceed to Sign In</span>
+                <span>{t("Proceed to Sign In")}</span>
                 <ArrowRight className="size-6 stroke-[3]" />
               </>
             )}
           </button>
           {!hasDownloaded && (
             <p className="mt-3 text-center text-xs sm:text-sm font-semibold text-muted-foreground">
-              Please click &ldquo;Download&rdquo; above to save your spare key file before signing in.
+              {t("Please click “Download” above to save your spare key file before signing in.")}
             </p>
           )}
         </div>

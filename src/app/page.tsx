@@ -4,10 +4,12 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export default function RootTurnkeyEntryPage() {
     const router = useRouter();
     const { user, profile, loading } = useAuth();
+    const { t } = useLanguageContext();
 
     useEffect(() => {
         if (loading) return;
@@ -27,5 +29,5 @@ export default function RootTurnkeyEntryPage() {
         }
     }, [user, profile, loading, router]);
 
-    return <PageLoader message="Entering iReside Workspace…" />;
+    return <PageLoader message={t("Entering iReside Workspace…")} />;
 }

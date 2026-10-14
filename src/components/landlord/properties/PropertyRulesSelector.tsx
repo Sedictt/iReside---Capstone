@@ -10,6 +10,7 @@ import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { FieldError } from "@/components/ui/field-error";
 import { PROPERTY_LIMITS, houseRuleTextRule } from "@/lib/validation/schemas/properties.schema";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface RuleChipProps {
     rule: string;
@@ -28,6 +29,8 @@ function RuleChip({
     onToggle,
     onRemove,
 }: RuleChipProps) {
+    const { t } = useLanguageContext();
+    const displayName = isCustom ? rule : t(rule);
     const textRef = useRef<HTMLSpanElement>(null);
     const [isTruncated, setIsTruncated] = useState(false);
 
@@ -53,7 +56,7 @@ function RuleChip({
             onClick={onToggle}
             onMouseEnter={checkTruncation}
             aria-pressed={isSelected}
-            title={isTruncated ? rule : undefined}
+            title={isTruncated ? displayName : undefined}
             className={cn(
                 isCustom
                     ? "w-full px-4 py-3 pr-8 rounded-2xl text-[11px] font-black uppercase tracking-wider border transition-all text-left truncate flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
@@ -67,13 +70,13 @@ function RuleChip({
         >
             {isSelected && <Check className="size-3.5 shrink-0 stroke-[3]" />}
             <span ref={textRef} className="truncate">
-                {rule}
+                {displayName}
             </span>
         </button>
     );
 
     const wrappedButton = isTruncated ? (
-        <Tooltip content={rule} side="top" sideOffset={6}>
+        <Tooltip content={displayName} side="top" sideOffset={6}>
             {button}
         </Tooltip>
     ) : (
@@ -88,8 +91,8 @@ function RuleChip({
                     <button
                         type="button"
                         onClick={onRemove}
-                        title={`Delete "${rule}" from choices`}
-                        aria-label={`Delete custom rule choice ${rule}`}
+                        title={t("Delete \"{amenity}\" from choices", { amenity: rule })}
+                        aria-label={t("Delete custom rule choice {rule}", { rule })}
                         className={cn(
                             "absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full opacity-60 hover:opacity-100 transition-opacity cursor-pointer",
                             isSelected
@@ -124,6 +127,7 @@ export function PropertyRulesSelector({
     variant = "default",
     className,
 }: PropertyRulesSelectorProps) {
+    const { t } = useLanguageContext();
     const isDarkVariant = variant === "dark";
     const [inputValue, setInputValue] = useState("");
 
@@ -164,7 +168,7 @@ export function PropertyRulesSelector({
 
         const result = addCustomRule(trimmed);
         if (!result.success) {
-            toast.error(result.error || "Unable to add custom rule.");
+            toast.error(t(result.error || "Unable to add custom rule."));
             return;
         }
 
@@ -176,7 +180,7 @@ export function PropertyRulesSelector({
 
         setInputValue("");
         addForm.reset();
-        toast.success(`"${addedName}" added! It is now saved as a choice for all your properties.`);
+        toast.success(t("\"{name}\" added! It is now saved as a choice for all your properties.", { name: addedName }));
     };
 
     const handleRemoveCustomChoice = (ruleName: string, e: React.MouseEvent) => {
@@ -186,7 +190,7 @@ export function PropertyRulesSelector({
         if (selectedRules.some((r) => r.toLowerCase() === ruleName.toLowerCase())) {
             onChange(selectedRules.filter((r) => r.toLowerCase() !== ruleName.toLowerCase()));
         }
-        toast.info(`"${ruleName}" removed from your custom choices.`);
+        toast.info(t("\"{name}\" removed from your custom choices.", { name: ruleName }));
     };
 
     return (
@@ -210,11 +214,11 @@ export function PropertyRulesSelector({
                                 isDarkVariant ? "text-white/60" : "text-muted-foreground"
                             )}
                         >
-                            Building Rules & Conduct
+                            {t("Building Rules & Conduct")}
                         </h3>
                     </div>
                     <span className="text-[10px] font-black text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">
-                        {selectedRules.length} Defined
+                        {t("{count} Defined", { count: selectedRules.length })}
                     </span>
                 </div>
 
@@ -226,7 +230,7 @@ export function PropertyRulesSelector({
                             isDarkVariant ? "text-white/40" : "text-muted-foreground"
                         )}
                     >
-                        Standard Rules
+                        {t("Standard Rules")}
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                         {defaultRules.map((rule) => (
@@ -253,7 +257,7 @@ export function PropertyRulesSelector({
                                     isDarkVariant ? "text-white/40" : "text-muted-foreground"
                                 )}
                             >
-                                Your Custom Rules
+                                {t("Your Custom Rules")}
                             </p>
                             <span
                                 className={cn(
@@ -261,7 +265,7 @@ export function PropertyRulesSelector({
                                     isDarkVariant ? "text-white/30" : "text-muted-foreground/60"
                                 )}
                             >
-                                Saved for your account
+                                {t("Saved for your account")}
                             </span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -291,7 +295,7 @@ export function PropertyRulesSelector({
                             isDarkVariant ? "text-white/40" : "text-muted-foreground"
                         )}
                     >
-                        Add Custom Rule
+                        {t("Add Custom Rule")}
                     </label>
                     <form onSubmit={handleAddCustom} className="flex gap-2">
                         <input
@@ -301,7 +305,7 @@ export function PropertyRulesSelector({
                             type="text"
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
-                            placeholder="e.g. No Videoke Starting 10pm to 9am"
+                            placeholder={t("e.g. No Videoke Starting 10pm to 9am")}
                             className={cn(
                                 "flex-1 rounded-xl px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all",
                                 addForm.errorFor("customRule") && "ring-1 ring-rose-500/50",
@@ -321,7 +325,7 @@ export function PropertyRulesSelector({
                             )}
                         >
                             <Plus className="size-3.5 stroke-[3]" />
-                            <span>Add Rule</span>
+                            <span>{t("Add Rule")}</span>
                         </button>
                     </form>
                     <FieldError id={addForm.errorId("customRule")} message={addForm.errorFor("customRule")} className="px-1" />
@@ -331,7 +335,7 @@ export function PropertyRulesSelector({
                             isDarkVariant ? "text-white/30" : "text-muted-foreground/60"
                         )}
                     >
-                        Custom rules are automatically saved to your account so you can reuse them in future properties.
+                        {t("Custom rules are automatically saved to your account so you can reuse them in future properties.")}
                     </p>
                 </div>
             </div>

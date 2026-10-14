@@ -5,6 +5,7 @@ import { NotificationCard } from "@/components/messaging/NotificationCard";
 import { OfficialReceipt } from "@/components/messaging/OfficialReceipt";
 import type { MiniChatMessage, MiniChatRole } from "./types";
 import { formatFullTimestamp } from "./utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 const systemIcon = (type: string) => {
     switch (type) {
@@ -27,6 +28,7 @@ interface MiniChatSystemMessageProps {
 }
 
 export function MiniChatSystemMessage({ message, viewerRole }: MiniChatSystemMessageProps) {
+    const { t } = useLanguageContext();
     const isOverpayment = message.issueType === "excessive_amount";
     const isRejected = message.workflowStatus === "rejected";
     const isResolved = Boolean(message.metadata?.isResolved);
@@ -45,9 +47,9 @@ export function MiniChatSystemMessage({ message, viewerRole }: MiniChatSystemMes
                 message={message}
                 icon={isOverpayment ? <TrendingUp className="size-6" /> : isRejected ? <AlertTriangle className="size-6" /> : <CheckCircle2 className="size-6" />}
                 title={isOverpayment
-                    ? (isResolved ? "Reconciliation Complete" : "Overpayment Detected")
-                    : (isRejected ? "Payment Rejected" : "Payment Confirmed")}
-                subtitle={isResolved ? "Transaction Settled" : "Action Logged"}
+                    ? (isResolved ? t("Reconciliation Complete") : t("Overpayment Detected"))
+                    : (isRejected ? t("Payment Rejected") : t("Payment Confirmed"))}
+                subtitle={isResolved ? t("Transaction Settled") : t("Action Logged")}
                 variant={isOverpayment ? (isResolved ? "success" : "warning") : (isRejected ? "error" : "success")}
                 refundImg={typeof message.metadata?.refundProofUrl === "string" ? message.metadata.refundProofUrl : undefined}
                 isCompact
@@ -60,8 +62,8 @@ export function MiniChatSystemMessage({ message, viewerRole }: MiniChatSystemMes
             <NotificationCard
                 message={message}
                 icon={<HandCoins className="size-6" />}
-                title="In-Person Payment"
-                subtitle="Verification Required"
+                title={t("In-Person Payment")}
+                subtitle={t("Verification Required")}
                 variant="warning"
                 isCompact
             />
@@ -73,8 +75,8 @@ export function MiniChatSystemMessage({ message, viewerRole }: MiniChatSystemMes
             <NotificationCard
                 message={message}
                 icon={<Bell className="size-6" />}
-                title="Payment Reminder"
-                subtitle="Notification Sent"
+                title={t("Payment Reminder")}
+                subtitle={t("Notification Sent")}
                 variant="default"
                 isCompact
             />
@@ -85,7 +87,7 @@ export function MiniChatSystemMessage({ message, viewerRole }: MiniChatSystemMes
         <NotificationCard
             message={message}
             icon={systemIcon(message.systemType ?? "")}
-            title="System Notification"
+            title={t("System Notification")}
             subtitle={formatFullTimestamp(message.createdAt)}
             variant="default"
             isCompact

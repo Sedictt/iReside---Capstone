@@ -93,7 +93,8 @@ export type TenantRenewalRequestItem = Database["public"]["Tables"]["renewal_req
   current_lease: {
     id: string;
     start_date: string;
-    end_date: string;
+    end_date: string | null;
+    term_type?: string | null;
     monthly_rent: number;
   } | null;
   new_lease: Database["public"]["Tables"]["leases"]["Row"] | null;

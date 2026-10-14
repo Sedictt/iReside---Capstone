@@ -12,6 +12,7 @@ import { createPortal } from "react-dom";
 import { m as motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Tooltip } from "@/components/ui/tooltip";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 import { formatDateLong, formatPhpCurrency, getInvoiceDisplayStatus } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
 import { moneyRule } from "@/lib/validation/rules";
 import { BILLING_LIMITS, rejectionReasonRule, roundCentavos } from "@/lib/validation/schemas/billing.schema";
+import { tr } from "@/hooks/useLanguage";
 
 type InvoiceDetail = Awaited<ReturnType<typeof import("@/lib/billing/server").getInvoiceDetailForActor>>;
 
@@ -38,6 +40,7 @@ export function InvoiceModal({
     role?: "landlord" | "tenant";
     refundMessage?: any;
 }) {
+    const { t } = useLanguageContext();
     const [invoice, setInvoice] = useState<InvoiceDetail>(null);
     const [loading, setLoading] = useState(false);
     const [processingAction, setProcessingAction] = useState<"confirm" | "confirm_received" | "reject" | "request_completion" | "remind" | null>(null);
@@ -178,11 +181,11 @@ export function InvoiceModal({
         // Intercept if not already confirmed
         if (!pendingAction && action !== "remind") {
             const config = {
-                confirm: { label: "Issue Official Receipt", desc: "This will officially record the payment and generate a permanent receipt for the tenant. This action is financially binding.", isCrucial: true },
-                confirm_received: { label: "Confirm Cash Received", desc: "By clicking this, you confirm you have physically received the cash amount. This will update the property ledger immediately.", isCrucial: true },
-                reject: { label: "Reject This Payment", desc: "The tenant's submission will be cancelled. They will be notified to correct their proof or amount and resubmit.", isCrucial: true },
-                request_completion: { label: "Request Missing Balance", desc: "The tenant will be notified that they still owe a balance, but their current payment will be recorded.", isCrucial: true },
-                remind: { label: "Send Gentle Nudge", desc: "Sends a notification without changing status.", isCrucial: false }
+                confirm: { label: t("Issue Official Receipt"), desc: t("This will officially record the payment and generate a permanent receipt for the tenant. This action is financially binding."), isCrucial: true },
+                confirm_received: { label: t("Confirm Cash Received"), desc: t("By clicking this, you confirm you have physically received the cash amount. This will update the property ledger immediately."), isCrucial: true },
+                reject: { label: t("Reject This Payment"), desc: t("The tenant's submission will be cancelled. They will be notified to correct their proof or amount and resubmit."), isCrucial: true },
+                request_completion: { label: t("Request Missing Balance"), desc: t("The tenant will be notified that they still owe a balance, but their current payment will be recorded."), isCrucial: true },
+                remind: { label: t("Send Gentle Nudge"), desc: t("Sends a notification without changing status."), isCrucial: false }
             };
             const c = config[action];
             setPendingAction({ type: action, ...c });
@@ -249,7 +252,7 @@ export function InvoiceModal({
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 if (errorData?.fieldErrors?.rejectionReason) setShowRejectionWarning(true);
-                throw new Error(errorData.error || "Failed to process review");
+                throw new Error(errorData.error || t("Failed to process review"));
             }
 
             // Reload invoice data to show updated state
@@ -270,7 +273,7 @@ export function InvoiceModal({
             onClose();
         } catch (error: any) {
             console.error("[InvoiceModal] Action failed:", error);
-            toast.error(error.message || "An unexpected error occurred. Please try again.");
+            toast.error(tr(error.message || t("An unexpected error occurred. Please try again.")));
         } finally {
             setProcessingAction(null);
         }
@@ -371,11 +374,11 @@ export function InvoiceModal({
                                 <div className="flex size-10 items-center justify-center rounded-xl bg-surface-2 border border-white/10 shadow-inner">
                                     <FileText className="size-5 text-text-medium" />
                                 </div>
-                                <span className="text-xs font-black uppercase tracking-[0.25em] text-text-medium">Invoice Specification</span>
+                                <span className="text-xs font-black uppercase tracking-[0.25em] text-text-medium">{t("Invoice Specification")}</span>
                             </div>
                             
                             <h2 className="text-4xl font-black tracking-tight text-text-high">
-                                {invoice?.invoiceNumber ?? "Loading..."}
+                                {invoice?.invoiceNumber ?? t("Loading...")}
                             </h2>
                             
                             {invoice && (
@@ -391,14 +394,14 @@ export function InvoiceModal({
                                     </span>
                                     <div className="size-1 rounded-full bg-white/10" />
                                     <span className="rounded-full bg-surface-2/50 px-3 py-1 border border-white/5 shadow-sm">
-                                        Unit {invoice.unit?.name}
+                                        {t("Unit {unit}", { unit: invoice.unit?.name ?? "" })}
                                     </span>
                                     {invoice.paymentSubmittedAt && (
                                         <>
                                             <div className="size-1 rounded-full bg-white/10" />
                                             <span className="flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-primary border border-primary/20 shadow-sm animate-in fade-in slide-in-from-left-2 duration-500">
                                                 <Clock3 className="size-3.5" />
-                                                Paid on {formatDateLong(invoice.paymentSubmittedAt)}
+                                                {t("Paid on {date}", { date: formatDateLong(invoice.paymentSubmittedAt) })}
                                             </span>
                                         </>
                                     )}
@@ -410,11 +413,12 @@ export function InvoiceModal({
                             {invoice && (
                                 <div className={cn("flex items-center gap-2 rounded-full border px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] shadow-lg", statusStyle.classes)}>
                                     <span className={cn("size-1.5 rounded-full animate-pulse", statusStyle.dot)} />
-                                    {statusStyle.label}
+                                    {t(statusStyle.label)}
                                 </div>
                              )}
                              <button 
                                  onClick={handleClose} 
+                                 aria-label={t("Close")}
                                  className="group flex size-10 items-center justify-center rounded-full border border-white/10 bg-surface-2 text-text-medium transition-all hover:bg-surface-3 hover:text-text-high active:scale-95 shadow-lg"
                              >
                                  <X className="size-5 transition-transform group-hover:rotate-90" />
@@ -437,20 +441,20 @@ export function InvoiceModal({
                                     <Loader2 className="size-12 animate-spin text-primary" />
                                     <div className="absolute inset-0 blur-xl bg-primary/20 animate-pulse rounded-full" />
                                 </div>
-                                <p className="text-sm font-medium">Synchronizing ledger details...</p>
+                                <p className="text-sm font-medium">{t("Synchronizing ledger details...")}</p>
                             </div>
                         ) : (
                             <>
                                 <div className="space-y-1">
-                                    <h3 className="text-xl font-black text-text-high tracking-tight">Financial Overview</h3>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Ledger Reconciliation</p>
+                                    <h3 className="text-xl font-black text-text-high tracking-tight">{t("Financial Overview")}</h3>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Ledger Reconciliation")}</p>
                                 </div>
 
                                 <section className="space-y-4">
                                     <div className="flex items-center justify-between">
                                         <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-text-high">
                                             <Hash className="size-4 text-primary" />
-                                            Itemized Breakdown
+                                            {t("Itemized Breakdown")}
                                         </h3>
                                     </div>
                                     <div className="grid gap-3">
@@ -458,7 +462,7 @@ export function InvoiceModal({
                                             <div key={item.id} className="group flex items-center justify-between rounded-2xl border border-white/5 bg-surface-1 p-5 transition-all hover:bg-surface-2 hover:border-white/10 shadow-sm">
                                                 <div className="space-y-1">
                                                     <p className="text-sm font-black text-text-high">{item.label}</p>
-                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-disabled">{item.category}</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-disabled">{t(item.category)}</p>
                                                 </div>
                                                 <div className="text-right">
                                                     <p className="text-base font-black text-text-high">{formatPhpCurrency(item.amount)}</p>
@@ -468,7 +472,7 @@ export function InvoiceModal({
 
                                         {invoice.paidAmount === 0 && (
                                             <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 shadow-inner">
-                                                <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">Total Payable</p>
+                                                <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">{t("Total Payable")}</p>
                                                 <p className="text-lg font-black text-primary">{formatPhpCurrency(invoice.totalAmount)}</p>
                                             </div>
                                         )}
@@ -476,11 +480,11 @@ export function InvoiceModal({
                                         {invoice.paidAmount > 0 && (
                                             <>
                                                 <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-surface-2/30 px-5 py-3 mt-4">
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Paid to Date</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Paid to Date")}</p>
                                                     <p className="text-sm font-black text-emerald-400">-{formatPhpCurrency(invoice.paidAmount)}</p>
                                                 </div>
                                                 <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 shadow-inner">
-                                                    <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">Remaining Balance</p>
+                                                    <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">{t("Remaining Balance")}</p>
                                                     <p className="text-lg font-black text-primary">{formatPhpCurrency(invoice.balanceRemaining)}</p>
                                                 </div>
                                             </>
@@ -491,12 +495,13 @@ export function InvoiceModal({
                                 <section className="space-y-4">
                                     <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-text-high">
                                         <Clock3 className="size-4 text-primary" />
-                                        Utility Consumption
+                                        {t("Utility Consumption")}
                                     </h3>
                                     <div className="grid gap-4">
                                         {invoice.readings.length === 0 && (
                                             <div className="rounded-3xl border-2 border-dashed border-white/5 bg-surface-1/30 p-8 text-center">
-                                                <p className="text-sm font-medium text-text-disabled">No metered readings associated with this period.</p>
+                                                <p className="text-sm font-medium text-text-disabled">{t("No metered readings associated with this period.")}</p>
+
                                             </div>
                                         )}
                                         {invoice.readings.map((reading) => (
@@ -504,22 +509,22 @@ export function InvoiceModal({
                                                 <div className="flex items-center justify-between bg-surface-2/50 px-6 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="size-2 rounded-full bg-primary" />
-                                                        <p className="text-sm font-black capitalize text-text-high">{reading.utility_type} Service</p>
+                                                        <p className="text-sm font-black capitalize text-text-high">{t("{utility} Service", { utility: t(reading.utility_type) })}</p>
                                                     </div>
                                                     <span className={cn("rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider", reading.billing_mode === "included_in_rent" ? "bg-white/5 text-text-medium" : "bg-primary/10 text-primary")}>
-                                                        {reading.billing_mode === "included_in_rent" ? "Bundled" : "Unit Standard"}
+                                                        {reading.billing_mode === "included_in_rent" ? t("Bundled") : t("Unit Standard")}
                                                     </span>
                                                 </div>
                                                 <div className="p-6">
                                                     <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
-                                                        <ReadingField label="Prev" value={reading.previous_reading} />
-                                                        <ReadingField label="Curr" value={reading.current_reading} />
-                                                        <ReadingField label="Usage" value={reading.usage} highlight />
-                                                        <ReadingField label="Charge" value={formatPhpCurrency(reading.computed_charge)} highlight />
+                                                        <ReadingField label={t("Prev")} value={reading.previous_reading} />
+                                                        <ReadingField label={t("Curr")} value={reading.current_reading} />
+                                                        <ReadingField label={t("Usage")} value={reading.usage} highlight />
+                                                        <ReadingField label={t("Charge")} value={formatPhpCurrency(reading.computed_charge)} highlight />
                                                     </div>
                                                     <div className="mt-5 border-t border-white/5 pt-4">
                                                         <p className="text-[10px] font-medium uppercase tracking-widest text-text-disabled">
-                                                            Billing Period: {formatDateLong(reading.billing_period_start)} â€“ {formatDateLong(reading.billing_period_end)}
+                                                            {t("Billing Period:")} {formatDateLong(reading.billing_period_start)} â€“ {formatDateLong(reading.billing_period_end)}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -532,7 +537,7 @@ export function InvoiceModal({
                                     <div className="flex items-center justify-between">
                                         <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-text-high">
                                             <Receipt className="size-4 text-primary" />
-                                            Proof of Payment
+                                            {t("Proof of Payment")}
                                         </h3>
                                     </div>
 
@@ -545,7 +550,7 @@ export function InvoiceModal({
                                             <div className="relative size-20 sm:size-24 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-surface-2">
                                                 <Image
                                                     src={invoice.paymentProofUrl}
-                                                    alt="Proof of Payment Thumbnail"
+                                                    alt={t("Proof of Payment Thumbnail")}
                                                     fill
                                                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                                                 />
@@ -555,12 +560,12 @@ export function InvoiceModal({
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">
-                                                    <p className="text-sm font-black text-text-high">Uploaded Receipt</p>
+                                                    <p className="text-sm font-black text-text-high">{t("Uploaded Receipt")}</p>
                                                     <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-                                                        Click to expand
+                                                        {t("Click to expand")}
                                                     </span>
                                                 </div>
-                                                <p className="text-xs text-text-medium mt-1">Click thumbnail to inspect high-resolution image</p>
+                                                <p className="text-xs text-text-medium mt-1">{t("Click thumbnail to inspect high-resolution image")}</p>
                                             </div>
                                             <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-text-disabled transition-all group-hover:bg-primary/10 group-hover:text-primary">
                                                 <ArrowUpRight className="size-4" />
@@ -574,9 +579,9 @@ export function InvoiceModal({
                                                     <Receipt className="size-6 opacity-25" />
                                                 </div>
                                                 <div className="space-y-0.5">
-                                                    <p className="text-xs font-black text-text-medium">No Proof Attached</p>
+                                                    <p className="text-xs font-black text-text-medium">{t("No Proof Attached")}</p>
                                                     <p className="text-[10px] font-medium text-text-disabled max-w-[200px] mx-auto leading-relaxed">
-                                                        The tenant has not uploaded a digital receipt for this transaction yet.
+                                                        {t("The tenant has not uploaded a digital receipt for this transaction yet.")}
                                                     </p>
                                                 </div>
                                             </div>
@@ -587,7 +592,7 @@ export function InvoiceModal({
                                         <div className="space-y-4 pt-6 border-t border-white/5 text-left">
                                             <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-text-high">
                                                 <Wallet className="size-4 text-amber-400" />
-                                                Proof of Refund
+                                                {t("Proof of Refund")}
                                             </h3>
                                             <button 
                                                 type="button"
@@ -597,7 +602,7 @@ export function InvoiceModal({
                                                 <div className="relative size-20 sm:size-24 shrink-0 overflow-hidden rounded-xl border border-amber-500/20 bg-surface-2">
                                                     <Image
                                                         src={(invoice.metadata as any).refund_proof_url}
-                                                        alt="Proof of Refund Thumbnail"
+                                                        alt={t("Proof of Refund Thumbnail")}
                                                         fill
                                                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                                                     />
@@ -607,12 +612,12 @@ export function InvoiceModal({
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2">
-                                                        <p className="text-sm font-black text-text-high">Refund Receipt</p>
+                                                        <p className="text-sm font-black text-text-high">{t("Refund Receipt")}</p>
                                                         <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                                                            Click to expand
+                                                            {t("Click to expand")}
                                                         </span>
                                                     </div>
-                                                    <p className="text-xs text-text-medium mt-1">Click thumbnail to inspect high-resolution image</p>
+                                                    <p className="text-xs text-text-medium mt-1">{t("Click thumbnail to inspect high-resolution image")}</p>
                                                 </div>
                                                 <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 group-hover:bg-amber-500/20 transition-colors">
                                                     <ArrowUpRight className="size-4" />
@@ -645,7 +650,7 @@ export function InvoiceModal({
                                         onClick={() => leftPanelRef.current?.scrollBy({ top: 220, behavior: "smooth" })}
                                         className="flex items-center gap-1.5 rounded-full border border-white/10 bg-surface-2/95 hover:bg-surface-3 px-3 py-1.5 text-[11px] font-bold text-text-medium hover:text-text-high shadow-xl backdrop-blur-md transition-all cursor-pointer hover:scale-105"
                                     >
-                                        <span>Scroll for details</span>
+                                        <span>{t("Scroll for details")}</span>
                                         <ChevronDown className="size-3.5 text-primary animate-bounce" />
                                     </button>
                                 </motion.div>
@@ -667,26 +672,26 @@ export function InvoiceModal({
                                         {/* Verification Section */}
                                         <section className="space-y-4">
                                             <div className="flex items-center justify-between">
-                                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-medium">Payment Verification</h3>
+                                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-medium">{t("Payment Verification")}</h3>
                                                 {invoice.paymentProofUrl && (
                                                     <span className="flex items-center gap-1.5 text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                                                         <ShieldCheck className="size-3" />
-                                                        Attachment Provided
+                                                        {t("Attachment Provided")}
                                                     </span>
                                                 )}
                                             </div>
                                             
                                             <div className="grid gap-3">
                                                 <div className="grid grid-cols-2 gap-3">
-                                                    <StatusLine label="Payment Method" value={invoice.paymentMethod ?? "Not specified"} icon={<CreditCardIcon className="size-3.5" />} />
-                                                    <StatusLine label="Reference #" value={invoice.referenceNumber ?? "None"} icon={<Hash className="size-3.5" />} />
+                                                    <StatusLine label={t("Payment Method")} value={invoice.paymentMethod ?? t("Not specified")} icon={<CreditCardIcon className="size-3.5" />} />
+                                                    <StatusLine label={t("Reference #")} value={invoice.referenceNumber ?? t("None")} icon={<Hash className="size-3.5" />} />
                                                 </div>
 
                                                 {invoice.paymentDestination && (
                                                     <div className="rounded-2xl border border-white/10 bg-surface-2 p-5 space-y-3 shadow-sm">
                                                         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-disabled">
                                                             <QrCode className="size-3.5" />
-                                                            Paid To
+                                                            {t("Paid To")}
                                                         </div>
                                                         <div>
                                                             <p className="text-sm font-black text-text-high">{(invoice.paymentDestination as any)?.account_name}</p>
@@ -700,7 +705,7 @@ export function InvoiceModal({
                                     {/* Decisions Hub */}
                                     <section className="space-y-4 pt-4 border-t border-white/5">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-medium">Action Center</h3>
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-medium">{t("Action Center")}</h3>
                                             <div className="flex bg-surface-2 p-1 rounded-xl border border-white/5 shadow-inner">
                                                 <button 
                                                     onClick={() => setActiveTab("approve")}
@@ -709,7 +714,7 @@ export function InvoiceModal({
                                                         activeTab === "approve" ? "bg-primary text-primary-foreground shadow-sm" : "text-text-disabled hover:text-text-medium"
                                                     )}
                                                 >
-                                                    Confirm
+                                                    {t("Confirm")}
                                                 </button>
                                                 <button 
                                                     onClick={() => setActiveTab("issue")}
@@ -718,7 +723,7 @@ export function InvoiceModal({
                                                         activeTab === "issue" ? "bg-amber-500 text-white shadow-sm" : "text-text-disabled hover:text-text-medium"
                                                     )}
                                                 >
-                                                    Report Issue
+                                                    {t("Report Issue")}
                                                 </button>
                                             </div>
                                         </div>
@@ -762,8 +767,8 @@ export function InvoiceModal({
                                                                         <CheckCircle className="size-3" />
                                                                     </div>
                                                                     <div className="space-y-1">
-                                                                        <p className="text-xs font-black text-text-high leading-tight">Proceed with Confirmation</p>
-                                                                        <p className="text-[10px] text-text-medium font-medium leading-relaxed">Everything looks correct. Confirming will finalize the payment and issue a formal receipt to the tenant.</p>
+                                                                        <p className="text-xs font-black text-text-high leading-tight">{t("Proceed with Confirmation")}</p>
+                                                                        <p className="text-[10px] text-text-medium font-medium leading-relaxed">{t("Everything looks correct. Confirming will finalize the payment and issue a formal receipt to the tenant.")}</p>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -775,7 +780,7 @@ export function InvoiceModal({
                                                                         onChange={(event) => setTenantComment(event.target.value)} 
                                                                         rows={3} 
                                                                         className="w-full resize-none rounded-2xl border border-white/10 bg-surface-2 px-5 py-4 text-sm text-text-high placeholder:text-text-disabled focus:border-primary/50 focus:ring-4 focus:ring-primary/10 outline-none transition-all shadow-inner" 
-                                                                        placeholder="Add an optional message for the tenant (e.g. 'Thank you for the prompt payment!')" 
+                                                                        placeholder={t("Add an optional message for the tenant (e.g. 'Thank you for the prompt payment!')")} 
                                                                     />
                                                                     <div className="absolute right-4 bottom-4 opacity-30 group-focus-within:opacity-100 transition-opacity">
                                                                         <MessageSquare className="size-4 text-primary" />
@@ -790,7 +795,7 @@ export function InvoiceModal({
                                                                         fullWidth
                                                                         icon={<CheckCircle2 className="size-5" />}
                                                                     >
-                                                                        Confirm & Issue Receipt
+                                                                        {t("Confirm & Issue Receipt")}
                                                                     </ActionButton>
                                                                 </div>
                                                             </div>
@@ -806,8 +811,8 @@ export function InvoiceModal({
                                                     className="space-y-6"
                                                 >
                                                     <div className="space-y-1">
-                                                        <h4 className="text-sm font-black text-text-high">Resolution Wizard</h4>
-                                                        <p className="text-[10px] font-medium text-text-disabled uppercase tracking-widest">Step-by-step issue management</p>
+                                                        <h4 className="text-sm font-black text-text-high">{t("Resolution Wizard")}</h4>
+                                                        <p className="text-[10px] font-medium text-text-disabled uppercase tracking-widest">{t("Step-by-step issue management")}</p>
                                                     </div>
 
                                                     <WizardFlow 
@@ -836,7 +841,7 @@ export function InvoiceModal({
                                                                         <Info className="size-3" />
                                                                     </div>
                                                                     <p className="text-[11px] leading-relaxed text-slate-200 dark:text-zinc-200">
-                                                                        This sends a message to the tenant <span className="text-amber-400 font-bold">without changing anything</span>. Use this if you just want to tell them you&apos;re still reviewing their payment.
+                                                                        {t("This sends a message to the tenant")} <span className="text-amber-400 font-bold">{t("without changing anything")}</span>. {t("Use this if you just want to tell them you're still reviewing their payment.")}
                                                                     </p>
                                                                 </div>
                                                             }
@@ -849,7 +854,7 @@ export function InvoiceModal({
                                                                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-surface-2/30 py-3 text-[10px] font-black uppercase tracking-widest text-text-medium transition-all hover:bg-surface-3 hover:text-text-high hover:border-white/20 group"
                                                             >
                                                                 {processingAction === "remind" ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />}
-                                                                Send a Gentle Nudge
+                                                                {t("Send a Gentle Nudge")}
                                                                 <HelpCircle className="size-3 text-text-disabled group-hover:text-amber-400 transition-colors" />
                                                             </button>
                                                         </Tooltip>
@@ -863,12 +868,12 @@ export function InvoiceModal({
                                     <section className="space-y-4 pt-4 border-t border-white/5">
                                         <div className="flex items-center gap-2">
                                             <History className="size-3.5 text-text-disabled" />
-                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-medium">Audit History</h3>
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-medium">{t("Audit History")}</h3>
                                         </div>
                                         <div className="space-y-3">
                                             {invoice.receipts.length === 0 && (
                                                 <div className="rounded-2xl bg-surface-2/30 border border-white/5 p-6 text-center">
-                                                    <p className="text-[10px] italic text-text-disabled">No transactions recorded yet for this invoice.</p>
+                                                    <p className="text-[10px] italic text-text-disabled">{t("No transactions recorded yet for this invoice.")}</p>
                                                 </div>
                                             )}
                                             {invoice.receipts.map((receipt) => (
@@ -882,7 +887,7 @@ export function InvoiceModal({
                                                     </div>
                                                     <div className="text-right">
                                                         <p className="text-xs font-black text-text-high">{formatPhpCurrency((receipt as any).amount)}</p>
-                                                        <p className="text-[8px] font-black uppercase text-emerald-400 mt-0.5">Verified</p>
+                                                        <p className="text-[8px] font-black uppercase text-emerald-400 mt-0.5">{t("Verified")}</p>
                                                     </div>
                                                 </div>
                                             ))}
@@ -913,7 +918,7 @@ export function InvoiceModal({
                                             onClick={() => rightPanelRef.current?.scrollBy({ top: 220, behavior: "smooth" })}
                                             className="flex items-center gap-1.5 rounded-full border border-white/10 bg-surface-2/95 hover:bg-surface-3 px-3 py-1.5 text-[11px] font-bold text-text-medium hover:text-text-high shadow-xl backdrop-blur-md transition-all cursor-pointer hover:scale-105"
                                         >
-                                            <span>Scroll for actions</span>
+                                            <span>{t("Scroll for actions")}</span>
                                             <ChevronDown className="size-3.5 text-primary animate-bounce" />
                                         </button>
                                     </motion.div>
@@ -931,9 +936,9 @@ export function InvoiceModal({
                                     </div>
                                 </div>
                                 <div className="space-y-3">
-                                    <h3 className="text-2xl font-black text-text-high tracking-tight">Verified Statement</h3>
+                                    <h3 className="text-2xl font-black text-text-high tracking-tight">{t("Verified Statement")}</h3>
                                     <p className="text-sm text-text-medium leading-relaxed max-w-[280px]">
-                                        This invoice has been officially logged in the iReside ledger. You can download a digital copy or pay through the checkout.
+                                        {t("This invoice has been officially logged in the iReside ledger. You can download a digital copy or pay through the checkout.")}
                                     </p>
                                 </div>
                                 {invoice?.status !== 'paid' && (
@@ -941,7 +946,8 @@ export function InvoiceModal({
                                         href={`/tenant/payments/${invoiceId}/checkout`}
                                         className="w-full bg-primary hover:bg-primary-dark text-white py-5 px-8 rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-primary/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-3"
                                     >
-                                        Proceed to Payment <ArrowUpRight className="size-5" />
+                                        {t("Proceed to Payment")} <ArrowUpRight
+ className="size-5" />
                                     </Link>
                                 )}
                             </div>
@@ -975,9 +981,9 @@ export function InvoiceModal({
                                 </div>
 
                                 <div className="space-y-3 text-center">
-                                    <h3 className="text-2xl font-black text-text-high tracking-tight">Confirm Action</h3>
+                                    <h3 className="text-2xl font-black text-text-high tracking-tight">{t("Confirm Action")}</h3>
                                     <p className="text-sm font-medium leading-relaxed text-text-medium">
-                                        You are about to <span className="text-amber-400 font-black underline decoration-amber-500/30 underline-offset-4">{pendingAction.label}</span>.{" "}
+                                        {t("You are about to")} <span className="text-amber-400 font-black underline decoration-amber-500/30 underline-offset-4">{pendingAction.label}</span>.{" "}
                                         {pendingAction.desc}
                                     </p>
                                 </div>
@@ -998,12 +1004,12 @@ export function InvoiceModal({
                                         {confirmCountdown > 0 ? (
                                             <>
                                                 <Clock3 className="size-4 animate-pulse shrink-0" />
-                                                <span>Hold to Confirm ({confirmCountdown}s)</span>
+                                                <span>{t("Hold to Confirm ({seconds}s)", { seconds: confirmCountdown })}</span>
                                             </>
                                         ) : (
                                             <>
                                                 <CheckCircle2 className="size-4 shrink-0" />
-                                                <span>Yes, Proceed</span>
+                                                <span>{t("Yes, Proceed")}</span>
                                             </>
                                         )}
                                     </button>
@@ -1011,7 +1017,7 @@ export function InvoiceModal({
                                         onClick={() => setPendingAction(null)}
                                         className="flex items-center justify-center h-14 rounded-2xl border border-white/10 bg-transparent text-sm font-black text-text-medium transition-all hover:bg-white/5"
                                     >
-                                        Cancel
+                                        {t("Cancel")}
                                     </button>
                                 </div>
                             </div>
@@ -1038,10 +1044,11 @@ export function InvoiceModal({
                             exit={{ opacity: 0, scale: 0.9 }}
                             className="relative max-h-full max-w-full overflow-hidden rounded-3xl border border-white/10 shadow-[0_40px_120px_rgba(0,0,0,0.8)]"
                         >
-                            <Image src={lightboxUrl} alt="Enlarged Proof" width={1200} height={900} className="object-contain" style={{maxHeight: '85vh', width: 'auto'}} />
+                            <Image src={lightboxUrl} alt={t("Enlarged Proof")} width={1200} height={900} className="object-contain" style={{maxHeight: '85vh', width: 'auto'}} />
                             <div className="absolute top-4 right-4">
                                 <button 
                                     onClick={() => setLightboxUrl(null)}
+                                    aria-label={t("Close")}
                                     className="flex size-12 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md border border-white/10 hover:bg-black/60 transition-all shadow-lg"
                                 >
                                     <X className="size-6" />
@@ -1049,7 +1056,7 @@ export function InvoiceModal({
                             </div>
                             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none">
                                 <p className="text-xs font-semibold text-white/90 bg-black/60 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 shadow-lg">
-                                    Proof of Payment
+                                    {t("Proof of Payment")}
                                 </p>
                             </div>
                         </motion.div>
@@ -1075,6 +1082,7 @@ function F2FActionCenter({
     tenantComment: string;
     setTenantComment: (value: string) => void;
 }) {
+    const { t } = useLanguageContext();
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
             <div className="rounded-[2rem] border border-cyan-500/20 bg-cyan-500/10 p-6 text-center space-y-4">
@@ -1084,26 +1092,26 @@ function F2FActionCenter({
                     </div>
                 </div>
                 <div className="space-y-1">
-                    <p className="text-sm font-black text-white">Physical Cash Collection</p>
-                    <p className="text-[10px] font-medium text-cyan-100/60 leading-relaxed uppercase tracking-wider">Face-to-Face Transaction</p>
+                    <p className="text-sm font-black text-white">{t("Physical Cash Collection")}</p>
+                    <p className="text-[10px] font-medium text-cyan-100/60 leading-relaxed uppercase tracking-wider">{t("Face-to-Face Transaction")}</p>
                 </div>
             </div>
 
             <div className="space-y-5">
                 <div className="rounded-2xl border border-white/5 bg-surface-2 p-5 space-y-4">
                     <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Amount to Receive</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Amount to Receive")}</p>
                         <p className="text-sm font-black text-primary">{formatPhpCurrency(invoice?.balanceRemaining ?? 0)}</p>
                     </div>
                     <div className="h-[1px] bg-white/5" />
                     <div className="space-y-2">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Handover Status</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Handover Status")}</p>
                         <div className="grid grid-cols-2 gap-2">
                             <div className="rounded-xl border border-primary/20 bg-primary/10 p-3 text-center">
-                                <p className="text-[10px] font-black text-primary">In Person</p>
+                                <p className="text-[10px] font-black text-primary">{t("In Person")}</p>
                             </div>
                             <div className="rounded-xl border border-white/5 bg-surface-3 p-3 text-center opacity-40">
-                                <p className="text-[10px] font-black text-text-disabled">Other</p>
+                                <p className="text-[10px] font-black text-text-disabled">{t("Other")}</p>
                             </div>
                         </div>
                     </div>
@@ -1115,7 +1123,7 @@ function F2FActionCenter({
                         onChange={(event) => setTenantComment(event.target.value)} 
                         rows={2} 
                         className="w-full resize-none rounded-2xl border border-white/10 bg-surface-2 px-5 py-4 text-sm text-text-high placeholder:text-text-disabled focus:border-primary/50 outline-none transition-all" 
-                        placeholder="Note (e.g. 'Received at unit 202')" 
+                        placeholder={t("Note (e.g. 'Received at unit 202')")} 
                     />
                 </div>
 
@@ -1126,7 +1134,7 @@ function F2FActionCenter({
                     fullWidth
                     icon={<ShieldCheck className="size-5" />}
                 >
-                    Confirm Cash Received
+                    {t("Confirm Cash Received")}
                 </ActionButton>
             </div>
         </div>
@@ -1166,6 +1174,7 @@ function WizardFlow({
     shortfallAmount: number | "";
     setShortfallAmount: (value: number | "") => void;
 }) {
+    const { t } = useLanguageContext();
     const [step, setStep] = useState<"diagnose" | "adjust" | "resolve" | "communicate">("diagnose");
     const [diagnosis, setDiagnosis] = useState<"amount" | "proof" | "other" | null>(null);
     const [receivedAmount, setReceivedAmount] = useState<number | "">("");
@@ -1199,24 +1208,24 @@ function WizardFlow({
                         exit={{ opacity: 0, y: -10 }}
                         className="space-y-4"
                     >
-                        <p className="text-[11px] font-black text-text-medium">What seems to be the problem?</p>
+                        <p className="text-[11px] font-black text-text-medium">{t("What seems to be the problem?")}</p>
                         <div className="grid gap-3">
                             <DiagnosisCard 
                                 icon={<AlertTriangle className="size-5" />}
-                                title="Amount is Incorrect"
-                                description="The tenant paid more or less than required"
+                                title={t("Amount is Incorrect")}
+                                description={t("The tenant paid more or less than required")}
                                 onClick={() => handleDiagnosis("amount")}
                             />
                             <DiagnosisCard 
                                 icon={<FileText className="size-5" />}
-                                title="Invalid Proof"
-                                description="Receipt is blurry, fake, or incorrect"
+                                title={t("Invalid Proof")}
+                                description={t("Receipt is blurry, fake, or incorrect")}
                                 onClick={() => handleDiagnosis("proof")}
                             />
                             <DiagnosisCard 
                                 icon={<MessageSquare className="size-5" />}
-                                title="Something Else"
-                                description="Another issue not listed above"
+                                title={t("Something Else")}
+                                description={t("Another issue not listed above")}
                                 onClick={() => handleDiagnosis("other")}
                             />
                         </div>
@@ -1235,23 +1244,23 @@ function WizardFlow({
                             <button onClick={() => setStep("diagnose")} className="text-text-disabled hover:text-text-medium transition-colors">
                                 <ChevronRight className="size-4 rotate-180" />
                             </button>
-                            <p className="text-[11px] font-black text-text-medium">Enter actual payment details</p>
+                            <p className="text-[11px] font-black text-text-medium">{t("Enter actual payment details")}</p>
                         </div>
 
                         <div className="rounded-2xl border border-white/10 bg-surface-2 p-5 space-y-4 shadow-inner">
                             <div className="flex items-center justify-between">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Expected Amount</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Expected Amount")}</p>
                                 <p className="text-sm font-black text-text-high">{formatPhpCurrency(invoice.balanceRemaining)}</p>
                             </div>
                             <div className="h-[1px] bg-white/5" />
                             <div className="space-y-2">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Actual Amount Received</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Actual Amount Received")}</p>
                                 <div className="relative group">
                                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-disabled group-focus-within:text-primary transition-colors font-black text-sm">₱</div>
                                     <input min={0} max={9999999.99} step="0.01"
                                         type="number"
                                         inputMode="decimal"
-                                        aria-label="Actual amount received"
+                                        aria-label={t("Actual amount received")}
                                         aria-invalid={receivedTouched && receivedError ? true : undefined}
                                         aria-describedby={receivedTouched && receivedError ? "invoice-received-amount-error" : undefined}
                                         value={receivedAmount}
@@ -1278,7 +1287,7 @@ function WizardFlow({
                             fullWidth
                             icon={<ChevronRight className="size-4" />}
                         >
-                            Continue to Resolution
+                            {t("Continue to Resolution")}
                         </ActionButton>
                     </motion.div>
                 )}
@@ -1295,32 +1304,32 @@ function WizardFlow({
                             <button onClick={() => setStep(diagnosis === "amount" ? "adjust" : "diagnose")} className="text-text-disabled hover:text-text-medium transition-colors">
                                 <ChevronRight className="size-4 rotate-180" />
                             </button>
-                            <p className="text-[11px] font-black text-text-medium">How would you like to handle this?</p>
+                            <p className="text-[11px] font-black text-text-medium">{t("How would you like to handle this?")}</p>
                         </div>
                         <div className="grid gap-3">
                             {diagnosis === "amount" && (
                                 <>
                                     <div className="rounded-xl bg-surface-2 p-3 flex items-center justify-between border border-white/5">
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-text-disabled">Adjustment</p>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-text-disabled">{t("Adjustment")}</p>
                                         <p className={cn(
                                             "text-[10px] font-black",
                                             (shortfallAmount as number) > 0 ? "text-amber-400" : "text-emerald-400"
                                         )}>
                                             {(shortfallAmount as number) > 0 
-                                                ? `Shortfall: ${formatPhpCurrency(shortfallAmount as number)}` 
-                                                : `Excess: ${formatPhpCurrency(Math.abs(shortfallAmount as number))}`}
+                                                ? t("Shortfall: {amount}", { amount: formatPhpCurrency(shortfallAmount as number) }) 
+                                                : t("Excess: {amount}", { amount: formatPhpCurrency(Math.abs(shortfallAmount as number)) })}
                                         </p>
                                     </div>
 
                                     {(shortfallAmount as number) > 0 && (
                                         <ResolutionCard 
                                             active={paymentDiscrepancyType === "insufficient_amount"}
-                                            title="Insufficient Amount"
-                                            description="Ask the tenant to pay the remaining balance."
+                                            title={t("Insufficient Amount")}
+                                            description={t("Ask the tenant to pay the remaining balance.")}
                                             onClick={() => { 
                                                 setPaymentDiscrepancyType("insufficient_amount"); 
                                                 setMismatchResolution("request_completion"); 
-                                                setRejectionReason(`The payment amount is insufficient. Please pay the remaining balance of ${formatPhpCurrency(shortfallAmount as number)}.`);
+                                                setRejectionReason(t("The payment amount is insufficient. Please pay the remaining balance of {amount}.", { amount: formatPhpCurrency(shortfallAmount as number) }));
                                                 setStep("communicate"); 
                                             }}
                                         />
@@ -1329,12 +1338,12 @@ function WizardFlow({
                                     {(shortfallAmount as number) < 0 && (
                                         <ResolutionCard 
                                             active={paymentDiscrepancyType === "excessive_amount"}
-                                            title="Too Much Amount"
-                                            description="Credit the overpayment to next month."
+                                            title={t("Too Much Amount")}
+                                            description={t("Credit the overpayment to next month.")}
                                             onClick={() => { 
                                                 setPaymentDiscrepancyType("excessive_amount"); 
                                                 setMismatchResolution("accept_partial"); 
-                                                setRejectionReason(`The payment amount is excessive by ${formatPhpCurrency(Math.abs(shortfallAmount as number))}. We will credit the excess to your next month's rent.`);
+                                                setRejectionReason(t("The payment amount is excessive by {amount}. We will credit the excess to your next month's rent.", { amount: formatPhpCurrency(Math.abs(shortfallAmount as number)) }));
                                                 setStep("communicate"); 
                                             }}
                                         />
@@ -1344,24 +1353,24 @@ function WizardFlow({
                             {diagnosis === "proof" && (
                                 <ResolutionCard 
                                     active={paymentDiscrepancyType === "not_received"}
-                                    title="Not Received"
-                                    description="The funds haven't arrived in the account."
+                                    title={t("Not Received")}
+                                    description={t("The funds haven't arrived in the account.")}
                                     onClick={() => { 
                                         setPaymentDiscrepancyType("not_received"); 
                                         setMismatchResolution("reject"); 
-                                        setRejectionReason("We did not receive the payment in our records. Please verify the transaction details and resubmit proof.");
+                                        setRejectionReason(t("We did not receive the payment in our records. Please verify the transaction details and resubmit proof."));
                                         setStep("communicate"); 
                                     }}
                                 />
                             )}
                             <ResolutionCard 
                                 active={mismatchResolution === "reject" && paymentDiscrepancyType === "invalid_proof"}
-                                title="Reject Entirely"
-                                description="Tell the tenant the evidence is invalid"
+                                title={t("Reject Entirely")}
+                                description={t("Tell the tenant the evidence is invalid")}
                                 onClick={() => { 
                                     setPaymentDiscrepancyType("invalid_proof");
                                     setMismatchResolution("reject"); 
-                                    setRejectionReason("The proof of payment provided is invalid or unreadable. Please resubmit.");
+                                    setRejectionReason(t("The proof of payment provided is invalid or unreadable. Please resubmit."));
                                     setStep("communicate"); 
                                 }}
                             />
@@ -1381,19 +1390,19 @@ function WizardFlow({
                             <button onClick={() => setStep(diagnosis === "amount" ? "resolve" : "diagnose")} className="text-text-disabled hover:text-text-medium transition-colors">
                                 <ChevronRight className="size-4 rotate-180" />
                             </button>
-                            <p className="text-[11px] font-black text-text-medium">Finalize and Notify Tenant</p>
+                            <p className="text-[11px] font-black text-text-medium">{t("Finalize and Notify Tenant")}</p>
                         </div>
 
                         <div className="rounded-2xl bg-amber-500/5 border border-amber-500/20 p-4 space-y-2">
                             <p className="text-[10px] font-black uppercase text-amber-500/80 tracking-widest flex items-center gap-2">
                                 <Info className="size-3" />
-                                Effect of this action
+                                {t("Effect of this action")}
                             </p>
                             <p className="text-[11px] text-text-medium leading-relaxed font-medium">
-                                {mismatchResolution === "reject" && "The payment will be cancelled. The tenant will be asked to resubmit a valid payment proof and amount."}
-                                {mismatchResolution === "request_completion" && "The tenant will be notified that they still owe a balance, but their current payment will be recorded."}
-                                {mismatchResolution === "accept_partial" && "The payment will be accepted and the invoice will be marked as partially paid."}
-                                {diagnosis === "other" && "The payment will be flagged with your custom reason and the tenant will be notified."}
+                                {mismatchResolution === "reject" && t("The payment will be cancelled. The tenant will be asked to resubmit a valid payment proof and amount.")}
+                                {mismatchResolution === "request_completion" && t("The tenant will be notified that they still owe a balance, but their current payment will be recorded.")}
+                                {mismatchResolution === "accept_partial" && t("The payment will be accepted and the invoice will be marked as partially paid.")}
+                                {diagnosis === "other" && t("The payment will be flagged with your custom reason and the tenant will be notified.")}
                             </p>
                         </div>
 
@@ -1401,8 +1410,9 @@ function WizardFlow({
                             <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-4 flex items-start gap-3">
                                 <AlertTriangle className="size-5 text-rose-400 shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="text-sm font-medium text-rose-400">Rejection reason required</p>
-                                    <p className="text-xs text-rose-300/70 mt-1">Please enter a reason for the tenant before rejecting or requesting completion.</p>
+                                    <p className="text-sm font-medium text-rose-400">{t("Rejection reason required")}</p>
+
+                                    <p className="text-xs text-rose-300/70 mt-1">{t("Please enter a reason for the tenant before rejecting or requesting completion.")}</p>
                                 </div>
                             </div>
                         )}
@@ -1412,12 +1422,12 @@ function WizardFlow({
                                 <textarea maxLength={BILLING_LIMITS.rejectionReason}
                                     value={rejectionReason}
                                     onChange={(event) => setRejectionReason(event.target.value)}
-                                    aria-label="Reason for the tenant"
+                                    aria-label={t("Reason for the tenant")}
                                     aria-invalid={showRejectionWarning && rejectionReasonError ? true : undefined}
                                     aria-describedby={showRejectionWarning && rejectionReasonError ? "invoice-rejection-reason-error" : undefined}
                                     rows={3}
                                     className={cn("w-full resize-none rounded-2xl border border-white/10 bg-surface-2 px-5 py-4 text-sm text-text-high placeholder:text-text-disabled focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all shadow-inner", showRejectionWarning && rejectionReasonError && fieldErrorClass)}
-                                    placeholder="Add a reason for the tenant (e.g. 'The receipt is unreadable' or 'The amount is missing ₱100')"
+                                    placeholder={t("Add a reason for the tenant (e.g. 'The receipt is unreadable' or 'The amount is missing ₱100')")}
                                 />
                                 <div className="absolute right-4 bottom-4 opacity-30 group-focus-within:opacity-100 transition-opacity">
                                     <MessageSquare className="size-4 text-amber-500" />
@@ -1436,7 +1446,7 @@ function WizardFlow({
                                 fullWidth
                                 icon={<CheckCircle2 className="size-5" />}
                             >
-                                Submit Resolution
+                                {t("Submit Resolution")}
                             </ActionButton>
                         </div>
                     </motion.div>
@@ -1589,6 +1599,7 @@ function RefundCenter({
     refundMessage?: any;
     onRefundSuccess?: () => void;
 }) {
+    const { t } = useLanguageContext();
     if (!invoice) return null;
     const refund = (invoice.metadata as any)?.refund_preference;
     if (!refund) return null;
@@ -1606,17 +1617,17 @@ function RefundCenter({
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <p className="text-lg font-black text-white">Refund Processed</p>
-                        <p className="text-xs font-medium text-emerald-100/60 leading-relaxed uppercase tracking-widest">Transaction Reconciled</p>
+                        <p className="text-lg font-black text-white">{t("Refund Processed")}</p>
+                        <p className="text-xs font-medium text-emerald-100/60 leading-relaxed uppercase tracking-widest">{t("Transaction Reconciled")}</p>
                     </div>
                 </div>
 
                 <div className="space-y-3">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled ml-1">Submitted Proof</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled ml-1">{t("Submitted Proof")}</p>
                     <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-surface-2 shadow-lg">
                         <Image
                             src={refundProofUrl}
-                            alt="Refund Proof"
+                            alt={t("Refund Proof")}
                             fill
                             className="object-cover"
                         />
@@ -1625,7 +1636,7 @@ function RefundCenter({
 
                 <div className="p-4 rounded-2xl bg-surface-2 border border-white/5 text-center">
                     <p className="text-[10px] text-text-medium font-medium leading-relaxed">
-                        The refund has been officially recorded. No further action is required for this reconciliation.
+                        {t("The refund has been officially recorded. No further action is required for this reconciliation.")}
                     </p>
                 </div>
             </div>
@@ -1640,36 +1651,36 @@ function RefundCenter({
                         <Wallet className="size-3" />
                     </div>
                     <div className="space-y-1">
-                        <p className="text-xs font-black text-text-high leading-tight">Tenant Refund Request</p>
+                        <p className="text-xs font-black text-text-high leading-tight">{t("Tenant Refund Request")}</p>
                         <p className="text-[10px] text-text-medium font-medium leading-relaxed">
-                            The tenant has requested a refund for the excess payment. Please process this via GCash.
+                            {t("The tenant has requested a refund for the excess payment. Please process this via GCash.")}
                         </p>
                     </div>
                 </div>
 
                 <div className="grid gap-3 p-3 rounded-xl bg-surface-2 border border-white/5 shadow-inner">
                     <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Method</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Method")}</p>
                         <p className="text-[10px] font-black text-text-high uppercase tracking-widest">GCash</p>
                     </div>
                     <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Account Number</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("Account Number")}</p>
                         <p className="text-sm font-black text-primary tracking-wider font-mono">
-                            {refund.gcash_number || "Provided via QR"}
+                            {refund.gcash_number || t("Provided via QR")}
                         </p>
                     </div>
                     {refund.qr_url && (
                         <div className="pt-2">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled mb-2">Recipient QR Code</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled mb-2">{t("Recipient QR Code")}</p>
                             <div className="relative group aspect-square w-full max-w-[200px] mx-auto overflow-hidden rounded-xl border border-white/10 bg-white p-2">
                                 <Image
                                     src={refund.qr_url}
-                                    alt="Tenant GCash QR"
+                                    alt={t("Tenant GCash QR")}
                                     fill
                                     className="object-contain"
                                 />
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <p className="text-[10px] font-black text-white uppercase tracking-widest">View Full Size</p>
+                                    <p className="text-[10px] font-black text-white uppercase tracking-widest">{t("View Full Size")}</p>
                                 </div>
                             </div>
                         </div>
@@ -1678,7 +1689,7 @@ function RefundCenter({
             </div>
 
             <div className="space-y-3">
-                <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled ml-1">Upload Proof of Refund</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled ml-1">{t("Upload Proof of Refund")}</p>
                 <div className="relative">
                     {!proofFile ? (
                         <label className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/10 bg-surface-1 py-8 text-text-disabled transition-all hover:border-primary/30 hover:bg-surface-2 cursor-pointer group">
@@ -1686,8 +1697,8 @@ function RefundCenter({
                                 <Upload className="size-5" />
                             </div>
                             <div className="text-center">
-                                <p className="text-xs font-black text-text-high group-hover:text-primary transition-colors">Select Proof Image</p>
-                                <p className="text-[10px] font-medium">PNG, JPG or WebP (Max 5MB)</p>
+                                <p className="text-xs font-black text-text-high group-hover:text-primary transition-colors">{t("Select Proof Image")}</p>
+                                <p className="text-[10px] font-medium">{t("PNG, JPG or WebP (Max 5MB)")}</p>
                             </div>
                             <input 
                                 type="file" 
@@ -1697,7 +1708,7 @@ function RefundCenter({
                                     const file = handleMediaSelection(event, {
                                         preset: "image",
                                         maxSizeBytes: 5 * 1024 * 1024,
-                                        notify: (msg, desc) => toast.error(msg, { description: desc }),
+                                        notify: (msg, desc) => toast.error(tr(msg), { description: desc }),
                                     });
                                     onProofChange(file);
                                 }}
@@ -1707,7 +1718,7 @@ function RefundCenter({
                         <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-surface-2">
                             <Image
                                 src={URL.createObjectURL(proofFile)}
-                                alt="Refund Proof Preview"
+                                alt={t("Refund Proof Preview")}
                                 fill
                                 className="object-cover"
                             />
@@ -1715,7 +1726,7 @@ function RefundCenter({
                                 <button 
                                     onClick={() => onProofChange(null)}
                                     className="p-3 rounded-2xl bg-red-500 text-white shadow-xl active:scale-90 transition-all"
-                                    title="Remove Image"
+                                    title={t("Remove Image")}
                                 >
                                     <Trash2 className="size-5" />
                                 </button>
@@ -1746,6 +1757,7 @@ function RefundSubmitButton({
     onProofChange: (file: File | null) => void;
     onSuccess?: () => void;
 }) {
+    const { t } = useLanguageContext();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -1767,13 +1779,13 @@ function RefundSubmitButton({
 
             if (!response.ok) {
                 const responseData = await response.json().catch(() => ({}));
-                throw new Error(responseData.error || "Failed to mark refund as processed.");
+                throw new Error(responseData.error || t("Failed to mark refund as processed."));
             }
 
             onProofChange(null);
             onSuccess?.();
         } catch (error: any) {
-            setError(error.message || "Something went wrong. Please try again.");
+            setError(tr(error.message || t("Something went wrong. Please try again.")));
         } finally {
             setIsSubmitting(false);
         }
@@ -1787,7 +1799,7 @@ function RefundSubmitButton({
                     <p className="text-[10px] font-medium text-rose-400 leading-relaxed">{error}</p>
                 </div>
             )}
-            <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled text-center mb-1">Finalize Resolution</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled text-center mb-1">{t("Finalize Resolution")}</p>
             <ActionButton
                 onClick={handleSubmit}
                 loading={isSubmitting}
@@ -1795,10 +1807,11 @@ function RefundSubmitButton({
                 fullWidth
                 icon={<CheckCircle2 className="size-5" />}
             >
-                Mark as Refunded
+                {t("Mark as Refunded")}
             </ActionButton>
             <p className="text-[9px] text-text-disabled text-center leading-relaxed px-4">
-                By clicking this, you confirm that you have manually sent the refund to the tenant&apos;s provided details.
+                {t("By clicking this, you confirm that you have manually sent the refund to the tenant's provided details.")}
+
             </p>
         </div>
     );

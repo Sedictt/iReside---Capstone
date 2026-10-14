@@ -4,6 +4,8 @@ import { X } from "lucide-react";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import { Unit } from "../types";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 interface ComplaintModalProps {
     isOpen: boolean;
@@ -18,6 +20,7 @@ export const ComplaintModal = ({
     unit,
     isDark
 }: ComplaintModalProps) => {
+    const { t } = useLanguageContext();
     const [complaintType, setComplaintType] = useState<string>("");
     const [customComplaint, setCustomComplaint] = useState("");
     const [attachment, setAttachment] = useState<File | null>(null);
@@ -70,7 +73,7 @@ export const ComplaintModal = ({
                         className={`relative w-full max-w-lg flex flex-col rounded-[2.5rem] border border-border bg-card shadow-[0_32px_80px_-20px_rgba(0,0,0,0.5)] overflow-hidden`}
                     >
                         <div className="absolute right-6 top-6 z-10">
-                            <button onClick={onClose} className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground">
+                            <button onClick={onClose} aria-label={t("Close")} className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground">
                                 <X className="size-6" />
                             </button>
                         </div>
@@ -82,9 +85,9 @@ export const ComplaintModal = ({
                                 </div>
                                 <div>
                                     <h2 className="text-2xl font-black tracking-tight text-foreground">
-                                        Report an Issue
+                                        {t("Report an Issue")}
                                     </h2>
-                                    <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Unit {unit.name}</p>
+                                    <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">{t("Unit {name}", { name: unit.name })}</p>
                                 </div>
                             </div>
 
@@ -97,13 +100,13 @@ export const ComplaintModal = ({
                                     <div className="size-20 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6">
                                         <span className="material-icons-round text-5xl">check_circle</span>
                                     </div>
-                                    <h3 className="text-xl font-black text-foreground mb-2">Complaint Submitted</h3>
-                                    <p className="text-muted-foreground">Your report for Unit {unit.name} has been received. We'll look into it right away.</p>
+                                    <h3 className="text-xl font-black text-foreground mb-2">{t("Complaint Submitted")}</h3>
+                                    <p className="text-muted-foreground">{t("Your report for Unit {name} has been received. We'll look into it right away.", { name: unit.name })}</p>
                                 </motion.div>
                             ) : (
                                 <form onSubmit={handleSubmit} className="space-y-6">
                                     <div className="space-y-3">
-                                        <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Type of Issue</label>
+                                        <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">{t("Type of Issue")}</label>
                                         <div className="grid grid-cols-2 gap-2">
                                             {predefinedComplaints.map((type) => (
                                                 <button
@@ -116,7 +119,7 @@ export const ComplaintModal = ({
                                                             : 'border-border bg-muted/30 text-muted-foreground hover:border-neutral-400'
                                                     }`}
                                                 >
-                                                    {type}
+                                                    {t(type)}
                                                 </button>
                                             ))}
                                         </div>
@@ -129,7 +132,7 @@ export const ComplaintModal = ({
                                             className="space-y-3"
                                         >
                                             <div className="flex items-center justify-between ml-1">
-                                                <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Details</label>
+                                                <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">{t("Details")}</label>
                                                 <span className="text-[10px] font-medium text-muted-foreground/70 select-none">
                                                     {customComplaint.length} / 500
                                                 </span>
@@ -139,14 +142,14 @@ export const ComplaintModal = ({
                                                 maxLength={500}
                                                 value={customComplaint}
                                                 onChange={(e) => setCustomComplaint(e.target.value)}
-                                                placeholder="Please describe the issue in detail..."
+                                                placeholder={t("Please describe the issue in detail...")}
                                                 className="w-full min-h-[120px] rounded-2xl border border-border bg-muted/20 px-5 py-4 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
                                             />
                                         </motion.div>
                                     )}
 
                                     <div className="space-y-3">
-                                        <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Evidence / Photos</label>
+                                        <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">{t("Evidence / Photos")}</label>
                                         <div 
                                             className={`relative group cursor-pointer rounded-2xl border-2 border-dashed transition-all p-8 flex flex-col items-center justify-center gap-3 ${
                                                 attachment ? 'border-primary/50 bg-primary/5' : 'border-border hover:border-primary/30 hover:bg-muted/30'
@@ -161,7 +164,7 @@ export const ComplaintModal = ({
                                                 onChange={(e) => {
                                                     const file = handleMediaSelection(e, {
                                                         preset: "image",
-                                                        notify: (msg, desc) => toast.error(msg, { description: desc }),
+                                                        notify: (msg, desc) => toast.error(tr(msg), { description: desc }),
                                                     });
                                                     setAttachment(file);
                                                 }}
@@ -174,7 +177,7 @@ export const ComplaintModal = ({
                                                     <div className="text-center">
                                                         <p className="text-sm font-black text-foreground">{attachment.name}</p>
                                                         <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">
-                                                            {(attachment.size / 1024 / 1024).toFixed(2)} MB &bull; Click to change
+                                                            {t("{size} MB • Click to change", { size: (attachment.size / 1024 / 1024).toFixed(2) })}
                                                         </p>
                                                     </div>
                                                 </>
@@ -184,8 +187,8 @@ export const ComplaintModal = ({
                                                         <span className="material-icons-round text-2xl">add_a_photo</span>
                                                     </div>
                                                     <div className="text-center">
-                                                        <p className="text-sm font-black text-foreground">Upload Evidence</p>
-                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">JPG, PNG up to 10MB</p>
+                                                        <p className="text-sm font-black text-foreground">{t("Upload Evidence")}</p>
+                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">{t("JPG, PNG up to 10MB")}</p>
                                                     </div>
                                                 </>
                                             )}
@@ -200,11 +203,11 @@ export const ComplaintModal = ({
                                         {isSubmitting ? (
                                             <>
                                                 <span className="material-icons-round animate-spin">refresh</span>
-                                                Processing...
+                                                {t("Processing...")}
                                             </>
                                         ) : (
                                             <>
-                                                Submit Complaint
+                                                {t("Submit Complaint")}
                                                 <span className="material-icons-round">send</span>
                                             </>
                                         )}

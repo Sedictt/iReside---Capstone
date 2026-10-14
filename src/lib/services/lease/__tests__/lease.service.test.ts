@@ -93,6 +93,63 @@ describe("LeaseService", () => {
       expect(chain.eq).not.toHaveBeenCalledWith("status", "active,expired");
     });
 
+    it("selects term_type so open-ended leases can be told apart", async () => {
+      chain.order.mockResolvedValue({ data: [], error: null });
+
+      await service.listLeasesForLandlord("landlord-1");
+
+      const selectCall = chain.select.mock.calls[chain.select.mock.calls.length - 1][0];
+      expect(selectCall).toContain("term_type");
+      expect(selectCall).toContain("end_date");
+    });
+
+    it("strips the expiring_soon pseudo-status from the status filter", async () => {
+      chain.order.mockResolvedValue({ data: [], error: null });
+
+      await service.listLeasesForLandlord("landlord-1", { status: "active,expiring_soon" });
+
+      expect(chain.eq).toHaveBeenCalledWith("status", "active");
+      expect(chain.in).not.toHaveBeenCalled();
+    });
+
+    it("maps a lone expiring_soon filter to active fixed-term leases ending soon", async () => {
+      const soon = new Date();
+      soon.setDate(soon.getDate() + 30);
+      const far = new Date();
+      far.setDate(far.getDate() + 200);
+      const iso = (d: Date) => d.toISOString().slice(0, 10);
+
+      chain.order.mockResolvedValue({
+        data: [
+          { id: "fixed-soon", status: "active", term_type: "fixed", end_date: iso(soon) },
+          { id: "fixed-far", status: "active", term_type: "fixed", end_date: iso(far) },
+          { id: "open", status: "active", term_type: "open_ended", end_date: null },
+          { id: "moving-out", status: "active", term_type: "open_ended", end_date: iso(soon) },
+        ],
+        error: null,
+      });
+
+      const result = await service.listLeasesForLandlord("landlord-1", { status: "expiring_soon" });
+
+      expect(chain.eq).toHaveBeenCalledWith("status", "active");
+      expect(result.map((lease) => lease.id)).toEqual(["fixed-soon"]);
+    });
+
+    it("keeps explicitly requested statuses when combined with expiring_soon", async () => {
+      chain.order.mockResolvedValue({
+        data: [
+          { id: "expired", status: "expired", term_type: "fixed", end_date: "2020-01-01" },
+          { id: "open", status: "active", term_type: "open_ended", end_date: null },
+        ],
+        error: null,
+      });
+
+      const result = await service.listLeasesForLandlord("landlord-1", { status: "expired,expiring_soon" });
+
+      expect(chain.in).toHaveBeenCalledWith("status", ["expired", "active"]);
+      expect(result.map((lease) => lease.id)).toEqual(["expired"]);
+    });
+
     it("propagates database errors", async () => {
       chain.order.mockResolvedValue({ data: null, error: { message: "boom" } });
 

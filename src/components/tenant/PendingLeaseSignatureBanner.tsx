@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, FileSignature } from "lucide-react";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type PendingLease = {
     id: string;
@@ -17,6 +18,7 @@ type PendingLease = {
  * "no active lease"; this gives them the way forward from inside the portal.
  */
 export function PendingLeaseSignatureBanner() {
+    const { t } = useLanguageContext();
     const [lease, setLease] = useState<PendingLease | null>(null);
 
     useEffect(() => {
@@ -47,9 +49,9 @@ export function PendingLeaseSignatureBanner() {
                     <FileSignature className="size-5" />
                 </div>
                 <div className="min-w-0">
-                    <p className="text-sm font-black text-foreground">Your lease is waiting for your signature</p>
+                    <p className="text-sm font-black text-foreground">{t("Your lease is waiting for your signature")}</p>
                     <p className="text-xs text-muted-foreground">
-                        {place ? `${place}. ` : ""}Your lease becomes active once you sign it. Until then, some pages will show that you have no active lease.
+                        {place ? `${place}. ` : ""}{t("Your lease becomes active once you sign it. Until then, some pages will show that you have no active lease.")}
                     </p>
                 </div>
             </div>
@@ -57,7 +59,7 @@ export function PendingLeaseSignatureBanner() {
                 href={lease.signingUrl}
                 className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-black uppercase tracking-wider text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
-                Review &amp; sign
+                {t("Review & sign")}
                 <ArrowRight className="size-4" />
             </Link>
         </div>

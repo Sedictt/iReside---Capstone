@@ -28,6 +28,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export interface AuditLogItem {
     id: string;
@@ -55,7 +56,18 @@ interface AuditStats {
 
 const PAGE_SIZE = 8;
 
+const CATEGORY_LABELS: Record<string, string> = {
+    all: "All Logs",
+    billing: "Billing",
+    security: "Security",
+    settings: "Settings",
+    properties: "Properties",
+    maintenance: "Maintenance",
+    general: "General",
+};
+
 export function AuditLogsSettingsTab() {
+    const { t, locale } = useLanguageContext();
     const [logs, setLogs] = useState<AuditLogItem[]>([]);
     const [stats, setStats] = useState<AuditStats>({
         total: 0,
@@ -88,11 +100,11 @@ export function AuditLogsSettingsTab() {
             if (data.stats) setStats(data.stats);
         } catch (err: any) {
             console.error("Error loading audit logs:", err);
-            toast.error("Unable to load activity logs.");
+            toast.error(t("Unable to load activity logs."));
         } finally {
             setLoading(false);
         }
-    }, [selectedCategory, selectedSeverity, searchQuery]);
+    }, [selectedCategory, selectedSeverity, searchQuery, t]);
 
     useEffect(() => {
         fetchLogs();
@@ -131,10 +143,10 @@ export function AuditLogsSettingsTab() {
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(downloadUrl);
-            toast.success("Audit log CSV exported successfully!");
+            toast.success(t("Audit log CSV exported successfully!"));
         } catch (err: any) {
             console.error("Export error:", err);
-            toast.error("Failed to export audit log.");
+            toast.error(t("Failed to export audit log."));
         } finally {
             setIsExporting(false);
         }
@@ -193,10 +205,10 @@ export function AuditLogsSettingsTab() {
                             </div>
                             <div>
                                 <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
-                                    Activity & Audit Logs
+                                    {t("Activity & Audit Logs")}
                                 </h2>
                                 <p className="text-xs text-muted-foreground">
-                                    Tamper-proof chronological trail of account, billing, and security actions.
+                                    {t("Tamper-proof chronological trail of account, billing, and security actions.")}
                                 </p>
                             </div>
                         </div>
@@ -210,7 +222,7 @@ export function AuditLogsSettingsTab() {
                             className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl neumorphic-extruded hover:text-primary text-xs font-bold text-muted-foreground hover:text-foreground transition-colors cursor-pointer disabled:opacity-50"
                         >
                             <RefreshCw className={cn("size-3.5", loading && "animate-spin text-primary")} />
-                            <span>Refresh</span>
+                            <span>{t("Refresh")}</span>
                         </button>
 
                         <button
@@ -220,7 +232,7 @@ export function AuditLogsSettingsTab() {
                             className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl neumorphic-primary text-primary-foreground text-xs font-black transition-all shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
                         >
                             <Download className="size-3.5" />
-                            <span>{isExporting ? "Exporting..." : "Export CSV"}</span>
+                            <span>{isExporting ? t("Exporting...") : t("Export CSV")}</span>
                         </button>
                     </div>
                 </div>
@@ -229,9 +241,9 @@ export function AuditLogsSettingsTab() {
                 <div className="flex items-start gap-3 p-4 rounded-2xl border border-primary/20 bg-primary/5 text-xs text-muted-foreground leading-relaxed">
                     <Lock className="size-4 shrink-0 text-primary mt-0.5" />
                     <div>
-                        <span className="font-bold text-foreground">Ethical Logging Standard (OWASP & GDPR Article 30): </span>
+                        <span className="font-bold text-foreground">{t("Ethical Logging Standard (OWASP & GDPR Article 30):")} </span>
                         <span>
-                            All events are append-only and strictly isolated to your workspace. Passwords, auth tokens, private chat texts, and financial secrets are never logged.
+                            {t("All events are append-only and strictly isolated to your workspace. Passwords, auth tokens, private chat texts, and financial secrets are never logged.")}
                         </span>
                     </div>
                 </div>
@@ -247,7 +259,7 @@ export function AuditLogsSettingsTab() {
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search by action, resident, or invoice ID..."
+                            placeholder={t("Search by action, resident, or invoice ID...")}
                             className="w-full pl-9 pr-4 py-2.5 text-xs sm:text-sm text-foreground bg-card/60 border border-border rounded-2xl focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground"
                         />
                     </div>
@@ -268,7 +280,7 @@ export function AuditLogsSettingsTab() {
                                             : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                                     )}
                                 >
-                                    {cat === "all" ? "All Logs" : cat}
+                                    {t(CATEGORY_LABELS[cat] ?? cat)}
                                 </button>
                             );
                         })}
@@ -281,13 +293,13 @@ export function AuditLogsSettingsTab() {
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-2 text-xs">
                         <RefreshCw className="size-5 animate-spin text-primary" />
-                        Loading activity logs...
+                        {t("Loading activity logs...")}
                     </div>
                 ) : logs.length === 0 ? (
                     <div className="p-12 text-center border border-dashed border-border rounded-3xl space-y-2 text-muted-foreground">
                         <ShieldCheck className="size-8 text-muted-foreground/40 mx-auto" />
-                        <p className="text-sm font-bold text-foreground">No activity logs found</p>
-                        <p className="text-xs">Actions you perform across the dashboard will appear here in real time.</p>
+                        <p className="text-sm font-bold text-foreground">{t("No activity logs found")}</p>
+                        <p className="text-xs">{t("Actions you perform across the dashboard will appear here in real time.")}</p>
                     </div>
                 ) : (
                     paginatedLogs.map((log) => {
@@ -310,11 +322,11 @@ export function AuditLogsSettingsTab() {
                                                 {log.title}
                                             </h4>
                                             <span className={cn("text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border", catInfo.badgeClass)}>
-                                                {log.category}
+                                                {t(CATEGORY_LABELS[log.category] ?? log.category)}
                                             </span>
                                             {log.severity === "warning" && (
                                                 <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                                                    Warning
+                                                    {t("Warning")}
                                                 </span>
                                             )}
                                         </div>
@@ -331,7 +343,7 @@ export function AuditLogsSettingsTab() {
                                             <ClientOnlyDate date={log.createdAt} format={{ month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }} />
                                         </div>
                                         <span className="text-[10px] text-muted-foreground/80 block font-mono">
-                                            {log.device || "Web Application"}
+                                            {log.device || t("Web Application")}
                                         </span>
                                     </div>
 
@@ -339,7 +351,7 @@ export function AuditLogsSettingsTab() {
                                         type="button"
                                         onClick={() => setInspectingLog(log)}
                                         className="size-8 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all cursor-pointer"
-                                        title="View Metadata"
+                                        title={t("View Metadata")}
                                     >
                                         <Eye className="size-3.5" />
                                     </button>
@@ -354,7 +366,11 @@ export function AuditLogsSettingsTab() {
             {logs.length > PAGE_SIZE && (
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-border/80 text-xs">
                     <span className="text-muted-foreground font-medium">
-                        Showing <strong className="font-bold text-foreground">{(currentPage - 1) * PAGE_SIZE + 1}</strong> to <strong className="font-bold text-foreground">{Math.min(currentPage * PAGE_SIZE, logs.length)}</strong> of <strong className="font-bold text-foreground">{logs.length}</strong> activities
+                        {t("Showing {start} to {end} of {total} activities", {
+                            start: (currentPage - 1) * PAGE_SIZE + 1,
+                            end: Math.min(currentPage * PAGE_SIZE, logs.length),
+                            total: logs.length,
+                        })}
                     </span>
 
                     <div className="flex items-center gap-1.5">
@@ -365,7 +381,7 @@ export function AuditLogsSettingsTab() {
                             className="flex items-center gap-1 px-3 py-1.5 rounded-xl neumorphic-extruded font-bold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                         >
                             <ChevronLeft className="size-3.5" />
-                            <span>Previous</span>
+                            <span>{t("Previous")}</span>
                         </button>
 
                         <div className="flex items-center gap-1">
@@ -392,7 +408,7 @@ export function AuditLogsSettingsTab() {
                             disabled={currentPage === totalPages}
                             className="flex items-center gap-1 px-3 py-1.5 rounded-xl neumorphic-extruded font-bold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                         >
-                            <span>Next</span>
+                            <span>{t("Next")}</span>
                             <ChevronRight className="size-3.5" />
                         </button>
                     </div>
@@ -415,12 +431,13 @@ export function AuditLogsSettingsTab() {
                                         <FileText className="size-5" />
                                     </div>
                                     <div>
-                                        <h3 className="text-sm font-black text-foreground">Audit Event Details</h3>
+                                        <h3 className="text-sm font-black text-foreground">{t("Audit Event Details")}</h3>
                                         <p className="text-xs text-muted-foreground font-mono">ID: {inspectingLog.id}</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setInspectingLog(null)}
+                                    aria-label={t("Close")}
                                     className="size-8 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
                                 >
                                     <X className="size-4" />
@@ -429,29 +446,29 @@ export function AuditLogsSettingsTab() {
 
                             <div className="space-y-2 text-xs">
                                 <div className="flex justify-between py-1.5 border-b border-border/50">
-                                    <span className="text-muted-foreground">Action Code</span>
+                                    <span className="text-muted-foreground">{t("Action Code")}</span>
                                     <span className="font-mono font-bold text-foreground">{inspectingLog.action}</span>
                                 </div>
                                 <div className="flex justify-between py-1.5 border-b border-border/50">
-                                    <span className="text-muted-foreground">Category</span>
-                                    <span className="font-bold text-primary uppercase tracking-wider">{inspectingLog.category}</span>
+                                    <span className="text-muted-foreground">{t("Category")}</span>
+                                    <span className="font-bold text-primary uppercase tracking-wider">{t(CATEGORY_LABELS[inspectingLog.category] ?? inspectingLog.category)}</span>
                                 </div>
                                 <div className="flex justify-between py-1.5 border-b border-border/50">
-                                    <span className="text-muted-foreground">Recorded At</span>
+                                    <span className="text-muted-foreground">{t("Recorded At")}</span>
                                     <span className="font-medium text-foreground">
-                                        {new Date(inspectingLog.createdAt).toLocaleString()}
+                                        {new Date(inspectingLog.createdAt).toLocaleString(locale)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between py-1.5 border-b border-border/50">
-                                    <span className="text-muted-foreground">Client / Device</span>
-                                    <span className="font-medium text-foreground">{inspectingLog.device || "Web Browser"}</span>
+                                    <span className="text-muted-foreground">{t("Client / Device")}</span>
+                                    <span className="font-medium text-foreground">{inspectingLog.device || t("Web Browser")}</span>
                                 </div>
                             </div>
 
                             {/* JSON Payload Inspector */}
                             <div className="space-y-1.5">
                                 <label className="text-[11px] font-bold text-muted-foreground">
-                                    Sanitized Event Metadata
+                                    {t("Sanitized Event Metadata")}
                                 </label>
                                 <pre className="p-3.5 rounded-2xl bg-muted/80 text-primary text-[11px] font-mono overflow-x-auto max-h-48 border border-border/40 custom-scrollbar-premium">
                                     {JSON.stringify(inspectingLog.metadata, null, 2)}
@@ -462,7 +479,7 @@ export function AuditLogsSettingsTab() {
                                 onClick={() => setInspectingLog(null)}
                                 className="w-full py-3 rounded-xl neumorphic-extruded hover:text-primary text-xs font-bold text-foreground transition-all cursor-pointer"
                             >
-                                Close
+                                {t("Close")}
                             </button>
                         </motion.div>
                     </div>

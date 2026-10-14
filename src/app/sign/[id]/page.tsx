@@ -7,23 +7,30 @@ import dynamic from 'next/dynamic';
 import { toast } from 'sonner';
 import { CheckCircle2, FileText } from 'lucide-react';
 import { m as motion } from "framer-motion";
+import { useLanguageContext } from "@/context/LanguageContext";
 
-const ConsultationTool = dynamic(() => import('../../admin/consultation-tool/ConsultationTool'), { 
-  ssr: false,
-  loading: () => (
+function ViewerLoading() {
+  const { t } = useLanguageContext();
+  return (
     <div className="min-h-screen bg-[#050505] text-text-high flex flex-col items-center justify-center font-sans">
       <div className="relative mb-8">
         <div className="size-20 border-2 border-primary/20 rounded-full" />
         <div className="absolute inset-0 size-20 border-t-2 border-primary rounded-full animate-spin" />
       </div>
-      <h2 className="text-2xl font-black tracking-tighter uppercase text-primary">Loading Viewer</h2>
-      <p className="text-text-medium text-sm mt-2 font-medium uppercase tracking-widest">Preparing high-fidelity environment</p>
+      <h2 className="text-2xl font-black tracking-tighter uppercase text-primary">{t("Loading Viewer")}</h2>
+      <p className="text-text-medium text-sm mt-2 font-medium uppercase tracking-widest">{t("Preparing high-fidelity environment")}</p>
     </div>
-  )
+  );
+}
+
+const ConsultationTool = dynamic(() => import('../../admin/consultation-tool/ConsultationTool'), { 
+  ssr: false,
+  loading: () => <ViewerLoading />
 });
 
 export default function SignPage() {
   const params = useParams();
+  const { t } = useLanguageContext();
   const rawId = params?.id;
   const documentId = Array.isArray(rawId) ? rawId[0] : rawId;
   const [docData, setDocData] = useState<any>(null);
@@ -33,7 +40,7 @@ export default function SignPage() {
 
   useEffect(() => {
     if (!documentId) {
-      toast.error('Invalid signing link');
+      toast.error(t('Invalid signing link'));
       setIsLoading(false);
       return;
     }
@@ -48,7 +55,7 @@ export default function SignPage() {
       .single();
 
     if (error || !data) {
-      toast.error('Document not found or link expired');
+      toast.error(t('Document not found or link expired'));
     } else {
       setDocData(data);
       if (data.status === 'signed') {
@@ -60,7 +67,7 @@ export default function SignPage() {
 
   const handleSigned = async (signedUrl: string) => {
     if (!documentId) {
-      toast.error('Invalid signing link');
+      toast.error(t('Invalid signing link'));
       return;
     }
 
@@ -74,7 +81,7 @@ export default function SignPage() {
       .eq('id', documentId);
 
     if (error) {
-      toast.error('Failed to update document status');
+      toast.error(t('Failed to update document status'));
     } else {
       setIsFinished(true);
     }
@@ -89,9 +96,9 @@ export default function SignPage() {
       >
         <CheckCircle2 className="size-12" />
       </motion.div>
-      <h1 className="text-4xl font-black tracking-tighter mb-4 uppercase">Document Signed</h1>
+      <h1 className="text-4xl font-black tracking-tighter mb-4 uppercase">{t("Document Signed")}</h1>
       <p className="text-zinc-500 max-w-sm font-medium mb-10 leading-relaxed">
-        Thank you for your technical consultation. Your signature has been embedded and saved to our secure storage.
+        {t("Thank you for your technical consultation. Your signature has been embedded and saved to our secure storage.")}
       </p>
       <div className="p-6 rounded-3xl bg-surface-dark border border-border flex items-center gap-4 max-w-xs w-full">
          <div className="size-12 rounded-xl bg-surface-2 flex items-center justify-center text-text-medium">
@@ -99,7 +106,7 @@ export default function SignPage() {
          </div>
          <div className="text-left">
            <div className="text-sm font-black truncate max-w-[150px]">{docData?.file_name}</div>
-           <div className="text-[10px] text-zinc-500 font-black uppercase">Signed & Sealed</div>
+           <div className="text-[10px] text-zinc-500 font-black uppercase">{t("Signed & Sealed")}</div>
          </div>
       </div>
     </div>

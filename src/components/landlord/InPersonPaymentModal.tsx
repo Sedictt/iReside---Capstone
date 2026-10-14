@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { CheckCircle2, Wallet, X } from "lucide-react";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export function InPersonPaymentModal() {
+    const { t } = useLanguageContext();
     const [isOpen, setIsOpen] = useState(false);
     const [isConfirming, setIsConfirming] = useState(false);
 
@@ -46,7 +48,7 @@ export function InPersonPaymentModal() {
                     localStorage.removeItem("pendingInPersonPayment");
                 }}
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-default"
-                aria-label="Close modal backdrop"
+                aria-label={t("Close modal backdrop")}
             />
             <div className="relative w-full max-w-md bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-200">
                 <button
@@ -55,7 +57,7 @@ export function InPersonPaymentModal() {
                         localStorage.removeItem("pendingInPersonPayment");
                     }}
                     className="absolute top-4 right-4 text-neutral-500 hover:text-white transition-colors"
-                    aria-label="Close modal"
+                    aria-label={t("Close modal")}
                 >
                     <X className="size-5" />
                 </button>
@@ -64,22 +66,22 @@ export function InPersonPaymentModal() {
                     <Wallet className="size-6 text-emerald-500" />
                 </div>
 
-                <h3 className="text-xl font-black text-white mb-2">In-Person Payment Confirmation</h3>
+                <h3 className="text-xl font-black text-white mb-2">{t("In-Person Payment Confirmation")}</h3>
                 <p className="text-neutral-400 text-sm mb-6">
-                    A tenant has reported handing you cash for their rent. Please confirm you have received the exact amount.
+                    {t("A tenant has reported handing you cash for their rent. Please confirm you have received the exact amount.")}
                 </p>
 
                 <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6 space-y-3">
                     <div className="flex justify-between items-center text-sm">
-                        <span className="text-neutral-500">Tenant</span>
+                        <span className="text-neutral-500">{t("Tenant")}</span>
                         <span className="font-medium text-white">Marcus Johnson</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                        <span className="text-neutral-500">Unit</span>
+                        <span className="text-neutral-500">{t("Unit")}</span>
                         <span className="font-medium text-white">Unit 304</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                        <span className="text-neutral-500">Amount Received</span>
+                        <span className="text-neutral-500">{t("Amount Received")}</span>
                         <span className="font-black text-emerald-400">₱18,500.00</span>
                     </div>
                 </div>
@@ -92,7 +94,7 @@ export function InPersonPaymentModal() {
                         }}
                         className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-medium transition-colors border border-white/10"
                     >
-                        Dismiss
+                        {t("Dismiss")}
                     </button>
                     <button
                         onClick={handleConfirm}
@@ -102,12 +104,13 @@ export function InPersonPaymentModal() {
                         {isConfirming ? (
                             <>
                                 <div className="size-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                                Confirming...
+                                {t("Confirming...")}
                             </>
                         ) : (
                             <>
                                 <CheckCircle2 className="size-4" />
-                                Confirm Receipt
+                                {t("Confirm Receipt")}
+
                             </>
                         )}
                     </button>

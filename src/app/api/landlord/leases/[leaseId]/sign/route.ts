@@ -6,6 +6,7 @@ import { logAuditEvent, extractIpAddress, extractUserAgent } from "@/lib/audit-l
 import { sendLeaseActivatedNotification } from "@/lib/email";
 import { verifySigningToken } from "@/lib/jwt";
 import { generateLeasePdf } from "@/lib/lease-pdf";
+import { normalizeTermType } from "@/lib/lease-term";
 import { parseWithSchema } from "@/lib/validation/server";
 import { isId, signLeaseBodySchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import {
@@ -177,6 +178,7 @@ export async function POST(
         id,
         start_date,
         end_date,
+        term_type,
         monthly_rent,
         security_deposit,
         terms,
@@ -297,7 +299,9 @@ export async function POST(
       const pdfBlob = await generateLeasePdf({
         id: leaseDetails.id,
         startDate: new Date(leaseDetails.start_date).toLocaleDateString(),
-        endDate: new Date(leaseDetails.end_date).toLocaleDateString(),
+        // Open-ended leases have no end date; the PDF renders the month-to-month clause.
+        endDate: leaseDetails.end_date ? new Date(leaseDetails.end_date).toLocaleDateString() : null,
+        termType: normalizeTermType(leaseDetails.term_type),
         monthlyRent: leaseDetails.monthly_rent,
         securityDeposit: leaseDetails.security_deposit,
         property: (leaseDetails as any).units?.properties,

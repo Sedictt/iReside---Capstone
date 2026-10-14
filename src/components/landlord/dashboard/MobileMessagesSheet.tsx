@@ -12,6 +12,8 @@ import {
 } from "@/lib/messages/client";
 import { RoleBadge, type BadgeRole } from "@/components/profile/RoleBadge";
 import { getSafeAvatarBgColor, DEFAULT_AVATAR_URL } from "@/lib/constants";
+import { tr } from "@/hooks/useLanguage";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface ChatUser {
     id: string;
@@ -28,9 +30,9 @@ interface ChatUser {
 const FALLBACK_AVATAR = DEFAULT_AVATAR_URL;
 
 const formatConversationTimestamp = (iso: string | null) => {
-    if (!iso) return "No messages yet";
+    if (!iso) return tr("No messages yet");
     const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return "Recently";
+    if (Number.isNaN(date.getTime())) return tr("Recently");
     return date.toLocaleString([], {
         month: "short",
         day: "numeric",
@@ -44,17 +46,18 @@ const mapConversationToUser = (conversation: ConversationSummary): ChatUser => {
     return {
         id: conversation.id,
         participantUserId: other?.id ?? null,
-        name: other?.fullName ?? "Conversation",
+        name: other?.fullName ?? tr("Conversation"),
         role: other?.role ?? null,
         avatar: other?.avatarUrl || FALLBACK_AVATAR,
         avatarBgColor: other?.avatarBgColor || null,
-        lastMessage: conversation.lastMessage?.content ?? "No messages yet",
+        lastMessage: conversation.lastMessage?.content ?? tr("No messages yet"),
         time: formatConversationTimestamp(conversation.lastMessage?.createdAt ?? conversation.updatedAt),
         unread: conversation.unreadCount > 0,
     };
 };
 
 export function MobileMessagesSheet() {
+    const { t } = useLanguageContext();
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<"messages" | "contacts">("messages");
     const [conversations, setConversations] = useState<ChatUser[]>([]);
@@ -95,7 +98,7 @@ export function MobileMessagesSheet() {
             {/* Floating Action Button - Mobile Only */}
             <button
                 onClick={() => setIsOpen(true)}
-                aria-label="Open messages"
+                aria-label={t("Open messages")}
                 className="fixed bottom-6 right-6 z-50 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_8px_24px_rgba(var(--primary-rgb),0.35)] transition-all hover:scale-105 active:scale-95 md:hidden"
             >
                 <div className="relative">
@@ -140,14 +143,17 @@ export function MobileMessagesSheet() {
                                     <MessageSquare className="size-5" />
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-black text-foreground">Messages</h2>
+                                    <h2 className="text-lg font-black text-foreground">{t("Messages")}</h2>
                                     <p className="text-xs font-medium text-muted-foreground">
-                                        {conversations.length} conversation{conversations.length !== 1 ? "s" : ""}
+                                        {conversations.length === 1
+                                            ? t("{count} conversation", { count: conversations.length })
+                                            : t("{count} conversations", { count: conversations.length })}
                                     </p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setIsOpen(false)}
+                                aria-label={t("Close")}
                                 className="flex size-9 items-center justify-center rounded-xl border border-white/10 bg-card text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
                             >
                                 <X className="size-4" />
@@ -166,7 +172,7 @@ export function MobileMessagesSheet() {
                                 )}
                             >
                                 <MessageSquare className="size-4" />
-                                Messages
+                                {t("Messages")}
                                 {hasUnread && (
                                     <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-black text-primary-foreground">
                                         {conversations.filter((c) => c.unread).length}
@@ -189,7 +195,7 @@ export function MobileMessagesSheet() {
                                 )}
                             >
                                 <Users className="size-4" />
-                                Contacts
+                                {t("Contacts")}
                                 {activeTab === "contacts" && (
                                     <motion.div
                                         layoutId="mobile-sheet-tabs"
@@ -206,7 +212,8 @@ export function MobileMessagesSheet() {
                                     <Search className="size-4 text-muted-foreground shrink-0" />
                                     <input maxLength={60}
                                         type="text"
-                                        placeholder="Search messages..."
+                                        placeholder={t("Search messages...")}
+                                        aria-label={t("Search messages...")}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
@@ -235,11 +242,11 @@ export function MobileMessagesSheet() {
                                         <MessageSquare className="size-6" />
                                     </div>
                                     <p className="text-sm font-black text-muted-foreground">
-                                        {searchQuery ? "No messages found" : "No conversations yet"}
+                                        {searchQuery ? t("No messages found") : t("No conversations yet")}
                                     </p>
                                     {!searchQuery && (
                                         <p className="mt-1 text-xs font-medium text-muted-foreground/60">
-                                            Messages with tenants will appear here
+                                            {t("Messages with tenants will appear here")}
                                         </p>
                                     )}
                                 </div>
@@ -315,7 +322,7 @@ export function MobileMessagesSheet() {
                                 onClick={() => setIsOpen(false)}
                                 className="flex w-full items-center justify-center gap-2 rounded-2xl bg-foreground px-6 py-3 text-sm font-black tracking-tight text-background transition-all hover:brightness-110 active:scale-[0.98]"
                             >
-                                View All Messages
+                                {t("View All Messages")}
                                 <ChevronRight className="size-4" />
                             </Link>
                         </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { m as motion } from "framer-motion";
 import { UserCheck, Mail, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type SigningMode = "in_person" | "remote";
 
@@ -24,6 +25,7 @@ export function SigningModeSelector({
   disabled = false,
   className,
 }: SigningModeSelectorProps) {
+  const { t } = useLanguageContext();
   const modes = [
     {
       id: "in_person" as SigningMode,
@@ -46,7 +48,7 @@ export function SigningModeSelector({
       <div className="flex items-center gap-3 text-purple-400">
         <UserCheck size={18} strokeWidth={2.5} />
         <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">
-          Signing Mode
+          {t("Signing Mode")}
         </h3>
       </div>
 
@@ -124,10 +126,10 @@ export function SigningModeSelector({
                       isSelected ? "text-white" : "text-neutral-200"
                     )}
                   >
-                    {mode.label}
+                    {t(mode.label)}
                   </h4>
                   <p className="text-xs text-neutral-400 leading-relaxed">
-                    {mode.description}
+                    {t(mode.description)}
                   </p>
                 </div>
               </div>
@@ -136,7 +138,7 @@ export function SigningModeSelector({
               {disabled && (
                 <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center">
                   <div className="text-xs font-black text-white/60 uppercase tracking-wider">
-                    Locked
+                    {t("Locked")}
                   </div>
                 </div>
               )}
@@ -148,7 +150,7 @@ export function SigningModeSelector({
       {/* Helper Text */}
       {!value && !disabled && (
         <p className="text-xs text-neutral-400 px-1">
-          Select a signing mode to continue. Mode cannot be changed after first signature.
+          {t("Select a signing mode to continue. Mode cannot be changed after first signature.")}
         </p>
       )}
     </div>

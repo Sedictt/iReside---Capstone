@@ -207,6 +207,31 @@ describe("renewal settings", () => {
         expect(renewalSettingsPatchSchema.safeParse({ settings: { ...base, adjustment_type: "compound" } }).success).toBe(false);
         expect(renewalSettingsPatchSchema.safeParse({ settings: { ...base, new_rules: ["   "] } }).success).toBe(false);
     });
+
+    it("round-trips landlord-offered renewal terms and defaults them to an empty list", () => {
+        const parsed = renewalSettingsPatchSchema.parse({ settings: base });
+        expect(parsed.settings.renewal_terms).toEqual([]);
+
+        const withTerms = renewalSettingsPatchSchema.parse({
+            settings: {
+                ...base,
+                renewal_terms: [
+                    { months: 6, label: "6 Months", price_label: "Standard Rent" },
+                    { months: 12, label: "1 Year", price_label: "Standard Rent", is_popular: true },
+                ],
+            },
+        });
+        expect(withTerms.settings.renewal_terms.map((t) => t.months)).toEqual([6, 12]);
+        expect(withTerms.settings.renewal_terms[1].is_popular).toBe(true);
+    });
+
+    it("rejects duplicate, out-of-range, or too many renewal terms", () => {
+        const term = (months: number) => ({ months, label: "", price_label: "" });
+        expect(renewalSettingsPatchSchema.safeParse({ settings: { ...base, renewal_terms: [term(12), term(12)] } }).success).toBe(false);
+        expect(renewalSettingsPatchSchema.safeParse({ settings: { ...base, renewal_terms: [term(0)] } }).success).toBe(false);
+        expect(renewalSettingsPatchSchema.safeParse({ settings: { ...base, renewal_terms: [term(61)] } }).success).toBe(false);
+        expect(renewalSettingsPatchSchema.safeParse({ settings: { ...base, renewal_terms: [1, 2, 3, 4, 5, 6, 7].map(term) } }).success).toBe(false);
+    });
 });
 
 // ---------------------------------------------------------------------------

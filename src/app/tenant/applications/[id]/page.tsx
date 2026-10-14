@@ -25,6 +25,7 @@ import {
     Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 // import { properties } from "@/lib/data"; // Removed legacy data
 const properties = [
     { 
@@ -51,6 +52,7 @@ import { m as motion, AnimatePresence } from "framer-motion";
 export default function ApplicationDashboardPage() {
     const params = useParams();
     const router = useRouter();
+    const { t } = useLanguageContext();
     const applicationId = typeof params.id === 'string' ? params.id : 'APP-8920';
 
     // Progress state for the radial animation
@@ -107,13 +109,13 @@ export default function ApplicationDashboardPage() {
                             <ArrowLeft className="size-5" />
                         </Link>
                         <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-primary/20 text-primary border border-primary/10">
-                            Application Pending
+                            {t("Application Pending")}
                         </span>
-                        <span className="text-white/30 text-[10px] font-medium">ID: #{applicationId}</span>
+                        <span className="text-white/30 text-[10px] font-medium">{t("ID:")} #{applicationId}</span>
                     </div>
                     <div className="flex items-center gap-3">
                         <h1 className="text-2xl md:text-3xl font-black text-white tracking-tighter">
-                            Unit {property.id}02, {property.name}
+                            {t("Unit {unit}", { unit: `${property.id}02` })}, {property.name}
                         </h1>
                         <p className="text-white/40 text-xs flex items-center gap-1.5 font-medium bg-white/5 px-2 py-1 rounded-lg">
                             <MapPin className="size-3.5 text-primary" />
@@ -124,10 +126,10 @@ export default function ApplicationDashboardPage() {
                 <div className="flex gap-2">
                     <button className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-white/5 text-white text-xs font-black transition-all flex items-center gap-2 shadow-xl group">
                         <Download className="size-4 text-primary group-hover:scale-110" />
-                        Support Docs
+                        {t("Support Docs")}
                     </button>
                     <button className="px-4 py-2 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/5 text-white/50 hover:text-red-400 text-xs font-black transition-all">
-                        Withdraw
+                        {t("Withdraw")}
                     </button>
                 </div>
             </div>
@@ -149,20 +151,20 @@ export default function ApplicationDashboardPage() {
                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
                             <div className="absolute bottom-5 left-5">
                                 <h3 className="text-xl font-black text-white tracking-tight">{property.name}</h3>
-                                <p className="text-primary text-[10px] font-black uppercase tracking-widest">Luxury Collection</p>
+                                <p className="text-primary text-[10px] font-black uppercase tracking-widest">{t("Luxury Collection")}</p>
                             </div>
                         </div>
 
                         <div className="p-5 flex flex-col justify-between flex-1 min-h-0">
                             <div className="grid grid-cols-2 gap-3">
                                 {[
-                                    { label: "Rent", val: `${property.price}`, sub: "/mo" },
+                                    { label: "Rent", val: `${property.price}`, sub: t("/mo") },
                                     { label: "Move-in", val: "Oct 1st" },
-                                    { label: "Term", val: "12 Mo" },
+                                    { label: "Term", val: t("12 Mo") },
                                     { label: "Deposit", val: `${property.price}` },
                                 ].map((item) => (
                                     <div key={item.label} className="bg-neutral-900/50 rounded-2xl p-3 border border-white/5">
-                                        <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-0.5">{item.label}</p>
+                                        <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-0.5">{t(item.label)}</p>
                                         <p className="text-white font-black text-lg tracking-tight">
                                             {item.val}
                                             {item.sub && <span className="text-[10px] font-medium text-white/50 ml-0.5">{item.sub}</span>}
@@ -172,7 +174,7 @@ export default function ApplicationDashboardPage() {
                             </div>
 
                             <div className="pt-4 border-t border-white/5">
-                                <h4 className="text-white font-black text-[10px] uppercase tracking-widest mb-3 opacity-40">Amenities included</h4>
+                                <h4 className="text-white font-black text-[10px] uppercase tracking-widest mb-3 opacity-40">{t("Amenities included")}</h4>
                                 <div className="flex flex-wrap gap-2">
                                     {property.amenities.slice(0, 5).map((amenity) => (
                                         <span key={amenity} className="text-[10px] font-black px-2 py-1 rounded-lg bg-white/5 text-white/70 border border-white/5">
@@ -186,7 +188,7 @@ export default function ApplicationDashboardPage() {
                                 onClick={() => router.push('/tenant/applications')}
                                 className="mt-4 p-4 bg-primary/5 hover:bg-primary/10 border border-primary/10 rounded-2xl text-[10px] text-primary transition-all flex items-center justify-center gap-2 font-black uppercase tracking-widest group"
                             >
-                                Back to Applications
+                                {t("Back to Applications")}
                                 <ArrowRight className="size-3.5 group-hover:translate-x-1" />
                             </button>
                         </div>
@@ -222,12 +224,12 @@ export default function ApplicationDashboardPage() {
                                     >
                                         {progress}%
                                     </motion.span>
-                                    <span className="text-[10px] font-black text-primary uppercase tracking-widest">Complete</span>
+                                    <span className="text-[10px] font-black text-primary uppercase tracking-widest">{t("Complete")}</span>
                                 </div>
                             </div>
-                            <h2 className="text-2xl md:text-3xl font-black text-white mb-2 tracking-tighter">Landlord Review in Progress</h2>
+                            <h2 className="text-2xl md:text-3xl font-black text-white mb-2 tracking-tighter">{t("Landlord Review in Progress")}</h2>
                             <p className="text-white/40 max-w-md mx-auto text-sm leading-relaxed font-medium">
-                                Your application is being reviewed. Expected update within <span className="text-primary font-black">24 hours</span>.
+                                {t("Your application is being reviewed. Expected update within")} <span className="text-primary font-black">{t("24 hours")}</span>.
                             </p>
                         </div>
                     </div>
@@ -259,10 +261,10 @@ export default function ApplicationDashboardPage() {
                                                 step.status === 'active' ? "text-primary" :
                                                     step.status === 'completed' ? "text-white" : "text-white/20"
                                             )}>
-                                                {step.label}
+                                                {t(step.label)}
                                             </p>
                                             <p className="text-[9px] uppercase font-black tracking-tighter mt-0.5 text-white/30 truncate max-w-[80px]">
-                                                {step.date}
+                                                {t(step.date)}
                                             </p>
                                         </div>
                                     </div>

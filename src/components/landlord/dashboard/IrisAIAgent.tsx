@@ -6,6 +6,7 @@ import { X, RefreshCcw, ChevronRight, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ClientOnlyTime } from "@/components/ui/client-only-date";
 import { IrisDeepInsightsModal } from "./IrisDeepInsightsModal";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type IrisAnalysis = {
     goodThings: string[];
@@ -30,6 +31,7 @@ interface IrisAIAgentProps {
 }
 
 export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilityChange, showVisibilityToggle = true, landlordFirstName }: IrisAIAgentProps) {
+    const { t } = useLanguageContext();
     const [isOpen, setIsOpen] = useState(false);
     const [isDeepInsightsOpen, setIsDeepInsightsOpen] = useState(false);
     const [internalIsVisible, setInternalIsVisible] = useState(true);
@@ -44,37 +46,37 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
     const bubbleSwapTimeoutRef = useRef<number | null>(null);
     const safeFirstName = useMemo(() => {
         const cleaned = landlordFirstName?.trim();
-        return cleaned && cleaned.length > 0 ? cleaned : "there";
-    }, [landlordFirstName]);
+        return cleaned && cleaned.length > 0 ? cleaned : t("there");
+    }, [landlordFirstName, t]);
     const bubbleMessages = useMemo(
         () => [
-            `Hey ${safeFirstName}, anything worth a closer look today?`,
-            `I'm IRIS — I handle the numbers so you can handle everything else.`,
-            `${safeFirstName}, ready for a quick KPI check?`,
-            `Tip: Use More Metrics when the top-line numbers look fine but something feels off.`,
-            `Tip: Export History makes period comparisons a lot less painful.`,
-            `Tip: Cross Pending Issues with revenue trends to know what to fix first.`,
-            `Late payments tend to cluster. One is rarely just one.`,
-            `Maintenance response time affects renewals more than most people expect.`,
-            `I can help spot slow leaks before they show up on the income statement.`,
-            `Vacancy streaks usually have a cause. Want me to look?`,
-            `${safeFirstName}, want me to scan the latest data for anything unusual?`,
-            `Revenue trends make more sense when read alongside maintenance volume.`,
-            `I track what changed — not just what it changed to.`,
-            `Steady occupancy, on-time payments, low open issues. That's the dream. I'll tell you how close you are.`,
-            `I don't have gut feelings. I have trend lines. Close enough.`,
-            `Most property surprises aren't surprising in hindsight. I try to flag them in foresight.`,
-            `${safeFirstName}, the data is up to date. Your coffee situation is your own problem.`,
-            `I've seen a lot of slow Mondays turn into expensive Fridays. Early checks help.`,
-            `Some patterns take months to surface. I've been watching.`,
-            `I don't sleep, which is either reassuring or unsettling depending on your perspective.`,
-            `If everything looks clean right now — good. I'll keep watching anyway.`,
-            `${safeFirstName}, I flag the issues. The fixing is still on you. Sorry.`,
-            `Fun fact: I find a well-timed export deeply satisfying.`,
-            `I'm not worried. But I am paying attention, which is close.`,
-            `Still here. What do you need?`,
+            t("Hey {name}, anything worth a closer look today?", { name: safeFirstName }),
+            t("I'm IRIS — I handle the numbers so you can handle everything else."),
+            t("{name}, ready for a quick KPI check?", { name: safeFirstName }),
+            t("Tip: Use More Metrics when the top-line numbers look fine but something feels off."),
+            t("Tip: Export History makes period comparisons a lot less painful."),
+            t("Tip: Cross Pending Issues with revenue trends to know what to fix first."),
+            t("Late payments tend to cluster. One is rarely just one."),
+            t("Maintenance response time affects renewals more than most people expect."),
+            t("I can help spot slow leaks before they show up on the income statement."),
+            t("Vacancy streaks usually have a cause. Want me to look?"),
+            t("{name}, want me to scan the latest data for anything unusual?", { name: safeFirstName }),
+            t("Revenue trends make more sense when read alongside maintenance volume."),
+            t("I track what changed — not just what it changed to."),
+            t("Steady occupancy, on-time payments, low open issues. That's the dream. I'll tell you how close you are."),
+            t("I don't have gut feelings. I have trend lines. Close enough."),
+            t("Most property surprises aren't surprising in hindsight. I try to flag them in foresight."),
+            t("{name}, the data is up to date. Your coffee situation is your own problem.", { name: safeFirstName }),
+            t("I've seen a lot of slow Mondays turn into expensive Fridays. Early checks help."),
+            t("Some patterns take months to surface. I've been watching."),
+            t("I don't sleep, which is either reassuring or unsettling depending on your perspective."),
+            t("If everything looks clean right now — good. I'll keep watching anyway."),
+            t("{name}, I flag the issues. The fixing is still on you. Sorry.", { name: safeFirstName }),
+            t("Fun fact: I find a well-timed export deeply satisfying."),
+            t("I'm not worried. But I am paying attention, which is close."),
+            t("Still here. What do you need?"),
         ],
-        [safeFirstName]
+        [safeFirstName, t]
     );
     // Compute a simple hash of the current stats to detect changes
     const currentDataHash = useMemo(() => {
@@ -309,9 +311,9 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                     }}
                     className="fixed left-[240px] bottom-8 z-[101] pointer-events-auto flex items-center gap-2 rounded-full border border-primary/30 bg-card/90 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-primary shadow-xl backdrop-blur-xl transition-all hover:scale-[1.03] active:scale-95"
                     aria-pressed={!resolvedIsVisible}
-                    aria-label={resolvedIsVisible ? "Hide iRis assistant" : "Show iRis assistant"}
+                    aria-label={resolvedIsVisible ? t("Hide iRis assistant") : t("Show iRis assistant")}
                 >
-                    {resolvedIsVisible ? "Hide iRis" : "Show iRis"}
+                    {resolvedIsVisible ? t("Hide iRis") : t("Show iRis")}
                 </button>
             )}
 
@@ -333,12 +335,13 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                 <div className="flex items-center justify-between mb-8">
                                     <div className="flex items-center gap-4">
                                         <div>
-                                            <h3 className="text-xl font-black tracking-tight text-foreground">iRis Property Analysis</h3>
-                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Portfolio Intelligence</p>
+                                            <h3 className="text-xl font-black tracking-tight text-foreground">{t("iRis Property Analysis")}</h3>
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t("Portfolio Intelligence")}</p>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => setIsOpen(false)}
+                                        aria-label={t("Close")}
                                         className="rounded-2xl p-3 text-muted-foreground transition-all hover:bg-white/5 hover:text-foreground active:scale-90"
                                     >
                                         <X className="size-6" />
@@ -372,7 +375,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                                 <div className="space-y-4">
                                                     <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-400">
                                                         <div className="size-1.5 rounded-full bg-emerald-400" />
-                                                        Good Things
+                                                        {t("Good Things")}
                                                     </h4>
                                                     <ul className="space-y-3">
                                                         {analysis.goodThings.map((item, i) => (
@@ -387,7 +390,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                                 <div className="space-y-4">
                                                     <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-400">
                                                         <div className="size-1.5 rounded-full bg-amber-400" />
-                                                        Things to Watch
+                                                        {t("Things to Watch")}
                                                     </h4>
                                                     <ul className="space-y-3">
                                                         {analysis.toLookOutFor.map((item, i) => (
@@ -410,8 +413,8 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                                         <MessageSquare className="size-5 text-primary" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-xs font-black text-foreground">Need deeper insights?</p>
-                                                        <p className="text-[10px] font-medium text-muted-foreground">View detailed breakdowns and operational recommendations.</p>
+                                                        <p className="text-xs font-black text-foreground">{t("Need deeper insights?")}</p>
+                                                        <p className="text-[10px] font-medium text-muted-foreground">{t("View detailed breakdowns and operational recommendations.")}</p>
                                                     </div>
                                                 </div>
                                                 <ChevronRight className="size-5 text-muted-foreground/60 group-hover/btn:translate-x-1 group-hover/btn:text-foreground transition-all" />
@@ -419,12 +422,12 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                         </>
                                     ) : (
                                         <div className="flex flex-col items-center justify-center py-12 text-center">
-                                            <p className="text-sm font-black text-muted-foreground">No analysis available for this period.</p>
+                                            <p className="text-sm font-black text-muted-foreground">{t("No analysis available for this period.")}</p>
                                             <button
                                                 onClick={() => fetchAnalysis(true)}
                                                 className="mt-4 text-xs font-black uppercase tracking-widest text-primary hover:underline"
                                             >
-                                                Generate Now
+                                                {t("Generate Now")}
                                             </button>
                                         </div>
                                     )}
@@ -433,7 +436,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                 {/* Footer */}
                                 <div className="mt-8 flex items-center justify-between border-t border-white/10 pt-6">
                                     <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">
-                                        Last Updated: {lastRefresh ? <ClientOnlyTime date={new Date(lastRefresh)} /> : "Never"}
+                                        {t("Last Updated:")} {lastRefresh ? <ClientOnlyTime date={new Date(lastRefresh)} /> : t("Never")}
                                     </div>
                                     <button
                                         onClick={() => fetchAnalysis(true)}
@@ -446,7 +449,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                         )}
                                     >
                                         <RefreshCcw className={cn("size-3.5", isLoading && "animate-spin")} />
-                                        {cooldown > 0 ? `Wait ${cooldown}s` : "Refresh Analysis"}
+                                        {cooldown > 0 ? t("Wait {seconds}s", { seconds: cooldown }) : t("Refresh Analysis")}
                                     </button>
                                 </div>
                             </div>

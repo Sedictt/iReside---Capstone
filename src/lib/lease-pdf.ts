@@ -1,4 +1,5 @@
 import { jsPDF } from "jspdf";
+import { leaseTermClause, type LeaseTermType } from "@/lib/lease-term";
 
 /**
  * Exports a rendered LeaseDocument DOM element to a crisp, high-resolution Letter-sized PDF.
@@ -120,7 +121,10 @@ export async function exportLeaseDocumentElementToPdf(
 export interface LeasePdfData {
   id: string;
   startDate: string;
-  endDate: string;
+  /** Null for open-ended (month-to-month) leases. */
+  endDate: string | null;
+  /** "open_ended" (default) or "fixed". */
+  termType?: LeaseTermType | string | null;
   monthlyRent: number;
   securityDeposit: number;
   property: {
@@ -303,8 +307,12 @@ export async function generateLeasePdf(data: LeasePdfData): Promise<Blob> {
   doc.setFont("times", "normal");
   doc.setFontSize(9.5);
   doc.setTextColor(30, 30, 30);
-  doc.text(`Term begins on ${data.startDate} and ends on ${data.endDate}.`, margin, y);
-  y += 9;
+  const termLines = doc.splitTextToSize(
+    leaseTermClause({ start_date: data.startDate, end_date: data.endDate, term_type: data.termType }),
+    contentWidth,
+  ) as string[];
+  doc.text(termLines, margin, y);
+  y += 4 * termLines.length + 5;
 
   // 4. RENT PAYMENTS
   renderSectionHeader("4. RENT PAYMENTS");

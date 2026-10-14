@@ -31,6 +31,7 @@ import {
 import { cn } from '@/lib/utils';
 import { DOCS_ARTICLES, DocArticle } from '@/lib/docs/docsData';
 import { DEFAULT_PROPERTY_RULES } from '@/lib/constants/rules';
+import { useLanguageContext } from '@/context/LanguageContext';
 
 interface QuickHotline {
     name: string;
@@ -192,6 +193,7 @@ const EMERGENCY_PROTOCOLS: EmergencyProtocol[] = [
 ];
 
 export function TenantManualView() {
+    const { t } = useLanguageContext();
     const [selectedTab, setSelectedTab] = useState<'hotlines' | 'rules' | 'protocols' | 'handbook'>('rules');
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedRule, setExpandedRule] = useState<string | null>(null);
@@ -234,9 +236,9 @@ export function TenantManualView() {
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-1.5 text-red-500 text-[10px] font-black uppercase tracking-wider">
                             <ShieldAlert className="size-3.5 animate-pulse" />
-                            <span>Emergency Hotlines</span>
+                            <span>{t('Emergency Hotlines')}</span>
                         </div>
-                        <span className="text-[10px] font-semibold text-red-500/80">Tap to call</span>
+                        <span className="text-[10px] font-semibold text-red-500/80">{t('Tap to call')}</span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
@@ -251,10 +253,10 @@ export function TenantManualView() {
                             >
                                 <div className="min-w-0 pr-1">
                                     <span className="text-[10px] font-bold text-muted-foreground block truncate">
-                                        {item.name}
+                                        {t(item.name)}
                                     </span>
                                     <span className={cn("text-xs font-black block mt-0.5", item.color)}>
-                                        Dial {item.number}
+                                        {t('Dial {number}', { number: item.number })}
                                     </span>
                                 </div>
                                 <item.icon className={cn("size-4 shrink-0", item.color)} />
@@ -263,12 +265,12 @@ export function TenantManualView() {
                     </div>
 
                     <div className="mt-2 pt-2 border-t border-red-500/20 flex items-center justify-between text-[11px]">
-                        <span className="text-muted-foreground">Building Admin / Security Desk</span>
+                        <span className="text-muted-foreground">{t('Building Admin / Security Desk')}</span>
                         <Link 
                             href="/mobile/tenant/messages" 
                             className="font-bold text-primary hover:underline flex items-center gap-1"
                         >
-                            <span>Chat Manager</span>
+                            <span>{t('Chat Manager')}</span>
                             <ArrowRight className="size-3" />
                         </Link>
                     </div>
@@ -288,7 +290,7 @@ export function TenantManualView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Rules
+                        {t('Rules')}
                     </button>
                     <button
                         type="button"
@@ -300,7 +302,7 @@ export function TenantManualView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Safety
+                        {t('Safety')}
                     </button>
                     <button
                         type="button"
@@ -312,7 +314,7 @@ export function TenantManualView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Guide
+                        {t('Guide')}
                     </button>
                     <button
                         type="button"
@@ -324,7 +326,7 @@ export function TenantManualView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Contacts
+                        {t('Contacts')}
                     </button>
                 </div>
             </div>
@@ -335,12 +337,12 @@ export function TenantManualView() {
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
-                                Community House Rules
+                                {t('Community House Rules')}
                             </h3>
-                            <p className="text-[11px] text-muted-foreground">Standard residential conduct & building policies</p>
+                            <p className="text-[11px] text-muted-foreground">{t('Standard residential conduct & building policies')}</p>
                         </div>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                            6 Policies
+                            {t('{count} Policies', { count: STANDARD_RULES.length })}
                         </span>
                     </div>
 
@@ -363,10 +365,10 @@ export function TenantManualView() {
                                             </div>
                                             <div className="min-w-0">
                                                 <h4 className="text-xs font-bold text-foreground">
-                                                    {rule.title}
+                                                    {t(rule.title)}
                                                 </h4>
                                                 <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
-                                                    {rule.summary}
+                                                    {t(rule.summary)}
                                                 </p>
                                             </div>
                                         </div>
@@ -382,11 +384,11 @@ export function TenantManualView() {
                                     {isExpanded && (
                                         <div className="px-3.5 pb-3.5 pt-0 border-t border-slate-100 dark:border-white/5 mt-1">
                                             <p className="text-xs text-foreground/90 leading-relaxed mt-2.5 bg-slate-50 dark:bg-white/5 p-3 rounded-xl">
-                                                {rule.details}
+                                                {t(rule.details)}
                                             </p>
                                             <div className="mt-2.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
                                                 <Info className="size-3 text-primary" />
-                                                <span>Refer to your signed lease agreement for specific violation terms.</span>
+                                                <span>{t('Refer to your signed lease agreement for specific violation terms.')}</span>
                                             </div>
                                         </div>
                                     )}
@@ -398,14 +400,14 @@ export function TenantManualView() {
                     {/* Quick Link to Lease Terms */}
                     <div className="mt-1 p-3.5 rounded-2xl bg-primary/5 border border-primary/20 flex items-center justify-between">
                         <div>
-                            <h4 className="text-xs font-bold text-foreground">Need Full Lease Contract?</h4>
-                            <p className="text-[11px] text-muted-foreground">View signed clauses, deposit terms & addenda</p>
+                            <h4 className="text-xs font-bold text-foreground">{t('Need Full Lease Contract?')}</h4>
+                            <p className="text-[11px] text-muted-foreground">{t('View signed clauses, deposit terms & addenda')}</p>
                         </div>
                         <Link
                             href="/mobile/tenant/lease"
                             className="px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1 shadow-2xs active:scale-95 transition-all"
                         >
-                            <span>Open Lease</span>
+                            <span>{t('Open Lease')}</span>
                             <ArrowRight className="size-3" />
                         </Link>
                     </div>
@@ -417,9 +419,9 @@ export function TenantManualView() {
                 <div className="px-4 flex flex-col gap-2.5">
                     <div>
                         <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
-                            Incident Safety Protocols
+                            {t('Incident Safety Protocols')}
                         </h3>
-                        <p className="text-[11px] text-muted-foreground">Step-by-step actions for building emergencies</p>
+                        <p className="text-[11px] text-muted-foreground">{t('Step-by-step actions for building emergencies')}</p>
                     </div>
 
                     <div className="flex flex-col gap-2">
@@ -440,7 +442,7 @@ export function TenantManualView() {
                                                 <protocol.icon className="size-4" />
                                             </div>
                                             <h4 className="text-xs font-bold text-foreground truncate">
-                                                {protocol.title}
+                                                {t(protocol.title)}
                                             </h4>
                                         </div>
                                         <div className="shrink-0 text-muted-foreground">
@@ -460,14 +462,14 @@ export function TenantManualView() {
                                                         <span className="size-4 rounded-full bg-primary/10 text-primary text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">
                                                             {idx + 1}
                                                         </span>
-                                                        <span className="leading-snug">{step}</span>
+                                                        <span className="leading-snug">{t(step)}</span>
                                                     </li>
                                                 ))}
                                             </ol>
 
                                             <div className="mt-3 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-[11px] flex items-start gap-2">
                                                 <AlertTriangle className="size-3.5 shrink-0 mt-0.5" />
-                                                <span className="font-semibold">{protocol.criticalTip}</span>
+                                                <span className="font-semibold">{t(protocol.criticalTip)}</span>
                                             </div>
 
                                             {protocol.title.includes('Water') && (
@@ -476,7 +478,7 @@ export function TenantManualView() {
                                                         href="/mobile/tenant/maintenance"
                                                         className="text-xs font-bold text-primary flex items-center gap-1 hover:underline"
                                                     >
-                                                        <span>Report Urgent Water Leak</span>
+                                                        <span>{t('Report Urgent Water Leak')}</span>
                                                         <ArrowRight className="size-3" />
                                                     </Link>
                                                 </div>
@@ -496,9 +498,9 @@ export function TenantManualView() {
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
-                                Resident Handbook & FAQs
+                                {t('Resident Handbook & FAQs')}
                             </h3>
-                            <p className="text-[11px] text-muted-foreground">Quick answers for payments, repairs & living</p>
+                            <p className="text-[11px] text-muted-foreground">{t('Quick answers for payments, repairs & living')}</p>
                         </div>
                     </div>
 
@@ -509,7 +511,7 @@ export function TenantManualView() {
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search guide (e.g. WiFi, garbage, submeters)..."
+                            placeholder={t('Search guide (e.g. WiFi, garbage, submeters)...')}
                             className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-white dark:bg-card border border-slate-300 dark:border-white/15 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 shadow-xs"
                         />
                     </div>
@@ -519,8 +521,8 @@ export function TenantManualView() {
                         {filteredArticles.length === 0 ? (
                             <div className="p-8 rounded-2xl bg-white dark:bg-card/60 border border-slate-300 dark:border-white/15 text-center">
                                 <BookOpen className="size-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-                                <p className="text-xs font-bold text-foreground">No articles found</p>
-                                <p className="text-[11px] text-muted-foreground mt-0.5">Try searching for another keyword</p>
+                                <p className="text-xs font-bold text-foreground">{t('No articles found')}</p>
+                                <p className="text-[11px] text-muted-foreground mt-0.5">{t('Try searching for another keyword')}</p>
                             </div>
                         ) : (
                             filteredArticles.map((article: DocArticle) => {
@@ -537,13 +539,13 @@ export function TenantManualView() {
                                         >
                                             <div className="min-w-0">
                                                 <span className="text-[9px] font-black uppercase tracking-wider text-primary block">
-                                                    {article.categoryLabel}
+                                                    {t(article.categoryLabel)}
                                                 </span>
                                                 <h4 className="text-xs font-bold text-foreground mt-0.5">
-                                                    {article.title}
+                                                    {t(article.title)}
                                                 </h4>
                                                 <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
-                                                    {article.summary}
+                                                    {t(article.summary)}
                                                 </p>
                                             </div>
                                             <div className="shrink-0 text-muted-foreground mt-1">
@@ -558,13 +560,13 @@ export function TenantManualView() {
                                         {isExpanded && (
                                             <div className="px-3.5 pb-3.5 pt-1 border-t border-slate-100 dark:border-white/5">
                                                 <p className="text-xs text-foreground/90 leading-relaxed mt-2 bg-slate-50 dark:bg-white/5 p-3 rounded-xl">
-                                                    {article.summary}
+                                                    {t(article.summary)}
                                                 </p>
 
                                                 {article.steps && article.steps.length > 0 && (
                                                     <div className="mt-3 flex flex-col gap-2">
                                                         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                                                            Step-by-Step Instructions
+                                                            {t('Step-by-Step Instructions')}
                                                         </span>
                                                         {article.steps.map((step: any, idx: number) => (
                                                             <div key={idx} className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex flex-col gap-1">
@@ -572,14 +574,14 @@ export function TenantManualView() {
                                                                     <span className="size-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shrink-0">
                                                                         {idx + 1}
                                                                     </span>
-                                                                    <span className="text-xs font-bold text-foreground">{step.title}</span>
+                                                                    <span className="text-xs font-bold text-foreground">{t(step.title)}</span>
                                                                 </div>
                                                                 <p className="text-[11px] text-muted-foreground pl-6 leading-relaxed">
-                                                                    {step.description}
+                                                                    {t(step.description)}
                                                                 </p>
                                                                 {step.tip && (
                                                                     <div className="ml-6 mt-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                                                                        Tip: {step.tip}
+                                                                        {t('Tip:')} {t(step.tip)}
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -593,7 +595,7 @@ export function TenantManualView() {
                                                             href={article.actionShortcut.href.startsWith('/mobile') ? article.actionShortcut.href : ('/mobile' + article.actionShortcut.href.replace(/^\/tenant/, '/tenant'))}
                                                             className="px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1 shadow-2xs active:scale-95 transition-all"
                                                         >
-                                                            <span>{article.actionShortcut.label}</span>
+                                                            <span>{t(article.actionShortcut.label)}</span>
                                                             <ArrowRight className="size-3" />
                                                         </Link>
                                                     </div>
@@ -613,9 +615,9 @@ export function TenantManualView() {
                 <div className="px-4 flex flex-col gap-2.5">
                     <div>
                         <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
-                            Emergency & Service Directory
+                            {t('Emergency & Service Directory')}
                         </h3>
-                        <p className="text-[11px] text-muted-foreground">Immediate contacts for security, police, fire & hospital</p>
+                        <p className="text-[11px] text-muted-foreground">{t('Immediate contacts for security, police, fire & hospital')}</p>
                     </div>
 
                     <div className="flex flex-col gap-2">
@@ -629,8 +631,8 @@ export function TenantManualView() {
                                         <hotline.icon className={cn("size-4", hotline.color)} />
                                     </div>
                                     <div>
-                                        <h4 className="text-xs font-bold text-foreground">{hotline.name}</h4>
-                                        <p className="text-[11px] text-muted-foreground">{hotline.role}</p>
+                                        <h4 className="text-xs font-bold text-foreground">{t(hotline.name)}</h4>
+                                        <p className="text-[11px] text-muted-foreground">{t(hotline.role)}</p>
                                     </div>
                                 </div>
                                 <a
@@ -638,7 +640,7 @@ export function TenantManualView() {
                                     className="px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1 shadow-2xs active:scale-95 transition-all"
                                 >
                                     <Phone className="size-3" />
-                                    <span>Call {hotline.number}</span>
+                                    <span>{t('Call {number}', { number: hotline.number })}</span>
                                 </a>
                             </div>
                         ))}
@@ -648,24 +650,24 @@ export function TenantManualView() {
                     <div className="mt-1 p-4 rounded-2xl bg-white dark:bg-card/80 border border-slate-300 dark:border-white/15 shadow-xs flex flex-col gap-2">
                         <div className="flex items-center gap-2 text-primary text-xs font-bold">
                             <BookOpen className="size-4" />
-                            <span>Building Administration Desk</span>
+                            <span>{t('Building Administration Desk')}</span>
                         </div>
                         <p className="text-xs text-muted-foreground leading-relaxed">
-                            For non-emergency inquiries such as elevator booking, package delivery notices, or gate passes, please chat directly with property management.
+                            {t('For non-emergency inquiries such as elevator booking, package delivery notices, or gate passes, please chat directly with property management.')}
                         </p>
                         <div className="pt-2 border-t border-slate-100 dark:border-white/5 flex gap-2">
                             <Link
                                 href="/mobile/tenant/messages"
                                 className="flex-1 py-2 rounded-xl bg-primary/10 text-primary text-xs font-bold text-center flex items-center justify-center gap-1 hover:bg-primary/20 active:scale-98 transition-all"
                             >
-                                <span>Message Management</span>
+                                <span>{t('Message Management')}</span>
                                 <ArrowRight className="size-3" />
                             </Link>
                             <Link
                                 href="/mobile/tenant/maintenance"
                                 className="flex-1 py-2 rounded-xl bg-slate-100 dark:bg-white/10 text-foreground text-xs font-bold text-center flex items-center justify-center gap-1 active:scale-98 transition-all"
                             >
-                                <span>Maintenance</span>
+                                <span>{t('Maintenance')}</span>
                                 <Wrench className="size-3" />
                             </Link>
                         </div>

@@ -21,6 +21,7 @@ import { RoleBadge } from '@/components/profile/RoleBadge';
 import { SocialsHeader } from '@/components/profile/SocialsHeader';
 import { ProfileSetupBanner } from '@/components/profile/ProfileSetupBanner';
 import { EditablePhone } from '@/components/profile/EditablePhone';
+import { T } from '@/context/LanguageContext';
 
 type LandlordProperty = {
     id: string;
@@ -178,22 +179,22 @@ export default async function LandlordProfilePage() {
         return (
             <div className="min-h-screen bg-background text-foreground p-6 md:p-12">
                 <div className="mx-auto max-w-3xl rounded-[2.5rem] neumorphic-panel p-10">
-                    <h1 className="text-2xl font-display font-black">Profile unavailable</h1>
+                    <h1 className="text-2xl font-display font-black"><T>Profile unavailable</T></h1>
                     <p className="mt-3 text-sm opacity-70">
-                        We couldn&apos;t load your landlord profile yet. Please complete your account details or try again.
+                        <T>{"We couldn't load your landlord profile yet. Please complete your account details or try again."}</T>
                     </p>
                     <div className="mt-6 flex flex-wrap gap-3">
                         <Link
                             href="/landlord/settings?category=Identity"
                             className="rounded-2xl neumorphic-primary px-6 py-3 text-[11px] font-black uppercase tracking-widest transition-all hover:scale-105"
                         >
-                            Complete Profile
+                            <T>Complete Profile</T>
                         </Link>
                         <Link
                             href="/landlord/dashboard"
                             className="rounded-2xl neumorphic-extruded px-6 py-3 text-[11px] font-black uppercase tracking-widest transition-all"
                         >
-                            Back to Dashboard
+                            <T>Back to Dashboard</T>
                         </Link>
                     </div>
                 </div>
@@ -287,7 +288,7 @@ export default async function LandlordProfilePage() {
     const socials = (profile.socials as Record<string, string>) || {};
     const emergencyContactName = (profile as any).emergency_contact_name || socials.emergency_contact_name || null;
     const emergencyContactPhone = (profile as any).emergency_contact_phone || socials.emergency_contact_phone || null;
-    const primaryLocation = profile.address || properties[0]?.city || properties[0]?.address || 'Not specified';
+    const primaryLocation = profile.address || properties[0]?.city || properties[0]?.address || null;
 
     const hasCustomAvatar = Boolean(profile.avatar_url && profile.avatar_url.trim().length > 0);
     const hasPhone = Boolean(profile.phone && profile.phone.trim().length > 0);
@@ -350,7 +351,7 @@ export default async function LandlordProfilePage() {
                                 href="/landlord/settings"
                                 className="px-10 py-3 rounded-2xl neumorphic-primary font-black text-[11px] tracking-widest uppercase transition-all duration-300 hover:scale-105 active:scale-95"
                             >
-                                Edit Profile
+                                <T>Edit Profile</T>
                             </Link>
                             <Link
                                 href="/landlord/messages"
@@ -366,7 +367,7 @@ export default async function LandlordProfilePage() {
                                 <div className="size-12 rounded-full neumorphic-inset-card flex items-center justify-center group-hover/item:scale-110 transition-transform">
                                     <Mail size={18} className="text-primary" />
                                 </div>
-                                <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mt-2">Email Address</p>
+                                <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mt-2"><T>Email Address</T></p>
                                 <a href={`mailto:${profile.email}`} className="text-sm font-medium hover:text-primary transition-colors">{profile.email}</a>
                             </div>
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
@@ -379,7 +380,7 @@ export default async function LandlordProfilePage() {
                                         </span>
                                     )}
                                 </div>
-                                <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mt-2">Phone Number</p>
+                                <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mt-2"><T>Phone Number</T></p>
                                 <EditablePhone initialPhone={profile.phone} userId={profile.id} />
                             </div>
                             {emergencyContactPhone && (
@@ -388,7 +389,7 @@ export default async function LandlordProfilePage() {
                                         <ShieldAlert size={18} className="text-red-400" />
                                     </div>
                                     <p className="text-[10px] font-black tracking-widest text-red-400 opacity-80 uppercase mt-2">
-                                        {emergencyContactName ? `Emergency (${emergencyContactName})` : "Emergency Contact"}
+                                        {emergencyContactName ? <T params={{ name: emergencyContactName }}>{"Emergency ({name})"}</T> : <T>Emergency Contact</T>}
                                     </p>
                                     <a href={`tel:${emergencyContactPhone}`} className="text-sm font-bold text-red-400 hover:underline">{emergencyContactPhone}</a>
                                 </div>
@@ -397,8 +398,8 @@ export default async function LandlordProfilePage() {
                                 <div className="size-12 rounded-full neumorphic-inset-card flex items-center justify-center group-hover/item:scale-110 transition-transform">
                                     <MapPin size={18} className="text-primary" />
                                 </div>
-                                <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mt-2">Primary Location</p>
-                                <p className="text-sm font-medium">{primaryLocation}</p>
+                                <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mt-2"><T>Primary Location</T></p>
+                                <p className="text-sm font-medium">{primaryLocation ?? <T>Not specified</T>}</p>
                             </div>
                         </div>
 
@@ -427,15 +428,15 @@ export default async function LandlordProfilePage() {
                         <div className="size-12 rounded-2xl neumorphic-inset-card flex items-center justify-center">
                             <TrendingUp size={20} className="text-primary" />
                         </div>
-                        <h2 className="text-2xl font-display font-black tracking-tight">Portfolio Stats</h2>
+                        <h2 className="text-2xl font-display font-black tracking-tight"><T>Portfolio Stats</T></h2>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
                         <div className="neumorphic-inset p-6 rounded-[2rem]">
-                            <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mb-2">Total Units</p>
+                            <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mb-2"><T>Total Units</T></p>
                             <p className="text-4xl font-display font-black">{units.length}</p>
                         </div>
                         <div className="neumorphic-inset p-6 rounded-[2rem]">
-                            <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mb-2">Occupancy</p>
+                            <p className="text-[10px] font-black tracking-widest opacity-50 uppercase mb-2"><T>Occupancy</T></p>
                             <p className="text-4xl font-display font-black">{occupancyRate}%</p>
                         </div>
                     </div>

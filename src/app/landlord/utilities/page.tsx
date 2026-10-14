@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProperty } from "@/context/PropertyContext";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { 
     getAmenities, 
     getAmenityBookings, 
@@ -34,6 +35,7 @@ import { toast } from "sonner";
 import { AddAmenityModal } from "@/components/landlord/AddAmenityModal";
 
 import * as LucideIcons from 'lucide-react';
+import { tr } from "@/hooks/useLanguage";
 
 const getIconByName = (name: string | null) => {
     if (!name) return LucideIcons.Zap;
@@ -45,6 +47,7 @@ const getIconByName = (name: string | null) => {
 export default function LandlordUtilitiesPage() {
     const { user } = useAuth();
     const { selectedPropertyId } = useProperty();
+    const { t } = useLanguageContext();
     const [activeTab, setActiveTab] = useState<"list" | "requests" | "history">("list");
     const [searchQuery, setSearchQuery] = useState("");
     const [amenities, setAmenities] = useState<AmenityWithProperty[]>([]);
@@ -69,7 +72,7 @@ export default function LandlordUtilitiesPage() {
         } catch (error) {
             const msg = error instanceof Error ? error.message : JSON.stringify(error);
             console.error("[UtilitiesPage] Error fetching data:", msg, error);
-            toast.error(msg || "Failed to load facilities and bookings");
+            toast.error(tr(msg || t("Failed to load facilities and bookings")));
         } finally {
             setLoading(false);
         }
@@ -82,25 +85,25 @@ export default function LandlordUtilitiesPage() {
     const handleUpdateBookingStatus = async (id: string, status: string) => {
         try {
             await updateBookingStatus(id, status);
-            toast.success(`Booking ${status.toLowerCase()} successfully`);
+            toast.success(status === "Approved" ? t("Booking approved successfully") : status === "Rejected" ? t("Booking rejected successfully") : t("Booking updated successfully"));
             fetchData();
         } catch (error) {
             const msg = error instanceof Error ? error.message : JSON.stringify(error);
             console.error("[UtilitiesPage] Error updating booking:", msg, error);
-            toast.error(msg || "Failed to update booking status");
+            toast.error(tr(msg || t("Failed to update booking status")));
         }
     };
 
     const handleDeleteAmenity = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this facility? This will also remove all associated bookings.")) return;
+        if (!confirm(t("Are you sure you want to delete this facility? This will also remove all associated bookings."))) return;
         try {
             await deleteAmenity(id);
-            toast.success("Facility deleted successfully");
+            toast.success(t("Facility deleted successfully"));
             fetchData();
         } catch (error) {
             const msg = error instanceof Error ? error.message : JSON.stringify(error);
             console.error("[UtilitiesPage] Error deleting facility:", msg, error);
-            toast.error(msg || "Failed to delete facility");
+            toast.error(tr(msg || t("Failed to delete facility")));
         }
     };
 
@@ -139,16 +142,16 @@ export default function LandlordUtilitiesPage() {
                         <section className="space-y-4">
                             <div className="flex items-center gap-3">
                                 <span className="flex h-6 items-center rounded-full neumorphic-inset px-3 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                                    Facilities
+                                    {t("Facilities")}
                                 </span>
                                 <span className="h-px w-12 bg-border" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Property Assets</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Property Assets")}</span>
                             </div>
                             <h1 className="text-5xl font-black tracking-tight text-foreground md:text-6xl lg:text-7xl">
-                                Property <span className="text-primary">Facilities</span>
+                                {t("Property")} <span className="text-primary">{t("Facilities")}</span>
                             </h1>
                             <p className="max-w-xl text-lg font-medium text-muted-foreground/80 leading-relaxed">
-                                Manage and monitor shared amenities, equipment, and services for your residents.
+                                {t("Manage and monitor shared amenities, equipment, and services for your residents.")}
                             </p>
                         </section>
                         
@@ -159,7 +162,7 @@ export default function LandlordUtilitiesPage() {
                                 className="flex items-center gap-3 rounded-2xl neumorphic-primary px-8 py-4 text-sm font-black text-primary-foreground transition-all hover:scale-[1.05] active:scale-95"
                             >
                                 <Plus className="size-5" />
-                                Add Facility
+                                {t("Add Facility")}
                             </button>
                         </div>
                     </div>
@@ -186,7 +189,7 @@ export default function LandlordUtilitiesPage() {
                                 )}
                             >
                                 <tab.icon className={cn("size-4 transition-colors", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
-                                {tab.label}
+                                {t(tab.label)}
                                 {tab.badge && (
                                     <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-black text-primary-foreground">
                                         {tab.badge}
@@ -208,7 +211,7 @@ export default function LandlordUtilitiesPage() {
                             <input maxLength={60}
                                 type="text"
                                 suppressHydrationWarning
-                                placeholder="Find a facility..."
+                                placeholder={t("Find a facility...")}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full rounded-[2rem] neumorphic-inset bg-card py-4 pl-14 pr-6 text-base font-medium outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-8 shadow-sm"
@@ -216,6 +219,7 @@ export default function LandlordUtilitiesPage() {
                         </div>
                         <button 
                             suppressHydrationWarning
+                            aria-label={t("Filter")}
                             className="flex size-14 items-center justify-center rounded-[2rem] neumorphic-extruded bg-card text-muted-foreground transition-all hover:text-primary active:scale-90"
                         >
                             <Filter className="size-5" />
@@ -243,13 +247,13 @@ export default function LandlordUtilitiesPage() {
                                     <Plus className="size-8" />
                                 </div>
                                 <div className="text-center space-y-2">
-                                    <p className="text-lg font-black text-foreground">Add New Facility</p>
+                                    <p className="text-lg font-black text-foreground">{t("Add New Facility")}</p>
                                     <p className="text-xs text-muted-foreground/70 leading-relaxed">
-                                        Register a new room, amenity, or service.
+                                        {t("Register a new room, amenity, or service.")}
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-1.5 text-primary font-black text-xs opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
-                                    Get started <ArrowRight className="size-3.5" />
+                                    {t("Get started")} <ArrowRight className="size-3.5" />
                                 </div>
                             </button>
 
@@ -263,8 +267,8 @@ export default function LandlordUtilitiesPage() {
                                     <div className="mb-4 rounded-full neumorphic-inset-card p-4">
                                         <Search className="size-8 text-muted-foreground" />
                                     </div>
-                                    <h3 className="text-xl font-black">No facilities found</h3>
-                                    <p className="text-muted-foreground">Try adjusting your search or add a new facility.</p>
+                                    <h3 className="text-xl font-black">{t("No facilities found")}</h3>
+                                    <p className="text-muted-foreground">{t("Try adjusting your search or add a new facility.")}</p>
                                 </div>
                             ) : (
                                 filteredUtilities.map((utility, idx) => {
@@ -305,7 +309,7 @@ export default function LandlordUtilitiesPage() {
                                                             "size-1.5 rounded-full",
                                                             utility.status === "Active" ? "bg-emerald-500 animate-pulse" : "bg-amber-500"
                                                         )} />
-                                                        {utility.status}
+                                                        {t(utility.status)}
                                                     </div>
                                                 </div>
                                                 {/* Type Icon */}
@@ -338,12 +342,12 @@ export default function LandlordUtilitiesPage() {
                                                 <div className="mt-3 flex items-center gap-3 text-xs font-medium text-muted-foreground">
                                                     <span className="flex items-center gap-1.5">
                                                         <Users className="size-3.5 text-muted-foreground/50" />
-                                                        {utility.capacity || 0} capacity
+                                                        {t("{count} capacity", { count: utility.capacity || 0 })}
                                                     </span>
                                                     <span className="size-1 rounded-full bg-border/60" />
                                                     <span className="flex items-center gap-1.5">
                                                         <MapPin className="size-3.5 text-muted-foreground/50" />
-                                                        {utility.property?.name || utility.location_details || "Main Wing"}
+                                                        {utility.property?.name || utility.location_details || t("Main Wing")}
                                                     </span>
                                                 </div>
 
@@ -357,7 +361,7 @@ export default function LandlordUtilitiesPage() {
                                                     <div>
                                                         <div className="flex items-baseline gap-1">
                                                             <span className="text-2xl font-black text-foreground">
-                                                                {utility.price_per_unit === 0 ? "Free" : `₱${Number(utility.price_per_unit).toLocaleString()}`}
+                                                                {utility.price_per_unit === 0 ? t("Free") : `₱${Number(utility.price_per_unit).toLocaleString()}`}
                                                             </span>
                                                             {utility.price_per_unit && utility.price_per_unit > 0 && <span className="text-xs font-black text-muted-foreground">/{utility.unit_type}</span>}
                                                         </div>
@@ -367,14 +371,14 @@ export default function LandlordUtilitiesPage() {
                                                         <button 
                                                             onClick={() => handleDeleteAmenity(utility.id)}
                                                             className="flex size-9 items-center justify-center rounded-xl border border-border text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-500" 
-                                                            aria-label="Delete facility"
+                                                            aria-label={t("Delete facility")}
                                                         >
                                                             <X className="size-4" />
                                                         </button>
                                                         <button 
                                                             onClick={() => handleOpenEdit(utility)}
                                                             className="flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-xs font-black text-background transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-md hover:shadow-primary/20">
-                                                            Manage
+                                                            {t("Manage")}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -398,11 +402,11 @@ export default function LandlordUtilitiesPage() {
                                 <table className="w-full text-left border-collapse">
                                     <thead>
                                         <tr className="bg-muted/40 border-b border-border">
-                                            <th className="p-8 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Applicant</th>
-                                            <th className="p-8 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Reservation Details</th>
-                                            <th className="p-8 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Billing</th>
-                                            <th className="p-8 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Status</th>
-                                            <th className="p-8 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground text-right">Actions</th>
+                                            <th className="p-8 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">{t("Applicant")}</th>
+                                            <th className="p-8 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">{t("Reservation Details")}</th>
+                                            <th className="p-8 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">{t("Billing")}</th>
+                                            <th className="p-8 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">{t("Status")}</th>
+                                            <th className="p-8 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground text-right">{t("Actions")}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/40">
@@ -411,7 +415,7 @@ export default function LandlordUtilitiesPage() {
                                                 <td colSpan={5} className="p-20 text-center">
                                                     <div className="flex flex-col items-center gap-3">
                                                         <ClipboardList className="size-12 text-muted-foreground/20" />
-                                                        <p className="text-lg font-black text-muted-foreground">No bookings found</p>
+                                                        <p className="text-lg font-black text-muted-foreground">{t("No bookings found")}</p>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -428,7 +432,7 @@ export default function LandlordUtilitiesPage() {
                                                                 </div>
                                                             )}
                                                             <div className="flex flex-col gap-1">
-                                                                <span className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{req.tenant?.full_name || "Unknown Tenant"}</span>
+                                                                <span className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{req.tenant?.full_name || t("Unknown Tenant")}</span>
                                                                 <span className="text-xs font-black text-muted-foreground flex items-center gap-2">
                                                                     <Zap className="size-3.5 text-primary" />
                                                                     {req.amenity?.name}
@@ -463,7 +467,7 @@ export default function LandlordUtilitiesPage() {
                                                                     ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
                                                                     : "bg-red-500/10 text-red-600 border-red-500/20"
                                                         )}>
-                                                            {req.status}
+                                                            {t(req.status)}
                                                         </span>
                                                     </td>
                                                     <td className="p-8 text-right">
@@ -472,19 +476,21 @@ export default function LandlordUtilitiesPage() {
                                                                 <>
                                                                     <button 
                                                                         onClick={() => handleUpdateBookingStatus(req.id, "Approved")}
+                                                                        aria-label={t("Approve booking")}
                                                                         className="flex size-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 transition-all hover:bg-emerald-500 hover:text-white shadow-lg shadow-emerald-500/10 active:scale-90"
                                                                     >
                                                                         <Check className="size-6" />
                                                                     </button>
                                                                     <button 
                                                                         onClick={() => handleUpdateBookingStatus(req.id, "Rejected")}
+                                                                        aria-label={t("Reject booking")}
                                                                         className="flex size-12 items-center justify-center rounded-2xl bg-red-500/10 text-red-600 transition-all hover:bg-red-500 hover:text-white shadow-lg shadow-red-500/10 active:scale-90"
                                                                     >
                                                                         <X className="size-6" />
                                                                     </button>
                                                                 </>
                                                             )}
-                                                            <button className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground transition-all hover:bg-foreground hover:text-background active:scale-90">
+                                                            <button aria-label={t("More options")} className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground transition-all hover:bg-foreground hover:text-background active:scale-90">
                                                                 <MoreVertical className="size-6" />
                                                             </button>
                                                         </div>
@@ -509,12 +515,13 @@ export default function LandlordUtilitiesPage() {
                             <div className="flex size-24 items-center justify-center rounded-[2.5rem] bg-muted mb-8 shadow-inner">
                                 <HistoryIcon className="size-12 text-muted-foreground/30" />
                             </div>
-                            <h3 className="text-3xl font-black text-foreground tracking-tight">Archive Management</h3>
+                            <h3 className="text-3xl font-black text-foreground tracking-tight">{t("Archive Management")}</h3>
                             <p className="text-base font-medium text-muted-foreground/60 text-center max-w-md mt-4 leading-relaxed">
-                                Review deep historical insights, occupancy trends, and long-term revenue analysis across all facilities.
+                                {t("Review deep historical insights, occupancy trends, and long-term revenue analysis across all facilities.")}
                             </p>
                             <button className="mt-10 rounded-2xl border border-border px-10 py-4 text-sm font-black text-foreground hover:bg-muted transition-all active:scale-95 shadow-sm">
-                                View Full History
+                                {t("View Full History")}
+
                             </button>
                         </motion.div>
                     )}

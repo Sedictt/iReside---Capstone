@@ -8,6 +8,7 @@ import { MiniChatBubble } from "./MiniChatBubble";
 import { MiniChatSystemMessage } from "./MiniChatSystemMessage";
 import type { MiniChatContact, MiniChatMessage, MiniChatRole } from "./types";
 import { formatDayLabel, shouldGroupWithPrevious, startsNewDay } from "./utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 const NEAR_BOTTOM_PX = 56;
 
@@ -40,6 +41,7 @@ export function MiniChatMessageList({
     onReload,
     onDismissError,
 }: MiniChatMessageListProps) {
+    const { t } = useLanguageContext();
     const containerRef = useRef<HTMLDivElement | null>(null);
     const isNearBottomRef = useRef(true);
     const previousCountRef = useRef(0);
@@ -103,12 +105,12 @@ export function MiniChatMessageList({
         }
 
         if (appended && last && !last.isOwn && last.messageType !== "system") {
-            setAnnouncement(`New message from ${contact.name}: ${last.fileUrl ? "attachment" : (last.redactedContent ?? last.content)}`);
+            setAnnouncement(t("New message from {name}: {content}", { name: contact.name, content: last.fileUrl ? t("attachment") : (last.redactedContent ?? last.content) }));
         }
 
         previousCountRef.current = count;
         previousLastIdRef.current = lastId;
-    }, [contact.name, messages, scrollToBottom]);
+    }, [contact.name, messages, scrollToBottom, t]);
 
     useEffect(() => {
         if (isOtherUserTyping && isNearBottomRef.current) {
@@ -125,7 +127,7 @@ export function MiniChatMessageList({
                 onScroll={handleScroll}
                 className="custom-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-3 pb-2 pt-3"
                 role="log"
-                aria-label={`Messages with ${contact.name}`}
+                aria-label={t("Messages with {name}", { name: contact.name })}
                 aria-busy={isLoading}
             >
                 {isLoading && <MiniChatSkeleton />}
@@ -135,8 +137,8 @@ export function MiniChatMessageList({
                         <span className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
                             <MessageSquareDashed className="size-5" aria-hidden="true" />
                         </span>
-                        <p className="text-sm font-semibold text-foreground">Say hello to {contact.name.split(" ")[0]}</p>
-                        <p className="text-xs text-muted-foreground">Messages you send here also appear on the full messaging page.</p>
+                        <p className="text-sm font-semibold text-foreground">{t("Say hello to {name}", { name: contact.name.split(" ")[0] })}</p>
+                        <p className="text-xs text-muted-foreground">{t("Messages you send here also appear on the full messaging page.")}</p>
                     </div>
                 )}
 
@@ -175,7 +177,7 @@ export function MiniChatMessageList({
                 })}
 
                 {isOtherUserTyping && (
-                    <div className="mt-2 flex items-end gap-2 animate-in fade-in slide-in-from-left-1 duration-200" aria-label={`${contact.name} is typing`}>
+                    <div className="mt-2 flex items-end gap-2 animate-in fade-in slide-in-from-left-1 duration-200" aria-label={t("{name} is typing", { name: contact.name })}>
                         <span className="w-6 shrink-0" />
                         <div className="rounded-2xl rounded-bl-sm border border-zinc-200/90 bg-zinc-100/95 px-3 py-2.5 dark:border-zinc-700/80 dark:bg-zinc-800/90">
                             <div className="flex items-center gap-1">
@@ -196,14 +198,14 @@ export function MiniChatMessageList({
                                 onClick={onReload}
                                 className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-semibold hover:bg-red-500/15"
                             >
-                                <RefreshCw className="size-3" aria-hidden="true" /> Retry
+                                <RefreshCw className="size-3" aria-hidden="true" /> {t("Retry")}
                             </button>
                             <button
                                 type="button"
                                 onClick={onDismissError}
                                 className="rounded-md px-1.5 py-0.5 font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
                             >
-                                Dismiss
+                                {t("Dismiss")}
                             </button>
                         </span>
                     </div>
@@ -220,7 +222,7 @@ export function MiniChatMessageList({
                     )}
                 >
                     <ArrowDown className="size-3 text-primary" aria-hidden="true" />
-                    {unseenCount} new {unseenCount === 1 ? "message" : "messages"}
+                    {unseenCount === 1 ? t("{count} new message", { count: unseenCount }) : t("{count} new messages", { count: unseenCount })}
                 </button>
             )}
 

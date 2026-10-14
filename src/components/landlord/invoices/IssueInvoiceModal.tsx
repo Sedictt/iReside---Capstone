@@ -22,6 +22,8 @@ import {
     ShieldCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 import { formatPhpCurrency } from "@/lib/billing/utils";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
@@ -32,7 +34,9 @@ interface ActiveLease {
     id: string;
     monthly_rent: number;
     start_date: string;
-    end_date: string;
+    /** Null for open-ended (month-to-month) leases. */
+    end_date: string | null;
+    term_type?: string | null;
     unit?: {
         id: string;
         name: string;
@@ -58,7 +62,7 @@ function getTenantDisplayName(lease: ActiveLease): string {
     const parts = [lease.tenant?.first_name, lease.tenant?.last_name].filter(Boolean);
     if (parts.length > 0) return parts.join(" ");
     if (lease.tenant?.email) return lease.tenant.email;
-    return "Active Tenant";
+    return tr("Active Tenant");
 }
 
 interface InvoiceItemDraft {
@@ -85,6 +89,7 @@ export function IssueInvoiceModal({
     defaultUnitId,
     propertyId
 }: IssueInvoiceModalProps) {
+    const { t } = useLanguageContext();
     const [leases, setLeases] = useState<ActiveLease[]>([]);
     const [loadingLeases, setLoadingLeases] = useState(true);
     const [selectedLeaseId, setSelectedLeaseId] = useState<string>("");
@@ -151,7 +156,7 @@ export function IssueInvoiceModal({
                     setSelectedLeaseId(data[0].id);
                 }
             } catch {
-                if (isMounted) setErrorMsg("Failed to load active leases.");
+                if (isMounted) setErrorMsg(t("Failed to load active leases."));
             } finally {
                 if (isMounted) setLoadingLeases(false);
             }
@@ -227,7 +232,7 @@ export function IssueInvoiceModal({
 
     const formRules = useMemo(() => {
         const rules: Record<string, (value: unknown) => string | undefined> = {
-            lease: (value) => (value ? undefined : "Please select a tenant with an active lease."),
+            lease: (value) => (value ? undefined : t("Please select a tenant with an active lease.")),
             billingMonth: (value) => billingMonthRule(value, { required: true }),
             dueDate: (value) => dateRule(value, { label: "Due date" }),
         };
@@ -280,12 +285,12 @@ export function IssueInvoiceModal({
         e.preventDefault();
         if (isSubmitting) return;
         if (!selectedLease) {
-            setErrorMsg("Please select a tenant with an active lease.");
+            setErrorMsg(t("Please select a tenant with an active lease."));
             return;
         }
 
         if (!form.validateAll()) {
-            setErrorMsg(form.errors.total ?? "Please fix the highlighted fields.");
+            setErrorMsg(tr(form.errors.total ?? t("Please fix the highlighted fields.")));
             return;
         }
 
@@ -298,7 +303,7 @@ export function IssueInvoiceModal({
             }));
 
         if (validItems.length === 0) {
-            setErrorMsg("Please provide at least one charge item with an amount greater than 0.");
+            setErrorMsg(t("Please provide at least one charge item with an amount greater than 0."));
             return;
         }
 
@@ -321,14 +326,14 @@ export function IssueInvoiceModal({
             if (!response.ok) {
                 const data = await response.json().catch(() => null);
                 form.setServerErrors(data?.fieldErrors);
-                throw new Error(data?.error || "Failed to issue invoice.");
+                throw new Error(data?.error || t("Failed to issue invoice."));
             }
 
             if (onIssued) onIssued();
             onClose();
         } catch (err: any) {
             console.error(err);
-            setErrorMsg(err.message || "An unexpected error occurred while issuing invoice.");
+            setErrorMsg(tr(err.message || t("An unexpected error occurred while issuing invoice.")));
         } finally {
             setIsSubmitting(false);
         }
@@ -360,9 +365,9 @@ export function IssueInvoiceModal({
                                 <ReceiptText className="size-6" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-black text-foreground">Issue Invoice</h2>
+                                <h2 className="text-xl font-black text-foreground">{t("Issue Invoice")}</h2>
                                 <p className="text-xs font-medium text-muted-foreground mt-0.5">
-                                    Send an itemized monthly bill for rent and utilities directly to a tenant.
+                                    {t("Send an itemized monthly bill for rent and utilities directly to a tenant.")}
                                 </p>
                             </div>
                         </div>
@@ -370,7 +375,7 @@ export function IssueInvoiceModal({
                             type="button"
                             onClick={onClose}
                             className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                            aria-label="Close modal"
+                            aria-label={t("Close modal")}
                         >
                             <X className="size-5" />
                         </button>
@@ -390,17 +395,17 @@ export function IssueInvoiceModal({
                     <div className="space-y-2">
                         <label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                             <User className="size-3.5 text-primary" />
-                            Select Recipient Tenant & Unit
+                            {t("Select Recipient Tenant & Unit")}
                         </label>
 
                         {loadingLeases ? (
                             <div className="flex items-center justify-center py-4 rounded-2xl border border-border/60 bg-muted/20 text-xs text-muted-foreground">
                                 <Loader2 className="size-4 animate-spin mr-2" />
-                                Loading active leases...
+                                {t("Loading active leases...")}
                             </div>
                         ) : leases.length === 0 ? (
                             <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-amber-700 dark:text-amber-300">
-                                No active tenant leases found. An active lease is required to issue monthly invoices.
+                                {t("No active tenant leases found. An active lease is required to issue monthly invoices.")}
                             </div>
                         ) : (
                             <div className="space-y-2">
@@ -411,7 +416,7 @@ export function IssueInvoiceModal({
                                 >
                                     {leases.map((lease) => (
                                         <option key={lease.id} value={lease.id}>
-                                            {getTenantDisplayName(lease)} • {lease.unit?.name || "Unit"} ({lease.unit?.property?.name || "Property"}) — {formatPhpCurrency(lease.monthly_rent)}/mo
+                                            {getTenantDisplayName(lease)} • {lease.unit?.name || t("Unit")} ({lease.unit?.property?.name || t("Property")}) — {formatPhpCurrency(lease.monthly_rent)}{t("/mo")}
                                         </option>
                                     ))}
                                 </select>
@@ -421,10 +426,10 @@ export function IssueInvoiceModal({
                                         <div className="flex items-center gap-2">
                                             <Building2 className="size-3.5 text-primary" />
                                             <span className="font-bold text-foreground">{selectedLease.unit?.property?.name}</span>
-                                            <span className="text-muted-foreground">• Unit {selectedLease.unit?.name}</span>
+                                            <span className="text-muted-foreground">• {t("Unit {unit}", { unit: selectedLease.unit?.name ?? "" })}</span>
                                         </div>
                                         <div className="flex items-center gap-2 text-muted-foreground">
-                                            <span>Base Rent:</span>
+                                            <span>{t("Base Rent:")}</span>
                                             <span className="font-black text-foreground">{formatPhpCurrency(selectedLease.monthly_rent)}</span>
                                         </div>
                                     </div>
@@ -438,7 +443,7 @@ export function IssueInvoiceModal({
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                 <Calendar className="size-3.5 text-primary" />
-                                Billing Month
+                                {t("Billing Month")}
                             </label>
                             <input min="2000-01" max="2099-12"
                                 {...form.fieldProps("billingMonth")}
@@ -453,7 +458,7 @@ export function IssueInvoiceModal({
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                 <Calendar className="size-3.5 text-primary" />
-                                Due Date
+                                {t("Due Date")}
                             </label>
                             <input min="2000-01-01" max="2099-12-31"
                                 {...form.fieldProps("dueDate")}
@@ -471,7 +476,7 @@ export function IssueInvoiceModal({
                         <div className="flex items-center justify-between">
                             <label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                 <DollarSign className="size-3.5 text-primary" />
-                                Review Rent & Utility Dues
+                                {t("Review Rent & Utility Dues")}
                             </label>
                             <button
                                 type="button"
@@ -479,7 +484,7 @@ export function IssueInvoiceModal({
                                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-border bg-muted/40 hover:bg-muted text-[11px] font-bold text-foreground transition-all cursor-pointer"
                             >
                                 <Plus className="size-3" />
-                                Add Line Item
+                                {t("Add Line Item")}
                             </button>
                         </div>
 
@@ -510,13 +515,13 @@ export function IssueInvoiceModal({
                                     <div className="flex-1 min-w-0">
                                         <input maxLength={60}
                                             {...form.fieldProps(`label:${item.id}`)}
-                                            aria-label="Charge description"
+                                            aria-label={t("Charge description")}
                                             type="text"
                                             value={item.label}
                                             disabled={!item.removable}
                                             onChange={(e) => handleUpdateItem(item.id, "label", e.target.value)}
                                             className="w-full bg-transparent text-xs font-bold text-foreground outline-none placeholder:text-muted-foreground disabled:opacity-80"
-                                            placeholder="Charge Description"
+                                            placeholder={t("Charge Description")}
                                         />
                                     </div>
 
@@ -524,7 +529,7 @@ export function IssueInvoiceModal({
                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">₱</span>
                                         <input max={9999999.99}
                                             {...form.fieldProps(`amount:${item.id}`)}
-                                            aria-label="Charge amount"
+                                            aria-label={t("Charge amount")}
                                             type="number"
                                             inputMode="decimal"
                                             step="0.01"
@@ -541,7 +546,7 @@ export function IssueInvoiceModal({
                                             type="button"
                                             onClick={() => handleRemoveItem(item.id)}
                                             className="p-1.5 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors"
-                                            title="Remove item"
+                                            title={t("Remove item")}
                                         >
                                             <Trash2 className="size-3.5" />
                                         </button>
@@ -558,34 +563,34 @@ export function IssueInvoiceModal({
                     {/* Total Summary Card */}
                     <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="space-y-0.5">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Total Bill Amount</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t("Total Bill Amount")}</span>
                             <div className="flex items-center gap-2">
                                 <span className="text-2xl font-black text-foreground tracking-tight">
                                     {formatPhpCurrency(totalAmount)}
                                 </span>
                                 <span className="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider">
-                                    Pending
+                                    {t("Pending")}
                                 </span>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:text-right">
                             <ShieldCheck className="size-4 text-emerald-500 shrink-0" />
-                            <span>Direct delivery to tenant phone portal</span>
+                            <span>{t("Direct delivery to tenant phone portal")}</span>
                         </div>
                     </div>
 
                     {/* Optional Note */}
                     <div className="space-y-1.5">
                         <label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
-                            Notes / Memo for Tenant (Optional)
+                            {t("Notes / Memo for Tenant (Optional)")}
                         </label>
                         <textarea maxLength={250}
                             {...form.fieldProps("notes")}
                             rows={2}
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
-                            placeholder="e.g. Regular monthly rent and recorded utility consumption."
+                            placeholder={t("e.g. Regular monthly rent and recorded utility consumption.")}
                             className="w-full rounded-xl border border-border bg-background p-3 text-xs font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
                         />
                     </div>
@@ -599,7 +604,7 @@ export function IssueInvoiceModal({
                         disabled={isSubmitting}
                         className="rounded-xl border border-border bg-card px-5 py-2.5 text-xs font-bold text-foreground transition-all hover:bg-muted active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
-                        Cancel
+                        {t("Cancel")}
                     </button>
 
                     <button
@@ -611,12 +616,13 @@ export function IssueInvoiceModal({
                         {isSubmitting ? (
                             <>
                                 <Loader2 className="size-3.5 animate-spin" />
-                                <span>Generating...</span>
+                                <span>{t("Generating...")}</span>
                             </>
                         ) : (
                             <>
                                 <Send className="size-3.5" />
-                                <span>Issue Invoice</span>
+                                <span>{t("Issue Invoice")}</span>
+
                             </>
                         )}
                     </button>

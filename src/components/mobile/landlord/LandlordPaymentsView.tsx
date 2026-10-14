@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Fragment, type ReactNode } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { useProperty } from '@/context/PropertyContext';
@@ -15,9 +15,17 @@ import {
     X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguageContext } from '@/context/LanguageContext';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { MobileConfirmModal } from '@/components/mobile/shared/MobileConfirmModal';
 import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropertySelector';
+
+function fillRich(text: string, nodes: Record<string, ReactNode>) {
+    return text.split(/(\{\w+\})/g).map((part, i) => {
+        const match = part.match(/^\{(\w+)\}$/);
+        return match && nodes[match[1]] !== undefined ? <Fragment key={i}>{nodes[match[1]]}</Fragment> : part;
+    });
+}
 
 interface InvoiceItem {
     id: string;
@@ -36,6 +44,7 @@ interface InvoiceItem {
 export function LandlordPaymentsView() {
     const { selectedPropertyId } = useProperty();
     const searchParams = useSearchParams();
+    const { t, locale } = useLanguageContext();
     const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -43,12 +52,12 @@ export function LandlordPaymentsView() {
 
     useEffect(() => {
         const s = searchParams?.get('search') || searchParams?.get('id') || searchParams?.get('paymentId');
-        const t = searchParams?.get('tab');
+        const tabParam = searchParams?.get('tab');
         if (s) {
             setSearchQuery(s);
         }
-        if (t && ['all', 'proofs', 'overdue', 'paid'].includes(t)) {
-            setActiveTab(t as any);
+        if (tabParam && ['all', 'proofs', 'overdue', 'paid'].includes(tabParam)) {
+            setActiveTab(tabParam as any);
         }
     }, [searchParams]);
     
@@ -71,8 +80,8 @@ export function LandlordPaymentsView() {
                 const formattedInvoices: InvoiceItem[] = rawList.map((inv: any) => ({
                     id: inv.id,
                     invoiceNumber: inv.invoiceNumber || inv.invoice_number,
-                    tenantName: inv.tenantName || inv.tenant || 'Unknown tenant',
-                    unitNumber: inv.unitNumber || inv.unit || 'N/A',
+                    tenantName: inv.tenantName || inv.tenant || t('Unknown tenant'),
+                    unitNumber: inv.unitNumber || inv.unit || t('N/A'),
                     propertyName: inv.propertyName || inv.property,
                     amount: Number(inv.amount || 0),
                     status: (inv.status || 'pending').toLowerCase(),
@@ -150,12 +159,12 @@ export function LandlordPaymentsView() {
 
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.error || 'Failed to review payment.');
+                throw new Error(errData.error || t('Failed to review payment.'));
             }
 
             setActionMessage({
                 type: 'success',
-                text: action === 'confirm' ? 'Payment approved successfully!' : 'Payment marked as rejected.',
+                text: action === 'confirm' ? t('Payment approved successfully!') : t('Payment marked as rejected.'),
             });
             setInspectInvoice(null);
             setPendingReview(null);
@@ -163,7 +172,7 @@ export function LandlordPaymentsView() {
         } catch (err: any) {
             setActionMessage({
                 type: 'error',
-                text: err?.message || 'Action failed. Please try again.',
+                text: err?.message || t('Action failed. Please try again.'),
             });
             setPendingReview(null);
         } finally {
@@ -187,7 +196,7 @@ export function LandlordPaymentsView() {
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/40 pointer-events-none" />
                             <input
                                 type="text"
-                                placeholder="SEARCH TENANT, UNIT, INVOICE…"
+                                placeholder={t("SEARCH TENANT, UNIT, INVOICE…")}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="h-11 w-full rounded-2xl border-none text-[11px] font-black uppercase tracking-wider pl-11 pr-8 focus:outline-none neumorphic-inset placeholder:text-muted-foreground/40 text-foreground"
@@ -197,7 +206,7 @@ export function LandlordPaymentsView() {
                                     type="button"
                                     onClick={() => setSearchQuery('')}
                                     className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground/50 hover:text-foreground"
-                                    aria-label="Clear search"
+                                    aria-label={t("Clear search")}
                                 >
                                     <X className="size-3.5" />
                                 </button>
@@ -226,7 +235,7 @@ export function LandlordPaymentsView() {
                     <div className="px-4 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-0.5">
                         {(['all', 'proofs', 'overdue', 'paid'] as const).map((tab) => {
                             const isActive = activeTab === tab;
-                            const label = tab === 'all' ? 'All' : tab === 'proofs' ? 'Proofs' : tab === 'overdue' ? 'Overdue' : 'Paid';
+                            const label = tab === 'all' ? t('All') : tab === 'proofs' ? t('Proofs') : tab === 'overdue' ? t('Overdue') : t('Paid');
                             return (
                                 <button
                                     key={tab}
@@ -258,16 +267,16 @@ export function LandlordPaymentsView() {
                     {loading ? (
                         <div className="py-12 flex flex-col items-center justify-center gap-2">
                             <div className="w-8 h-8 rounded-full border-2 border-muted border-t-primary animate-spin" />
-                            <span className="text-xs text-muted-foreground font-medium">Loading payments…</span>
+                            <span className="text-xs text-muted-foreground font-medium">{t("Loading payments…")}</span>
                         </div>
                     ) : filteredInvoices.length === 0 ? (
                         <div className="rounded-[2rem] neumorphic-panel p-8 text-center flex flex-col items-center justify-center shadow-sm my-2">
                             <div className="neumorphic-inset-card flex size-12 items-center justify-center rounded-2xl text-muted-foreground/50 mb-3">
                                 <CreditCard className="size-6" />
                             </div>
-                            <h4 className="text-xs font-black uppercase tracking-wider text-foreground">No invoices found</h4>
+                            <h4 className="text-xs font-black uppercase tracking-wider text-foreground">{t("No invoices found")}</h4>
                             <p className="text-[11px] text-muted-foreground mt-1">
-                                {activeTab === 'proofs' ? 'No pending tenant receipts awaiting verification.' : 'No invoices match the selected filter.'}
+                                {activeTab === 'proofs' ? t('No pending tenant receipts awaiting verification.') : t('No invoices match the selected filter.')}
                             </p>
                         </div>
                     ) : (
@@ -291,7 +300,7 @@ export function LandlordPaymentsView() {
                                                 {invoice.tenantName}
                                             </h4>
                                             <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/80 mt-0.5 block">
-                                                {invoice.unitNumber.toLowerCase().startsWith('unit') ? invoice.unitNumber : `Unit ${invoice.unitNumber}`}
+                                                {invoice.unitNumber.toLowerCase().startsWith('unit') ? invoice.unitNumber : t('Unit {unit}', { unit: invoice.unitNumber })}
                                             </span>
                                         </div>
                                         <div className="text-right shrink-0">
@@ -305,7 +314,7 @@ export function LandlordPaymentsView() {
                                                 (isUnderReview || (isPending && hasProof)) && "border-blue-500/30 bg-blue-500/10 text-blue-500",
                                                 isPending && !hasProof && "border-amber-500/30 bg-amber-500/10 text-amber-500"
                                             )}>
-                                                {isPaid ? 'Paid' : isOverdue ? 'Overdue' : hasProof ? 'Proof Attached' : 'Pending'}
+                                                {isPaid ? t('Paid') : isOverdue ? t('Overdue') : hasProof ? t('Proof Attached') : t('Pending')}
                                             </span>
                                         </div>
                                     </div>
@@ -317,7 +326,7 @@ export function LandlordPaymentsView() {
                                                 <Clock className="size-3" />
                                             </div>
                                             <span className="font-semibold text-[11px]">
-                                                Due: {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
+                                                {t('Due: {date}', { date: invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' }) : t('N/A') })}
                                             </span>
                                         </div>
                                         {invoice.propertyName && (
@@ -334,15 +343,15 @@ export function LandlordPaymentsView() {
                                                 <div className="relative size-11 rounded-xl overflow-hidden neumorphic-inset-card shrink-0">
                                                     <Image 
                                                         src={invoice.paymentProofUrl} 
-                                                        alt="Proof" 
+                                                        alt={t("Proof")} 
                                                         fill 
                                                         sizes="44px"
                                                         className="object-cover" 
                                                     />
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-xs font-black text-foreground truncate">Payment Screenshot</p>
-                                                    <p className="text-[10px] text-muted-foreground">Tap to inspect details</p>
+                                                    <p className="text-xs font-black text-foreground truncate">{t("Payment Screenshot")}</p>
+                                                    <p className="text-[10px] text-muted-foreground">{t("Tap to inspect details")}</p>
                                                 </div>
                                             </div>
 
@@ -351,7 +360,7 @@ export function LandlordPaymentsView() {
                                                 onClick={() => setInspectInvoice(invoice)}
                                                 className="neumorphic-extruded rounded-xl px-3 py-1.5 text-primary text-[10px] font-black uppercase tracking-wider flex items-center gap-1 active:scale-95 shrink-0 hover:scale-105 cursor-pointer"
                                             >
-                                                <span>Inspect</span>
+                                                <span>{t('Inspect')}</span>
                                                 <Maximize2 className="size-3" />
                                             </button>
                                         </div>
@@ -367,7 +376,7 @@ export function LandlordPaymentsView() {
                                                 className="flex-1 py-2.5 px-3 rounded-xl neumorphic-primary text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 shadow-sm disabled:opacity-50 cursor-pointer"
                                             >
                                                 <CheckCircle2 className="size-3.5" />
-                                                <span>{processingId === invoice.id ? 'Saving…' : 'Approve'}</span>
+                                                <span>{processingId === invoice.id ? t('Saving…') : t('Approve')}</span>
                                             </button>
                                             <button
                                                 type="button"
@@ -379,7 +388,7 @@ export function LandlordPaymentsView() {
                                                 className="py-2.5 px-4 rounded-xl neumorphic-extruded border border-red-500/25 bg-red-500/10 text-red-500 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50 cursor-pointer"
                                             >
                                                 <XCircle className="size-3.5" />
-                                                <span>Reject</span>
+                                                <span>{t('Reject')}</span>
                                             </button>
                                         </div>
                                     )}
@@ -396,14 +405,14 @@ export function LandlordPaymentsView() {
                         <div className="flex items-center justify-between pb-3 text-white border-b border-white/10">
                             <div>
                                 <h4 className="text-xs font-bold">
-                                    {inspectInvoice.tenantName} - {inspectInvoice.unitNumber.toLowerCase().startsWith('unit') ? inspectInvoice.unitNumber : `Unit ${inspectInvoice.unitNumber}`}
+                                    {inspectInvoice.tenantName} - {inspectInvoice.unitNumber.toLowerCase().startsWith('unit') ? inspectInvoice.unitNumber : t('Unit {unit}', { unit: inspectInvoice.unitNumber })}
                                 </h4>
-                                <p className="text-[10px] text-white/70">₱{inspectInvoice.amount.toLocaleString()} Receipt Proof</p>
+                                <p className="text-[10px] text-white/70">{t('₱{amount} Receipt Proof', { amount: inspectInvoice.amount.toLocaleString() })}</p>
                             </div>
                             <button
                                 onClick={() => setInspectInvoice(null)}
                                 className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20"
-                                aria-label="Close proof inspection"
+                                aria-label={t("Close proof inspection")}
                             >
                                 <X className="size-4" />
                             </button>
@@ -413,7 +422,7 @@ export function LandlordPaymentsView() {
                         <div className="flex-1 relative my-3 flex items-center justify-center overflow-hidden rounded-2xl bg-black/50">
                             <Image
                                 src={inspectInvoice.paymentProofUrl}
-                                alt="Full Payment Proof"
+                                alt={t("Full Payment Proof")}
                                 fill
                                 sizes="100vw"
                                 className="object-contain"
@@ -429,7 +438,7 @@ export function LandlordPaymentsView() {
                                 className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-black text-xs uppercase tracking-tight flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
                             >
                                 <CheckCircle2 className="size-4" />
-                                <span>{processingId === inspectInvoice.id ? 'Approving…' : 'Approve Payment'}</span>
+                                <span>{processingId === inspectInvoice.id ? t('Approving…') : t('Approve Payment')}</span>
                             </button>
                             <button
                                 type="button"
@@ -441,7 +450,7 @@ export function LandlordPaymentsView() {
                                 className="flex-1 py-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-300 font-black text-xs uppercase tracking-tight flex items-center justify-center gap-1.5 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
                             >
                                 <XCircle className="size-4" />
-                                <span>Reject</span>
+                                <span>{t('Reject')}</span>
                             </button>
                         </div>
                     </div>,
@@ -452,23 +461,26 @@ export function LandlordPaymentsView() {
                 {pendingReview && (
                     <MobileConfirmModal
                         isOpen={Boolean(pendingReview)}
-                        title={pendingReview.action === 'confirm' ? 'Approve Payment?' : 'Reject Payment Proof?'}
+                        title={pendingReview.action === 'confirm' ? t('Approve Payment?') : t('Reject Payment Proof?')}
                         description={
                             pendingReview.action === 'confirm' ? (
                                 <span>
-                                    Are you sure you want to approve the payment of{' '}
-                                    <strong className="text-foreground font-bold">₱{pendingReview.invoice.amount.toLocaleString()}</strong>{' '}
-                                    submitted by <strong className="text-foreground font-bold">{pendingReview.invoice.tenantName}</strong> ({pendingReview.invoice.unitNumber})? This will mark the invoice as paid.
+                                    {fillRich(t('Are you sure you want to approve the payment of {amount} submitted by {tenant} ({unit})? This will mark the invoice as paid.'), {
+                                        amount: <strong className="text-foreground font-bold">₱{pendingReview.invoice.amount.toLocaleString()}</strong>,
+                                        tenant: <strong className="text-foreground font-bold">{pendingReview.invoice.tenantName}</strong>,
+                                        unit: pendingReview.invoice.unitNumber,
+                                    })}
                                 </span>
                             ) : (
                                 <div className="flex flex-col gap-2.5">
                                     <span>
-                                        Are you sure you want to reject the payment proof from{' '}
-                                        <strong className="text-foreground font-bold">{pendingReview.invoice.tenantName}</strong>?
+                                        {fillRich(t('Are you sure you want to reject the payment proof from {tenant}?'), {
+                                            tenant: <strong className="text-foreground font-bold">{pendingReview.invoice.tenantName}</strong>,
+                                        })}
                                     </span>
                                     <input
                                         type="text"
-                                        placeholder="Reason (optional, e.g. blurry receipt)"
+                                        placeholder={t("Reason (optional, e.g. blurry receipt)")}
                                         value={rejectionReason}
                                         onChange={(e) => setRejectionReason(e.target.value)}
                                         className="w-full bg-slate-50 dark:bg-card border border-slate-300 dark:border-white/15 rounded-xl px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
@@ -476,8 +488,8 @@ export function LandlordPaymentsView() {
                                 </div>
                             )
                         }
-                        confirmLabel={pendingReview.action === 'confirm' ? 'Approve' : 'Reject Proof'}
-                        cancelLabel="Cancel"
+                        confirmLabel={pendingReview.action === 'confirm' ? t('Approve') : t('Reject Proof')}
+                        cancelLabel={t("Cancel")}
                         variant={pendingReview.action === 'confirm' ? 'success' : 'danger'}
                         isLoading={processingId === pendingReview.invoice.id}
                         icon={pendingReview.action === 'confirm' ? <CheckCircle2 className="size-5" /> : <XCircle className="size-5" />}

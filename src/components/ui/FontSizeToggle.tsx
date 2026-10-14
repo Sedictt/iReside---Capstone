@@ -10,6 +10,7 @@ import {
   FONT_SCALE_STEPS,
 } from "@/hooks/useFontSize";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export interface FontSizeToggleProps {
   variant?: "slider" | "compact" | "segmented";
@@ -29,6 +30,7 @@ export function FontSizeToggle({
     tierLabel,
     isDefault,
   } = useFontSize();
+  const { t } = useLanguageContext();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -63,8 +65,8 @@ export function FontSizeToggle({
           "relative flex size-10 items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-900 transition-all hover:bg-zinc-100 hover:border-zinc-300 dark:border-white/10 dark:bg-white/[0.02] dark:text-white dark:hover:bg-white/[0.08] dark:hover:border-white/20 cursor-pointer",
           className
         )}
-        title={`Text size: ${fontScale}% (${tierLabel}). Click to cycle.`}
-        aria-label={`Change text size. Currently ${fontScale}%`}
+        title={t("Text size: {scale}% ({tier}). Click to cycle.", { scale: fontScale, tier: t(tierLabel) })}
+        aria-label={t("Change text size. Currently {scale}%", { scale: fontScale })}
       >
         <div className="flex items-center justify-center font-bold tracking-tighter">
           <span className="text-xs">A</span>
@@ -87,9 +89,9 @@ export function FontSizeToggle({
       <div className="p-5 rounded-2xl bg-surface-2 border border-border/70 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-foreground">Display Font Scale</span>
+            <span className="text-sm font-bold text-foreground">{t("Display Font Scale")}</span>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-primary/15 text-primary border border-primary/25">
-              {fontScale}% · {tierLabel}
+              {fontScale}% · {t(tierLabel)}
             </span>
           </div>
 
@@ -98,10 +100,10 @@ export function FontSizeToggle({
               type="button"
               onClick={resetFontScale}
               className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1 rounded-lg hover:bg-surface-3 cursor-pointer"
-              title="Reset to 100% standard font size"
+              title={t("Reset to 100% standard font size")}
             >
               <RotateCcw className="size-3.5" />
-              Reset
+              {t("Reset")}
             </button>
           )}
         </div>
@@ -114,7 +116,7 @@ export function FontSizeToggle({
               onClick={() => setFontScale(Math.max(MIN_FONT_SCALE, fontScale - 10))}
               disabled={fontScale <= MIN_FONT_SCALE}
               className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors cursor-pointer"
-              aria-label="Decrease font size"
+              aria-label={t("Decrease font size")}
             >
               <span className="font-serif font-bold text-xs">A</span>
             </button>
@@ -127,7 +129,7 @@ export function FontSizeToggle({
                 step={10}
                 value={fontScale}
                 onChange={(e) => setFontScale(Number(e.target.value))}
-                aria-label="Font size scale percentage"
+                aria-label={t("Font size scale percentage")}
                 className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-surface-3 accent-primary transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 style={{
                   background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${percentageFilled}%, var(--surface-3) ${percentageFilled}%, var(--surface-3) 100%)`,
@@ -140,7 +142,7 @@ export function FontSizeToggle({
               onClick={() => setFontScale(Math.min(MAX_FONT_SCALE, fontScale + 10))}
               disabled={fontScale >= MAX_FONT_SCALE}
               className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors cursor-pointer"
-              aria-label="Increase font size"
+              aria-label={t("Increase font size")}
             >
               <span className="font-serif font-black text-lg">A</span>
             </button>
@@ -168,7 +170,7 @@ export function FontSizeToggle({
                       : "text-muted-foreground border-transparent hover:text-foreground hover:bg-surface-3"
                   )}
                 >
-                  {label}
+                  {t(label)}
                 </button>
               );
             })}
@@ -182,22 +184,22 @@ export function FontSizeToggle({
           <div className="flex items-center justify-between border-b border-border/40 pb-2.5">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
               <Type className="size-3.5 text-primary" />
-              Live Readability Preview
+              {t("Live Readability Preview")}
             </span>
             <span className="text-xs font-mono text-primary font-bold">
-              {fontScale}% scale active
+              {t("{scale}% scale active", { scale: fontScale })}
             </span>
           </div>
 
           <div className="space-y-2">
             <h4 className="text-base font-bold text-foreground tracking-tight">
-              Sample Lease &amp; Property Notice
+              {t("Sample Lease & Property Notice")}
             </h4>
             <p className="text-sm text-foreground/85 leading-relaxed">
-              Unit #304 lease agreement renewal is approved. The monthly rent is ₱24,500 with water and high-speed fiber internet amenities included.
+              {t("Unit #304 lease agreement renewal is approved. The monthly rent is ₱24,500 with water and high-speed fiber internet amenities included.")}
             </p>
             <p className="text-xs text-muted-foreground">
-              Small caption details, payment due dates, and badges scale cleanly with zero clipping.
+              {t("Small caption details, payment due dates, and badges scale cleanly with zero clipping.")}
             </p>
           </div>
         </div>

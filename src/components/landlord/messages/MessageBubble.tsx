@@ -34,6 +34,7 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import { OfficialReceipt } from "@/components/messaging/OfficialReceipt";
 import { NotificationCard } from "@/components/messaging/NotificationCard";
 import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface MessageBubbleProps {
     message: UiMessage;
@@ -60,6 +61,7 @@ export function MessageBubble({
     isActionDisabled = false,
     onResolveIssue
 }: MessageBubbleProps) {
+    const { t } = useLanguageContext();
     const isSystem = message.type === "system";
     const [didCopy, setDidCopy] = useState(false);
     const [didCopyId, setDidCopyId] = useState(false);
@@ -142,7 +144,7 @@ export function MessageBubble({
                             "inline-flex items-center justify-center rounded-full p-1.5 transition-all text-muted-foreground hover:text-foreground hover:bg-muted border border-border/80 dark:border-zinc-700/80 bg-card shadow-xs",
                             showActionsMenu && "bg-muted text-foreground ring-1 ring-border"
                         )}
-                        title="Message actions"
+                        title={t("Message actions")}
                     >
                         <MoreVertical className="size-3.5" />
                     </button>
@@ -163,7 +165,7 @@ export function MessageBubble({
                                         className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                                     >
                                         {didCopy ? <Check className="size-3 text-primary" /> : <Copy className="size-3" />}
-                                        {didCopy ? "Copied" : "Copy text"}
+                                        {didCopy ? t("Copied") : t("Copy text")}
                                     </button>
                                 )}
                                 <button
@@ -172,7 +174,7 @@ export function MessageBubble({
                                     className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                                 >
                                     {didCopyId ? <Check className="size-3 text-primary" /> : <ShieldCheck className="size-3" />}
-                                    {didCopyId ? "ID Copied" : "Copy ID"}
+                                    {didCopyId ? t("ID Copied") : t("Copy ID")}
                                 </button>
                             </motion.div>
                         )}
@@ -208,7 +210,7 @@ export function MessageBubble({
                             >
                                 <Image 
                                     src={message.fileUrl} 
-                                    alt={message.fileName || "Attachment"} 
+                                    alt={message.fileName || t("Attachment")} 
                                     width={1200} 
                                     height={800} 
                                     className={cn("object-cover", message.status === "sending" && "opacity-90")} 
@@ -218,7 +220,7 @@ export function MessageBubble({
                                     <div className="absolute inset-0 bg-black/35 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
                                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 text-white text-xs font-black shadow-lg">
                                             <div className="size-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                            <span>Sending…</span>
+                                            <span>{t("Sending…")}</span>
                                         </div>
                                     </div>
                                 )}
@@ -254,12 +256,12 @@ export function MessageBubble({
                                     <Paperclip className="size-4" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-bold truncate">{message.fileName || "File Attachment"}</p>
+                                    <p className="text-xs font-bold truncate">{message.fileName || t("File Attachment")}</p>
                                     <p className={cn("text-[10px] font-medium", isMe ? "text-primary-foreground/75" : "text-muted-foreground")}>
                                         {message.fileSize ? `${(message.fileSize / 1024).toFixed(1)} KB` : ""}
                                     </p>
                                 </div>
-                                <button className={cn(
+                                <button aria-label={t("Download")} className={cn(
                                     "p-1.5 rounded-lg transition-colors",
                                     isMe ? "hover:bg-primary-foreground/15 text-primary-foreground" : "hover:bg-muted text-muted-foreground hover:text-foreground"
                                 )}>
@@ -307,7 +309,7 @@ export function MessageBubble({
                             "inline-flex items-center justify-center rounded-full p-1.5 transition-all text-muted-foreground hover:text-foreground hover:bg-muted border border-border/80 dark:border-zinc-700/80 bg-card shadow-xs",
                             showActionsMenu && "bg-muted text-foreground ring-1 ring-border"
                         )}
-                        title="Message actions"
+                        title={t("Message actions")}
                     >
                         <MoreVertical className="size-3.5" />
                     </button>
@@ -328,7 +330,7 @@ export function MessageBubble({
                                         className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                                     >
                                         {didCopy ? <Check className="size-3 text-primary" /> : <Copy className="size-3" />}
-                                        {didCopy ? "Copied" : "Copy text"}
+                                        {didCopy ? t("Copied") : t("Copy text")}
                                     </button>
                                 )}
                                 <button
@@ -337,7 +339,7 @@ export function MessageBubble({
                                     className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                                 >
                                     {didCopyId ? <Check className="size-3 text-primary" /> : <ShieldCheck className="size-3" />}
-                                    {didCopyId ? "ID Copied" : "Copy ID"}
+                                    {didCopyId ? t("ID Copied") : t("Copy ID")}
                                 </button>
                                 {onReportMessage && (
                                     <button
@@ -346,7 +348,7 @@ export function MessageBubble({
                                         className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors"
                                     >
                                         <AlertTriangle className="size-3" />
-                                        Report
+                                        {t("Report")}
                                     </button>
                                 )}
                             </motion.div>
@@ -451,6 +453,7 @@ function SystemMessage({
     onResolveIssue?: (message: UiMessage) => void
 }) {
     const router = useRouter();
+    const { t } = useLanguageContext();
     const isLandlord = viewerRole === "landlord";
 
     // Invoice - Shared Official Receipt with real-time fetching
@@ -471,10 +474,10 @@ function SystemMessage({
             <NotificationCard
                 message={message}
                 icon={<HandCoins className="size-6" />}
-                title={isLandlord ? "In-Person Payment" : "Payment Awaiting Collection"}
-                subtitle={isLandlord ? "Verification Required" : "Face-to-Face Transaction"}
+                title={isLandlord ? t("In-Person Payment") : t("Payment Awaiting Collection")}
+                subtitle={isLandlord ? t("Verification Required") : t("Face-to-Face Transaction")}
                 variant="warning"
-                actionLabel={isLandlord ? "Process Payment" : "View Invoice"}
+                actionLabel={isLandlord ? t("Process Payment") : t("View Invoice")}
                 onAction={isLandlord ? () => onOpenF2F?.(message) : () => router.push(message.invoiceId ? `/tenant/payments/${message.invoiceId}/checkout` : "/tenant/payments")}
                 disabled={isActionDisabled}
             />
@@ -487,10 +490,10 @@ function SystemMessage({
             <NotificationCard
                 message={message}
                 icon={<Bell className="size-6" />}
-                title={isLandlord ? "Payment Reminder" : "Payment Request"}
-                subtitle={isLandlord ? "Notification Sent" : "Action Required"}
+                title={isLandlord ? t("Payment Reminder") : t("Payment Request")}
+                subtitle={isLandlord ? t("Notification Sent") : t("Action Required")}
                 variant="default"
-                actionLabel={!isLandlord ? "Pay Now" : undefined}
+                actionLabel={!isLandlord ? t("Pay Now") : undefined}
                 onAction={!isLandlord ? () => router.push(message.invoiceId ? `/tenant/payments/${message.invoiceId}/checkout` : "/tenant/payments") : undefined}
                 disabled={isActionDisabled}
             />
@@ -506,23 +509,23 @@ function SystemMessage({
             <NotificationCard
                 message={message}
                 icon={isOverpayment ? <TrendingUp className="size-6" /> : (isRejected ? <AlertTriangle className="size-6" /> : <CheckCircle2 className="size-6" />)}
-                title={isOverpayment 
-                    ? (message.metadata?.isResolved 
+                title={t(isOverpayment
+                    ? (message.metadata?.isResolved
                         ? "Reconciliation Complete"
                         : (isLandlord 
                             ? (message.metadata?.hasRefundDetails ? "Refund Details Available" : "Overpayment Detected")
                             : (message.metadata?.hasRefundDetails ? "Refund Details Shared" : "Excess Payment Received")))
                     : (isRejected 
                         ? (isLandlord ? "Payment Rejected" : "Payment Declined") 
-                        : (isLandlord ? "Payment Confirmed" : "Payment Received"))
+                        : (isLandlord ? "Payment Confirmed" : "Payment Received")))
                 }
                 subtitle={isOverpayment 
                     ? (message.metadata?.isResolved
-                        ? (isLandlord ? "Excess payment handled." : "Transaction fully settled.")
+                        ? (isLandlord ? t("Excess payment handled.") : t("Transaction fully settled."))
                         : (isLandlord 
-                            ? (message.metadata?.hasRefundDetails ? "Tenant has submitted their refund preference." : `Reconciliation needed for ₱${Math.abs(Number(message.metadata?.shortfallAmount || 0)).toLocaleString()} excess`)
-                            : (message.metadata?.hasRefundDetails ? "Awaiting landlord processing." : `We received ₱${Math.abs(Number(message.metadata?.shortfallAmount || 0)).toLocaleString()} more than the required amount.`))) 
-                    : (isRejected ? "Action Logged" : "Transaction Complete")}
+                            ? (message.metadata?.hasRefundDetails ? t("Tenant has submitted their refund preference.") : t("Reconciliation needed for ₱{amount} excess", { amount: Math.abs(Number(message.metadata?.shortfallAmount || 0)).toLocaleString() }))
+                            : (message.metadata?.hasRefundDetails ? t("Awaiting landlord processing.") : t("We received ₱{amount} more than the required amount.", { amount: Math.abs(Number(message.metadata?.shortfallAmount || 0)).toLocaleString() })))) 
+                    : (isRejected ? t("Action Logged") : t("Transaction Complete"))}
                 variant={isOverpayment ? (message.metadata?.isResolved ? "success" : "warning") : (isRejected ? "error" : "success")}
                 refundImg={message.metadata?.refundProofUrl}
                 actionLabel={
@@ -530,10 +533,10 @@ function SystemMessage({
                         ? undefined 
                         : (isOverpayment
                             ? (isLandlord 
-                                ? (message.metadata?.hasRefundDetails ? "View Refund Info" : "Reconcile")
-                                : (message.metadata?.hasRefundDetails ? undefined : "Resolve Issue"))
-                            : (isRejected 
-                                ? (!isLandlord ? "Resolve Issue" : undefined)
+                                ? (message.metadata?.hasRefundDetails ? t("View Refund Info") : t("Reconcile"))
+                                : (message.metadata?.hasRefundDetails ? undefined : t("Resolve Issue")))
+                            : (isRejected
+                                ? (!isLandlord ? t("Resolve Issue") : undefined)
                                 : undefined))
                 }
                 onAction={
@@ -556,7 +559,7 @@ function SystemMessage({
         <NotificationCard
             message={message}
             icon={renderSystemIcon(message.systemType || "")}
-            title="System Notification"
+            title={t("System Notification")}
             subtitle={message.timestamp}
             variant="default"
         />

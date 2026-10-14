@@ -34,6 +34,8 @@ import {
     calendarNoteDescriptionRule,
     calendarNoteTitleRule,
 } from "@/lib/validation/schemas/operations.schema";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 export interface CalendarEvent {
     id: string;
@@ -118,12 +120,30 @@ const EVENT_TYPE_STYLES = {
     }
 };
 
-const MONTH_NAMES = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-];
-
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/** Display labels for event status values coming from the calendar APIs (keys are lowercased). */
+const EVENT_STATUS_LABELS: Record<string, string> = {
+    paid: "Paid",
+    pending: "Pending",
+    overdue: "Overdue",
+    active: "Active",
+    approved: "Approved",
+    resolved: "Resolved",
+    start: "Start",
+    end: "End",
+    move_out: "Move-out",
+    "moving out": "Moving Out",
+    expiring: "Expiring",
+    open: "Open",
+    in_progress: "In Progress",
+    assigned: "Assigned",
+    completed: "Completed",
+    confirmed: "Confirmed",
+    cancelled: "Cancelled",
+    rejected: "Rejected",
+    note: "Note",
+};
 
 export interface CalendarViewProps {
     role: "landlord" | "tenant";
@@ -150,6 +170,9 @@ export function CalendarView({
         ? "No upcoming utility dues, maintenance requests, or lease milestones for this date."
         : "No upcoming bills due, maintenance visits, or milestones for this date."
 }: CalendarViewProps) {
+    const { t, locale } = useLanguageContext();
+    // System event titles are fixed English labels from the API; personal notes are user text.
+    const eventTitle = (event: CalendarEvent) => (event.type === "note" ? event.title : t(event.title));
     const { user } = useAuth();
     const effectiveNotesEndpoint = notesEndpoint || (role === "tenant" ? "/api/tenant/calendar/notes" : "/api/landlord/calendar/notes");
     const { notes, addNote, deleteNote } = useCalendarNotes({
@@ -210,7 +233,7 @@ export function CalendarView({
                 setEvents(data.events || []);
             } catch (err: any) {
                 console.error("Error loading calendar events:", err);
-                setError(err.message || "Failed to load events");
+                setError(tr(err.message || t("Failed to load events")));
             } finally {
                 setLoading(false);
             }
@@ -370,13 +393,13 @@ export function CalendarView({
             const dateKey = formatDateKey(selectedDate);
             const res = await addNote(dateKey, noteTitle, noteDescription);
             if (res.success) {
-                toast.success("Personal note saved.");
+                toast.success(t("Personal note saved."));
                 closeNoteForm();
             } else {
-                toast.error(res.error || "Failed to save note.");
+                toast.error(tr(res.error || t("Failed to save note.")));
             }
         } catch {
-            toast.error("Failed to save note.");
+            toast.error(t("Failed to save note."));
         } finally {
             setIsSavingNote(false);
         }
@@ -395,11 +418,11 @@ export function CalendarView({
                             <CalendarIcon className="size-4.5 text-primary" />
                         </div>
                         <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
-                            {title}
+                            {t(title)}
                         </h1>
                     </div>
                     <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                        {subtitle}
+                        {t(subtitle)}
                     </p>
                 </div>
 
@@ -409,23 +432,23 @@ export function CalendarView({
                         onClick={handleToday}
                         className="px-4 py-2 text-xs font-semibold rounded-xl neumorphic-extruded active:neumorphic-inset text-foreground transition-all duration-150"
                     >
-                        Today
+                        {t("Today")}
                     </button>
                     <div className="flex items-center rounded-xl p-1 bg-card/40 border border-border/20 shadow-inner">
                         <button
                             onClick={handlePrevMonth}
                             className="p-2 hover:bg-muted/80 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                            aria-label="Previous Month"
+                            aria-label={t("Previous Month")}
                         >
                             <ChevronLeft className="size-4" />
                         </button>
                         <span className="px-3 text-sm font-semibold text-foreground min-w-[120px] text-center">
-                            {MONTH_NAMES[currentMonth]} {currentYear}
+                            {new Date(currentYear, currentMonth, 1).toLocaleDateString(locale, { month: "long", year: "numeric" })}
                         </span>
                         <button
                             onClick={handleNextMonth}
                             className="p-2 hover:bg-muted/80 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                            aria-label="Next Month"
+                            aria-label={t("Next Month")}
                         >
                             <ChevronRight className="size-4" />
                         </button>
@@ -437,7 +460,7 @@ export function CalendarView({
             <section className="flex flex-wrap items-center gap-2 sm:gap-2.5">
                 <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl neumorphic-panel text-muted-foreground text-xs font-semibold select-none mr-0.5">
                     <Filter className="size-3.5 text-primary" />
-                    <span>Filter Events:</span>
+                    <span>{t("Filter Events:")}</span>
                 </div>
 
                 {/* "All" Pill */}
@@ -449,13 +472,13 @@ export function CalendarView({
                             ? "border border-purple-500/35 bg-gradient-to-r from-purple-500/15 via-purple-500/10 to-purple-500/5 dark:from-[#2e1c4a] dark:via-[#1e1335] dark:to-[#170e28] shadow-[0_2px_12px_rgba(168,85,247,0.2),inset_0_1px_1px_rgba(255,255,255,0.18)] text-foreground dark:text-white"
                             : "neumorphic-extruded opacity-60 hover:opacity-100 text-muted-foreground"
                     )}
-                    title={allFiltersActive ? "Click to deselect all category filters" : "Click to show all category events"}
+                    title={allFiltersActive ? t("Click to deselect all category filters") : t("Click to show all category events")}
                 >
                     {allFiltersActive && (
                         <div className="absolute -left-1 -top-1 size-8 rounded-full bg-purple-500/25 blur-sm pointer-events-none opacity-80" />
                     )}
                     <LayoutGrid className={cn("size-3.5 shrink-0 relative z-10 transition-colors", allFiltersActive ? "text-purple-500 dark:text-purple-400" : "text-muted-foreground/60")} />
-                    <span className="relative z-10 tracking-tight text-foreground dark:text-white">All</span>
+                    <span className="relative z-10 tracking-tight text-foreground dark:text-white">{t("All")}</span>
                     <span className={cn(
                         "relative z-10 flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold border transition-all",
                         allFiltersActive
@@ -482,13 +505,13 @@ export function CalendarView({
                                     ? style.activePill
                                     : "neumorphic-extruded opacity-60 hover:opacity-100 text-muted-foreground"
                             )}
-                            title={isActive ? `Click to hide ${style.label} events` : `Click to show ${style.label} events`}
+                            title={isActive ? t("Click to hide {category} events", { category: t(style.label) }) : t("Click to show {category} events", { category: t(style.label) })}
                         >
                             {isActive && (
                                 <div className={cn("absolute -left-1 -top-1 size-8 rounded-full pointer-events-none opacity-80", style.glow)} />
                             )}
                             <Icon className={cn("size-3.5 shrink-0 relative z-10 transition-colors", isActive ? style.iconColor : "text-muted-foreground/60")} />
-                            <span className="relative z-10 tracking-tight text-foreground dark:text-white">{style.label}</span>
+                            <span className="relative z-10 tracking-tight text-foreground dark:text-white">{t(style.label)}</span>
                             <span className={cn(
                                 "relative z-10 flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold border transition-all",
                                 isActive
@@ -511,16 +534,16 @@ export function CalendarView({
                         <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] z-10 flex items-center justify-center">
                             <div className="flex flex-col items-center gap-3">
                                 <span className="size-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                                <span className="text-xs font-medium text-muted-foreground animate-pulse">Syncing schedule...</span>
+                                <span className="text-xs font-medium text-muted-foreground animate-pulse">{t("Syncing schedule...")}</span>
                             </div>
                         </div>
                     )}
                     
                     {/* Day labels header */}
                     <div className="grid grid-cols-7 gap-3 mb-4">
-                        {WEEKDAYS.map(day => (
+                        {WEEKDAYS.map((day, index) => (
                             <div key={day} className="text-center text-xs font-bold text-muted-foreground uppercase tracking-wider py-1">
-                                {day}
+                                {new Date(2023, 0, 1 + index).toLocaleDateString(locale, { weekday: "short" })}
                             </div>
                         ))}
                     </div>
@@ -574,10 +597,10 @@ export function CalendarView({
                                                             styles.color,
                                                             styles.bg
                                                         )}
-                                                        title={event.title}
+                                                        title={eventTitle(event)}
                                                     >
                                                         <span className={cn("size-1 rounded-full shrink-0", styles.dot)} />
-                                                        <span className="truncate">{event.title}</span>
+                                                        <span className="truncate">{eventTitle(event)}</span>
                                                     </div>
                                                 );
                                             })
@@ -593,18 +616,18 @@ export function CalendarView({
                                                                 styles.color,
                                                                 styles.bg
                                                             )}
-                                                            title={primaryEvent.title}
+                                                            title={eventTitle(primaryEvent)}
                                                         >
                                                             <span className={cn("size-1 rounded-full shrink-0", styles.dot)} />
-                                                            <span className="truncate">{primaryEvent.title}</span>
+                                                            <span className="truncate">{eventTitle(primaryEvent)}</span>
                                                         </div>
                                                     );
                                                 })()}
                                                 <span
                                                     className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground/80 hover:text-foreground pl-1 transition-colors truncate block shrink-0"
-                                                    title={dayEvents.slice(1).map(e => e.title).join(", ")}
+                                                    title={dayEvents.slice(1).map(e => eventTitle(e)).join(", ")}
                                                 >
-                                                    +{dayEvents.length - 1} more
+                                                    {t("+{count} more", { count: dayEvents.length - 1 })}
                                                 </span>
                                             </>
                                         )}
@@ -625,7 +648,7 @@ export function CalendarView({
                                         <Layers className="size-4 text-primary" />
                                     </div>
                                     <h2 className="text-base font-semibold text-foreground tracking-tight truncate">
-                                        Agenda Details
+                                        {t("Agenda Details")}
                                     </h2>
                                     <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-surface-2/80 border border-border/50 text-muted-foreground shrink-0">
                                         {selectedDayEvents.length}
@@ -634,7 +657,7 @@ export function CalendarView({
                                 <div className="flex items-center gap-1.5 mt-1.5 pl-0.5 text-xs text-muted-foreground">
                                     <span className="size-1.5 rounded-full bg-primary shrink-0 animate-pulse" />
                                     <p className="truncate font-medium">
-                                        {selectedDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                                        {selectedDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                                     </p>
                                 </div>
                             </div>
@@ -646,17 +669,17 @@ export function CalendarView({
                                         ? "bg-muted/70 text-foreground border-border/60 hover:bg-muted"
                                         : "bg-surface-2/70 hover:bg-surface-2 border-border/60 hover:border-amber-500/40 text-foreground hover:text-amber-500 dark:hover:text-amber-300 shadow-sm"
                                 )}
-                                title={isAddNoteOpen ? "Cancel note creation" : "Add note for this date"}
+                                title={isAddNoteOpen ? t("Cancel note creation") : t("Add note for this date")}
                             >
                                 {isAddNoteOpen ? (
                                     <>
                                         <X className="size-3.5 text-muted-foreground" />
-                                        <span>Cancel</span>
+                                        <span>{t("Cancel")}</span>
                                     </>
                                 ) : (
                                     <>
                                         <Plus className="size-3.5 text-amber-500" />
-                                        <span>Add Note</span>
+                                        <span>{t("Add Note")}</span>
                                     </>
                                 )}
                             </button>
@@ -674,10 +697,11 @@ export function CalendarView({
                                     <div className="flex items-center justify-between">
                                         <span className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
                                             <StickyNote className="size-3.5 text-amber-500 shrink-0" />
-                                            <span>New Note for {selectedDate.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+                                            <span>{t("New Note for {date}", { date: selectedDate.toLocaleDateString(locale, { month: "short", day: "numeric" }) })}</span>
                                         </span>
                                         <button
                                             onClick={closeNoteForm}
+                                            aria-label={t("Close")}
                                             className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted/40 transition-colors"
                                         >
                                             <X className="size-3.5" />
@@ -687,8 +711,8 @@ export function CalendarView({
                                         <input
                                             {...noteForm.fieldProps("title")}
                                             type="text"
-                                            aria-label="Note title"
-                                            placeholder="Note title or reminder (e.g. Schedule delivery)..."
+                                            aria-label={t("Note title")}
+                                            placeholder={t("Note title or reminder (e.g. Schedule delivery)...")}
                                             value={noteTitle}
                                             onChange={(e) => setNoteTitle(e.target.value)}
                                             maxLength={CALENDAR_NOTE_LIMITS.title}
@@ -699,8 +723,8 @@ export function CalendarView({
                                     <div>
                                         <textarea
                                             {...noteForm.fieldProps("description")}
-                                            aria-label="Note details"
-                                            placeholder="Optional details, notes, or instructions..."
+                                            aria-label={t("Note details")}
+                                            placeholder={t("Optional details, notes, or instructions...")}
                                             value={noteDescription}
                                             onChange={(e) => setNoteDescription(e.target.value)}
                                             rows={2}
@@ -715,7 +739,7 @@ export function CalendarView({
                                             onClick={closeNoteForm}
                                             className="px-3 py-1.5 text-xs font-medium rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
                                         >
-                                            Cancel
+                                            {t("Cancel")}
                                         </button>
                                         <button
                                             type="button"
@@ -723,7 +747,7 @@ export function CalendarView({
                                             onClick={handleSaveNote}
                                             className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-amber-500 hover:bg-amber-400 text-black active:scale-95 disabled:opacity-40 shadow-sm transition-all flex items-center gap-1.5"
                                         >
-                                            {isSavingNote ? "Saving..." : "Save Note"}
+                                            {isSavingNote ? t("Saving...") : t("Save Note")}
                                         </button>
                                     </div>
                                 </motion.div>
@@ -737,16 +761,16 @@ export function CalendarView({
                                     <div className="size-12 rounded-2xl bg-muted/30 border border-border/30 flex items-center justify-center mb-3 shadow-inner">
                                         <CalendarCheck className="size-6 text-muted-foreground/60" />
                                     </div>
-                                    <h3 className="text-sm font-semibold text-foreground">{emptyTitle}</h3>
+                                    <h3 className="text-sm font-semibold text-foreground">{t(emptyTitle)}</h3>
                                     <p className="text-xs text-muted-foreground mt-1 max-w-[220px] mb-4 leading-relaxed">
-                                        {emptySubtitle}
+                                        {t(emptySubtitle)}
                                     </p>
                                     <button
                                         onClick={() => setIsAddNoteOpen(true)}
                                         className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium border border-border/60 hover:border-amber-500/40 bg-surface-2/70 hover:bg-surface-2 text-foreground hover:text-amber-500 dark:hover:text-amber-300 transition-all duration-200 group active:scale-95 shadow-sm"
                                     >
                                         <Plus className="size-3.5 text-amber-500 group-hover:rotate-90 transition-transform duration-200" />
-                                        <span>Add Note for this Date</span>
+                                        <span>{t("Add Note for this Date")}</span>
                                     </button>
                                 </div>
                             ) : (
@@ -772,10 +796,10 @@ export function CalendarView({
                                                         </div>
                                                         <div>
                                                             <h4 className="text-sm font-semibold text-foreground leading-tight">
-                                                                {event.title}
+                                                                {eventTitle(event)}
                                                             </h4>
                                                             <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                                                                {styles.label}
+                                                                {t(styles.label)}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -786,7 +810,7 @@ export function CalendarView({
                                                             ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
                                                             : "bg-amber-500/10 text-amber-500 border-amber-500/20"
                                                     )}>
-                                                        {event.status}
+                                                        {EVENT_STATUS_LABELS[event.status?.toLowerCase()] ? t(EVENT_STATUS_LABELS[event.status.toLowerCase()]) : event.status}
                                                     </span>
                                                 </div>
 
@@ -807,7 +831,7 @@ export function CalendarView({
                                                     )}
                                                     {event.amount !== undefined && (
                                                         <div className="flex items-center gap-1.5 text-foreground font-semibold justify-end">
-                                                            <span>Amount: ₱{event.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                            <span>{t("Amount: {amount}", { amount: `₱${event.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` })}</span>
                                                         </div>
                                                     )}
                                                     {event.startTime && (
@@ -823,19 +847,19 @@ export function CalendarView({
                                                     <div className="flex items-center justify-between border-t border-border/20 pt-2.5 mt-0.5">
                                                         <div className="flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
                                                             <StickyNote className="size-3.5" />
-                                                            <span>Personal Note</span>
+                                                            <span>{t("Personal Note")}</span>
                                                         </div>
                                                         <button
                                                             type="button"
                                                             onClick={async () => {
                                                                 await deleteNote(event.id);
-                                                                toast.success("Note removed.");
+                                                                toast.success(t("Note removed."));
                                                             }}
                                                             className="text-xs font-medium text-muted-foreground hover:text-rose-500 flex items-center gap-1 px-2.5 py-1 rounded-xl border border-border/40 hover:border-rose-500/30 bg-surface-2/40 hover:bg-rose-500/10 active:scale-95 transition-all cursor-pointer"
-                                                            title="Delete this note"
+                                                            title={t("Delete this note")}
                                                         >
                                                             <Trash2 className="size-3.5" />
-                                                            <span>Delete</span>
+                                                            <span>{t("Delete")}</span>
                                                         </button>
                                                     </div>
                                                 ) : (
@@ -857,12 +881,12 @@ export function CalendarView({
                                                                 </div>
                                                             ) : (
                                                                 <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                                                                    <span>Milestone</span>
+                                                                    <span>{t("Milestone")}</span>
                                                                 </div>
                                                             )
                                                         ) : (
                                                             <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                                                                <span className="font-medium">{event.unitName || "Your Home"}</span>
+                                                                <span className="font-medium">{event.unitName || t("Your Home")}</span>
                                                             </div>
                                                         )}
 
@@ -871,7 +895,7 @@ export function CalendarView({
                                                                 href={event.detailsUrl}
                                                                 className="text-xs font-semibold text-primary hover:text-primary-hover flex items-center gap-1 px-3 py-1.5 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 active:scale-95 transition-all duration-150 ml-auto"
                                                             >
-                                                                {event.actionLabel || (role === "tenant" ? "View Details" : "Inspect")}
+                                                                {event.actionLabel ? t(event.actionLabel) : (role === "tenant" ? t("View Details") : t("Inspect"))}
                                                                 <ArrowUpRight className="size-3.5" />
                                                             </Link>
                                                         )}

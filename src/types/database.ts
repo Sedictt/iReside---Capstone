@@ -11,6 +11,7 @@ export type PropertyType = 'apartment' | 'dormitory' | 'boarding_house'
 type UtilitySplitMethod = 'equal_per_head' | 'equal_per_unit' | 'fixed_charge' | 'individual_meter'
 export type UnitStatus = 'vacant' | 'occupied' | 'maintenance'
 export type LeaseStatus = 'draft' | 'pending_signature' | 'active' | 'expired' | 'terminated' | 'pending_tenant_signature' | 'pending_landlord_signature'
+export type LeaseTermType = 'open_ended' | 'fixed'
 export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded'
 export type PaymentMethod = 'credit_card' | 'debit_card' | 'gcash' | 'maya' | 'bank_transfer' | 'cash'
 export type PaymentWorkflowStatus = 'pending' | 'reminder_sent' | 'intent_submitted' | 'under_review' | 'awaiting_in_person' | 'confirmed' | 'rejected' | 'receipted'
@@ -359,7 +360,8 @@ export interface Database {
                     landlord_id: string
                     status: LeaseStatus
                     start_date: string
-                    end_date: string
+                    end_date: string | null
+                    term_type: LeaseTermType
                     monthly_rent: number
                     security_deposit: number
                     terms: Json | null
@@ -383,7 +385,8 @@ export interface Database {
                     landlord_id: string
                     status?: LeaseStatus
                     start_date: string
-                    end_date: string
+                    end_date?: string | null
+                    term_type?: LeaseTermType
                     monthly_rent: number
                     security_deposit?: number
                     terms?: Json | null
@@ -407,7 +410,8 @@ export interface Database {
                     landlord_id?: string
                     status?: LeaseStatus
                     start_date?: string
-                    end_date?: string
+                    end_date?: string | null
+                    term_type?: LeaseTermType
                     monthly_rent?: number
                     security_deposit?: number
                     terms?: Json | null

@@ -3,6 +3,7 @@ import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { parseJsonBody, parseSearchParams } from "@/lib/validation/server";
 import { unitMapQuerySchema, unitMapSaveSchema } from "@/lib/validation/schemas/properties.schema";
+import { normalizeTermType } from "@/lib/lease-term";
 
 export const dynamic = "force-dynamic";
 
@@ -165,7 +166,7 @@ export async function GET(request: NextRequest) {
     const unitIds = (units ?? []).map(u => u.id);
     
     let positions: UnitMapPositionRow[] = [];
-    let leaseData: Record<string, { tenant_name: string | null; lease_start: string | null; lease_end: string | null; tenant_avatar_url: string | null; tenant_avatar_bg_color: string | null }> = {};
+    let leaseData: Record<string, { tenant_name: string | null; lease_start: string | null; lease_end: string | null; lease_term: string; tenant_avatar_url: string | null; tenant_avatar_bg_color: string | null }> = {};
     let maintenanceData: Record<string, { maintenance_title: string | null; maintenance_description: string | null; maintenance_created_at: string | null; maintenance_status: string | null }> = {};
     let applicationCounts: Record<string, number> = {};
 
@@ -186,6 +187,7 @@ export async function GET(request: NextRequest) {
                     unit_id,
                     start_date,
                     end_date,
+                    term_type,
                     profiles!leases_tenant_id_fkey(full_name, avatar_url, avatar_bg_color)
                 `)
                 .in("unit_id", unitIds)
@@ -218,7 +220,9 @@ export async function GET(request: NextRequest) {
                 tenant_avatar_url: lease.profiles?.avatar_url ?? null,
                 tenant_avatar_bg_color: lease.profiles?.avatar_bg_color ?? null,
                 lease_start: lease.start_date ?? null,
+                // null for open-ended leases until a move-out date is agreed.
                 lease_end: lease.end_date ?? null,
+                lease_term: normalizeTermType(lease.term_type),
             };
         }
 

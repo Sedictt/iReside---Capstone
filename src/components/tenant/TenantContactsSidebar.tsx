@@ -12,12 +12,14 @@ import {
     useMiniChat,
 } from "@/components/messaging/mini-chat";
 import { ChatWidget } from "./ChatWidget";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 /**
  * Tenant messaging rail: hover-expanding conversation list with the iRis assistant
  * pinned on top, plus docked mini chat windows (iRis opens in the same dock).
  */
 export function TenantContactsSidebar() {
+    const { t } = useLanguageContext();
     const controller = useMiniChat({ role: "tenant" });
     const { setSharedFilesChatId } = controller;
     const [isExpanded, setIsExpanded] = useState(false);
@@ -35,7 +37,7 @@ export function TenantContactsSidebar() {
                         <button
                             type="button"
                             onClick={() => setIsIrisOpen(true)}
-                            aria-label="Open iRis Assistant"
+                            aria-label={t("Open iRis Assistant")}
                             className={cn(
                                 "group flex items-center gap-3 rounded-2xl border border-primary/20 text-left transition-colors",
                                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
@@ -51,10 +53,10 @@ export function TenantContactsSidebar() {
                             {expanded && (
                                 <span className="min-w-0 flex-1">
                                     <span className="mb-0.5 flex items-center justify-between">
-                                        <span className="truncate pr-2 text-sm font-bold text-primary">iRis Assistant</span>
+                                        <span className="truncate pr-2 text-sm font-bold text-primary">{t("iRis Assistant")}</span>
                                         <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-primary/80">AI</span>
                                     </span>
-                                    <span className="block truncate text-xs font-medium text-foreground/80">How can I help you today?</span>
+                                    <span className="block truncate text-xs font-medium text-foreground/80">{t("How can I help you today?")}</span>
                                 </span>
                             )}
                         </button>
@@ -62,7 +64,7 @@ export function TenantContactsSidebar() {
 
                     return (
                         <div className={cn(expanded ? "mb-1" : "mb-0")}>
-                            {expanded ? button : <Tooltip content="iRis Assistant" side="left">{button}</Tooltip>}
+                            {expanded ? button : <Tooltip content={t("iRis Assistant")} side="left">{button}</Tooltip>}
                         </div>
                     );
                 }}

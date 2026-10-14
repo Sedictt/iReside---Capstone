@@ -21,7 +21,7 @@ import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
 import { m as motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage, tr } from "@/hooks/useLanguage";
 
 export interface SidebarNavAction {
     icon: LucideIcon;
@@ -98,7 +98,7 @@ function LogoLink({
         e.preventDefault();
         if (isLocked) {
             if (lockToastText) {
-                toast.warning(lockToastText);
+                toast.warning(tr(lockToastText));
             }
             return;
         }
@@ -338,12 +338,12 @@ export function RoleSidebar({
                     {item.warning ? (
                         <span className="flex items-center gap-1 text-[9px] font-bold text-amber-500 uppercase tracking-wider">
                             <AlertTriangle className="size-2.5" />
-                            Action Needed
+                            {t("Action Needed")}
                         </span>
                     ) : isItemLocked ? (
                         <span className="flex items-center gap-1 text-[9px] font-bold text-amber-500 uppercase tracking-wider">
                             <Lock className="size-2.5" />
-                            {lockBadgeText}
+                            {t(lockBadgeText)}
                         </span>
                     ) : item.badge && !item.warning ? (
                         <span className="ml-auto rounded-full bg-red-500 px-1.5 py-0.2 text-[9px] font-bold text-white">
@@ -355,11 +355,11 @@ export function RoleSidebar({
                 </div>
                 {item.warning ? (
                     <span className="text-[11px] font-medium text-amber-500/90 leading-snug">
-                        {item.warningTooltip || "Begin setting up your tenants."}
+                        {t(item.warningTooltip || "Begin setting up your tenants.")}
                     </span>
                 ) : isItemLocked ? (
                     <span className="text-[11px] font-medium text-amber-500/90 leading-snug">
-                        {lockTooltipText}
+                        {t(lockTooltipText)}
                     </span>
                 ) : item.description ? (
                     <span className="text-[11px] font-medium text-muted-foreground/90 leading-snug">
@@ -388,7 +388,7 @@ export function RoleSidebar({
                         onClick={(e) => {
                             if (isItemLocked) {
                                 e.preventDefault();
-                                toast.warning(lockToastText);
+                                toast.warning(t(lockToastText));
                             }
                         }}
                         className={cn(
@@ -439,7 +439,7 @@ export function RoleSidebar({
                                 <span
                                     data-testid={`warning-icon-${item.label.toLowerCase()}`}
                                     className="flex items-center justify-center text-amber-500 shrink-0"
-                                    title={item.warningTooltip || "Action needed: Begin setting up your tenants"}
+                                    title={t(item.warningTooltip || "Action needed: Begin setting up your tenants")}
                                 >
                                     <AlertTriangle className="size-3.5 text-amber-500 animate-pulse" />
                                 </span>
@@ -459,12 +459,12 @@ export function RoleSidebar({
                     {/* Targeted Action Button (Guideline 10) */}
                     {item.action && !isItemLocked && (
                         <div className="opacity-0 group-hover/row:opacity-100 focus-within:opacity-100 transition-opacity pr-2 shrink-0">
-                            <Tooltip content={`${item.action.label}${item.action.hotkey ? ` (${item.action.hotkey})` : ''}`} side="right" sideOffset={8}>
+                            <Tooltip content={`${t(item.action.label)}${item.action.hotkey ? ` (${item.action.hotkey})` : ''}`} side="right" sideOffset={8}>
                                 {item.action.href ? (
                                     <Link
                                         href={item.action.href}
                                         className="flex size-6 items-center justify-center rounded-md hover:bg-primary/10 hover:text-primary text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-                                        aria-label={item.action.label}
+                                        aria-label={t(item.action.label)}
                                         onClick={(e) => {
                                             if (item.action?.onClick) {
                                                 item.action.onClick(e);
@@ -482,7 +482,7 @@ export function RoleSidebar({
                                         type="button"
                                         onClick={item.action.onClick}
                                         className="flex size-6 items-center justify-center rounded-md hover:bg-primary/10 hover:text-primary text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary cursor-pointer"
-                                        aria-label={item.action.label}
+                                        aria-label={t(item.action.label)}
                                     >
                                         <item.action.icon className="size-3.5" />
                                     </button>
@@ -503,31 +503,31 @@ export function RoleSidebar({
                     "fixed left-0 top-0 z-40 flex h-screen flex-col bg-card dark:bg-zinc-900 text-foreground border-r border-border/60 shadow-xs select-none",
                     className
                 )}
-                aria-label="Sidebar Navigation"
+                aria-label={t("Sidebar Navigation")}
             >
                 {/* Header (Branding & Global Controls) */}
                 <div className="flex h-16 items-center justify-between px-3.5 border-b border-border/40 gap-2 shrink-0">
                     <div className="flex items-center min-w-0 flex-1 overflow-hidden pr-1">
                         <LogoLink 
                             isLocked={Boolean((isLocked || lockStage) && lockStage !== "no_tenant")} 
-                            lockToastText="Onboarding in progress. Complete your property setup first to unlock portal operations."
+                            lockToastText={t("Onboarding in progress. Complete your property setup first to unlock portal operations.")}
                         >
                             <BrandLogo size="md" className="w-full min-w-0" />
                         </LogoLink>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                         {!onClose && (
-                            <Tooltip content="Toggle theme" side="bottom" sideOffset={8}>
+                            <Tooltip content={t("Toggle theme")} side="bottom" sideOffset={8}>
                                 <ThemeToggle variant="sidebar" className="size-8 shrink-0" />
                             </Tooltip>
                         )}
                         {onClose && (
-                            <Tooltip content="Close navigation" side="bottom" sideOffset={8}>
+                            <Tooltip content={t("Close navigation")} side="bottom" sideOffset={8}>
                                 <button
                                     type="button"
                                     onClick={onClose}
                                     className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-background hover:bg-muted text-muted-foreground hover:text-foreground border border-border/60 transition-colors shadow-2xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                                    aria-label="Close navigation"
+                                    aria-label={t("Close navigation")}
                                 >
                                     <X className="size-4" />
                                 </button>
@@ -554,14 +554,14 @@ export function RoleSidebar({
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="h-8 w-full rounded-lg border border-border/60 bg-muted/20 pl-8 pr-12 text-xs text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
-                            aria-label="Search navigation menu"
+                            aria-label={t("Search navigation menu")}
                         />
                         {searchQuery ? (
                             <button
                                 type="button"
                                 onClick={() => setSearchQuery("")}
                                 className="absolute right-2 p-0.5 text-muted-foreground hover:text-foreground"
-                                aria-label="Clear search"
+                                aria-label={t("Clear search")}
                             >
                                 <X className="size-3" />
                             </button>
@@ -574,22 +574,22 @@ export function RoleSidebar({
                 </div>
 
                 {/* Navigation Items (Guideline 3 & 4) */}
-                <nav className="flex-1 custom-scrollbar-premium space-y-1 overflow-y-auto px-1.5 py-1.5" aria-label="Main Navigation">
+                <nav className="flex-1 custom-scrollbar-premium space-y-1 overflow-y-auto px-1.5 py-1.5" aria-label={t("Main Navigation")}>
                     {portalLabel && (
                         <div className="px-3 pb-1 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
-                            {portalLabel}
+                            {t(portalLabel)}
                         </div>
                     )}
 
                     {filteredSections.length === 0 && searchQuery && (
                         <div className="py-6 px-3 text-center">
-                            <p className="text-xs font-medium text-muted-foreground">No menu items match &quot;{searchQuery}&quot;</p>
+                            <p className="text-xs font-medium text-muted-foreground">{t("No menu items match \"{query}\"", { query: searchQuery })}</p>
                             <button
                                 type="button"
                                 onClick={() => setSearchQuery("")}
                                 className="mt-2 text-[11px] font-bold text-primary hover:underline"
                             >
-                                Clear search
+                                {t("Clear search")}
                             </button>
                         </div>
                     )}
@@ -702,12 +702,12 @@ export function RoleSidebar({
                     onMouseDown={handleResizeMouseDown}
                     role="separator"
                     aria-orientation="vertical"
-                    aria-label="Resize sidebar"
+                    aria-label={t("Resize sidebar")}
                     className={cn(
                         "absolute top-0 right-0 bottom-0 w-1.5 cursor-col-resize hover:bg-primary/40 active:bg-primary z-50 transition-colors select-none group",
                         isResizing && "bg-primary w-2"
                     )}
-                    title="Drag to resize sidebar (240px - 300px)"
+                    title={t("Drag to resize sidebar (240px - 300px)")}
                 >
                     <div className="hidden group-hover:block absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-full bg-primary/60" />
                 </div>

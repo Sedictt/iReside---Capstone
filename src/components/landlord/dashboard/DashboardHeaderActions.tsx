@@ -329,13 +329,17 @@ const FEATURE_INDEX: SearchResult[] = [
     }
 ];
 
-function formatTimeAgo(value: string) {
+function formatTimeAgo(
+    value: string,
+    t: (phrase: string, params?: Record<string, string | number>) => string,
+    locale: string
+) {
     const timestamp = new Date(value);
     const now = new Date();
     const diffMs = now.getTime() - timestamp.getTime();
 
     if (Number.isNaN(diffMs) || diffMs < 0) {
-        return "Recently";
+        return t("Recently");
     }
 
     const minute = 60 * 1000;
@@ -344,24 +348,24 @@ function formatTimeAgo(value: string) {
 
     if (diffMs < hour) {
         const minutes = Math.max(1, Math.floor(diffMs / minute));
-        return `${minutes}m ago`;
+        return t("{count}m ago", { count: minutes });
     }
 
     if (diffMs < day) {
         const hours = Math.max(1, Math.floor(diffMs / hour));
-        return `${hours}h ago`;
+        return t("{count}h ago", { count: hours });
     }
 
     const days = Math.floor(diffMs / day);
     if (days === 1) {
-        return "Yesterday";
+        return t("Yesterday");
     }
 
     if (days < 7) {
-        return `${days}d ago`;
+        return t("{count}d ago", { count: days });
     }
 
-    return timestamp.toLocaleDateString("en-US", {
+    return timestamp.toLocaleDateString(locale, {
         month: "short",
         day: "numeric",
     });
@@ -375,7 +379,7 @@ interface DashboardHeaderActionsProps {
 
 export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = false, className }: DashboardHeaderActionsProps) {
     const router = useRouter();
-    const { t, isFilipino } = useLanguage();
+    const { t, locale } = useLanguage();
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -407,8 +411,8 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
         const terms = cleanQuery.split(/\s+/).filter(Boolean);
 
         return FEATURE_INDEX.filter((item) => {
-            const titleMatch = item.title.toLowerCase();
-            const subtitleMatch = item.subtitle.toLowerCase();
+            const titleMatch = `${item.title} ${t(item.title)}`.toLowerCase();
+            const subtitleMatch = `${item.subtitle} ${t(item.subtitle)}`.toLowerCase();
             const keywords = item.keywords || [];
 
             return terms.every((term) => 
@@ -417,7 +421,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                 keywords.some(k => k.toLowerCase().includes(term))
             );
         });
-    }, []);
+    }, [t]);
 
     // Perform dual-tier fast search
     const performSearch = useCallback(async (query: string) => {
@@ -663,7 +667,8 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                     <input maxLength={60}
                         ref={inputRef}
                         type="text"
-                        placeholder={isFilipino ? "Maghanap ng kwarto, tenant, aksyon…" : "Search unit, tenant, or action…"}
+                        placeholder={t("Search unit, tenant, or action…")}
+                        aria-label={t("Search unit, tenant, or action…")}
                         value={searchQuery}
                         onChange={(e) => {
                             setSearchQuery(e.target.value);
@@ -682,20 +687,21 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                         <div className="absolute right-0 top-full z-50 mt-2 w-96 overflow-hidden rounded-3xl border border-white/10 neumorphic-panel shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
                             {/* Search Header Info */}
                             <div className="flex items-center justify-between border-b border-white/5 px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                                <span>Fast Search</span>
-                                {searchLoading && <span className="text-primary animate-pulse">Scanning live records…</span>}
+                                <span>{t("Fast Search")}</span>
+                                {searchLoading && <span className="text-primary animate-pulse">{t("Scanning live records…")}</span>}
                             </div>
 
                             <div className="max-h-96 overflow-y-auto custom-scrollbar-premium p-1.5 space-y-1">
                                 {searchResults.length === 0 && !searchLoading ? (
                                     <div className="px-6 py-8 text-center text-muted-foreground">
                                         <Search className="size-8 mx-auto mb-2 opacity-30" />
-                                        <p className="text-xs font-black text-foreground">No matches found</p>
-                                        <p className="text-[10px] mt-0.5">Try searching for &quot;leases&quot;, &quot;walk-in&quot;, &quot;meters&quot;, or unit numbers.</p>
+                                        <p className="text-xs font-black text-foreground">{t("No matches found")}</p>
+                                        <p className="text-[10px] mt-0.5">{t("Try searching for \"leases\", \"walk-in\", \"meters\", or unit numbers.")}</p>
                                     </div>
                                 ) : (
                                     searchResults.map((result, idx) => {
                                         const isSelected = idx === selectedIndex;
+                                        const isStaticEntry = result.type === "action" || result.type === "page" || result.type === "setting";
                                         return (
                                             <button
                                                 key={`${result.type}-${result.id}-${idx}`}
@@ -714,14 +720,14 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2">
-                                                        <p className="text-xs font-black text-foreground truncate">{result.title}</p>
+                                                        <p className="text-xs font-black text-foreground truncate">{isStaticEntry ? t(result.title) : result.title}</p>
                                                         {result.badge && (
                                                             <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-neutral-400">
-                                                                {result.badge}
+                                                                {t(result.badge)}
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="text-[10px] text-muted-foreground truncate">{result.subtitle}</p>
+                                                    <p className="text-[10px] text-muted-foreground truncate">{isStaticEntry ? t(result.subtitle) : result.subtitle}</p>
                                                 </div>
                                             </button>
                                         );
@@ -731,8 +737,8 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
 
                             {/* Shortcut footer */}
                             <div className="border-t border-white/5 bg-white/[0.02] px-4 py-2 flex items-center justify-between text-[9px] font-bold text-neutral-500">
-                                <span>Navigate with ↑ ↓</span>
-                                <span>Press <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white font-mono">↵</kbd> to jump</span>
+                                <span>{t("Navigate with ↑ ↓")}</span>
+                                <span>{t("Press ↵ to jump")}</span>
                             </div>
                         </div>
                     )}
@@ -749,6 +755,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                             }
                         }}
                         className="group relative flex size-11 items-center justify-center rounded-2xl neumorphic-extruded active:scale-95"
+                        aria-label={t("Notifications")}
                     >
                         <Bell className="size-5 text-muted-foreground transition-colors group-hover:text-foreground" />
                         {unreadCount > 0 && (
@@ -761,8 +768,8 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                     {isNotificationsOpen && (
                         <div className="absolute right-0 z-50 mt-4 w-[340px] overflow-hidden rounded-[2rem] neumorphic-panel animate-in fade-in zoom-in-95 duration-200">
                             <div className="flex items-center justify-between border-b border-white/5 px-6 py-4">
-                                <p className="text-sm font-black uppercase tracking-widest text-foreground">Notifications</p>
-                                <span className="rounded-full neumorphic-inset-card border border-primary/10 bg-primary/5 px-2.5 py-0.5 text-[10px] font-black text-primary">{unreadCount} New</span>
+                                <p className="text-sm font-black uppercase tracking-widest text-foreground">{t("Notifications")}</p>
+                                <span className="rounded-full neumorphic-inset-card border border-primary/10 bg-primary/5 px-2.5 py-0.5 text-[10px] font-black text-primary">{t("{count} New", { count: unreadCount })}</span>
                             </div>
 
                             <div className="max-h-[360px] overflow-y-auto custom-scrollbar-premium py-2">
@@ -781,8 +788,8 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                                 ) : notifications.length === 0 ? (
                                     <div className="px-6 py-12 text-center text-muted-foreground">
                                         <Bell className="size-10 mx-auto mb-2 opacity-20" />
-                                        <p className="text-xs font-black uppercase tracking-widest text-foreground">All Caught Up</p>
-                                        <p className="text-xs">No unread notifications at this time.</p>
+                                        <p className="text-xs font-black uppercase tracking-widest text-foreground">{t("All Caught Up")}</p>
+                                        <p className="text-xs">{t("No unread notifications at this time.")}</p>
                                     </div>
                                 ) : (
                                     <div className="divide-y divide-white/5">
@@ -825,11 +832,11 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                                                                 className="inline-flex items-center gap-1 text-[11px] font-bold text-red-500 hover:text-red-400 hover:underline transition-colors cursor-pointer"
                                                             >
                                                                 <AlertTriangle className="size-3 shrink-0" />
-                                                                <span>Is this not you? Reset now &rarr;</span>
+                                                                <span>{t("Is this not you? Reset now →")}</span>
                                                             </Link>
                                                         </div>
                                                     )}
-                                                    <span className="text-[10px] text-muted-foreground/60 mt-1 block font-mono">{formatTimeAgo(n.created_at || (n as any).createdAt || new Date().toISOString())}</span>
+                                                    <span className="text-[10px] text-muted-foreground/60 mt-1 block font-mono">{formatTimeAgo(n.created_at || (n as any).createdAt || new Date().toISOString(), t, locale)}</span>
                                                 </div>
 
                                                 {!n.read && (
@@ -837,7 +844,8 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                                                         type="button"
                                                         onClick={(e) => handleMarkAsRead(e, n.id)}
                                                         className="size-2 rounded-full bg-primary mt-1.5 shrink-0 hover:scale-150 transition-transform"
-                                                        title="Mark as read"
+                                                        title={t("Mark as read")}
+                                                        aria-label={t("Mark as read")}
                                                     />
                                                 )}
                                             </div>
@@ -852,7 +860,7 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                                         onClick={handleClearAll}
                                         className="w-full py-2 rounded-xl text-center text-xs font-black uppercase tracking-widest text-primary hover:bg-primary/10 transition-colors"
                                     >
-                                        Mark all as read
+                                        {t("Mark all as read")}
                                     </button>
                                 </div>
                             )}

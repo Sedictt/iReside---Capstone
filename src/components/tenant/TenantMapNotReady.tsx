@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Building2, Compass, MapPin, MessageSquare, RefreshCw } from "lucide-react";
 import { m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface TenantMapNotReadyProps {
     propertyName?: string;
@@ -15,12 +16,14 @@ interface TenantMapNotReadyProps {
 }
 
 export function TenantMapNotReady({
-    propertyName = "Your Residence",
+    propertyName: propertyNameProp,
     propertyAddress,
     currentUnitName,
     onRefresh,
     isRefreshing = false,
 }: TenantMapNotReadyProps) {
+    const { t } = useLanguageContext();
+    const propertyName = propertyNameProp || t("Your Residence");
     return (
         <div className="flex-1 flex flex-col min-h-screen bg-background text-foreground selection:bg-emerald-500/20 relative overflow-hidden">
             {/* Subtle architectural background grid */}
@@ -45,13 +48,13 @@ export function TenantMapNotReady({
                     className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-xl hover:bg-muted/60 group"
                 >
                     <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5 text-emerald-500" />
-                    <span>Back to Dashboard</span>
+                    <span>{t("Back to Dashboard")}</span>
                 </Link>
 
                 <div className="flex items-center gap-2">
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-wide bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                         <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
-                        <span>Setup in Progress</span>
+                        <span>{t("Setup in Progress")}</span>
                     </div>
                 </div>
             </header>
@@ -82,11 +85,11 @@ export function TenantMapNotReady({
                         {/* Title & Description */}
                         <div className="space-y-2">
                             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-                                Interactive Map Coming Soon
+                                {t("Interactive Map Coming Soon")}
                             </h1>
                             <p className="text-sm text-muted-foreground leading-relaxed">
-                                The property management team is currently preparing the digital floor map for{" "}
-                                <span className="font-semibold text-foreground">{propertyName}</span>. Once published, you&apos;ll be able to explore building floors, locate neighboring units, and request unit transfers here.
+                                {t("The property management team is currently preparing the digital floor map for")}{" "}
+                                <span className="font-semibold text-foreground">{propertyName}</span>{t(". Once published, you'll be able to explore building floors, locate neighboring units, and request unit transfers here.")}
                             </p>
                         </div>
 
@@ -98,22 +101,22 @@ export function TenantMapNotReady({
                                     <span className="text-sm font-bold text-foreground truncate">{propertyName}</span>
                                 </div>
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0">
-                                    Property Details
+                                    {t("Property Details")}
                                 </span>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3 text-xs">
                                 {currentUnitName && (
                                     <div className="p-3 rounded-xl bg-background/80 dark:bg-background/50 border border-border/50 min-w-0">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Your Unit</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("Your Unit")}</p>
                                         <p className="text-sm font-bold text-foreground mt-0.5 truncate">{currentUnitName}</p>
                                     </div>
                                 )}
                                 <div className={cn("p-3 rounded-xl bg-background/80 dark:bg-background/50 border border-border/50 min-w-0", !currentUnitName && "col-span-2")}>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Floor Map Status</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("Floor Map Status")}</p>
                                     <p className="text-sm font-bold text-amber-600 dark:text-amber-400 mt-0.5 flex items-center gap-1.5 whitespace-nowrap truncate">
                                         <span className="size-1.5 rounded-full bg-amber-500 shrink-0" />
-                                        <span className="truncate">Pending Landlord Setup</span>
+                                        <span className="truncate">{t("Pending Landlord Setup")}</span>
                                     </p>
                                 </div>
                             </div>
@@ -132,7 +135,7 @@ export function TenantMapNotReady({
                                 className="sm:flex-1 py-3 px-5 rounded-xl text-xs font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] shadow-md shadow-emerald-600/20 whitespace-nowrap"
                             >
                                 <ArrowLeft className="size-4 shrink-0" />
-                                <span className="whitespace-nowrap">Dashboard</span>
+                                <span className="whitespace-nowrap">{t("Dashboard")}</span>
                             </Link>
 
                             <Link
@@ -140,7 +143,7 @@ export function TenantMapNotReady({
                                 className="sm:flex-1 py-3 px-5 rounded-xl text-xs font-bold uppercase tracking-wider bg-muted/60 hover:bg-muted text-foreground border border-border/70 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] whitespace-nowrap"
                             >
                                 <MessageSquare className="size-4 shrink-0" />
-                                <span className="whitespace-nowrap">Contact Landlord</span>
+                                <span className="whitespace-nowrap">{t("Contact Landlord")}</span>
                             </Link>
 
                             {onRefresh && (
@@ -149,10 +152,10 @@ export function TenantMapNotReady({
                                     onClick={onRefresh}
                                     disabled={isRefreshing}
                                     className="py-3 px-3.5 rounded-xl text-muted-foreground hover:text-foreground bg-muted/40 hover:bg-muted border border-border/70 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shrink-0 whitespace-nowrap"
-                                    title="Check if the landlord has completed map setup"
+                                    title={t("Check if the landlord has completed map setup")}
                                 >
                                     <RefreshCw className={cn("size-4 shrink-0", isRefreshing && "animate-spin text-emerald-500")} />
-                                    <span className="sm:hidden text-xs font-bold uppercase tracking-wider whitespace-nowrap">Check Updates</span>
+                                    <span className="sm:hidden text-xs font-bold uppercase tracking-wider whitespace-nowrap">{t("Check Updates")}</span>
                                 </button>
                             )}
                         </div>

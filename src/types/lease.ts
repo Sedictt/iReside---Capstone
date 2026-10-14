@@ -7,7 +7,8 @@ interface RenewalSettings {
 export interface LeaseData {
     id: string;
     start_date: string;
-    end_date: string;
+    end_date: string | null;
+    term_type?: "open_ended" | "fixed" | string | null;
     monthly_rent: number;
     security_deposit: number;
     signed_at: string | null;

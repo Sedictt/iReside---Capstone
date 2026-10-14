@@ -27,6 +27,7 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 import MoveOutRequest from "@/components/tenant/MoveOutRequest";
 import UnitTransferRequest from "@/components/tenant/UnitTransferRequest";
 import LeaseModal from "@/components/tenant/LeaseModal";
@@ -35,10 +36,20 @@ import LeaseRenewalReminder from "@/components/tenant/LeaseRenewalReminder";
 import { PropertyAmenities } from "@/components/tenant/PropertyAmenities";
 import { LeaseData } from "@/types/lease";
 import { DEFAULT_AVATAR_URL, getSafeAvatarBgColor } from "@/lib/constants";
+import {
+    daysBetween,
+    formatTenure,
+    leaseEndState,
+    leaseProgressPercent,
+    leaseTermDescription,
+    parseLeaseDate,
+    tenureSinceLabel,
+} from "@/lib/lease-term";
 
 type TabId = "agreement" | "property" | "services";
 
 function LeaseHubContent() {
+    const { t, locale, language } = useLanguageContext();
     const [lease, setLease] = useState<LeaseData | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -92,35 +103,31 @@ function LeaseHubContent() {
         return new Intl.NumberFormat("en-PH", { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
     };
 
-    const formatDate = (dateString: string) => {
-        if (!dateString) return "N/A";
+    const formatDate = (dateString: string | null | undefined) => {
+        if (!dateString) return t("N/A");
         const date = new Date(dateString);
-        return date.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+        if (Number.isNaN(date.getTime())) return t("N/A");
+        return date.toLocaleDateString(locale, { month: "short", day: "2-digit", year: "numeric" });
     };
 
-    const progressData = useMemo(() => {
-        if (!lease?.start_date || !lease?.end_date) return { daysRemaining: 0, totalDays: 1, percent: 0, dayCount: 0 };
-        const startTimestamp = new Date(lease.start_date).getTime();
-        const endTimestamp = new Date(lease.end_date).getTime();
-        const currentTimestamp = Date.now();
-
-        const totalMs = endTimestamp - startTimestamp;
-        const elapsedMs = Math.max(0, Math.min(currentTimestamp - startTimestamp, totalMs));
-        const remainingMs = Math.max(0, endTimestamp - currentTimestamp);
-
-        const totalDays = Math.max(1, Math.round(totalMs / 86400000));
-        const daysRemaining = Math.max(0, Math.round(remainingMs / 86400000));
-        const percent = Math.min(100, (elapsedMs / totalMs) * 100);
-        const dayCount = Math.round(elapsedMs / 86400000) + 1;
-
-        return { daysRemaining, totalDays, percent, dayCount };
+    // Open-ended leases have no end date: we show tenure instead of a countdown.
+    const lifecycle = useMemo(() => {
+        const endState = leaseEndState(lease);
+        const start = parseLeaseDate(lease?.start_date);
+        const dayCount = start ? Math.max(1, daysBetween(start, new Date()) + 1) : 0;
+        return {
+            endState,
+            percent: leaseProgressPercent(lease) ?? 0,
+            dayCount,
+            daysRemaining: Math.max(0, endState.daysLeft ?? 0),
+        };
     }, [lease]);
 
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-muted-foreground">
                 <Loader2 className="size-8 animate-spin text-primary" />
-                <p className="text-xs font-black uppercase tracking-widest">Validating Lease Registry...</p>
+                <p className="text-xs font-black uppercase tracking-widest">{t("Validating Lease Registry...")}</p>
             </div>
         );
     }
@@ -132,13 +139,13 @@ function LeaseHubContent() {
                     <FileSearch className="size-10" />
                 </div>
                 <div>
-                    <h2 className="text-2xl font-black text-foreground tracking-tight">Registry Empty</h2>
+                    <h2 className="text-2xl font-black text-foreground tracking-tight">{t("Registry Empty")}</h2>
                     <p className="text-muted-foreground mt-2 text-sm max-w-md mx-auto">
-                        We couldn&apos;t find an active lease associated with your profile. This usually happens if your move-in is still pending approval.
+                        {t("We couldn't find an active lease associated with your profile. This usually happens if your move-in is still pending approval.")}
                     </p>
                 </div>
                 <Link href="/search" className="px-8 py-4 text-[10px] rounded-2xl font-black uppercase tracking-widest transition-all neumorphic-primary">
-                    Discover Properties
+                    {t("Discover Properties")}
                 </Link>
             </div>
         );
@@ -155,8 +162,8 @@ function LeaseHubContent() {
 
     return (
         <div className="space-y-6 max-w-[1400px] mx-auto pb-12">
-            <LeaseRenewalReminder 
-                daysRemaining={progressData.daysRemaining} 
+            <LeaseRenewalReminder
+                lease={lease}
                 leaseId={lease?.id}
                 hasOngoingRequest={!!(renewalRequest && (renewalRequest.status === "pending" || renewalRequest.status === "approved"))}
                 teamMembers={lease?.landlord ? [{ avatar_url: lease.landlord.avatar_url, name: lease.landlord.full_name }] : undefined}
@@ -166,24 +173,24 @@ function LeaseHubContent() {
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
                         <h1 className="text-4xl font-black text-foreground tracking-tighter">
-                            Lease Hub
+                            {t("Lease Hub")}
                         </h1>
                     </div>
                     <p className="text-muted-foreground font-medium text-sm max-w-2xl">
-                        Your digital source of truth for your residency, agreement terms, and unit specifications.
+                        {t("Your digital source of truth for your residency, agreement terms, and unit specifications.")}
                     </p>
                 </div>
 
                 <div className="rounded-[1.5rem] p-3 flex items-center gap-6 neumorphic-panel">
                     <div className="px-1 border-r border-border/50">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Contract Status</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">{t("Contract Status")}</p>
                         <div className="flex items-center gap-2">
                             <div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <p className="text-sm font-black text-foreground uppercase tracking-wider">Active</p>
+                            <p className="text-sm font-black text-foreground uppercase tracking-wider">{t("Active")}</p>
                         </div>
                     </div>
                     <div className="px-1">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Lease Hash</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">{t("Lease Hash")}</p>
                         <p className="text-sm font-mono text-muted-foreground">0x{shortHash}</p>
                     </div>
                 </div>
@@ -202,7 +209,7 @@ function LeaseHubContent() {
                         )}
                     >
                         <tabItem.icon className="size-4" />
-                        {tabItem.label}
+                        {t(tabItem.label)}
                     </button>
                 ))}
             </div>
@@ -216,7 +223,7 @@ function LeaseHubContent() {
                                     <div className="absolute inset-0 z-0">
                                         <Image
                                             src={propertyThumbnailUrl}
-                                            alt="Property"
+                                            alt={t("Property")}
                                             fill
                                             sizes="(max-width: 1024px) 100vw, 850px"
                                             className="object-cover opacity-[0.08] grayscale"
@@ -227,38 +234,51 @@ function LeaseHubContent() {
                                     <div className="relative z-10">
                                         <div className="flex justify-between items-start mb-8">
                                             <div>
-                                                <p className="text-[10px] text-primary font-black uppercase tracking-[0.2em] mb-1">Source of Truth</p>
-                                                <h2 className="text-4xl font-black text-foreground tracking-tighter">Master Lease Agreement</h2>
-                                                <p className="text-muted-foreground font-medium text-sm mt-1">{lease.unit.property.name} • Unit {lease.unit.name}</p>
+                                                <p className="text-[10px] text-primary font-black uppercase tracking-[0.2em] mb-1">{t("Source of Truth")}</p>
+                                                <h2 className="text-4xl font-black text-foreground tracking-tighter">{t("Master Lease Agreement")}</h2>
+                                                <p className="text-muted-foreground font-medium text-sm mt-1">{lease.unit.property.name} • {t("Unit {unit}", { unit: lease.unit.name })}</p>
                                             </div>
                                             <div className="flex gap-2">
                                                 <button className="h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 neumorphic-extruded">
-                                                    <Download className="size-3" /> Download PDF
+                                                    <Download className="size-3" /> {t("Download PDF")}
                                                 </button>
                                                 <button 
                                                     onClick={() => setIsModalOpen(true)}
                                                     className="h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 neumorphic-primary"
                                                 >
-                                                    <FileText className="size-3" /> View Lease
+                                                    <FileText className="size-3" /> {t("View Lease")}
                                                 </button>
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                                             <div>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Start Date</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t("Start Date")}</p>
                                                 <p className="text-base font-black text-foreground">{formatDate(lease.start_date)}</p>
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">End Date</p>
-                                                <p className="text-base font-black text-foreground">{formatDate(lease.end_date)}</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">
+                                                    {lifecycle.endState.kind === "moving_out" ? t("Move-out Date") : t("End Date")}
+                                                </p>
+                                                <p className="text-base font-black text-foreground">
+                                                    {lifecycle.endState.kind === "open_ended" ? t("Open-ended") : formatDate(lease.end_date)}
+                                                </p>
+                                                <p className="text-[10px] text-muted-foreground mt-0.5">
+                                                    {lifecycle.endState.kind === "open_ended"
+                                                        ? t("Month-to-month")
+                                                        : lifecycle.endState.kind === "moving_out"
+                                                            ? t("Approved move-out")
+                                                            : lifecycle.endState.kind === "ended"
+                                                                ? t("Term ended")
+                                                                : t("Fixed term")}
+                                                </p>
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Monthly Rent</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t("Monthly Rent")}</p>
                                                 <p className="text-base font-black text-primary">₱{formatCurrency(lease.monthly_rent)}</p>
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Security Deposit</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t("Security Deposit")}</p>
                                                 <p className="text-base font-black text-foreground">₱{formatCurrency(lease.security_deposit)}</p>
                                             </div>
                                         </div>
@@ -270,12 +290,12 @@ function LeaseHubContent() {
                                                 <CheckCircle2 className="size-5" />
                                             </div>
                                             <div>
-                                                <p className="text-xs font-black text-foreground">Legally Signed</p>
-                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Signed on {formatDate(lease.signed_at || lease.start_date)}</p>
+                                                <p className="text-xs font-black text-foreground">{t("Legally Signed")}</p>
+                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("Signed on {date}", { date: formatDate(lease.signed_at || lease.start_date) })}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
-                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest text-right">Encrypted & Stored in Vault</p>
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest text-right">{t("Encrypted & Stored in Vault")}</p>
                                             <div className="size-2 rounded-full bg-emerald-500" />
                                         </div>
                                     </div>
@@ -297,14 +317,14 @@ function LeaseHubContent() {
                                         </div>
                                         <div>
                                             <p className="text-sm font-black text-foreground">
-                                                {renewalRequest.status === "pending" && "Renewal Request Pending"}
-                                                {renewalRequest.status === "approved" && "Renewal Approved!"}
-                                                {renewalRequest.status === "rejected" && "Renewal Request Rejected"}
+                                                {renewalRequest.status === "pending" && t("Renewal Request Pending")}
+                                                {renewalRequest.status === "approved" && t("Renewal Approved!")}
+                                                {renewalRequest.status === "rejected" && t("Renewal Request Rejected")}
                                             </p>
                                             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                                                {renewalRequest.status === "pending" && "Awaiting landlord response"}
-                                                {renewalRequest.status === "approved" && "New lease ready for signing"}
-                                                {renewalRequest.status === "rejected" && (renewalRequest.landlord_notes || "Contact your landlord")}
+                                                {renewalRequest.status === "pending" && t("Awaiting landlord response")}
+                                                {renewalRequest.status === "approved" && t("New lease ready for signing")}
+                                                {renewalRequest.status === "rejected" && (renewalRequest.landlord_notes || t("Contact your landlord"))}
                                             </p>
                                         </div>
                                     </div>
@@ -315,24 +335,57 @@ function LeaseHubContent() {
                                         <div className="absolute top-0 right-0 p-6 opacity-[0.02] select-none pointer-events-none">
                                             <Clock className="size-24" />
                                         </div>
-                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-6">Residency Lifecycle</p>
+                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-6">{t("Residency Lifecycle")}</p>
                                         
                                         <div className="space-y-8">
-                                            <div className="relative">
-                                                <div className="h-4 w-full bg-muted rounded-full overflow-hidden border border-border">
-                                                    <div 
-                                                        className="h-full bg-primary transition-all duration-1000 shadow-[0_0_10px_rgba(var(--primary),0.3)]"
-                                                        style={{ width: `${progressData.percent}%` }}
-                                                    />
-                                                </div>
-                                                <div className="flex justify-between items-center mt-3">
-                                                    <p className="text-[10px] font-black text-foreground uppercase tracking-widest">Day {progressData.dayCount}</p>
-                                                    <div className="flex items-center gap-2">
-                                                        <Clock className="size-3 text-primary" />
-                                                        <p className="text-[10px] font-black text-primary uppercase tracking-widest">{progressData.daysRemaining} Days Remaining</p>
+                                            {lifecycle.endState.kind === "open_ended" ? (
+                                                /* Open-ended: tenure, not a countdown */
+                                                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5" data-testid="lease-tenure">
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{t("Tenure")}</p>
+                                                        <p className="text-xl font-black text-foreground tracking-tight whitespace-nowrap">{tenureSinceLabel(lease.start_date, language)}</p>
+                                                        <p className="text-sm font-black text-primary mt-1">
+                                                            {formatTenure(lease.start_date, undefined, language)}
+                                                            <span className="text-muted-foreground font-medium"> · {t("Day {count}", { count: lifecycle.dayCount })}</span>
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex flex-col items-start sm:items-end gap-2 sm:max-w-xs">
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-primary border border-primary/20 neumorphic-inset">
+                                                            <span className="size-1.5 rounded-full bg-primary" />
+                                                            {t("Open-ended · month-to-month")}
+                                                        </span>
+                                                        <p className="text-[11px] text-muted-foreground leading-relaxed sm:text-right">{leaseTermDescription(lease, undefined, language)}</p>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            ) : (
+                                                <div className="relative">
+                                                    <div className="h-4 w-full bg-muted rounded-full overflow-hidden border border-border">
+                                                        <div
+                                                            className="h-full bg-primary transition-all duration-1000 shadow-[0_0_10px_rgba(var(--primary),0.3)]"
+                                                            style={{ width: `${lifecycle.percent}%` }}
+                                                        />
+                                                    </div>
+                                                    <div className="flex justify-between items-center mt-3">
+                                                        <p className="text-[10px] font-black text-foreground uppercase tracking-widest">{t("Day {count}", { count: lifecycle.dayCount })}</p>
+                                                        <div className="flex items-center gap-2">
+                                                            <Clock className="size-3 text-primary" />
+                                                            <p className="text-[10px] font-black text-primary uppercase tracking-widest">
+                                                                {lifecycle.endState.kind === "ended"
+                                                                    ? t("Term Ended")
+                                                                    : lifecycle.endState.kind === "moving_out"
+                                                                        ? lifecycle.daysRemaining === 0
+                                                                            ? t("Moving out today")
+                                                                            : lifecycle.daysRemaining === 1
+                                                                                ? t("Moving out in {count} Day", { count: lifecycle.daysRemaining })
+                                                                                : t("Moving out in {count} Days", { count: lifecycle.daysRemaining })
+                                                                        : lifecycle.daysRemaining === 1
+                                                                            ? t("{count} Day Remaining", { count: lifecycle.daysRemaining })
+                                                                            : t("{count} Days Remaining", { count: lifecycle.daysRemaining })}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
 
                                             <div className="flex flex-wrap gap-8 items-center pt-4 border-t border-border/50">
                                                 <div className="flex items-center gap-4">
@@ -340,7 +393,7 @@ function LeaseHubContent() {
                                                         <CheckCircle className="size-5" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Move-in Verified</p>
+                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">{t("Move-in Verified")}</p>
                                                         <p className="text-sm font-black text-foreground">{formatDate(lease.start_date)}</p>
                                                     </div>
                                                 </div>
@@ -349,8 +402,12 @@ function LeaseHubContent() {
                                                         <History className="size-5" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Move-out Target</p>
-                                                        <p className="text-sm font-black text-foreground">{formatDate(lease.end_date)}</p>
+                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">
+                                                            {lifecycle.endState.kind === "open_ended" ? t("Lease Term") : lifecycle.endState.kind === "moving_out" ? t("Move-out Date") : t("Move-out Target")}
+                                                        </p>
+                                                        <p className="text-sm font-black text-foreground">
+                                                            {lifecycle.endState.kind === "open_ended" ? t("Open-ended") : formatDate(lease.end_date)}
+                                                        </p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -358,9 +415,10 @@ function LeaseHubContent() {
                                     </div>
 
                                     <div className="md:col-span-1">
-                                        <LeaseRenewalRequest 
-                                            daysRemaining={progressData.daysRemaining} 
-                                            leaseId={lease?.id} 
+                                        <LeaseRenewalRequest
+                                            lease={lease}
+                                            daysRemaining={lifecycle.daysRemaining}
+                                            leaseId={lease?.id}
                                             existingRequest={renewalRequest}
                                             renewalSettings={undefined}
                                             onSuccess={() => {
@@ -394,8 +452,8 @@ function LeaseHubContent() {
                                                 <Layers className="size-6" />
                                             </div>
                                             <div>
-                                                <h4 className="text-lg font-black text-foreground tracking-tight">Unit Specifications</h4>
-                                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mt-0.5">Physical Configuration</p>
+                                                <h4 className="text-lg font-black text-foreground tracking-tight">{t("Unit Specifications")}</h4>
+                                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mt-0.5">{t("Physical Configuration")}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -406,8 +464,8 @@ function LeaseHubContent() {
                                                 <Maximize className="size-5" />
                                             </div>
                                             <div className="mt-2">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Floor Area</p>
-                                                <p className="text-2xl font-black text-foreground">{lease.unit.sqft ? `${lease.unit.sqft} SQFT` : 'Contact'}</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t("Floor Area")}</p>
+                                                <p className="text-2xl font-black text-foreground">{lease.unit.sqft ? `${lease.unit.sqft} SQFT` : t('Contact')}</p>
                                             </div>
                                         </div>
                                         
@@ -416,8 +474,8 @@ function LeaseHubContent() {
                                                 <Layers className="size-5" />
                                             </div>
                                             <div className="mt-2">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Level</p>
-                                                <p className="text-2xl font-black text-foreground">Floor {lease.unit.floor}</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t("Level")}</p>
+                                                <p className="text-2xl font-black text-foreground">{t("Floor {floor}", { floor: lease.unit.floor })}</p>
                                             </div>
                                         </div>
                                         
@@ -426,8 +484,8 @@ function LeaseHubContent() {
                                                 <Bed className="size-5" />
                                             </div>
                                             <div className="mt-2">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Bedrooms</p>
-                                                <p className="text-2xl font-black text-foreground">{lease.unit.beds} Bed</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t("Bedrooms")}</p>
+                                                <p className="text-2xl font-black text-foreground">{t("{count} Bed", { count: lease.unit.beds })}</p>
                                             </div>
                                         </div>
                                         
@@ -436,8 +494,8 @@ function LeaseHubContent() {
                                                 <Bath className="size-5" />
                                             </div>
                                             <div className="mt-2">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Bathrooms</p>
-                                                <p className="text-2xl font-black text-foreground">{lease.unit.baths} Bath</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t("Bathrooms")}</p>
+                                                <p className="text-2xl font-black text-foreground">{t("{count} Bath", { count: lease.unit.baths })}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -451,8 +509,8 @@ function LeaseHubContent() {
                                                 <Building2 className="size-6" />
                                             </div>
                                             <div>
-                                                <h4 className="text-lg font-black text-foreground tracking-tight">Facilities & Amenities</h4>
-                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-0.5">Exclusive Residency Benefits</p>
+                                                <h4 className="text-lg font-black text-foreground tracking-tight">{t("Facilities & Amenities")}</h4>
+                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-0.5">{t("Exclusive Residency Benefits")}</p>
                                             </div>
                                         </div>
                                         <PropertyAmenities amenities={lease.unit.property.amenities || []} />
@@ -464,8 +522,8 @@ function LeaseHubContent() {
                                                 <ShieldCheck className="size-6" />
                                             </div>
                                             <div>
-                                                <h4 className="text-lg font-black text-foreground tracking-tight">Building Regulations</h4>
-                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-0.5">Community Guidelines</p>
+                                                <h4 className="text-lg font-black text-foreground tracking-tight">{t("Building Regulations")}</h4>
+                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-0.5">{t("Community Guidelines")}</p>
                                             </div>
                                         </div>
                                         
@@ -485,7 +543,7 @@ function LeaseHubContent() {
                                                         <div className="size-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
                                                             <FileText className="size-5" />
                                                         </div>
-                                                        <p className="text-sm text-muted-foreground max-w-[200px]">Refer to the master lease for building-specific guidelines.</p>
+                                                        <p className="text-sm text-muted-foreground max-w-[200px]">{t("Refer to the master lease for building-specific guidelines.")}</p>
                                                     </div>
                                                 )}
                                             </div>
@@ -499,16 +557,16 @@ function LeaseHubContent() {
                             <div className="space-y-12">
                                 <div className="space-y-6">
                                     <div className="flex items-center justify-between px-1">
-                                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Operational Requests</h3>
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">{t("Operational Requests")}</h3>
                                         <div className="h-px flex-1 bg-border/50 mx-6 hidden md:block" />
                                         <div className="flex items-center gap-2 text-[9px] font-black text-muted-foreground uppercase tracking-widest">
-                                            <Shield className="size-3" /> Managed by Protocol
+                                            <Shield className="size-3" /> {t("Managed by Protocol")}
                                         </div>
                                     </div>
                                     
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                           <div className="lg:col-span-1">
-                                              <MoveOutRequest variant="hub" />
+                                              <MoveOutRequest variant="hub" leaseEndDate={lease.end_date ?? null} />
                                           </div>
 
                                          <div className="lg:col-span-1">
@@ -528,7 +586,7 @@ function LeaseHubContent() {
                                         >
                                             <Image
                                                 src={lease.landlord?.avatar_url || DEFAULT_AVATAR_URL}
-                                                alt="Landlord"
+                                                alt={t("Landlord")}
                                                 width={112}
                                                 height={112}
                                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
@@ -537,19 +595,19 @@ function LeaseHubContent() {
                                         
                                         <div className="space-y-4 mb-10">
                                             <div>
-                                                <h3 className="text-3xl font-black text-foreground tracking-tighter">{lease.landlord?.full_name || "Your Property Manager"}</h3>
+                                                <h3 className="text-3xl font-black text-foreground tracking-tighter">{lease.landlord?.full_name || t("Your Property Manager")}</h3>
                                                 <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mt-2 flex items-center justify-center gap-2">
-                                                    <ShieldCheck className="size-4" /> Landlord
+                                                    <ShieldCheck className="size-4" /> {t("Landlord")}
                                                 </p>
                                             </div>
                                             <p className="text-base text-muted-foreground leading-relaxed">
-                                                Have a question about your unit or need to discuss your agreement? You can send a secure message directly to your landlord through the iReside chat.
+                                                {t("Have a question about your unit or need to discuss your agreement? You can send a secure message directly to your landlord through the iReside chat.")}
                                             </p>
                                         </div>
 
                                         <div className="w-full max-w-sm mx-auto">
                                             <Link href="/tenant/messages" className="w-full py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 neumorphic-primary">
-                                                <MessageSquare className="size-5" /> Send a Message
+                                                <MessageSquare className="size-5" /> {t("Send a Message")}
                                             </Link>
                                         </div>
                                     </div>
@@ -570,7 +628,7 @@ function LeaseHubContent() {
                                 </div>
                                 
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Assigned Unit</p>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">{t("Assigned Unit")}</p>
                                     <h3 className="text-2xl font-black text-foreground tracking-tighter">{lease.unit.name}</h3>
                                     <p className="text-[10px] font-black text-primary uppercase tracking-widest">{lease.unit.property.name}</p>
                                 </div>
@@ -580,7 +638,7 @@ function LeaseHubContent() {
                                         href="/tenant/dashboard" 
                                         className="inline-flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors group/link"
                                     >
-                                        Return to Dashboard 
+                                        {t("Return to Dashboard")}
                                         <ArrowUpRight className="size-3.5 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
                                     </Link>
                                 </div>
@@ -602,11 +660,12 @@ function LeaseHubContent() {
 }
 
 export default function LeasesPage() {
+    const { t } = useLanguageContext();
     return (
         <Suspense fallback={
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-muted-foreground">
                 <Loader2 className="size-8 animate-spin text-primary" />
-                <p className="text-xs font-black uppercase tracking-widest">Initializing Vault...</p>
+                <p className="text-xs font-black uppercase tracking-widest">{t("Initializing Vault...")}</p>
             </div>
         }>
             <LeaseHubContent />

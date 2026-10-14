@@ -25,6 +25,7 @@ import {
   type FieldRuleResult,
 } from "../rules";
 import { zEmail, zInteger, zIsoDate, zMoney, zOptionalPhone, zOptionalText, zRequiredText } from "../zod-fields";
+import { DEFAULT_LEASE_TERM_TYPE, LEASE_TERM_TYPES, OPEN_ENDED_NOTICE_DAYS, type LeaseTermType } from "@/lib/lease-term";
 
 // ---------------------------------------------------------------------------
 // Limits
@@ -201,7 +202,7 @@ export function advanceAmountRule(value: unknown, { required = true } = {}): Fie
 }
 
 /** Move-out date: at least `minNoticeDays` after today and not after the lease end date. */
-export const MOVE_OUT_NOTICE_DAYS = 30;
+export const MOVE_OUT_NOTICE_DAYS = OPEN_ENDED_NOTICE_DAYS;
 
 export function addDaysIso(iso: string, days: number): string {
   const [y, m, d] = iso.split("-").map(Number);
@@ -444,6 +445,36 @@ export const inviteUpdateSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
+// Lease term type (open-ended by default; fixed term requires an end date)
+// ---------------------------------------------------------------------------
+
+/** Accepts "open_ended" | "fixed" (plus blank / legacy "month_to_month"). Defaults to open-ended. */
+export const zLeaseTermType = () =>
+  z.preprocess(
+    (v) => (v === "month_to_month" ? "open_ended" : v == null || v === "" ? DEFAULT_LEASE_TERM_TYPE : v),
+    z.enum(LEASE_TERM_TYPES, { error: "Lease term must be open-ended or fixed." }),
+  );
+
+/** End date rule shared by every lease form: required and after start only for fixed terms. */
+export function leaseTermEndDateRule(
+  termType: LeaseTermType,
+  end: unknown,
+  start: unknown,
+  { label = "Lease end date" } = {},
+): FieldRuleResult {
+  if (termType !== "fixed") return undefined;
+  if (isBlank(end)) return `${label} is required for a fixed-term lease.`;
+  return leaseEndDateRule(end, start, { label });
+}
+
+/** Optional end date that must still be a sane ISO date when supplied. */
+const zLeaseEndDate = (label: string) =>
+  z.preprocess(
+    blankToUndefined,
+    zIsoDate(label, { min: LEASE_YEAR_MIN_DATE, max: LEASE_YEAR_MAX_DATE }).optional(),
+  ).transform((v) => v ?? null);
+
+// ---------------------------------------------------------------------------
 // Application review actions
 // ---------------------------------------------------------------------------
 
@@ -452,7 +483,8 @@ export const PAYMENT_METHODS = ["credit_card", "debit_card", "gcash", "maya", "b
 export const leaseDataSchema = z
   .object({
     start_date: zIsoDate("Lease start date", { min: LEASE_YEAR_MIN_DATE, max: LEASE_YEAR_MAX_DATE }),
-    end_date: zIsoDate("Lease end date", { min: LEASE_YEAR_MIN_DATE, max: LEASE_YEAR_MAX_DATE }),
+    term_type: zLeaseTermType(),
+    end_date: zLeaseEndDate("Lease end date"),
     monthly_rent: zMoney("Monthly rent", { positive: true }),
     security_deposit: zMoney("Security deposit"),
     terms: z.record(z.string(), z.unknown()).nullish().transform((v) => v ?? {}),
@@ -462,9 +494,10 @@ export const leaseDataSchema = z
     signed_document_path: z.string().max(LIFECYCLE_LIMITS.url).nullish(),
   })
   .superRefine((lease, ctx) => {
-    const message = dateRangeRule(lease.start_date, lease.end_date, { strict: true, endLabel: "Lease end date" });
+    const message = leaseTermEndDateRule(lease.term_type, lease.end_date, lease.start_date);
     if (message) ctx.addIssue({ code: "custom", path: ["end_date"], message });
-  });
+  })
+  .transform((lease) => (lease.term_type === "fixed" ? lease : { ...lease, end_date: null }));
 
 const actionPaymentSchema = z.object({
   amount: zMoney("Payment amount").optional(),
@@ -536,7 +569,8 @@ export const manualTenantSchema = z
     propertyId: zId("Property"),
     unitId: zId("Unit"),
     startDate: z.string({ error: "Please provide valid lease start and end dates." }).trim().superRefine(fromRule((v: string) => leaseStartDateRule(v, { label: "Lease start date" }))),
-    endDate: z.string({ error: "Please provide valid lease start and end dates." }).trim().superRefine(fromRule((v: string) => leaseStartDateRule(v, { label: "Lease end date" }))),
+    termType: zLeaseTermType(),
+    endDate: z.preprocess(blankToUndefined, z.string().trim().superRefine(fromRule((v: string) => leaseStartDateRule(v, { label: "Lease end date" }))).optional()).transform((v) => v ?? null),
     monthlyRent: z.union([z.number(), z.string()], { error: "Monthly rent must be greater than zero." }).superRefine(fromRule(monthlyRentRule)).transform((v) => Number(String(v).replace(/,/g, ""))),
     securityDeposit: z.preprocess(blankToUndefined, zMoney("Security deposit").optional()).transform((v) => v ?? 0),
     advancePayment: z.preprocess(blankToUndefined, zMoney("Advance payment").optional()).transform((v) => v ?? 0),
@@ -546,10 +580,10 @@ export const manualTenantSchema = z
     securityDepositPaid: z.boolean().optional().default(false),
   })
   .superRefine((value, ctx) => {
-    if (value.endDate <= value.startDate) {
-      ctx.addIssue({ code: "custom", path: ["endDate"], message: "Lease end date must be after start date." });
-    }
-  });
+    const message = leaseTermEndDateRule(value.termType, value.endDate, value.startDate);
+    if (message) ctx.addIssue({ code: "custom", path: ["endDate"], message });
+  })
+  .transform((value) => (value.termType === "fixed" ? value : { ...value, endDate: null }));
 
 // ---------------------------------------------------------------------------
 // Lease finalisation / signing
@@ -560,7 +594,8 @@ export const leaseFinalizeSchema = z
     application_id: zId("Application"),
     unit_id: zId("Unit"),
     lease_start: zIsoDate("Lease start date", { min: LEASE_YEAR_MIN_DATE, max: LEASE_YEAR_MAX_DATE }),
-    lease_end: zIsoDate("Lease end date", { min: LEASE_YEAR_MIN_DATE, max: LEASE_YEAR_MAX_DATE }),
+    lease_term_type: zLeaseTermType(),
+    lease_end: zLeaseEndDate("Lease end date"),
     monthly_rent: zMoney("Monthly rent", { positive: true }),
     security_deposit: z.preprocess(blankToUndefined, zMoney("Security deposit").optional()).transform((v) => v ?? 0),
     landlord_signature: z.string({ error: "Both landlord and tenant signatures are required." }).min(1, "Both landlord and tenant signatures are required.").max(LIFECYCLE_LIMITS.signatureChars, "Landlord signature is too large."),
@@ -568,9 +603,10 @@ export const leaseFinalizeSchema = z
     occupant_count: z.preprocess(blankToUndefined, zInteger("Number of occupants", { min: 1, max: LIFECYCLE_LIMITS.maxOccupants }).optional()),
   })
   .superRefine((value, ctx) => {
-    const message = dateRangeRule(value.lease_start, value.lease_end, { strict: true, endLabel: "Lease end date" });
+    const message = leaseTermEndDateRule(value.lease_term_type, value.lease_end, value.lease_start);
     if (message) ctx.addIssue({ code: "custom", path: ["lease_end"], message });
-  });
+  })
+  .transform((value) => (value.lease_term_type === "fixed" ? value : { ...value, lease_end: null }));
 
 /** Body of the tenant/landlord sign endpoints (accepts snake_case and camelCase aliases). */
 export const signLeaseBodySchema = z.object({
@@ -792,7 +828,15 @@ export const landlordLeaseListQuerySchema = z.object({
   unitId: zFilterId("Unit"),
   status: z.preprocess(
     blankToUndefined,
-    z.string().max(200, "Status filter is invalid.").regex(/^[a-z_]+(,[a-z_]+)*$/, "Status filter is invalid.").optional(),
+    z
+      .string()
+      .max(200, "Status filter is invalid.")
+      .regex(/^[a-z_]+(,[a-z_]+)*$/, "Status filter is invalid.")
+      .refine(
+        (v) => v.split(",").every((s) => (LEASE_STATUSES as readonly string[]).includes(s.trim()) || s.trim() === "expiring_soon"),
+        "Status filter is invalid.",
+      )
+      .optional(),
   ),
 });
 

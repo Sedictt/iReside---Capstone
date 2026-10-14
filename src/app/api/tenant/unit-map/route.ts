@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/supabase/auth";
 import { parseJsonBody } from "@/lib/validation/server";
 import { zOptionalText, zUuid } from "@/lib/validation/zod-fields";
 import { TEXT_LIMITS } from "@/lib/validation/rules";
+import { normalizeTermType } from "@/lib/lease-term";
 
 const transferRequestSchema = z.object({
     requestedUnitId: zUuid("Requested unit"),
@@ -28,6 +29,7 @@ export async function GET() {
             unit_id,
             start_date,
             end_date,
+            term_type,
             monthly_rent,
             units (
                 id,
@@ -107,12 +109,15 @@ export async function GET() {
 
     // Enrich units with positions and active tenant lease details
     const rawLease = leaseWithUnit as any;
+    const leaseTerm = normalizeTermType(rawLease?.term_type);
     const unitsWithPositions = (units ?? []).map(unit => {
         const isCurrent = unit.id === unitInfo.id;
         return {
             ...unit,
             lease_start: isCurrent ? rawLease?.start_date : undefined,
-            lease_end: isCurrent ? rawLease?.end_date : undefined,
+            // null for open-ended leases until a move-out date is agreed.
+            lease_end: isCurrent ? (rawLease?.end_date ?? null) : undefined,
+            lease_term: isCurrent ? leaseTerm : undefined,
             rent_amount: isCurrent && rawLease?.monthly_rent ? Number(rawLease.monthly_rent) : unit.rent_amount,
             position: positionsByUnitId.get(unit.id) ?? null
         };
@@ -136,6 +141,7 @@ export async function GET() {
         leaseId: leaseWithUnit.id,
         leaseStart: rawLease?.start_date ?? null,
         leaseEnd: rawLease?.end_date ?? null,
+        leaseTerm,
         landlordId: leaseWithUnit.landlord_id,
         tenantId: user.id,
         currentUnitId: unitInfo.id,

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { m as motion, AnimatePresence } from "framer-motion"
 import { X, Shield } from "lucide-react"
+import { useLanguageContext } from "@/context/LanguageContext"
 
 interface CommunityRulesProps {
     isOpen?: boolean
@@ -11,6 +12,7 @@ interface CommunityRulesProps {
 }
 
 export function CommunityRules({ isOpen = true, onClose }: CommunityRulesProps) {
+    const { t } = useLanguageContext()
     const [mounted, setMounted] = useState(false)
 
     useEffect(() => {
@@ -79,15 +81,15 @@ export function CommunityRules({ isOpen = true, onClose }: CommunityRulesProps) 
                                     <Shield className="size-5" />
                                 </div>
                                 <div>
-                                    <h3 id="community-rules-title" className="text-lg font-black tracking-tight text-foreground dark:text-white">Community Rules</h3>
-                                    <p className="text-xs text-muted-foreground">Guidelines for a healthy community</p>
+                                    <h3 id="community-rules-title" className="text-lg font-black tracking-tight text-foreground dark:text-white">{t("Community Rules")}</h3>
+                                    <p className="text-xs text-muted-foreground">{t("Guidelines for a healthy community")}</p>
                                 </div>
                             </div>
                             <button 
                                 type="button"
                                 onClick={onClose}
                                 className="flex size-10 items-center justify-center rounded-full text-muted-foreground hover:text-foreground transition-colors neumorphic-extruded"
-                                aria-label="Close community rules"
+                                aria-label={t("Close community rules")}
                             >
                                 <X className="size-5" />
                             </button>
@@ -98,22 +100,22 @@ export function CommunityRules({ isOpen = true, onClose }: CommunityRulesProps) 
                             <div className="space-y-3">
                                 <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary border border-primary/20">1</div>
                                 <div>
-                                    <p className="text-sm font-black text-foreground dark:text-white/80">Post Approval</p>
-                                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground dark:text-white/40">All discussion posts require management approval before appearing in the public feed.</p>
+                                    <p className="text-sm font-black text-foreground dark:text-white/80">{t("Post Approval")}</p>
+                                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground dark:text-white/40">{t("All discussion posts require management approval before appearing in the public feed.")}</p>
                                 </div>
                             </div>
                             <div className="space-y-3">
                                 <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary border border-primary/20">2</div>
                                 <div>
-                                    <p className="text-sm font-black text-foreground dark:text-white/80">Respect Others</p>
-                                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground dark:text-white/40">Be respectful, polite, and neighborly. Harassment or toxic behavior will result in a ban.</p>
+                                    <p className="text-sm font-black text-foreground dark:text-white/80">{t("Respect Others")}</p>
+                                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground dark:text-white/40">{t("Be respectful, polite, and neighborly. Harassment or toxic behavior will result in a ban.")}</p>
                                 </div>
                             </div>
                             <div className="space-y-3">
                                 <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary border border-primary/20">3</div>
                                 <div>
-                                    <p className="text-sm font-black text-foreground dark:text-white/80">No Spam</p>
-                                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground dark:text-white/40">Do not post repetitive content, advertisements, or unrelated commercial promotions.</p>
+                                    <p className="text-sm font-black text-foreground dark:text-white/80">{t("No Spam")}</p>
+                                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground dark:text-white/40">{t("Do not post repetitive content, advertisements, or unrelated commercial promotions.")}</p>
                                 </div>
                             </div>
                         </div>
@@ -125,7 +127,7 @@ export function CommunityRules({ isOpen = true, onClose }: CommunityRulesProps) 
                                 onClick={onClose} 
                                 className="px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest text-primary hover:bg-primary/10 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
                             >
-                                I understand
+                                {t("I understand")}
                             </button>
                         </div>
                     </motion.div>

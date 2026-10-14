@@ -45,6 +45,8 @@ import { LucideIcon } from "lucide-react";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
 import { phoneRule } from "@/lib/validation/rules";
 import { applicantNameRule } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 interface OnboardingData {
     email: string;
@@ -64,6 +66,7 @@ const STEPS: { id: Step; label: string; icon: any }[] = [
 ];
 
 export default function OnboardingPage({ params }: { params: Promise<{ token: string }> }) {
+    const { t } = useLanguageContext();
     const router = useRouter();
     const searchParams = useSearchParams();
     const isPreview = searchParams.get("preview") === "true";
@@ -99,7 +102,6 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     const [contractMode, setContractMode] = useState<"upload" | "generate">("generate");
     const [contractFile, setContractFile] = useState<string | null>(null);
     const [onboardingStartDate, setOnboardingStartDate] = useState("");
-    const [onboardingEndDate, setOnboardingEndDate] = useState("");
     const [buildingRules, setBuildingRules] = useState<string[]>(["No Smoking", "No Pets", "No Loud Music after 10PM"]);
     
     // Profile Identity
@@ -111,7 +113,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = handleMediaSelection(e, {
             preset: "image",
-            notify: (msg, desc) => toast.error(msg, { description: desc }),
+            notify: (msg, desc) => toast.error(t(msg), { description: desc ? t(desc) : desc }),
         });
         if (file) {
             const reader = new FileReader();
@@ -125,7 +127,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     const handleCoverPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = handleMediaSelection(e, {
             preset: "image",
-            notify: (msg, desc) => toast.error(msg, { description: desc }),
+            notify: (msg, desc) => toast.error(t(msg), { description: desc ? t(desc) : desc }),
         });
         if (file) {
             const reader = new FileReader();
@@ -139,7 +141,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = handleMediaSelection(e, {
             preset: "image",
-            notify: (msg, desc) => toast.error(msg, { description: desc }),
+            notify: (msg, desc) => toast.error(t(msg), { description: desc ? t(desc) : desc }),
         });
         if (file) {
             const reader = new FileReader();
@@ -153,7 +155,6 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
 
     useEffect(() => {
         setOnboardingStartDate(new Date().toISOString().split('T')[0]);
-        setOnboardingEndDate(new Date(Date.now() + 31536000000).toISOString().split('T')[0]);
     }, []);
 
     useEffect(() => {
@@ -187,7 +188,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                     } else if (result.alreadyCompleted) {
                         router.push("/login?message=onboarding-complete");
                     } else {
-                        setError(result.error || "Invalid onboarding link");
+                        setError(tr(result.error || "Invalid onboarding link"));
                     }
                 } else {
                     setData(result);
@@ -274,30 +275,30 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
         if (/[0-9]/.test(pwd)) score++;
         if (/[^A-Za-z0-9]/.test(pwd)) score++;
         
-        if (score <= 2) return { score, label: "Weak", color: "bg-red-500" };
-        if (score <= 4) return { score, label: "Medium", color: "bg-yellow-500" };
-        return { score, label: "Strong", color: "bg-green-500" };
+        if (score <= 2) return { score, label: t("Weak"), color: "bg-red-500" };
+        if (score <= 4) return { score, label: t("Medium"), color: "bg-yellow-500" };
+        return { score, label: t("Strong"), color: "bg-green-500" };
     };
 
     const validatePassword = () => {
         if (password.length < 8) {
-            toast.error("Password must be at least 8 characters");
+            toast.error(t("Password must be at least 8 characters"));
             return false;
         }
         if (!/[A-Z]/.test(password)) {
-            toast.error("Password must contain at least one uppercase letter");
+            toast.error(t("Password must contain at least one uppercase letter"));
             return false;
         }
         if (!/[0-9]/.test(password)) {
-            toast.error("Password must contain at least one number");
+            toast.error(t("Password must contain at least one number"));
             return false;
         }
         if (!/[^A-Za-z0-9]/.test(password)) {
-            toast.error("Password must contain at least one special character");
+            toast.error(t("Password must contain at least one special character"));
             return false;
         }
         if (password !== confirmPassword) {
-            toast.error("Passwords do not match");
+            toast.error(t("Passwords do not match"));
             return false;
         }
         return true;
@@ -317,23 +318,23 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     const handleSubmit = async () => {
         if (submitting) return;
         if (!fullName || !phone) {
-            toast.error("Please fill in all required fields");
+            toast.error(t("Please fill in all required fields"));
             return;
         }
         // Same rules as POST /api/landlord/onboarding/[token].
         const nameError = applicantNameRule(fullName, { label: "Full name" });
         if (nameError) {
-            toast.error(nameError);
+            toast.error(t(nameError));
             return;
         }
         const phoneError = phoneRule(phone, { required: true });
         if (phoneError) {
-            toast.error(phoneError);
+            toast.error(t(phoneError));
             return;
         }
 
         if (!password || password.length < 8) {
-            toast.error("Please go back to Step 1 and set a valid password");
+            toast.error(t("Please go back to Step 1 and set a valid password"));
             setCurrentStep("password");
             return;
         }
@@ -373,7 +374,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
             const result = await response.json();
             
             if (!response.ok) {
-                toast.error(result.error || "Failed to complete onboarding");
+                toast.error(t(result.error || "Failed to complete onboarding"));
                 return;
             }
             
@@ -389,10 +390,10 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
             if (data?.email) {
                 localStorage.removeItem(`onboarding_progress_${data.email}`);
             }
-            toast.success("Account created successfully!");
+            toast.success(t("Account created successfully!"));
             
         } catch (err) {
-            toast.error("An error occurred");
+            toast.error(t("An error occurred"));
         } finally {
             setSubmitting(false);
         }
@@ -413,13 +414,13 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                     <div className="size-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Lock className="size-8 text-red-500" />
                     </div>
-                    <h2 className="text-2xl font-black text-white mb-2">Link Invalid</h2>
-                    <p className="text-white/60 mb-6">{error}</p>
+                    <h2 className="text-2xl font-black text-white mb-2">{t("Link Invalid")}</h2>
+                    <p className="text-white/60 mb-6">{t(error)}</p>
                     <Link 
                         href="/login" 
                         className="inline-block w-full py-4 bg-primary text-white/87 rounded-xl font-black hover:bg-primary-dark transition-all"
                     >
-                        Back to Login
+                        {t("Back to Login")}
                     </Link>
                 </div>
             </div>
@@ -434,9 +435,9 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                         <CheckCircle className="size-10 text-emerald-500" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-black text-white mb-1">Account Created!</h2>
+                        <h2 className="text-2xl font-black text-white mb-1">{t("Account Created!")}</h2>
                         <p className="text-xs text-white/60">
-                            Your landlord portal configuration has been finalized.
+                            {t("Your landlord portal configuration has been finalized.")}
                         </p>
                     </div>
 
@@ -447,8 +448,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 isAcknowledged={isKeyAcknowledged}
                                 onToggleAcknowledge={setIsKeyAcknowledged}
                                 accountEmail={data?.email}
-                                title="Landlord Security Recovery Key"
-                                description="Save your single-use recovery key now in case you lose access to your email."
+                                title={t("Landlord Security Recovery Key")}
+                                description={t("Save your single-use recovery key now in case you lose access to your email.")}
                             />
 
                             <button
@@ -457,13 +458,13 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 onClick={() => router.push("/login?message=onboarding-success")}
                                 className="w-full py-3.5 bg-primary text-black rounded-xl font-black hover:bg-primary-dark transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-xs uppercase tracking-wider"
                             >
-                                <span>Proceed to Login</span>
+                                <span>{t("Proceed to Login")}</span>
                                 <ArrowRight className="size-4" />
                             </button>
                         </div>
                     ) : (
                         <div className="py-4">
-                            <p className="text-white/60 mb-4 text-xs">Redirecting to login...</p>
+                            <p className="text-white/60 mb-4 text-xs">{t("Redirecting to login...")}</p>
                             <Loader2 className="size-6 animate-spin text-primary mx-auto" />
                         </div>
                     )}
@@ -510,7 +511,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         <Icon className="size-4" />
                                     </div>
                                     <span className={`text-[10px] font-black mt-2 uppercase tracking-wider ${isActive ? "text-primary" : "text-white/30"}`}>
-                                        {step.label}
+                                        {t(step.label)}
                                     </span>
                                 </div>
                             );
@@ -525,21 +526,21 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                             <div className="text-center mb-4">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full mb-3">
                                     <Lock className="size-3 text-primary" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Secure Authentication</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/60">{t("Secure Authentication")}</span>
                                 </div>
-                                <h2 className="text-3xl font-black tracking-tight text-white">Create Credentials</h2>
-                                <p className="text-white/50 text-sm mt-1">Establish your administrative access</p>
+                                <h2 className="text-3xl font-black tracking-tight text-white">{t("Create Credentials")}</h2>
+                                <p className="text-white/50 text-sm mt-1">{t("Establish your administrative access")}</p>
                             </div>
                             
                             <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 space-y-6 backdrop-blur-xl shadow-2xl">
                                 <div>
                                     <div className="flex items-center justify-between mb-3">
                                         <label htmlFor="admin-identity" className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
-                                            Administrative Identity
+                                            {t("Administrative Identity")}
                                         </label>
                                         <div className="flex items-center gap-1.5 px-2 py-0.5 bg-primary/10 border border-primary/20 rounded-full">
                                             <CheckCircle2 className="size-3 text-primary" />
-                                            <span className="text-[9px] font-black text-primary uppercase tracking-tighter">Verified Link</span>
+                                            <span className="text-[9px] font-black text-primary uppercase tracking-tighter">{t("Verified Link")}</span>
                                         </div>
                                     </div>
                                     <input 
@@ -552,13 +553,13 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     />
                                     <p className="text-[10px] text-white/20 mt-3 flex items-start gap-2 px-1">
                                         <Lock className="size-3 mt-0.5" />
-                                        <span>This email is cryptographically linked to your registration and cannot be modified.</span>
+                                        <span>{t("This email is cryptographically linked to your registration and cannot be modified.")}</span>
                                     </p>
                                 </div>
                                 
                                 <div className="space-y-3">
                                     <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
-                                        Password
+                                        {t("Password")}
                                     </label>
                                     <div className="relative group">
                                         <input 
@@ -567,13 +568,13 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             maxLength={16}
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            placeholder="e.g. MyPass@2024"
+                                            placeholder={t("e.g. MyPass@2024")}
                                             className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 pr-14 text-white focus:border-primary/50 focus:bg-primary/5 transition-all outline-none font-black"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            aria-label={showPassword ? "Hide password" : "Show password"}
+                                            aria-label={showPassword ? t("Hide password") : t("Show password")}
                                             className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors focus:outline-none focus:text-primary"
                                         >
                                             {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
@@ -592,7 +593,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                     <CheckCircle2 className="size-2" />
                                                 </div>
                                                 <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${req.met ? "text-primary" : "text-white/20"}`}>
-                                                    {req.label}
+                                                    {t(req.label)}
                                                 </span>
                                             </div>
                                         ))}
@@ -601,7 +602,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     {password && (
                                         <div className="pt-4 border-t border-white/5">
                                             <div className="flex justify-between items-center mb-2">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Entropy Strength</span>
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-white/30">{t("Entropy Strength")}</span>
                                                 <span className={`text-[10px] font-black uppercase tracking-widest ${getPasswordStrength(password).color.replace('bg-', 'text-')}`}>
                                                     {getPasswordStrength(password).label}
                                                 </span>
@@ -620,7 +621,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 
                                 <div className="space-y-3">
                                     <label htmlFor="confirm-password" className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
-                                        Confirm Password
+                                        {t("Confirm Password")}
                                     </label>
                                     <div className="relative">
                                         <input 
@@ -629,13 +630,13 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             maxLength={16}
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
-                                            placeholder="e.g. MyPass@2024"
+                                            placeholder={t("e.g. MyPass@2024")}
                                             className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 pr-14 text-white focus:border-primary/50 transition-all font-black"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                            aria-label={showConfirmPassword ? t("Hide password") : t("Show password")}
                                             className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors focus:outline-none focus:text-primary"
                                         >
                                             {showConfirmPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
@@ -646,10 +647,10 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             {password === confirmPassword ? (
                                                 <>
                                                     <CheckCircle2 className="size-3 text-primary" />
-                                                    <span className="text-[10px] text-primary font-black uppercase tracking-widest">Passwords Synchronized</span>
+                                                    <span className="text-[10px] text-primary font-black uppercase tracking-widest">{t("Passwords Synchronized")}</span>
                                                 </>
                                             ) : (
-                                                <p className="text-red-400 text-[10px] font-black uppercase tracking-widest">Mismatched credentials</p>
+                                                <p className="text-red-400 text-[10px] font-black uppercase tracking-widest">{t("Mismatched credentials")}</p>
                                             )}
                                         </div>
                                     )}
@@ -661,8 +662,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                     {currentStep === "property" && (
                         <div className="space-y-8">
                             <div className="text-center mb-4">
-                                <h2 className="text-3xl font-black tracking-tight text-white">Property Configuration</h2>
-                                <p className="text-white/50 text-sm mt-1">Initialize your asset's operational parameters</p>
+                                <h2 className="text-3xl font-black tracking-tight text-white">{t("Property Configuration")}</h2>
+                                <p className="text-white/50 text-sm mt-1">{t("Initialize your asset's operational parameters")}</p>
                             </div>
                             
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -672,20 +673,20 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="space-y-3">
                                         <div className="flex items-center gap-2 px-1">
                                             <ImageIcon className="size-3.5 text-primary" />
-                                            <label htmlFor="cover-photo-input" className="text-[10px] font-black uppercase tracking-widest text-white/40">Cover Photo</label>
+                                            <label htmlFor="cover-photo-input" className="text-[10px] font-black uppercase tracking-widest text-white/40">{t("Cover Photo")}</label>
                                         </div>
                                         <div className="relative group cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 hover:bg-white/10 transition-all aspect-[16/10] shadow-2xl">
                                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
                                                 {propertyPhoto ? (
-                                                    <Image src={propertyPhoto} alt="Property Preview" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                                                    <Image src={propertyPhoto} alt={t("Property Preview")} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
                                                 ) : (
                                                     <>
                                                         <div className="size-14 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20">
                                                             <Building2 className="size-7 text-primary" />
                                                         </div>
                                                         <div className="text-center px-6">
-                                                            <span className="block text-xs font-black text-white mb-1">Upload Photo</span>
-                                                            <span className="block text-[10px] text-white/30 uppercase tracking-widest">High Res Preferred</span>
+                                                            <span className="block text-xs font-black text-white mb-1">{t("Upload Photo")}</span>
+                                                            <span className="block text-[10px] text-white/30 uppercase tracking-widest">{t("High Res Preferred")}</span>
                                                         </div>
                                                     </>
                                                 )}
@@ -695,7 +696,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-20 pointer-events-none">
                                                     <div className="bg-white/10 border border-white/20 px-4 py-2 rounded-full flex items-center gap-2">
                                                         <Camera className="size-4 text-white" />
-                                                        <span className="text-xs font-black text-white">Change Cover</span>
+                                                        <span className="text-xs font-black text-white">{t("Change Cover")}</span>
                                                     </div>
                                                 </div>
                                             )}
@@ -706,15 +707,15 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="bg-white/[0.03] border border-white/5 rounded-[2rem] p-5 space-y-4 backdrop-blur-md">
                                         <div className="flex items-center gap-2 px-1">
                                             <ShieldCheck className="size-3.5 text-primary" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Verified Identity</span>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-white/40">{t("Verified Identity")}</span>
                                         </div>
                                         <div className="grid gap-3">
                                             <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-4">
-                                                <p className="text-[9px] font-black uppercase tracking-wider text-white/30 mb-1">Formal Name</p>
+                                                <p className="text-[9px] font-black uppercase tracking-wider text-white/30 mb-1">{t("Formal Name")}</p>
                                                 <p className="text-sm font-black text-white truncate leading-none">{data?.propertyName}</p>
                                             </div>
                                             <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-4">
-                                                <p className="text-[9px] font-black uppercase tracking-wider text-white/30 mb-1">Location</p>
+                                                <p className="text-[9px] font-black uppercase tracking-wider text-white/30 mb-1">{t("Location")}</p>
                                                 <p className="text-xs font-medium text-white/60 line-clamp-2 leading-relaxed">{data?.propertyAddress}</p>
                                             </div>
                                         </div>
@@ -724,14 +725,14 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 space-y-6">
                                         <div className="flex items-center gap-2">
                                             <Grid className="size-4 text-primary" />
-                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Architectural Scope</h3>
+                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">{t("Architectural Scope")}</h3>
                                         </div>
                                         
                                         <div className="grid gap-4">
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
                                                     <label htmlFor="total-units" className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-white/30 px-1">
-                                                        <Building2 className="size-3" /> Total Units
+                                                        <Building2 className="size-3" /> {t("Total Units")}
                                                     </label>
                                                     <input
                                                         id="total-units"
@@ -745,7 +746,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label htmlFor="total-floors" className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-white/30 px-1">
-                                                        <Layers className="size-3" /> Total Floors
+                                                        <Layers className="size-3" /> {t("Total Floors")}
                                                     </label>
                                                     <input
                                                         id="total-floors"
@@ -760,7 +761,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             </div>
                                             <div className="space-y-2">
                                                 <label htmlFor="head-limit" className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-white/30 px-1">
-                                                    <Users className="size-3" /> Maximum Capacity per Unit
+                                                    <Users className="size-3" /> {t("Maximum Capacity per Unit")}
                                                 </label>
                                                 <div className="relative">
                                                     <select
@@ -769,8 +770,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                         onChange={(e) => setHeadLimit(e.target.value === "none" ? "none" : parseInt(e.target.value))}
                                                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-primary/50 appearance-none font-black pr-10"
                                                     >
-                                                        {[1,2,3,4,5,6,8,10].map(n => <option key={n} value={n} className="bg-black">{n} Person(s)</option>)}
-                                                        <option value="none" className="bg-black">Unlimited Capacity</option>
+                                                        {[1,2,3,4,5,6,8,10].map(n => <option key={n} value={n} className="bg-black">{t("{count} Person(s)", { count: n })}</option>)}
+                                                        <option value="none" className="bg-black">{t("Unlimited Capacity")}</option>
                                                     </select>
                                                     <ArrowRight className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40 size-3 rotate-90" />
                                                 </div>
@@ -785,13 +786,13 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
                                         <div className="flex items-center gap-2">
                                             <Zap className="size-4 text-primary" />
-                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Billing Strategy</h3>
+                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">{t("Billing Strategy")}</h3>
                                         </div>
 
                                         <div className="grid gap-6">
                                             <div className="grid gap-3">
-                                                <span className="text-[10px] font-black uppercase tracking-wider text-white/30 px-1">Utility Management</span>
-                                                <div className="grid gap-2" role="radiogroup" aria-label="Utility Management Strategy">
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-white/30 px-1">{t("Utility Management")}</span>
+                                                <div className="grid gap-2" role="radiogroup" aria-label={t("Utility Management Strategy")}>
                                                     {[
                                                         { id: "included_in_rent", label: "Included in Rent", desc: "Utilities are part of the rent", popular: false },
                                                         { id: "mixed", label: "Submetered", desc: "You bill tenants for usage", popular: true },
@@ -808,12 +809,12 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                                 <div className={`size-2.5 rounded-full ${utilityBilling === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-white/10"}`} />
                                                                 <div>
                                                                     <div className="flex items-center gap-2">
-                                                                        <p className={`text-sm font-black tracking-tight ${utilityBilling === opt.id ? "text-primary" : "text-white"}`}>{opt.label}</p>
+                                                                        <p className={`text-sm font-black tracking-tight ${utilityBilling === opt.id ? "text-primary" : "text-white"}`}>{t(opt.label)}</p>
                                                                         {opt.popular && (
-                                                                            <span className="text-[7px] font-black uppercase tracking-widest bg-primary/20 text-primary px-1.5 py-0.5 rounded-full border border-primary/20">Most Popular</span>
+                                                                            <span className="text-[7px] font-black uppercase tracking-widest bg-primary/20 text-primary px-1.5 py-0.5 rounded-full border border-primary/20">{t("Most Popular")}</span>
                                                                         )}
                                                                     </div>
-                                                                    <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">{opt.desc}</p>
+                                                                    <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">{t(opt.desc)}</p>
                                                                 </div>
                                                             </div>
                                                             {utilityBilling === opt.id && <CheckCircle2 className="size-5 text-primary" />}
@@ -829,18 +830,18 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                         <HelpCircle className="size-5 text-primary" />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">How this works</h4>
+                                                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{t("How this works")}</h4>
                                                         <p className="text-xs text-white/60 font-medium leading-relaxed">
-                                                            {utilityBilling === "included_in_rent" && "The utility cost is part of the rent. Your tenants do not pay anything extra for their water or electricity usage."}
-                                                            {utilityBilling === "separate_metered" && "Tenants have their own separate accounts and meters. They receive and pay their own bills directly to the utility company."}
-                                                            {utilityBilling === "mixed" && "The property has one main bill that you pay. You use submeters to bill tenants for their specific usage through iReside."}
+                                                            {utilityBilling === "included_in_rent" && t("The utility cost is part of the rent. Your tenants do not pay anything extra for their water or electricity usage.")}
+                                                            {utilityBilling === "separate_metered" && t("Tenants have their own separate accounts and meters. They receive and pay their own bills directly to the utility company.")}
+                                                            {utilityBilling === "mixed" && t("The property has one main bill that you pay. You use submeters to bill tenants for their specific usage through iReside.")}
                                                         </p>
                                                         <div className="flex items-center gap-2 pt-1">
                                                             <div className="size-1 rounded-full bg-primary" />
                                                             <span className="text-[9px] font-black text-white/40 uppercase tracking-tighter">
-                                                                {utilityBilling === "included_in_rent" && "Best for: Simple rent setups"}
-                                                                {utilityBilling === "separate_metered" && "Best for: Standard houses or apartments"}
-                                                                {utilityBilling === "mixed" && "Best for: Multi unit buildings with one main meter"}
+                                                                {utilityBilling === "included_in_rent" && t("Best for: Simple rent setups")}
+                                                                {utilityBilling === "separate_metered" && t("Best for: Standard houses or apartments")}
+                                                                {utilityBilling === "mixed" && t("Best for: Multi unit buildings with one main meter")}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -848,7 +849,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             </div>
 
                                             <div className="space-y-3">
-                                                <label htmlFor="base-rent" className="text-[10px] font-black uppercase tracking-wider text-white/30 px-1">Standard Base Rent (PHP)</label>
+                                                <label htmlFor="base-rent" className="text-[10px] font-black uppercase tracking-wider text-white/30 px-1">{t("Standard Base Rent (PHP)")}</label>
                                                 <div className="relative group">
                                                     <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none text-xl font-black text-primary/40 group-focus-within:text-primary transition-colors">₱</div>
                                                     <input 
@@ -893,7 +894,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
                                         <div className="flex items-center gap-2">
                                             <FileText className="size-4 text-primary" />
-                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Final Validation</h3>
+                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">{t("Final Validation")}</h3>
                                         </div>
                                         
                                         <div
@@ -915,11 +916,11 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 onChange={(e) => {
                                                     const file = handleMediaSelection(e, {
                                                         preset: "document_only",
-                                                        notify: (msg, desc) => toast.error(msg, { description: desc }),
+                                                        notify: (msg, desc) => toast.error(t(msg), { description: desc ? t(desc) : desc }),
                                                     });
                                                     if (file) {
                                                         setContractFile(file.name);
-                                                        toast.success(`Contract linked: ${file.name}`);
+                                                        toast.success(t("Contract linked: {name}", { name: file.name }));
                                                     }
                                                 }}
                                                 className="hidden"
@@ -933,8 +934,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                         <FileText className="size-8 text-primary" />
                                                     </div>
                                                     <div className="text-center px-4 relative z-10">
-                                                        <span className="block text-xs font-black text-white uppercase tracking-widest mb-1">Contract Preview</span>
-                                                        <span className="block text-[8px] text-white/30 uppercase tracking-widest font-black">Digital Agreement v2.1</span>
+                                                        <span className="block text-xs font-black text-white uppercase tracking-widest mb-1">{t("Contract Preview")}</span>
+                                                        <span className="block text-[8px] text-white/30 uppercase tracking-widest font-black">{t("Digital Agreement v2.1")}</span>
                                                     </div>
                                                 </>
                                             ) : (
@@ -944,7 +945,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                     </div>
                                                     <div className="text-center px-4">
                                                         <span className={`block text-xs font-black uppercase tracking-widest ${contractFile ? "text-primary" : "text-white/40"}`}>
-                                                            {contractFile ? "Upload Complete" : "Click to Upload"}
+                                                            {contractFile ? t("Upload Complete") : t("Click to Upload")}
                                                         </span>
                                                         {contractFile && <span className="block text-[8px] text-white/30 uppercase tracking-widest font-black mt-1 truncate max-w-[150px] mx-auto">{contractFile}</span>}
                                                     </div>
@@ -955,7 +956,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 <div className="bg-white text-black px-5 py-2.5 rounded-full flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                                                     {contractMode === "generate" ? <Maximize2 className="size-4" /> : <Upload className="size-4" />}
                                                     <span className="text-[10px] font-black uppercase tracking-widest">
-                                                        {contractMode === "generate" ? "Review & Export" : (contractFile ? "Change Document" : "Upload File")}
+                                                        {contractMode === "generate" ? t("Review & Export") : (contractFile ? t("Change Document") : t("Upload File"))}
                                                     </span>
                                                 </div>
                                             </div>
@@ -968,11 +969,11 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6 h-full">
                                         <div className="flex items-center gap-2">
                                             <Lock className="size-4 text-primary" />
-                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Execution Strategy</h3>
+                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">{t("Execution Strategy")}</h3>
                                         </div>
                                         
                                         <div className="grid gap-5">
-                                            <div className="flex bg-white/5 p-1.5 rounded-2xl border border-white/5" role="tablist" aria-label="Contract Execution Strategy">
+                                            <div className="flex bg-white/5 p-1.5 rounded-2xl border border-white/5" role="tablist" aria-label={t("Contract Execution Strategy")}>
                                                 {[
                                                     { id: "generate", label: "Smart Draft" },
                                                     { id: "upload", label: "Own Document" }
@@ -984,15 +985,15 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                         onClick={() => setContractMode(mode.id as any)}
                                                         className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/40 ${contractMode === mode.id ? "bg-primary text-black shadow-lg shadow-primary/10" : "text-white/30 hover:text-white/50"}`}
                                                     >
-                                                        {mode.label}
+                                                        {t(mode.label)}
                                                     </button>
                                                 ))}
                                             </div>
                                             <div className="bg-white/5 rounded-2xl p-6 border border-white/5 flex-1 flex items-center justify-center text-center">
                                                 <p className="text-[11px] text-white/40 font-black uppercase tracking-widest leading-relaxed">
                                                     {contractMode === "generate" 
-                                                        ? "Instantiate a standard iReside digital agreement dynamically bound to your specific rules and parameters." 
-                                                        : "Your proprietary lease documentation will be securely archived and linked to this property asset."}
+                                                        ? t("Instantiate a standard iReside digital agreement dynamically bound to your specific rules and parameters.") 
+                                                        : t("Your proprietary lease documentation will be securely archived and linked to this property asset.")}
                                                 </p>
                                             </div>
                                         </div>
@@ -1013,8 +1014,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                     <FileText className="size-5 text-primary" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-sm font-black text-white uppercase tracking-widest">Lease Agreement Preview</h4>
-                                                    <p className="text-[10px] text-white/30 font-black uppercase tracking-tighter">Draft Version â€¢ iReside Standard Protocol</p>
+                                                    <h4 className="text-sm font-black text-white uppercase tracking-widest">{t("Lease Agreement Preview")}</h4>
+                                                    <p className="text-[10px] text-white/30 font-black uppercase tracking-tighter">{t("Draft Version • iReside Standard Protocol")}</p>
                                                 </div>
                                             </div>
 
@@ -1062,10 +1063,10 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                                     }
                                                                     
                                                                     doc.save(`Lease_Draft_${data?.propertyName?.replace(/\s+/g, '_') || 'Property'}.pdf`);
-                                                                    toast.success("PDF Exported Successfully");
+                                                                    toast.success(t("PDF Exported Successfully"));
                                                                 } catch (err) {
                                                                     console.error(err);
-                                                                    toast.error("Failed to export PDF");
+                                                                    toast.error(t("Failed to export PDF"));
                                                                 } finally {
                                                                     setExporting(false);
                                                                 }
@@ -1073,7 +1074,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                             className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 text-white/60 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
                                                         >
                                                             {exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-3.5" />}
-                                                            Export PDF
+                                                            {t("Export PDF")}
                                                         </button>
 
                                                         <button 
@@ -1098,10 +1099,10 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                                     a.href = dataUrl;
                                                                     a.download = `Lease_Preview_${data?.propertyName?.replace(/\s+/g, '_') || 'Property'}.png`;
                                                                     a.click();
-                                                                    toast.success("Photo Saved Successfully");
+                                                                    toast.success(t("Photo Saved Successfully"));
                                                                 } catch (err) {
                                                                     console.error(err);
-                                                                    toast.error("Failed to save photo");
+                                                                    toast.error(t("Failed to save photo"));
                                                                 } finally {
                                                                     setExporting(false);
                                                                 }
@@ -1109,13 +1110,13 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                             className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 text-white/60 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
                                                         >
                                                             <ImageIcon className="size-3.5" />
-                                                            Save Photo
+                                                            {t("Save Photo")}
                                                         </button>
                                                     </>
                                                 )}
                                                 <button 
                                                     onClick={() => setShowLightbox(false)}
-                                                    aria-label="Close preview"
+                                                    aria-label={t("Close preview")}
                                                     className="size-10 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center text-white/40 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
                                                 >
                                                     <X className="size-5" />
@@ -1131,7 +1132,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                         className="shadow-none border-none max-w-none p-8 sm:p-10"
                                                         id="TEMP-0001"
                                                         start_date={onboardingStartDate}
-                                                        end_date={onboardingEndDate}
+                                                        end_date={null}
+                                                        term_type="open_ended"
                                                         monthly_rent={baseRent}
                                                         security_deposit={baseRent} // Mock 1 month deposit
                                                         signed_at={null}
@@ -1185,9 +1187,9 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                         <FilePlus className="size-10 text-white/10" />
                                                     </div>
                                                     <div className="text-center max-w-sm">
-                                                        <h5 className="text-lg font-black text-white uppercase tracking-widest mb-2">Awaiting Documentation</h5>
+                                                        <h5 className="text-lg font-black text-white uppercase tracking-widest mb-2">{t("Awaiting Documentation")}</h5>
                                                         <p className="text-xs text-white/30 font-medium leading-relaxed">
-                                                            Custom lease agreements can be uploaded via your administrative dashboard immediately after completing this onboarding flow.
+                                                            {t("Custom lease agreements can be uploaded via your administrative dashboard immediately after completing this onboarding flow.")}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -1204,10 +1206,10 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                             <div className="text-center mb-4">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full mb-3">
                                     <User className="size-3 text-primary" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Operator Profile</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/60">{t("Operator Profile")}</span>
                                 </div>
-                                <h2 className="text-3xl font-black tracking-tight text-white">Final Details</h2>
-                                <p className="text-white/50 text-sm mt-1">Complete your administrative identity</p>
+                                <h2 className="text-3xl font-black tracking-tight text-white">{t("Final Details")}</h2>
+                                <p className="text-white/50 text-sm mt-1">{t("Complete your administrative identity")}</p>
                             </div>
                             
                             <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] overflow-hidden backdrop-blur-xl shadow-2xl">
@@ -1224,21 +1226,21 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); document.getElementById('cover-photo-input')?.click(); } }}
                                                                     tabIndex={0}
                                                                     role="button"
-                                                                    aria-label="Upload Cover Banner"
+                                                                    aria-label={t("Upload Cover Banner")}
                                                                     className="relative h-40 group cursor-pointer bg-white/5 border-b border-white/5 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:z-20"
                                                                 >
                                                                     {coverPhoto ? (
-                                                                        <Image src={coverPhoto} alt="Cover" fill className="object-cover" />
+                                                                        <Image src={coverPhoto} alt={t("Cover")} fill className="object-cover" />
                                                                     ) : (
                                                                         <div className="w-full h-full flex flex-col items-center justify-center gap-2">
                                                                             <ImageIcon className="size-6 text-white/10" />
-                                                                            <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">Set Cover Banner</span>
+                                                                            <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">{t("Set Cover Banner")}</span>
                                                                         </div>
                                                                     )}
                                                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-[2px] pointer-events-none">
                                                                         <div className="bg-white/10 border border-white/20 px-4 py-2 rounded-full flex items-center gap-2">
                                                                             <Camera className="size-4 text-white" />
-                                                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">Change Cover</span>
+                                                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">{t("Change Cover")}</span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -1252,7 +1254,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsAvatarPickerOpen(true); }}}
                                             tabIndex={0}
                                             role="button"
-                                            aria-label="Choose profile avatar"
+                                            aria-label={t("Choose profile avatar")}
                                             className="relative group shrink-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-[2.5rem] focus:z-20"
                                         >
                                             <div 
@@ -1260,7 +1262,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 style={{ backgroundColor: profileBgColor }}
                                             >
                                                 {profilePhoto ? (
-                                                    <Image src={profilePhoto} alt="Profile" fill className="object-cover" />
+                                                    <Image src={profilePhoto} alt={t("Profile")} fill className="object-cover" />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center">
                                                         <span className="text-4xl font-black text-white/20">
@@ -1281,11 +1283,11 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
 
                                         <div className="flex-1 pb-2">
                                             <h3 className="text-xl font-black text-white uppercase tracking-widest leading-none mb-1">
-                                                {fullName || "New Landlord"}
+                                                {fullName || t("New Landlord")}
                                             </h3>
                                             <p className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
                                                 <ShieldCheck className="size-3" />
-                                                Authorized Operator
+                                                {t("Authorized Operator")}
                                             </p>
                                         </div>
                                     </div>
@@ -1293,7 +1295,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-3">
                                             <label htmlFor="full-name" className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
-                                                Full Legal Name
+                                                {t("Full Legal Name")}
                                             </label>
                                             <div className="relative group">
                                                 <input 
@@ -1302,7 +1304,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                     maxLength={50}
                                                     value={fullName}
                                                     onChange={(e) => setFullName(e.target.value)}
-                                                    placeholder="As shown on official ID"
+                                                    placeholder={t("As shown on official ID")}
                                                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-primary/50 transition-all outline-none font-black"
                                                 />
                                             </div>
@@ -1310,7 +1312,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         
                                         <div className="space-y-3">
                                             <label htmlFor="admin-contact" className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
-                                                Administrative Contact
+                                                {t("Administrative Contact")}
                                             </label>
                                             <div className="relative group">
                                                 <input 
@@ -1329,7 +1331,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
 
                                     <p className="text-[10px] text-white/20 mt-6 flex items-start gap-2 px-1 leading-relaxed border-t border-white/5 pt-6">
                                         <ShieldCheck className="size-3 mt-0.5 text-primary/40" />
-                                        <span>Your profile configuration establishes your legal and administrative presence within the iReside network. Ensure all contact data is accurate for billing and emergency dispatch.</span>
+                                        <span>{t("Your profile configuration establishes your legal and administrative presence within the iReside network. Ensure all contact data is accurate for billing and emergency dispatch.")}</span>
                                     </p>
                                 </div>
                             </div>
@@ -1346,7 +1348,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 }}
                                 className="flex-1 py-4 bg-white/5 text-white/60 rounded-xl font-black hover:bg-white/10 transition-all"
                             >
-                                Back
+                                {t("Back")}
                             </button>
                         )}
                         <button
@@ -1358,7 +1360,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 <Loader2 className="size-5 animate-spin" />
                             ) : (
                                 <>
-                                    {currentStep === "profile" ? "Complete Setup" : "Continue"} 
+                                    {currentStep === "profile" ? t("Complete Setup") : t("Continue")} 
                                     <ArrowRight className="size-4" />
                                 </>
                             )}

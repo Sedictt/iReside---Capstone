@@ -30,6 +30,8 @@ import { cn } from '@/lib/utils';
 import { playSound } from '@/hooks/useSound';
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from '@/lib/validation';
 import { IResideLoading } from '../IResideLoading';
+import { useLanguageContext } from '@/context/LanguageContext';
+import { tr } from "@/hooks/useLanguage";
 
 // Configure worker using the local build
 if (typeof window !== 'undefined') {
@@ -75,6 +77,7 @@ export function DigitalSigner({
   primaryActionLabel = "Finalize",
   onClose
 }: DigitalSignerProps) {
+  const { t } = useLanguageContext();
   const [file, setFile] = useState<File | Blob | null>(null);
   const [pdfPages, setPdfPages] = useState<PdfPage[]>([]);
   const [isProcessing, setIsProcessing] = useState(isProcessingInitial);
@@ -206,7 +209,7 @@ export function DigitalSigner({
       await processFile(loadedFile);
     } catch (error) {
       console.error('Error loading initial PDF:', error);
-      toast.error('Failed to load document');
+      toast.error(t('Failed to load document'));
       setIsProcessing(false);
     }
   };
@@ -236,7 +239,7 @@ export function DigitalSigner({
       setPdfPages(pages);
     } catch (error) {
       console.error('Error processing PDF:', error);
-      toast.error('Failed to process document');
+      toast.error(t('Failed to process document'));
     } finally {
       setIsProcessing(false);
     }
@@ -276,7 +279,7 @@ export function DigitalSigner({
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const photo = handleMediaSelection(e, {
       preset: "image",
-      notify: (message, description) => toast.error(message, { description }),
+      notify: (message, description) => toast.error(tr(message), { description }),
     });
     if (!photo) return;
     const reader = new FileReader();
@@ -303,7 +306,7 @@ export function DigitalSigner({
         setSignatures(prev => [...prev, newSignature]);
         setIsPenActive(false);
         playSound("success");
-        toast.success('Signature extracted and placed');
+        toast.success(t('Signature extracted and placed'));
       };
       img.src = event.target?.result as string;
     };
@@ -352,9 +355,9 @@ export function DigitalSigner({
       link.href = URL.createObjectURL(blob);
       link.download = `Draft_${(file as File).name || 'document.pdf'}`;
       link.click();
-      toast.success('Local copy downloaded');
+      toast.success(t('Local copy downloaded'));
     } catch (error) {
-      toast.error('Download failed');
+      toast.error(t('Download failed'));
     } finally {
       setIsExporting(false);
     }
@@ -438,11 +441,11 @@ export function DigitalSigner({
           link.href = URL.createObjectURL(blob);
           link.download = `Signed_${(file as File).name || 'document.pdf'}`;
           link.click();
-          toast.success('Document finalized');
+          toast.success(t('Document finalized'));
       }
     } catch (error) {
       console.error('Export error:', error);
-      toast.error('Finalization failed');
+      toast.error(t('Finalization failed'));
     } finally {
       setIsExporting(false);
     }
@@ -458,23 +461,24 @@ export function DigitalSigner({
         <div className="flex items-center gap-6">
           <button 
             onClick={() => onClose?.()}
+            aria-label={t("Exit Signer")}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-all group"
           >
             <div className="size-10 rounded-full border border-border flex items-center justify-center group-hover:bg-muted transition-colors">
               <X className="size-5" />
             </div>
-            <span className="text-xs font-black uppercase tracking-widest hidden md:inline">Exit Signer</span>
+            <span className="text-xs font-black uppercase tracking-widest hidden md:inline">{t("Exit Signer")}</span>
           </button>
           
           <div className="h-8 w-px bg-border/50 mx-2 hidden md:block" />
 
           <div className="flex flex-col">
             <h1 className="text-sm md:text-base font-black tracking-tight truncate max-w-[150px] md:max-w-[300px]">
-              {title}
+              {t(title)}
             </h1>
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
               <span className={cn("size-1.5 rounded-full", isPenActive ? "bg-primary animate-pulse" : "bg-emerald-500")} />
-              {isPenActive ? 'Active Signing' : 'Reviewing Document'}
+              {isPenActive ? t('Active Signing') : t('Reviewing Document')}
             </p>
           </div>
         </div>
@@ -484,7 +488,7 @@ export function DigitalSigner({
           <div className="hidden lg:flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-muted/50 border border-border mr-2">
             <CheckCircle2 className={cn("size-4", signatures.length > 0 || hasDrawnOnCanvas ? "text-emerald-500" : "text-muted-foreground/30")} />
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-              {signatures.length === 0 && !hasDrawnOnCanvas ? "Awaiting Signature" : "Signature Ready"}
+              {signatures.length === 0 && !hasDrawnOnCanvas ? t("Awaiting Signature") : t("Signature Ready")}
             </span>
           </div>
 
@@ -503,7 +507,7 @@ export function DigitalSigner({
             ) : (
                 <FileCheck className="size-4" />
             )}
-            {primaryActionLabel}
+            {t(primaryActionLabel)}
           </button>
         </div>
       </header>
@@ -519,7 +523,8 @@ export function DigitalSigner({
                 "size-3 rounded-full transition-all duration-300",
                 currentPage === idx ? "bg-primary h-8" : "bg-muted-foreground/20 hover:bg-muted-foreground/40"
               )}
-              title={`Go to page ${idx + 1}`}
+              title={t("Go to page {page}", { page: idx + 1 })}
+              aria-label={t("Go to page {page}", { page: idx + 1 })}
             />
           ))}
         </div>
@@ -556,7 +561,7 @@ export function DigitalSigner({
                   transformOrigin: 'top center'
                 }}
               >
-                <NextImage src={page.dataUrl} fill className="object-contain pointer-events-none select-none" alt={`Document page ${idx + 1}`} />
+                <NextImage src={page.dataUrl} fill className="object-contain pointer-events-none select-none" alt={t("Document page {page}", { page: idx + 1 })} />
                 
                 {/* Direct Ink Canvas */}
                 <canvas 
@@ -583,7 +588,7 @@ export function DigitalSigner({
                     >
                       <div className="relative">
                         <NextImage 
-                          src={sig.dataUrl} alt="Signature overlay" 
+                          src={sig.dataUrl} alt={t("Signature overlay")} 
                           width={250} height={100}
                           unoptimized
                           style={{ transform: `scale(${sig.scale * (window.innerWidth < 768 ? 0.7 : 1)})`, transformOrigin: 'top left' }}
@@ -592,7 +597,7 @@ export function DigitalSigner({
                         <button 
                           onClick={() => setSignatures(prev => prev.filter(s => s.id !== sig.id))}
                           className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-red-500 text-white text-[10px] font-black opacity-0 group-hover/sig:opacity-100 transition-all shadow-xl"
-                        >REMOVE</button>
+                        >{t("REMOVE")}</button>
                       </div>
                     </motion.div>
                   ))}
@@ -616,12 +621,13 @@ export function DigitalSigner({
                 className="bg-background/90 backdrop-blur-2xl border border-border p-2 rounded-[2rem] shadow-2xl flex items-center gap-2 mb-2"
               >
                 <div className="flex items-center px-4 gap-3 border-r border-border py-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Weight</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{t("Weight")}</span>
                   <div className="flex gap-1">
                     {[0.5, 1.5, 3, 5].map((size) => (
                       <button
                         key={size}
                         onClick={() => setPenSize(size)}
+                        aria-label={t("Pen weight {size}", { size })}
                         className={cn(
                           "size-8 rounded-full transition-all flex items-center justify-center",
                           penSize === size ? "bg-primary text-primary-foreground shadow-lg" : "hover:bg-muted"
@@ -641,17 +647,17 @@ export function DigitalSigner({
                     onClick={() => {
                       signaturePads.current[currentPage]?.clear();
                       checkCanvasStatus();
-                      toast.success("Page cleared");
+                      toast.success(t("Page cleared"));
                     }}
                     className="h-10 px-4 rounded-full hover:bg-red-500/10 hover:text-red-500 text-muted-foreground transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
                   >
                     <Trash2 className="size-4" />
-                    Clear
+                    {t("Clear")}
                   </button>
 
                   <label className="h-10 px-4 rounded-full hover:bg-primary/10 hover:text-primary text-muted-foreground transition-all cursor-pointer flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
                     <ImageIcon className="size-4" />
-                    Upload
+                    {t("Upload")}
                     <input type="file" accept={MEDIA_ACCEPT_STRINGS.image} className="hidden" onChange={handlePhotoUpload} />
                   </label>
                 </div>
@@ -662,11 +668,11 @@ export function DigitalSigner({
           <div className="bg-background/90 backdrop-blur-2xl border border-border p-2 rounded-[2.5rem] shadow-2xl flex items-center gap-4">
             {/* Zoom Controls */}
             <div className="flex items-center bg-muted/50 rounded-full p-1 gap-1 ml-1">
-              <button onClick={() => setZoom(Math.max(0.1, zoom - 0.2))} className="p-2 hover:bg-background rounded-full transition-all active:scale-90">
+              <button onClick={() => setZoom(Math.max(0.1, zoom - 0.2))} aria-label={t("Zoom out")} className="p-2 hover:bg-background rounded-full transition-all active:scale-90">
                 <ZoomOut className="size-4" />
               </button>
               <span className="text-[10px] font-black w-12 text-center tabular-nums">{Math.round(zoom * 100)}%</span>
-              <button onClick={() => setZoom(Math.min(2, zoom + 0.2))} className="p-2 hover:bg-background rounded-full transition-all active:scale-90">
+              <button onClick={() => setZoom(Math.min(2, zoom + 0.2))} aria-label={t("Zoom in")} className="p-2 hover:bg-background rounded-full transition-all active:scale-90">
                 <ZoomIn className="size-4" />
               </button>
             </div>
@@ -686,12 +692,12 @@ export function DigitalSigner({
               {isPenActive ? (
                 <>
                   <X className="size-4" />
-                  Stop Signing
+                  {t("Stop Signing")}
                 </>
               ) : (
                 <>
                   <PenTool className="size-4" />
-                  Sign Document
+                  {t("Sign Document")}
                 </>
               )}
             </button>
@@ -702,16 +708,18 @@ export function DigitalSigner({
             <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 rounded-full">
               <button 
                 onClick={() => currentPage > 0 && scrollToPage(currentPage - 1)}
+                aria-label={t("Previous page")}
                 disabled={currentPage === 0}
                 className="text-muted-foreground hover:text-foreground disabled:opacity-30"
               >
                 <ChevronUp className="size-4" />
               </button>
               <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
-                Pg {currentPage + 1} / {pdfPages.length}
+                {t("Pg {current} / {total}", { current: currentPage + 1, total: pdfPages.length })}
               </span>
               <button 
                 onClick={() => currentPage < pdfPages.length - 1 && scrollToPage(currentPage + 1)}
+                aria-label={t("Next page")}
                 disabled={currentPage === pdfPages.length - 1}
                 className="text-muted-foreground hover:text-foreground disabled:opacity-30"
               >
@@ -751,9 +759,9 @@ export function DigitalSigner({
                     <ShieldCheck className="size-10 text-primary -rotate-[10deg]" />
                   </div>
                   <div className="space-y-2">
-                    <h2 className="text-3xl font-black tracking-tighter uppercase italic text-foreground">Make it Official?</h2>
+                    <h2 className="text-3xl font-black tracking-tighter uppercase italic text-foreground">{t("Make it Official?")}</h2>
                     <p className="text-muted-foreground text-sm font-medium leading-relaxed">
-                      By finalizing, you confirm that you have reviewed the document and your signature is legally binding.
+                      {t("By finalizing, you confirm that you have reviewed the document and your signature is legally binding.")}
                     </p>
                   </div>
                 </div>
@@ -764,8 +772,8 @@ export function DigitalSigner({
                         <FileText className="size-5 text-muted-foreground" />
                       </div>
                       <div className="text-left min-w-0 flex-1">
-                        <p className="text-[9px] font-black uppercase tracking-[0.1em] text-muted-foreground mb-0.5">Agreement</p>
-                        <p className="text-xs text-foreground font-black truncate leading-tight">{title}</p>
+                        <p className="text-[9px] font-black uppercase tracking-[0.1em] text-muted-foreground mb-0.5">{t("Agreement")}</p>
+                        <p className="text-xs text-foreground font-black truncate leading-tight">{t(title)}</p>
                       </div>
                    </div>
                 </div>
@@ -775,13 +783,13 @@ export function DigitalSigner({
                     onClick={handleExport}
                     className="w-full h-16 rounded-2xl bg-primary text-primary-foreground font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                   >
-                    Confirm & Finalize Signature
+                    {t("Confirm & Finalize Signature")}
                   </button>
                   <button 
                     onClick={() => setShowConfirmation(false)}
                     className="w-full h-14 rounded-2xl bg-muted text-muted-foreground font-black text-[10px] uppercase tracking-widest hover:bg-muted/80 transition-all"
                   >
-                    Go Back
+                    {t("Go Back")}
                   </button>
                 </div>
               </div>

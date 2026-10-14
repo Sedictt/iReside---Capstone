@@ -2,6 +2,7 @@
 
 import { useEffect, use } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export default function LeaseSigningPage({
   params,
@@ -11,6 +12,7 @@ export default function LeaseSigningPage({
   const { replace } = useRouter();
   const searchParams = useSearchParams();
   const { leaseId } = use(params);
+  const { t } = useLanguageContext();
 
   useEffect(() => {
     if (leaseId) {
@@ -27,8 +29,8 @@ export default function LeaseSigningPage({
           <div className="absolute inset-0 border-4 border-t-primary rounded-full animate-spin" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-xl font-black uppercase italic text-white tracking-tighter">Transferring to Secure Portal</h2>
-          <p className="text-zinc-500 text-xs font-black uppercase tracking-widest">Entering Isolated Environment</p>
+          <h2 className="text-xl font-black uppercase italic text-white tracking-tighter">{t("Transferring to Secure Portal")}</h2>
+          <p className="text-zinc-500 text-xs font-black uppercase tracking-widest">{t("Entering Isolated Environment")}</p>
         </div>
       </div>
     </div>

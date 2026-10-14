@@ -1,12 +1,16 @@
 import { Calendar, Banknote } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
 import type { FormValidation } from "@/hooks/useFormValidation";
 import { MAX_MONEY_AMOUNT } from "@/lib/validation/rules";
+import type { LeaseTermType } from "@/lib/lease-term";
+import { LeaseDurationPresets, LeaseTermReveal, LeaseTermTypeField } from "../LeaseTermTypeField";
 
 /** Values validated inline by the contract preview (see ContractPreviewModal). */
 export type LeaseFormValues = {
     leaseStart: string;
+    termType: LeaseTermType;
     leaseEnd: string;
     monthlyRent: number;
     advanceAmount: number;
@@ -15,12 +19,15 @@ export type LeaseFormValues = {
 
 interface LeaseFormFieldsProps {
     leaseStart: string;
+    termType: LeaseTermType;
     leaseEnd: string;
     monthlyRent: number;
     advanceAmount: number;
     securityDeposit: number;
     isFinalApproval: boolean;
     onLeaseStartChange: (value: string) => void;
+    onTermTypeChange: (value: LeaseTermType) => void;
+    onLeaseEndChange: (value: string) => void;
     onMonthlyRentChange: (value: number) => void;
     onAdvanceAmountChange: (value: number) => void;
     onSecurityDepositChange: (value: number) => void;
@@ -33,17 +40,21 @@ const inputClass =
 
 export function LeaseFormFields({
     leaseStart,
+    termType,
     leaseEnd,
     monthlyRent,
     advanceAmount,
     securityDeposit,
     isFinalApproval,
     onLeaseStartChange,
+    onTermTypeChange,
+    onLeaseEndChange,
     onMonthlyRentChange,
     onAdvanceAmountChange,
     onSecurityDepositChange,
     form,
 }: LeaseFormFieldsProps) {
+    const { t } = useLanguageContext();
     const fieldProps = (name: keyof LeaseFormValues) => (form ? form.fieldProps(name) : {});
     const errorFor = (name: keyof LeaseFormValues) => form?.errorFor(name);
     const errorNode = (name: keyof LeaseFormValues) =>
@@ -60,7 +71,7 @@ export function LeaseFormFields({
                         className="text-xs font-black uppercase tracking-wide text-neutral-300 flex items-center gap-2"
                     >
                         <Calendar className="size-3.5" />
-                        Lease Start Date
+                        {t("Lease Start Date")}
                     </label>
                     <input min="1990-01-01" max="2100-12-31"
                         {...fieldProps("leaseStart")}
@@ -72,25 +83,48 @@ export function LeaseFormFields({
                     />
                     {errorNode("leaseStart")}
                 </div>
-                <div className="space-y-2">
-                    <label
-                        htmlFor="lease-end"
-                        className="text-xs font-black uppercase tracking-wide text-neutral-300 flex items-center gap-2"
-                    >
-                        <Calendar className="size-3.5" />
-                        Lease End Date
-                    </label>
-                    <input min="1990-01-01" max="2100-12-31"
-                        {...fieldProps("leaseEnd")}
-                        id="lease-end"
-                        type="date"
-                        value={leaseEnd}
-                        disabled
-                        className={cn("w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-neutral-400 text-sm", errorFor("leaseEnd") && fieldErrorClass)}
-                    />
-                    {errorNode("leaseEnd")}
-                </div>
+                <LeaseTermTypeField
+                    id="contract-term-type"
+                    value={termType}
+                    onChange={onTermTypeChange}
+                    disabled={isFinalApproval}
+                    appearance="dark"
+                    compact
+                    className="sm:col-span-1"
+                />
             </div>
+
+            <LeaseTermReveal show={termType === "fixed"}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                    <div className="space-y-2">
+                        <label
+                            htmlFor="lease-end"
+                            className="text-xs font-black uppercase tracking-wide text-neutral-300 flex items-center gap-2"
+                        >
+                            <Calendar className="size-3.5" />
+                            {t("Lease End Date")}
+                        </label>
+                        <input min={leaseStart || "1990-01-01"} max="2100-12-31"
+                            {...fieldProps("leaseEnd")}
+                            id="lease-end"
+                            type="date"
+                            value={leaseEnd}
+                            disabled={isFinalApproval}
+                            onChange={(event) => onLeaseEndChange(event.target.value)}
+                            className={cn(inputClass, isFinalApproval && "text-neutral-400", errorFor("leaseEnd") && fieldErrorClass)}
+                        />
+                        {errorNode("leaseEnd")}
+                    </div>
+                    <LeaseDurationPresets
+                        startDate={leaseStart}
+                        endDate={leaseEnd}
+                        onSelect={onLeaseEndChange}
+                        disabled={isFinalApproval}
+                        appearance="dark"
+                        className="pb-3"
+                    />
+                </div>
+            </LeaseTermReveal>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
@@ -99,7 +133,7 @@ export function LeaseFormFields({
                         className="text-xs font-black uppercase tracking-wide text-neutral-300 flex items-center gap-2"
                     >
                         <Banknote className="size-3.5" />
-                        Monthly Rent
+                        {t("Monthly Rent")}
                     </label>
                     <input max={MAX_MONEY_AMOUNT}
                         {...fieldProps("monthlyRent")}
@@ -120,7 +154,7 @@ export function LeaseFormFields({
                         className="text-xs font-black uppercase tracking-wide text-neutral-300 flex items-center gap-2"
                     >
                         <Banknote className="size-3.5" />
-                        Advance Rent
+                        {t("Advance Rent")}
                     </label>
                     <input max={MAX_MONEY_AMOUNT}
                         {...fieldProps("advanceAmount")}
@@ -141,7 +175,7 @@ export function LeaseFormFields({
                         className="text-xs font-black uppercase tracking-wide text-neutral-300 flex items-center gap-2"
                     >
                         <Banknote className="size-3.5" />
-                        Security Deposit
+                        {t("Security Deposit")}
                     </label>
                     <input max={MAX_MONEY_AMOUNT}
                         {...fieldProps("securityDeposit")}

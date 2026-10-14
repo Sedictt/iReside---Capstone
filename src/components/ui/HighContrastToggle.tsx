@@ -5,20 +5,22 @@ import { Contrast } from "lucide-react";
 import { useHighContrast } from "@/hooks/useHighContrast";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export function HighContrastToggle({ className }: { className?: string }) {
   const { isHighContrast, toggleHighContrast, mounted } = useHighContrast();
+  const { t } = useLanguageContext();
 
   if (!mounted) return null;
 
   const handleClick = () => {
     toggleHighContrast();
     if (!isHighContrast) {
-      toast.success("High Contrast Mode Enabled", {
-        description: "Solid borders, reinforced font weights, and WCAG AAA legibility.",
+      toast.success(t("High Contrast Mode Enabled"), {
+        description: t("Solid borders, reinforced font weights, and WCAG AAA legibility."),
       });
     } else {
-      toast.info("High Contrast Mode Disabled");
+      toast.info(t("High Contrast Mode Disabled"));
     }
   };
 
@@ -33,10 +35,10 @@ export function HighContrastToggle({ className }: { className?: string }) {
           : "bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700",
         className
       )}
-      title="Toggle High Contrast Accessibility Mode"
+      title={t("Toggle High Contrast Accessibility Mode")}
     >
       <Contrast className="size-3.5 shrink-0" />
-      <span className="hidden sm:inline">{isHighContrast ? "Contrast: ON" : "High Contrast"}</span>
+      <span className="hidden sm:inline">{isHighContrast ? t("Contrast: ON") : t("High Contrast")}</span>
     </button>
   );
 }

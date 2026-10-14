@@ -1498,7 +1498,8 @@ export type Database = {
       leases: {
         Row: {
           created_at: string
-          end_date: string
+          end_date: string | null
+          term_type: string
           id: string
           landlord_id: string
           landlord_signature: string | null
@@ -1522,7 +1523,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          end_date: string
+          end_date?: string | null
+          term_type?: string
           id?: string
           landlord_id: string
           landlord_signature?: string | null
@@ -1546,7 +1548,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          end_date?: string
+          end_date?: string | null
+          term_type?: string
           id?: string
           landlord_id?: string
           landlord_signature?: string | null

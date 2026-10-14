@@ -80,7 +80,7 @@ import { useHighContrast } from "@/hooks/useHighContrast";
 import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
 import { TimeFormatToggle } from "@/components/ui/TimeFormatToggle";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { CURATED_BANNER_PRESETS, DEFAULT_BANNER_URL } from "@/components/landlord/dashboard/BannerCustomizerModal";
 import { ColorPickerModal } from "@/components/ui/ColorPickerModal";
 import { UnsavedChangesModal } from "@/components/ui/UnsavedChangesModal";
@@ -109,6 +109,7 @@ import {
 } from "@/lib/validation/landlord-settings";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import { DISALLOWED_PRESEEDED_DATA, isPreseededPhone } from "@/lib/validation/brand-setup";
+import { tr } from "@/hooks/useLanguage";
 
 export function normalizeRentalArchetype(val?: string | null): "apartment" | "dormitory" | "boarding_house" {
     if (!val) return "apartment";
@@ -193,13 +194,14 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
 // --- Components ---
 
 function GlassCard({ children, className, title, description, headerExtra }: { children: React.ReactNode; className?: string; title?: string; description?: string; headerExtra?: React.ReactNode }) {
+    const { t } = useLanguageContext();
     return (
         <div className={cn("relative overflow-hidden rounded-2xl sm:rounded-[2rem] neumorphic-panel transition-all duration-500", className)}>
             {(title || description || headerExtra) && (
                 <div className="border-b border-border/60 px-4 py-3.5 sm:px-6 sm:py-5 md:px-8 md:py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
-                        {title && <h3 className="text-base sm:text-lg font-black text-foreground">{title}</h3>}
-                        {description && <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">{description}</p>}
+                        {title && <h3 className="text-base sm:text-lg font-black text-foreground">{t(title)}</h3>}
+                        {description && <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">{t(description)}</p>}
                     </div>
                     {headerExtra && <div className="shrink-0">{headerExtra}</div>}
                 </div>
@@ -226,14 +228,15 @@ function SettingField({
     required?: boolean;
     counter?: { current: number; max: number };
 }) {
+    const { t } = useLanguageContext();
     return (
         <div className="space-y-1.5">
             <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
                     {Icon && <Icon className="size-3.5 text-primary shrink-0" />}
                     <label className="text-xs font-black uppercase tracking-wider text-foreground/80">
-                        {label}
-                        {required && <span className="ml-1 text-rose-500 font-bold" title="Required field">*</span>}
+                        {t(label)}
+                        {required && <span className="ml-1 text-rose-500 font-bold" title={t("Required field")}>*</span>}
                     </label>
                 </div>
                 {counter && (
@@ -249,10 +252,10 @@ function SettingField({
             {error ? (
                 <p className="px-1 text-[11px] font-bold text-rose-500 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
                     <AlertCircle className="size-3 shrink-0" />
-                    <span>{error}</span>
+                    <span>{t(error)}</span>
                 </p>
             ) : (
-                description && <p className="px-1 text-xs text-muted-foreground">{description}</p>
+                description && <p className="px-1 text-xs text-muted-foreground">{t(description)}</p>
             )}
         </div>
     );
@@ -279,6 +282,7 @@ function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: () =>
 }
 
 function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: string; onTabChange: (tab: string) => void }) {
+    const { t } = useLanguageContext();
     return (
         <div className="relative">
             <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 pt-0.5 scrollbar-hide px-0.5">
@@ -294,7 +298,7 @@ function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: s
                                 : "neumorphic-extruded text-muted-foreground hover:text-foreground font-bold"
                         )}
                     >
-                        {tab}
+                        {t(tab)}
                     </button>
                 ))}
             </div>
@@ -375,7 +379,7 @@ export function saveCachedSettings(settings: CachedLandlordSettings, userId?: st
 export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
     const router = useRouter();
     const { user, profile, loading, refreshProfile } = useAuth();
-    const { t, isFilipino } = useLanguage();
+    const { t, locale } = useLanguageContext();
     // UI State
     const [activeTab, setActiveTab] = useState<SettingsCategory>("Identity");
     const [activeSubTab, setActiveSubTab] = useState<string>("Profile");
@@ -505,14 +509,14 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
             const res = await fetch(`/api/landlord/export?${queryParams.toString()}`);
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.error || "Failed to generate export");
+                throw new Error(errData.error || t("Failed to generate export"));
             }
             const result = await res.json();
             const records: Record<string, unknown>[] = result.data || [];
             const filename = result.filename || `iReside_Export_${new Date().toISOString().split("T")[0]}`;
 
             if (records.length === 0) {
-                toast.info("No records found for the selected export criteria.");
+                toast.info(t("No records found for the selected export criteria."));
                 return;
             }
 
@@ -526,7 +530,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                toast.success(`Exported ${records.length} records as JSON!`);
+                toast.success(t("Exported {count} records as JSON!", { count: records.length }));
             } else {
                 const headers = Object.keys(records[0]);
                 const escapeCSV = (val: unknown) => {
@@ -552,12 +556,12 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                toast.success(`Exported ${records.length} records to CSV!`);
+                toast.success(t("Exported {count} records to CSV!", { count: records.length }));
             }
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "Failed to export data.";
+            const message = err instanceof Error ? err.message : t("Failed to export data.");
             console.error("Export error:", err);
-            toast.error(message);
+            toast.error(tr(message));
         } finally {
             setIsExporting(false);
         }
@@ -565,7 +569,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
 
     const handleDeleteAccount = async () => {
         if (deleteConfirmText !== "DELETE") return;
-        toast.error("Account deletion requires administrative verification to protect active tenant leases and financial ledgers. Please contact support to submit an account closure request.");
+        toast.error(t("Account deletion requires administrative verification to protect active tenant leases and financial ledgers. Please contact support to submit an account closure request."));
         setShowDeleteConfirm(false);
         setDeleteConfirmText("");
     };
@@ -632,13 +636,13 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
     const handleSelectBannerPreset = (presetUrl: string) => {
         setHasUserEdited(true);
         setBannerUrl(presetUrl);
-        toast.info("Banner preview updated. Save all changes to apply permanently.");
+        toast.info(t("Banner preview updated. Save all changes to apply permanently."));
     };
 
     const handleResetBanner = () => {
         setHasUserEdited(true);
         setBannerUrl(DEFAULT_BANNER_URL);
-        toast.info("Banner reset to default preview. Save all changes to apply permanently.");
+        toast.info(t("Banner reset to default preview. Save all changes to apply permanently."));
     };
 
 
@@ -647,7 +651,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
         const file = handleMediaSelection(e, {
             preset: "image",
             maxSizeBytes: 8 * 1024 * 1024,
-            notify: (message, description) => toast.error(message, { description }),
+            notify: (message, description) => toast.error(tr(message), { description }),
         });
         if (!file) return;
 
@@ -657,7 +661,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
             if (dataUrl) {
                 setHasUserEdited(true);
                 setBannerUrl(dataUrl);
-                toast.info("Banner preview uploaded. Save all changes to apply permanently.");
+                toast.info(t("Banner preview uploaded. Save all changes to apply permanently."));
             }
         };
         reader.readAsDataURL(file);
@@ -667,7 +671,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
         const file = handleMediaSelection(e, {
             preset: "branding_logo",
             maxSizeBytes: 5 * 1024 * 1024,
-            notify: (message, description) => toast.error(message, { description }),
+            notify: (message, description) => toast.error(tr(message), { description }),
         });
         if (!file) return;
 
@@ -683,7 +687,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
         reader.readAsDataURL(file);
 
         // 2. Upload to Supabase Storage in cloud
-        const uploadToast = toast.loading("Uploading logo to cloud storage...");
+        const uploadToast = toast.loading(t("Uploading logo to cloud storage..."));
         try {
             const formData = new FormData();
             formData.append("file", file);
@@ -699,7 +703,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                     setHasUserEdited(true);
                     setPropertyLogoUrl(data.logoUrl);
                     toast.dismiss(uploadToast);
-                    toast.success("Logo uploaded to cloud! Save changes to apply across all devices.");
+                    toast.success(t("Logo uploaded to cloud! Save changes to apply across all devices."));
                     return;
                 }
             } else if (res.status === 400) {
@@ -707,21 +711,21 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 const data = await res.json().catch(() => ({}));
                 setPropertyLogoUrl(initialSnapshot?.propertyLogoUrl ?? null);
                 toast.dismiss(uploadToast);
-                toast.error(data.error || "This logo file could not be uploaded.");
+                toast.error(tr(data.error || t("This logo file could not be uploaded.")));
                 return;
             }
             toast.dismiss(uploadToast);
-            toast.info("Logo preview updated locally. Save all changes to apply.");
+            toast.info(t("Logo preview updated locally. Save all changes to apply."));
         } catch {
             toast.dismiss(uploadToast);
-            toast.info("Logo preview updated. Save all changes to apply.");
+            toast.info(t("Logo preview updated. Save all changes to apply."));
         }
     };
 
     const handleRemoveLogo = () => {
         setHasUserEdited(true);
         setPropertyLogoUrl(null);
-        toast.info("Logo removed in preview. Save all changes to apply permanently.");
+        toast.info(t("Logo removed in preview. Save all changes to apply permanently."));
     };
 
     const toggleThemeWithTransition = (newTheme: string) => {
@@ -889,7 +893,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
     const handleResetNotificationDefaults = () => {
         setHasUserEdited(true);
         setNotificationPreferences(DEFAULT_NOTIFICATION_PREFERENCES);
-        toast.info("Notification preferences reset to defaults. Save changes to apply.");
+        toast.info(t("Notification preferences reset to defaults. Save changes to apply."));
     };
 
     const [initialSnapshot, setInitialSnapshot] = useState<{
@@ -952,7 +956,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
             } else if (profile) {
                 profileData = { profile };
             } else {
-                throw new Error("Unable to sync profile settings with the server.");
+                throw new Error(t("Unable to sync profile settings with the server."));
             }
 
             const freshProfile = profileData.profile || profileData;
@@ -1154,13 +1158,13 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
             setLastSyncedAt(new Date());
             setHasLoadedOnce(true);
             if (isManualRetry) {
-                toast.success("Settings synced with cloud database!");
+                toast.success(t("Settings synced with cloud database!"));
             }
         } catch (err: any) {
             console.error("[LandlordSettings] Background sync error:", err);
-            setSyncError(err?.message || "Failed to sync settings with the database.");
+            setSyncError(tr(err?.message || t("Failed to sync settings with the database.")));
             if (isManualRetry) {
-                toast.error(err?.message || "Failed to sync settings with the database");
+                toast.error(tr(err?.message || t("Failed to sync settings with the database")));
             }
         } finally {
             clearTimeout(timeoutId);
@@ -1308,7 +1312,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
         setPropertyLogoUrl(initialSnapshot.propertyLogoUrl);
         applyBrandCssVariables(initialSnapshot.brandPrimaryHex, initialSnapshot.brandSecondaryHex);
         setHasUserEdited(false);
-        toast.info("Unsaved changes discarded");
+        toast.info(t("Unsaved changes discarded"));
     };
 
     const [isUploadingPermit, setIsUploadingPermit] = useState(false);
@@ -1349,7 +1353,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
         const autoSendOtp = searchParams.get("auto_send_otp") === "true";
 
         if (gmailConnected === "true") {
-            toast.success("Google account connected! Sending OTP...");
+            toast.success(t("Google account connected! Sending OTP..."));
 
             if (autoSendOtp) {
                 const sendOtpAsync = async () => {
@@ -1361,13 +1365,13 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                         });
                         const data = await res.json();
                         if (data.error) {
-                            toast.error(data.error);
+                            toast.error(tr(data.error));
                         } else {
                             setTwoFAStatus('pending_otp');
-                            toast.success(`OTP sent to ${data.email}`);
+                            toast.success(t("OTP sent to {email}", { email: data.email }));
                         }
                     } catch (err) {
-                        toast.error("Failed to send OTP");
+                        toast.error(t("Failed to send OTP"));
                     }
                 };
                 sendOtpAsync();
@@ -1384,7 +1388,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 save_failed: "Failed to save credentials.",
                 callback_failed: "Something went wrong.",
             };
-            toast.error(errorMessages[error] || "An error occurred.");
+            toast.error(t(errorMessages[error] || "An error occurred."));
             window.history.replaceState({}, "", window.location.pathname + "?category=Security&subtab=Protection");
         }
     }, []);
@@ -1433,20 +1437,20 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
         if (!pairCheck.isValid) {
             setFieldError("newPassword", pairCheck.newPasswordError);
             setFieldError("confirmNewPassword", pairCheck.confirmPasswordError);
-            if (pairCheck.newPasswordError) toast.error(pairCheck.newPasswordError);
-            else if (pairCheck.confirmPasswordError) toast.error(pairCheck.confirmPasswordError);
+            if (pairCheck.newPasswordError) toast.error(tr(pairCheck.newPasswordError));
+            else if (pairCheck.confirmPasswordError) toast.error(tr(pairCheck.confirmPasswordError));
             return;
         }
 
         setIsUpdatingPassword(true);
-        const loadingToast = toast.loading("Updating password...");
+        const loadingToast = toast.loading(t("Updating password..."));
         try {
             const { error: authError } = await supabase.auth.updateUser({
                 password: newPassword,
             });
 
             if (authError) {
-                throw new Error(authError.message || "Failed to update password");
+                throw new Error(authError.message || t("Failed to update password"));
             }
 
             const nowIso = new Date().toISOString();
@@ -1487,17 +1491,17 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
             setConfirmNewPassword("");
             setFieldError("newPassword", undefined);
             setFieldError("confirmNewPassword", undefined);
-            toast.success("Password updated successfully!", { id: loadingToast });
+            toast.success(t("Password updated successfully!"), { id: loadingToast });
         } catch (err: any) {
             console.error("[Settings] Password update error:", err);
-            toast.error(err.message || "Failed to update password", { id: loadingToast });
+            toast.error(tr(err.message || t("Failed to update password")), { id: loadingToast });
         } finally {
             setIsUpdatingPassword(false);
         }
     };
 
     const handleRevokeSession = async (sessionId: string) => {
-        const loadingToast = toast.loading("Revoking session...");
+        const loadingToast = toast.loading(t("Revoking session..."));
         try {
             const res = await fetch("/api/auth/sessions", {
                 method: "DELETE",
@@ -1505,18 +1509,18 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 body: JSON.stringify({ sessionId }),
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Failed to revoke session");
+            if (!res.ok) throw new Error(data.error || t("Failed to revoke session"));
             
-            toast.success("Session revoked successfully", { id: loadingToast });
+            toast.success(t("Session revoked successfully"), { id: loadingToast });
             setSessions(prev => prev.filter(s => s.id !== sessionId));
         } catch (error: any) {
-            toast.error(error.message || "Failed to revoke session", { id: loadingToast });
+            toast.error(tr(error.message || t("Failed to revoke session")), { id: loadingToast });
         }
     };
 
     const handleSignOutOthers = async () => {
         setIsSessionsLoading(true);
-        const loadingToast = toast.loading("Signing out other devices...");
+        const loadingToast = toast.loading(t("Signing out other devices..."));
         try {
             const { error } = await supabase.auth.signOut({ scope: "others" });
             if (error) throw error;
@@ -1528,18 +1532,18 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 body: JSON.stringify({ scope: "others" }),
             }).catch(() => null);
 
-            toast.success("Signed out of all other devices successfully", { id: loadingToast });
+            toast.success(t("Signed out of all other devices successfully"), { id: loadingToast });
             const { data } = await (supabase as any).from('user_sessions').select('*').order('updated_at', { ascending: false });
             if (data) setSessions(data);
         } catch (error: any) {
-            toast.error(error.message || "Failed to sign out other devices", { id: loadingToast });
+            toast.error(tr(error.message || t("Failed to sign out other devices")), { id: loadingToast });
         } finally {
             setIsSessionsLoading(false);
         }
     };
 
     const handleSignOutAll = async () => {
-        const loadingToast = toast.loading("Signing out everywhere...");
+        const loadingToast = toast.loading(t("Signing out everywhere..."));
         try {
             await fetch("/api/auth/sessions", {
                 method: "DELETE",
@@ -1549,14 +1553,14 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
 
             await signOut({ scope: "global" });
         } catch (error: any) {
-            toast.error(error.message || "Failed to sign out globally", { id: loadingToast });
+            toast.error(tr(error.message || t("Failed to sign out globally")), { id: loadingToast });
         }
     };
 
     const handleSaveAll = async (): Promise<boolean> => {
         const currentUserId = profile?.id || user?.id;
         if (!currentUserId) {
-            toast.error("Please wait for your account session to load before saving.");
+            toast.error(t("Please wait for your account session to load before saving."));
             return false;
         }
 
@@ -1579,21 +1583,21 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
             if (validation.firstErrorTab) {
                 setActiveTab(validation.firstErrorTab.category);
                 setActiveSubTab(validation.firstErrorTab.subtab);
-                toast.error(`Please fix the errors in ${validation.firstErrorTab.category} (${validation.firstErrorTab.subtab}) before saving.`);
+                toast.error(t("Please fix the errors in {section} ({tab}) before saving.", { section: t(validation.firstErrorTab.category), tab: t(validation.firstErrorTab.subtab) }));
             } else {
-                toast.error("Please correct the highlighted errors before saving.");
+                toast.error(t("Please correct the highlighted errors before saving."));
             }
             return false;
         }
 
         setIsSaving(true);
-        const loadingToast = toast.loading("Saving all changes across settings…");
+        const loadingToast = toast.loading(t("Saving all changes across settings…"));
 
         // Failsafe timer so save button can never be trapped in perpetual saving state
         const safetyTimer = setTimeout(() => {
             setIsSaving(false);
             toast.dismiss(loadingToast);
-            toast.error("Saving took longer than expected. Changes were saved locally.");
+            toast.error(t("Saving took longer than expected. Changes were saved locally."));
         }, 25000);
 
         try {
@@ -1657,7 +1661,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                             setFieldError(path.replace(/^socials\./, "socials_"), message);
                         }
                     }
-                    throw new Error(data.error || "Failed to save profile changes");
+                    throw new Error(data.error || t("Failed to save profile changes"));
                 }
 
                 if (typeof window !== "undefined") {
@@ -1742,14 +1746,14 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
 
             clearTimeout(safetyTimer);
             toast.dismiss(loadingToast);
-            toast.success("All settings saved successfully!");
+            toast.success(t("All settings saved successfully!"));
             setJustSaved(true);
             setTimeout(() => setJustSaved(false), 2500);
             return true;
         } catch (error: any) {
             clearTimeout(safetyTimer);
             toast.dismiss(loadingToast);
-            toast.error(error?.message || "Failed to save settings");
+            toast.error(tr(error?.message || t("Failed to save settings")));
             return false;
         } finally {
             clearTimeout(safetyTimer);
@@ -1766,12 +1770,12 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
     const handlePermitUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = handleMediaSelection(e, {
             preset: "image",
-            notify: (message, description) => toast.error(message, { description }),
+            notify: (message, description) => toast.error(tr(message), { description }),
         });
         if (!file) return;
 
         setIsUploadingPermit(true);
-        const loadingToast = toast.loading("Uploading permit...");
+        const loadingToast = toast.loading(t("Uploading permit..."));
 
         try {
             const formData = new FormData();
@@ -1784,13 +1788,13 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.error || "Failed to upload permit");
+                throw new Error(error.error || t("Failed to upload permit"));
             }
 
-            toast.success("Permit uploaded successfully", { id: loadingToast });
+            toast.success(t("Permit uploaded successfully"), { id: loadingToast });
             await refreshProfile();
         } catch (error: any) {
-            toast.error(error.message, { id: loadingToast });
+            toast.error(tr(error.message), { id: loadingToast });
         } finally {
             setIsUploadingPermit(false);
             if (permitInputRef.current) permitInputRef.current.value = "";
@@ -1798,10 +1802,10 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
     };
 
     const handlePermitRemove = async () => {
-        if (!confirm("Are you sure you want to remove your uploaded business permit?")) return;
+        if (!confirm(t("Are you sure you want to remove your uploaded business permit?"))) return;
         
         setIsUploadingPermit(true);
-        const loadingToast = toast.loading("Removing permit...");
+        const loadingToast = toast.loading(t("Removing permit..."));
 
         try {
             const response = await fetch("/api/profile/permit", {
@@ -1810,14 +1814,14 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
 
             if (!response.ok) {
                 const error = await response.json().catch(() => ({}));
-                throw new Error(error.error || "Failed to remove permit");
+                throw new Error(error.error || t("Failed to remove permit"));
             }
 
-            toast.success("Business permit removed successfully", { id: loadingToast });
+            toast.success(t("Business permit removed successfully"), { id: loadingToast });
             await refreshProfile();
             window.dispatchEvent(new CustomEvent("profile-updated"));
         } catch (error: any) {
-            toast.error(error.message || "Failed to remove permit", { id: loadingToast });
+            toast.error(tr(error.message || t("Failed to remove permit")), { id: loadingToast });
         } finally {
             setIsUploadingPermit(false);
         }
@@ -1825,10 +1829,10 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
 
 
     const handleHardResetTour = async () => {
-        if (!confirm("Are you sure you want to reset all tour progress? This cannot be undone.")) return;
+        if (!confirm(t("Are you sure you want to reset all tour progress? This cannot be undone."))) return;
         
         setIsResetting(true);
-        const loadingToast = toast.loading("Resetting tour progress...");
+        const loadingToast = toast.loading(t("Resetting tour progress..."));
 
         try {
             const response = await fetch("/api/landlord/tour", {
@@ -1837,13 +1841,13 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.error || "Failed to reset tour");
+                throw new Error(error.error || t("Failed to reset tour"));
             }
 
-            toast.success("Tour progress has been completely reset", { id: loadingToast });
+            toast.success(t("Tour progress has been completely reset"), { id: loadingToast });
             await refreshProfile();
         } catch (error: any) {
-            toast.error(error.message, { id: loadingToast });
+            toast.error(tr(error.message), { id: loadingToast });
         } finally {
             setIsResetting(false);
         }
@@ -1865,11 +1869,11 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 body: JSON.stringify({ show_completed_quests: nextValue, quest_board_hidden: false }),
             });
             if (res.ok) {
-                toast.success(nextValue ? "Quests will now remain visible" : "Completed quests will be hidden");
+                toast.success(nextValue ? t("Quests will now remain visible") : t("Completed quests will be hidden"));
                 await fetchTourState();
             }
         } catch (err) {
-            toast.error("Failed to update preferences");
+            toast.error(t("Failed to update preferences"));
         }
     };
     const renderIdentity = () => {
@@ -1878,7 +1882,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
             switch (currentSubTab) {
                 case "Profile":
                     return (
-                        <GlassCard title="Profile Information" description="Basic details about you and your business.">
+                        <GlassCard title={t("Profile Information")} description="Basic details about you and your business.">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <SettingField 
                                     label="Full Name" 
@@ -1903,7 +1907,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                 setFieldError("full_name", check.error);
                                             }
                                         }}
-                                        placeholder="e.g. John Doe"
+                                        placeholder={t("e.g. John Doe")}
                                         className={cn(
                                             "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
                                             touchedFields.full_name && fieldErrors.full_name 
@@ -1958,21 +1962,21 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                         onClick={() => {
                                                             updateFormData({ business_name: whiteLabelName });
                                                             setFieldError("business_name", undefined);
-                                                            toast.info("Applied white-label name", {
-                                                                description: `Business name set to "${whiteLabelName}".`,
+                                                            toast.info(t("Applied white-label name"), {
+                                                                description: t("Business name set to \"{name}\".", { name: whiteLabelName }),
                                                             });
                                                         }}
                                                         className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1 text-[11px] font-bold rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors cursor-pointer"
-                                                        title={`Fill with white-label property name: ${whiteLabelName}`}
+                                                        title={t("Fill with white-label property name: {name}", { name: whiteLabelName })}
                                                     >
-                                                        Use White-Label
+                                                        {t("Use White-Label")}
                                                     </button>
                                                 )}
                                             </div>
                                             {hasWhiteLabel && (
                                                  <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
                                                      <span>
-                                                         White-label brand name: <strong className="text-foreground font-semibold">{whiteLabelName}</strong>
+                                                         {t("White-label brand name:")} <strong className="text-foreground font-semibold">{whiteLabelName}</strong>
                                                      </span>
                                                      {formData.business_name && formData.business_name !== whiteLabelName && (
                                                          <button
@@ -1980,13 +1984,13 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                              onClick={() => {
                                                                  updateFormData({ business_name: whiteLabelName });
                                                                  setFieldError("business_name", undefined);
-                                                                 toast.info("Synced with white-label name", {
-                                                                     description: `Business name updated to "${whiteLabelName}".`,
+                                                                 toast.info(t("Synced with white-label name"), {
+                                                                     description: t("Business name updated to \"{name}\".", { name: whiteLabelName }),
                                                                  });
                                                              }}
                                                              className="text-primary hover:underline font-bold text-[10px] cursor-pointer"
                                                          >
-                                                             Sync with White-Label
+                                                             {t("Sync with White-Label")}
                                                          </button>
                                                      )}
                                                  </div>
@@ -2051,7 +2055,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                 setFieldError("phone", check.error);
                                             }
                                         }}
-                                        placeholder="e.g. 0917 123 4567 or +63 917 123 4567"
+                                        placeholder={t("e.g. 0917 123 4567 or +63 917 123 4567")}
                                         className={cn(
                                             "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
                                             touchedFields.phone && fieldErrors.phone 
@@ -2117,7 +2121,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                     setFieldError("address", check.error);
                                                 }
                                             }}
-                                            placeholder="e.g. Unit 101, Taft Tower, Manila"
+                                            placeholder={t("e.g. Unit 101, Taft Tower, Manila")}
                                             className={cn(
                                                 "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
                                                 touchedFields.address && fieldErrors.address 
@@ -2153,7 +2157,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                     setFieldError("bio", check.error);
                                                 }
                                             }}
-                                            placeholder="Tell prospective tenants about your rental community, values, and policies..."
+                                            placeholder={t("Tell prospective tenants about your rental community, values, and policies...")}
                                             className={cn(
                                                 "w-full resize-none rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
                                                 touchedFields.bio && fieldErrors.bio 
@@ -2169,7 +2173,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                     );
                 case "Emergency Contact":
                     return (
-                        <GlassCard title="Emergency Contact" description="Designated emergency contact person and 24/7 phone number for urgent property escalations and tenant emergencies.">
+                        <GlassCard title={t("Emergency Contact")} description="Designated emergency contact person and 24/7 phone number for urgent property escalations and tenant emergencies.">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <SettingField 
                                     label="Emergency Contact Name" 
@@ -2184,9 +2188,9 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         onBlur={() => {
                                             markFieldTouched("emergency_contact_name");
                                             if (formData.emergency_contact_name && formData.emergency_contact_name.trim().length < 2) {
-                                                setFieldError("emergency_contact_name", "Emergency contact name must be at least 2 characters.");
+                                                setFieldError("emergency_contact_name", t("Emergency contact name must be at least 2 characters."));
                                             } else if (formData.emergency_contact_name && !REGEX_NAME.test(formData.emergency_contact_name.trim())) {
-                                                setFieldError("emergency_contact_name", "Name can only contain letters, spaces, hyphens, and periods.");
+                                                setFieldError("emergency_contact_name", t("Name can only contain letters, spaces, hyphens, and periods."));
                                             } else {
                                                 setFieldError("emergency_contact_name", undefined);
                                             }
@@ -2195,13 +2199,13 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                             updateFormData({ emergency_contact_name: e.target.value });
                                             if (touchedFields.emergency_contact_name) {
                                                 if (e.target.value && e.target.value.trim().length < 2) {
-                                                    setFieldError("emergency_contact_name", "Emergency contact name must be at least 2 characters.");
+                                                    setFieldError("emergency_contact_name", t("Emergency contact name must be at least 2 characters."));
                                                 } else {
                                                     setFieldError("emergency_contact_name", undefined);
                                                 }
                                             }
                                         }}
-                                        placeholder="e.g. Jane Doe (Property Manager)"
+                                        placeholder={t("e.g. Jane Doe (Property Manager)")}
                                         className={cn(
                                             "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
                                             touchedFields.emergency_contact_name && fieldErrors.emergency_contact_name 
@@ -2227,7 +2231,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                             if (!check.isValid) {
                                                 setFieldError("emergency_contact_phone", check.error);
                                             } else if (formData.emergency_contact_name.trim() && !formData.emergency_contact_phone.trim()) {
-                                                setFieldError("emergency_contact_phone", "Emergency phone number is required when a contact name is provided.");
+                                                setFieldError("emergency_contact_phone", t("Emergency phone number is required when a contact name is provided."));
                                             } else {
                                                 setFieldError("emergency_contact_phone", undefined);
                                             }
@@ -2255,7 +2259,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 case "Branding":
                     return (
                         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-                            <GlassCard title="Cover Photo" description="A cinematic background for your public page.">
+                            <GlassCard title={t("Cover Photo")} description="A cinematic background for your public page.">
                                 <div className="relative h-64 w-full overflow-hidden rounded-[1.5rem] neumorphic-inset">
                                     <ProfileCoverUploader 
                                         initialCoverUrl={profile?.cover_url || null} 
@@ -2263,14 +2267,14 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     />
                                 </div>
                             </GlassCard>
-                            <GlassCard title="Avatar & Identity" description="Your primary identification photo.">
+                            <GlassCard title={t("Avatar & Identity")} description="Your primary identification photo.">
                                 <div className="flex flex-col items-center py-4">
                                     <div 
                                         className="group relative flex size-40 items-center justify-center rounded-[3rem] border-4 border-white/10 shadow-2xl transition-transform hover:scale-105"
                                         style={{ backgroundColor: profile?.avatar_bg_color || "#22C55E" }}
                                     >
                                         {profile?.avatar_url ? (
-                                            <Image src={profile.avatar_url} alt="Avatar" fill sizes="160px" className="rounded-[2.8rem] object-cover" />
+                                            <Image src={profile.avatar_url} alt={t("Avatar")} fill sizes="160px" className="rounded-[2.8rem] object-cover" />
                                         ) : (
                                             <span className="text-5xl font-black text-white">
                                                 {(formData.full_name || profile?.full_name || "L").charAt(0).toUpperCase()}
@@ -2284,14 +2288,14 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         </button>
                                     </div>
                                     <h4 className="mt-6 text-xl font-black text-white">{formData.full_name || profile?.full_name}</h4>
-                                    <p className="text-sm text-neutral-500">Verified Landlord</p>
+                                    <p className="text-sm text-neutral-500">{t("Verified Landlord")}</p>
                                 </div>
                             </GlassCard>
                         </div>
                     );
                 case "Socials":
                     return (
-                        <GlassCard title="Social Media Links" description="Connect your social profiles to build more trust.">
+                        <GlassCard title={t("Social Media Links")} description="Connect your social profiles to build more trust.">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <SettingField 
                                     label="Facebook" 
@@ -2300,7 +2304,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 >
                                     <input maxLength={120}
                                         type="text"
-                                        placeholder="https://facebook.com/your-page or page-handle"
+                                        placeholder={t("https://facebook.com/your-page or page-handle")}
                                         value={formData.socials.facebook}
                                         onBlur={() => {
                                             markFieldTouched("socials_facebook");
@@ -2331,7 +2335,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 >
                                     <input maxLength={120}
                                         type="text"
-                                        placeholder="https://instagram.com/your-profile or @handle"
+                                        placeholder={t("https://instagram.com/your-profile or @handle")}
                                         value={formData.socials.instagram}
                                         onBlur={() => {
                                             markFieldTouched("socials_instagram");
@@ -2362,7 +2366,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 >
                                     <input maxLength={120}
                                         type="text"
-                                        placeholder="https://x.com/your-handle or @handle"
+                                        placeholder={t("https://x.com/your-handle or @handle")}
                                         value={formData.socials.twitter}
                                         onBlur={() => {
                                             markFieldTouched("socials_twitter");
@@ -2393,7 +2397,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 >
                                     <input maxLength={120}
                                         type="text"
-                                        placeholder="https://linkedin.com/in/your-profile or username"
+                                        placeholder={t("https://linkedin.com/in/your-profile or username")}
                                         value={formData.socials.linkedin}
                                         onBlur={() => {
                                             markFieldTouched("socials_linkedin");
@@ -2422,7 +2426,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                     );
                 case "Business Permit":
                     return (
-                        <GlassCard title="Business Permit (Optional)" description="Optionally provide your business permit number and document photo.">
+                        <GlassCard title={t("Business Permit (Optional)")} description="Optionally provide your business permit number and document photo.">
                             <div className="space-y-6">
                                 <SettingField 
                                     label="Business Permit Number (Optional)" 
@@ -2445,7 +2449,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                 setFieldError("business_permit_number", check.error);
                                             }
                                         }}
-                                        placeholder="e.g. BP-2026-VAL-09124"
+                                        placeholder={t("e.g. BP-2026-VAL-09124")}
                                         className={cn(
                                             "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
                                             touchedFields.business_permit_number && fieldErrors.business_permit_number 
@@ -2458,27 +2462,27 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-2">
-                                        <label className="text-xs font-black uppercase tracking-wider text-neutral-400">Permit Document (Photo)</label>
+                                        <label className="text-xs font-black uppercase tracking-wider text-neutral-400">{t("Permit Document (Photo)")}</label>
                                         <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-muted text-muted-foreground border border-border/60">
-                                            Optional
+                                            {t("Optional")}
                                         </span>
                                     </div>
                                     <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                                         <div className="relative h-48 w-full md:w-80 overflow-hidden rounded-2xl neumorphic-inset border-dashed border-white/10 transition-all hover:opacity-80">
                                             {profile?.business_permit_url ? (
-                                                <Image src={profile.business_permit_url} alt="Business Permit" fill sizes="(max-width: 768px) 100vw, 320px" className="object-cover" />
+                                                <Image src={profile.business_permit_url} alt={t("Business Permit")} fill sizes="(max-width: 768px) 100vw, 320px" className="object-cover" />
                                             ) : (
                                                 <div className="flex h-full flex-col items-center justify-center gap-2 text-neutral-500">
                                                     <UploadCloud className="size-8" />
                                                     <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
-                                                        No document uploaded
+                                                        {t("No document uploaded")}
                                                     </p>
                                                 </div>
                                             )}
                                         </div>
                                         <div className="flex-1 space-y-4">
                                             <p className="text-sm text-neutral-500 leading-relaxed">
-                                                Optionally upload a photo of your business permit. Supported formats: JPG, PNG. Max size: 15MB.
+                                                {t("Optionally upload a photo of your business permit. Supported formats: JPG, PNG. Max size: 15MB.")}
                                             </p>
                                             <div className="flex items-center gap-3 flex-wrap">
                                                 {profile?.business_permit_url && (
@@ -2489,7 +2493,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                         className="inline-flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-5 py-3 text-sm font-black text-red-500 transition-all hover:bg-red-500/20 disabled:opacity-50 cursor-pointer"
                                                     >
                                                         <Trash2 className="size-4" />
-                                                        Remove
+                                                        {t("Remove")}
                                                     </button>
                                                 )}
                                                 <button 
@@ -2499,7 +2503,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                     className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-6 py-3 text-sm font-black text-primary transition-all hover:bg-primary/20 disabled:opacity-50 cursor-pointer"
                                                 >
                                                     <UploadCloud className="size-5" /> 
-                                                    {isUploadingPermit ? "Uploading…" : profile?.business_permit_url ? "Replace Document" : "Upload Document (Optional)"}
+                                                    {isUploadingPermit ? t("Uploading…") : profile?.business_permit_url ? t("Replace Document") : t("Upload Document (Optional)")}
                                                 </button>
                                             </div>
                                             <input 
@@ -2526,8 +2530,8 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-black text-foreground">Identity</h2>
-                    <p className="text-muted-foreground">Control how you appear to others.</p>
+                    <h2 className="text-3xl font-black text-foreground">{t("Identity")}</h2>
+                    <p className="text-muted-foreground">{t("Control how you appear to others.")}</p>
                 </div>
 
                 <SubNav 
@@ -2551,7 +2555,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                     return (
                         <div className="space-y-8">
                             <GlassCard 
-                                title="Visual Theme" 
+                                title={t("Visual Theme")} 
                                 description="Choose how iReside renders across all screens. Default is light mode."
                             >
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 p-4 rounded-2xl bg-surface-2 border border-border/60">
@@ -2566,20 +2570,20 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <h4 className="text-sm font-black text-foreground">Dark Mode</h4>
+                                                <h4 className="text-sm font-black text-foreground">{t("Dark Mode")}</h4>
                                                 <span className={cn(
                                                     "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
                                                     resolvedTheme === "dark" 
                                                         ? "bg-primary/20 text-primary border border-primary/30" 
                                                         : "bg-surface-3 text-muted-foreground"
                                                 )}>
-                                                    {resolvedTheme === "dark" ? "Enabled" : "Disabled"}
+                                                    {resolvedTheme === "dark" ? t("Enabled") : t("Disabled")}
                                                 </span>
                                             </div>
                                             <p className="text-xs text-muted-foreground mt-1 max-w-xl">
                                                 {resolvedTheme === "dark"
-                                                    ? "Sleek, eye-friendly low-light atmosphere active across all screens."
-                                                    : "Clean, high-brightness daylight aesthetic active by default across all screens."}
+                                                    ? t("Sleek, eye-friendly low-light atmosphere active across all screens.")
+                                                    : t("Clean, high-brightness daylight aesthetic active by default across all screens.")}
                                             </p>
                                         </div>
                                     </div>
@@ -2591,7 +2595,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                             </GlassCard>
 
                             <GlassCard 
-                                title="Brand Accent Colors Studio" 
+                                title={t("Brand Accent Colors Studio")} 
                                 description="Tune the primary and secondary signature tones used in buttons, active states & metrics."
                             >
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -2606,7 +2610,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                 type="button"
                                                 onClick={() => setIsPrimaryColorPickerOpen(true)}
                                                 className="flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl neumorphic-extruded border border-border/80 hover:border-primary/80 transition-all group cursor-pointer shrink-0"
-                                                title="Open modern color picker"
+                                                title={t("Open modern color picker")}
                                             >
                                                 <span 
                                                     className="size-5 sm:size-6 rounded-lg shadow-sm border border-white/20 shrink-0 transition-transform group-hover:scale-105" 
@@ -2670,7 +2674,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                 type="button"
                                                 onClick={() => setIsSecondaryColorPickerOpen(true)}
                                                 className="flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl neumorphic-extruded border border-border/80 hover:border-primary/80 transition-all group cursor-pointer shrink-0"
-                                                title="Open modern color picker"
+                                                title={t("Open modern color picker")}
                                             >
                                                 <span 
                                                     className="size-5 sm:size-6 rounded-lg shadow-sm border border-white/20 shrink-0 transition-transform group-hover:scale-105" 
@@ -2725,7 +2729,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 </div>
 
                                 <div className="mt-6 flex flex-wrap gap-2 items-center pt-4 border-t border-border/40">
-                                    <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground mr-2">Curated Palettes:</span>
+                                    <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground mr-2">{t("Curated Palettes:")}</span>
                                     {[
                                         { name: "Royal Lavender", primary: "#c4b0ff", secondary: "#8b5cf6" },
                                         { name: "Emerald Oasis", primary: "#10b981", secondary: "#065f46" },
@@ -2743,7 +2747,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                 setFieldError("brandPrimaryHex", undefined);
                                                 setFieldError("brandSecondaryHex", undefined);
                                                 applyBrandCssVariables(preset.primary, preset.secondary);
-                                                toast.success(`Applied ${preset.name} palette`);
+                                                toast.success(t("Applied {name} palette", { name: preset.name }));
                                             }}
                                             className="px-3 py-1.5 rounded-xl border border-border/60 hover:border-primary/60 bg-surface-2 text-xs font-bold text-foreground flex items-center gap-2 transition-all active:scale-95"
                                         >
@@ -2755,28 +2759,28 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                             </GlassCard>
 
                             <GlassCard 
-                                title="Language / Wika" 
-                                description={isFilipino ? "Pumili kung nais mong gamitin ang sistemang ito sa pang-araw-araw na Filipino (Taglish) o English." : "Choose between everyday conversational Filipino (Taglish) and standard English."}
+                                title={t("Language / Wika")} 
+                                description="Choose between everyday conversational Filipino (Taglish) and standard English."
                             >
                                 <LanguageToggle variant="segmented" showPreview={true} />
                             </GlassCard>
 
                             <GlassCard 
-                                title="Time & Clock Format" 
+                                title={t("Time & Clock Format")} 
                                 description="Choose between 12-hour (AM/PM) and 24-hour military format for dashboards, digital clocks, and operational timestamps."
                             >
                                 <TimeFormatToggle variant="segmented" showPreview={true} />
                             </GlassCard>
 
                             <GlassCard 
-                                title="Accessibility: Text Size & Readability" 
+                                title={t("Accessibility: Text Size & Readability")} 
                                 description="Adjust interface font scaling for maximum comfort without compromising card structures or layout symmetry."
                             >
                                 <FontSizeToggle variant="slider" showPreview={true} />
                             </GlassCard>
 
                             <GlassCard 
-                                title="Accessibility: High Contrast Mode" 
+                                title={t("Accessibility: High Contrast Mode")} 
                                 description="Engineered per WCAG 2.1 AAA standards for maximum legibility and visibility."
                             >
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 p-4 rounded-2xl bg-surface-2 border border-border/60">
@@ -2791,16 +2795,16 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <h4 className="text-sm font-black text-foreground">Universal High Contrast</h4>
+                                                <h4 className="text-sm font-black text-foreground">{t("Universal High Contrast")}</h4>
                                                 <span className={cn(
                                                     "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
                                                     isHighContrast ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-surface-3 text-muted-foreground"
                                                 )}>
-                                                    {isHighContrast ? "Active (WCAG AAA)" : "Off"}
+                                                    {isHighContrast ? t("Active (WCAG AAA)") : t("Off")}
                                                 </span>
                                             </div>
                                             <p className="text-xs text-muted-foreground mt-1 max-w-xl">
-                                                Replaces all soft neumorphic shadows with crisp 2.5px solid borders, pure black/white contrasts, and reinforced bold text across the landlord & tenant portals.
+                                                {t("Replaces all soft neumorphic shadows with crisp 2.5px solid borders, pure black/white contrasts, and reinforced bold text across the landlord & tenant portals.")}
                                             </p>
                                         </div>
                                     </div>
@@ -2816,7 +2820,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 case "Branding & Logo":
                     return (
                         <div className="space-y-8">
-                            <GlassCard title="Property Identity" description="Configure how your business is branded on leases, receipts & the tenant portal.">
+                            <GlassCard title={t("Property Identity")} description="Configure how your business is branded on leases, receipts & the tenant portal.">
                                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                     <SettingField 
                                         label="Property Trade Name" 
@@ -2855,7 +2859,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                     return prev;
                                                 });
                                             }}
-                                            placeholder="e.g., Skyline Lofts"
+                                            placeholder={t("e.g., Skyline Lofts")}
                                             className={cn(
                                                 "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none font-bold transition-all",
                                                 touchedFields.propertyTradeName && fieldErrors.propertyTradeName ? "ring-1 ring-rose-500/50" : ""
@@ -2888,7 +2892,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                     setFieldError("propertyTagline", check.error);
                                                 }
                                             }}
-                                            placeholder="e.g., Modern Urban Residences & Studios"
+                                            placeholder={t("e.g., Modern Urban Residences & Studios")}
                                             className={cn(
                                                 "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
                                                 touchedFields.propertyTagline && fieldErrors.propertyTagline ? "ring-1 ring-rose-500/50" : ""
@@ -2899,13 +2903,13 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 </div>
                             </GlassCard>
 
-                            <GlassCard title="Property Logo & Monogram" description="Upload a custom logo or customize your dynamic monogram badge.">
+                            <GlassCard title={t("Property Logo & Monogram")} description="Upload a custom logo or customize your dynamic monogram badge.">
                                 <div className="flex flex-col md:flex-row items-center gap-8 p-4">
                                     <div className="relative flex size-32 items-center justify-center rounded-[2rem] border-4 border-border/80 neumorphic-extruded overflow-hidden shrink-0 bg-surface-2 shadow-xl">
                                         {propertyLogoUrl ? (
                                             <Image 
                                                 src={propertyLogoUrl} 
-                                                alt="Property Logo" 
+                                                alt={t("Property Logo")} 
                                                 fill 
                                                 sizes="128px" 
                                                 className="object-cover" 
@@ -2923,10 +2927,10 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     <div className="flex-1 space-y-4 text-center md:text-left">
                                         <div>
                                             <h4 className="text-base font-black text-foreground">
-                                                {propertyLogoUrl ? "Custom Brand Logo Active" : "Dynamic Monogram Badge Active"}
+                                                {propertyLogoUrl ? t("Custom Brand Logo Active") : t("Dynamic Monogram Badge Active")}
                                             </h4>
                                             <p className="text-xs text-muted-foreground mt-1">
-                                                Supports PNG, JPG, SVG or WebP (up to 5MB). Automatically rendered across navigation bars, PDF invoices, and tenant invitation links.
+                                                {t("Supports PNG, JPG, SVG or WebP (up to 5MB). Automatically rendered across navigation bars, PDF invoices, and tenant invitation links.")}
                                             </p>
                                         </div>
 
@@ -2944,7 +2948,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-wider transition-all hover:scale-[1.02] active:scale-95"
                                             >
                                                 <Upload className="size-4" />
-                                                Upload Logo
+                                                {t("Upload Logo")}
                                             </button>
 
                                             {propertyLogoUrl && (
@@ -2954,7 +2958,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs font-bold transition-all"
                                                 >
                                                     <Trash2 className="size-4" />
-                                                    Reset to Monogram
+                                                    {t("Reset to Monogram")}
                                                 </button>
                                             )}
                                         </div>
@@ -2963,7 +2967,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                             </GlassCard>
 
                             <GlassCard 
-                                title="Turnkey Workspace Personalization Wizard" 
+                                title={t("Turnkey Workspace Personalization Wizard")} 
                                 description="Need to re-evaluate your visual theme, dynamic HSL color harmonies, or setup flow?"
                                 headerExtra={
                                     <Link
@@ -2971,12 +2975,12 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         className="inline-flex items-center gap-2 px-4 py-2 rounded-xl neumorphic-panel text-xs font-black uppercase tracking-wider text-foreground hover:text-primary transition-all active:scale-95 shadow-xs"
                                     >
                                         <SlidersHorizontal className="size-3.5 text-primary" />
-                                        <span>Re-run Setup Wizard</span>
+                                        <span>{t("Re-run Setup Wizard")}</span>
                                     </Link>
                                 }
                             >
                                 <div className="p-2 text-xs text-muted-foreground leading-relaxed">
-                                    The 3-step personalization wizard guides you through property identity, WCAG contrast verification, and theme setup. Running it in reconfiguration mode updates your branding and operational settings without affecting active leases or units.
+                                    {t("The 3-step personalization wizard guides you through property identity, WCAG contrast verification, and theme setup. Running it in reconfiguration mode updates your branding and operational settings without affecting active leases or units.")}
                                 </div>
                             </GlassCard>
                         </div>
@@ -2985,11 +2989,11 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 case "Dashboard Banner":
                     return (
                         <div className="space-y-8">
-                            <GlassCard title="Active Dashboard Banner Preview" description="This photo serves as the panoramic hero header of your landlord dashboard.">
+                            <GlassCard title={t("Active Dashboard Banner Preview")} description="This photo serves as the panoramic hero header of your landlord dashboard.">
                                 <div className="relative h-56 sm:h-64 w-full rounded-2xl overflow-hidden border border-border/80 shadow-2xl group">
                                     <Image
                                         src={bannerUrl}
-                                        alt="Banner Preview"
+                                        alt={t("Banner Preview")}
                                         fill
                                         sizes="(max-width: 1024px) 100vw, 800px"
                                         className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -2998,7 +3002,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
                                         <div>
                                             <span className="px-2.5 py-1 rounded-lg bg-primary/90 text-primary-foreground text-[10px] font-black uppercase tracking-widest">
-                                                Active Hero Header
+                                                {t("Active Hero Header")}
                                             </span>
                                             <h3 className="text-xl font-black text-white mt-2 drop-shadow-md">
                                                 {propertyTradeName || "Skyline Lofts"}
@@ -3013,13 +3017,13 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                             className="px-3 py-1.5 rounded-xl bg-black/60 hover:bg-black/90 text-white border border-white/20 backdrop-blur-md text-xs font-bold flex items-center gap-1.5 transition-all"
                                         >
                                             <RotateCcw className="size-3.5" />
-                                            Reset
+                                            {t("Reset")}
                                         </button>
                                     </div>
                                 </div>
                             </GlassCard>
 
-                            <GlassCard title="Architectural Preset Library" description="Select from 6 hand-curated ultra high-resolution architectural hero photos.">
+                            <GlassCard title={t("Architectural Preset Library")} description="Select from 6 hand-curated ultra high-resolution architectural hero photos.">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {CURATED_BANNER_PRESETS.map((preset) => {
                                         const isSelected = bannerUrl === preset.url;
@@ -3038,7 +3042,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                 <div className="relative h-28 w-full">
                                                     <Image
                                                         src={preset.url}
-                                                        alt={preset.name}
+                                                        alt={t(preset.name)}
                                                         fill
                                                         sizes="(max-width: 768px) 100vw, 300px"
                                                         className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -3051,10 +3055,10 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                     )}
                                                     <div className="absolute bottom-2 left-3 right-3">
                                                         <span className="text-[10px] font-black uppercase tracking-wider text-primary">
-                                                            {preset.category}
+                                                            {t(preset.category)}
                                                         </span>
                                                         <h4 className="text-xs font-bold text-white truncate">
-                                                            {preset.name}
+                                                            {t(preset.name)}
                                                         </h4>
                                                     </div>
                                                 </div>
@@ -3064,14 +3068,14 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 </div>
                             </GlassCard>
 
-                            <GlassCard title="Custom Photo Upload" description="Upload your property's real exterior or interior photography.">
+                            <GlassCard title={t("Custom Photo Upload")} description="Upload your property's real exterior or interior photography.">
                                 <div className="p-6 rounded-2xl border border-dashed border-border flex flex-col items-center justify-center text-center gap-3">
                                     <div className="size-12 rounded-2xl bg-surface-2 flex items-center justify-center text-primary border border-border">
                                         <Upload className="size-6" />
                                     </div>
                                     <div>
-                                        <h4 className="text-sm font-black text-foreground">Upload Photo File</h4>
-                                        <p className="text-xs text-muted-foreground mt-1">PNG, JPG or WebP up to 8MB</p>
+                                        <h4 className="text-sm font-black text-foreground">{t("Upload Photo File")}</h4>
+                                        <p className="text-xs text-muted-foreground mt-1">{t("PNG, JPG or WebP up to 8MB")}</p>
                                     </div>
                                     <input
                                         ref={bannerFileInputRef}
@@ -3085,7 +3089,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         onClick={() => bannerFileInputRef.current?.click()}
                                         className="mt-2 px-5 py-2.5 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-wider transition-all"
                                     >
-                                        Browse Device
+                                        {t("Browse Device")}
                                     </button>
                                 </div>
                             </GlassCard>
@@ -3104,8 +3108,8 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-black text-foreground">Personalization</h2>
-                    <p className="text-muted-foreground">Customize branding, themes, banner imagery & accessibility.</p>
+                    <h2 className="text-3xl font-black text-foreground">{t("Personalization")}</h2>
+                    <p className="text-muted-foreground">{t("Customize branding, themes, banner imagery & accessibility.")}</p>
                 </div>
 
                 <SubNav 
@@ -3153,7 +3157,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     >
                                         {tab === "Water" && <Droplets className="size-4" />}
                                         {tab === "Electricity" && <Zap className="size-4" />}
-                                        {tab} Configuration
+                                        {t(tab === "Water" ? "Water Configuration" : "Electricity Configuration")}
                                     </button>
                                 ))}
                             </div>
@@ -3180,8 +3184,8 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
             >
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
                     <div className="flex-1">
-                        <h2 className="text-3xl font-black text-foreground">Finance & Utilities</h2>
-                        <p className="text-muted-foreground">Configure how you receive payments and manage utility rates.</p>
+                        <h2 className="text-3xl font-black text-foreground">{t("Finance & Utilities")}</h2>
+                        <p className="text-muted-foreground">{t("Configure how you receive payments and manage utility rates.")}</p>
                     </div>
                     
                     {/* Property Selector */}
@@ -3189,7 +3193,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                         <div className="flex items-center gap-3 rounded-2xl neumorphic-panel p-1">
                             <div className="flex items-center gap-2 px-3 py-1">
                                 <Building2 className="size-4 text-primary" />
-                                <span className="text-xs font-black text-foreground whitespace-nowrap">Property:</span>
+                                <span className="text-xs font-black text-foreground whitespace-nowrap">{t("Property:")}</span>
                             </div>
                             <select
                                 value={selectedPropertyId}
@@ -3197,7 +3201,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 className="bg-transparent text-sm font-black text-foreground outline-none pr-8 py-2 cursor-pointer appearance-none"
                                 style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center', backgroundSize: '1rem' }}
                             >
-                                <option value="all" className="bg-surface-1 text-foreground">All Properties</option>
+                                <option value="all" className="bg-surface-1 text-foreground">{t("All Properties")}</option>
                                 {properties.map(p => (
                                     <option key={p.id} value={p.id} className="bg-surface-1 text-foreground">{p.name}</option>
                                 ))}
@@ -3228,13 +3232,13 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 case "Account":
                     return (
                         <GlassCard 
-                            title="Change Password" 
+                            title={t("Change Password")} 
                             description="Ensure your account is using a long, random password to stay secure."
                             headerExtra={
                                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
                                     <Clock className="size-3.5 shrink-0 text-primary" />
                                     <span>
-                                        Last updated:{" "}
+                                        {t("Last updated:")}{" "}
                                         <span className="font-bold text-foreground">
                                             {passwordLastUpdated ? (
                                                 <ClientOnlyDate 
@@ -3246,7 +3250,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                     }} 
                                                 />
                                             ) : (
-                                                "Never"
+                                                t("Never")
                                             )}
                                         </span>
                                     </span>
@@ -3259,7 +3263,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         <div className="flex items-center justify-between p-3.5 rounded-xl bg-white/[0.02] border border-white/5 text-xs text-muted-foreground">
                                             <div className="flex items-center gap-2">
                                                 <ShieldCheck className="size-4 text-emerald-400 shrink-0" />
-                                                <span>Password last modified</span>
+                                                <span>{t("Password last modified")}</span>
                                             </div>
                                             <span className="font-mono font-medium text-foreground">
                                                 <ClientOnlyDate 
@@ -3278,13 +3282,13 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 rounded-xl bg-red-500/[0.06] border border-red-500/20 text-xs">
                                             <div className="flex items-center gap-2 text-red-500 font-medium">
                                                 <AlertTriangle className="size-4 shrink-0" />
-                                                <span>Is this not you? Someone may have accessed your account.</span>
+                                                <span>{t("Is this not you? Someone may have accessed your account.")}</span>
                                             </div>
                                             <Link 
                                                 href={`/forgot-password?email=${encodeURIComponent(user?.email || profile?.email || "")}`}
                                                 className="inline-flex items-center gap-1 font-bold text-red-500 hover:text-red-400 hover:underline transition-colors shrink-0 cursor-pointer"
                                             >
-                                                <span>Reset password now &rarr;</span>
+                                                <span>{t("Reset password now")} &rarr;</span>
                                             </Link>
                                         </div>
                                     </div>
@@ -3329,7 +3333,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                             type="button"
                                             onClick={() => setShowNewPassword(!showNewPassword)}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 transition-colors cursor-pointer"
-                                            aria-label={showNewPassword ? "Hide password" : "Show password"}
+                                            aria-label={showNewPassword ? t("Hide password") : t("Show password")}
                                         >
                                             {showNewPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                         </button>
@@ -3342,8 +3346,8 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     return (
                                         <div className="space-y-2.5 rounded-xl neumorphic-panel p-3.5 animate-in fade-in duration-200">
                                             <div className="flex items-center justify-between text-xs">
-                                                <span className="font-bold text-muted-foreground">Password Strength:</span>
-                                                <span className={cn("font-black", strength.color)}>{strength.label}</span>
+                                                <span className="font-bold text-muted-foreground">{t("Password Strength:")}</span>
+                                                <span className={cn("font-black", strength.color)}>{t(strength.label)}</span>
                                             </div>
                                             <div className="grid grid-cols-4 gap-1.5">
                                                 {[1, 2, 3, 4].map((step) => (
@@ -3364,23 +3368,23 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                             <div className="grid grid-cols-2 gap-1.5 pt-1 text-[11px]">
                                                 <div className={cn("flex items-center gap-1.5 font-medium", strength.checks.hasMinLength ? "text-emerald-500" : "text-muted-foreground")}>
                                                     <CheckCircle2 className={cn("size-3 shrink-0", strength.checks.hasMinLength ? "text-emerald-500" : "opacity-40")} />
-                                                    <span>At least 8 characters</span>
+                                                    <span>{t("At least 8 characters")}</span>
                                                 </div>
                                                 <div className={cn("flex items-center gap-1.5 font-medium", strength.checks.hasUppercase ? "text-emerald-500" : "text-muted-foreground")}>
                                                     <CheckCircle2 className={cn("size-3 shrink-0", strength.checks.hasUppercase ? "text-emerald-500" : "opacity-40")} />
-                                                    <span>Uppercase letter</span>
+                                                    <span>{t("Uppercase letter")}</span>
                                                 </div>
                                                 <div className={cn("flex items-center gap-1.5 font-medium", strength.checks.hasLetter ? "text-emerald-500" : "text-muted-foreground")}>
                                                     <CheckCircle2 className={cn("size-3 shrink-0", strength.checks.hasLetter ? "text-emerald-500" : "opacity-40")} />
-                                                    <span>Letters</span>
+                                                    <span>{t("Letters")}</span>
                                                 </div>
                                                 <div className={cn("flex items-center gap-1.5 font-medium", strength.checks.hasNumberOrSymbol ? "text-emerald-500" : "text-muted-foreground")}>
                                                     <CheckCircle2 className={cn("size-3 shrink-0", strength.checks.hasNumberOrSymbol ? "text-emerald-500" : "opacity-40")} />
-                                                    <span>Number or symbol</span>
+                                                    <span>{t("Number or symbol")}</span>
                                                 </div>
                                                 <div className={cn("col-span-2 flex items-center gap-1.5 font-medium", (strength.checks.isNotCommon && strength.checks.isNotRepetitive && strength.checks.isNotPersonal) ? "text-emerald-500" : "text-muted-foreground")}>
                                                     <CheckCircle2 className={cn("size-3 shrink-0", (strength.checks.isNotCommon && strength.checks.isNotRepetitive && strength.checks.isNotPersonal) ? "text-emerald-500" : "opacity-40")} />
-                                                    <span>Not common, repetitive, or your name/email</span>
+                                                    <span>{t("Not common, repetitive, or your name/email")}</span>
                                                 </div>
                                             </div>
                                             {strength.error && (
@@ -3423,7 +3427,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                             type="button"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 transition-colors cursor-pointer"
-                                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                            aria-label={showConfirmPassword ? t("Hide password") : t("Show password")}
                                         >
                                             {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                         </button>
@@ -3431,7 +3435,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     {confirmNewPassword && !fieldErrors["confirmNewPassword"] && newPassword === confirmNewPassword && (
                                         <p className="px-1 text-[11px] font-bold text-emerald-500 flex items-center gap-1.5 animate-in fade-in">
                                             <CheckCircle2 className="size-3 shrink-0" />
-                                            <span>Passwords match</span>
+                                            <span>{t("Passwords match")}</span>
                                         </p>
                                     )}
                                 </SettingField>
@@ -3441,7 +3445,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     disabled={isUpdatingPassword || !newPassword || !confirmNewPassword}
                                     className="w-full rounded-2xl neumorphic-extruded py-3 text-sm font-black transition-all hover:text-primary disabled:opacity-50 cursor-pointer"
                                 >
-                                    {isUpdatingPassword ? "Updating Password..." : "Update Password"}
+                                    {isUpdatingPassword ? t("Updating Password...") : t("Update Password")}
                                 </button>
                             </form>
                         </GlassCard>
@@ -3462,14 +3466,14 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                     );
                 case "Sessions":
                     return (
-                        <GlassCard title="Active Sessions" description="Devices and browsers currently logged into your landlord account.">
+                        <GlassCard title={t("Active Sessions")} description="Devices and browsers currently logged into your landlord account.">
                             <div className="space-y-4 max-w-xl">
                                 {isSessionsLoading && sessions.length === 0 ? (
                                     <div className="text-center py-6 text-xs text-muted-foreground uppercase tracking-widest font-black flex items-center justify-center gap-2">
-                                        <RefreshCw className="size-4 animate-spin text-primary" /> Loading active sessions…
+                                        <RefreshCw className="size-4 animate-spin text-primary" /> {t("Loading active sessions…")}
                                     </div>
                                 ) : sessions.length === 0 ? (
-                                    <div className="text-center py-6 text-xs text-muted-foreground uppercase tracking-widest font-black">No active sessions found</div>
+                                    <div className="text-center py-6 text-xs text-muted-foreground uppercase tracking-widest font-black">{t("No active sessions found")}</div>
                                 ) : (
                                     sessions.map((sess) => {
                                         const deviceInfo = parseUserAgent(sess.user_agent);
@@ -3496,12 +3500,12 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                             <h4 className="text-sm font-black text-foreground truncate">{deviceInfo.label}</h4>
                                                             {isCurrent && (
                                                                 <span className="rounded-md bg-primary/20 px-2 py-0.5 text-[10px] font-black text-primary uppercase tracking-wider shrink-0">
-                                                                    This Device
+                                                                    {t("This Device")}
                                                                 </span>
                                                             )}
                                                         </div>
                                                         <p className="text-[11px] text-muted-foreground truncate">
-                                                            {isCurrent ? "Active now" : <>Last active <ClientOnlyDate date={sess.updated_at} format={{ month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }} /></>} • IP: {sess.ip || "Unknown IP"}
+                                                            {isCurrent ? t("Active now") : <>{t("Last active")} <ClientOnlyDate date={sess.updated_at} format={{ month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }} /></>} • IP: {sess.ip || t("Unknown IP")}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -3510,9 +3514,9 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                     <button
                                                         onClick={() => handleRevokeSession(sess.id)}
                                                         className="px-3 py-1.5 rounded-xl text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors shrink-0"
-                                                        title="Revoke this device"
+                                                        title={t("Revoke this device")}
                                                     >
-                                                        Revoke
+                                                        {t("Revoke")}
                                                     </button>
                                                 )}
                                             </div>
@@ -3527,7 +3531,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                             disabled={isSessionsLoading}
                                             className="flex items-center gap-2 text-xs font-black text-amber-500 hover:text-amber-400 transition-colors disabled:opacity-50"
                                         >
-                                            <LogOut className="size-3.5" /> Sign out all other devices
+                                            <LogOut className="size-3.5" /> {t("Sign out all other devices")}
                                         </button>
 
                                         <button 
@@ -3535,7 +3539,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                             disabled={isSessionsLoading}
                                             className="flex items-center gap-2 text-xs font-black text-red-500 hover:text-red-400 transition-colors disabled:opacity-50"
                                         >
-                                            <ShieldCheck className="size-3.5" /> Sign out of all devices (Global Reset)
+                                            <ShieldCheck className="size-3.5" /> {t("Sign out of all devices (Global Reset)")}
                                         </button>
                                     </div>
                                 )}
@@ -3553,8 +3557,8 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-black text-foreground">Security & Login</h2>
-                    <p className="text-muted-foreground">Protect your account and manage active sessions.</p>
+                    <h2 className="text-3xl font-black text-foreground">{t("Security & Login")}</h2>
+                    <p className="text-muted-foreground">{t("Protect your account and manage active sessions.")}</p>
                 </div>
 
                 <SubNav 
@@ -3577,8 +3581,8 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
             className="space-y-8"
         >
             <div>
-                <h2 className="text-3xl font-black text-foreground">Notifications</h2>
-                <p className="text-muted-foreground">Choose how and when you want to be alerted.</p>
+                <h2 className="text-3xl font-black text-foreground">{t("Notifications")}</h2>
+                <p className="text-muted-foreground">{t("Choose how and when you want to be alerted.")}</p>
             </div>
 
             <SubNav 
@@ -3592,9 +3596,9 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="border-b border-border/60 bg-surface-2/50">
-                                <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-muted-foreground">Activity Type</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground w-32">Email</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground w-32">Push</th>
+                                <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-muted-foreground">{t("Activity Type")}</th>
+                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground w-32">{t("Email")}</th>
+                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground w-32">{t("Push")}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border/40">
@@ -3607,8 +3611,8 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                             ].map((item) => (
                                 <tr key={item.key} className="transition-colors hover:bg-surface-2/50">
                                     <td className="px-8 py-6">
-                                        <h4 className="text-sm font-black text-foreground">{item.label}</h4>
-                                        <p className="text-xs text-muted-foreground">{item.desc}</p>
+                                        <h4 className="text-sm font-black text-foreground">{t(item.label)}</h4>
+                                        <p className="text-xs text-muted-foreground">{t(item.desc)}</p>
                                     </td>
                                     <td className="px-4 py-6 text-center">
                                         <div className="flex justify-center">
@@ -3636,7 +3640,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                             onClick={handleResetNotificationDefaults}
                             className="text-xs font-black text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                         >
-                            Reset to Defaults
+                            {t("Reset to Defaults")}
                         </button>
                     </div>
                 </GlassCard>
@@ -3650,12 +3654,12 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
             switch (currentSubTab) {
                 case "Export":
                     return (
-                        <GlassCard title="Data Export" description="Download structured business records in CSV (Excel) or JSON format.">
+                        <GlassCard title={t("Data Export")} description="Download structured business records in CSV (Excel) or JSON format.">
                             <div className="space-y-6 max-w-2xl">
                                 {/* Dataset Category */}
                                 <div className="space-y-3">
                                     <label className="text-xs font-black uppercase tracking-wider text-foreground/80">
-                                        Select Dataset
+                                        {t("Select Dataset")}
                                     </label>
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                         {[
@@ -3708,10 +3712,10 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                     </div>
                                                     <div>
                                                         <span className="text-xs font-black tracking-tight text-foreground block">
-                                                            {item.label}
+                                                            {t(item.label)}
                                                         </span>
                                                         <span className="text-[11px] text-muted-foreground mt-1 leading-snug block">
-                                                            {item.desc}
+                                                            {t(item.desc)}
                                                         </span>
                                                     </div>
                                                 </button>
@@ -3730,9 +3734,9 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                     onChange={(e) => setExportRange(e.target.value as ExportRange)}
                                                     className="w-full rounded-xl neumorphic-inset px-4 py-3 text-xs font-bold text-foreground focus:outline-none appearance-none cursor-pointer bg-transparent"
                                                 >
-                                                    <option value="ytd" className="bg-card text-foreground">Year to Date (2026)</option>
-                                                    <option value="12m" className="bg-card text-foreground">Past 12 Months</option>
-                                                    <option value="all" className="bg-card text-foreground">All Time (Full History)</option>
+                                                    <option value="ytd" className="bg-card text-foreground">{t("Year to Date (2026)")}</option>
+                                                    <option value="12m" className="bg-card text-foreground">{t("Past 12 Months")}</option>
+                                                    <option value="all" className="bg-card text-foreground">{t("All Time (Full History)")}</option>
                                                 </select>
                                                 <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                                             </div>
@@ -3740,8 +3744,8 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     ) : (
                                         <SettingField label="Date Range" icon={Calendar} description="All active records included">
                                             <div className="w-full rounded-xl neumorphic-inset px-4 py-3 text-xs font-bold text-muted-foreground flex items-center justify-between">
-                                                <span>Active Records</span>
-                                                <span className="text-[10px] uppercase font-black tracking-wider text-muted-foreground/80">Current State</span>
+                                                <span>{t("Active Records")}</span>
+                                                <span className="text-[10px] uppercase font-black tracking-wider text-muted-foreground/80">{t("Current State")}</span>
                                             </div>
                                         </SettingField>
                                     )}
@@ -3753,8 +3757,8 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                 onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
                                                 className="w-full rounded-xl neumorphic-inset px-4 py-3 text-xs font-bold text-foreground focus:outline-none appearance-none cursor-pointer bg-transparent"
                                             >
-                                                <option value="csv" className="bg-card text-foreground">CSV (Microsoft Excel / Spreadsheets)</option>
-                                                <option value="json" className="bg-card text-foreground">JSON (Raw Structured Data)</option>
+                                                <option value="csv" className="bg-card text-foreground">{t("CSV (Microsoft Excel / Spreadsheets)")}</option>
+                                                <option value="json" className="bg-card text-foreground">{t("JSON (Raw Structured Data)")}</option>
                                             </select>
                                             <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                                         </div>
@@ -3766,9 +3770,9 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     <div className="flex items-start gap-3 p-3.5 rounded-xl border border-amber-500/25 bg-amber-500/[0.08] text-xs">
                                         <AlertTriangle className="size-4 text-amber-500 shrink-0 mt-0.5" />
                                         <div className="space-y-0.5">
-                                            <p className="font-bold text-amber-600 dark:text-amber-400">Large Export Warning</p>
+                                            <p className="font-bold text-amber-600 dark:text-amber-400">{t("Large Export Warning")}</p>
                                             <p className="text-muted-foreground leading-relaxed">
-                                                Exporting all-time financial records will retrieve all historical invoices and payments. This may take longer to generate and result in a larger file.
+                                                {t("Exporting all-time financial records will retrieve all historical invoices and payments. This may take longer to generate and result in a larger file.")}
                                             </p>
                                         </div>
                                     </div>
@@ -3777,13 +3781,13 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 {/* Action & File Summary Bar */}
                                 <div className="pt-4 border-t border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <div className="text-xs text-muted-foreground">
-                                        <span className="font-bold text-foreground">Scope:</span>{" "}
+                                        <span className="font-bold text-foreground">{t("Scope:")}</span>{" "}
                                         {exportCategory === "financials"
-                                            ? "Financial Ledger"
+                                            ? t("Financial Ledger")
                                             : exportCategory === "properties"
-                                            ? "Property Portfolio"
-                                            : "Active Rent Roll"}
-                                        {exportCategory === "financials" && ` (${exportRange === "ytd" ? "YTD 2026" : exportRange === "12m" ? "Past 12M" : "All Time"})`}
+                                            ? t("Property Portfolio")
+                                            : t("Active Rent Roll")}
+                                        {exportCategory === "financials" && ` (${exportRange === "ytd" ? t("YTD 2026") : exportRange === "12m" ? t("Past 12M") : t("All Time")})`}
                                         {" • "}
                                         <span className="uppercase font-bold text-foreground">{exportFormat}</span>
                                     </div>
@@ -3797,12 +3801,12 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         {isExporting ? (
                                             <>
                                                 <Loader2 className="size-3.5 animate-spin" />
-                                                <span>Exporting...</span>
+                                                <span>{t("Exporting...")}</span>
                                             </>
                                         ) : (
                                             <>
                                                 <Download className="size-3.5" />
-                                                <span>Download {exportFormat.toUpperCase()}</span>
+                                                <span>{t("Download {format}", { format: exportFormat.toUpperCase() })}</span>
                                             </>
                                         )}
                                     </button>
@@ -3812,12 +3816,12 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                     );
                 case "Tour":
                     return (
-                        <GlassCard title="Product Mastery Quests" description="Reset your progress or manage your learning experience.">
+                        <GlassCard title={t("Product Mastery Quests")} description="Reset your progress or manage your learning experience.">
                             <div className="space-y-6 max-w-lg">
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
-                                        <h4 className="text-sm font-black text-foreground">Show Completed Quests</h4>
-                                        <p className="text-xs text-muted-foreground">Keep the mastery board visible even after completion.</p>
+                                        <h4 className="text-sm font-black text-foreground">{t("Show Completed Quests")}</h4>
+                                        <p className="text-xs text-muted-foreground">{t("Keep the mastery board visible even after completion.")}</p>
                                     </div>
                                     <ToggleSwitch 
                                         enabled={!!tourState?.metadata?.show_completed_quests} 
@@ -3826,15 +3830,15 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 </div>
                                 
                                 <div className="pt-6 border-t border-border/60">
-                                    <h4 className="text-sm font-black text-foreground">Hard Reset</h4>
-                                    <p className="mt-1 text-xs text-muted-foreground">This will wipe all tour progress and event logs, allowing you to start all quests from zero.</p>
+                                    <h4 className="text-sm font-black text-foreground">{t("Hard Reset")}</h4>
+                                    <p className="mt-1 text-xs text-muted-foreground">{t("This will wipe all tour progress and event logs, allowing you to start all quests from zero.")}</p>
                                     <button 
                                         onClick={handleHardResetTour}
                                         disabled={isResetting}
                                         className="mt-4 flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/5 px-6 py-3 text-sm font-black text-red-500 transition-all hover:bg-red-500/10 disabled:opacity-50"
                                     >
                                         <RotateCcw className="size-4" /> 
-                                        {isResetting ? "Resetting…" : "Reset All Quests"}
+                                        {isResetting ? t("Resetting…") : t("Reset All Quests")}
                                     </button>
                                 </div>
                             </div>
@@ -3842,20 +3846,20 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                     );
                 case "Danger":
                     return (
-                        <GlassCard className="border-red-500/20 bg-red-500/5 hover:bg-red-500/10" title="Danger Zone" description="Irreversible account actions.">
+                        <GlassCard className="border-red-500/20 bg-red-500/5 hover:bg-red-500/10" title={t("Danger Zone")} description="Irreversible account actions.">
                             <div className="space-y-6 max-w-lg">
                                 <div className="flex items-start gap-4">
                                     <div className="size-10 rounded-2xl bg-rose-500/20 text-rose-500 flex items-center justify-center shrink-0">
                                         <AlertTriangle className="size-5" />
                                     </div>
                                     <div>
-                                        <h4 className="text-base font-black text-rose-600 dark:text-rose-400">Delete Account</h4>
-                                        <p className="text-sm text-muted-foreground mt-1">Permanently delete your account and all associated data. This action cannot be undone.</p>
+                                        <h4 className="text-base font-black text-rose-600 dark:text-rose-400">{t("Delete Account")}</h4>
+                                        <p className="text-sm text-muted-foreground mt-1">{t("Permanently delete your account and all associated data. This action cannot be undone.")}</p>
                                     </div>
                                 </div>
 
                                 <div className="rounded-2xl neumorphic-inset p-4">
-                                    <h5 className="text-xs font-black uppercase tracking-wider text-foreground mb-3">What will be deleted:</h5>
+                                    <h5 className="text-xs font-black uppercase tracking-wider text-foreground mb-3">{t("What will be deleted:")}</h5>
                                     <ul className="space-y-2">
                                         {[
                                             "Your landlord profile and business credentials",
@@ -3866,7 +3870,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         ].map((text) => (
                                             <li key={text} className="flex items-center gap-2 text-xs text-muted-foreground">
                                                 <X className="size-3 text-rose-500 flex-shrink-0" />
-                                                <span>{text}</span>
+                                                <span>{t(text)}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -3878,7 +3882,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         onClick={() => setShowDeleteConfirm(true)}
                                         className="px-6 py-3 rounded-xl sm:rounded-2xl bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-black transition-all shadow-md cursor-pointer"
                                     >
-                                        I understand, delete my account
+                                        {t("I understand, delete my account")}
                                     </button>
                                 ) : (
                                     <motion.div
@@ -3887,13 +3891,13 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         className="space-y-4 border-t border-rose-500/20 pt-4"
                                     >
                                         <p className="text-xs text-muted-foreground">
-                                            Please type <span className="text-rose-600 dark:text-rose-400 font-mono font-black">DELETE</span> to confirm:
+                                            {t("Please type")} <span className="text-rose-600 dark:text-rose-400 font-mono font-black">DELETE</span> {t("to confirm:")}
                                         </p>
                                         <input maxLength={60}
                                             type="text"
                                             value={deleteConfirmText}
                                             onChange={(e) => setDeleteConfirmText(e.target.value)}
-                                            placeholder="Type DELETE"
+                                            placeholder={t("Type DELETE")}
                                             className="w-full max-w-xs rounded-xl neumorphic-inset border border-rose-500/30 px-4 py-3 text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-rose-500 transition-colors"
                                         />
                                         <div className="flex gap-3">
@@ -3908,14 +3912,14 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                         : "bg-muted text-muted-foreground cursor-not-allowed"
                                                 )}
                                             >
-                                                Permanently Delete
+                                                {t("Permanently Delete")}
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(""); }}
                                                 className="px-4 py-3 rounded-xl sm:rounded-2xl border border-border text-xs sm:text-sm font-black text-muted-foreground hover:text-foreground transition-all cursor-pointer"
                                             >
-                                                Cancel
+                                                {t("Cancel")}
                                             </button>
                                         </div>
                                     </motion.div>
@@ -3934,8 +3938,8 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-black text-foreground">Data & Privacy</h2>
-                    <p className="text-muted-foreground">Manage your data and account longevity.</p>
+                    <h2 className="text-3xl font-black text-foreground">{t("Data & Privacy")}</h2>
+                    <p className="text-muted-foreground">{t("Manage your data and account longevity.")}</p>
                 </div>
 
                 <SubNav 
@@ -3983,8 +3987,8 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                     <div className="size-8 rounded-full neumorphic-extruded flex items-center justify-center transition-all group-hover:scale-105 group-hover:text-primary">
                         <ChevronLeft className="size-4" />
                     </div>
-                    <span className="text-xs sm:text-sm font-black tracking-wide hidden sm:inline">Back to Dashboard</span>
-                    <span className="text-xs font-black tracking-wide sm:hidden">Dashboard</span>
+                    <span className="text-xs sm:text-sm font-black tracking-wide hidden sm:inline">{t("Back to Dashboard")}</span>
+                    <span className="text-xs font-black tracking-wide sm:hidden">{t("Dashboard")}</span>
                 </button>
 
                 <div className="flex items-center gap-2 sm:gap-3">
@@ -4000,39 +4004,39 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                         )}
                         title={
                             isSyncing
-                                ? "Syncing settings with database in the background..."
+                                ? t("Syncing settings with database in the background...")
                                 : syncError
-                                ? `Sync failed: ${syncError}`
+                                ? t("Sync failed: {error}", { error: syncError })
                                 : lastSyncedAt
-                                ? `Synced with cloud database (Last synced: ${lastSyncedAt.toLocaleTimeString()})`
-                                : "Synced with cloud database"
+                                ? t("Synced with cloud database (Last synced: {time})", { time: lastSyncedAt.toLocaleTimeString(locale) })
+                                : t("Synced with cloud database")
                         }
                     >
                         {isSyncing ? (
                             <>
                                 <RefreshCw className="size-3.5 animate-spin text-primary" />
-                                <span className="hidden sm:inline">Syncing with database…</span>
-                                <span className="sm:hidden">Syncing…</span>
+                                <span className="hidden sm:inline">{t("Syncing with database…")}</span>
+                                <span className="sm:hidden">{t("Syncing…")}</span>
                             </>
                         ) : syncError ? (
                             <>
                                 <AlertCircle className="size-3.5 text-rose-500" />
-                                <span className="hidden sm:inline">Sync Error</span>
-                                <span className="sm:hidden">Error</span>
+                                <span className="hidden sm:inline">{t("Sync Error")}</span>
+                                <span className="sm:hidden">{t("Error")}</span>
                             </>
                         ) : (
                             <>
                                 <CheckCircle2 className="size-3.5 text-emerald-500" />
-                                <span className="hidden sm:inline">Synced with cloud</span>
-                                <span className="sm:hidden">Synced</span>
+                                <span className="hidden sm:inline">{t("Synced with cloud")}</span>
+                                <span className="sm:hidden">{t("Synced")}</span>
                             </>
                         )}
                     </div>
 
                     <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-muted/40 border border-border/40 text-xs font-bold text-muted-foreground">
-                        <span>Control Center</span>
+                        <span>{t("Control Center")}</span>
                         <span className="text-muted-foreground/40">•</span>
-                        <span className="text-foreground font-black">{activeTab}</span>
+                        <span className="text-foreground font-black">{t(SIDEBAR_ITEMS.find(i => i.id === activeTab)?.label ?? activeTab)}</span>
                     </div>
                 </div>
             </div>
@@ -4046,11 +4050,10 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                         </div>
                         <div>
                             <h4 className="text-sm font-black text-rose-900 dark:text-rose-200">
-                                Unable to sync latest settings with the database
+                                {t("Unable to sync latest settings with the database")}
                             </h4>
                             <p className="text-xs text-rose-700/90 dark:text-rose-300/90 mt-0.5">
-                                Showing cached data. Background synchronization encountered an error ({syncError}).
-                                We recommend refreshing the page or retrying the sync.
+                                {t("Showing cached data. Background synchronization encountered an error ({error}). We recommend refreshing the page or retrying the sync.", { error: syncError })}
                             </p>
                         </div>
                     </div>
@@ -4062,7 +4065,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-rose-500/20 hover:bg-rose-500/30 text-rose-800 dark:text-rose-200 transition-colors cursor-pointer disabled:opacity-50"
                         >
                             <RefreshCw className={cn("size-3.5", isSyncing && "animate-spin")} />
-                            <span>Retry Sync</span>
+                            <span>{t("Retry Sync")}</span>
                         </button>
                         <button
                             type="button"
@@ -4070,7 +4073,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-colors cursor-pointer"
                         >
                             <RotateCcw className="size-3.5" />
-                            <span>Refresh Page</span>
+                            <span>{t("Refresh Page")}</span>
                         </button>
                     </div>
                 </div>
@@ -4085,9 +4088,9 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 <Layout className="size-4.5" />
                             </div>
                             <div>
-                                <h1 className="text-base font-black text-foreground leading-tight">Settings</h1>
+                                <h1 className="text-base font-black text-foreground leading-tight">{t("Settings")}</h1>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                    {SIDEBAR_ITEMS.find(i => i.id === activeTab)?.label}
+                                    {t(SIDEBAR_ITEMS.find(i => i.id === activeTab)?.label ?? "")}
                                 </p>
                             </div>
                         </div>
@@ -4095,7 +4098,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                         {/* Swipe / Slide affordance hint */}
                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-full border border-border/40 select-none">
                             <SlidersHorizontal className="size-3 text-primary/70" />
-                            <span>Swipe to reveal</span>
+                            <span>{t("Swipe to reveal")}</span>
                             <ChevronRight className="size-3 text-primary animate-pulse" />
                         </div>
                     </div>
@@ -4114,7 +4117,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     <button
                                         type="button"
                                         onClick={() => scrollMobileTabs("left")}
-                                        aria-label="Scroll tabs left"
+                                        aria-label={t("Scroll tabs left")}
                                         className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto"
                                     >
                                         <ChevronLeft className="size-3.5" />
@@ -4145,7 +4148,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         )}
                                     >
                                         <Icon className={cn("size-4 transition-transform", isActive ? "scale-110 text-primary" : "text-muted-foreground")} />
-                                        <span>{item.label}</span>
+                                        <span>{t(item.label)}</span>
                                         {isActive && (
                                             <span className="size-1.5 rounded-full bg-primary" />
                                         )}
@@ -4167,8 +4170,8 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     <button
                                         type="button"
                                         onClick={() => scrollMobileTabs("right")}
-                                        aria-label="Scroll tabs right"
-                                        title="Slide to view more tabs"
+                                        aria-label={t("Scroll tabs right")}
+                                        title={t("Slide to view more tabs")}
                                         className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto animate-pulse hover:animate-none"
                                     >
                                         <ChevronRight className="size-3.5" />
@@ -4191,8 +4194,8 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                             </div>
                             {!isSidebarCollapsed && (
                                 <div>
-                                    <h1 className="text-xl font-black text-foreground">Settings</h1>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Control Center</p>
+                                    <h1 className="text-xl font-black text-foreground">{t("Settings")}</h1>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Control Center")}</p>
                                 </div>
                             )}
                         </div>
@@ -4201,7 +4204,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 type="button"
                                 onClick={() => setIsSidebarCollapsed(true)}
                                 className="size-8 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all cursor-pointer"
-                                title="Collapse sidebar"
+                                title={t("Collapse sidebar")}
                             >
                                 <ChevronLeft className="size-4" />
                             </button>
@@ -4214,7 +4217,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 type="button"
                                 onClick={() => setIsSidebarCollapsed(false)}
                                 className="size-8 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all cursor-pointer"
-                                title="Expand sidebar"
+                                title={t("Expand sidebar")}
                             >
                                 <ChevronRight className="size-4" />
                             </button>
@@ -4230,7 +4233,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     key={item.id}
                                     type="button"
                                     onClick={() => handleTabChange(item.id)}
-                                    title={isSidebarCollapsed ? `${item.label} — ${item.description}` : undefined}
+                                    title={isSidebarCollapsed ? `${t(item.label)} — ${t(item.description)}` : undefined}
                                     className={cn(
                                         "group relative flex flex-col transition-all duration-300 text-left cursor-pointer",
                                         isSidebarCollapsed
@@ -4253,10 +4256,10 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     {!isSidebarCollapsed && (
                                         <>
                                             <span className={cn("mt-3 text-sm font-black transition-colors", isActive ? "text-primary" : "text-foreground group-hover:text-primary")}>
-                                                {item.label}
+                                                {t(item.label)}
                                             </span>
                                             <span className="text-[10px] font-medium text-muted-foreground mt-0.5 line-clamp-1">
-                                                {item.description}
+                                                {t(item.description)}
                                             </span>
                                         </>
                                     )}
@@ -4297,7 +4300,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                     isOpen={isPrimaryColorPickerOpen}
                     onClose={() => setIsPrimaryColorPickerOpen(false)}
                     color={brandPrimaryHex}
-                    title="Primary Brand Accent"
+                    title={t("Primary Brand Accent")}
                     onChange={(newColor) => {
                         setHasUserEdited(true);
                         setBrandPrimaryHex(newColor);
@@ -4309,7 +4312,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                     isOpen={isSecondaryColorPickerOpen}
                     onClose={() => setIsSecondaryColorPickerOpen(false)}
                     color={brandSecondaryHex}
-                    title="Secondary Ambient Accent"
+                    title={t("Secondary Ambient Accent")}
                     onChange={(newColor) => {
                         setHasUserEdited(true);
                         setBrandSecondaryHex(newColor);
@@ -4369,15 +4372,15 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                             {justSaved && !isDirty && !isSaving ? (
                                 <div className="flex items-center gap-2 px-3 py-1.5 text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                                     <CheckCircle className="size-4 text-emerald-500" />
-                                    <span>All Changes Saved</span>
+                                    <span>{t("All Changes Saved")}</span>
                                 </div>
                             ) : (
                                 <>
                                     {/* Unsaved status badge */}
                                     <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/30 text-[11px] sm:text-xs font-black shrink-0">
                                         <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
-                                        <span className="hidden sm:inline">Unsaved Changes</span>
-                                        <span className="sm:hidden">Unsaved</span>
+                                        <span className="hidden sm:inline">{t("Unsaved Changes")}</span>
+                                        <span className="sm:hidden">{t("Unsaved")}</span>
                                     </div>
 
                                     {/* Discard button */}
@@ -4386,10 +4389,10 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         onClick={handleDiscardChanges}
                                         disabled={isSaving}
                                         className="flex items-center gap-1 px-2.5 sm:px-3 py-2 text-xs font-black text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-                                        title="Discard all pending changes"
+                                        title={t("Discard all pending changes")}
                                     >
                                         <RotateCcw className="size-3.5" />
-                                        <span className="hidden sm:inline">Discard</span>
+                                        <span className="hidden sm:inline">{t("Discard")}</span>
                                     </button>
 
                                     {/* Save All Changes Button */}
@@ -4402,13 +4405,13 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         {isSaving ? (
                                             <>
                                                 <Loader2 className="size-4 animate-spin" />
-                                                <span>Saving…</span>
+                                                <span>{t("Saving…")}</span>
                                             </>
                                         ) : (
                                             <>
                                                 <Save className="size-4" />
-                                                <span className="hidden sm:inline">Save All Changes</span>
-                                                <span className="sm:hidden">Save</span>
+                                                <span className="hidden sm:inline">{t("Save All Changes")}</span>
+                                                <span className="sm:hidden">{t("Save")}</span>
                                             </>
                                         )}
                                     </button>

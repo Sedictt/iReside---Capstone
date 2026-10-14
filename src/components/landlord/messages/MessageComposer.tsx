@@ -20,6 +20,7 @@ import Picker from '@emoji-mart/react';
 import { Skeleton } from "@/components/ui/Skeleton";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 
 interface MessageComposerProps {
@@ -54,6 +55,7 @@ export function MessageComposer({
     onOpenQuickActions,
 }: MessageComposerProps) {
     const { resolvedTheme } = useTheme();
+    const { t } = useLanguageContext();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -133,7 +135,7 @@ export function MessageComposer({
                             <span className="size-1.5 rounded-full bg-primary animate-bounce" />
                         </div>
                         <span className="text-[10px] font-black text-primary uppercase tracking-wider">
-                            {otherUserName || "Someone"} is typing…
+                            {t("{name} is typing…", { name: otherUserName || t("Someone") })}
                         </span>
                     </motion.div>
                 )}
@@ -152,7 +154,7 @@ export function MessageComposer({
                                 <div key={att.id || `pending-att-${idx}`} className="relative group">
                                     <div className="size-16 rounded-xl overflow-hidden border border-divider bg-surface-3 relative">
                                         {att.isImage && att.previewUrl ? (
-                                            <Image src={att.previewUrl} fill sizes="80px" className="object-cover" alt="Preview" />
+                                            <Image src={att.previewUrl} fill sizes="80px" className="object-cover" alt={t("Preview")} />
                                         ) : (
                                             <div className="h-full w-full flex items-center justify-center">
                                                 <Paperclip className="size-6 text-medium" />
@@ -163,7 +165,7 @@ export function MessageComposer({
                                             <div className="absolute inset-0 bg-black/45 flex flex-col items-center justify-center backdrop-blur-[1px] text-white">
                                                 <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin mb-1" />
                                                 <span className="text-[8px] font-black uppercase tracking-wider">
-                                                    {typeof att.progress === 'number' && att.progress > 0 && att.progress < 100 ? `${att.progress}%` : "Readying…"}
+                                                    {typeof att.progress === 'number' && att.progress > 0 && att.progress < 100 ? `${att.progress}%` : t("Readying…")}
                                                 </span>
                                             </div>
                                         )}
@@ -177,6 +179,7 @@ export function MessageComposer({
                                     
                                     <button 
                                         onClick={() => removePendingAttachment(att.id)}
+                                        aria-label={t("Remove attachment")}
                                         className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-90 transition-transform z-10"
                                     >
                                         <X className="size-3" />
@@ -205,8 +208,8 @@ export function MessageComposer({
                                     ? "bg-primary/20 text-primary scale-105" 
                                     : "hover:bg-surface-3 text-medium hover:text-high"
                             )}
-                            title="Attach files, invoices, or quick actions"
-                            aria-label="Attachment options"
+                            title={t("Attach files, invoices, or quick actions")}
+                            aria-label={t("Attachment options")}
                         >
                             <Paperclip className="size-5" />
                         </button>
@@ -221,7 +224,7 @@ export function MessageComposer({
                                     className="absolute bottom-full left-0 mb-3 z-50 w-64 rounded-3xl border border-border bg-card p-2 shadow-2xl animate-in fade-in zoom-in-95 backdrop-blur-md"
                                 >
                                     <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-disabled">
-                                        Attachments & Actions
+                                        {t("Attachments & Actions")}
                                     </div>
 
                                     <button
@@ -237,10 +240,10 @@ export function MessageComposer({
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <div className="text-xs font-black text-high group-hover:text-primary transition-colors">
-                                                Upload File or Photo
+                                                {t("Upload File or Photo")}
                                             </div>
                                             <div className="text-[10px] font-medium text-disabled">
-                                                Images, documents, or PDFs
+                                                {t("Images, documents, or PDFs")}
                                             </div>
                                         </div>
                                     </button>
@@ -259,10 +262,10 @@ export function MessageComposer({
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <div className="text-xs font-black text-high group-hover:text-primary transition-colors">
-                                                    Attach Bill / Invoice
+                                                    {t("Attach Bill / Invoice")}
                                                 </div>
                                                 <div className="text-[10px] font-medium text-disabled">
-                                                    Send invoice directly to chat
+                                                    {t("Send invoice directly to chat")}
                                                 </div>
                                             </div>
                                         </button>
@@ -282,10 +285,10 @@ export function MessageComposer({
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <div className="text-xs font-black text-high group-hover:text-primary transition-colors">
-                                                    Quick Actions
+                                                    {t("Quick Actions")}
                                                 </div>
                                                 <div className="text-[10px] font-medium text-disabled">
-                                                    Payment request, notice, repairs
+                                                    {t("Payment request, notice, repairs")}
                                                 </div>
                                             </div>
                                         </button>
@@ -306,7 +309,7 @@ export function MessageComposer({
                                 preset: "chat_attachment",
                                 multiple: true,
                                 maxSizeBytes: 25 * 1024 * 1024,
-                                notify: (msg, desc) => toast.error(msg, { description: desc }),
+                                notify: (msg, desc) => toast.error(t(msg), { description: desc ? t(desc) : desc }),
                             });
                             if (validFiles && validFiles.length > 0) {
                                 onFileUpload(validFiles);
@@ -319,7 +322,7 @@ export function MessageComposer({
                         value={messageInput}
                         onChange={(e) => setMessageInput(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder={pendingAttachments.length > 0 ? "Add a caption…" : "Type a message…"}
+                        placeholder={pendingAttachments.length > 0 ? t("Add a caption…") : t("Type a message…")}
                         className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2.5 max-h-[120px] resize-none text-high placeholder:text-disabled appearance-none shadow-none"
                         style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
                         rows={1}
@@ -332,12 +335,13 @@ export function MessageComposer({
                                 "p-2.5 rounded-full transition-colors text-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
                                 showEmojiPicker ? "bg-primary/20 text-primary" : "hover:bg-surface-3"
                             )}
-                            title="Add emoji"
+                            title={t("Add emoji")}
                         >
                             <Smile className="size-5" />
                         </button>
                         <button 
                             onClick={onSendMessage}
+                            aria-label={t("Send message")}
                             disabled={(!messageInput.trim() && pendingAttachments.length === 0) || isSending}
                             className={cn(
                                 "p-2.5 rounded-full transition-all flex items-center justify-center min-w-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
@@ -376,16 +380,16 @@ export function MessageComposer({
                         {isUploadingFile ? (
                             <span className="text-primary animate-pulse flex items-center gap-2">
                                 <Zap className="size-3" />
-                                Processing uploads…
+                                {t("Processing uploads…")}
                             </span>
                         ) : pendingAttachments.length > 0 ? (
                             <span className="text-primary font-black">
-                                {pendingAttachments.length} {pendingAttachments.length === 1 ? 'file' : 'files'} selected
+                                {pendingAttachments.length === 1 ? t("{count} file selected", { count: 1 }) : t("{count} files selected", { count: pendingAttachments.length })}
                             </span>
                         ) : (
                             <span className="flex items-center gap-1.5">
                                 <Zap className="size-3 text-primary" />
-                                Shift+Enter for newline
+                                {t("Shift+Enter for newline")}
                             </span>
                         )}
                     </div>

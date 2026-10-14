@@ -4,6 +4,7 @@ import Image from "next/image"
 import { m as motion } from "framer-motion"
 import { Search, Flag, Bell, Building2, ChevronDown, Check, Megaphone, MessageCircle, Bookmark } from "lucide-react"
 import { ComponentType } from "react"
+import { useLanguageContext } from "@/context/LanguageContext"
 
 interface TabButtonProps {
     active: boolean
@@ -54,6 +55,7 @@ export function CommunityHeader({
     userInitial,
     pendingCount
 }: CommunityHeaderProps) {
+    const { t } = useLanguageContext()
     return (
         <div className="space-y-8">
             <header className="relative overflow-hidden rounded-[2.5rem] p-8 md:p-12 neumorphic-panel">
@@ -80,7 +82,7 @@ export function CommunityHeader({
                                     <div className="flex items-center gap-2 overflow-hidden">
                                         <Building2 className="size-4 shrink-0 text-primary" />
                                         <span className="truncate">
-                                            {managementProperties.find(p => p.id === selectedPropertyId)?.name || 'Select Property'}
+                                            {managementProperties.find(p => p.id === selectedPropertyId)?.name || t('Select Property')}
                                         </span>
                                     </div>
                                     <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${isPropertyDropdownOpen ? 'rotate-180' : ''}`} />
@@ -132,7 +134,7 @@ export function CommunityHeader({
                                 <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                                 <input maxLength={60}
                                     type="text"
-                                    placeholder="Search discussions..."
+                                    placeholder={t("Search discussions...")}
                                     value={searchQuery}
                                     onChange={(e) => onSearchChange(e.target.value)}
                                     className="w-full py-3 pl-10 pr-4 text-sm outline-none transition-all neumorphic-inset rounded-full"
@@ -146,11 +148,11 @@ export function CommunityHeader({
                                         ? 'neumorphic-primary text-primary-foreground' 
                                         : 'neumorphic-extruded text-muted-foreground'
                                     }`}
-                                    title="Community Rules"
+                                    title={t("Community Rules")}
                                 >
                                     <Flag className="size-5" />
                                 </button>
-                                <button className="flex size-12 items-center justify-center rounded-full transition-all neumorphic-extruded text-muted-foreground">
+                                <button className="flex size-12 items-center justify-center rounded-full transition-all neumorphic-extruded text-muted-foreground" aria-label={t("Notifications")}>
                                     <Bell className="size-5" />
                                 </button>
                                 <div
@@ -158,7 +160,7 @@ export function CommunityHeader({
                                     style={{ backgroundColor: profile?.avatar_bg_color || undefined }}
                                 >
                                     {profile?.avatar_url ? (
-                                        <Image src={profile.avatar_url} alt="Profile" fill className="object-cover" />
+                                        <Image src={profile.avatar_url} alt={t("Profile")} fill className="object-cover" />
                                     ) : (
                                         <span className="font-black text-foreground dark:text-white">{userInitial}</span>
                                     )}
@@ -174,20 +176,20 @@ export function CommunityHeader({
                     active={activeTab === "live"}
                     onClick={() => onTabChange("live")}
                     icon={Megaphone}
-                    label="Live Feed"
+                    label={t("Live Feed")}
                 />
                 <TabButton
                     active={activeTab === "mine"}
                     onClick={() => onTabChange("mine")}
                     icon={MessageCircle}
-                    label="My Posts"
+                    label={t("My Posts")}
                 />
                 {isManagementUser && (
                     <TabButton
                         active={activeTab === "approvals"}
                         onClick={() => onTabChange("approvals")}
                         icon={Check}
-                        label="Approvals"
+                        label={t("Approvals")}
                         badge={pendingCount}
                     />
                 )}
@@ -195,7 +197,7 @@ export function CommunityHeader({
                     active={activeTab === "saved"}
                     onClick={() => onTabChange("saved")}
                     icon={Bookmark}
-                    label="Saved"
+                    label={t("Saved")}
                 />
             </nav>
         </div>

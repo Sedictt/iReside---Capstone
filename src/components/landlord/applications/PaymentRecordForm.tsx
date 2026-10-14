@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import type { PaymentMethod } from "@/types/database";
 import { DollarSign, Hash, Calendar, Wallet, CheckCircle2, Clock } from "lucide-react";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface PaymentRecordFormProps {
   label: string;
@@ -42,14 +43,15 @@ export function PaymentRecordForm({
   status,
   onStatusChange,
 }: PaymentRecordFormProps) {
+  const { t } = useLanguageContext();
   return (
     <div className="group relative flex flex-col gap-6 rounded-[2rem] border border-border bg-card/30 p-6 transition-all duration-500 hover:bg-card/50 hover:border-primary/30 shadow-sm">
       {/* Compact Header */}
       <div className="flex items-center justify-between border-b border-border/40 pb-4">
         <div className="space-y-0.5">
-          <p className="text-[9px] font-black uppercase tracking-[0.4em] text-primary/80">Ledger Entry</p>
+          <p className="text-[9px] font-black uppercase tracking-[0.4em] text-primary/80">{t("Ledger Entry")}</p>
           <h3 className="text-lg font-black tracking-tight text-foreground">
-              {label}
+              {t(label)}
           </h3>
         </div>
         <div className={cn(
@@ -59,7 +61,7 @@ export function PaymentRecordForm({
                 : "bg-amber-500/10 border-amber-500/20 text-amber-500"
         )}>
             {status === "completed" ? <CheckCircle2 size={12} strokeWidth={3} /> : <Clock size={12} strokeWidth={3} />}
-            {status}
+            {t(status)}
         </div>
       </div>
 
@@ -67,7 +69,7 @@ export function PaymentRecordForm({
         {/* Amount */}
         <div className="space-y-2">
           <label htmlFor="amount-due" className="ml-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-            Amount Due
+            {t("Amount Due")}
           </label>
           <div className="relative isolate group/input">
             <div className="absolute inset-0 -z-10 rounded-xl border border-border bg-background/40 transition-all duration-300 group-focus-within/input:bg-background group-focus-within/input:border-primary/50" />
@@ -100,7 +102,7 @@ export function PaymentRecordForm({
         {/* Method */}
         <div className="space-y-2">
           <label htmlFor="payment-method" className="ml-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-            Method
+            {t("Method")}
           </label>
           <div className="relative isolate group/input">
             <div className="absolute inset-0 -z-10 rounded-xl border border-border bg-background/40 transition-all duration-300 group-focus-within/input:bg-background group-focus-within/input:border-primary/50" />
@@ -114,9 +116,9 @@ export function PaymentRecordForm({
               required
               className="h-12 w-full appearance-none bg-transparent pl-11 pr-10 text-sm font-black tracking-tight text-foreground outline-none cursor-pointer"
             >
-              <option value="" disabled>Choose Method</option>
+              <option value="" disabled>{t("Choose Method")}</option>
               {PAYMENT_METHODS.map((m) => (
-                <option key={m.value} value={m.value} className="bg-neutral-900 text-foreground">{m.label}</option>
+                <option key={m.value} value={m.value} className="bg-neutral-900 text-foreground">{t(m.label)}</option>
               ))}
             </select>
             <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-muted-foreground/40">
@@ -128,7 +130,7 @@ export function PaymentRecordForm({
         {/* Reference */}
         <div className="space-y-2">
           <label htmlFor="ref-number" className="ml-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-            Ref Number
+            {t("Ref Number")}
           </label>
           <div className="relative isolate group/input">
             <div className="absolute inset-0 -z-10 rounded-xl border border-border bg-background/40 transition-all duration-300 group-focus-within/input:bg-background group-focus-within/input:border-primary/50" />
@@ -141,7 +143,7 @@ export function PaymentRecordForm({
               type="text"
               value={referenceNumber}
               onChange={(e) => onReferenceChange(e.target.value)}
-              placeholder="e.g. TRN-123"
+              placeholder={t("e.g. TRN-123")}
               className="h-12 w-full bg-transparent pl-11 pr-4 text-sm font-black tracking-tight text-foreground outline-none"
             />
           </div>
@@ -150,7 +152,7 @@ export function PaymentRecordForm({
         {/* Date */}
         <div className="space-y-2">
           <label htmlFor="payment-date" className="ml-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-            Payment Date
+            {t("Payment Date")}
           </label>
           <div className="relative isolate group/input">
             <div className="absolute inset-0 -z-10 rounded-xl border border-border bg-background/40 transition-all duration-300 group-focus-within/input:bg-background group-focus-within/input:border-primary/50" />
@@ -183,7 +185,7 @@ export function PaymentRecordForm({
           )}
         >
           <CheckCircle2 size={14} strokeWidth={3} />
-          Received
+          {t("Received")}
         </button>
         <button
           type="button"
@@ -196,7 +198,7 @@ export function PaymentRecordForm({
           )}
         >
           <Clock size={14} strokeWidth={3} />
-          Pending
+          {t("Pending")}
         </button>
       </div>
     </div>

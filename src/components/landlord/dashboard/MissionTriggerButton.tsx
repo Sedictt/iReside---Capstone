@@ -15,7 +15,7 @@ interface MissionTriggerButtonProps {
 }
 
 export function MissionTriggerButton({ onOpen, className }: MissionTriggerButtonProps) {
-    const { isFilipino } = useLanguage();
+    const { t } = useLanguage();
     const [state, setState] = useState<LandlordProductTourState | null>(null);
 
     const fetchState = useCallback(async () => {
@@ -57,8 +57,8 @@ export function MissionTriggerButton({ onOpen, className }: MissionTriggerButton
     const strokeDashoffset = circumference - (Math.min(100, Math.max(0, progress)) / 100) * circumference;
 
     const labelText = isCompleted
-        ? (isFilipino ? "Kumpleto na ang Setup (100%)" : "Setup Complete (100%)")
-        : (isFilipino ? `Gabay sa Setup (${progress}% Tapos Na)` : `Setup Guide (${progress}% Done)`);
+        ? t("Setup Complete (100%)")
+        : t("Setup Guide ({progress}% Done)", { progress });
 
     return (
         <button

@@ -2,6 +2,7 @@
 
 import { m as motion } from "framer-motion"
 import { Megaphone, ChevronUp, ChevronDown, Clock, Trash2 } from "lucide-react"
+import { useLanguageContext } from "@/context/LanguageContext"
 
 interface CommunityAnnouncementProps {
     announcement: any
@@ -22,6 +23,7 @@ export function CommunityAnnouncement({
     canDelete,
     onDelete
 }: CommunityAnnouncementProps) {
+    const { t } = useLanguageContext()
     if (!announcement || !config) return null
 
     if (isCollapsed) {
@@ -44,17 +46,17 @@ export function CommunityAnnouncement({
                         }
                     }}
                     className="group relative flex cursor-pointer items-center justify-between gap-3 overflow-hidden rounded-2xl p-3 sm:px-5 neumorphic-panel transition-all hover:scale-[1.005] active:scale-[0.995]"
-                    title="Announcement minimized - Click to expand"
+                    title={t("Announcement minimized - Click to expand")}
                 >
                     <div className="flex min-w-0 flex-1 items-center gap-3">
                         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${config.bg} ${config.color}`}>
                             <Megaphone className="size-4" />
                         </div>
                         <span className={`hidden sm:inline-block shrink-0 rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${config.color} ${config.bg} border border-current opacity-80`}>
-                            {config.badge}
+                            {t(config.badge)}
                         </span>
                         <span className="truncate text-sm font-bold text-foreground dark:text-white">
-                            {announcement.title || "Community Announcement"}
+                            {announcement.title || t("Community Announcement")}
                         </span>
                         {announcement.content && (
                             <span className="hidden md:inline-block truncate text-xs text-muted-foreground/80 max-w-sm">
@@ -65,7 +67,7 @@ export function CommunityAnnouncement({
 
                     <div className="flex shrink-0 items-center gap-2">
                         <span className="hidden sm:inline text-xs font-semibold text-muted-foreground group-hover:text-primary transition-colors">
-                            Expand
+                            {t("Expand")}
                         </span>
                         <div className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground group-hover:text-primary transition-colors neumorphic-extruded">
                             <ChevronDown className="size-4" />
@@ -75,12 +77,12 @@ export function CommunityAnnouncement({
                                 type="button"
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    if (confirm("Are you sure you want to delete this announcement?")) {
+                                    if (confirm(t("Are you sure you want to delete this announcement?"))) {
                                         onDelete(announcement.id);
                                     }
                                 }}
                                 className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-red-500 transition-colors neumorphic-extruded ml-1"
-                                title="Delete announcement"
+                                title={t("Delete announcement")}
                             >
                                 <Trash2 className="size-3.5" />
                             </button>
@@ -105,12 +107,12 @@ export function CommunityAnnouncement({
                         <button
                             type="button"
                             onClick={() => {
-                                if (confirm("Are you sure you want to delete this announcement?")) {
+                                if (confirm(t("Are you sure you want to delete this announcement?"))) {
                                     onDelete(announcement.id);
                                 }
                             }}
                             className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:text-red-500 transition-colors neumorphic-extruded"
-                            title="Delete announcement"
+                            title={t("Delete announcement")}
                         >
                             <Trash2 className="size-4" />
                         </button>
@@ -119,7 +121,7 @@ export function CommunityAnnouncement({
                         type="button"
                         onClick={() => onToggle(true)}
                         className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors neumorphic-extruded"
-                        title="Minimize announcement"
+                        title={t("Minimize announcement")}
                     >
                         <ChevronUp className="size-4" />
                     </button>
@@ -133,7 +135,7 @@ export function CommunityAnnouncement({
                     <div className="flex-1 space-y-2 pr-20 md:pr-24">
                         <div className="flex items-center gap-3">
                             <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${config.color} ${config.bg} border border-current opacity-80`}>
-                                {config.badge}
+                                {t(config.badge)}
                             </span>
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                 <Clock className="h-3 w-3" />
@@ -141,7 +143,7 @@ export function CommunityAnnouncement({
                             </div>
                         </div>
                         <h2 className="text-xl font-black tracking-tight text-foreground dark:text-white">
-                            {announcement.title || "Community Announcement"}
+                            {announcement.title || t("Community Announcement")}
                         </h2>
                         <p className="text-base leading-relaxed text-muted-foreground dark:text-white/70">
                             {announcement.content}

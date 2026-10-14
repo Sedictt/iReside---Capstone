@@ -1,3 +1,5 @@
+import { useLanguageContext } from "@/context/LanguageContext";
+
 interface PolicyConfirmationProps {
     policyConfirmed: boolean;
     isFinalApproval: boolean;
@@ -9,13 +11,13 @@ export function PolicyConfirmation({
     isFinalApproval,
     onPolicyConfirmedChange,
 }: PolicyConfirmationProps) {
+    const { t } = useLanguageContext();
     return (
         <>
             <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-4 text-xs text-amber-100">
-                <p className="font-black mb-1">Policy enforcement</p>
+                <p className="font-black mb-1">{t("Policy enforcement")}</p>
                 <p>
-                    Approval creates pending invoices only. Move-in payment completion is counted after
-                    landlord-confirmed proof, not at application submission.
+                    {t("Approval creates pending invoices only. Move-in payment completion is counted after landlord-confirmed proof, not at application submission.")}
                 </p>
             </div>
 
@@ -28,8 +30,7 @@ export function PolicyConfirmation({
                         className="mt-0.5 size-4 rounded border-white/20 bg-transparent"
                     />
                     <span className="text-xs text-neutral-300 leading-relaxed">
-                        I confirm this should start payment-pending stage and send the payment portal
-                        link to the prospect.
+                        {t("I confirm this should start payment-pending stage and send the payment portal link to the prospect.")}
                     </span>
                 </label>
             )}

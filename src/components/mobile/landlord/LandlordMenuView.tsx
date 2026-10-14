@@ -35,6 +35,7 @@ import { useNotifications } from '@/context/NotificationContext'
 import { useLandlordSetup } from '@/hooks/useLandlordSetup'
 import { triggerHaptic } from '@/lib/haptics'
 import { cn } from '@/lib/utils'
+import { useLanguageContext } from '@/context/LanguageContext'
 import { signOut } from '@/lib/supabase/client-auth'
 import { toast } from 'sonner'
 
@@ -59,6 +60,7 @@ export function LandlordMenuView() {
     const router = useRouter()
     const { counts, importantNotifications } = useNotifications()
     const setup = useLandlordSetup()
+    const { t } = useLanguageContext()
 
     const [showLogoutModal, setShowLogoutModal] = useState(false)
     const isTenantSetupDelayed = Boolean(setup.steps.find((step) => step.id === 'first_tenant')?.deferred)
@@ -240,8 +242,8 @@ export function LandlordMenuView() {
             e.preventDefault()
             toast.warning(
                 setup.lockStage === 'no_property'
-                    ? 'Property setup required. Please complete your property setup first to unlock portal operations.'
-                    : 'Unit map setup required. Please configure your property unit layout first to unlock portal operations.'
+                    ? t('Property setup required. Please complete your property setup first to unlock portal operations.')
+                    : t('Unit map setup required. Please configure your property unit layout first to unlock portal operations.')
             )
         }
     }
@@ -270,7 +272,7 @@ export function LandlordMenuView() {
                 <div key={section.category} className="space-y-2">
                     <div className="px-2 pt-1 flex items-center justify-between">
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">
-                            {section.category}
+                            {t(section.category)}
                         </span>
                     </div>
 
@@ -290,11 +292,11 @@ export function LandlordMenuView() {
                                         </div>
                                         <div className="flex flex-col min-w-0 flex-1 text-left">
                                             <span className="text-xs font-black uppercase tracking-wider text-foreground truncate">
-                                                {item.label}
+                                                {t(item.label)}
                                             </span>
                                             {item.description && (
                                                 <span className="text-[10px] text-muted-foreground/80 truncate">
-                                                    {item.description}
+                                                    {t(item.description)}
                                                 </span>
                                             )}
                                         </div>
@@ -305,7 +307,7 @@ export function LandlordMenuView() {
                                         {item.warning && (
                                             <span
                                                 className="text-amber-500 animate-pulse"
-                                                title={item.warningTooltip}
+                                                title={item.warningTooltip ? t(item.warningTooltip) : undefined}
                                             >
                                                 <AlertTriangle className="size-4" />
                                             </span>
@@ -347,10 +349,10 @@ export function LandlordMenuView() {
                         </div>
                         <div className="flex flex-col text-left">
                             <span className="text-xs font-black uppercase tracking-wider text-red-500">
-                                Log Out
+                                {t('Log Out')}
                             </span>
                             <span className="text-[10px] text-muted-foreground/80">
-                                Sign out of your iReside account
+                                {t('Sign out of your iReside account')}
                             </span>
                         </div>
                     </div>

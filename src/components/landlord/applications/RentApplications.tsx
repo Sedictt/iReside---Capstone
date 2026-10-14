@@ -47,6 +47,9 @@ import { LeaseOfflineSigner } from "@/lib/offline/leaseOfflineSigner";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import dynamic from "next/dynamic";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr, getCurrentLanguage } from "@/hooks/useLanguage";
+import { LANGUAGE_LOCALES } from "@/lib/i18n";
 
 const WalkInApplicationModal = dynamic(() => import("@/components/landlord/applications/WalkInApplicationModal").then(mod => mod.WalkInApplicationModal), {
  ssr: false,
@@ -59,7 +62,7 @@ import { LeaseAuditTrail, type LeaseAuditEvent } from "@/components/landlord/lea
 import type { LeaseStatus } from "@/types/database";
 const SignaturePad = dynamic(() => import("./SignaturePad").then(mod => mod.SignaturePad), {
  ssr: false,
- loading: () => <div className="h-[200px] w-full neumorphic-inset rounded-2xl animate-pulse flex items-center justify-center text-xs font-black uppercase tracking-widest text-neutral-400">Loading Signer...</div>
+ loading: () => <div className="h-[200px] w-full neumorphic-inset rounded-2xl animate-pulse flex items-center justify-center text-xs font-black uppercase tracking-widest text-neutral-400">{tr("Loading Signer...")}</div>
 });
 import { useProperty } from "@/context/PropertyContext";
 import { generateLeasePdf } from "@/lib/lease-pdf";
@@ -212,19 +215,19 @@ const STATUS_CONFIG: Record<ApplicationStatus, { label: string; color: string; b
 const FALLBACK_PROPERTY_IMAGE = "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1200&auto=format&fit=crop&q=80";
 
 const formatCurrency = (value: number | null) => {
- if (typeof value !== "number" || !Number.isFinite(value)) return "Not provided";
+ if (typeof value !== "number" || !Number.isFinite(value)) return tr("Not provided");
  return `₱${value.toLocaleString()}`;
 };
 
 const formatDate = (value: string | null) => {
- if (!value) return "Not specified";
+ if (!value) return tr("Not specified");
  const parsed = new Date(value);
- if (Number.isNaN(parsed.getTime())) return "Not specified";
- return parsed.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+ if (Number.isNaN(parsed.getTime())) return tr("Not specified");
+ return parsed.toLocaleDateString(LANGUAGE_LOCALES[getCurrentLanguage()], { month: "short", day: "numeric", year: "numeric" });
 };
 
 const formatDocumentLabel = (value: string) => {
- if (!value) return "Document";
+ if (!value) return tr("Document");
  const trimmed = value.trim();
  const lastSlash = trimmed.lastIndexOf("/");
  const fileName = lastSlash >= 0 ? trimmed.slice(lastSlash + 1) : trimmed;
@@ -307,6 +310,8 @@ function ApplicationsSkeletonList() {
 // ─── Main Component ───────────────────────────────────────────────────
 
 export function RentApplications() {
+  const { t } = useLanguageContext();
+  const tOpt = (message?: string) => (message ? t(message) : message);
   const { user } = useAuth();
   const { selectedPropertyId } = useProperty();
   const supabase = useMemo(() => createClient(), []);
@@ -464,7 +469,8 @@ export function RentApplications() {
  name: selectedApp.unitNumber,
  },
  startDate: "2024-05-01", // Placeholder
- endDate: "2025-05-01", // Placeholder
+ endDate: null, // Placeholder: open-ended by default
+ termType: "open_ended",
  monthlyRent: selectedApp.monthlyRent || 0,
  securityDeposit: (selectedApp.monthlyRent || 0) * 2, // Placeholder
  });
@@ -593,8 +599,8 @@ export function RentApplications() {
         (payload) => {
           if (payload.eventType === "INSERT") {
             const newRecord = payload.new as any;
-            const applicantName = newRecord?.applicant_name || "a new applicant";
-            toast.info(`New application received from ${applicantName}!`);
+            const applicantName = newRecord?.applicant_name || tr("a new applicant");
+            toast.info(tr("New application received from {name}!", { name: applicantName }));
           }
           refreshApplications({ silent: true });
         }
@@ -611,7 +617,7 @@ export function RentApplications() {
           if (payload.eventType === "UPDATE") {
             const updatedReq = payload.new as any;
             if (updatedReq?.status === "processing" || updatedReq?.payment_proof_url) {
-              toast.info("Payment proof submitted for an application.");
+              toast.info(tr("Payment proof submitted for an application."));
             }
           }
           refreshApplications({ silent: true });
@@ -737,11 +743,15 @@ export function RentApplications() {
  
  setShowContractModal(false);
  setSelectedApp(null);
- alert(`Approved! Credentials:\nEmail: ${data.tenant_account?.email}\nTemp Password: ${data.tenant_account?.tempPassword}\n\nShare these with the tenant securely.`);
+ alert(t("Approved! Credentials:\nEmail: {email}\nTemp Password: {password}\n\nShare these with the tenant securely.", { email: data.tenant_account?.email ?? "", password: data.tenant_account?.tempPassword ?? "" }));
  } catch { setActionError("Quick approve failed."); } finally { setUpdatingStatusId(null); }
  };
 
  const openApprovalModal = (application: RentApplication) => {
+ if (application.status === "approved" || application.status === "rejected" || application.status === "withdrawn") {
+   setActionError(t("This application is already {status}.", { status: t(STATUS_CONFIG[application.status].label) }));
+   return;
+ }
  const monthlyRent = Number(application.monthlyRent ?? 0);
  if (application.status !== "payment_pending" && (!Number.isFinite(monthlyRent) || monthlyRent <= 0)) {
  setActionError("Valid monthly rent required. Update unit rent first.");
@@ -818,12 +828,12 @@ export function RentApplications() {
         return_overpayment: "Overpayment refund recorded and tenant notified.",
         request_shortfall: "Shortfall request emailed to applicant.",
       };
-      toast.success(successLabels[action] || "Payment updated successfully.");
+      toast.success(t(successLabels[action] || "Payment updated successfully."));
       setShowResolutionModal(false);
       refreshApplications();
     } catch (err: any) {
-      setActionError(err.message || "Failed to review payment request.");
-      toast.error(err.message || "Failed to review payment request.");
+      setActionError(tr(err.message || "Failed to review payment request."));
+      toast.error(t(err.message || "Failed to review payment request."));
     } finally {
       setReviewingReqId(null);
     }
@@ -854,14 +864,14 @@ export function RentApplications() {
     }
     bypassForm.reset();
 
-    toast.success("Cash payment bypassed! Application is ready for final approval.");
+    toast.success(t("Cash payment bypassed! Application is ready for final approval."));
     setShowBypassModal(false);
     setBypassPassword("");
     setBypassReason("");
     refreshApplications();
   } catch (err: any) {
-    setActionError(err.message || "Failed to run bypass.");
-    toast.error(err.message || "Failed to run bypass.");
+    setActionError(tr(err.message || "Failed to run bypass."));
+    toast.error(t(err.message || "Failed to run bypass."));
   } finally {
     setBypassLoading(false);
   }
@@ -895,7 +905,7 @@ export function RentApplications() {
     });
     setCountersignState({ loading: false, error: null, message: "Lease signed offline." });
     setShowCountersignModal(false);
-    toast.success("Signed offline! Signature envelope is sealed and will sync upon reconnection.");
+    toast.success(t("Signed offline! Signature envelope is sealed and will sync upon reconnection."));
     reloadKey.current += 1;
     return;
    } catch (err: any) {
@@ -926,7 +936,7 @@ export function RentApplications() {
     });
     setCountersignState({ loading: false, error: null, message: "Lease signed offline." });
     setShowCountersignModal(false);
-    toast.success("Network error: Signature saved offline! Will sync automatically.");
+    toast.success(t("Network error: Signature saved offline! Will sync automatically."));
     reloadKey.current += 1;
    } catch (innerErr: any) {
     setCountersignState({ loading: false, error: err.message, message: null });
@@ -953,7 +963,7 @@ export function RentApplications() {
  throw new Error("No signing URL returned");
  }
  } catch (err: any) {
- setActionError(err.message || "Failed to generate signing link");
+ setActionError(tr(err.message || "Failed to generate signing link"));
  setCountersignRedirectLoading(false);
  }
  };
@@ -1004,10 +1014,10 @@ export function RentApplications() {
  <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
  <div className="space-y-1">
  <h1 className="text-4xl font-black tracking-tight text-foreground">
- Applications
+ {t("Applications")}
  </h1>
  <p className="text-sm font-medium text-muted-foreground">
- Manage prospective tenants and review residency profiles.
+ {t("Manage prospective tenants and review residency profiles.")}
  </p>
  </div>
  
@@ -1017,14 +1027,14 @@ export function RentApplications() {
  className="flex h-11 items-center gap-2 rounded-2xl neumorphic-panel px-5 text-xs font-black uppercase tracking-widest text-foreground transition-all hover:border-primary/30 hover:neumorphic-inset active:scale-95"
  >
  <Plus className="size-4" />
- Invite Manager
+ {t("Invite Manager")}
  </button>
  <button
  onClick={() => setShowTenantApplicationModal(true)}
  className="flex h-11 items-center gap-2 rounded-2xl bg-primary px-6 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95"
  >
  <QrCode className="size-4" />
- Walk-in Intake
+ {t("Walk-in Intake")}
  </button>
  </div>
  </div>
@@ -1046,7 +1056,7 @@ export function RentApplications() {
  : "text-muted-foreground hover:neumorphic-inset hover:text-foreground"
  )}
  >
- {tab.label}
+ {t(tab.label)}
  <span className={cn(
  "rounded-lg px-1.5 py-0.5 text-[9px]",
  activeFilter === tab.value ? "bg-primary text-primary-foreground" : "neumorphic-inset text-muted-foreground"
@@ -1063,7 +1073,7 @@ export function RentApplications() {
  <input
  type="text"
  maxLength={60}
- placeholder="Search applications..."
+ placeholder={t("Search applications...")}
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
  className="h-11 w-full rounded-2xl neumorphic-extruded pl-10 pr-4 text-xs font-black text-foreground placeholder:text-muted-foreground/60 focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all"
@@ -1071,7 +1081,7 @@ export function RentApplications() {
  </div>
  <button className="flex h-11 items-center gap-2 rounded-2xl neumorphic-extruded px-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:neumorphic-inset hover:text-foreground transition-all cursor-pointer">
  <Filter className="size-4" />
- <span className="hidden sm:inline">Advanced</span>
+ <span className="hidden sm:inline">{t("Advanced")}</span>
  </button>
  </div>
  </div>
@@ -1083,14 +1093,14 @@ export function RentApplications() {
  ) : error ? (
  <div className="flex flex-col items-center justify-center py-12 text-center">
  <AlertCircle className="size-12 text-red-500/50 mb-4" />
- <p className="text-sm font-black text-foreground">{error}</p>
+ <p className="text-sm font-black text-foreground">{t(error)}</p>
  </div>
  ) : filteredApplications.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-24 text-center">
  <Users className="size-12 text-muted-foreground/30 mb-4" />
- <h3 className="text-xl font-black text-foreground">No Applications Found</h3>
+ <h3 className="text-xl font-black text-foreground">{t("No Applications Found")}</h3>
  <p className="text-sm font-medium text-muted-foreground max-w-xs mt-2">
- We couldn&apos;t find any applications matching your current criteria.
+ {t("We couldn't find any applications matching your current criteria.")}
  </p>
  </div>
  ) : (
@@ -1127,7 +1137,7 @@ export function RentApplications() {
                           )}
                         >
                           {app.applicant.avatar ? (
-                            <Image src={app.applicant.avatar} alt={`${app.applicant.name} avatar`} fill sizes="48px" className="object-cover rounded-full" />
+                            <Image src={app.applicant.avatar} alt={t("{name} avatar", { name: app.applicant.name })} fill sizes="48px" className="object-cover rounded-full" />
                           ) : (
                             app.applicant.name[0]?.toUpperCase() || "?"
                           )}
@@ -1138,18 +1148,18 @@ export function RentApplications() {
  <h3 className="truncate text-lg font-black tracking-tight text-foreground group-hover:text-primary transition-colors">{app.applicant.name}</h3>
  <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground truncate">
  <Briefcase className="size-3 shrink-0" />
- {app.applicant.occupation || "Unspecified"}
+ {app.applicant.occupation || t("Unspecified")}
  </p>
  </div>
  </div>
 
  <div className="hidden lg:flex flex-col">
- <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Rent</span>
+ <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{t("Rent")}</span>
  <span className="text-sm font-black text-foreground">{formatCurrency(app.monthlyRent)}</span>
  </div>
 
  <div className="hidden xl:flex flex-col">
- <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Move-in</span>
+ <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{t("Move-in")}</span>
  <span className="text-sm font-black text-foreground">{formatDate(app.requestedMoveIn)}</span>
  </div>
 
@@ -1159,9 +1169,9 @@ export function RentApplications() {
  config.bgColor, config.borderColor, config.color
  )}>
  <config.icon className="size-3.5" />
- {config.label}
+ {t(config.label)}
  </div>
- <button className="neumorphic-extruded flex size-10 shrink-0 items-center justify-center rounded-xl neumorphic-panel transition-all text-muted-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary">
+ <button aria-label={t("View application")} className="neumorphic-extruded flex size-10 shrink-0 items-center justify-center rounded-xl neumorphic-panel transition-all text-muted-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary">
  <Eye className="size-4" />
  </button>
  </div>
@@ -1185,7 +1195,7 @@ export function RentApplications() {
  exit={{ opacity: 0 }} 
  onClick={() => setSelectedApp(null)} 
  className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-md cursor-default"
- aria-label="Close application detail"
+ aria-label={t("Close application detail")}
  />
  <motion.div
  initial={{ x: "100%" }}
@@ -1198,14 +1208,14 @@ export function RentApplications() {
  <div>
  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1">
  <div className="size-1.5 rounded-full bg-primary" />
- Application Record
+ {t("Application Record")}
  </div>
  <h2 className="text-3xl font-black tracking-tighter text-foreground">
- Dossier <span className="text-muted-foreground/40">Review</span>
+ {t("Dossier")} <span className="text-muted-foreground/40">{t("Review")}</span>
  </h2>
  </div>
  <div className="flex items-center gap-2">
- <button onClick={() => setSelectedApp(null)} className="flex size-11 items-center justify-center rounded-2xl neumorphic-extruded text-muted-foreground hover:text-foreground transition-all hover:neumorphic-inset active:scale-95 cursor-pointer">
+ <button onClick={() => setSelectedApp(null)} aria-label={t("Close")} className="flex size-11 items-center justify-center rounded-2xl neumorphic-extruded text-muted-foreground hover:text-foreground transition-all hover:neumorphic-inset active:scale-95 cursor-pointer">
  <X className="size-5" />
  </button>
  </div>
@@ -1225,18 +1235,18 @@ export function RentApplications() {
  ) : (
  <Zap className="size-4" />
  )}
- Quick Approve
+ {t("Quick Approve")}
  </button>
  <button
  onClick={() => openApprovalModal(selectedApp)}
  className="flex items-center gap-2 rounded-xl bg-primary/10 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-primary transition-all hover:bg-primary/20 cursor-pointer"
  >
  <Wallet className="size-4" />
- {selectedApp.status === "payment_pending" ? "Approve Application" : "Request Payment"}
+ {selectedApp.status === "payment_pending" ? t("Approve Application") : t("Request Payment")}
  </button>
  </div>
  <p className="mt-3 text-[10px] font-medium text-muted-foreground">
- Quick Approve skips payment and directly creates tenant account.
+ {t("Quick Approve skips payment and directly creates tenant account.")}
  </p>
  </div>
  )}
@@ -1249,7 +1259,7 @@ export function RentApplications() {
  <span className="mt-1 inline-block rounded-lg bg-primary px-3 py-1 text-xs font-black text-primary-foreground">{selectedApp.unitNumber}</span>
  </div>
  <div className="absolute bottom-6 right-8 text-right">
- <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Monthly Rent</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-white/60">{t("Monthly Rent")}</span>
  <p className="text-2xl font-black text-white">{formatCurrency(selectedApp.monthlyRent)}</p>
  </div>
  </div>
@@ -1260,12 +1270,12 @@ export function RentApplications() {
  return (
  <div className="space-y-4">
  <div className="flex items-center justify-between px-2">
- <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Onboarding Progress</h4>
+ <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Onboarding Progress")}</h4>
  <span className={cn(
  "text-[10px] font-black uppercase tracking-widest",
  percentage === 100 ? "text-emerald-500" : "text-primary"
  )}>
- {percentage}% Complete
+ {t("{percent}% Complete", { percent: percentage })}
  </span>
  </div>
  <div className="h-2 w-full overflow-hidden rounded-full neumorphic-inset /50">
@@ -1282,12 +1292,12 @@ export function RentApplications() {
  <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5 flex items-start gap-4">
  <AlertCircle className="size-5 text-amber-500 shrink-0 mt-0.5" />
  <div className="space-y-3">
- <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500">Missing Prerequisites</p>
+ <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500">{t("Missing Prerequisites")}</p>
  <ul className="space-y-1.5">
  {missing.map((item) => (
  <li key={item} className="flex items-center gap-2 text-[11px] font-black text-muted-foreground">
  <div className="size-1 rounded-full bg-amber-500/40" />
- {item}
+ {t(item)}
  </li>
  ))}
  </ul>
@@ -1305,7 +1315,7 @@ export function RentApplications() {
               <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-2">
                   <div className="size-2 rounded-full bg-violet-500 animate-pulse" />
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground">Move-In Payment Verification</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground">{t("Move-In Payment Verification")}</h4>
                 </div>
                 {selectedApp.status === "payment_pending" && (
                   <button
@@ -1317,7 +1327,7 @@ export function RentApplications() {
                     className="flex items-center gap-1.5 rounded-xl border border-primary/20 bg-primary/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/20 transition-all cursor-pointer"
                   >
                     <ShieldCheck className="size-3.5" />
-                    Cash Bypass
+                    {t("Cash Bypass")}
                   </button>
                 )}
               </div>
@@ -1331,21 +1341,24 @@ export function RentApplications() {
                   const hasDiscrepancy = payments.some((p: any) => p.status === "rejected");
 
                   if (allCompleted) {
+                    // Informational only. The approval CTA lives in the action bar below
+                    // ("Finalize Approval & Create Lease") so there is a single path to
+                    // approve; a second button here used to reopen the payment-request
+                    // flow on applications that were already approved.
+                    const awaitingApproval = selectedApp.status === "payment_pending";
                     return (
-                      <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <CheckCircle2 className="size-5 text-emerald-500 shrink-0" />
-                          <div>
-                            <p className="text-xs font-black text-emerald-500 uppercase tracking-wider">All Payments Verified</p>
-                            <p className="text-[11px] font-medium text-emerald-600/80">Move-in requirements satisfied. Ready for final approval and lease generation.</p>
-                          </div>
+                      <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 flex items-center gap-3">
+                        <CheckCircle2 className="size-5 text-emerald-500 shrink-0" />
+                        <div>
+                          <p className="text-xs font-black text-emerald-500 uppercase tracking-wider">{t("All Payments Verified")}</p>
+                          <p className="text-[11px] font-medium text-emerald-600/80">
+                            {awaitingApproval
+                              ? t("Move-in requirements satisfied. Finalize the approval below to create the lease.")
+                              : selectedApp.status === "approved"
+                                ? t("Move-in payments were verified and this application is approved.")
+                                : t("Move-in payments were verified for this application.")}
+                          </p>
                         </div>
-                        <button
-                          onClick={() => openApprovalModal(selectedApp)}
-                          className="shrink-0 rounded-xl bg-emerald-500 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-black hover:bg-emerald-400 transition-all cursor-pointer"
-                        >
-                          Approve & Sign
-                        </button>
                       </div>
                     );
                   }
@@ -1355,8 +1368,8 @@ export function RentApplications() {
                       <div className="rounded-2xl border border-violet-500/20 bg-violet-500/10 p-4 flex items-center gap-3">
                         <Receipt className="size-5 text-violet-500 shrink-0" />
                         <div>
-                          <p className="text-xs font-black text-violet-500 uppercase tracking-wider">Payment Proof Submitted — Review Required</p>
-                          <p className="text-[11px] font-medium text-violet-600/80">The applicant has submitted proof of payment. Please inspect the receipt and confirm or resolve discrepancies below.</p>
+                          <p className="text-xs font-black text-violet-500 uppercase tracking-wider">{t("Payment Proof Submitted — Review Required")}</p>
+                          <p className="text-[11px] font-medium text-violet-600/80">{t("The applicant has submitted proof of payment. Please inspect the receipt and confirm or resolve discrepancies below.")}</p>
                         </div>
                       </div>
                     );
@@ -1367,8 +1380,8 @@ export function RentApplications() {
                       <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 flex items-center gap-3">
                         <AlertCircle className="size-5 text-red-500 shrink-0" />
                         <div>
-                          <p className="text-xs font-black text-red-500 uppercase tracking-wider">Discrepancy Flagged</p>
-                          <p className="text-[11px] font-medium text-red-600/80">A payment return or shortfall was requested. Waiting for applicant update or settlement.</p>
+                          <p className="text-xs font-black text-red-500 uppercase tracking-wider">{t("Discrepancy Flagged")}</p>
+                          <p className="text-[11px] font-medium text-red-600/80">{t("A payment return or shortfall was requested. Waiting for applicant update or settlement.")}</p>
                         </div>
                       </div>
                     );
@@ -1378,8 +1391,8 @@ export function RentApplications() {
                     <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 flex items-center gap-3">
                       <Clock className="size-5 text-amber-500 shrink-0" />
                       <div>
-                        <p className="text-xs font-black text-amber-500 uppercase tracking-wider">Awaiting Tenant Payment</p>
-                        <p className="text-[11px] font-medium text-amber-600/80">Payment request link has been emailed to applicant. If tenant paid cash in person, use Cash Bypass.</p>
+                        <p className="text-xs font-black text-amber-500 uppercase tracking-wider">{t("Awaiting Tenant Payment")}</p>
+                        <p className="text-[11px] font-medium text-amber-600/80">{t("Payment request link has been emailed to applicant. If tenant paid cash in person, use Cash Bypass.")}</p>
                       </div>
                     </div>
                   );
@@ -1388,7 +1401,7 @@ export function RentApplications() {
                 {/* Payment Items */}
                 {(!selectedApp.preApprovalPayments || selectedApp.preApprovalPayments.length === 0) ? (
                   <div className="py-6 text-center text-xs font-medium text-muted-foreground">
-                    No individual payment requests registered.
+                    {t("No individual payment requests registered.")}
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -1420,7 +1433,7 @@ export function RentApplications() {
                               </div>
                               <div>
                                 <h5 className="text-sm font-black text-foreground capitalize">
-                                  {req.requirementType === "advance_rent" ? "First Month Advance Rent" : "Security Deposit"}
+                                  {req.requirementType === "advance_rent" ? t("First Month Advance Rent") : t("Security Deposit")}
                                 </h5>
                                 <p className="text-lg font-black text-foreground">{formatCurrency(req.amount)}</p>
                               </div>
@@ -1430,17 +1443,17 @@ export function RentApplications() {
                               {isConfirmed ? (
                                 <span className="flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-500">
                                   <CheckCircle2 className="size-3" />
-                                  {req.bypassed ? "Cash Bypassed" : "Confirmed"}
+                                  {req.bypassed ? t("Cash Bypassed") : t("Confirmed")}
                                 </span>
                               ) : hasProof ? (
                                 <span className="flex items-center gap-1.5 rounded-xl border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-violet-500">
                                   <Clock className="size-3" />
-                                  Under Review
+                                  {t("Under Review")}
                                 </span>
                               ) : (
                                 <span className="flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-amber-500">
                                   <Clock className="size-3" />
-                                  Awaiting Payment
+                                  {t("Awaiting Payment")}
                                 </span>
                               )}
                             </div>
@@ -1451,7 +1464,7 @@ export function RentApplications() {
                             {req.transactionReference && (
                               <div className="rounded-xl neumorphic-inset p-3 flex items-center justify-between">
                                 <div>
-                                  <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">System Ref No.</span>
+                                  <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">{t("System Ref No.")}</span>
                                   <span className="font-mono text-xs font-black text-foreground">{req.transactionReference}</span>
                                 </div>
                                 <button
@@ -1461,7 +1474,7 @@ export function RentApplications() {
                                     setTimeout(() => setCopiedTxn(null), 2000);
                                   }}
                                   className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-background/40 transition-all cursor-pointer"
-                                  title="Copy System Reference"
+                                  title={t("Copy System Reference")}
                                 >
                                   {copiedTxn === req.transactionReference ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
                                 </button>
@@ -1470,21 +1483,21 @@ export function RentApplications() {
 
                             {req.referenceNumber && (
                               <div className="rounded-xl neumorphic-inset p-3">
-                                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">GCash Ref No.</span>
+                                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">{t("GCash Ref No.")}</span>
                                 <span className="font-mono text-xs font-black text-foreground">{req.referenceNumber}</span>
                               </div>
                             )}
 
                             {req.submittedAt && (
                               <div className="rounded-xl neumorphic-inset p-3">
-                                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">Submitted At</span>
+                                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">{t("Submitted At")}</span>
                                 <span className="text-xs font-bold text-foreground">{formatDate(req.submittedAt)}</span>
                               </div>
                             )}
 
                             {req.method && (
                               <div className="rounded-xl neumorphic-inset p-3">
-                                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">Method</span>
+                                <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">{t("Method")}</span>
                                 <span className="text-xs font-bold text-foreground uppercase">{req.method}</span>
                               </div>
                             )}
@@ -1493,7 +1506,7 @@ export function RentApplications() {
                           {/* Proof Image / Document Lightbox trigger */}
                           {req.proofUrl ? (
                             <div className="space-y-2">
-                              <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">Proof of Payment</span>
+                              <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">{t("Proof of Payment")}</span>
                               <button
                                 onClick={() => setPreviewUrl(req.proofUrl)}
                                 className="group relative flex w-full items-center justify-between rounded-2xl neumorphic-extruded p-3 hover:border-primary/40 transition-all cursor-pointer overflow-hidden text-left"
@@ -1503,12 +1516,12 @@ export function RentApplications() {
                                     {req.proofUrl.toLowerCase().endsWith(".pdf") ? (
                                       <FileText className="size-6 text-primary m-auto mt-3" />
                                     ) : (
-                                      <Image src={req.proofUrl} alt="Proof" fill sizes="48px" className="object-cover group-hover:scale-105 transition-transform" />
+                                      <Image src={req.proofUrl} alt={t("Proof")} fill sizes="48px" className="object-cover group-hover:scale-105 transition-transform" />
                                     )}
                                   </div>
                                   <div>
-                                    <p className="text-xs font-black text-foreground group-hover:text-primary transition-colors">Receipt / Proof Document</p>
-                                    <p className="text-[10px] font-medium text-muted-foreground">Click to inspect full resolution</p>
+                                    <p className="text-xs font-black text-foreground group-hover:text-primary transition-colors">{t("Receipt / Proof Document")}</p>
+                                    <p className="text-[10px] font-medium text-muted-foreground">{t("Click to inspect full resolution")}</p>
                                   </div>
                                 </div>
                                 <Eye className="size-4 text-primary mr-2" />
@@ -1516,14 +1529,14 @@ export function RentApplications() {
                             </div>
                           ) : (
                             <div className="rounded-xl bg-muted/20 p-3 text-[11px] font-medium text-muted-foreground">
-                              No proof document uploaded yet.
+                              {t("No proof document uploaded yet.")}
                             </div>
                           )}
 
                           {/* Review Note / Resolution note */}
                           {req.reviewNote && (
                             <div className="rounded-xl border border-border/50 bg-background/40 p-3">
-                              <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">Resolution Note</span>
+                              <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">{t("Resolution Note")}</span>
                               <p className="text-xs font-medium text-foreground mt-0.5">{req.reviewNote}</p>
                             </div>
                           )}
@@ -1537,7 +1550,7 @@ export function RentApplications() {
                                 className="flex-1 min-w-[140px] flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white hover:bg-emerald-500 disabled:opacity-50 transition-all cursor-pointer"
                               >
                                 {isReviewing ? <Loader2 className="size-3.5 animate-spin" /> : <CheckCircle2 className="size-3.5" />}
-                                Confirm Payment
+                                {t("Confirm Payment")}
                               </button>
 
                               <button
@@ -1546,7 +1559,7 @@ export function RentApplications() {
                                 className="flex-1 min-w-[140px] flex items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-50 transition-all cursor-pointer"
                               >
                                 <RotateCcw className="size-3.5" />
-                                Discrepancy / Return
+                                {t("Discrepancy / Return")}
                               </button>
                             </div>
                           )}
@@ -1561,7 +1574,7 @@ export function RentApplications() {
 
           {/* Applicant Profile */}
  <div className="space-y-4">
- <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Tenant Profile</h4>
+ <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">{t("Tenant Profile")}</h4>
  <div className="rounded-[2.5rem] neumorphic-extruded p-8 space-y-8">
  <div className="flex items-center gap-6">
  {(() => {
@@ -1575,7 +1588,7 @@ export function RentApplications() {
                               )}
                             >
                               {selectedApp.applicant.avatar ? (
-                                <Image src={selectedApp.applicant.avatar} alt={`${selectedApp.applicant.name} avatar`} fill sizes="80px" className="object-cover rounded-full" />
+                                <Image src={selectedApp.applicant.avatar} alt={t("{name} avatar", { name: selectedApp.applicant.name })} fill sizes="80px" className="object-cover rounded-full" />
                               ) : (
                                 selectedApp.applicant.name[0]?.toUpperCase() || "?"
                               )}
@@ -1584,50 +1597,50 @@ export function RentApplications() {
                         })()}
  <div>
  <h3 className="text-2xl font-black text-foreground">{selectedApp.applicant.name}</h3>
- <p className="text-sm font-black text-muted-foreground">{selectedApp.applicant.occupation || "Unspecified Occupation"}</p>
+ <p className="text-sm font-black text-muted-foreground">{selectedApp.applicant.occupation || t("Unspecified Occupation")}</p>
  </div>
  </div>
 
  <div className="grid grid-cols-2 gap-6">
  <div className="space-y-1">
  <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- <Mail className="size-3" /> Email
+ <Mail className="size-3" /> {t("Email")}
  </span>
  <p className="text-sm font-black text-foreground">{selectedApp.applicant.email}</p>
  </div>
  <div className="space-y-1">
  <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- <Phone className="size-3" /> Phone
+ <Phone className="size-3" /> {t("Phone")}
  </span>
- <p className="text-sm font-black text-foreground">{selectedApp.applicant.phone || "Not provided"}</p>
+ <p className="text-sm font-black text-foreground">{selectedApp.applicant.phone || t("Not provided")}</p>
  </div>
  <div className="space-y-1">
  <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- <Banknote className="size-3" /> Income
+ <Banknote className="size-3" /> {t("Income")}
  </span>
  <p className="text-sm font-black text-foreground">{formatCurrency(selectedApp.applicant.monthlyIncome)}</p>
  </div>
 
  <div className="space-y-1">
  <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- <Clock className="size-3" /> Application Date
+ <Clock className="size-3" /> {t("Application Date")}
  </span>
  <p className="text-sm font-black text-foreground">{formatDate(selectedApp.submittedDate)}</p>
  </div>
 
  <div className="space-y-1">
  <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- <Calendar className="size-3" /> Preferred Move-in
+ <Calendar className="size-3" /> {t("Preferred Move-in")}
  </span>
  <p className="text-sm font-black text-foreground">{formatDate(selectedApp.requestedMoveIn)}</p>
  </div>
 
  <div className="space-y-1">
  <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- <Filter className="size-3" /> Intake Source
+ <Filter className="size-3" /> {t("Intake Source")}
  </span>
  <p className="text-sm font-black text-foreground capitalize">
- {selectedApp.source?.replace(/_/g, ' ') || "Online"}
+ {t(selectedApp.source?.replace(/_/g, ' ') || "Online")}
  </p>
  </div>
  </div>
@@ -1636,7 +1649,7 @@ export function RentApplications() {
 
  {/* Compliance Checklist */}
  <div className="space-y-4">
- <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Compliance Roadmap</h4>
+ <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">{t("Compliance Roadmap")}</h4>
  <div className="grid grid-cols-2 gap-3">
  {[
  { key: 'valid_id', label: 'Identity Verify' },
@@ -1652,7 +1665,7 @@ export function RentApplications() {
  isDone ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" : "neumorphic-extruded border-border/50 text-muted-foreground hover:border-primary/30 hover:text-foreground"
  )}
  >
- <span className="text-[10px] font-black uppercase tracking-widest">{req.label}</span>
+ <span className="text-[10px] font-black uppercase tracking-widest">{t(req.label)}</span>
  {isDone ? <CheckCircle2 className="size-4" /> : <div className="size-4 rounded-full border-2 border-current opacity-20" />}
  </button>
  );
@@ -1662,7 +1675,7 @@ export function RentApplications() {
 
  {/* Documents */}
  <div className="space-y-4">
- <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Supporting Files</h4>
+ <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">{t("Supporting Files")}</h4>
  <div className="grid grid-cols-1 gap-3">
  {selectedApp.documents.map((doc) => (
  <button key={doc} onClick={() => setPreviewUrl(doc)} className="flex items-center justify-between rounded-2xl neumorphic-extruded p-4 hover:border-primary/30 transition-all cursor-pointer">
@@ -1679,7 +1692,7 @@ export function RentApplications() {
  {/* Lease Agreement (§6.4) */}
  {selectedApp.status === "approved" && (
  <div className="space-y-4">
- <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Lease Agreement</h4>
+ <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">{t("Lease Agreement")}</h4>
  <div className="rounded-[2.5rem] neumorphic-extruded p-6 space-y-6">
  {selectedApp.lease ? (
  <>
@@ -1689,9 +1702,9 @@ export function RentApplications() {
  <FileText className="size-6 text-primary" />
  </div>
  <div>
- <p className="text-sm font-black text-foreground">Digital Lease Contract</p>
+ <p className="text-sm font-black text-foreground">{t("Digital Lease Contract")}</p>
  <div className="flex items-center gap-2 mt-0.5">
- <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">ID: {selectedApp.lease.id.slice(0, 8)}…</span>
+ <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("ID:")} {selectedApp.lease.id.slice(0, 8)}…</span>
  </div>
  </div>
  </div>
@@ -1704,9 +1717,9 @@ export function RentApplications() {
  <Clock className="size-4" />
  </div>
  <div className="space-y-1">
- <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Awaiting Signature</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">{t("Awaiting Signature")}</p>
  <p className="text-[11px] font-medium text-amber-600/70 leading-relaxed">
- The lease has been generated and is ready for the tenant to sign. You can use the button below to send or resend the signing magic link via email.
+ {t("The lease has been generated and is ready for the tenant to sign. You can use the button below to send or resend the signing magic link via email.")}
  </p>
  <button 
  onClick={(e) => { e.stopPropagation(); handleGenerateSigningLink(selectedApp.id); }} 
@@ -1718,35 +1731,35 @@ export function RentApplications() {
  ) : (
  <Mail className="size-3.5" />
  )}
- {selectedApp.lease.status === "pending_signature" ? "Send Signing Link" : "Resend Signing Link"}
+ {selectedApp.lease.status === "pending_signature" ? t("Send Signing Link") : t("Resend Signing Link")}
  </button>
 
  {signingLinkState.message && (
  <div className="mt-2 space-y-1">
  <p className="text-[10px] font-black uppercase text-emerald-500 animate-pulse">
- {signingLinkState.message}
+ {t(signingLinkState.message)}
  </p>
  {signingLinkState.emailSent === false && (
  <p className="text-[10px] font-black text-amber-500">
- ⚠ Email delivery failed — copy the link below and send it manually
+ ⚠ {t("Email delivery failed — copy the link below and send it manually")}
  </p>
  )}
  {signingLinkState.emailSent && (
  <p className="text-[10px] font-black text-emerald-500/70">
- ✓ Signing link emailed to tenant
+ ✓ {t("Signing link emailed to tenant")}
  </p>
  )}
  {signingLinkState.signingUrl && signingLinkState.emailSent === false && (
  <div className="mt-2 flex items-center gap-2">
  <input readOnly maxLength={500} value={signingLinkState.signingUrl} className="flex-1 rounded-lg neumorphic-inset px-3 py-1.5 text-[10px] font-mono text-foreground truncate" />
- <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 px-3 py-1.5 text-[10px] font-black uppercase text-primary hover:bg-primary/20 cursor-pointer">Copy</button>
+ <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 px-3 py-1.5 text-[10px] font-black uppercase text-primary hover:bg-primary/20 cursor-pointer">{t("Copy")}</button>
  </div>
  )}
  </div>
  )}
  {signingLinkState.error && (
  <p className="mt-2 text-[10px] font-black uppercase text-red-500">
- {signingLinkState.error}
+ {t(signingLinkState.error)}
  </p>
  )}
  </div>
@@ -1759,9 +1772,9 @@ export function RentApplications() {
  <FileText className="size-4" />
  </div>
  <div className="space-y-1 w-full">
- <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Awaiting Your Signature</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">{t("Awaiting Your Signature")}</p>
  <p className="text-[11px] font-medium text-emerald-600/70 leading-relaxed">
- The tenant has successfully signed the lease! Please review and countersign to officially activate the lease.
+ {t("The tenant has successfully signed the lease! Please review and countersign to officially activate the lease.")}
  </p>
  <button 
  onClick={(e) => { e.stopPropagation(); void handleCountersignRedirect(selectedApp.lease!.id); }} 
@@ -1773,7 +1786,7 @@ export function RentApplications() {
  ) : (
  <FileText className="size-3.5" />
  )}
- Countersign Now
+ {t("Countersign Now")}
  </button>
  </div>
  </div>
@@ -1785,9 +1798,9 @@ export function RentApplications() {
  <FileText className="size-8" />
  </div>
  <div className="space-y-1">
- <p className="text-sm font-black text-foreground">No Lease Generated</p>
+ <p className="text-sm font-black text-foreground">{t("No Lease Generated")}</p>
  <p className="text-[11px] font-medium text-muted-foreground max-w-[240px] mx-auto leading-relaxed">
- This approved application doesn&apos;t have an active lease record linked. 
+ {t("This approved application doesn't have an active lease record linked.")}
  </p>
  </div>
  <button 
@@ -1795,27 +1808,27 @@ export function RentApplications() {
  disabled={signingLinkState.loading}
  className="rounded-2xl bg-primary px-8 py-3 text-[10px] font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 cursor-pointer"
  >
- {signingLinkState.loading ? <Loader2 className="size-4 animate-spin" /> : "Generate & Link Lease"}
+ {signingLinkState.loading ? <Loader2 className="size-4 animate-spin" /> : t("Generate & Link Lease")}
  </button>
  {signingLinkState.message && (
  <div className="space-y-1 text-center">
- <p className="text-[10px] font-black uppercase text-emerald-500 animate-pulse">{signingLinkState.message}</p>
+ <p className="text-[10px] font-black uppercase text-emerald-500 animate-pulse">{t(signingLinkState.message)}</p>
  {signingLinkState.emailSent === false && (
- <p className="text-[10px] font-black text-amber-500">⚠ Email delivery failed — copy the link below</p>
+ <p className="text-[10px] font-black text-amber-500">⚠ {t("Email delivery failed — copy the link below")}</p>
  )}
  {signingLinkState.emailSent && (
- <p className="text-[10px] font-black text-emerald-500/70">✓ Signing link emailed to tenant</p>
+ <p className="text-[10px] font-black text-emerald-500/70">✓ {t("Signing link emailed to tenant")}</p>
  )}
  {signingLinkState.signingUrl && (
  <div className="mt-2 flex items-center gap-2">
  <input readOnly maxLength={500} value={signingLinkState.signingUrl} className="flex-1 rounded-lg neumorphic-inset px-3 py-1.5 text-[10px] font-mono text-neutral-400 truncate" />
- <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 px-3 py-1.5 text-[10px] font-black uppercase text-primary hover:bg-primary/20">Copy</button>
+ <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 px-3 py-1.5 text-[10px] font-black uppercase text-primary hover:bg-primary/20">{t("Copy")}</button>
  </div>
  )}
  </div>
  )}
  {signingLinkState.error && (
- <p className="text-[10px] font-black uppercase text-red-500">{signingLinkState.error}</p>
+ <p className="text-[10px] font-black uppercase text-red-500">{t(signingLinkState.error)}</p>
  )}
  </div>
  )}
@@ -1828,20 +1841,20 @@ export function RentApplications() {
   {selectedApp.status === "pending" || selectedApp.status === "reviewing" ? (
   <div className="flex gap-4">
   <button onClick={() => { setDeclineReason(""); setShowDeclineConfirm(true); }} className="flex-1 rounded-2xl border border-red-500/20 bg-red-500/5 py-4 text-xs font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95 cursor-pointer">
-  Decline
+  {t("Decline")}
   </button>
   <button onClick={() => openApprovalModal(selectedApp)} className="flex-[2] rounded-2xl bg-primary py-4 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95 cursor-pointer">
-  Move to Approval
+  {t("Move to Approval")}
   </button>
   </div>
   ) : selectedApp.status === "payment_pending" ? (
   <div className="flex gap-4">
   <button onClick={() => { setDeclineReason(""); setShowDeclineConfirm(true); }} className="flex-1 rounded-2xl border border-red-500/20 bg-red-500/5 py-4 text-xs font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95 cursor-pointer">
-  Decline
+  {t("Decline")}
   </button>
   <button onClick={() => openApprovalModal(selectedApp)} className="flex-[2] rounded-2xl bg-emerald-600 py-4 text-xs font-black uppercase tracking-widest text-white shadow-emerald-600/20 hover:bg-emerald-500 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
   <CheckCircle2 className="size-4" />
-  Finalize Approval & Create Lease
+  {t("Finalize Approval & Create Lease")}
   </button>
   </div>
   ) : (
@@ -1851,10 +1864,10 @@ export function RentApplications() {
  <div className="mb-2 flex items-center justify-center">
  <XCircle className="size-6 text-red-500" />
  </div>
- <p className="text-sm font-black text-red-500">Application Declined</p>
+ <p className="text-sm font-black text-red-500">{t("Application Declined")}</p>
  {declineReason && (
  <p className="mt-2 text-xs font-medium text-neutral-400">
- Reason: {declineReason}
+ {t("Reason:")} {declineReason}
  </p>
  )}
  </div>
@@ -1873,27 +1886,27 @@ export function RentApplications() {
  ) : (
  <Mail className="size-3.5" />
  )}
- Generate & Send Lease Signing Link
+ {t("Generate & Send Lease Signing Link")}
  </button>
  {signingLinkState.message && (
  <div className="space-y-1 text-center">
- <p className="text-[10px] font-black uppercase text-emerald-500 animate-pulse">{signingLinkState.message}</p>
+ <p className="text-[10px] font-black uppercase text-emerald-500 animate-pulse">{t(signingLinkState.message)}</p>
  {signingLinkState.emailSent === false && (
- <p className="text-[10px] font-black text-amber-500">⚠ Email delivery failed — copy the link below</p>
+ <p className="text-[10px] font-black text-amber-500">⚠ {t("Email delivery failed — copy the link below")}</p>
  )}
  {signingLinkState.emailSent && (
- <p className="text-[10px] font-black text-emerald-500/70">✓ Signing link emailed to tenant</p>
+ <p className="text-[10px] font-black text-emerald-500/70">✓ {t("Signing link emailed to tenant")}</p>
  )}
  {signingLinkState.signingUrl && (
  <div className="mt-2 flex items-center gap-2">
  <input readOnly maxLength={500} value={signingLinkState.signingUrl} className="flex-1 rounded-lg neumorphic-inset px-3 py-1.5 text-[10px] font-mono text-neutral-400 truncate" />
- <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 px-3 py-1.5 text-[10px] font-black uppercase text-primary hover:bg-primary/20">Copy</button>
+ <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 px-3 py-1.5 text-[10px] font-black uppercase text-primary hover:bg-primary/20">{t("Copy")}</button>
  </div>
  )}
  </div>
  )}
  {signingLinkState.error && (
- <p className="text-[10px] font-black uppercase text-red-500 text-center">{signingLinkState.error}</p>
+ <p className="text-[10px] font-black uppercase text-red-500 text-center">{t(signingLinkState.error)}</p>
  )}
  </div>
  )}
@@ -1902,7 +1915,7 @@ export function RentApplications() {
  disabled={sendingCredentials}
  className="w-full rounded-2xl border border-blue-500/20 bg-blue-500/10 py-4 text-xs font-black uppercase tracking-widest text-blue-500 hover:bg-blue-500 hover:text-white transition-all active:scale-95 disabled:opacity-50"
  >
- {sendingCredentials ? <Loader2 className="size-4 animate-spin mx-auto" /> : "Resend Access Portal Link"}
+ {sendingCredentials ? <Loader2 className="size-4 animate-spin mx-auto" /> : t("Resend Access Portal Link")}
  </button>
  </div>
  )}
@@ -1927,20 +1940,20 @@ export function RentApplications() {
  exit={{ opacity: 0 }} 
  onClick={() => setPreviewUrl(null)} 
  className="absolute inset-0 bg-black/90 backdrop-blur-xl cursor-default"
- aria-label="Close document preview"
+ aria-label={t("Close document preview")}
  />
  <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[210] flex h-full w-full max-w-6xl flex-col overflow-hidden rounded-[2.5rem] neumorphic-panel border border-border/50">
  <div className="flex items-center justify-between border-b border-border/50 bg-background/50 px-8 py-6 backdrop-blur-md">
  <h3 className="text-xl font-black text-foreground">{formatDocumentLabel(previewUrl)}</h3>
- <button onClick={() => setPreviewUrl(null)} className="flex size-12 items-center justify-center rounded-xl bg-red-500/10 text-red-500 transition-all hover:bg-red-500 hover:text-white cursor-pointer">
+ <button onClick={() => setPreviewUrl(null)} aria-label={t("Close")} className="flex size-12 items-center justify-center rounded-xl bg-red-500/10 text-red-500 transition-all hover:bg-red-500 hover:text-white cursor-pointer">
  <X className="size-6" />
  </button>
  </div>
  <div className="flex-1 bg-black/50 p-4">
  {previewUrl.toLowerCase().endsWith(".pdf") ? (
- <iframe src={previewUrl} className="h-full w-full rounded-2xl border-0" title="Preview" />
+ <iframe src={previewUrl} className="h-full w-full rounded-2xl border-0" title={t("Preview")} />
  ) : (
- <div className="relative flex h-full w-full items-center justify-center overflow-hidden"><Image src={previewUrl} alt="Document preview" fill sizes="(max-width: 768px) 100vw, 640px" className="object-contain" /></div>
+ <div className="relative flex h-full w-full items-center justify-center overflow-hidden"><Image src={previewUrl} alt={t("Document preview")} fill sizes="(max-width: 768px) 100vw, 640px" className="object-contain" /></div>
  )}
  </div>
  </motion.div>
@@ -1957,29 +1970,29 @@ export function RentApplications() {
  exit={{ opacity: 0 }} 
  onClick={() => setTenantCredentials(null)} 
  className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-default"
- aria-label="Close credentials panel"
+ aria-label={t("Close credentials panel")}
  />
  <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[310] w-full max-w-md rounded-[2.5rem] border border-emerald-500/20 neumorphic-panel p-8">
  <div className="mb-6 flex items-center gap-4">
  <div className="flex size-12 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20"><CheckCircle2 className="size-6 text-emerald-500" /></div>
  <div>
- <h3 className="text-xl font-black text-foreground">Access Generated</h3>
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tenant credentials provisioned</p>
+ <h3 className="text-xl font-black text-foreground">{t("Access Generated")}</h3>
+ <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Tenant credentials provisioned")}</p>
  </div>
  </div>
  <div className="space-y-4">
  <div className="rounded-2xl neumorphic-extruded p-4">
- <span className="text-[9px] font-black uppercase text-muted-foreground">Tenant Email</span>
+ <span className="text-[9px] font-black uppercase text-muted-foreground">{t("Tenant Email")}</span>
  <p className="font-mono text-sm font-black text-foreground">{tenantCredentials.email}</p>
  </div>
  {tenantCredentials.tempPassword && (
  <div className="rounded-2xl neumorphic-extruded p-4">
- <span className="text-[9px] font-black uppercase text-muted-foreground">Initial Password</span>
+ <span className="text-[9px] font-black uppercase text-muted-foreground">{t("Initial Password")}</span>
  <p className="font-mono text-sm font-black text-emerald-500 tracking-widest">{tenantCredentials.tempPassword}</p>
  </div>
  )}
  <button onClick={() => setTenantCredentials(null)} className="w-full rounded-2xl bg-primary py-4 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 hover:bg-primary/90 transition-all cursor-pointer">
- Close Secure Panel
+ {t("Close Secure Panel")}
  </button>
  </div>
  </motion.div>
@@ -1996,12 +2009,12 @@ export function RentApplications() {
  exit={{ opacity: 0 }} 
  onClick={() => setShowInviteTools(false)} 
  className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-default"
- aria-label="Close invite tools"
+ aria-label={t("Close invite tools")}
  />
  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative z-[160] h-[90vh] w-full max-w-6xl overflow-hidden rounded-[2.5rem] neumorphic-extruded border border-border/50">
  <div className="flex items-center justify-between border-b border-border/50 neumorphic-panel px-8 py-6">
- <h3 className="text-xl font-black tracking-tighter text-foreground">Intake Manager</h3>
- <button onClick={() => setShowInviteTools(false)} className="rounded-xl neumorphic-extruded p-2 text-muted-foreground hover:text-foreground transition-all hover:neumorphic-inset cursor-pointer"><X className="size-6" /></button>
+ <h3 className="text-xl font-black tracking-tighter text-foreground">{t("Intake Manager")}</h3>
+ <button onClick={() => setShowInviteTools(false)} aria-label={t("Close")} className="rounded-xl neumorphic-extruded p-2 text-muted-foreground hover:text-foreground transition-all hover:neumorphic-inset cursor-pointer"><X className="size-6" /></button>
  </div>
  <div className="h-full overflow-y-auto p-8 pb-24"><TenantInviteManager availableUnits={scopedAvailableUnits} invites={scopedTenantInvites} onRefresh={loadInvites} /></div>
  </motion.div>
@@ -2019,28 +2032,28 @@ export function RentApplications() {
  exit={{ opacity: 0 }} 
  onClick={() => setShowCountersignModal(false)} 
  className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-default"
- aria-label="Close countersign modal"
+ aria-label={t("Close countersign modal")}
  />
  <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[410] w-full max-w-2xl rounded-[2.5rem] neumorphic-panel p-8 border border-border/50">
- <h3 className="text-2xl font-black text-foreground mb-6">Countersign Lease</h3>
+ <h3 className="text-2xl font-black text-foreground mb-6">{t("Countersign Lease")}</h3>
  <div className="space-y-6">
  <div className="rounded-2xl neumorphic-inset p-4">
- <p className="text-[10px] font-black uppercase text-muted-foreground mb-2">Tenant Signature</p>
+ <p className="text-[10px] font-black uppercase text-muted-foreground mb-2">{t("Tenant Signature")}</p>
  <Image src={selectedApp.lease.tenant_signature || ""} alt="" width={300} height={96} className="object-contain" style={{maxHeight: '6rem'}} />
  </div>
  <div className="space-y-2">
- <p className="text-[10px] font-black uppercase text-muted-foreground">Your Signature</p>
+ <p className="text-[10px] font-black uppercase text-muted-foreground">{t("Your Signature")}</p>
  <SignaturePad 
  onSave={setPendingCountersignature} 
  onClear={() => setPendingCountersignature(null)} 
  width={800} 
  height={180} 
  pdfBlob={leasePdfBlob}
- documentTitle={`Lease - ${selectedApp.propertyName} ${selectedApp.unitNumber}`}
+ documentTitle={t("Lease - {property} {unit}", { property: selectedApp.propertyName, unit: selectedApp.unitNumber })}
  />
  </div>
  <button disabled={countersignState.loading || !pendingCountersignature} onClick={() => handleCountersignLease(selectedApp.lease!.id, pendingCountersignature!)} className="w-full rounded-2xl bg-emerald-500 py-4 text-xs font-black uppercase tracking-widest text-black hover:bg-emerald-400 disabled:opacity-50 cursor-pointer">
- {countersignState.loading ? "Signing..." : "Complete Execution"}
+ {countersignState.loading ? t("Signing...") : t("Complete Execution")}
  </button>
  </div>
  </motion.div>
@@ -2058,7 +2071,7 @@ export function RentApplications() {
  exit={{ opacity: 0 }} 
  onClick={() => setShowDeclineConfirm(false)} 
  className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-default"
- aria-label="Close decline confirmation"
+ aria-label={t("Close decline confirmation")}
  />
  <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[310] w-full max-w-md rounded-[2.5rem] neumorphic-panel p-8 border border-border/50">
  <div className="mb-6 flex items-center gap-4">
@@ -2066,19 +2079,19 @@ export function RentApplications() {
  <AlertCircle className="size-6 text-red-500" />
  </div>
  <div>
- <h3 className="text-xl font-black text-foreground">Decline Application</h3>
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">This action cannot be undone</p>
+ <h3 className="text-xl font-black text-foreground">{t("Decline Application")}</h3>
+ <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("This action cannot be undone")}</p>
  </div>
  </div>
  <div className="space-y-4">
  <div className="rounded-2xl neumorphic-inset p-4 overflow-hidden">
  <p className="text-sm font-medium text-foreground/80">
- You are about to decline the application from <span className="font-black text-foreground">{selectedApp.applicant.name}</span> for <span className="font-black text-foreground">{selectedApp.propertyName} - {selectedApp.unitNumber}</span>.
+ {t("You are about to decline the application from")} <span className="font-black text-foreground">{selectedApp.applicant.name}</span> {t("for")} <span className="font-black text-foreground">{selectedApp.propertyName} - {selectedApp.unitNumber}</span>.
  </p>
  </div>
  <div className="space-y-2">
  <div className="flex items-center justify-between">
- <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Rejection Reason (Required)</label>
+ <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Rejection Reason (Required)")}</label>
  <span className="text-[10px] font-medium text-muted-foreground/70">{declineReason.length} / 250</span>
  </div>
  <textarea
@@ -2086,7 +2099,7 @@ export function RentApplications() {
  id="rejection-reason"
  maxLength={250}
  value={declineReason}
- placeholder="Enter the reason for declining this application..."
+ placeholder={t("Enter the reason for declining this application...")}
  className={cn(
  "neumorphic-inset w-full py-4 px-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all resize-none",
  declineForm.errorFor("declineReason") && "ring-1 ring-rose-500/60"
@@ -2097,7 +2110,7 @@ export function RentApplications() {
  setDeclineReason(reason);
  }}
  />
- <FieldError id={declineForm.errorId("declineReason")} message={declineForm.errorFor("declineReason")} />
+ <FieldError id={declineForm.errorId("declineReason")} message={tOpt(declineForm.errorFor("declineReason"))} />
  </div>
  <div className="flex gap-3">
  <button 
@@ -2108,7 +2121,7 @@ export function RentApplications() {
  }}  
  className="neumorphic-extruded flex-1 py-4 text-xs font-black uppercase tracking-widest text-foreground hover:bg-muted active:scale-95 transition-all cursor-pointer"
  >
- Cancel
+ {t("Cancel")}
  </button>
  <button 
  onClick={async () => {
@@ -2142,12 +2155,12 @@ export function RentApplications() {
  {updatingStatusId === selectedApp.id ? (
  <Loader2 className="size-4 animate-spin mx-auto" />
  ) : (
- "Confirm Decline"
+ t("Confirm Decline")
  )}
  </button>
  </div>
  {actionError && (
- <p className="text-[11px] font-black text-red-500 text-center">{actionError}</p>
+ <p className="text-[11px] font-black text-red-500 text-center">{t(actionError)}</p>
  )}
  </div>
  </motion.div>
@@ -2165,7 +2178,7 @@ export function RentApplications() {
                 exit={{ opacity: 0 }}
                 onClick={() => setShowBypassModal(false)}
                 className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-default"
-                aria-label="Close bypass modal"
+                aria-label={t("Close bypass modal")}
               />
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -2178,26 +2191,26 @@ export function RentApplications() {
                     <ShieldCheck className="size-6" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-foreground">Cash Payment Bypass</h3>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">In-Person Settlement Confirmation</p>
+                    <h3 className="text-xl font-black text-foreground">{t("Cash Payment Bypass")}</h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("In-Person Settlement Confirmation")}</p>
                   </div>
                 </div>
 
                 <p className="text-xs font-medium text-foreground/80 leading-relaxed">
-                  Confirm that applicant <span className="font-black text-foreground">{selectedApp.applicant.name}</span> has settled advance rent and security deposit in cash. This action is permanently audited.
+                  {t("Confirm that applicant")} <span className="font-black text-foreground">{selectedApp.applicant.name}</span> {t("has settled advance rent and security deposit in cash. This action is permanently audited.")}
                 </p>
 
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
- <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Bypass Reason (Min 10 characters)</label>
+ <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Bypass Reason (Min 10 characters)")}</label>
  <span className="text-[10px] font-medium text-muted-foreground/70">{bypassReason.length} / 250</span>
  </div>
                     <textarea maxLength={250}
                       {...bypassForm.fieldProps("bypassReason")}
-                      aria-label="Bypass reason"
+                      aria-label={t("Bypass reason")}
                       rows={3}
-                      placeholder="e.g., Received full cash payment in person at leasing office on Sep 13."
+                      placeholder={t("e.g., Received full cash payment in person at leasing office on Sep 13.")}
                       value={bypassReason}
                       onChange={(e) => setBypassReason(e.target.value)}
                       className={cn(
@@ -2205,19 +2218,19 @@ export function RentApplications() {
                         bypassForm.errorFor("bypassReason") && "ring-1 ring-rose-500/60"
                       )}
                     />
-                    <FieldError id={bypassForm.errorId("bypassReason")} message={bypassForm.errorFor("bypassReason")} />
+                    <FieldError id={bypassForm.errorId("bypassReason")} message={tOpt(bypassForm.errorFor("bypassReason"))} />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Your Account Password</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Your Account Password")}</label>
                     <div className="relative">
                       <input
                         {...bypassForm.fieldProps("bypassPassword")}
-                        aria-label="Your account password"
+                        aria-label={t("Your account password")}
                         type="password"
                         maxLength={72}
                         autoComplete="current-password"
-                        placeholder="Enter password to authenticate"
+                        placeholder={t("Enter password to authenticate")}
                         value={bypassPassword}
                         onChange={(e) => setBypassPassword(e.target.value)}
                         className={cn(
@@ -2227,12 +2240,12 @@ export function RentApplications() {
                       />
                       <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                     </div>
-                    <FieldError id={bypassForm.errorId("bypassPassword")} message={bypassForm.errorFor("bypassPassword")} />
+                    <FieldError id={bypassForm.errorId("bypassPassword")} message={tOpt(bypassForm.errorFor("bypassPassword"))} />
                   </div>
                 </div>
 
                 {actionError && (
-                  <p className="text-[11px] font-black text-red-500 text-center">{actionError}</p>
+                  <p className="text-[11px] font-black text-red-500 text-center">{t(actionError)}</p>
                 )}
 
                 <div className="flex gap-3">
@@ -2240,7 +2253,7 @@ export function RentApplications() {
                     onClick={() => setShowBypassModal(false)}
                     className="flex-1 py-3.5 rounded-2xl neumorphic-extruded text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all cursor-pointer"
                   >
-                    Cancel
+                    {t("Cancel")}
                   </button>
                   <button
                     onClick={runPaymentBypass}
@@ -2248,7 +2261,7 @@ export function RentApplications() {
                     className="flex-1 py-3.5 rounded-2xl bg-primary text-xs font-black uppercase tracking-widest text-primary-foreground shadow-primary/20 hover:bg-primary/90 disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
                     {bypassLoading ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
-                    Confirm Bypass
+                    {t("Confirm Bypass")}
                   </button>
                 </div>
               </motion.div>
@@ -2266,7 +2279,7 @@ export function RentApplications() {
                 exit={{ opacity: 0 }}
                 onClick={() => setShowResolutionModal(false)}
                 className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-default"
-                aria-label="Close resolution modal"
+                aria-label={t("Close resolution modal")}
               />
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -2279,8 +2292,8 @@ export function RentApplications() {
                     <RotateCcw className="size-6" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-foreground">Resolve Payment Discrepancy</h3>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Return Funds or Request Balance</p>
+                    <h3 className="text-xl font-black text-foreground">{t("Resolve Payment Discrepancy")}</h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Return Funds or Request Balance")}</p>
                   </div>
                 </div>
 
@@ -2301,16 +2314,16 @@ export function RentApplications() {
                           : "text-muted-foreground hover:text-foreground"
                       )}
                     >
-                      {tab.label}
+                      {t(tab.label)}
                     </button>
                   ))}
                 </div>
 
                 <div className="rounded-2xl border border-border/40 bg-background/30 p-4 space-y-1">
                   <p className="text-xs font-medium text-muted-foreground">
-                    {resolutionAction === "return_payment" && "Returns the entire payment to applicant. The tenant will be notified via email with your explanation and attached transfer proof."}
-                    {resolutionAction === "return_overpayment" && "Records excess amount refunded to tenant while keeping the required fee satisfied. Tenant will receive refund receipt via email."}
-                    {resolutionAction === "request_shortfall" && "Notifies tenant of underpayment, specifying remaining amount due to complete move-in requirements."}
+                    {resolutionAction === "return_payment" && t("Returns the entire payment to applicant. The tenant will be notified via email with your explanation and attached transfer proof.")}
+                    {resolutionAction === "return_overpayment" && t("Records excess amount refunded to tenant while keeping the required fee satisfied. Tenant will receive refund receipt via email.")}
+                    {resolutionAction === "request_shortfall" && t("Notifies tenant of underpayment, specifying remaining amount due to complete move-in requirements.")}
                   </p>
                 </div>
 
@@ -2318,11 +2331,11 @@ export function RentApplications() {
                   {(resolutionAction === "return_overpayment" || resolutionAction === "request_shortfall") && (
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                        {resolutionAction === "return_overpayment" ? "Excess Refund Amount (₱)" : "Shortfall Amount Required (₱)"}
+                        {resolutionAction === "return_overpayment" ? t("Excess Refund Amount (₱)") : t("Shortfall Amount Required (₱)")}
                       </label>
                       <input
                         {...resolutionForm.fieldProps("resolutionAmount")}
-                        aria-label={resolutionAction === "return_overpayment" ? "Excess refund amount" : "Shortfall amount required"}
+                        aria-label={resolutionAction === "return_overpayment" ? t("Excess refund amount") : t("Shortfall amount required")}
                         type="number"
                         inputMode="decimal"
                         min={0}
@@ -2336,19 +2349,19 @@ export function RentApplications() {
                           resolutionForm.errorFor("resolutionAmount") && "ring-1 ring-rose-500/60"
                         )}
                       />
-                      <FieldError id={resolutionForm.errorId("resolutionAmount")} message={resolutionForm.errorFor("resolutionAmount")} />
+                      <FieldError id={resolutionForm.errorId("resolutionAmount")} message={tOpt(resolutionForm.errorFor("resolutionAmount"))} />
                     </div>
                   )}
 
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                      Explanation for Tenant (Required)
+                      {t("Explanation for Tenant (Required)")}
                     </label>
                     <textarea maxLength={250}
                       {...resolutionForm.fieldProps("resolutionNote")}
-                      aria-label="Explanation for tenant"
+                      aria-label={t("Explanation for tenant")}
                       rows={3}
-                      placeholder="Explain the reason for this adjustment or return..."
+                      placeholder={t("Explain the reason for this adjustment or return...")}
                       value={resolutionNote}
                       onChange={(e) => setResolutionNote(e.target.value)}
                       className={cn(
@@ -2356,13 +2369,13 @@ export function RentApplications() {
                         resolutionForm.errorFor("resolutionNote") && "ring-1 ring-rose-500/60"
                       )}
                     />
-                    <FieldError id={resolutionForm.errorId("resolutionNote")} message={resolutionForm.errorFor("resolutionNote")} />
+                    <FieldError id={resolutionForm.errorId("resolutionNote")} message={tOpt(resolutionForm.errorFor("resolutionNote"))} />
                   </div>
 
                   {(resolutionAction === "return_payment" || resolutionAction === "return_overpayment") && (
                     <div className="space-y-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                        Proof of Return / Refund Receipt (Attached to Email)
+                        {t("Proof of Return / Refund Receipt (Attached to Email)")}
                       </label>
 
                       <input
@@ -2373,7 +2386,7 @@ export function RentApplications() {
                           const file = handleMediaSelection(e, {
                             preset: "document_and_image",
                             maxSizeBytes: 10 * 1024 * 1024,
-                            notify: (msg, desc) => toast.error(msg, { description: desc }),
+                            notify: (msg, desc) => toast.error(t(msg), { description: desc ? t(desc) : desc }),
                           });
                           setResolutionProofFile(file);
                         }}
@@ -2395,7 +2408,7 @@ export function RentApplications() {
                             }}
                             className="text-muted-foreground hover:text-red-500 text-xs font-bold cursor-pointer"
                           >
-                            Remove
+                            {t("Remove")}
                           </button>
                         </div>
                       ) : (
@@ -2404,16 +2417,16 @@ export function RentApplications() {
                           className="rounded-2xl border border-dashed border-border hover:border-primary/50 bg-background/20 hover:bg-background/40 p-3 text-center cursor-pointer transition-all flex items-center justify-center gap-2"
                         >
                           <UploadCloud className="size-4 text-primary" />
-                          <span className="text-xs font-bold text-muted-foreground">Click to upload refund screenshot / receipt</span>
+                          <span className="text-xs font-bold text-muted-foreground">{t("Click to upload refund screenshot / receipt")}</span>
                         </div>
                       )}
 
                       <input
                         {...resolutionForm.fieldProps("resolutionProofUrl")}
-                        aria-label="GCash reference or receipt link"
+                        aria-label={t("GCash reference or receipt link")}
                         type="text"
                         maxLength={250}
-                        placeholder="Or paste GCash ref # or receipt link (optional)"
+                        placeholder={t("Or paste GCash ref # or receipt link (optional)")}
                         value={resolutionProofUrl}
                         onChange={(e) => setResolutionProofUrl(e.target.value)}
                         className={cn(
@@ -2421,13 +2434,13 @@ export function RentApplications() {
                           resolutionForm.errorFor("resolutionProofUrl") && "ring-1 ring-rose-500/60"
                         )}
                       />
-                      <FieldError id={resolutionForm.errorId("resolutionProofUrl")} message={resolutionForm.errorFor("resolutionProofUrl")} />
+                      <FieldError id={resolutionForm.errorId("resolutionProofUrl")} message={tOpt(resolutionForm.errorFor("resolutionProofUrl"))} />
                     </div>
                   )}
                 </div>
 
                 {actionError && (
-                  <p className="text-[11px] font-black text-red-500 text-center">{actionError}</p>
+                  <p className="text-[11px] font-black text-red-500 text-center">{t(actionError)}</p>
                 )}
 
                 <div className="flex gap-3">
@@ -2435,7 +2448,7 @@ export function RentApplications() {
                     onClick={() => setShowResolutionModal(false)}
                     className="flex-1 py-3.5 rounded-2xl neumorphic-extruded text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all cursor-pointer"
                   >
-                    Cancel
+                    {t("Cancel")}
                   </button>
                   <button
                     onClick={() => {
@@ -2454,7 +2467,7 @@ export function RentApplications() {
                     className="flex-1 py-3.5 rounded-2xl bg-red-600 text-xs font-black uppercase tracking-widest text-white shadow-red-600/20 hover:bg-red-500 disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
                     {reviewingReqId === resolutionRequest.id ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
-                    Submit & Notify
+                    {t("Submit & Notify")}
                   </button>
                 </div>
               </motion.div>

@@ -16,6 +16,8 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/context/BrandContext";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 
 export const CURATED_BANNER_PRESETS = [
@@ -73,6 +75,7 @@ export function BannerCustomizerModal({
   onBannerChange,
 }: BannerCustomizerModalProps) {
   const brand = useBrand();
+  const { t } = useLanguageContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedBanner, setSelectedBanner] = useState(currentBanner);
 
@@ -89,12 +92,12 @@ export function BannerCustomizerModal({
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = handleMediaSelection(e, {
       preset: "image",
-      notify: (message, description) => toast.error(message, { description }),
+      notify: (message, description) => toast.error(tr(message), { description }),
     });
     if (!file) return;
 
     setIsUploading(true);
-    const toastId = toast.loading("Uploading property banner photo...");
+    const toastId = toast.loading(t("Uploading property banner photo..."));
 
     try {
       const formData = new FormData();
@@ -107,14 +110,14 @@ export function BannerCustomizerModal({
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to upload banner photo.");
+        throw new Error(data.error || t("Failed to upload banner photo."));
       }
 
       setSelectedBanner(data.bannerUrl);
-      toast.success("Banner photo uploaded! Click 'Apply Banner Photo' to save.", { id: toastId });
+      toast.success(t("Banner photo uploaded! Click 'Apply Banner Photo' to save."), { id: toastId });
     } catch (err: any) {
       console.error("[BannerCustomizerModal] Upload error:", err);
-      toast.error(err.message || "Failed to upload image. Please try again.", { id: toastId });
+      toast.error(tr(err.message || t("Failed to upload image. Please try again.")), { id: toastId });
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {
@@ -140,11 +143,11 @@ export function BannerCustomizerModal({
       }
 
       await brand.updateBranding({ bannerUrl: selectedBanner }, true);
-      toast.success("Dashboard banner updated successfully!");
+      toast.success(t("Dashboard banner updated successfully!"));
       onClose();
     } catch (err) {
       console.error("[BannerCustomizerModal] Save error:", err);
-      toast.error("Failed to save banner customization.");
+      toast.error(t("Failed to save banner customization."));
     } finally {
       setIsSaving(false);
     }
@@ -165,11 +168,11 @@ export function BannerCustomizerModal({
       }
 
       await brand.updateBranding({ bannerUrl: null }, true);
-      toast.info("Banner restored to default glass high-rise.");
+      toast.info(t("Banner restored to default glass high-rise."));
       onClose();
     } catch (err) {
       console.error("[BannerCustomizerModal] Reset error:", err);
-      toast.error("Failed to reset banner.");
+      toast.error(t("Failed to reset banner."));
     } finally {
       setIsSaving(false);
     }
@@ -213,16 +216,17 @@ export function BannerCustomizerModal({
             </div>
             <div>
               <h3 className="text-base font-black tracking-tight text-zinc-950 dark:text-white">
-                Customize Dashboard Banner
+                {t("Customize Dashboard Banner")}
               </h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Upload your property photography or choose from curated architect presets
+                {t("Upload your property photography or choose from curated architect presets")}
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
+            aria-label={t("Close")}
             className="size-8 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
           >
             <X className="size-4" />
@@ -234,15 +238,15 @@ export function BannerCustomizerModal({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={selectedBanner}
-            alt="Banner Preview"
+            alt={t("Banner Preview")}
             className="size-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-4">
             <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded w-fit mb-1">
-              Active Preview
+              {t("Active Preview")}
             </span>
             <p className="text-xs font-bold text-white">
-              Welcome back, Landlord · Dashboard Header Preview
+              {t("Welcome back, Landlord · Dashboard Header Preview")}
             </p>
           </div>
         </div>
@@ -259,7 +263,7 @@ export function BannerCustomizerModal({
           ) : (
             <Upload className="size-4 text-primary" />
           )}
-          <span>{isUploading ? "Uploading photo..." : "Upload Property Photo (PNG / JPG)"}</span>
+          <span>{isUploading ? t("Uploading photo...") : t("Upload Property Photo (PNG / JPG)")}</span>
         </button>
 
         {/* Curated Presets Grid */}
@@ -267,9 +271,9 @@ export function BannerCustomizerModal({
           <div className="flex items-center justify-between">
             <label className="text-[11px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
               <Building2 className="size-3.5 text-primary" />
-              <span>Curated Property Architecture Presets</span>
+              <span>{t("Curated Property Architecture Presets")}</span>
             </label>
-            <span className="text-[10px] text-zinc-400">High Definition</span>
+            <span className="text-[10px] text-zinc-400">{t("High Definition")}</span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
@@ -290,15 +294,15 @@ export function BannerCustomizerModal({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={preset.url}
-                    alt={preset.name}
+                    alt={t(preset.name)}
                     className="size-full object-cover transition-transform group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-2">
                     <p className="text-[10px] font-bold text-white truncate leading-tight">
-                      {preset.name}
+                      {t(preset.name)}
                     </p>
                     <span className="text-[8px] text-zinc-300 truncate opacity-80">
-                      {preset.category}
+                      {t(preset.category)}
                     </span>
                   </div>
 
@@ -322,7 +326,7 @@ export function BannerCustomizerModal({
             className="px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors flex items-center gap-1.5 disabled:opacity-50"
           >
             <RotateCcw className="size-3.5" />
-            <span>Reset to Default</span>
+            <span>{t("Reset to Default")}</span>
           </button>
 
           <div className="flex items-center gap-2">
@@ -332,7 +336,7 @@ export function BannerCustomizerModal({
               disabled={isSaving || isUploading}
               className="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50"
             >
-              Cancel
+              {t("Cancel")}
             </button>
 
             <button
@@ -346,7 +350,7 @@ export function BannerCustomizerModal({
               ) : (
                 <Check className="size-3.5 stroke-[3]" />
               )}
-              <span>{isSaving ? "Applying..." : "Apply Banner Photo"}</span>
+              <span>{isSaving ? t("Applying...") : t("Apply Banner Photo")}</span>
             </button>
           </div>
         </div>

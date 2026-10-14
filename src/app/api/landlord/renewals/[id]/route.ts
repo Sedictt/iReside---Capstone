@@ -4,6 +4,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { Json, RenewalStatus } from "@/types/database";
 import { parseJsonBody } from "@/lib/validation/server";
 import { isId, renewalDecisionSchema, renewalTermDatesRule } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { isFixedTerm, leaseEndDate } from "@/lib/lease-term";
+
+// Not exported: Next.js route modules may only export handlers/config.
+const OPEN_ENDED_RENEWAL_ERROR = "This lease is open-ended and does not need renewal.";
 
 /**
  * GET /api/landlord/renewals/[id]
@@ -86,7 +90,7 @@ export async function POST(
     // Get renewal request
     const { data: renewalRequest, error: fetchError } = await supabase
       .from("renewal_requests")
-      .select("*, current_lease:leases!renewal_requests_current_lease_id_fkey (unit_id, start_date, end_date, unit:units!inner (property:properties!inner (landlord_id)))")
+      .select("*, current_lease:leases!renewal_requests_current_lease_id_fkey (unit_id, start_date, end_date, term_type, unit:units!inner (property:properties!inner (landlord_id)))")
       .eq("id", id)
       .single();
 
@@ -118,12 +122,18 @@ export async function POST(
       // Update renewal request with proposed terms
       const { proposed_start_date, proposed_end_date, proposed_monthly_rent, proposed_security_deposit, terms_json } = body;
 
+      // Renewal only applies to fixed-term leases; open-ended leases continue
+      // month-to-month and never need a new term.
+      const currentLeaseDates = renewalRequest.current_lease as any;
+      if (!isFixedTerm(currentLeaseDates) || !leaseEndDate(currentLeaseDates)) {
+        return NextResponse.json({ error: OPEN_ENDED_RENEWAL_ERROR }, { status: 400 });
+      }
+
       // Validate the effective term (overrides fall back to the tenant's proposal) before any write,
       // so a bad term cannot leave the request "approved" without a lease.
-      const currentLeaseDates = renewalRequest.current_lease as any;
       const effectiveStart = proposed_start_date || renewalRequest.proposed_start_date;
       const effectiveEnd = proposed_end_date || renewalRequest.proposed_end_date;
-      const dateProblem = renewalTermDatesRule(effectiveStart, effectiveEnd, currentLeaseDates?.end_date ?? null);
+      const dateProblem = renewalTermDatesRule(effectiveStart, effectiveEnd, leaseEndDate(currentLeaseDates));
       if (dateProblem) {
         return NextResponse.json(
           { error: dateProblem.message, fieldErrors: { [dateProblem.field]: dateProblem.message } },
@@ -170,6 +180,8 @@ export async function POST(
         landlord_id: userId,
         status: "draft" as any,
         start_date: effectiveStart as string,
+        // A renewal always produces another dated term.
+        term_type: "fixed" as const,
         end_date: effectiveEnd as string,
         monthly_rent: effectiveRent,
         security_deposit: Number(proposed_security_deposit ?? renewalRequest.proposed_security_deposit ?? 0),

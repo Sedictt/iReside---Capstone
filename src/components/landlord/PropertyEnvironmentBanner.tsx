@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils"
 import { AlertCircle, Building2, Shield, Users } from "lucide-react"
 import Link from "next/link"
+import { T } from "@/context/LanguageContext"
 
 type EnvironmentMode = 'apartment' | 'dormitory' | 'boarding_house' | string
 
@@ -25,17 +26,25 @@ export function PropertyEnvironmentBanner({
     let themeColor = "bg-primary/10 text-primary border-primary/20"
     let Icon = Building2
     let label = "Apartment"
+    let scopeTitle = "Apartment Environment Scope"
+    let rulesText = "Property operates under apartment occupancy rules and billing structures."
 
     if (isDorm) {
         themeColor = "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
         label = "Dormitory"
+        scopeTitle = "Dormitory Environment Scope"
+        rulesText = "Property operates under dormitory occupancy rules and billing structures."
         Icon = Shield
     } else if (isBoarding) {
         themeColor = "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20"
         label = "Boarding House"
+        scopeTitle = "Boarding House Environment Scope"
+        rulesText = "Property operates under boarding house occupancy rules and billing structures."
         Icon = Users
     } else {
         label = environmentMode.charAt(0).toUpperCase() + environmentMode.slice(1)
+        scopeTitle = "{label} Environment Scope"
+        rulesText = "Property operates under {label} occupancy rules and billing structures."
     }
 
     return (
@@ -46,15 +55,15 @@ export function PropertyEnvironmentBanner({
                 </div>
                 <div>
                     <h3 className="text-sm font-black text-foreground flex flex-wrap items-center gap-2">
-                        {label} Environment Scope
+                        <T params={{ label }}>{scopeTitle}</T>
                         {needsReview && (
                             <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-black uppercase tracking-wider">
-                                <AlertCircle className="size-4" /> Needs Review
+                                <AlertCircle className="size-4" /> <T>Needs Review</T>
                             </span>
                         )}
                     </h3>
                     <p className="mt-1 text-xs text-muted-foreground max-w-sm">
-                        Property operates under {label.toLowerCase()} occupancy rules and billing structures.
+                        <T params={{ label: label.toLowerCase() }}>{rulesText}</T>
                     </p>
                 </div>
             </div>
@@ -64,7 +73,7 @@ export function PropertyEnvironmentBanner({
                     href={`/landlord/properties/${propertyId}/environment`}
                     className="w-full sm:w-auto rounded-xl bg-primary/10 px-4 py-2 text-sm font-black text-primary hover:bg-primary/20 transition-all text-center"
                  >
-                    Configure Policy
+                    <T>Configure Policy</T>
                  </Link>
             </div>
         </div>

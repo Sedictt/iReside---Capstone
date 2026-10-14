@@ -5,6 +5,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 interface DbUnit {
     id: string;
@@ -27,8 +29,8 @@ interface FloorConfig {
 
 const floorDisplayName = (fc: FloorConfig) => {
     if (fc.display_name) return fc.display_name;
-    if (fc.floor_number === 0) return "Ground Floor";
-    return `Floor ${fc.floor_number}`;
+    if (fc.floor_number === 0) return tr("Ground Floor");
+    return tr("Floor {number}", { number: fc.floor_number });
 };
 
 function SortableUnit({
@@ -44,6 +46,7 @@ function SortableUnit({
     canRemove?: boolean;
     isHighlighted?: boolean;
 }) {
+    const { t } = useLanguageContext();
     const {
         attributes,
         listeners,
@@ -78,8 +81,8 @@ function SortableUnit({
             {...listeners}
             role="button"
             tabIndex={0}
-            title={`Drag ${unit.name} to another floor`}
-            aria-label={`Drag ${unit.name} to another floor`}
+            title={t("Drag {name} to another floor", { name: unit.name })}
+            aria-label={t("Drag {name} to another floor", { name: unit.name })}
         >
             <div className="flex items-center gap-2.5 min-w-0">
                 {isHighlighted && (
@@ -103,7 +106,7 @@ function SortableUnit({
 
                 {isHighlighted && (
                     <span className="inline-flex items-center text-[10px] font-bold text-primary bg-primary/20 px-2 py-0.5 rounded-full border border-primary/30 shrink-0">
-                        Drag Me
+                        {t("Drag Me")}
                     </span>
                 )}
             </div>
@@ -118,8 +121,8 @@ function SortableUnit({
                         onRemove(unit);
                     }}
                     className="size-7 flex items-center justify-center rounded-lg text-muted-foreground/40 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0"
-                    title={`Remove ${unit.name}`}
-                    aria-label={`Remove ${unit.name}`}
+                    title={t("Remove {name}", { name: unit.name })}
+                    aria-label={t("Remove {name}", { name: unit.name })}
                 >
                     <Trash2 className="size-3.5" />
                 </button>
@@ -147,6 +150,7 @@ function FloorLane({
     highlightedUnitId?: string;
     isDropHighlighted?: boolean;
 }) {
+    const { t } = useLanguageContext();
     const { setNodeRef, isOver } = useSortable({
         id: `floor-${floor.floor_number}`,
         data: { type: "floor", floorNumber: floor.floor_number },
@@ -193,8 +197,8 @@ function FloorLane({
                                 type="button"
                                 onClick={onRemove}
                                 className="size-6 flex items-center justify-center rounded-lg text-muted-foreground/40 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
-                                title={`Remove ${floorDisplayName(floor)}`}
-                                aria-label={`Remove ${floorDisplayName(floor)}`}
+                                title={t("Remove {name}", { name: floorDisplayName(floor) })}
+                                aria-label={t("Remove {name}", { name: floorDisplayName(floor) })}
                             >
                                 <Trash2 className="size-3.5" />
                             </button>
@@ -206,7 +210,7 @@ function FloorLane({
                     {isDropHighlighted ? (
                         <span className="inline-flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/15 px-3 py-1 rounded-full border border-primary/30 animate-pulse shadow-xs">
                             <Move className="size-3 animate-bounce" />
-                            <span>Target Drop Zone</span>
+                            <span>{t("Target Drop Zone")}</span>
                         </span>
                     ) : null}
                     
@@ -218,7 +222,7 @@ function FloorLane({
                                 ? "bg-muted text-muted-foreground border-border/60"
                                 : "bg-background text-foreground border-border/80"
                     )}>
-                        {units.length} {units.length === 1 ? "Room" : "Rooms"}
+                        {t(units.length === 1 ? "{count} Room" : "{count} Rooms", { count: units.length })}
                     </span>
                 </div>
             </div>
@@ -252,7 +256,7 @@ function FloorLane({
                     <div className="flex items-center justify-center gap-2 py-2 text-center">
                         <Layers className="size-4 text-muted-foreground/40" />
                         <p className="text-xs font-medium text-muted-foreground">
-                            Empty floor • Drag rooms here to assign
+                            {t("Empty floor • Drag rooms here to assign")}
                         </p>
                     </div>
                 )}

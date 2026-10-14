@@ -53,6 +53,7 @@ import {
     rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils';
+import { useLanguageContext } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { useProperty } from '@/context/PropertyContext';
 import { useBrand } from '@/context/BrandContext';
@@ -153,6 +154,7 @@ export function LandlordOverviewView() {
     const { properties, selectedPropertyId } = useProperty();
     const brand = useBrand();
     const { is24Hour, formatTimeParts, toggleTimeFormat } = useTimeFormat();
+    const { t, locale } = useLanguageContext();
 
     // Live Manila Clock
     const getManilaTime = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
@@ -289,7 +291,7 @@ export function LandlordOverviewView() {
         user?.user_metadata?.name ||
         user?.email?.split('@')[0] ||
         '';
-    const firstName = rawName.trim() ? rawName.trim().split(' ')[0] : 'Landlord';
+    const firstName = rawName.trim() ? rawName.trim().split(' ')[0] : t('Landlord');
     const formattedFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
 
     // Fetch all real-time dashboard data
@@ -413,7 +415,7 @@ export function LandlordOverviewView() {
                     <div className="absolute inset-0 overflow-hidden rounded-[2rem] pointer-events-none">
                         <Image
                             src={activeBanner}
-                            alt="Property Skyline"
+                            alt={t("Property Skyline")}
                             fill
                             priority
                             sizes="(max-width: 768px) 100vw, 500px"
@@ -431,7 +433,7 @@ export function LandlordOverviewView() {
                                 <div className="absolute inset-0 size-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.8)]" />
                             </div>
                             <span className="text-[9px] font-black uppercase tracking-[0.14em] text-foreground/80">
-                                {currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                {currentTime.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' })}
                             </span>
                         </div>
 
@@ -441,8 +443,8 @@ export function LandlordOverviewView() {
                                 type="button"
                                 onClick={toggleTimeFormat}
                                 className="flex items-center gap-1 px-2.5 py-1 rounded-full neumorphic-inset-card font-mono text-[11px] font-black text-foreground tabular-nums select-none active:scale-95 transition-all"
-                                title={`Tap to switch to ${is24Hour ? '12-hour' : '24-hour'} format`}
-                                aria-label="Digital clock toggle"
+                                title={is24Hour ? t('Tap to switch to 12-hour format') : t('Tap to switch to 24-hour format')}
+                                aria-label={t("Digital clock toggle")}
                             >
                                 <span>{hours}:{minutes}</span>
                                 {period ? (
@@ -456,8 +458,8 @@ export function LandlordOverviewView() {
                                 type="button"
                                 onClick={() => setIsCustomizerOpen(true)}
                                 className="size-7 rounded-full neumorphic-extruded text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95"
-                                title="Customize banner photo"
-                                aria-label="Customize banner photo"
+                                title={t("Customize banner photo")}
+                                aria-label={t("Customize banner photo")}
                             >
                                 <Camera className="size-3 text-primary" />
                             </button>
@@ -467,13 +469,15 @@ export function LandlordOverviewView() {
                     {/* Middle Row: Full-Width Prominent Greeting */}
                     <div className="relative z-10 flex flex-col gap-0.5">
                         <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground leading-tight">
-                            Welcome back, {formattedFirstName}
+                            {t('Welcome back, {name}', { name: formattedFirstName })}
                             <span className="text-primary prose-invert">.</span>
                         </h1>
                         <p className="text-xs font-medium text-muted-foreground line-clamp-1">
                             {overdueCount > 0
-                                ? `⚠️ ${overdueCount} payment${overdueCount > 1 ? 's are' : ' is'} overdue for review`
-                                : "Here's what's happening with your properties today."}
+                                ? (overdueCount > 1
+                                    ? t('⚠️ {count} payments are overdue for review', { count: overdueCount })
+                                    : t('⚠️ {count} payment is overdue for review', { count: overdueCount }))
+                                : t("Here's what's happening with your properties today.")}
                         </p>
                     </div>
 
@@ -486,7 +490,7 @@ export function LandlordOverviewView() {
                             className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 hover:bg-emerald-500/15 p-2 min-h-[58px] active:scale-95 transition-all text-emerald-600 dark:text-emerald-400 group shadow-2xs"
                         >
                             <Banknote className="size-5 text-emerald-500 group-hover:scale-110 transition-transform" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">Collect</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider">{t("Collect")}</span>
                         </button>
 
                         {/* 2. Walk-in App */}
@@ -499,7 +503,7 @@ export function LandlordOverviewView() {
                             className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-primary/25 bg-primary/10 hover:bg-primary/15 p-2 min-h-[58px] active:scale-95 transition-all text-primary group shadow-2xs"
                         >
                             <UserPlus className="size-5 text-primary group-hover:scale-110 transition-transform" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">Walk-In</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider">{t("Walk-In")}</span>
                         </button>
 
                         {/* 3. Invite Resident */}
@@ -509,7 +513,7 @@ export function LandlordOverviewView() {
                             className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-violet-500/25 bg-violet-500/10 hover:bg-violet-500/15 p-2 min-h-[58px] active:scale-95 transition-all text-violet-600 dark:text-violet-400 group shadow-2xs"
                         >
                             <QrCode className="size-5 text-violet-500 group-hover:scale-110 transition-transform" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">Invite</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider">{t("Invite")}</span>
                         </button>
 
                         {/* 4. Building Calendar */}
@@ -518,7 +522,7 @@ export function LandlordOverviewView() {
                             className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-sky-500/25 bg-sky-500/10 hover:bg-sky-500/15 p-2 min-h-[58px] active:scale-95 transition-all text-sky-600 dark:text-sky-400 group shadow-2xs text-center"
                         >
                             <Calendar className="size-5 text-sky-500 group-hover:scale-110 transition-transform" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">Calendar</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider">{t("Calendar")}</span>
                         </Link>
                     </div>
 
@@ -529,7 +533,7 @@ export function LandlordOverviewView() {
                             className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border border-border/50 bg-card/60 text-muted-foreground hover:text-foreground text-[10px] font-bold active:scale-95 transition-all"
                         >
                             <Wrench className="size-3.5 text-amber-500" />
-                            <span>Tickets</span>
+                            <span>{t('Tickets')}</span>
                         </Link>
 
                         <button
@@ -538,7 +542,7 @@ export function LandlordOverviewView() {
                             className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border border-border/50 bg-card/60 text-muted-foreground hover:text-foreground text-[10px] font-bold active:scale-95 transition-all"
                         >
                             <Printer className="size-3.5 text-foreground" />
-                            <span>Flyer</span>
+                            <span>{t('Flyer')}</span>
                         </button>
 
                         <Link
@@ -546,7 +550,7 @@ export function LandlordOverviewView() {
                             className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border border-border/50 bg-card/60 text-muted-foreground hover:text-foreground text-[10px] font-bold active:scale-95 transition-all"
                         >
                             <FolderSearch2 className="size-3.5 text-indigo-400" />
-                            <span>Manual</span>
+                            <span>{t('Manual')}</span>
                         </Link>
                     </div>
                 </div>
@@ -558,7 +562,7 @@ export function LandlordOverviewView() {
                             <ShieldCheck className="size-3.5" />
                         </div>
                         <h2 className="text-xs font-black uppercase tracking-wider text-foreground">
-                            Intelligence Hub
+                            {t('Intelligence Hub')}
                         </h2>
                     </div>
 
@@ -572,12 +576,12 @@ export function LandlordOverviewView() {
                             <div className="min-w-0">
                                 <span className="text-[9px] font-black uppercase tracking-wider text-red-400 flex items-center gap-1">
                                     <Zap className="size-2.5 text-red-500 fill-red-500" />
-                                    Overdue
+                                    {t('Overdue')}
                                 </span>
                                 <h3 className="text-xl font-black text-foreground mt-0.5 tabular-nums">
                                     {paymentsState.loading ? <span className="inline-block h-6 w-10 rounded-md bg-muted/60 animate-pulse mt-0.5" /> : overdueCount}
                                 </h3>
-                                <p className="text-[9px] text-muted-foreground truncate">Tap to review</p>
+                                <p className="text-[9px] text-muted-foreground truncate">{t("Tap to review")}</p>
                             </div>
                             <div className="neumorphic-inset-card flex size-8 items-center justify-center rounded-xl text-red-500 shrink-0">
                                 <Zap className="size-4" />
@@ -593,12 +597,12 @@ export function LandlordOverviewView() {
                             <div className="min-w-0">
                                 <span className="text-[9px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1">
                                     <TrendingUp className="size-2.5 text-amber-500" />
-                                    Near Due
+                                    {t('Near Due')}
                                 </span>
                                 <h3 className="text-xl font-black text-foreground mt-0.5 tabular-nums">
                                     {paymentsState.loading ? <span className="inline-block h-6 w-10 rounded-md bg-muted/60 animate-pulse mt-0.5" /> : nearDueCount}
                                 </h3>
-                                <p className="text-[9px] text-muted-foreground truncate">Next 7 days</p>
+                                <p className="text-[9px] text-muted-foreground truncate">{t("Next 7 days")}</p>
                             </div>
                             <div className="neumorphic-inset-card flex size-8 items-center justify-center rounded-xl text-amber-500 shrink-0">
                                 <TrendingUp className="size-4" />
@@ -614,12 +618,12 @@ export function LandlordOverviewView() {
                             <div className="min-w-0">
                                 <span className="text-[9px] font-black uppercase tracking-wider text-sky-400 flex items-center gap-1">
                                     <Building2 className="size-2.5 text-sky-500" />
-                                    Vacant
+                                    {t('Vacant')}
                                 </span>
                                 <h3 className="text-xl font-black text-foreground mt-0.5 tabular-nums">
                                     {loadingUnits ? <span className="inline-block h-6 w-10 rounded-md bg-muted/60 animate-pulse mt-0.5" /> : openUnitsCount}
                                 </h3>
-                                <p className="text-[9px] text-muted-foreground truncate">Available units</p>
+                                <p className="text-[9px] text-muted-foreground truncate">{t("Available units")}</p>
                             </div>
                             <div className="neumorphic-inset-card flex size-8 items-center justify-center rounded-xl text-sky-500 shrink-0">
                                 <Building2 className="size-4" />
@@ -635,12 +639,12 @@ export function LandlordOverviewView() {
                             <div className="min-w-0">
                                 <span className="text-[9px] font-black uppercase tracking-wider text-violet-400 flex items-center gap-1">
                                     <QrCode className="size-2.5 text-violet-500" />
-                                    Invites
+                                    {t('Invites')}
                                 </span>
                                 <h3 className="text-xl font-black text-foreground mt-0.5 tabular-nums">
                                     {loadingInvites ? <span className="inline-block h-6 w-10 rounded-md bg-muted/60 animate-pulse mt-0.5" /> : activeInviteCount}
                                 </h3>
-                                <p className="text-[9px] text-muted-foreground truncate">Active referral tokens</p>
+                                <p className="text-[9px] text-muted-foreground truncate">{t("Active referral tokens")}</p>
                             </div>
                             <div className="neumorphic-inset-card flex size-8 items-center justify-center rounded-xl text-violet-500 shrink-0">
                                 <QrCode className="size-4" />
@@ -652,7 +656,7 @@ export function LandlordOverviewView() {
                 {/* 4. Smart Action Center: Next Priorities & Urgent Tasks */}
                 <div className="flex flex-col gap-2 shrink-0">
                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">
-                        ACTION CENTER &amp; PRIORITIES
+                        {t('ACTION CENTER & PRIORITIES')}
                     </h3>
 
                     <div className="flex flex-col gap-2">
@@ -661,18 +665,18 @@ export function LandlordOverviewView() {
                             <div className="neumorphic-panel rounded-2xl p-3 border-l-4 border-l-red-500 flex items-center justify-between gap-3">
                                 <div className="min-w-0 flex-1">
                                     <span className="text-[8px] font-black uppercase tracking-widest text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded">
-                                        High Priority
+                                        {t('High Priority')}
                                     </span>
                                     <h4 className="text-xs font-black text-foreground mt-1 truncate">
-                                        {overdueCount} Overdue Rent Invoice{overdueCount > 1 ? 's' : ''}
+                                        {overdueCount > 1 ? t('{count} Overdue Rent Invoices', { count: overdueCount }) : t('{count} Overdue Rent Invoice', { count: overdueCount })}
                                     </h4>
-                                    <p className="text-[10px] text-muted-foreground">Immediate follow-up required with tenants.</p>
+                                    <p className="text-[10px] text-muted-foreground">{t("Immediate follow-up required with tenants.")}</p>
                                 </div>
                                 <button
                                     onClick={() => setOpenPaymentModal('Overdue')}
                                     className="shrink-0 px-3 py-1.5 rounded-xl neumorphic-primary text-[10px] font-black uppercase text-primary-foreground tracking-wider active:scale-95"
                                 >
-                                    Review
+                                    {t('Review')}
                                 </button>
                             </div>
                         ) : null}
@@ -682,18 +686,18 @@ export function LandlordOverviewView() {
                             <div className="neumorphic-panel rounded-2xl p-3 border-l-4 border-l-amber-500 flex items-center justify-between gap-3">
                                 <div className="min-w-0 flex-1">
                                     <span className="text-[8px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
-                                        Occupancy
+                                        {t('Occupancy')}
                                     </span>
                                     <h4 className="text-xs font-black text-foreground mt-1 truncate">
-                                        {openUnitsCount} Vacant Unit{openUnitsCount > 1 ? 's' : ''} Awaiting Residents
+                                        {openUnitsCount > 1 ? t('{count} Vacant Units Awaiting Residents', { count: openUnitsCount }) : t('{count} Vacant Unit Awaiting Residents', { count: openUnitsCount })}
                                     </h4>
-                                    <p className="text-[10px] text-muted-foreground">Start walk-in application or share invite QR.</p>
+                                    <p className="text-[10px] text-muted-foreground">{t("Start walk-in application or share invite QR.")}</p>
                                 </div>
                                 <button
                                     onClick={() => setIsVacantUnitsModalOpen(true)}
                                     className="shrink-0 px-3 py-1.5 rounded-xl neumorphic-extruded text-[10px] font-black uppercase text-primary tracking-wider active:scale-95"
                                 >
-                                    View
+                                    {t('View')}
                                 </button>
                             </div>
                         ) : null}
@@ -703,18 +707,18 @@ export function LandlordOverviewView() {
                             <div className="neumorphic-panel rounded-2xl p-3 border-l-4 border-l-emerald-500 flex items-center justify-between gap-3">
                                 <div className="min-w-0 flex-1">
                                     <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                                        System Healthy
+                                        {t('System Healthy')}
                                     </span>
                                     <h4 className="text-xs font-black text-foreground mt-1">
-                                        Every Account is Up to Date
+                                        {t('Every Account is Up to Date')}
                                     </h4>
-                                    <p className="text-[10px] text-muted-foreground">Properties are fully occupied and rents are current.</p>
+                                    <p className="text-[10px] text-muted-foreground">{t("Properties are fully occupied and rents are current.")}</p>
                                 </div>
                                 <Link
                                     href="/mobile/landlord/payments"
                                     className="shrink-0 px-3 py-1.5 rounded-xl neumorphic-extruded text-[10px] font-black uppercase text-foreground tracking-wider active:scale-95"
                                 >
-                                    Ledger
+                                    {t('Ledger')}
                                 </Link>
                             </div>
                         ) : null}
@@ -732,7 +736,7 @@ export function LandlordOverviewView() {
                         <div className="flex items-center gap-2">
                             <span className="size-2 rounded-full bg-primary" />
                             <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
-                                Operations Center
+                                {t('Operations Center')}
                             </h3>
                         </div>
 
@@ -748,7 +752,7 @@ export function LandlordOverviewView() {
                                             : 'text-muted-foreground hover:text-foreground'
                                     )}
                                 >
-                                    Custom
+                                    {t('Custom')}
                                 </button>
                                 <button
                                     onClick={() => setSortMode('frequently_used')}
@@ -759,7 +763,7 @@ export function LandlordOverviewView() {
                                             : 'text-muted-foreground hover:text-foreground'
                                     )}
                                 >
-                                    Frequent
+                                    {t('Frequent')}
                                 </button>
                             </div>
 
@@ -773,7 +777,7 @@ export function LandlordOverviewView() {
                                 )}
                             >
                                 {isCustomizing ? <Check className="size-3" /> : <SlidersHorizontal className="size-3 text-primary" />}
-                                <span>{isCustomizing ? 'Done' : 'Edit'}</span>
+                                <span>{isCustomizing ? t('Done') : t('Edit')}</span>
                             </button>
                         </div>
                     </div>
@@ -781,19 +785,19 @@ export function LandlordOverviewView() {
                     {/* Customize Mode Banner */}
                     {isCustomizing && (
                         <div className="p-3 rounded-2xl border border-primary/20 bg-primary/5 flex items-center justify-between text-[10px]">
-                            <span className="font-semibold text-primary">Tap eye to hide, or drag to reorder.</span>
+                            <span className="font-semibold text-primary">{t("Tap eye to hide, or drag to reorder.")}</span>
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={restoreAll}
                                     className="font-bold text-muted-foreground hover:text-primary underline"
                                 >
-                                    Restore All
+                                    {t('Restore All')}
                                 </button>
                                 <button
                                     onClick={resetToDefaults}
                                     className="font-bold text-muted-foreground hover:text-red-400"
                                 >
-                                    Reset
+                                    {t('Reset')}
                                 </button>
                             </div>
                         </div>
@@ -832,8 +836,8 @@ export function LandlordOverviewView() {
                                 <CreditCard className="size-4" />
                             </div>
                             <div>
-                                <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Cash Flow Ledger</h3>
-                                <p className="text-[10px] text-muted-foreground">What is overdue, due soon, and paid</p>
+                                <h3 className="text-xs font-black uppercase tracking-wider text-foreground">{t("Cash Flow Ledger")}</h3>
+                                <p className="text-[10px] text-muted-foreground">{t("What is overdue, due soon, and paid")}</p>
                             </div>
                         </div>
 
@@ -841,7 +845,7 @@ export function LandlordOverviewView() {
                             href="/mobile/landlord/payments"
                             className="px-2.5 py-1.5 rounded-xl text-[10px] font-bold neumorphic-extruded text-muted-foreground hover:text-primary flex items-center gap-1 active:scale-95"
                         >
-                            <span>Ledger</span>
+                            <span>{t('Ledger')}</span>
                             <ArrowUpRight className="size-3" />
                         </Link>
                     </div>
@@ -858,12 +862,12 @@ export function LandlordOverviewView() {
                                     className="neumorphic-inset rounded-xl p-2.5 flex flex-col items-center justify-between text-center active:scale-95 transition-all"
                                 >
                                     <span className={cn('text-[9px] font-black uppercase tracking-tight', tone)}>
-                                        {key}
+                                        {t(key)}
                                     </span>
                                     <h4 className="text-base font-black text-foreground my-0.5 tabular-nums">
                                         {paymentsState.loading ? '…' : items.length}
                                     </h4>
-                                    <span className="text-[8px] text-muted-foreground font-semibold">View list</span>
+                                    <span className="text-[8px] text-muted-foreground font-semibold">{t("View list")}</span>
                                 </button>
                             );
                         })}
@@ -900,7 +904,7 @@ export function LandlordOverviewView() {
                         ) : (
                             <div className="neumorphic-inset rounded-2xl p-4 text-center text-muted-foreground/60">
                                 <CheckCircle2 className="size-5 mx-auto mb-1 text-emerald-500 opacity-70" />
-                                <p className="text-[11px] font-bold">No Pending Payments</p>
+                                <p className="text-[11px] font-bold">{t("No Pending Payments")}</p>
                             </div>
                         )}
                     </div>
@@ -916,26 +920,26 @@ export function LandlordOverviewView() {
                                     <Zap className="size-4" />
                                 </div>
                                 <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
-                                    Utility Submeters
+                                    {t('Utility Submeters')}
                                 </h3>
                             </div>
-                            <span className="text-[9px] font-bold text-muted-foreground">Monthly Cycle</span>
+                            <span className="text-[9px] font-bold text-muted-foreground">{t("Monthly Cycle")}</span>
                         </div>
                         <p className="text-[10px] text-muted-foreground leading-relaxed">
-                            Record water &amp; electric submeter readings, calculate consumption, and update active invoices.
+                            {t('Record water & electric submeter readings, calculate consumption, and update active invoices.')}
                         </p>
                         <div className="flex items-center gap-2 pt-1 border-t border-border/40">
                             <Link
                                 href="/landlord/utility-billing?tab=verify"
                                 className="flex-1 text-center py-2 rounded-xl neumorphic-extruded text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-primary active:scale-95 transition-all"
                             >
-                                Verify Queue
+                                {t('Verify Queue')}
                             </Link>
                             <Link
                                 href="/landlord/utility-billing"
                                 className="flex-1 text-center py-2 rounded-xl neumorphic-primary text-[10px] font-black uppercase tracking-wider text-primary-foreground active:scale-95 transition-all"
                             >
-                                Record
+                                {t('Record')}
                             </Link>
                         </div>
                     </div>
@@ -948,20 +952,20 @@ export function LandlordOverviewView() {
                                     <RefreshCw className="size-4" />
                                 </div>
                                 <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
-                                    Lease Renewals
+                                    {t('Lease Renewals')}
                                 </h3>
                             </div>
-                            <span className="text-[9px] font-bold text-emerald-500">Active</span>
+                            <span className="text-[9px] font-bold text-emerald-500">{t("Active")}</span>
                         </div>
                         <p className="text-[10px] text-muted-foreground leading-relaxed">
-                            Review and manage tenant lease renewal requests, expiration dates, and tenancy extensions.
+                            {t('Review and manage tenant lease renewal requests, expiration dates, and tenancy extensions.')}
                         </p>
                         <div className="pt-1 border-t border-border/40">
                             <Link
                                 href="/mobile/landlord/leases?tab=renewals"
                                 className="w-full block text-center py-2 rounded-xl neumorphic-extruded text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-primary active:scale-95 transition-all"
                             >
-                                View All Renewals
+                                {t('View All Renewals')}
                             </Link>
                         </div>
                     </div>
@@ -1033,10 +1037,10 @@ export function LandlordOverviewView() {
                                     </div>
                                     <div className="min-w-0">
                                         <h2 className="text-base font-black text-foreground truncate">
-                                            Resident Invite Links
+                                            {t('Resident Invite Links')}
                                         </h2>
                                         <p className="text-[11px] text-muted-foreground truncate">
-                                            Generate referral tokens for applicant intake
+                                            {t('Generate referral tokens for applicant intake')}
                                         </p>
                                     </div>
                                 </div>
@@ -1044,7 +1048,7 @@ export function LandlordOverviewView() {
                                     type="button"
                                     onClick={() => setIsInviteModalOpen(false)}
                                     className="size-9 min-h-[36px] min-w-[36px] rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95 shrink-0"
-                                    aria-label="Close sheet"
+                                    aria-label={t("Close sheet")}
                                 >
                                     <X className="size-4" />
                                 </button>
@@ -1104,6 +1108,7 @@ export function LandlordOverviewView() {
                 {selectedActionPayment && (
                     <div className="fixed inset-0 z-[150] flex items-end justify-center p-0">
                         <button
+                            aria-label={t('Close')}
                             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                             onClick={() => {
                                 setSelectedActionPayment(null);
@@ -1144,6 +1149,7 @@ export function LandlordOverviewView() {
                                         <button
                                             onClick={() => setSelectedActionPayment(null)}
                                             className="size-8 flex items-center justify-center rounded-full bg-muted/40 text-muted-foreground"
+                                            aria-label={t('Close')}
                                         >
                                             <X className="size-4" />
                                         </button>
@@ -1151,13 +1157,13 @@ export function LandlordOverviewView() {
 
                                     <div className="rounded-2xl bg-muted/30 p-4 border border-border/50">
                                         <div className="flex items-center justify-between mb-1">
-                                            <span className="text-[10px] font-black uppercase tracking-wider text-primary">Settlement Due</span>
+                                            <span className="text-[10px] font-black uppercase tracking-wider text-primary">{t("Settlement Due")}</span>
                                             <span className="text-[10px] font-black text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full">
-                                                {selectedActionPayment.status}
+                                                {t(selectedActionPayment.status)}
                                             </span>
                                         </div>
                                         <h4 className="text-2xl font-black text-foreground">PHP {selectedActionPayment.amount.toLocaleString()}</h4>
-                                        <p className="text-[10px] text-muted-foreground mt-0.5">Due date: {selectedActionPayment.date}</p>
+                                        <p className="text-[10px] text-muted-foreground mt-0.5">{t('Due date: {date}', { date: selectedActionPayment.date })}</p>
                                     </div>
 
                                     <div className="flex items-center gap-2">
@@ -1166,14 +1172,14 @@ export function LandlordOverviewView() {
                                             className="flex-1 flex items-center justify-center gap-2 rounded-xl neumorphic-extruded py-3 text-xs font-bold text-foreground active:scale-95"
                                         >
                                             <MessageSquare className="size-4 text-primary" />
-                                            <span>Message</span>
+                                            <span>{t('Message')}</span>
                                         </Link>
                                         <button
                                             onClick={() => setIsConfirmingAction(true)}
                                             className="flex-1 flex items-center justify-center gap-2 rounded-xl neumorphic-primary py-3 text-xs font-black uppercase tracking-wider text-primary-foreground active:scale-95"
                                         >
                                             <CheckCircle2 className="size-4" />
-                                            <span>Settle</span>
+                                            <span>{t('Settle')}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -1183,9 +1189,9 @@ export function LandlordOverviewView() {
                                         <AlertTriangle className="size-7" />
                                     </div>
                                     <div>
-                                        <h3 className="text-base font-black text-foreground">Confirm Settlement</h3>
+                                        <h3 className="text-base font-black text-foreground">{t("Confirm Settlement")}</h3>
                                         <p className="text-xs text-muted-foreground mt-1">
-                                            Make sure that the tenant has paid rent. Verify bank or GCash proof of payment.
+                                            {t('Make sure that the tenant has paid rent. Verify bank or GCash proof of payment.')}
                                         </p>
                                     </div>
                                     <div className="flex flex-col gap-2 pt-2">
@@ -1196,13 +1202,13 @@ export function LandlordOverviewView() {
                                             }}
                                             className="w-full rounded-xl neumorphic-primary py-3 text-xs font-black uppercase tracking-wider text-primary-foreground active:scale-95"
                                         >
-                                            Complete Settlement
+                                            {t('Complete Settlement')}
                                         </button>
                                         <button
                                             onClick={() => setIsConfirmingAction(false)}
                                             className="w-full rounded-xl neumorphic-extruded py-3 text-xs font-bold text-muted-foreground active:scale-95"
                                         >
-                                            Go Back
+                                            {t('Go Back')}
                                         </button>
                                     </div>
                                 </div>
@@ -1224,6 +1230,7 @@ function PaymentCard({
     fallbackAvatar: string;
     onClick?: () => void;
 }) {
+    const { t } = useLanguageContext();
     const { tenant, unit, amount, status, date, avatar } = payment;
     const isPaid = status === 'Paid';
     const isNearDue = status === 'Near Due';
@@ -1257,7 +1264,7 @@ function PaymentCard({
                     <h4 className="truncate text-xs font-black text-foreground group-hover:text-primary transition-colors">
                         {tenant}
                     </h4>
-                    <p className="text-[10px] font-semibold text-muted-foreground truncate">Unit {unit}</p>
+                    <p className="text-[10px] font-semibold text-muted-foreground truncate">{t('Unit {unit}', { unit })}</p>
                 </div>
             </div>
 

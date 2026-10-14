@@ -203,7 +203,7 @@ describe("lease date and money rules", () => {
   });
 
   it("action schema validates lease_data cross-field and money rules", () => {
-    const lease = { start_date: "2026-11-01", end_date: "2027-11-01", monthly_rent: 15000, security_deposit: 15000 };
+    const lease = { start_date: "2026-11-01", term_type: "fixed", end_date: "2027-11-01", monthly_rent: 15000, security_deposit: 15000 };
     expect(applicationActionSchema.safeParse({ status: "payment_pending", lease_data: lease }).success).toBe(true);
     expect(applicationActionSchema.safeParse({ status: "payment_pending", lease_data: { ...lease, end_date: "2026-11-01" } }).success).toBe(false);
     expect(applicationActionSchema.safeParse({ status: "payment_pending", lease_data: { ...lease, monthly_rent: 0 } }).success).toBe(false);
@@ -213,10 +213,66 @@ describe("lease date and money rules", () => {
   });
 
   it("finalize schema rejects equal dates and missing signatures", () => {
-    const base = { application_id: UNIT, unit_id: UNIT, lease_start: "2026-11-01", lease_end: "2027-11-01", monthly_rent: 12000, landlord_signature: "sig", tenant_signature: "sig" };
+    const base = { application_id: UNIT, unit_id: UNIT, lease_start: "2026-11-01", lease_term_type: "fixed", lease_end: "2027-11-01", monthly_rent: 12000, landlord_signature: "sig", tenant_signature: "sig" };
     expect(leaseFinalizeSchema.safeParse(base).success).toBe(true);
     expect(leaseFinalizeSchema.safeParse({ ...base, lease_end: base.lease_start }).success).toBe(false);
     expect(leaseFinalizeSchema.safeParse({ ...base, tenant_signature: "" }).success).toBe(false);
+  });
+});
+
+describe("lease term type (open-ended by default)", () => {
+  const lease = { start_date: "2026-11-01", monthly_rent: 15000, security_deposit: 15000 };
+  const finalizeBase = { application_id: UNIT, unit_id: UNIT, lease_start: "2026-11-01", monthly_rent: 12000, landlord_signature: "sig", tenant_signature: "sig" };
+  const manualBase = { fullName: "Lyle Cannon", email: "lyle@example.com", propertyId: PROPERTY, unitId: UNIT, startDate: "2026-10-09", monthlyRent: 20000 };
+
+  it("a payload with no term type parses as open-ended with a null end date", () => {
+    const action = applicationActionSchema.safeParse({ status: "payment_pending", lease_data: lease });
+    expect(action.success).toBe(true);
+    if (action.success) {
+      expect(action.data.lease_data?.term_type).toBe("open_ended");
+      expect(action.data.lease_data?.end_date).toBeNull();
+    }
+
+    const finalize = leaseFinalizeSchema.safeParse(finalizeBase);
+    expect(finalize.success).toBe(true);
+    if (finalize.success) {
+      expect(finalize.data.lease_term_type).toBe("open_ended");
+      expect(finalize.data.lease_end).toBeNull();
+    }
+
+    const manual = manualTenantSchema.safeParse(manualBase);
+    expect(manual.success).toBe(true);
+    if (manual.success) {
+      expect(manual.data.termType).toBe("open_ended");
+      expect(manual.data.endDate).toBeNull();
+    }
+  });
+
+  it("a fixed term without an end date fails with the fixed-term message", () => {
+    expect(firstMessage(applicationActionSchema.safeParse({ status: "payment_pending", lease_data: { ...lease, term_type: "fixed" } }))).toMatch(/required for a fixed-term lease/);
+    expect(firstMessage(leaseFinalizeSchema.safeParse({ ...finalizeBase, lease_term_type: "fixed" }))).toMatch(/required for a fixed-term lease/);
+    expect(firstMessage(manualTenantSchema.safeParse({ ...manualBase, termType: "fixed" }))).toMatch(/required for a fixed-term lease/);
+  });
+
+  it("an open-ended payload with an end date supplied has it nulled out", () => {
+    const action = applicationActionSchema.safeParse({ status: "payment_pending", lease_data: { ...lease, term_type: "open_ended", end_date: "2027-11-01" } });
+    expect(action.success).toBe(true);
+    if (action.success) expect(action.data.lease_data?.end_date).toBeNull();
+
+    const finalize = leaseFinalizeSchema.safeParse({ ...finalizeBase, lease_term_type: "open_ended", lease_end: "2027-11-01" });
+    expect(finalize.success).toBe(true);
+    if (finalize.success) expect(finalize.data.lease_end).toBeNull();
+
+    const manual = manualTenantSchema.safeParse({ ...manualBase, termType: "open_ended", endDate: "2027-10-09" });
+    expect(manual.success).toBe(true);
+    if (manual.success) expect(manual.data.endDate).toBeNull();
+  });
+
+  it("accepts the legacy month_to_month alias and rejects unknown term types", () => {
+    const alias = leaseFinalizeSchema.safeParse({ ...finalizeBase, lease_term_type: "month_to_month" });
+    expect(alias.success).toBe(true);
+    if (alias.success) expect(alias.data.lease_term_type).toBe("open_ended");
+    expect(firstMessage(leaseFinalizeSchema.safeParse({ ...finalizeBase, lease_term_type: "yearly" }))).toBe("Lease term must be open-ended or fixed.");
   });
 });
 
@@ -228,13 +284,15 @@ describe("manual tenant schema", () => {
     propertyId: PROPERTY,
     unitId: UNIT,
     startDate: "2026-10-09",
+    termType: "fixed",
     endDate: "2027-10-09",
     monthlyRent: 20000,
     securityDeposit: 20000,
   };
 
   it("keeps the established error messages", () => {
-    expect(firstMessage(manualTenantSchema.safeParse({ ...base, endDate: "2026-07-31" }))).toBe("Lease end date must be after start date.");
+    // Shared lease rule wording ("after the start date") replaced the older manual-only string.
+    expect(firstMessage(manualTenantSchema.safeParse({ ...base, endDate: "2026-07-31" }))).toMatch(/^Lease end date must be after (the )?start date\.$/);
     expect(firstMessage(manualTenantSchema.safeParse({ ...base, email: "nope" }))).toBe("Please enter a valid email address.");
     expect(firstMessage(manualTenantSchema.safeParse({ ...base, fullName: "Lyle 123" }))).toBe("Resident full name cannot contain numbers.");
     expect(firstMessage(manualTenantSchema.safeParse({ ...base, monthlyRent: 0 }))).toMatch(/greater than/);
@@ -322,6 +380,13 @@ describe("list query filters", () => {
     expect(landlordLeaseListQuerySchema.safeParse({ status: "active,expiring_soon", propertyId: "all" }).success).toBe(true);
     expect(landlordLeaseListQuerySchema.safeParse({ status: "active;drop" }).success).toBe(false);
     expect(landlordLeaseListQuerySchema.safeParse({ unitId: "unit-1" }).success).toBe(false);
+  });
+
+  it("only accepts real lease statuses plus the expiring_soon pseudo-status", () => {
+    expect(landlordLeaseListQuerySchema.safeParse({ status: "expiring_soon" }).success).toBe(true);
+    expect(landlordLeaseListQuerySchema.safeParse({ status: "expired,terminated" }).success).toBe(true);
+    expect(firstMessage(landlordLeaseListQuerySchema.safeParse({ status: "bogus" }))).toBe("Status filter is invalid.");
+    expect(landlordLeaseListQuerySchema.safeParse({ status: "active,bogus" }).success).toBe(false);
   });
 });
 
@@ -414,7 +479,7 @@ describe("route boundaries reject bad payloads with 400 + fieldErrors", () => {
 
   it("POST /api/landlord/lease/finalize rejects end date on/before start", async () => {
     const { POST } = await import("@/app/api/landlord/lease/finalize/route");
-    const res = await POST(jsonRequest({ application_id: UNIT, unit_id: UNIT, lease_start: "2026-11-01", lease_end: "2026-11-01", monthly_rent: 10000, landlord_signature: "a", tenant_signature: "b" }));
+    const res = await POST(jsonRequest({ application_id: UNIT, unit_id: UNIT, lease_start: "2026-11-01", lease_term_type: "fixed", lease_end: "2026-11-01", monthly_rent: 10000, landlord_signature: "a", tenant_signature: "b" }));
     expect(res.status).toBe(400);
     expect((await res.json()).fieldErrors.lease_end).toMatch(/after/);
   });

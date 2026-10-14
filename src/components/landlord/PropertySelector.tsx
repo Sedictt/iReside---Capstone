@@ -13,9 +13,11 @@ import {
     Plus
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
+import { useLanguageContext } from '@/context/LanguageContext'
 
 export function PropertySelector({ className }: { className?: string } = {}) {
     const { properties, selectedPropertyId, setSelectedPropertyId, selectedProperty, loading } = useProperty()
+    const { t } = useLanguageContext()
     const [isOpen, setIsOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [hasMounted, setHasMounted] = useState(false)
@@ -58,12 +60,12 @@ export function PropertySelector({ className }: { className?: string } = {}) {
     // When there is only 1 property (or 0), render as a static label instead of a dropdown
     if (properties.length <= 1) {
         const singleProperty = properties[0];
-        const propertyDisplayName = singleProperty?.name || (loading ? 'Loading…' : 'No Property');
+        const propertyDisplayName = singleProperty?.name || (loading ? t('Loading…') : t('No Property'));
 
         return (
             <div
                 className="flex h-12 w-full items-center gap-2.5 px-3 rounded-xl border border-border/60 bg-muted/20 select-none"
-                aria-label={`Current Property: ${propertyDisplayName}`}
+                aria-label={t('Current Property: {name}', { name: propertyDisplayName })}
             >
                 <div className="flex shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary size-8">
                     <Building2 className="size-4" />
@@ -71,7 +73,7 @@ export function PropertySelector({ className }: { className?: string } = {}) {
                 
                 <div className="flex min-w-0 flex-1 flex-col items-start leading-tight text-left">
                     <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">
-                        Property
+                        {t('Property')}
                     </span>
                     <span className="truncate text-xs font-bold text-foreground mt-0.5">
                         {propertyDisplayName}
@@ -102,12 +104,12 @@ export function PropertySelector({ className }: { className?: string } = {}) {
                 <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
                     <div className="flex min-w-0 flex-1 flex-col items-start leading-tight text-left">
                         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">
-                            Property
+                            {t('Property')}
                         </span>
                         <span className="truncate text-xs font-bold text-foreground mt-0.5">
                             {selectedPropertyId === 'all' 
-                                ? 'All Properties' 
-                                : (selectedProperty?.name || (loading ? 'Loading…' : (properties.length > 0 ? properties[0].name : 'Select Property')))}
+                                ? t('All Properties') 
+                                : (selectedProperty?.name || (loading ? t('Loading…') : (properties.length > 0 ? properties[0].name : t('Select Property'))))}
                         </span>
                     </div>
                     <ChevronDown className={cn(
@@ -123,7 +125,7 @@ export function PropertySelector({ className }: { className?: string } = {}) {
                         <Search className="absolute left-3.5 top-1/2 mt-0.5 size-3.5 -translate-y-1/2 text-muted-foreground/50" />
                         <input maxLength={60}
                             type="text"
-                            placeholder="Search properties…"
+                            placeholder={t('Search properties…')}
                             className="h-9 w-full rounded-xl border border-border/60 bg-muted/30 text-xs font-medium pl-8 pr-3 focus:outline-none focus:border-primary/50 focus:bg-background transition-colors"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -154,7 +156,7 @@ export function PropertySelector({ className }: { className?: string } = {}) {
                                     <LayoutGrid className="size-4" />
                                 </div>
                                 <div className="flex flex-1 flex-col items-start overflow-hidden">
-                                    <span className="text-xs font-bold tracking-tight">All Properties</span>
+                                    <span className="text-xs font-bold tracking-tight">{t('All Properties')}</span>
                                 </div>
                                 {selectedPropertyId === 'all' && (
                                     <Check className="size-3.5 text-primary shrink-0" />
@@ -163,13 +165,13 @@ export function PropertySelector({ className }: { className?: string } = {}) {
                         )}
 
                         <div className="px-2.5 py-1">
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Your Properties</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('Your Properties')}</p>
                         </div>
 
                         <div className="space-y-0.5">
                             {filteredProperties.length === 0 ? (
                                 <div className="p-6 text-center">
-                                    <p className="text-xs font-medium text-muted-foreground/60 italic">No properties found</p>
+                                    <p className="text-xs font-medium text-muted-foreground/60 italic">{t('No properties found')}</p>
                                 </div>
                             ) : (
                                 filteredProperties.map((property) => (
@@ -223,7 +225,7 @@ export function PropertySelector({ className }: { className?: string } = {}) {
                                 <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary group-hover:scale-105 transition-transform">
                                     <Plus className="size-3.5" />
                                 </div>
-                                <span className="truncate">Add New Property</span>
+                                <span className="truncate">{t('Add New Property')}</span>
                             </Link>
                         </div>
                     </div>

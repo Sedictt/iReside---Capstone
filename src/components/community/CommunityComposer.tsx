@@ -9,6 +9,8 @@ import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation"
 import { useFormValidation } from "@/hooks/useFormValidation"
 import { FieldError } from "@/components/ui/field-error"
 import { COMMUNITY_LIMITS, pollOptionsRule } from "@/lib/validation/schemas/operations.schema"
+import { useLanguageContext } from "@/context/LanguageContext"
+import { tr } from "@/hooks/useLanguage";
 
 /** The composer's single text area; poll and announcement text becomes the post title. */
 const COMPOSER_TEXT_MAX = 500
@@ -62,6 +64,7 @@ export function CommunityComposer({
     isSubmitting,
     uploadingPhotos
 }: CommunityComposerProps) {
+    const { t } = useLanguageContext()
     const [state, dispatch] = useReducer(composerReducer, {
         composerType: "discussion",
         title: "",
@@ -81,7 +84,7 @@ export function CommunityComposer({
     const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const rawFiles = Array.from(e.target.files || []);
         if (rawFiles.length + state.selectedPhotos.length > 4) {
-            toast.error("Photo limit exceeded", { description: "You can select up to 4 photos." });
+            toast.error(t("Photo limit exceeded"), { description: t("You can select up to 4 photos.") });
             if (e.target) e.target.value = "";
             return;
         }
@@ -89,7 +92,7 @@ export function CommunityComposer({
         const validFiles = handleMediaSelection(e, {
             preset: "image",
             multiple: true,
-            notify: (message, description) => toast.error(message, { description }),
+            notify: (message, description) => toast.error(tr(message), { description }),
         });
 
         if (!validFiles || validFiles.length === 0) return;
@@ -136,19 +139,19 @@ export function CommunityComposer({
                                 active={state.composerType === "discussion"} 
                                 onClick={() => dispatch({ type: "SET_COMPOSER_TYPE", payload: "discussion" })} 
                                 icon={MessageSquarePlus} 
-                                label="Discussion" 
+                                label={t("Discussion")} 
                             />
                             <TypeButton 
                                 active={state.composerType === "poll"} 
                                 onClick={() => dispatch({ type: "SET_COMPOSER_TYPE", payload: "poll" })} 
                                 icon={BarChart3} 
-                                label="Poll" 
+                                label={t("Poll")} 
                             />
                             <TypeButton 
                                 active={state.composerType === "announcement"} 
                                 onClick={() => dispatch({ type: "SET_COMPOSER_TYPE", payload: "announcement" })} 
                                 icon={Megaphone} 
-                                label="Announcement" 
+                                label={t("Announcement")} 
                             />
                         </div>
                     )}
@@ -159,7 +162,7 @@ export function CommunityComposer({
                             style={{ backgroundColor: profile?.avatar_bg_color || undefined }}
                         >
                             {profile?.avatar_url ? (
-                                <Image src={profile.avatar_url} alt="Profile" fill className="object-cover" />
+                                <Image src={profile.avatar_url} alt={t("Profile")} fill className="object-cover" />
                             ) : (
                                 <span className="font-black text-foreground dark:text-white">{userInitial}</span>
                             )}
@@ -173,9 +176,9 @@ export function CommunityComposer({
                                     e.target.style.height = `${e.target.scrollHeight}px`
                                 }}
                                 placeholder={
-                                    state.composerType === "announcement" ? "What's the announcement about?..." :
-                                    state.composerType === "poll" ? "Ask your neighbors a question..." :
-                                    "What's on your mind, neighbor?..."
+                                    state.composerType === "announcement" ? t("What's the announcement about?...") :
+                                    state.composerType === "poll" ? t("Ask your neighbors a question...") :
+                                    t("What's on your mind, neighbor?...")
                                 }
                                 className="block min-h-[40px] w-full resize-none overflow-hidden border-none bg-transparent p-0 text-xl font-medium leading-relaxed text-foreground outline-none focus:ring-0 dark:text-white dark:placeholder:text-white/20"
                                 rows={1}
@@ -187,7 +190,7 @@ export function CommunityComposer({
                                         <div key={`poll-option-${index}`} className="group relative">
                                             <input maxLength={COMMUNITY_LIMITS.pollOption}
                                                 {...(index === 0 ? form.fieldProps("pollOptions") : { onBlur: () => form.touch("pollOptions") })}
-                                                aria-label={`Poll option ${index + 1}`}
+                                                aria-label={t("Poll option {number}", { number: index + 1 })}
                                                 aria-invalid={form.errorFor("pollOptions") ? true : undefined}
                                                 aria-describedby={form.errorFor("pollOptions") ? form.errorId("pollOptions") : undefined}
                                                 type="text"
@@ -197,7 +200,7 @@ export function CommunityComposer({
                                                     next[index] = e.target.value
                                                     dispatch({ type: "SET_POLL_OPTIONS", payload: next })
                                                 }}
-                                                placeholder={`Option ${index + 1}`}
+                                                placeholder={t("Option {number}", { number: index + 1 })}
                                                 className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all neumorphic-inset"
                                             />
                                         </div>
@@ -210,7 +213,7 @@ export function CommunityComposer({
                                             className="text-xs font-black text-primary hover:underline disabled:opacity-50"
                                             disabled={state.pollOptions.length >= COMMUNITY_LIMITS.maxPollOptions}
                                         >
-                                            + Add Option
+                                            + {t("Add Option")}
                                         </button>
                                         {state.pollOptions.length > 2 && (
                                             <button
@@ -218,7 +221,7 @@ export function CommunityComposer({
                                                 onClick={() => dispatch({ type: "SET_POLL_OPTIONS", payload: state.pollOptions.slice(0, -1) })}
                                                 className="text-xs font-black text-muted-foreground hover:text-foreground"
                                             >
-                                                - Remove Option
+                                                - {t("Remove Option")}
                                             </button>
                                         )}
                                     </div>
@@ -239,10 +242,11 @@ export function CommunityComposer({
                                     key={`photo-${index}-${photo.name}`} 
                                     className="group relative size-20 overflow-hidden rounded-xl neumorphic-inset-card"
                                 >
-                                    <Image src={URL.createObjectURL(photo)} alt="Preview" fill className="object-cover" />
+                                    <Image src={URL.createObjectURL(photo)} alt={t("Preview")} fill className="object-cover" />
                                     <button 
                                         type="button" 
-                                        onClick={() => removePhoto(index)} 
+                                        onClick={() => removePhoto(index)}
+                                        aria-label={t("Remove photo")} 
                                         className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
                                     >
                                         <X className="size-4" />
@@ -269,7 +273,7 @@ export function CommunityComposer({
                                 className="flex items-center gap-2 rounded-xl px-3 py-2 text-muted-foreground transition-colors neumorphic-extruded disabled:opacity-30"
                             >
                                 <ImageIcon className="size-5" />
-                                <span className="text-sm font-black">Photo</span>
+                                <span className="text-sm font-black">{t("Photo")}</span>
                             </button>
                         </div>
                         <button 
@@ -277,7 +281,7 @@ export function CommunityComposer({
                             disabled={isSubmitting || uploadingPhotos || (!state.body.trim() && state.selectedPhotos.length === 0)} 
                             className="flex items-center gap-2 rounded-2xl px-8 py-2.5 text-sm font-black transition-all neumorphic-primary disabled:opacity-50"
                         >
-                            {uploadingPhotos ? "Uploading..." : isSubmitting ? "Publishing..." : "Publish"}
+                            {uploadingPhotos ? t("Uploading...") : isSubmitting ? t("Publishing...") : t("Publish")}
                             <Send className="size-5" />
                         </button>
                     </div>

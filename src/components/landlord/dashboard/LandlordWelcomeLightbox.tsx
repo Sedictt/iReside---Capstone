@@ -5,11 +5,13 @@ import { useRouter, usePathname } from "next/navigation";
 import { Building2, ArrowRight, Grid, Wallet, ShieldCheck } from "lucide-react";
 import { useLandlordSetup } from "@/hooks/useLandlordSetup";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export function LandlordWelcomeLightbox() {
     const router = useRouter();
     const pathname = usePathname();
     const setup = useLandlordSetup();
+    const { t } = useLanguageContext();
     const [hasMounted, setHasMounted] = useState(false);
 
     useEffect(() => {
@@ -59,17 +61,17 @@ export function LandlordWelcomeLightbox() {
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">
-                            Step 1 of 5
+                            {t("Step {step} of {total}", { step: 1, total: 5 })}
                         </span>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                            Required
+                            {t("Required")}
                         </span>
                     </div>
                     <h1 id="property-setup-lightbox-title" className="text-2xl sm:text-3xl font-black tracking-tight text-foreground leading-tight">
-                        Welcome! Let&apos;s set up your workspace
+                        {t("Welcome! Let's set up your workspace")}
                     </h1>
                     <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                        Start by registering your property. Units, payments, and tenants are all organized under it.
+                        {t("Start by registering your property. Units, payments, and tenants are all organized under it.")}
                     </p>
                 </div>
 
@@ -81,10 +83,10 @@ export function LandlordWelcomeLightbox() {
                         </div>
                         <div>
                             <h3 className="text-xs font-black text-foreground">
-                                1. Architecture & Units
+                                {t("1. Architecture & Units")}
                             </h3>
                             <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Define building floors, total units count, and automated room numbering schemes.
+                                {t("Define building floors, total units count, and automated room numbering schemes.")}
                             </p>
                         </div>
                     </div>
@@ -95,10 +97,10 @@ export function LandlordWelcomeLightbox() {
                         </div>
                         <div>
                             <h3 className="text-xs font-black text-foreground">
-                                2. Rental Pricing & Utilities
+                                {t("2. Rental Pricing & Utilities")}
                             </h3>
                             <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Set default monthly rent rates, security deposit rules, and utility billing allocations.
+                                {t("Set default monthly rent rates, security deposit rules, and utility billing allocations.")}
                             </p>
                         </div>
                     </div>
@@ -109,10 +111,10 @@ export function LandlordWelcomeLightbox() {
                         </div>
                         <div>
                             <h3 className="text-xs font-black text-foreground">
-                                3. Governance & Lease Rules
+                                {t("3. Governance & Lease Rules")}
                             </h3>
                             <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Add house rules and select whether to auto-generate standard lease agreements.
+                                {t("Add house rules and select whether to auto-generate standard lease agreements.")}
                             </p>
                         </div>
                     </div>
@@ -126,12 +128,12 @@ export function LandlordWelcomeLightbox() {
                         className="group relative w-full flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-primary px-6 py-4 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-105 active:scale-98 cursor-pointer"
                     >
                         <span className="text-xs sm:text-sm font-black uppercase tracking-wider relative z-10">
-                            Create Property Now
+                            {t("Create Property Now")}
                         </span>
                         <ArrowRight className="size-4 relative z-10 transition-transform group-hover:translate-x-1" />
                     </button>
                     <p className="mt-3 text-center text-[10px] font-medium text-muted-foreground/70">
-                        Units, billing, and tenant tools unlock once your first property is registered.
+                        {t("Units, billing, and tenant tools unlock once your first property is registered.")}
                     </p>
                 </div>
             </div>

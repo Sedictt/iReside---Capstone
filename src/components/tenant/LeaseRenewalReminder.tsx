@@ -5,10 +5,18 @@ import { RefreshCw, X, ArrowRight, Clock, Check } from "lucide-react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import {
+    EXPIRING_SOON_DAYS,
+    daysUntilLeaseEnd,
+    isLeaseExpiringSoon,
+    type LeaseTermLike,
+} from "@/lib/lease-term";
 import LeaseRenewalRequest from "./LeaseRenewalRequest";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface LeaseRenewalReminderProps {
-    daysRemaining: number;
+    /** The lease being reminded about. Open-ended leases never trigger the reminder. */
+    lease?: LeaseTermLike | null;
     leaseId?: string;
     hasOngoingRequest?: boolean;
     teamMembers?: Array<{
@@ -17,7 +25,8 @@ interface LeaseRenewalReminderProps {
     }>;
 }
 
-export default function LeaseRenewalReminder({ daysRemaining, leaseId, hasOngoingRequest, teamMembers }: LeaseRenewalReminderProps) {
+export default function LeaseRenewalReminder({ lease, leaseId, hasOngoingRequest, teamMembers }: LeaseRenewalReminderProps) {
+    const { t } = useLanguageContext();
     const [isVisible, setIsVisible] = useState(false);
     const [showRenewalRequest, setShowRenewalRequest] = useState(false);
     const [dontShowAgain, setDontShowAgain] = useState(false);
@@ -25,12 +34,14 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, hasOngoin
     // Use provided team members or fall back to empty array for placeholders
     const displayMembers = teamMembers && teamMembers.length > 0 ? teamMembers : null;
 
+    // Only fixed-term leases inside the renewal window qualify; open-ended leases have nothing to renew.
+    const daysRemaining = daysUntilLeaseEnd(lease) ?? 0;
+    const isEligible = isLeaseExpiringSoon(lease, EXPIRING_SOON_DAYS) && daysRemaining > 0;
+
     useEffect(() => {
         // If explicitly indicated that there is already an ongoing request, suppress reminder immediately
         if (hasOngoingRequest) return;
 
-        // Eligibility check: Within 90 days
-        const isEligible = daysRemaining > 0 && daysRemaining <= 90;
         if (!isEligible) return;
 
         if (!leaseId) return;
@@ -90,8 +101,9 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, hasOngoin
             if (timer) clearTimeout(timer);
             window.removeEventListener("lease-renewal-submitted", handleRenewalSubmitted);
         };
-    }, [daysRemaining, leaseId, hasOngoingRequest]);
+    }, [isEligible, leaseId, hasOngoingRequest]);
 
+    if (!isEligible) return null;
     if (!isVisible && !showRenewalRequest) return null;
 
     return (
@@ -125,6 +137,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, hasOngoin
                                     </div>
                                     <button 
                                         onClick={() => setIsVisible(false)}
+                                        aria-label={t("Close")}
                                         className="p-2 rounded-xl transition-colors text-muted-foreground hover:text-foreground neumorphic-extruded"
                                     >
                                         <X className="size-5" />
@@ -134,16 +147,16 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, hasOngoin
                                 <div className="space-y-4 mb-10">
                                     <div className="flex items-center gap-2">
                                         <div className="px-2.5 py-1 rounded-full text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1.5 neumorphic-inset">
-                                            <Clock className="size-3" /> {daysRemaining} Days Left
+                                            <Clock className="size-3" /> {t("{count} Days Left", { count: daysRemaining })}
                                         </div>
                                     </div>
                                     
                                     <h2 className="text-3xl font-black text-foreground tracking-tighter leading-none">
-                                        Lease Renewal Available
+                                        {t("Lease Renewal Available")}
                                     </h2>
                                     
                                     <p className="text-base text-muted-foreground leading-relaxed">
-                                        Your current lease is now eligible for renewal. You can submit a request to extend your stay for another term.
+                                        {t("Your current lease is now eligible for renewal. You can submit a request to extend your stay for another term.")}
                                     </p>
                                 </div>
 
@@ -152,7 +165,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, hasOngoin
                                         onClick={() => setIsVisible(false)}
                                         className="w-full py-4 rounded-2xl text-muted-foreground text-[11px] font-black uppercase tracking-widest hover:text-foreground transition-all neumorphic-extruded"
                                     >
-                                        Maybe Later
+                                        {t("Maybe Later")}
                                     </button>
                                     <button
                                         onClick={() => {
@@ -161,7 +174,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, hasOngoin
                                         }}
                                         className="w-full py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 neumorphic-primary"
                                     >
-                                        Renew Now <ArrowRight className="size-4" />
+                                        {t("Renew Now")} <ArrowRight className="size-4" />
                                     </button>
                                 </div>
 
@@ -185,7 +198,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, hasOngoin
                                             />
                                             <Check className="absolute size-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity stroke-[4]" />
                                         </div>
-                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">Do not show again</span>
+                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">{t("Do not show again")}</span>
                                     </label>
                                     <div className="flex -space-x-2">
                                         {displayMembers ? (
@@ -198,7 +211,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, hasOngoin
                                                     {member.avatar_url ? (
                                                         <Image 
                                                             src={member.avatar_url} 
-                                                            alt={member.name || `Team member ${i + 1}`}
+                                                            alt={member.name || t("Team member {number}", { number: i + 1 })}
                                                             width={24}
                                                             height={24}
                                                             className="w-full h-full object-cover"
@@ -224,9 +237,10 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId, hasOngoin
             </AnimatePresence>
 
             {showRenewalRequest && (
-                <LeaseRenewalRequest 
-                    leaseId={leaseId} 
-                    daysRemaining={daysRemaining} 
+                <LeaseRenewalRequest
+                    leaseId={leaseId}
+                    lease={lease}
+                    daysRemaining={daysRemaining}
                     variant="none" 
                     autoOpen={true}
                     onClose={() => {

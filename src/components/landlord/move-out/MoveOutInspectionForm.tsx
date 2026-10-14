@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useReducer } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 import {
  ShieldCheck,
  Camera,
@@ -18,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { FieldError } from "@/components/ui/field-error";
 import { MAX_MONEY_AMOUNT, moneyRule, textRule } from "@/lib/validation/rules";
 import { LIFECYCLE_LIMITS } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { tr } from "@/hooks/useLanguage";
 
 interface Deduction {
  id: string;
@@ -49,6 +51,7 @@ export function MoveOutInspectionForm({
  onSuccess,
  onCancel,
 }: MoveOutInspectionFormProps) {
+ const { t } = useLanguageContext();
  const [loading, setLoading] = useState(false);
  const [error, setError] = useState<string | null>(null);
  const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
@@ -188,21 +191,21 @@ export function MoveOutInspectionForm({
  const map: Record<string, { description?: string; amount?: string }> = {};
  for (const deduction of deductions) {
  const description = textRule(deduction.description, {
- label: "Deduction description",
+ label: t("Deduction description"),
  required: true,
  max: LIFECYCLE_LIMITS.deductionDescription,
  });
- const amount = moneyRule(deduction.amount, { label: "Deduction amount", positive: true });
+ const amount = moneyRule(deduction.amount, { label: t("Deduction amount"), positive: true });
  if (description || amount) map[deduction.id] = { description, amount };
  }
  return map;
- }, [deductions]);
- const notesError = textRule(notes, { label: "Notes", max: LIFECYCLE_LIMITS.inspectionNotes });
+ }, [deductions, t]);
+ const notesError = textRule(notes, { label: t("Notes"), max: LIFECYCLE_LIMITS.inspectionNotes });
 
  const validateForm = () => {
  setValidationAttempted(true);
  if (Object.keys(deductionErrors).length > 0 || notesError) {
- setError("Please provide a description and a positive amount for all deductions.");
+ setError(t("Please provide a description and a positive amount for all deductions."));
  const firstInvalid = deductions.find((d) => deductionErrors[d.id]);
  if (firstInvalid) {
  const field = deductionErrors[firstInvalid.id]?.description ? "description" : "amount";
@@ -238,14 +241,14 @@ export function MoveOutInspectionForm({
 
  if (!response.ok) {
  const responseData = await response.json();
- throw new Error(responseData.error || "Failed to submit inspection");
+ throw new Error(responseData.error || t("Failed to submit inspection"));
  }
 
  localStorage.removeItem(`inspection_draft_${requestId}`);
  onSuccess();
  } catch (err: unknown) {
  const error = err as Error;
- setError(error.message);
+ setError(tr(error.message));
  setShowConfirmSubmit(false);
  } finally {
  setLoading(false);
@@ -267,10 +270,10 @@ export function MoveOutInspectionForm({
  <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
  <ShieldCheck className="size-6" />
  </div>
- <h2 className="text-2xl font-black text-foreground tracking-tight">Move-Out Inspection</h2>
+ <h2 className="text-2xl font-black text-foreground tracking-tight">{t("Move-Out Inspection")}</h2>
  </div>
  <p className="text-sm font-medium text-muted-foreground">
- Record the condition of the unit and calculate security deposit deductions.
+ {t("Record the condition of the unit and calculate security deposit deductions.")}
  </p>
  </div>
 
@@ -288,7 +291,7 @@ export function MoveOutInspectionForm({
  <div className="grid gap-10 lg:grid-cols-12">
  <div className="flex flex-col gap-8 lg:col-span-7">
  <section className="rounded-3xl neumorphic-panel p-8 ">
- <h3 className="mb-8 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Clearance Status</h3>
+ <h3 className="mb-8 text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Clearance Status")}</h3>
  <div className="grid gap-4 sm:grid-cols-2">
  {Object.entries(checklist).map(([checklistKey, isCleared]) => (
  <div key={checklistKey} className="flex items-center justify-between rounded-2xl /50 neumorphic-inset p-4">
@@ -299,10 +302,10 @@ export function MoveOutInspectionForm({
  )}>
  {isCleared ? <CheckCircle2 className="size-4" /> : <AlertCircle className="size-4" />}
  </div>
- <span className="text-xs font-black capitalize text-foreground">{checklistKey.replace(/_/g, " ")}</span>
+ <span className="text-xs font-black capitalize text-foreground">{t(checklistKey.replace(/_/g, " "))}</span>
  </div>
  <Badge variant={isCleared ? "success" : "warning"} className="h-6 rounded-lg text-[9px] font-black uppercase tracking-tighter">
- {isCleared ? "Cleared" : "Pending"}
+ {isCleared ? t("Cleared") : t("Pending")}
  </Badge>
  </div>
  ))}
@@ -310,12 +313,12 @@ export function MoveOutInspectionForm({
  </section>
 
  <div className="space-y-3">
- <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">General Notes</h3>
+ <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("General Notes")}</h3>
  <textarea maxLength={LIFECYCLE_LIMITS.inspectionNotes}
- aria-label="General notes"
+ aria-label={t("General notes")}
  value={notes}
  onChange={(e) => setNotes(e.target.value)}
- placeholder="Record any specific damages or observations..."
+ placeholder={t("Record any specific damages or observations...")}
  className="h-32 w-full rounded-2xl neumorphic-panel p-4 text-sm font-medium text-foreground focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/30"
  />
  </div>
@@ -324,14 +327,14 @@ export function MoveOutInspectionForm({
  <div className="flex flex-col gap-8 lg:col-span-5">
  <section className="rounded-3xl neumorphic-panel p-8 ">
  <div className="mb-8">
- <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Outstanding Bills</h3>
+ <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Outstanding Bills")}</h3>
  </div>
  
  <div className="space-y-6">
  <div className="flex items-center justify-between">
  <div className="space-y-0.5">
- <p className="text-xs font-black text-foreground">Monthly Rent</p>
- <p className="text-[10px] font-medium text-muted-foreground">Outstanding balance</p>
+ <p className="text-xs font-black text-foreground">{t("Monthly Rent")}</p>
+ <p className="text-[10px] font-medium text-muted-foreground">{t("Outstanding balance")}</p>
  </div>
  <span className={cn(
  "text-base font-black",
@@ -343,7 +346,7 @@ export function MoveOutInspectionForm({
 
  <div className="grid grid-cols-2 gap-4 pt-6 border-t border-border/50">
  <div className="space-y-1">
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Electricity</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Electricity")}</p>
  <p className={cn(
  "text-sm font-black",
  (systemStatus?.electricity_balance || 0) > 0 ? "text-amber-600" : "text-emerald-500"
@@ -352,7 +355,7 @@ export function MoveOutInspectionForm({
  </p>
  </div>
  <div className="space-y-1 border-l border-border/50 pl-4">
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Water</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Water")}</p>
  <p className={cn(
  "text-sm font-black",
  (systemStatus?.water_balance || 0) > 0 ? "text-amber-600" : "text-emerald-500"
@@ -367,20 +370,20 @@ export function MoveOutInspectionForm({
  {/* Deposit Deductions */}
  <div className="space-y-6">
  <div className="flex items-center justify-between">
- <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Security Deposit Deductions</h3>
+ <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Security Deposit Deductions")}</h3>
  <button
  onClick={() => setDeductions([...deductions, { id: Math.random().toString(36).slice(2), description: "", amount: 0 }])}
  className="flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-primary transition-all hover:bg-primary/10"
  >
  <Plus className="size-3" />
- Add Item
+ {t("Add Item")}
  </button>
  </div>
 
  <div className="space-y-3">
  {deductions.length === 0 ? (
  <div className="flex h-24 items-center justify-center rounded-[2rem] border border-dashed border-border neumorphic-inset text-xs font-medium text-muted-foreground">
- No deductions added.
+ {t("No deductions added.")}
  </div>
  ) : (
  deductions.map((deduction) => (
@@ -394,12 +397,12 @@ export function MoveOutInspectionForm({
  <input maxLength={LIFECYCLE_LIMITS.deductionDescription}
  id={`deduction-${deduction.id}-description`}
  type="text"
- aria-label="Deduction description"
+ aria-label={t("Deduction description")}
  aria-invalid={validationAttempted && deductionErrors[deduction.id]?.description ? true : undefined}
  aria-describedby={validationAttempted && deductionErrors[deduction.id]?.description ? `deduction-${deduction.id}-description-error` : undefined}
  value={deduction.description}
  onChange={(e) => setDeductions(deductions.map(item => item.id === deduction.id ? { ...item, description: e.target.value } : item))}
- placeholder="Damage description"
+ placeholder={t("Damage description")}
  className={cn(
  "w-full rounded-xl neumorphic-panel px-4 py-2 text-xs font-black focus:border-primary/50 focus:outline-none",
  validationAttempted && deductionErrors[deduction.id]?.description && "ring-1 ring-rose-500/60"
@@ -417,7 +420,7 @@ export function MoveOutInspectionForm({
  id={`deduction-${deduction.id}-amount`}
  type="number"
  inputMode="decimal"
- aria-label="Deduction amount"
+ aria-label={t("Deduction amount")}
  aria-invalid={validationAttempted && deductionErrors[deduction.id]?.amount ? true : undefined}
  aria-describedby={validationAttempted && deductionErrors[deduction.id]?.amount ? `deduction-${deduction.id}-amount-error` : undefined}
  value={deduction.amount}
@@ -435,7 +438,7 @@ export function MoveOutInspectionForm({
  </div>
  <button
  type="button"
- aria-label="Remove deduction"
+ aria-label={t("Remove deduction")}
  onClick={() => setDeductions(deductions.filter(item => item.id !== deduction.id))}
  className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20"
  >
@@ -448,24 +451,24 @@ export function MoveOutInspectionForm({
 
  {/* Refund Summary Card */}
  <div className="rounded-[2.5rem] neumorphic-inset p-8 ">
- <h3 className="mb-6 text-sm font-black uppercase tracking-widest text-muted-foreground">Refund Summary</h3>
+ <h3 className="mb-6 text-sm font-black uppercase tracking-widest text-muted-foreground">{t("Refund Summary")}</h3>
  <div className="space-y-4">
  <div className="flex items-center justify-between">
- <span className="text-xs font-black text-muted-foreground">Security Deposit</span>
+ <span className="text-xs font-black text-muted-foreground">{t("Security Deposit")}</span>
  <span className="text-sm font-black text-foreground">₱{originalDeposit.toLocaleString()}</span>
  </div>
  <div className="flex items-center justify-between text-red-500">
- <span className="text-xs font-black">Total Deductions</span>
+ <span className="text-xs font-black">{t("Total Deductions")}</span>
  <span className="text-sm font-black">- ₱{totalDeductions.toLocaleString()}</span>
  </div>
  <div className="mt-4 flex flex-col gap-1 border-t border-border pt-4">
  <div className="flex items-center justify-between">
- <span className="text-xs font-black uppercase tracking-widest text-foreground">Net Refund</span>
+ <span className="text-xs font-black uppercase tracking-widest text-foreground">{t("Net Refund")}</span>
  <span className="text-2xl font-black text-primary">₱{refundAmount.toLocaleString()}</span>
  </div>
  <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground">
  <Info className="size-3" />
- Refund will be processed after completion.
+ {t("Refund will be processed after completion.")}
  </div>
  </div>
  </div>
@@ -479,7 +482,7 @@ export function MoveOutInspectionForm({
  onClick={onCancel}
  className="rounded-2xl px-8 py-3 text-[10px] font-black uppercase tracking-widest text-foreground transition-all hover:neumorphic-inset"
  >
- Cancel
+ {t("Cancel")}
  </button>
  <button
  onClick={handlePreSubmit}
@@ -491,7 +494,7 @@ export function MoveOutInspectionForm({
  ) : (
  <Save className="size-4" />
  )}
- Save Inspection Results
+ {t("Save Inspection Results")}
  </button>
  </div>
  </div>
@@ -518,16 +521,23 @@ export function MoveOutInspectionForm({
  <AlertCircle className="size-8" />
  </div>
  <div className="space-y-2">
- <h3 className="text-3xl font-black text-foreground tracking-tight">Final Confirmation</h3>
+ <h3 className="text-3xl font-black text-foreground tracking-tight">{t("Final Confirmation")}</h3>
  <p className="text-sm font-medium text-muted-foreground leading-relaxed">
- You are about to finalize the move-out inspection. This will determine the final refund of <span className="font-black text-primary">₱{refundAmount.toLocaleString()}</span> and notify the tenant.
+ {(() => {
+ const [before, after = ""] = t("You are about to finalize the move-out inspection. This will determine the final refund of {amount} and notify the tenant.").split("{amount}");
+ return (
+ <>
+ {before}<span className="font-black text-primary">₱{refundAmount.toLocaleString()}</span>{after}
+ </>
+ );
+ })()}
  </p>
  </div>
 
  {/* Conflict Warnings */}
  {(checklist.rent_settled && systemStatus && !systemStatus.rent_settled) && (
  <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-xs font-black text-red-500">
- Warning: System shows an outstanding rent balance of ₱{(systemStatus.outstanding_balance || 0).toLocaleString()}. Are you sure it has been settled?
+ {t("Warning: System shows an outstanding rent balance of {amount}. Are you sure it has been settled?", { amount: `₱${(systemStatus.outstanding_balance || 0).toLocaleString()}` })}
  </div>
  )}
 
@@ -536,14 +546,14 @@ export function MoveOutInspectionForm({
  onClick={() => setShowConfirmSubmit(false)}
  className="h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest text-foreground transition-all hover:neumorphic-inset"
  >
- Go Back
+ {t("Go Back")}
  </button>
  <button
  onClick={handleSubmit}
  disabled={loading}
  className="h-14 rounded-2xl neumorphic-primary text-[10px] font-black uppercase tracking-widest shadow-primary/20 transition-all hover:bg-primary/90 disabled:opacity-50"
  >
- {loading ? <Loader2 className="mx-auto size-4 animate-spin" /> : "Confirm & Save"}
+ {loading ? <Loader2 className="mx-auto size-4 animate-spin" /> : t("Confirm & Save")}
  </button>
  </div>
  </div>

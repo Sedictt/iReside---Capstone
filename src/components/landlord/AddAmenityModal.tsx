@@ -92,6 +92,8 @@ import type { AmenityWithProperty } from '@/types/database'
 import { useFormValidation } from '@/hooks/useFormValidation'
 import { FieldError, fieldErrorClass } from '@/components/ui/field-error'
 import { integerRule, moneyRule, textRule } from '@/lib/validation/rules'
+import { useLanguageContext } from '@/context/LanguageContext'
+import { tr } from "@/hooks/useLanguage";
 
 const FACILITY_LIMITS = { name: 60, location: 120, description: 500, maxCapacity: 9999 } as const
 
@@ -273,6 +275,7 @@ const ITEMS_PER_PAGE = 8
 
 export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editingAmenity }: AddAmenityModalProps) {
     const { properties } = useProperty()
+    const { t } = useLanguageContext()
     const [loading, setLoading] = useState(false)
     const [formData, setFormData] = useState({
         property_id: properties[0]?.id || '',
@@ -292,7 +295,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
         { ...formData, propertyIds: properties.map(p => p.id) },
         {
             property_id: (value, all) =>
-                !value ? 'Select a property.' : all.propertyIds.includes(value) ? undefined : 'Select a valid property.',
+                !value ? t('Select a property.') : all.propertyIds.includes(value) ? undefined : t('Select a valid property.'),
             name: (value) => textRule(value, { label: 'Facility name', required: true, min: 2, max: FACILITY_LIMITS.name }),
             capacity: (value) => integerRule(value, { label: 'Capacity', min: 1, max: FACILITY_LIMITS.maxCapacity }),
             price_per_unit: (value, all) =>
@@ -455,7 +458,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                     console.log('[AddAmenityModal] Photo uploaded successfully:', finalImageUrl)
                 } catch (err) {
                     console.error('[AddAmenityModal] Photo upload failed:', err)
-                    toast.error('Failed to upload photo. The facility will be created without it.')
+                    toast.error(t('Failed to upload photo. The facility will be created without it.'))
                 }
             }
 
@@ -478,12 +481,12 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
             await upsertAmenity(payload as Parameters<typeof upsertAmenity>[0]);
             console.log('[AddAmenityModal] Amenity upserted successfully')
 
-            toast.success(editingAmenity ? 'Facility updated successfully' : 'Facility added successfully')
+            toast.success(editingAmenity ? t('Facility updated successfully') : t('Facility added successfully'))
             onClose()
             if (onSuccess) onSuccess()
         } catch (error) {
             console.error('[AddAmenityModal] Submission error:', error)
-            toast.error(error instanceof Error ? error.message : 'Failed to add facility')
+            toast.error(error instanceof Error ? tr(error.message) : t('Failed to add facility'))
         } finally {
             setLoading(false)
         }
@@ -511,13 +514,14 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                 >
                     <div className="flex items-center justify-between border-b border-border bg-muted/30 px-8 py-6">
                         <div className="space-y-1">
-                            <h2 className="text-2xl font-black tracking-tight">{editingAmenity ? 'Edit Facility' : 'Add New Facility'}</h2>
+                            <h2 className="text-2xl font-black tracking-tight">{editingAmenity ? t('Edit Facility') : t('Add New Facility')}</h2>
                             <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
-                                {editingAmenity ? 'Update facility details and settings' : 'Expand your property assets'}
+                                {editingAmenity ? t('Update facility details and settings') : t('Expand your property assets')}
                             </p>
                         </div>
                         <button
                             onClick={onClose}
+                            aria-label={t("Close")}
                             className="rounded-2xl bg-muted p-3 text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-500"
                         >
                             <X className="size-5" />
@@ -529,13 +533,13 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                             <div className="space-y-6">
                                 <div className="space-y-2">
                                     <label htmlFor="property-select" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
-                                        Property
+                                        {t("Property")}
                                     </label>
                                     <ModernSelect
                                         value={formData.property_id}
                                         onChange={(val) => setFormData(prev => ({ ...prev, property_id: val }))}
                                         options={properties.map(p => ({ value: p.id, label: p.name }))}
-                                        placeholder="Select a property"
+                                        placeholder={t("Select a property")}
                                         icon={Building2}
                                     />
                                     <FieldError id={form.errorId('property_id')} message={form.errorFor('property_id')} />
@@ -543,7 +547,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
 
                                 <div className="space-y-2">
                                     <label htmlFor="facility-name" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
-                                        Facility Name
+                                        {t("Facility Name")}
                                     </label>
                                     <div className="relative">
                                         <Zap className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
@@ -554,7 +558,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                             type="text"
                                             maxLength={FACILITY_LIMITS.name}
                                             autoComplete="off"
-                                            placeholder="e.g., Sky Pool, Game Room"
+                                            placeholder={t("e.g., Sky Pool, Game Room")}
                                             value={formData.name}
                                             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                                             className={cn("w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4", form.errorFor('name') && fieldErrorClass)}
@@ -566,23 +570,24 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label htmlFor="facility-type" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
-                                            Type
+                                            {t("Type")}
                                         </label>
                                         <ModernSelect
                                             value={formData.type}
                                             onChange={(val) => setFormData(prev => ({ ...prev, type: val }))}
-                                            options={AMENITY_TYPES.map(t => ({ value: t, label: t }))}
-                                            placeholder="Select Type"
+                                            options={AMENITY_TYPES.map(type => ({ value: type, label: t(type) }))}
+                                            placeholder={t("Select Type")}
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <label htmlFor="facility-capacity" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
-                                            Capacity
+                                            {t("Capacity")}
                                         </label>
                                         <div className="flex items-center gap-3">
                                             <button
                                                 type="button"
                                                 onClick={() => setFormData(prev => ({ ...prev, capacity: Math.max(1, prev.capacity - 1) }))}
+                                                aria-label={t("Decrease capacity")}
                                                 className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-muted/80 text-muted-foreground transition-all hover:bg-primary/20 hover:text-primary"
                                             >
                                                 <Minus className="size-5" />
@@ -604,6 +609,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                             <button
                                                 type="button"
                                                 onClick={() => setFormData(prev => ({ ...prev, capacity: Math.min(9999, prev.capacity + 1) }))}
+                                                aria-label={t("Increase capacity")}
                                                 className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-muted/80 text-muted-foreground transition-all hover:bg-primary/20 hover:text-primary"
                                             >
                                                 <Plus className="size-5" />
@@ -615,10 +621,10 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
                                         <label htmlFor="icon-search" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
-                                            Icon Representation
+                                            {t("Icon Representation")}
                                         </label>
                                         <div className="text-[10px] font-black text-muted-foreground/40">
-                                            Page {currentPage + 1} of {Math.max(1, totalPages)}
+                                            {t("Page {current} of {total}", { current: currentPage + 1, total: Math.max(1, totalPages) })}
                                         </div>
                                     </div>
 
@@ -629,7 +635,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                             id="icon-search"
                                             type="text"
                                             maxLength={60}
-                                            placeholder="Search icons…"
+                                            placeholder={t("Search icons…")}
                                             value={searchTerm}
                                             onChange={handleSearch}
                                             className="w-full rounded-xl border border-border bg-muted/30 py-2 pl-9 pr-4 text-xs font-black outline-none transition-all focus:border-primary/50 focus:bg-muted/50"
@@ -664,7 +670,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                                 
                                                 {filteredIcons.length === 0 && (
                                                     <div className="col-span-4 py-8 text-center text-xs font-medium text-muted-foreground/60">
-                                                        No icons found
+                                                        {t("No icons found")}
                                                     </div>
                                                 )}
                                             </motion.div>
@@ -678,6 +684,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                                 type="button"
                                                 disabled={currentPage === 0}
                                                 onClick={() => setCurrentPage(prev => prev - 1)}
+                                                aria-label={t("Previous page")}
                                                 className="flex size-8 items-center justify-center rounded-lg border border-border bg-muted/30 text-muted-foreground transition-all hover:bg-muted disabled:opacity-30"
                                             >
                                                 <ChevronLeft className="size-4" />
@@ -688,6 +695,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                                         key={i}
                                                         type="button"
                                                         onClick={() => setCurrentPage(i)}
+                                                        aria-label={t("Go to page {page}", { page: i + 1 })}
                                                         className={cn(
                                                             "size-1.5 rounded-full transition-all",
                                                             currentPage === i ? "bg-primary w-4" : "bg-muted-foreground/20 hover:bg-muted-foreground/40"
@@ -699,6 +707,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                                 type="button"
                                                 disabled={currentPage === totalPages - 1}
                                                 onClick={() => setCurrentPage(prev => prev + 1)}
+                                                aria-label={t("Next page")}
                                                 className="flex size-8 items-center justify-center rounded-lg border border-border bg-muted/30 text-muted-foreground transition-all hover:bg-muted disabled:opacity-30"
                                             >
                                                 <ChevronRight className="size-4" />
@@ -712,7 +721,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                             <div className="space-y-6">
                                 <div className="space-y-2">
                                     <span className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
-                                        Pricing Details
+                                        {t("Pricing Details")}
                                     </span>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="relative">
@@ -722,7 +731,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                                 type="text"
                                                 inputMode="decimal"
                                                 maxLength={10}
-                                                placeholder="Price"
+                                                placeholder={t("Price")}
                                                 value={formData.price_per_unit}
                                                 onChange={(e) => {
                                                     const val = e.target.value.replace(/[^0-9.]/g, "")
@@ -744,11 +753,11 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                                 value={formData.unit_type}
                                                 onChange={(val) => setFormData(prev => ({ ...prev, unit_type: val }))}
                                                 options={[
-                                                    { value: 'hour', label: 'Per Hour' },
-                                                    { value: 'day', label: 'Per Day' },
-                                                    { value: 'free', label: 'Free' }
+                                                    { value: 'hour', label: t('Per Hour') },
+                                                    { value: 'day', label: t('Per Day') },
+                                                    { value: 'free', label: t('Free') }
                                                 ]}
-                                                placeholder="Unit Type"
+                                                placeholder={t("Unit Type")}
                                             />
                                         </div>
                                     </div>
@@ -756,7 +765,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
 
                                 <div className="space-y-2">
                                     <label htmlFor="location-details" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
-                                        Specific Location
+                                        {t("Specific Location")}
                                     </label>
                                     <div className="relative">
                                         <MapPin className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40 z-10" />
@@ -766,7 +775,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                             maxLength={120}
                                             autoComplete="off"
                                             spellCheck={false}
-                                            placeholder="e.g., 5th Floor, Main Wing"
+                                            placeholder={t("e.g., 5th Floor, Main Wing")}
                                             value={formData.location_details}
                                             onChange={(e) => {
                                                 const value = e.target.value
@@ -824,7 +833,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
                                         <label htmlFor="facility-description" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
-                                            Description
+                                            {t("Description")}
                                         </label>
                                         <span className="text-[10px] font-medium text-muted-foreground/70 select-none">
                                             {formData.description?.length || 0} / 500
@@ -834,7 +843,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                         {...form.fieldProps('description')}
                                         id="facility-description"
                                         maxLength={500}
-                                        placeholder="Describe the facility's features and rules…"
+                                        placeholder={t("Describe the facility's features and rules…")}
                                         value={formData.description}
                                         onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                                         className={cn("min-h-[120px] w-full resize-none rounded-2xl border border-border bg-muted/50 px-5 py-4 text-sm font-medium outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4", form.errorFor('description') && fieldErrorClass)}
@@ -844,7 +853,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
 
                                 <div className="space-y-2">
                                     <span className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
-                                        Facility Photo
+                                        {t("Facility Photo")}
                                     </span>
                                     <button 
                                         type="button"
@@ -855,7 +864,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                             <>
                                                 <Image
                                                     src={photoPreview}
-                                                    alt="Preview"
+                                                    alt={t("Preview")}
                                                     fill
                                                     sizes="(max-width: 640px) 100vw, 350px"
                                                     className="object-cover transition-transform group-hover:scale-105"
@@ -867,7 +876,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                         ) : (
                                             <div className="flex flex-col items-center gap-2 text-muted-foreground/60">
                                                 <Camera className="size-8" />
-                                                <span className="text-[10px] font-black uppercase tracking-widest">Click to upload photo</span>
+                                                <span className="text-[10px] font-black uppercase tracking-widest">{t("Click to upload photo")}</span>
                                             </div>
                                         )}
                                         <input 
@@ -879,7 +888,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                             onChange={(e) => {
                                                 const file = handleMediaSelection(e, {
                                                     preset: "image",
-                                                    notify: (msg, desc) => toast.error(msg, { description: desc }),
+                                                    notify: (msg, desc) => toast.error(tr(msg), { description: desc }),
                                                 });
                                                 if (file) {
                                                     setPhotoFile(file);
@@ -900,7 +909,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                 onClick={onClose}
                                 className="flex-1 rounded-2xl border border-border bg-muted/30 py-4 text-sm font-black transition-all hover:bg-muted"
                             >
-                                Cancel
+                                {t("Cancel")}
                             </button>
                             <button
                                 type="submit"
@@ -908,7 +917,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                                 disabled={loading}
                                 className="flex-[2] rounded-2xl bg-primary py-4 text-sm font-black text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                             >
-                                {loading ? 'Saving…' : editingAmenity ? 'Save Changes' : 'Create Facility'}
+                                {loading ? t('Saving…') : editingAmenity ? t('Save Changes') : t('Create Facility')}
                             </button>
                         </div>
                     </form>

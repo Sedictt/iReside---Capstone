@@ -26,6 +26,7 @@ export async function POST(request: Request) {
         propertyId: normalizedPropertyId,
         unitId: normalizedUnitId,
         startDate,
+        termType,
         endDate,
         monthlyRent: numMonthlyRent,
         securityDeposit: numSecurityDeposit,
@@ -181,7 +182,9 @@ export async function POST(request: Request) {
                 tenant_id: tenantId,
                 landlord_id: userId,
                 start_date: startDate,
-                end_date: endDate,
+                term_type: termType,
+                // Schema already nulls the end date for open-ended terms.
+                end_date: termType === "fixed" ? endDate : null,
                 monthly_rent: numMonthlyRent,
                 security_deposit: numSecurityDeposit,
                 terms: leaseTerms as any,
@@ -268,7 +271,7 @@ export async function POST(request: Request) {
 
         if (code === "23514" || message?.includes("lease_dates_valid")) {
             return NextResponse.json(
-                { error: "Lease end date must be after start date." },
+                { error: "Lease end date must be after the start date." },
                 { status: 400 }
             );
         }

@@ -6,6 +6,7 @@ import { Hammer, Zap, Wallet, Receipt } from "lucide-react";
 import { UiMessage } from "@/components/landlord/messages/types";
 import { cn } from "@/lib/utils";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface NotificationCardProps {
     message: any; // Using any to support both Landlord and Tenant message types which are slightly different
@@ -39,6 +40,7 @@ export function NotificationCard({
     receiptImg,
     refundImg
 }: NotificationCardProps) {
+    const { t } = useLanguageContext();
     const variantConfig = {
         default: {
             container: "border-border/90 dark:border-zinc-700 bg-card text-card-foreground shadow-lg shadow-zinc-950/5 dark:shadow-black/50",
@@ -137,7 +139,7 @@ export function NotificationCard({
                         isCompact ? "rounded-xl p-3" : "rounded-2xl p-4"
                     )}>
                         <div className="flex flex-col">
-                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-0.5">Amount Paid</span>
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-0.5">{t("Amount Paid")}</span>
                             <span className={cn(
                                 "font-black text-primary font-mono tabular-nums tracking-tight",
                                 isCompact ? "text-base" : "text-xl"
@@ -170,7 +172,7 @@ export function NotificationCard({
                                 "mt-2.5 flex items-center gap-2 text-[10px] text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wider bg-amber-500/10 w-fit rounded-lg border border-amber-500/25 px-2.5 py-1"
                             )}>
                                 <Hammer className="size-3 shrink-0" />
-                                Deadline: <ClientOnlyDate date={message.expiresAt} />
+                                {t("Deadline:")} <ClientOnlyDate date={message.expiresAt} />
                             </div>
                         )}
                     </div>
@@ -179,17 +181,17 @@ export function NotificationCard({
                 {/* Optional Receipt Image */}
                 {receiptImg && (
                     <div className="flex flex-col gap-1.5">
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold ml-1">Proof of Payment</span>
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold ml-1">{t("Proof of Payment")}</span>
                         <div className={cn(
                             "overflow-hidden border border-border/80 dark:border-zinc-700/80 bg-muted/40 relative cursor-pointer group/img",
                             isCompact ? "rounded-xl" : "rounded-2xl"
                         )}>
-                            <Image src={receiptImg} alt="Receipt" fill sizes="(max-width: 768px) 100vw, 380px" className={cn(
+                            <Image src={receiptImg} alt={t("Receipt")} fill sizes="(max-width: 768px) 100vw, 380px" className={cn(
                                 "object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500",
                                 isCompact ? "h-24" : "h-40"
                             )} />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                                <span className="text-[9px] text-white font-bold uppercase tracking-wider">Click to expand</span>
+                                <span className="text-[9px] text-white font-bold uppercase tracking-wider">{t("Click to expand")}</span>
                             </div>
                         </div>
                     </div>
@@ -199,19 +201,19 @@ export function NotificationCard({
                 {refundImg && (
                     <div className="flex flex-col gap-1.5 animate-in fade-in zoom-in-95 duration-300">
                         <div className="flex items-center gap-2 ml-1">
-                            <span className="text-[10px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400 font-bold">Proof of Refund</span>
+                            <span className="text-[10px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400 font-bold">{t("Proof of Refund")}</span>
                             <div className="h-[1px] flex-1 bg-emerald-500/20" />
                         </div>
                         <div className={cn(
                             "overflow-hidden border border-emerald-500/30 dark:border-emerald-500/40 bg-muted/40 relative cursor-pointer group/img",
                             isCompact ? "rounded-xl" : "rounded-2xl"
                         )}>
-                            <Image src={refundImg} alt="Refund Proof" fill sizes="(max-width: 768px) 100vw, 380px" className={cn(
+                            <Image src={refundImg} alt={t("Refund Proof")} fill sizes="(max-width: 768px) 100vw, 380px" className={cn(
                                 "object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500",
                                 isCompact ? "h-24" : "h-40"
                             )} />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                                <span className="text-[9px] text-white font-bold uppercase tracking-wider">Transaction Reconciled</span>
+                                <span className="text-[9px] text-white font-bold uppercase tracking-wider">{t("Transaction Reconciled")}</span>
                             </div>
                         </div>
                     </div>

@@ -43,14 +43,19 @@ import { LogoutConfirmationModal } from "@/components/ui/LogoutConfirmationModal
 import { m as motion, AnimatePresence } from "framer-motion";
 import { DEFAULT_AVATAR_URL, getSafeAvatarBgColor, isProfileIncomplete } from "@/lib/constants";
 import type { Notification, Profile } from "@/types/database";
+import type { TranslationParams } from "@/lib/i18n";
 
-function formatTimeAgo(value: string) {
+function formatTimeAgo(
+    value: string,
+    t: (phrase: string, params?: TranslationParams) => string,
+    locale: string
+) {
     const timestamp = new Date(value);
     const now = new Date();
     const diffMs = now.getTime() - timestamp.getTime();
 
     if (Number.isNaN(diffMs) || diffMs < 0) {
-        return "Recently";
+        return t("Recently");
     }
 
     const minute = 60 * 1000;
@@ -59,24 +64,24 @@ function formatTimeAgo(value: string) {
 
     if (diffMs < hour) {
         const minutes = Math.max(1, Math.floor(diffMs / minute));
-        return `${minutes}m ago`;
+        return t("{minutes}m ago", { minutes });
     }
 
     if (diffMs < day) {
         const hours = Math.max(1, Math.floor(diffMs / hour));
-        return `${hours}h ago`;
+        return t("{hours}h ago", { hours });
     }
 
     const days = Math.floor(diffMs / day);
     if (days === 1) {
-        return "Yesterday";
+        return t("Yesterday");
     }
 
     if (days < 7) {
-        return `${days}d ago`;
+        return t("{days}d ago", { days });
     }
 
-    return timestamp.toLocaleDateString("en-US", {
+    return timestamp.toLocaleDateString(locale, {
         month: "short",
         day: "numeric",
     });
@@ -353,7 +358,7 @@ export function TenantSidebar() {
                                     "relative flex size-9 items-center justify-center rounded-lg transition-all",
                                     isNotificationsOpen ? "neumorphic-primary" : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                                 )}
-                                aria-label="Notifications"
+                                aria-label={t("Notifications")}
                             >
                                 <Bell className="size-4" />
                                 {unreadCount > 0 && (
@@ -392,7 +397,7 @@ export function TenantSidebar() {
                             type="button"
                             onClick={() => setIsMobileOpen((prev) => !prev)}
                             className="relative inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground neumorphic-extruded"
-                            aria-label="Toggle tenant navigation"
+                            aria-label={t("Toggle tenant navigation")}
                         >
                             {isMobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
                             {isIncomplete && (
@@ -430,12 +435,12 @@ export function TenantSidebar() {
                                     className="relative size-full overflow-hidden rounded-full flex items-center justify-center" 
                                     style={{ backgroundColor: avatarBgColor }}
                                 >
-                                    <Image src={avatarUrl} alt="Profile" fill sizes="40px" className="object-cover" />
+                                    <Image src={avatarUrl} alt={t("Profile")} fill sizes="40px" className="object-cover" />
                                 </div>
                                 {isIncomplete && (
                                     <span 
                                         className="absolute -top-0.5 -right-0.5 flex size-3.5 z-20 pointer-events-none" 
-                                        title="Complete your profile setup"
+                                        title={t("Complete your profile setup")}
                                     >
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
                                         <span className="relative inline-flex rounded-full size-3.5 bg-primary border-2 border-background shadow-sm" />
@@ -453,7 +458,7 @@ export function TenantSidebar() {
                                 </ProfileCardTrigger>
                                 <RoleBadge role={profile?.role ?? null} />
                             </div>
-                            <p className="truncate text-xs text-muted-foreground">{profile?.email || user?.email || "Tenant Account"}</p>
+                            <p className="truncate text-xs text-muted-foreground">{profile?.email || user?.email || t("Tenant Account")}</p>
                         </div>
                         <div className="relative" ref={notificationsRef}>
                             <button
@@ -469,7 +474,7 @@ export function TenantSidebar() {
                                     "relative rounded-xl p-2 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                                     isNotificationsOpen ? "neumorphic-extruded active text-primary-foreground" : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                                 )}
-                                aria-label="Notifications"
+                                aria-label={t("Notifications")}
                             >
                                 <Bell className="size-4" />
                                 {unreadCount > 0 && (
@@ -560,7 +565,7 @@ export function TenantSidebar() {
                             type="button"
                             onClick={() => setIsMobileOpen(false)}
                             className="inline-flex size-8 items-center justify-center rounded-md neumorphic-extruded"
-                            aria-label="Close tenant navigation"
+                            aria-label={t("Close tenant navigation")}
                         >
                             <X className="size-4" />
                         </button>
@@ -630,11 +635,12 @@ function NotificationPanelContent({
     onMarkAsRead?: (id: string) => void,
     onMarkAllAsRead: () => void 
 }) {
+    const { t, locale } = useLanguage();
     return (
         <>
             <div className="flex items-center justify-between border-b border-border/50 px-6 py-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Notifications</p>
-                <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-black text-primary">{unreadCount > 99 ? '99+' : unreadCount} New</span>
+                <p className="text-[10px] font-black uppercase tracking-widest text-foreground">{t("Notifications")}</p>
+                <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-black text-primary">{t("{count} New", { count: unreadCount > 99 ? "99+" : unreadCount })}</span>
             </div>
 
             <div className="max-h-[400px] overflow-y-auto custom-scrollbar-premium">
@@ -654,8 +660,8 @@ function NotificationPanelContent({
                 ) : notifications.length === 0 ? (
                     <div className="px-6 py-12 text-center text-muted-foreground">
                         <Sparkles className="size-8 mx-auto mb-3 opacity-20" />
-                        <p className="text-sm font-black">All caught up!</p>
-                        <p className="text-[10px] mt-1 opacity-60">You have no notifications yet</p>
+                        <p className="text-sm font-black">{t("All caught up!")}</p>
+                        <p className="text-[10px] mt-1 opacity-60">{t("You have no notifications yet")}</p>
                     </div>
                 ) : (
                     notifications.map((notification) => (
@@ -691,12 +697,12 @@ function NotificationPanelContent({
                                                 className="inline-flex items-center gap-1 text-[11px] font-bold text-red-500 hover:text-red-400 hover:underline transition-colors cursor-pointer"
                                             >
                                                 <AlertTriangle className="size-3 shrink-0" />
-                                                <span>Is this not you? Reset now &rarr;</span>
+                                                <span>{t("Is this not you? Reset now →")}</span>
                                             </Link>
                                         </div>
                                     )}
                                     <p className="mt-2 text-[10px] font-black text-muted-foreground/40 uppercase tracking-wider">
-                                        {formatTimeAgo(notification.created_at)}
+                                        {formatTimeAgo(notification.created_at, t, locale)}
                                     </p>
                                 </div>
                                 <div className="flex items-center justify-center size-7 shrink-0 mt-0.5">
@@ -710,7 +716,7 @@ function NotificationPanelContent({
                                                         e.stopPropagation();
                                                         onMarkAsRead(notification.id);
                                                     }}
-                                                    title="Mark as read"
+                                                    title={t("Mark as read")}
                                                     className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover/item:opacity-100 bg-primary/20 rounded-full text-primary hover:bg-primary/30 transition-all duration-200 transform scale-50 group-hover/item:scale-100"
                                                 >
                                                     <Check className="size-3.5 stroke-[3px]" />
@@ -735,7 +741,7 @@ function NotificationPanelContent({
                     }}
                     className="w-full rounded-xl py-2 text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground transition-all hover:bg-card hover:text-primary hover:shadow-sm"
                 >
-                    Mark all as read
+                    {t("Mark all as read")}
                 </button>
             </div>
         </>

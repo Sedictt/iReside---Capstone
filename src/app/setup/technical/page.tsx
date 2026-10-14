@@ -32,6 +32,7 @@ import { Logo } from "@/components/ui/Logo";
 import { HighContrastToggle } from "@/components/ui/HighContrastToggle";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface MigrationStep {
   id: string;
@@ -44,6 +45,7 @@ interface MigrationStep {
 export default function TechnicalCommissioningPage() {
   const router = useRouter();
   const { profile, loading } = useAuth();
+  const { t } = useLanguageContext();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
 
   React.useEffect(() => {
@@ -119,8 +121,8 @@ export default function TechnicalCommissioningPage() {
       setDbTesting(false);
       setDbStatus("connected");
       setDbLatency(28);
-      toast.success("PostgreSQL Cluster Linked Successfully!", {
-        description: "Latency: 28ms • PostgreSQL 15.8 (Ubuntu) • TLS 1.3 Verified.",
+      toast.success(t("PostgreSQL Cluster Linked Successfully!"), {
+        description: t("Latency: {ms}ms • PostgreSQL 15.8 (Ubuntu) • TLS 1.3 Verified.", { ms: 28 }),
       });
     }, 850);
   };
@@ -130,8 +132,8 @@ export default function TechnicalCommissioningPage() {
     setTimeout(() => {
       setEmailTesting(false);
       setEmailStatus("verified");
-      toast.success("Gmail SMTP Handshake Successful!", {
-        description: "TLS Auth OK (Port 587) • Test transmission delivered to queue.",
+      toast.success(t("Gmail SMTP Handshake Successful!"), {
+        description: t("TLS Auth OK (Port 587) • Test transmission delivered to queue."),
       });
     }, 950);
   };
@@ -188,8 +190,8 @@ export default function TechnicalCommissioningPage() {
           "[00:00:15] [✓] 🚀 Commissioning completed with 0 errors.",
           "[00:00:15] Turnkey infrastructure is live. Ready for Business Personalization Wizard.",
         ]);
-        toast.success("Turnkey Infrastructure Commissioned!", {
-          description: "All 55 database tables & storage policies are live and verified.",
+        toast.success(t("Turnkey Infrastructure Commissioned!"), {
+          description: t("All 55 database tables & storage policies are live and verified."),
         });
       }
     }, 1200);
@@ -215,10 +217,10 @@ export default function TechnicalCommissioningPage() {
           <div className="hidden sm:flex items-center gap-2.5">
             <span className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
               <Cpu className="size-3.5 text-zinc-600 dark:text-zinc-400" />
-              Turnkey Installer
+              {t("Turnkey Installer")}
             </span>
             <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Layer 1: Technical Setup
+              {t("Layer 1: Technical Setup")}
             </span>
           </div>
         </div>
@@ -236,12 +238,12 @@ export default function TechnicalCommissioningPage() {
         {/* Minimal Title Header */}
         <div className="text-center">
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-zinc-950 dark:text-white">
-            {migrationCompleted ? "Technical Commissioning Complete!" : "System Technical Setup"}
+            {migrationCompleted ? t("Technical Commissioning Complete!") : t("System Technical Setup")}
           </h1>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
             {migrationCompleted
-              ? "All cloud infrastructure services are live, isolated, and verified."
-              : "Link cloud services and initialize database schemas before client handover."}
+              ? t("All cloud infrastructure services are live, isolated, and verified.")
+              : t("Link cloud services and initialize database schemas before client handover.")}
           </p>
         </div>
 
@@ -277,7 +279,7 @@ export default function TechnicalCommissioningPage() {
                   >
                     {step.isDone ? <Check className="size-3 stroke-[3]" /> : step.num}
                   </div>
-                  <span className="hidden sm:inline text-[11px] truncate">{step.label}</span>
+                  <span className="hidden sm:inline text-[11px] truncate">{t(step.label)}</span>
                 </button>
               );
             })}
@@ -307,11 +309,11 @@ export default function TechnicalCommissioningPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 px-2 py-0.5 rounded">
-                        All Systems Verified
+                        {t("All Systems Verified")}
                       </span>
                     </div>
                     <h2 className="text-sm sm:text-base font-black tracking-tight text-zinc-950 dark:text-white mt-0.5">
-                      Everything looks good and is ready for Handover!
+                      {t("Everything looks good and is ready for Handover!")}
                     </h2>
                   </div>
                 </div>
@@ -323,7 +325,7 @@ export default function TechnicalCommissioningPage() {
                       <Database className="size-4" />
                       <span>PostgreSQL 15.8</span>
                     </div>
-                    <p className="text-[10px] text-zinc-500">Database cluster link active with TLS 1.3 encryption.</p>
+                    <p className="text-[10px] text-zinc-500">{t("Database cluster link active with TLS 1.3 encryption.")}</p>
                   </div>
 
                   <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
@@ -331,15 +333,15 @@ export default function TechnicalCommissioningPage() {
                       <Mail className="size-4" />
                       <span>Gmail Gateway</span>
                     </div>
-                    <p className="text-[10px] text-zinc-500">SMTP service armed to dispatch automated rent receipts.</p>
+                    <p className="text-[10px] text-zinc-500">{t("SMTP service armed to dispatch automated rent receipts.")}</p>
                   </div>
 
                   <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
                     <div className="flex items-center gap-2 text-emerald-600 font-bold mb-1">
                       <Server className="size-4" />
-                      <span>55 Entity Schemas</span>
+                      <span>{t("55 Entity Schemas")}</span>
                     </div>
-                    <p className="text-[10px] text-zinc-500">Row-Level Security (RLS) & keep-alive uptime daemon applied.</p>
+                    <p className="text-[10px] text-zinc-500">{t("Row-Level Security (RLS) & keep-alive uptime daemon applied.")}</p>
                   </div>
                 </div>
 
@@ -348,10 +350,10 @@ export default function TechnicalCommissioningPage() {
                   <UserCheck className="size-5 shrink-0 mt-0.5 text-emerald-400 dark:text-emerald-600" />
                   <div className="space-y-0.5">
                     <p className="text-xs font-black uppercase tracking-wide">
-                      Next Step: Hand the device over to the Property Owner
+                      {t("Next Step: Hand the device over to the Property Owner")}
                     </p>
                     <p className="text-[11px] text-zinc-300 dark:text-zinc-700 leading-relaxed">
-                      The technical setup is complete. Pass this device to the landlord to personalize their property name, upload their logo, choose brand colors, and create their Master Admin account.
+                      {t("The technical setup is complete. Pass this device to the landlord to personalize their property name, upload their logo, choose brand colors, and create their Master Admin account.")}
                     </p>
                   </div>
                 </div>
@@ -364,7 +366,7 @@ export default function TechnicalCommissioningPage() {
                     className="py-2.5 px-3.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5 transition-all active:scale-95"
                   >
                     <TerminalIcon className="size-3.5" />
-                    <span>View Setup Logs</span>
+                    <span>{t("View Setup Logs")}</span>
                   </button>
 
                   <button
@@ -372,7 +374,7 @@ export default function TechnicalCommissioningPage() {
                     onClick={() => router.push("/setup")}
                     className="flex-1 py-2.5 px-5 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-xs flex items-center justify-center gap-2"
                   >
-                    <span>Proceed to Business Personalization & Branding</span>
+                    <span>{t("Proceed to Business Personalization & Branding")}</span>
                     <ArrowRight className="size-4" />
                   </button>
                 </div>
@@ -399,9 +401,9 @@ export default function TechnicalCommissioningPage() {
                     </div>
                     <div>
                       <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
-                        Step 1: Link Supabase PostgreSQL
+                        {t("Step 1: Link Supabase PostgreSQL")}
                       </h2>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">Extract 3 keys from Supabase Dashboard ➔ Project Settings ➔ API</p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("Extract 3 keys from Supabase Dashboard ➔ Project Settings ➔ API")}</p>
                     </div>
                   </div>
 
@@ -419,7 +421,7 @@ export default function TechnicalCommissioningPage() {
                 {/* Clear Required Keys Checklist */}
                 <div className="space-y-2">
                   <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Required Environment Variables (.env / Vercel):
+                    {t("Required Environment Variables (.env / Vercel):")}
                   </p>
 
                   <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
@@ -427,11 +429,11 @@ export default function TechnicalCommissioningPage() {
                       <Globe className="size-4 text-zinc-400 shrink-0" />
                       <div>
                         <p className="font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100">NEXT_PUBLIC_SUPABASE_URL</p>
-                        <p className="text-[10px] text-zinc-500">Project Endpoint (e.g. https://[id].supabase.co)</p>
+                        <p className="text-[10px] text-zinc-500">{t("Project Endpoint (e.g. https://[id].supabase.co)")}</p>
                       </div>
                     </div>
                     <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                      Required
+                      {t("Required")}
                     </span>
                   </div>
 
@@ -440,11 +442,11 @@ export default function TechnicalCommissioningPage() {
                       <Lock className="size-4 text-zinc-400 shrink-0" />
                       <div>
                         <p className="font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100">NEXT_PUBLIC_SUPABASE_ANON_KEY</p>
-                        <p className="text-[10px] text-zinc-500">Client-safe public API key for authentication</p>
+                        <p className="text-[10px] text-zinc-500">{t("Client-safe public API key for authentication")}</p>
                       </div>
                     </div>
                     <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">
-                      Client-Safe
+                      {t("Client-Safe")}
                     </span>
                   </div>
 
@@ -453,11 +455,11 @@ export default function TechnicalCommissioningPage() {
                       <ShieldCheck className="size-4 text-zinc-400 shrink-0" />
                       <div>
                         <p className="font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100">SUPABASE_SERVICE_ROLE_KEY</p>
-                        <p className="text-[10px] text-zinc-500">Server-only master key used to provision 55 tables</p>
+                        <p className="text-[10px] text-zinc-500">{t("Server-only master key used to provision 55 tables")}</p>
                       </div>
                     </div>
                     <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40">
-                      Server-Only
+                      {t("Server-Only")}
                     </span>
                   </div>
 
@@ -481,19 +483,19 @@ export default function TechnicalCommissioningPage() {
                       </div>
                       <div>
                         <p className="text-xs font-bold uppercase tracking-wide">
-                          {dbStatus === "connected" ? "PostgreSQL Cluster Linked" : "Cluster Status: Untested"}
+                          {dbStatus === "connected" ? t("PostgreSQL Cluster Linked") : t("Cluster Status: Untested")}
                         </p>
                         <p className="text-[10px] opacity-80 leading-none mt-0.5">
                           {dbStatus === "connected"
-                            ? `Latency: ${dbLatency}ms • PostgreSQL 15.8 (Ubuntu) • TLS 1.3 Active`
-                            : "Click 'Verify Cloud Link' to test server environment keys"}
+                            ? t("Latency: {ms}ms • PostgreSQL 15.8 (Ubuntu) • TLS 1.3 Active", { ms: dbLatency ?? 0 })
+                            : t("Click 'Verify Cloud Link' to test server environment keys")}
                         </p>
                       </div>
                     </div>
 
                     {dbStatus === "connected" && (
                       <span className="text-[9px] font-bold uppercase tracking-wider bg-emerald-600 text-white px-2 py-0.5 rounded">
-                        Ready
+                        {t("Ready")}
                       </span>
                     )}
                   </div>
@@ -509,12 +511,12 @@ export default function TechnicalCommissioningPage() {
                     {dbTesting ? (
                       <>
                         <RefreshCw className="size-3.5 animate-spin text-zinc-600" />
-                        <span>Verifying...</span>
+                        <span>{t("Verifying...")}</span>
                       </>
                     ) : (
                       <>
                         <Activity className="size-3.5 text-zinc-700 dark:text-zinc-300" />
-                        <span>Verify Cloud Link</span>
+                        <span>{t("Verify Cloud Link")}</span>
                       </>
                     )}
                   </button>
@@ -526,7 +528,7 @@ export default function TechnicalCommissioningPage() {
                     }}
                     className="w-1/2 py-2.5 px-4 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 active:scale-95 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs"
                   >
-                    <span>Continue to Email</span>
+                    <span>{t("Continue to Email")}</span>
                     <ArrowRight className="size-4" />
                   </button>
                 </div>
@@ -552,9 +554,9 @@ export default function TechnicalCommissioningPage() {
                     </div>
                     <div>
                       <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
-                        Step 2: Gmail Notification Setup
+                        {t("Step 2: Gmail Notification Setup")}
                       </h2>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">Extract 16-character App Password from Google Security</p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("Extract 16-character App Password from Google Security")}</p>
                     </div>
                   </div>
 
@@ -571,7 +573,7 @@ export default function TechnicalCommissioningPage() {
 
                 <div className="space-y-2">
                   <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Required Environment Variables (.env / Vercel):
+                    {t("Required Environment Variables (.env / Vercel):")}
                   </p>
 
                   <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
@@ -579,11 +581,11 @@ export default function TechnicalCommissioningPage() {
                       <Mail className="size-4 text-zinc-400 shrink-0" />
                       <div>
                         <p className="font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100">SMTP_USER</p>
-                        <p className="text-[10px] text-zinc-500">Sender Gmail address (e.g. reyes.residences@gmail.com)</p>
+                        <p className="text-[10px] text-zinc-500">{t("Sender Gmail address (e.g. reyes.residences@gmail.com)")}</p>
                       </div>
                     </div>
                     <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                      Required
+                      {t("Required")}
                     </span>
                   </div>
 
@@ -592,11 +594,11 @@ export default function TechnicalCommissioningPage() {
                       <KeyRound className="size-4 text-zinc-400 shrink-0" />
                       <div>
                         <p className="font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100">SMTP_PASS</p>
-                        <p className="text-[10px] text-zinc-500">16-character Google App Password (revocable token)</p>
+                        <p className="text-[10px] text-zinc-500">{t("16-character Google App Password (revocable token)")}</p>
                       </div>
                     </div>
                     <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">
-                      App Password
+                      {t("App Password")}
                     </span>
                   </div>
 
@@ -620,19 +622,19 @@ export default function TechnicalCommissioningPage() {
                       </div>
                       <div>
                         <p className="text-xs font-bold uppercase tracking-wide">
-                          {emailStatus === "verified" ? "SMTP Gateway Verified" : "SMTP Status: Untested"}
+                          {emailStatus === "verified" ? t("SMTP Gateway Verified") : t("SMTP Status: Untested")}
                         </p>
                         <p className="text-[10px] opacity-80 leading-none mt-0.5">
                           {emailStatus === "verified"
-                            ? "TLS Handshake OK • smtp.gmail.com:587 • Ready to send receipts"
-                            : "Click 'Test SMTP Handshake' to send a test packet"}
+                            ? t("TLS Handshake OK • smtp.gmail.com:587 • Ready to send receipts")
+                            : t("Click 'Test SMTP Handshake' to send a test packet")}
                         </p>
                       </div>
                     </div>
 
                     {emailStatus === "verified" && (
                       <span className="text-[9px] font-bold uppercase tracking-wider bg-emerald-600 text-white px-2 py-0.5 rounded">
-                        Ready
+                        {t("Ready")}
                       </span>
                     )}
                   </div>
@@ -644,7 +646,7 @@ export default function TechnicalCommissioningPage() {
                     className="w-1/3 py-2.5 px-3 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 active:scale-95 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 text-zinc-900 dark:text-zinc-100 shadow-xs"
                   >
                     <ArrowLeft className="size-3.5" />
-                    <span>Back</span>
+                    <span>{t("Back")}</span>
                   </button>
 
                   <button
@@ -655,12 +657,12 @@ export default function TechnicalCommissioningPage() {
                     {emailTesting ? (
                       <>
                         <RefreshCw className="size-3.5 animate-spin text-zinc-600" />
-                        <span>Testing...</span>
+                        <span>{t("Testing...")}</span>
                       </>
                     ) : (
                       <>
                         <Mail className="size-3.5 text-zinc-700 dark:text-zinc-300" />
-                        <span>Test SMTP</span>
+                        <span>{t("Test SMTP")}</span>
                       </>
                     )}
                   </button>
@@ -672,7 +674,7 @@ export default function TechnicalCommissioningPage() {
                     }}
                     className="w-1/3 py-2.5 px-3 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 active:scale-95 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-xs"
                   >
-                    <span>Continue</span>
+                    <span>{t("Continue")}</span>
                     <ArrowRight className="size-3.5" />
                   </button>
                 </div>
@@ -698,9 +700,9 @@ export default function TechnicalCommissioningPage() {
                     </div>
                     <div>
                       <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
-                        Step 3: Schema Provisioner & RLS
+                        {t("Step 3: Schema Provisioner & RLS")}
                       </h2>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">Deploys 55 entity tables, storage policies, and crons</p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("Deploys 55 entity tables, storage policies, and crons")}</p>
                     </div>
                   </div>
 
@@ -713,12 +715,12 @@ export default function TechnicalCommissioningPage() {
                       {migrationRunning ? (
                         <>
                           <RefreshCw className="size-3.5 animate-spin" />
-                          <span>Provisioning...</span>
+                          <span>{t("Provisioning...")}</span>
                         </>
                       ) : (
                         <>
                           <Play className="size-3.5 fill-current" />
-                          <span>Execute Migrations</span>
+                          <span>{t("Execute Migrations")}</span>
                         </>
                       )}
                     </button>
@@ -729,7 +731,7 @@ export default function TechnicalCommissioningPage() {
                       className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 flex items-center gap-1 transition-all active:scale-95"
                     >
                       <Check className="size-3 text-emerald-600" />
-                      <span>Back to Summary</span>
+                      <span>{t("Back to Summary")}</span>
                     </button>
                   )}
                 </div>
@@ -767,21 +769,21 @@ export default function TechnicalCommissioningPage() {
                         </div>
                         <div>
                           <p className="text-xs font-bold uppercase tracking-wide text-zinc-900 dark:text-zinc-100 leading-tight">
-                            {step.label}
+                            {t(step.label)}
                           </p>
-                          <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight">{step.detail}</p>
+                          <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight">{t(step.detail)}</p>
                         </div>
                       </div>
 
                       <div className="text-[10px] font-mono font-bold shrink-0 ml-2">
                         {step.status === "completed" && (
-                          <span className="text-emerald-600 dark:text-emerald-400">APPLIED</span>
+                          <span className="text-emerald-600 dark:text-emerald-400">{t("APPLIED")}</span>
                         )}
                         {step.status === "running" && (
-                          <span className="text-zinc-950 dark:text-white animate-pulse">RUNNING...</span>
+                          <span className="text-zinc-950 dark:text-white animate-pulse">{t("RUNNING...")}</span>
                         )}
                         {step.status === "pending" && (
-                          <span className="text-zinc-400 dark:text-zinc-600">PENDING</span>
+                          <span className="text-zinc-400 dark:text-zinc-600">{t("PENDING")}</span>
                         )}
                       </div>
                     </div>
@@ -804,7 +806,7 @@ export default function TechnicalCommissioningPage() {
                   <div className="flex-1 overflow-y-auto space-y-0.5 text-[11px]">
                     {logs.length === 0 ? (
                       <p className="text-zinc-600 italic">
-                        Click &apos;Execute Migrations&apos; above to begin automated schema deployment...
+                        {t("Click 'Execute Migrations' above to begin automated schema deployment...")}
                       </p>
                     ) : (
                       logs.map((log, index) => (
@@ -832,7 +834,7 @@ export default function TechnicalCommissioningPage() {
                     className="py-2 px-3.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 active:scale-95 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 text-zinc-900 dark:text-zinc-100 shadow-xs"
                   >
                     <ArrowLeft className="size-3.5" />
-                    <span>Back to Email</span>
+                    <span>{t("Back to Email")}</span>
                   </button>
 
                   {migrationCompleted && (
@@ -841,7 +843,7 @@ export default function TechnicalCommissioningPage() {
                       onClick={() => setShowLogDetails(false)}
                       className="py-2 px-4 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-xs flex items-center gap-1.5"
                     >
-                      <span>Proceed to Handover Summary</span>
+                      <span>{t("Proceed to Handover Summary")}</span>
                       <ArrowRight className="size-3.5" />
                     </button>
                   )}
@@ -855,7 +857,7 @@ export default function TechnicalCommissioningPage() {
         <div className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center gap-2.5 text-[11px] text-zinc-500 dark:text-zinc-400 shadow-xs">
           <ShieldCheck className="size-4 text-zinc-800 dark:text-zinc-200 shrink-0" />
           <span>
-            <strong className="text-zinc-900 dark:text-zinc-200">Zero-Trust Standard:</strong> Secret keys reside strictly in hosting server environment variables. Zero client-side key storage or exposure.
+            <strong className="text-zinc-900 dark:text-zinc-200">{t("Zero-Trust Standard:")}</strong> {t("Secret keys reside strictly in hosting server environment variables. Zero client-side key storage or exposure.")}
           </span>
         </div>
       </main>

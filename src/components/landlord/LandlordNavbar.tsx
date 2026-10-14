@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "@/lib/supabase/client-auth";
 import { ProfileWidget } from "./ProfileWidget";
 import { RoleBadge } from "@/components/profile/RoleBadge";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 const NAV_ITEMS = [
     { label: "Dashboard", href: "/landlord/dashboard" },
@@ -18,19 +19,20 @@ const NAV_ITEMS = [
 
 export function LandlordNavbar() {
     const pathname = usePathname();
+    const { t } = useLanguageContext();
     const { profile, user } = useAuth();
-    const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Landlord';
+    const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || t('Landlord');
 
     return (
         <nav 
             className="sticky top-0 z-50 flex h-[4.5rem] items-center justify-between bg-background px-4 sm:px-6 md:px-8 text-foreground neumorphic-panel" 
-            aria-label="Main Navigation"
+            aria-label={t("Main Navigation")}
         >
             <div className="flex items-center gap-6 md:gap-8">
                 <Link 
                     href="/landlord/dashboard" 
                     className="flex items-center transition-transform hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1 max-w-[220px] sm:max-w-xs overflow-hidden"
-                    aria-label="Dashboard Home"
+                    aria-label={t("Dashboard Home")}
                 >
                     <BrandLogo size="md" className="w-full min-w-0" />
                 </Link>
@@ -50,7 +52,7 @@ export function LandlordNavbar() {
                                         : "text-muted-foreground neumorphic-extruded hover:text-primary"
                                 )}
                             >
-                                {item.label}
+                                {t(item.label)}
                             </Link>
                         );
                     })}
@@ -59,7 +61,7 @@ export function LandlordNavbar() {
 
             <div className="flex items-center gap-3 sm:gap-5">
                 <button 
-                    aria-label="View notifications" 
+                    aria-label={t("View notifications")} 
                     className="group relative rounded-2xl p-3 text-muted-foreground transition-all neumorphic-extruded hover:text-primary active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                     <Bell className="size-5 transition-transform group-hover:scale-110" aria-hidden="true" />

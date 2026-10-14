@@ -79,7 +79,7 @@ export const LANDLORD_PRODUCT_TOUR_STEPS = [
     {
         id: "nav_tenants",
         title: "Accessing Tenants",
-        description: "Everything related to your residents—from applications to lease renewals—is found in the Tenant Hub.",
+        description: "Everything related to your residents—from applications to move-outs—is found in the Tenant Hub.",
         route: "/landlord/properties",
         anchorId: "nav-tenant-hub",
         fallback: "Click 'Tenants' in the sidebar to access resident management tools.",
@@ -87,7 +87,7 @@ export const LANDLORD_PRODUCT_TOUR_STEPS = [
     {
         id: "tenant_management",
         title: "Tenant Hub",
-        description: "Review applications, manage active tenants, and handle lease renewals. Everything related to your residents is consolidated here.",
+        description: "Review applications, manage active tenants, and handle move-outs. Everything related to your residents is consolidated here.",
         route: "/landlord/tenants",
         anchorId: "tour-tenant-hub",
         fallback: "The Tenant Hub is where you find all resident information and active lease agreements.",

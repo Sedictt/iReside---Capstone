@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { WifiOff, RefreshCw, BookOpen, Home, PhoneCall } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export default function OfflinePage() {
+  const { t } = useLanguageContext();
   const handleRetry = () => {
     if (typeof window !== "undefined") {
       window.location.reload();
@@ -24,10 +26,10 @@ export default function OfflinePage() {
 
         <div className="space-y-2">
           <h1 className="text-2xl font-black text-foreground tracking-tight">
-            You Are Currently Offline
+            {t("You Are Currently Offline")}
           </h1>
           <p className="text-xs text-muted-foreground font-medium leading-relaxed">
-            iReside Turnkey instance is running in local offline mode. You can continue viewing cached property details, leases, and local documentation.
+            {t("iReside Turnkey instance is running in local offline mode. You can continue viewing cached property details, leases, and local documentation.")}
           </p>
         </div>
 
@@ -37,7 +39,7 @@ export default function OfflinePage() {
             className="w-full h-12 rounded-xl neumorphic-primary font-black text-sm flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-transform"
           >
             <RefreshCw className="size-4" />
-            Retry Connection
+            {t("Retry Connection")}
           </button>
 
           <Link
@@ -45,7 +47,7 @@ export default function OfflinePage() {
             className="w-full h-12 rounded-xl neumorphic-extruded font-black text-sm text-foreground flex items-center justify-center gap-2 transition-opacity hover:opacity-85"
           >
             <Home className="size-4 text-primary" />
-            Go to Cached Dashboard
+            {t("Go to Cached Dashboard")}
           </Link>
 
           <Link
@@ -53,13 +55,13 @@ export default function OfflinePage() {
             className="w-full h-12 rounded-xl neumorphic-inset font-bold text-xs text-muted-foreground flex items-center justify-center gap-2 hover:text-foreground transition-colors"
           >
             <BookOpen className="size-4" />
-            Open Offline Handover Manuals
+            {t("Open Offline Handover Manuals")}
           </Link>
         </div>
 
         <div className="pt-2 border-t border-border/40 text-[11px] text-muted-foreground flex items-center justify-center gap-1.5 font-medium">
           <PhoneCall className="size-3.5 text-primary" />
-          Emergency? Contact your property manager directly.
+          {t("Emergency? Contact your property manager directly.")}
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type ReadOnlyCoverProps = {
     coverUrl: string | null
@@ -13,6 +14,7 @@ export function ReadOnlyCover({
     fullName,
     className = ""
 }: ReadOnlyCoverProps) {
+    const { t } = useLanguageContext();
     if (!coverUrl) {
         // Default gradient background
         return (
@@ -26,7 +28,7 @@ export function ReadOnlyCover({
         <div className={`relative w-full h-full ${className}`}>
             <Image
                 src={coverUrl}
-                alt={`${fullName}'s cover`}
+                alt={t("{name}'s cover", { name: fullName })}
                 fill
                 sizes="100vw"
                 className="object-cover"

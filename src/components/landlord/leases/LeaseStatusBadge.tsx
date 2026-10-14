@@ -1,5 +1,6 @@
 import type { LeaseStatus } from "@/types/database";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type LeaseStatusBadgeProps = {
  status: LeaseStatus;
@@ -46,13 +47,14 @@ const STATUS_STYLES: Record<LeaseStatus, { label: string; dotClass: string; badg
 };
 
 export function LeaseStatusBadge({ status, className, dotOnly }: LeaseStatusBadgeProps) {
+ const { t } = useLanguageContext();
  const style = STATUS_STYLES[status] || STATUS_STYLES.draft;
  
  if (dotOnly) {
  return (
  <div 
  role="status" 
- aria-label={`Lease status: ${style.label}`}
+ aria-label={t("Lease status: {status}", { status: t(style.label) })}
  className={cn("relative flex size-2.5 items-center justify-center", className)}
  >
  <span className={cn("absolute size-full animate-ping rounded-full opacity-20", style.dotClass)} />
@@ -71,7 +73,7 @@ export function LeaseStatusBadge({ status, className, dotOnly }: LeaseStatusBadg
  )}
  >
  <span className={cn("size-1.5 rounded-full", style.dotClass)} aria-hidden="true" />
- {style.label}
+ {t(style.label)}
  </span>
  );
 }

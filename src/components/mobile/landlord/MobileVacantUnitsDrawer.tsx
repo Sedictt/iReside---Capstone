@@ -15,6 +15,7 @@ import {
     DoorOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguageContext } from '@/context/LanguageContext';
 import { toast } from 'sonner';
 
 export interface VacantUnitItem {
@@ -54,6 +55,7 @@ export function MobileVacantUnitsDrawer({
     units,
     onStartWalkIn,
 }: MobileVacantUnitsDrawerProps) {
+    const { t } = useLanguageContext();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedPropertyFilter, setSelectedPropertyFilter] = useState('all');
     const [copiedUnitId, setCopiedUnitId] = useState<string | null>(null);
@@ -87,10 +89,10 @@ export function MobileVacantUnitsDrawer({
                 : '';
             await navigator.clipboard.writeText(url);
             setCopiedUnitId(unit.id);
-            toast.success(`Application link for ${unit.name} copied!`);
+            toast.success(t('Application link for {unit} copied!', { unit: unit.name }));
             setTimeout(() => setCopiedUnitId(null), 2000);
         } catch {
-            toast.error('Failed to copy application link');
+            toast.error(t('Failed to copy application link'));
         }
     };
 
@@ -129,14 +131,14 @@ export function MobileVacantUnitsDrawer({
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-2">
                                         <h2 className="text-base font-black text-foreground tracking-tight truncate">
-                                            Vacant Units
+                                            {t('Vacant Units')}
                                         </h2>
                                         <span className="px-2 py-0.5 rounded-full text-[10px] font-black border bg-muted/60 text-foreground tabular-nums">
-                                            {units.length} available
+                                            {t('{count} available', { count: units.length })}
                                         </span>
                                     </div>
                                     <p className="text-[11px] text-muted-foreground truncate">
-                                        Units ready for walk-in or resident invites
+                                        {t('Units ready for walk-in or resident invites')}
                                     </p>
                                 </div>
                             </div>
@@ -145,7 +147,7 @@ export function MobileVacantUnitsDrawer({
                                 type="button"
                                 onClick={onClose}
                                 className="size-9 min-h-[36px] min-w-[36px] rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95 shrink-0"
-                                aria-label="Close sheet"
+                                aria-label={t('Close sheet')}
                             >
                                 <X className="size-4" />
                             </button>
@@ -159,7 +161,7 @@ export function MobileVacantUnitsDrawer({
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Search by unit name or property..."
+                                    placeholder={t('Search by unit name or property...')}
                                     maxLength={60}
                                     className="w-full rounded-xl bg-background border border-border/60 py-2 pl-10 pr-9 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                                 />
@@ -187,7 +189,7 @@ export function MobileVacantUnitsDrawer({
                                                 : 'bg-muted/50 text-muted-foreground hover:text-foreground'
                                         )}
                                     >
-                                        All ({units.length})
+                                        {t('All ({count})', { count: units.length })}
                                     </button>
                                     {properties.map((prop) => (
                                         <button
@@ -216,19 +218,19 @@ export function MobileVacantUnitsDrawer({
                                         <Sparkles className="size-6" />
                                     </div>
                                     <h3 className="text-sm font-black text-foreground">
-                                        {searchQuery ? 'No matching units found' : '100% Occupancy!'}
+                                        {searchQuery ? t('No matching units found') : t('100% Occupancy!')}
                                     </h3>
                                     <p className="text-xs text-muted-foreground mt-1 max-w-xs leading-relaxed">
                                         {searchQuery
-                                            ? `No vacant units match "${searchQuery}". Try a different keyword.`
-                                            : 'All units across your selected property are currently occupied or leased.'}
+                                            ? t('No vacant units match "{query}". Try a different keyword.', { query: searchQuery })
+                                            : t('All units across your selected property are currently occupied or leased.')}
                                     </p>
                                     <Link
                                         href="/mobile/landlord/properties"
                                         onClick={onClose}
                                         className="mt-4 px-4 py-2 rounded-xl neumorphic-extruded text-xs font-black uppercase tracking-wider text-primary flex items-center gap-1.5 active:scale-95 transition-all"
                                     >
-                                        <span>Manage Properties</span>
+                                        <span>{t('Manage Properties')}</span>
                                         <ArrowUpRight className="size-3.5" />
                                     </Link>
                                 </div>
@@ -260,7 +262,7 @@ export function MobileVacantUnitsDrawer({
                                                     <div className="text-xs font-black text-foreground tabular-nums">
                                                         PHP {unit.rent_amount.toLocaleString()}
                                                     </div>
-                                                    <span className="text-[9px] font-bold text-muted-foreground">/ month</span>
+                                                    <span className="text-[9px] font-bold text-muted-foreground">{t('/ month')}</span>
                                                 </div>
                                             </div>
 
@@ -274,12 +276,12 @@ export function MobileVacantUnitsDrawer({
                                                     {isCopied ? (
                                                         <>
                                                             <Check className="size-3.5 text-emerald-500" />
-                                                            <span className="text-emerald-500 font-black">Copied!</span>
+                                                            <span className="text-emerald-500 font-black">{t('Copied!')}</span>
                                                         </>
                                                     ) : (
                                                         <>
                                                             <Copy className="size-3.5 text-muted-foreground" />
-                                                            <span>Copy Link</span>
+                                                            <span>{t('Copy Link')}</span>
                                                         </>
                                                     )}
                                                 </button>
@@ -293,7 +295,7 @@ export function MobileVacantUnitsDrawer({
                                                     className="py-2 px-3 rounded-xl neumorphic-primary text-[11px] font-black uppercase tracking-wider text-primary-foreground flex items-center justify-center gap-1.5 active:scale-95 transition-all"
                                                 >
                                                     <UserPlus className="size-3.5" />
-                                                    <span>Walk-In App</span>
+                                                    <span>{t('Walk-In App')}</span>
                                                 </button>
                                             </div>
                                         </div>
@@ -309,14 +311,14 @@ export function MobileVacantUnitsDrawer({
                                 onClick={onClose}
                                 className="flex-1 py-2.5 rounded-xl border border-border/60 bg-muted/30 text-xs font-bold text-muted-foreground hover:text-foreground text-center active:scale-95 transition-all"
                             >
-                                All Properties
+                                {t('All Properties')}
                             </Link>
                             <button
                                 type="button"
                                 onClick={onClose}
                                 className="px-5 py-2.5 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-wider text-primary-foreground active:scale-95 transition-all"
                             >
-                                Done
+                                {t('Done')}
                             </button>
                         </div>
                     </motion.div>

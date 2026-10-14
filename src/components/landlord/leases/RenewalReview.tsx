@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { RefreshCw, CheckCircle2, X, Calendar, ArrowRight, AlertTriangle, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { toast } from "sonner";
 import { useProperty } from "@/context/PropertyContext";
 import RenewalSettingsModal from "./RenewalSettingsModal";
@@ -13,6 +14,7 @@ import { FieldError } from "@/components/ui/field-error";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { dateRule, moneyRule, parseNumericInput, textRule } from "@/lib/validation/rules";
 import { renewalTermDatesRule } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { formatLeaseDate, isOpenEnded, leaseEndState, termLengthMonths, type LeaseTermLike } from "@/lib/lease-term";
 
 interface RenewalRequest {
  id: string;
@@ -25,7 +27,9 @@ interface RenewalRequest {
  current_lease: {
  id: string;
  start_date: string;
- end_date: string;
+ /** Null for open-ended (month-to-month) leases. */
+ end_date: string | null;
+ term_type?: string | null;
  monthly_rent: number;
  security_deposit: number;
  unit: {
@@ -53,6 +57,22 @@ interface LandlordRenewalReviewProps {
 
 export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }: LandlordRenewalReviewProps) {
  const searchParams = useSearchParams();
+ const { t, language } = useLanguageContext();
+
+ /** Localized short term label ("Open-ended", "Ends Mar 15, 2027", ...). */
+ const leaseTermLabel = (lease: LeaseTermLike) => {
+ const state = leaseEndState(lease);
+ switch (state.kind) {
+ case "open_ended":
+ return t("Open-ended");
+ case "moving_out":
+ return t("Moving out {date}", { date: formatLeaseDate(state.endDate, undefined, language) });
+ case "fixed":
+ return t("Ends {date}", { date: formatLeaseDate(state.endDate, undefined, language) });
+ case "ended":
+ return t("Ended {date}", { date: formatLeaseDate(state.endDate, undefined, language) });
+ }
+ };
  const isPreview = searchParams.get("preview_requests") === "true";
 
  const { selectedPropertyId } = useProperty();
@@ -85,6 +105,14 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  return parseNumericInput(val) as number;
  };
 
+ /** Whole months of a proposed term, or an em dash when a date is missing. */
+ const proposedTermMonths = (request: RenewalRequest) => {
+ const months = termLengthMonths(request.proposed_start_date, request.proposed_end_date);
+ return months === null ? "—" : t("{count} Months", { count: months });
+ };
+
+ const selectedIsOpenEnded = selectedRequest ? isOpenEnded(selectedRequest.current_lease) : false;
+
  // Same rules as POST /api/landlord/renewals/[id] (approve).
  const renewalForm = useFormValidation(
  {
@@ -97,18 +125,18 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  },
  {
  proposedStartDate: (value, all) =>
- dateRule(value, { label: "New start date" }) ??
+ dateRule(value, { label: t("New start date") }) ??
  (renewalTermDatesRule(value, all.proposedEndDate, all.currentEndDate)?.field === "proposed_start_date"
  ? renewalTermDatesRule(value, all.proposedEndDate, all.currentEndDate)?.message
  : undefined),
  proposedEndDate: (value, all) =>
- dateRule(value, { label: "New end date" }) ??
+ dateRule(value, { label: t("New end date") }) ??
  (renewalTermDatesRule(all.proposedStartDate, value, all.currentEndDate)?.field === "proposed_end_date"
  ? renewalTermDatesRule(all.proposedStartDate, value, all.currentEndDate)?.message
  : undefined),
- proposedRent: (value) => moneyRule(value, { label: "Monthly rent", positive: true }),
- proposedDeposit: (value) => moneyRule(value, { label: "Security deposit" }),
- rejectNotes: (value) => textRule(value, { label: "Notes", max: 250 }),
+ proposedRent: (value) => moneyRule(value, { label: t("Monthly rent"), positive: true }),
+ proposedDeposit: (value) => moneyRule(value, { label: t("Security deposit") }),
+ rejectNotes: (value) => textRule(value, { label: t("Notes"), max: 250 }),
  }
  );
 
@@ -228,16 +256,16 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  if (fe.proposed_monthly_rent) mapped.proposedRent = fe.proposed_monthly_rent;
  if (fe.proposed_security_deposit) mapped.proposedDeposit = fe.proposed_security_deposit;
  renewalForm.setServerErrors(mapped);
- toast.error("Failed to approve", { description: approveResponse.error });
+ toast.error(t("Failed to approve"), { description: approveResponse.error });
  return;
  }
- toast.success("Renewal approved", {
- description: "New lease created. Tenant will be notified."
+ toast.success(t("Renewal approved"), {
+ description: t("New lease created. Tenant will be notified.")
  });
  setSelectedRequest(null);
  fetchRequests();
  } catch (error) {
- toast.error("Failed to approve request");
+ toast.error(t("Failed to approve request"));
  } finally {
  setSubmitting(false);
  }
@@ -261,17 +289,17 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  });
  const rejectResponse = await res.json();
  if (!res.ok) {
- toast.error("Failed to reject", { description: rejectResponse.error });
+ toast.error(t("Failed to reject"), { description: rejectResponse.error });
  return;
  }
- toast.success("Renewal rejected", {
- description: "Tenant will be notified."
+ toast.success(t("Renewal rejected"), {
+ description: t("Tenant will be notified.")
  });
  setSelectedRequest(null);
  setRejectNotes("");
  fetchRequests();
  } catch (error) {
- toast.error("Failed to reject request");
+ toast.error(t("Failed to reject request"));
  } finally {
  setSubmitting(false);
  }
@@ -293,7 +321,7 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  <RefreshCw className="size-8 animate-spin text-primary" />
  </div>
  <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">
- Loading Requests...
+ {t("Loading Requests...")}
  </p>
  </div>
  );
@@ -303,10 +331,10 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  <div className="space-y-8">
  <div className="flex items-center justify-between px-2">
  <div className="flex items-center gap-4">
- <h3 className="text-xl font-black text-foreground tracking-tight">Pending Renewals</h3>
+ <h3 className="text-xl font-black text-foreground tracking-tight">{t("Pending Renewals")}</h3>
  {isPreview && (
  <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest border border-primary/20">
- Preview Mode
+ {t("Preview Mode")}
  </span>
  )}
  </div>
@@ -315,15 +343,15 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  onClick={() => setIsSettingsOpen(true)}
  disabled={!selectedPropertyId || selectedPropertyId === "all"}
  className="flex items-center gap-2 px-4 py-2 rounded-full neumorphic-panel text-[10px] font-black text-muted-foreground uppercase tracking-widest hover:neumorphic-inset hover:text-foreground transition-all disabled:opacity-30"
- title={(!selectedPropertyId || selectedPropertyId === "all") ? "Select a property to configure its renewal policy" : "Configure Renewal Policy"}
+ title={(!selectedPropertyId || selectedPropertyId === "all") ? t("Select a property to configure its renewal policy") : t("Configure Renewal Policy")}
  >
  <Settings2 className="size-3.5" />
- Renewal Policy
+ {t("Renewal Policy")}
  </button>
  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full neumorphic-inset ">
  <div className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
- {requests.length} Pending
+ {t("{count} Pending", { count: requests.length })}
  </span>
  </div>
  </div>
@@ -334,8 +362,8 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  <div className="p-4 rounded-full neumorphic-inset mb-4">
  <CheckCircle2 className="size-8 text-muted-foreground/30" />
  </div>
- <p className="font-black text-foreground">All Caught Up</p>
- <p className="text-sm text-muted-foreground">No new renewal requests to process at this time.</p>
+ <p className="font-black text-foreground">{t("All Caught Up")}</p>
+ <p className="text-sm text-muted-foreground">{t("No new renewal requests to process at this time.")}</p>
  </div>
  ) : viewMode === "list" ? (
  <div className="flex flex-col gap-3">
@@ -354,7 +382,7 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  {request.tenant.full_name}
  </h4>
  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">
- {request.current_lease.unit.property.name} • Unit {request.current_lease.unit.name}
+ {request.current_lease.unit.property.name} • {t("Unit {name}", { name: request.current_lease.unit.name })}
  </p>
  </div>
  </div>
@@ -362,22 +390,22 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  {/* Middle: Expiry & Duration */}
  <div className="flex items-center gap-6 min-w-[200px]">
  <div>
- <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Expires</p>
+ <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{t("Current Term")}</p>
  <p className="text-xs font-black text-foreground">
- <ClientOnlyDate date={request.current_lease.end_date} />
+ {leaseTermLabel(request.current_lease)}
  </p>
  </div>
  <div>
- <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Proposed Term</p>
+ <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{t("Proposed Term")}</p>
  <p className="text-xs font-black text-foreground">
- {Math.round((new Date(request.proposed_end_date).getTime() - new Date(request.proposed_start_date).getTime()) / (86400000 * 30.44))} Months
+ {proposedTermMonths(request)}
  </p>
  </div>
  </div>
 
  {/* Financials */}
  <div className="min-w-[140px] text-left md:text-right">
- <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Proposed Rent</p>
+ <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{t("Proposed Rent")}</p>
  <p className="font-mono text-base font-black tracking-tight text-foreground tabular-nums">
  PHP {request.proposed_monthly_rent?.toLocaleString()}
  </p>
@@ -386,14 +414,14 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  {/* Status & Action */}
  <div className="flex items-center justify-between md:justify-end gap-3 shrink-0">
  <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-widest border border-amber-500/20">
- Pending Review
+ {t("Pending Review")}
  </span>
  <button
  onClick={() => openReview(request)}
  className="px-4 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white font-black uppercase tracking-wider text-xs transition-all flex items-center gap-1.5 cursor-pointer"
  >
  <FileText className="size-3.5" />
- <span>Review</span>
+ <span>{t("Review")}</span>
  </button>
  </div>
  </div>
@@ -411,32 +439,32 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  <div>
  <h4 className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{request.tenant.full_name}</h4>
  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">
- {request.current_lease.unit.property.name} • Unit {request.current_lease.unit.name}
+ {request.current_lease.unit.property.name} • {t("Unit {name}", { name: request.current_lease.unit.name })}
  </p>
  </div>
  </div>
  <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-widest border border-amber-500/20">
- Pending Review
+ {t("Pending Review")}
  </span>
  </div>
  
  <div className="grid grid-cols-2 gap-6 mb-8">
  <div className="space-y-1">
- <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Current End Date</p>
- <p className="font-black text-foreground"><ClientOnlyDate date={request.current_lease.end_date} /></p>
+ <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">{t("Current Term")}</p>
+ <p className="font-black text-foreground">{leaseTermLabel(request.current_lease)}</p>
  </div>
  <div className="space-y-1">
- <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Proposed Length</p>
+ <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">{t("Proposed Length")}</p>
  <p className="font-black text-foreground">
- {Math.round((new Date(request.proposed_end_date).getTime() - new Date(request.proposed_start_date).getTime()) / (86400000 * 30.44))} Months
+ {proposedTermMonths(request)}
  </p>
  </div>
  <div className="space-y-1">
- <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Proposed Rent</p>
+ <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">{t("Proposed Rent")}</p>
  <p className="font-black text-foreground">PHP {request.proposed_monthly_rent?.toLocaleString()}</p>
  </div>
  <div className="space-y-1">
- <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Submitted On</p>
+ <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">{t("Submitted On")}</p>
  <p className="font-black text-foreground"><ClientOnlyDate date={request.created_at} /></p>
  </div>
  </div>
@@ -446,7 +474,7 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  className="w-full py-4 rounded-2xl bg-primary/5 border border-primary/10 text-primary hover:bg-primary hover:text-white font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
  >
  <FileText className="size-4" />
- Review Request
+ {t("Review Request")}
  </button>
  </div>
  ))}
@@ -463,14 +491,15 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  <RefreshCw className="size-6" />
  </div>
  <div>
- <h3 className="text-xl font-black text-foreground tracking-tight">Review Renewal Terms</h3>
+ <h3 className="text-xl font-black text-foreground tracking-tight">{t("Review Renewal Terms")}</h3>
  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">
- Reviewing request for {selectedRequest.tenant.full_name}
+ {t("Reviewing request for {name}", { name: selectedRequest.tenant.full_name })}
  </p>
  </div>
  </div>
  <button
  onClick={() => setSelectedRequest(null)}
+ aria-label={t("Close")}
  className="p-3 rounded-xl hover:neumorphic-inset transition-colors"
  >
  <X className="size-5" />
@@ -480,39 +509,52 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  <div className="p-8 overflow-y-auto space-y-8">
  <div className="grid grid-cols-2 gap-4">
  <div className="neumorphic-inset rounded-3xl p-6 /50">
- <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-black mb-4">Current Lease</p>
+ <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-black mb-4">{t("Current Lease")}</p>
  <div className="space-y-3">
  <div className="flex justify-between items-center">
- <span className="text-xs text-muted-foreground">Expires</span>
- <span className="text-sm font-black"><ClientOnlyDate date={selectedRequest.current_lease.end_date} /></span>
+ <span className="text-xs text-muted-foreground">{t("Term")}</span>
+ <span className="text-sm font-black">{leaseTermLabel(selectedRequest.current_lease)}</span>
  </div>
  <div className="flex justify-between items-center">
- <span className="text-xs text-muted-foreground">Monthly Rent</span>
+ <span className="text-xs text-muted-foreground">{t("Monthly Rent")}</span>
  <span className="text-sm font-black">PHP {selectedRequest.current_lease.monthly_rent?.toLocaleString()}</span>
  </div>
  </div>
  </div>
  <div className="bg-primary/5 rounded-3xl p-6 border border-primary/20">
- <p className="text-[10px] text-primary uppercase tracking-[0.2em] font-black mb-4">Tenant Proposal</p>
+ <p className="text-[10px] text-primary uppercase tracking-[0.2em] font-black mb-4">{t("Tenant Proposal")}</p>
  <div className="space-y-3">
  <div className="flex justify-between items-center">
- <span className="text-xs text-primary/70">Target Start</span>
+ <span className="text-xs text-primary/70">{t("Target Start")}</span>
  <span className="text-sm font-black text-primary"><ClientOnlyDate date={selectedRequest.proposed_start_date} /></span>
  </div>
  <div className="flex justify-between items-center">
- <span className="text-xs text-primary/70">Target Rent</span>
+ <span className="text-xs text-primary/70">{t("Target Rent")}</span>
  <span className="text-sm font-black text-primary">PHP {selectedRequest.proposed_monthly_rent?.toLocaleString()}</span>
  </div>
  </div>
  </div>
  </div>
 
+ {selectedIsOpenEnded ? (
+ <div className="flex items-start gap-3 rounded-3xl neumorphic-inset p-6">
+ <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+ <Calendar className="size-5" />
+ </div>
+ <div className="space-y-1">
+ <p className="text-sm font-black text-foreground">{t("This lease is open-ended and doesn't need renewal.")}</p>
+ <p className="text-xs text-muted-foreground">
+ {t("The tenancy continues month-to-month for as long as rent is paid. If the tenant wants a dated term instead, set a fixed end date from the lease card.")}
+ </p>
+ </div>
+ </div>
+ ) : (
  <div className="space-y-6">
- <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-white/5 pb-2">Finalize New Terms</h4>
- 
+ <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-white/5 pb-2">{t("Finalize New Terms")}</h4>
+
  <div className="grid grid-cols-2 gap-6">
  <div className="space-y-2">
- <label htmlFor="new-start-date" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New Start Date</label>
+ <label htmlFor="new-start-date" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("New Start Date")}</label>
  <input min="1990-01-01" max="2100-12-31"
  {...renewalForm.fieldProps("proposedStartDate")}
  id="new-start-date"
@@ -524,7 +566,7 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  <FieldError id={renewalForm.errorId("proposedStartDate")} message={renewalForm.errorFor("proposedStartDate")} />
  </div>
  <div className="space-y-2">
- <label htmlFor="new-end-date" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New End Date</label>
+ <label htmlFor="new-end-date" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("New End Date")}</label>
  <input min="1990-01-01" max="2100-12-31"
  {...renewalForm.fieldProps("proposedEndDate")}
  id="new-end-date"
@@ -536,7 +578,7 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  <FieldError id={renewalForm.errorId("proposedEndDate")} message={renewalForm.errorFor("proposedEndDate")} />
  </div>
  <div className="space-y-2">
- <label htmlFor="monthly-rent" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Rent (PHP)</label>
+ <label htmlFor="monthly-rent" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Monthly Rent (PHP)")}</label>
  <div className="relative">
  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-black">₱</span>
  <input maxLength={14}
@@ -553,12 +595,12 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  </div>
  <div className="space-y-2">
  <div className="flex justify-between items-center">
- <label htmlFor="security-deposit" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Security Deposit (PHP)</label>
+ <label htmlFor="security-deposit" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Security Deposit (PHP)")}</label>
  <button 
  onClick={() => setProposedDeposit(formatWithCommas(selectedRequest.current_lease.security_deposit?.toString() || "0"))}
  className="text-[10px] font-black text-primary hover:underline uppercase tracking-tighter"
  >
- Use Current Balance
+ {t("Use Current Balance")}
  </button>
  </div>
  <div className="relative">
@@ -575,21 +617,22 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  </div>
  <FieldError id={renewalForm.errorId("proposedDeposit")} message={renewalForm.errorFor("proposedDeposit")} />
  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl neumorphic-inset /50">
- <span className="text-[9px] font-black text-muted-foreground uppercase">Current Held:</span>
+ <span className="text-[9px] font-black text-muted-foreground uppercase">{t("Current Held:")}</span>
  <span className="text-[9px] font-black text-foreground">PHP {selectedRequest.current_lease.security_deposit?.toLocaleString()}</span>
  </div>
  </div>
  </div>
  </div>
+ )}
 
  <div className="space-y-2">
- <label htmlFor="landlord-notes" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block">Landlord Notes (Optional)</label>
+ <label htmlFor="landlord-notes" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block">{t("Landlord Notes (Optional)")}</label>
  <textarea maxLength={250}
  {...renewalForm.fieldProps("rejectNotes")}
  id="landlord-notes"
  value={rejectNotes}
  onChange={(e) => setRejectNotes(e.target.value)}
- placeholder="Explain your decision or adjustments..."
+ placeholder={t("Explain your decision or adjustments...")}
  className="w-full p-4 rounded-2xl neumorphic-panel text-sm min-h-[100px] outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
  />
  </div>
@@ -602,16 +645,18 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  className="px-6 py-4 rounded-2xl border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white font-black uppercase tracking-widest text-xs transition-all flex-1 disabled:opacity-50 flex items-center justify-center gap-2"
  >
  <AlertTriangle className="size-4" />
- Reject Request
+ {t("Reject Request")}
  </button>
+ {!selectedIsOpenEnded && (
  <button
  onClick={handleApprove}
  disabled={submitting}
  className="px-6 py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-xs hover:bg-primary-dark transition-all flex flex-[1.5] items-center justify-center gap-2 shadow-primary/20 disabled:opacity-50"
  >
- {submitting ? "Creating Lease..." : "Approve & Generate Lease"}
+ {submitting ? t("Creating Lease...") : t("Approve & Generate Lease")}
  <CheckCircle2 className="size-4" />
  </button>
+ )}
  </div>
  </div>
  </div>
@@ -620,7 +665,7 @@ export default function LandlordRenewalReview({ searchQuery, viewMode = "grid" }
  {selectedPropertyId && selectedPropertyId !== "all" && (
  <RenewalSettingsModal
  propertyId={selectedPropertyId}
- propertyName="Active Property" // You could fetch the real name if needed
+ propertyName={t("Active Property")} // You could fetch the real name if needed
  isOpen={isSettingsOpen}
  onClose={() => setIsSettingsOpen(false)}
  />

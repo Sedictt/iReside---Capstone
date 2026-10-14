@@ -65,11 +65,3 @@ export interface PropertyOverviewItem {
   maintenanceCount: number;
 }
 
-export interface UpdateRenewalSettingsInput {
-  propertyId: string;
-  landlordId: string;
-  autoRenewalEnabled: boolean;
-  renewalNoticeDays: number;
-  defaultRenewalTermMonths: number;
-  defaultRentIncreasePercent: number;
-}

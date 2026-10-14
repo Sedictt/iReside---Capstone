@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useTimeFormat } from "@/hooks/useTimeFormat";
 import { TimeFormatToggle } from "@/components/ui/TimeFormatToggle";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface TenantDigitalClockProps {
   className?: string;
@@ -11,6 +12,7 @@ interface TenantDigitalClockProps {
 }
 
 export function TenantDigitalClock({ className, compact = false }: TenantDigitalClockProps) {
+  const { t } = useLanguageContext();
   const [time, setTime] = useState<Date>(() => new Date());
   const [mounted, setMounted] = useState(false);
   const { is24Hour, formatTimeParts, toggleTimeFormat } = useTimeFormat();
@@ -38,7 +40,7 @@ export function TenantDigitalClock({ className, compact = false }: TenantDigital
           type="button"
           onClick={toggleTimeFormat}
           className="font-mono text-base font-black text-foreground hover:text-primary transition-colors cursor-pointer"
-          title={`Click to switch to ${is24Hour ? "12-hour" : "24-hour"} format`}
+          title={is24Hour ? t("Click to switch to 12-hour format") : t("Click to switch to 24-hour format")}
         >
           {hours}:{minutes}
           {period && <span className="ml-1 text-xs text-primary">{period}</span>}
@@ -54,8 +56,8 @@ export function TenantDigitalClock({ className, compact = false }: TenantDigital
         type="button"
         onClick={toggleTimeFormat}
         className="group flex items-baseline gap-1.5 cursor-pointer transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl px-1.5 py-0.5"
-        title={`Click to switch to ${is24Hour ? "12-hour (AM/PM)" : "24-hour"} format`}
-        aria-label={`Current time is ${hours}:${minutes}${period ? ` ${period}` : ""}. Click to switch to ${is24Hour ? "12-hour" : "24-hour"} format.`}
+        title={is24Hour ? t("Click to switch to 12-hour (AM/PM) format") : t("Click to switch to 24-hour format")}
+        aria-label={t(is24Hour ? "Current time is {time}. Click to switch to 12-hour format." : "Current time is {time}. Click to switch to 24-hour format.", { time: `${hours}:${minutes}${period ? ` ${period}` : ""}` })}
       >
         <span className="font-mono text-3xl sm:text-4xl font-black tracking-tight text-foreground tabular-nums group-hover:text-primary transition-colors">
           {hours}:{minutes}
@@ -69,7 +71,7 @@ export function TenantDigitalClock({ className, compact = false }: TenantDigital
       <div className="mt-1 flex items-center gap-2">
         <TimeFormatToggle variant="compact" />
         <span className="text-[9px] font-black uppercase tracking-[0.25em] text-muted-foreground/60">
-          Local Time
+          {t("Local Time")}
         </span>
       </div>
     </div>

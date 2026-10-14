@@ -1,3 +1,5 @@
+import { tr } from "@/hooks/useLanguage";
+
 export interface PosterRenderOptions {
   propertyName: string;
   address: string;
@@ -289,10 +291,10 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
 
   ctx.fillStyle = "#ffffff";
   ctx.font = `900 17px ${fontFam}`;
-  ctx.fillText("⬇️  SCAN TO DOWNLOAD", card1X + qrCardW / 2, qrCardY + qrCardH - 58);
+  ctx.fillText(`⬇️  ${tr("SCAN TO DOWNLOAD")}`, card1X + qrCardW / 2, qrCardY + qrCardH - 58);
   ctx.font = `800 13px ${fontFam}`;
   ctx.fillStyle = "rgba(255,255,255,0.9)";
-  ctx.fillText("ANDROID (APK)", card1X + qrCardW / 2, qrCardY + qrCardH - 36);
+  ctx.fillText(tr("ANDROID (APK)"), card1X + qrCardW / 2, qrCardY + qrCardH - 36);
 
   // --- Right: Web Portal Card (Emerald Theme) ---
   const card2X = col2X + qrInnerMargin * 2 + qrCardW;
@@ -347,10 +349,10 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
 
   ctx.fillStyle = "#ffffff";
   ctx.font = `900 17px ${fontFam}`;
-  ctx.fillText("🌐  SCAN TO REGISTER", card2X + qrCardW / 2, qrCardY + qrCardH - 58);
+  ctx.fillText(`🌐  ${tr("SCAN TO REGISTER")}`, card2X + qrCardW / 2, qrCardY + qrCardH - 58);
   ctx.font = `800 13px ${fontFam}`;
   ctx.fillStyle = "rgba(255,255,255,0.9)";
-  ctx.fillText("INSTANT WEB ACCESS", card2X + qrCardW / 2, qrCardY + qrCardH - 36);
+  ctx.fillText(tr("INSTANT WEB ACCESS"), card2X + qrCardW / 2, qrCardY + qrCardH - 36);
 
   // --- Center Floating "OR" Badge ---
   const orCenterX = col2X + col2W / 2;
@@ -367,7 +369,7 @@ export async function renderPosterToCanvas(options: PosterRenderOptions): Promis
   ctx.font = `900 16px ${fontFam}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("OR", orCenterX, orCenterY);
+  ctx.fillText(tr("OR"), orCenterX, orCenterY);
 
   // ----------------------------------------------------
   // COLUMN 3: Dark Utility Sidebar (Right 25%)

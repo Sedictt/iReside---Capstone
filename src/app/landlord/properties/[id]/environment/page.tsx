@@ -28,6 +28,8 @@ import { createClient } from "@/lib/supabase/client";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
 import { TimePicker } from "@/components/ui/TimePicker";
 import { useAppToast } from "@/hooks/useAppToast";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 type EnvironmentMode = "apartment" | "dormitory" | "boarding_house";
 
@@ -188,6 +190,7 @@ const MODE_CARDS: {
 
 export default function PropertyEnvironmentPage() {
     const toast = useAppToast();
+    const { t } = useLanguageContext();
     const params = useParams();
     const router = useRouter();
     const supabase = useMemo(() => createClient(), []);
@@ -348,19 +351,19 @@ export default function PropertyEnvironmentPage() {
                 .update({ type: mode })
                 .eq("id", propertyId);
 
-            toast.success("Environment policies updated!");
+            toast.success(t("Environment policies updated!"));
             router.refresh();
             router.push("/landlord/properties");
         } catch (err: any) {
             console.error("Error saving policy:", err);
-            toast.error(err?.message || "Failed to save environment settings");
+            toast.error(tr(err?.message || t("Failed to save environment settings")));
         } finally {
             setSaving(false);
         }
     };
 
     if (loading) {
-        return <PageLoader message="Loading Environment Settings" />;
+        return <PageLoader message={t("Loading Environment Settings")} />;
     }
 
     const currentUtilityGuide = UTILITY_GUIDE_DETAILS[formData.utility_policy_mode] || UTILITY_GUIDE_DETAILS.included_in_rent;
@@ -374,21 +377,21 @@ export default function PropertyEnvironmentPage() {
                         <button
                             onClick={() => router.push(`/landlord/properties`)}
                             className="neumorphic-extruded size-10 rounded-2xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
-                            title="Back to Properties"
+                            title={t("Back to Properties")}
                         >
                             <ArrowLeft className="size-4" />
                         </button>
                         <div>
                             <div className="flex items-center gap-2">
                                 <h1 className="text-xl font-black tracking-tight text-foreground">
-                                    Environment Scope
+                                    {t("Environment Scope")}
                                 </h1>
                                 <span className="rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[10px] font-black text-primary uppercase tracking-wider">
-                                    {mode.replace("_", " ")}
+                                    {t(mode.replace("_", " "))}
                                 </span>
                             </div>
                             <p className="text-xs text-muted-foreground font-medium truncate max-w-md">
-                                Operating rules, tenant constraints, and billing for <span className="text-foreground font-bold">{propertyName}</span>
+                                {t("Operating rules, tenant constraints, and billing for")} <span className="text-foreground font-bold">{propertyName}</span>
                             </p>
                         </div>
                     </div>
@@ -399,7 +402,7 @@ export default function PropertyEnvironmentPage() {
                             disabled={saving}
                             className="px-4 py-2 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground transition-all"
                         >
-                            Cancel
+                            {t("Cancel")}
                         </button>
                         <button
                             onClick={handleSave}
@@ -407,7 +410,7 @@ export default function PropertyEnvironmentPage() {
                             className="neumorphic-primary flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-wider text-primary-foreground transition-all hover:scale-105 active:scale-95 shadow-md shadow-primary/20 disabled:opacity-50"
                         >
                             <Save className="size-3.5" />
-                            <span>{saving ? "Saving…" : "Save Policy"}</span>
+                            <span>{saving ? t("Saving…") : t("Save Policy")}</span>
                         </button>
                     </div>
                 </div>
@@ -418,10 +421,10 @@ export default function PropertyEnvironmentPage() {
                         <div>
                             <h2 className="text-sm font-black tracking-tight text-foreground flex items-center gap-2">
                                 <Building2 className="size-4 text-primary" />
-                                <span>Operating Environment Mode</span>
+                                <span>{t("Operating Environment Mode")}</span>
                             </h2>
                             <p className="text-xs text-muted-foreground font-medium mt-0.5">
-                                Select how this property operates to auto-calibrate occupancy rules, curfews, and metering defaults.
+                                {t("Select how this property operates to auto-calibrate occupancy rules, curfews, and metering defaults.")}
                             </p>
                         </div>
                     </div>
@@ -463,22 +466,22 @@ export default function PropertyEnvironmentPage() {
                                         </div>
 
                                         <h3 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">
-                                            {card.label}
+                                            {t(card.label)}
                                         </h3>
                                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-0.5">
-                                            {card.tagline}
+                                            {t(card.tagline)}
                                         </p>
                                         <p className="text-xs text-muted-foreground mt-2 leading-relaxed font-medium">
-                                            {card.description}
+                                            {t(card.description)}
                                         </p>
                                     </div>
 
                                     <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between">
                                         <span className={cn("text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border", card.badgeColor)}>
-                                            {card.id.replace("_", " ")}
+                                            {t(card.id.replace("_", " "))}
                                         </span>
                                         <span className="text-[10px] font-bold text-muted-foreground group-hover:text-foreground transition-colors">
-                                            {isSelected ? "Active Mode" : "Switch Mode →"}
+                                            {isSelected ? t("Active Mode") : t("Switch Mode →")}
                                         </span>
                                     </div>
                                 </button>
@@ -496,8 +499,8 @@ export default function PropertyEnvironmentPage() {
                                 <Users className="size-4" />
                             </div>
                             <div>
-                                <h3 className="text-sm font-black text-foreground">Occupancy & Billing</h3>
-                                <p className="text-[11px] text-muted-foreground font-medium">Capacity and utility metering</p>
+                                <h3 className="text-sm font-black text-foreground">{t("Occupancy & Billing")}</h3>
+                                <p className="text-[11px] text-muted-foreground font-medium">{t("Capacity and utility metering")}</p>
                             </div>
                         </div>
 
@@ -505,22 +508,24 @@ export default function PropertyEnvironmentPage() {
                             {/* Max Occupants Stepper */}
                             <div className="space-y-1.5">
                                 <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                                    Max Occupants Per Unit
+                                    {t("Max Occupants Per Unit")}
                                 </label>
                                 <div className="flex items-center gap-3">
                                     <button
                                         type="button"
                                         onClick={() => setFormData(prev => ({ ...prev, max_occupants_per_unit: Math.max(1, prev.max_occupants_per_unit - 1) }))}
+                                        aria-label={t("Decrease max occupants")}
                                         className="neumorphic-extruded size-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95 shrink-0"
                                     >
                                         <Minus className="size-3.5" />
                                     </button>
                                     <div className="neumorphic-inset flex-1 rounded-xl py-2 text-center text-sm font-black text-foreground">
-                                        {formData.max_occupants_per_unit} {formData.max_occupants_per_unit === 1 ? "Person" : "Persons"}
+                                        {formData.max_occupants_per_unit === 1 ? t("{count} Person", { count: 1 }) : t("{count} Persons", { count: formData.max_occupants_per_unit })}
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => setFormData(prev => ({ ...prev, max_occupants_per_unit: Math.min(20, prev.max_occupants_per_unit + 1) }))}
+                                        aria-label={t("Increase max occupants")}
                                         className="neumorphic-extruded size-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95 shrink-0"
                                     >
                                         <Plus className="size-3.5" />
@@ -532,7 +537,7 @@ export default function PropertyEnvironmentPage() {
                             <div className="space-y-1.5">
                                 <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                     <VenusAndMars className="size-3 text-primary" />
-                                    <span>Gender Policy</span>
+                                    <span>{t("Gender Policy")}</span>
                                 </label>
                                 <select
                                     value={formData.gender_restriction_mode}
@@ -541,7 +546,7 @@ export default function PropertyEnvironmentPage() {
                                 >
                                     {GENDER_OPTIONS.map((opt) => (
                                         <option key={opt.value} value={opt.value} className="bg-card text-foreground">
-                                            {opt.label}
+                                            {t(opt.label)}
                                         </option>
                                     ))}
                                 </select>
@@ -552,7 +557,7 @@ export default function PropertyEnvironmentPage() {
                                 <div className="flex items-center justify-between">
                                     <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                         <Zap className="size-3 text-amber-500" />
-                                        <span>Electricity & Water Billing</span>
+                                        <span>{t("Electricity & Water Billing")}</span>
                                     </label>
                                     <button
                                         type="button"
@@ -560,7 +565,7 @@ export default function PropertyEnvironmentPage() {
                                         className="flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
                                     >
                                         <HelpCircle className="size-3" />
-                                        <span>Compare Styles</span>
+                                        <span>{t("Compare Styles")}</span>
                                     </button>
                                 </div>
 
@@ -571,7 +576,7 @@ export default function PropertyEnvironmentPage() {
                                 >
                                     {UTILITY_OPTIONS.map((opt) => (
                                         <option key={opt.value} value={opt.value} className="bg-card text-foreground">
-                                            {opt.label}
+                                            {t(opt.label)}
                                         </option>
                                     ))}
                                 </select>
@@ -587,16 +592,16 @@ export default function PropertyEnvironmentPage() {
                                         <div className="flex items-center gap-1.5">
                                             <Lightbulb className="size-3.5 text-amber-500 shrink-0" />
                                             <span className="text-[11px] font-black text-foreground">
-                                                {currentUtilityGuide.tagline}
+                                                {t(currentUtilityGuide.tagline)}
                                             </span>
                                         </div>
                                     </div>
                                     <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
-                                        {currentUtilityGuide.howItWorks}
+                                        {t(currentUtilityGuide.howItWorks)}
                                     </p>
                                     <div className="pt-1 flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold">
                                         <FileText className="size-3 text-muted-foreground" />
-                                        <span>Invoice: {currentUtilityGuide.invoicing}</span>
+                                        <span>{t("Invoice:")} {t(currentUtilityGuide.invoicing)}</span>
                                     </div>
                                 </motion.div>
                             </div>
@@ -610,7 +615,7 @@ export default function PropertyEnvironmentPage() {
                                 >
                                     <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                         <DollarSign className="size-3 text-amber-500" />
-                                        <span>Fixed Monthly Utility Fee (₱)</span>
+                                        <span>{t("Fixed Monthly Utility Fee (₱)")}</span>
                                     </label>
                                     <input max={9999999.99}
                                         type="number"
@@ -621,7 +626,7 @@ export default function PropertyEnvironmentPage() {
                                             ...prev,
                                             utility_fixed_charge_amount: e.target.value ? parseFloat(e.target.value) : null
                                         }))}
-                                        placeholder="e.g. 500"
+                                        placeholder={t("e.g. 500")}
                                         className="neumorphic-inset w-full rounded-xl px-3.5 py-2 text-xs font-bold text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-amber-500/40"
                                     />
                                 </motion.div>
@@ -637,8 +642,8 @@ export default function PropertyEnvironmentPage() {
                                     <Clock className="size-4" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-black text-foreground">Access & Curfew Rules</h3>
-                                    <p className="text-[11px] text-muted-foreground font-medium">Gate access & quiet periods</p>
+                                    <h3 className="text-sm font-black text-foreground">{t("Access & Curfew Rules")}</h3>
+                                    <p className="text-[11px] text-muted-foreground font-medium">{t("Gate access & quiet periods")}</p>
                                 </div>
                             </div>
 
@@ -646,8 +651,8 @@ export default function PropertyEnvironmentPage() {
                                 {/* Curfew Setting */}
                                 <div className="neumorphic-inset rounded-2xl p-3 flex items-center justify-between gap-3">
                                     <div>
-                                        <p className="text-xs font-black text-foreground">Curfew Restriction</p>
-                                        <p className="text-[10px] text-muted-foreground font-medium">Enforce gate lock time</p>
+                                        <p className="text-xs font-black text-foreground">{t("Curfew Restriction")}</p>
+                                        <p className="text-[10px] text-muted-foreground font-medium">{t("Enforce gate lock time")}</p>
                                     </div>
                                     <div className="flex items-center gap-2.5">
                                         {formData.curfew_enabled && (
@@ -655,12 +660,13 @@ export default function PropertyEnvironmentPage() {
                                                 size="sm"
                                                 value={formData.curfew_time}
                                                 onChange={(val) => setFormData(prev => ({ ...prev, curfew_time: val }))}
-                                                placeholder="Curfew Time"
+                                                placeholder={t("Curfew Time")}
                                             />
                                         )}
                                         <button
                                             type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, curfew_enabled: !prev.curfew_enabled }))}
+                                            aria-label={t("Toggle curfew restriction")}
                                             className={cn(
                                                 "relative h-6 w-11 rounded-full transition-colors shrink-0",
                                                 formData.curfew_enabled ? "bg-primary" : "bg-muted/80 border border-border/60"
@@ -680,8 +686,8 @@ export default function PropertyEnvironmentPage() {
                                 {/* Visitor Cutoff Setting */}
                                 <div className="neumorphic-inset rounded-2xl p-3 flex items-center justify-between gap-3">
                                     <div>
-                                        <p className="text-xs font-black text-foreground">Visitor Cutoff</p>
-                                        <p className="text-[10px] text-muted-foreground font-medium">Guest exit deadline</p>
+                                        <p className="text-xs font-black text-foreground">{t("Visitor Cutoff")}</p>
+                                        <p className="text-[10px] text-muted-foreground font-medium">{t("Guest exit deadline")}</p>
                                     </div>
                                     <div className="flex items-center gap-2.5">
                                         {formData.visitor_cutoff_enabled && (
@@ -689,12 +695,13 @@ export default function PropertyEnvironmentPage() {
                                                 size="sm"
                                                 value={formData.visitor_cutoff_time}
                                                 onChange={(val) => setFormData(prev => ({ ...prev, visitor_cutoff_time: val }))}
-                                                placeholder="Cutoff Time"
+                                                placeholder={t("Cutoff Time")}
                                             />
                                         )}
                                         <button
                                             type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, visitor_cutoff_enabled: !prev.visitor_cutoff_enabled }))}
+                                            aria-label={t("Toggle visitor cutoff")}
                                             className={cn(
                                                 "relative h-6 w-11 rounded-full transition-colors shrink-0",
                                                 formData.visitor_cutoff_enabled ? "bg-primary" : "bg-muted/80 border border-border/60"
@@ -715,7 +722,7 @@ export default function PropertyEnvironmentPage() {
                                 <div className="neumorphic-inset rounded-2xl p-3 space-y-2.5">
                                     <div className="flex items-center gap-2">
                                         <Moon className="size-3.5 text-primary" />
-                                        <p className="text-xs font-black text-foreground">Quiet Hours Period</p>
+                                        <p className="text-xs font-black text-foreground">{t("Quiet Hours Period")}</p>
                                     </div>
                                     <div className="flex items-center justify-between gap-2">
                                         <TimePicker
@@ -723,15 +730,15 @@ export default function PropertyEnvironmentPage() {
                                             className="flex-1"
                                             value={formData.quiet_hours_start}
                                             onChange={(val) => setFormData(prev => ({ ...prev, quiet_hours_start: val }))}
-                                            placeholder="Start Time"
+                                            placeholder={t("Start Time")}
                                         />
-                                        <span className="text-[10px] font-black uppercase text-muted-foreground shrink-0">to</span>
+                                        <span className="text-[10px] font-black uppercase text-muted-foreground shrink-0">{t("to")}</span>
                                         <TimePicker
                                             size="sm"
                                             className="flex-1"
                                             value={formData.quiet_hours_end}
                                             onChange={(val) => setFormData(prev => ({ ...prev, quiet_hours_end: val }))}
-                                            placeholder="End Time"
+                                            placeholder={t("End Time")}
                                         />
                                     </div>
                                 </div>
@@ -765,15 +772,16 @@ export default function PropertyEnvironmentPage() {
                                     </div>
                                     <div>
                                         <h3 className="text-xl font-black text-foreground tracking-tight">
-                                            Utility Billing Styles Guide
+                                            {t("Utility Billing Styles Guide")}
                                         </h3>
                                         <p className="text-xs text-muted-foreground font-medium">
-                                            Understand how each electricity & water billing policy functions in iReside.
+                                            {t("Understand how each electricity & water billing policy functions in iReside.")}
                                         </p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setIsUtilityGuideOpen(false)}
+                                    aria-label={t("Close")}
                                     className="neumorphic-extruded size-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all active:scale-95"
                                 >
                                     <X className="size-4" />
@@ -797,25 +805,25 @@ export default function PropertyEnvironmentPage() {
                                             <div className="space-y-3">
                                                 <div className="flex items-center justify-between">
                                                     <span className={cn("text-[9px] font-black uppercase px-2 py-0.5 rounded-md border", item.accentColor)}>
-                                                        {key.replace("_", " ")}
+                                                        {t(key.replace("_", " "))}
                                                     </span>
                                                     {isSelected && (
-                                                        <span className="text-[10px] font-black text-amber-500">Selected</span>
+                                                        <span className="text-[10px] font-black text-amber-500">{t("Selected")}</span>
                                                     )}
                                                 </div>
 
-                                                <h4 className="text-sm font-black text-foreground">{item.title}</h4>
+                                                <h4 className="text-sm font-black text-foreground">{t(item.title)}</h4>
                                                 <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
-                                                    {item.howItWorks}
+                                                    {t(item.howItWorks)}
                                                 </p>
 
                                                 <div className="space-y-1.5 pt-2 border-t border-border/40">
-                                                    <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Key Benefits:</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t("Key Benefits:")}</p>
                                                     <ul className="space-y-1">
                                                         {item.pros.map((pro, i) => (
                                                             <li key={i} className="text-[11px] text-foreground/90 flex items-center gap-1.5">
                                                                 <Check className="size-3 text-primary shrink-0" />
-                                                                <span>{pro}</span>
+                                                                <span>{t(pro)}</span>
                                                             </li>
                                                         ))}
                                                     </ul>
@@ -835,7 +843,7 @@ export default function PropertyEnvironmentPage() {
                                                         : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                                                 )}
                                             >
-                                                {isSelected ? "Current Policy" : "Choose This Style"}
+                                                {isSelected ? t("Current Policy") : t("Choose This Style")}
                                             </button>
                                         </div>
                                     );
@@ -848,7 +856,7 @@ export default function PropertyEnvironmentPage() {
                                     onClick={() => setIsUtilityGuideOpen(false)}
                                     className="px-6 py-2.5 rounded-xl neumorphic-extruded text-xs font-bold text-foreground hover:bg-surface-2 transition-all"
                                 >
-                                    Close Guide
+                                    {t("Close Guide")}
                                 </button>
                             </div>
                         </motion.div>

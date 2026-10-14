@@ -4,6 +4,7 @@ import { Lock, Check, PenTool, FileText } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface LeaseHeaderProps {
     currentStep: number;
@@ -12,6 +13,7 @@ interface LeaseHeaderProps {
 }
 
 export function LeaseHeader({ currentStep, steps, leaseId }: LeaseHeaderProps) {
+    const { t } = useLanguageContext();
     return (
         <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0f172a] px-6 py-4 text-white shadow-md">
             <div className="mx-auto flex max-w-7xl items-center justify-between">
@@ -24,7 +26,7 @@ export function LeaseHeader({ currentStep, steps, leaseId }: LeaseHeaderProps) {
 
                     <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400 border border-emerald-500/20">
                         <PenTool className="size-5" />
-                        <span>Secure Connection</span>
+                        <span>{t("Secure Connection")}</span>
                     </div>
                 </div>
 
@@ -56,7 +58,7 @@ export function LeaseHeader({ currentStep, steps, leaseId }: LeaseHeaderProps) {
                                             isActive ? "text-blue-400" : "text-zinc-400"
                                         )}
                                     >
-                                        {step.label}
+                                        {t(step.label)}
                                     </span>
                                 </div>
                                 {!isLast && (
@@ -70,7 +72,7 @@ export function LeaseHeader({ currentStep, steps, leaseId }: LeaseHeaderProps) {
                 {/* Right: User Profile & Lease ID */}
                 <div className="flex items-center gap-4 text-right">
                     <div className="hidden sm:block">
-                        <p className="text-xs text-zinc-400 uppercase tracking-wider">Lease ID</p>
+                        <p className="text-xs text-zinc-400 uppercase tracking-wider">{t("Lease ID")}</p>
                         <p className="text-sm font-medium text-white">{leaseId}</p>
                     </div>
                     <div className="size-10 overflow-hidden rounded-full ring-2 ring-border">

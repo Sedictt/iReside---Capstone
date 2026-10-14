@@ -31,6 +31,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Json } from "@/types/database";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 type ToolAccessBarProps = {
   propertyId?: string | null;
@@ -72,6 +74,7 @@ const TOOL_ACCENTS: Record<(typeof tools)[number]["key"], { iconBg: string, icon
 
 
 export function ToolAccessBar({ propertyId, className, variant = "default", direction = "horizontal" }: ToolAccessBarProps) {
+  const { t } = useLanguageContext();
   const disabled = !propertyId;
   const [activeTool, setActiveTool] = useState<(typeof tools)[number] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -119,7 +122,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
         });
       } catch (error) {
         if (cancelled) return;
-        setLoadError(error instanceof Error ? error.message : "Failed to load property data.");
+        setLoadError(error instanceof Error ? tr(error.message) : tr("Failed to load property data."));
         setPropertyData(null);
       } finally {
         if (!cancelled) setLoading(false);
@@ -144,7 +147,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
             className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card px-8 py-6 shadow-sm"
           >
             <Loader2 className="size-8 animate-spin text-primary" />
-            <span className="text-sm font-black uppercase tracking-widest text-muted-foreground">Loading property data...</span>
+            <span className="text-sm font-black uppercase tracking-widest text-muted-foreground">{t("Loading property data...")}</span>
           </motion.div>
         </div>
       );
@@ -162,8 +165,8 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
               <AlertCircle className="size-7 text-red-400" />
             </div>
             <div>
-              <p className="text-lg font-black text-red-300 tracking-tight">Unable to Load Tools</p>
-              <p className="text-sm font-medium text-red-200/80 mt-2">{loadError}</p>
+              <p className="text-lg font-black text-red-300 tracking-tight">{t("Unable to Load Tools")}</p>
+              <p className="text-sm font-medium text-red-200/80 mt-2">{t(loadError)}</p>
             </div>
           </motion.div>
         </div>
@@ -195,7 +198,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
           {propertyData.amenities.length === 0 ? (
             <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/20 p-20 text-center">
               <LayoutGrid className="mx-auto size-10 text-muted-foreground/20 mb-4" />
-              <p className="text-sm font-black tracking-tight text-muted-foreground/50">No amenities configured for this property.</p>
+              <p className="text-sm font-black tracking-tight text-muted-foreground/50">{t("No amenities configured for this property.")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -219,7 +222,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                         <span className="text-[15px] font-black tracking-tight text-foreground/90 leading-tight">{item}</span>
                         <div className="flex items-center gap-1.5">
                             <div className="size-1 rounded-full bg-primary/50" />
-                            <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50">Verified Facility</span>
+                            <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50">{t("Verified Facility")}</span>
                         </div>
                     </div>
                   </motion.div>
@@ -237,7 +240,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
           {propertyData.house_rules.length === 0 ? (
             <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/20 p-20 text-center">
               <ShieldCheck className="mx-auto size-10 text-muted-foreground/20 mb-4" />
-              <p className="text-sm font-black tracking-tight text-muted-foreground/50">No property policies configured yet.</p>
+              <p className="text-sm font-black tracking-tight text-muted-foreground/50">{t("No property policies configured yet.")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3 max-w-5xl">
@@ -251,7 +254,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                 >
                   <div className="flex items-center gap-6">
                         <div className="shrink-0 flex flex-col items-center gap-1 min-w-[50px]">
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 leading-none">Clause</span>
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 leading-none">{t("Clause")}</span>
                             <span className="text-xl font-black italic text-blue-500/60 leading-none">{String(index + 1).padStart(2, '0')}</span>
                         </div>
                         <div className="w-px h-8 bg-border/40" />
@@ -259,7 +262,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                             <p className="text-[15px] font-black leading-relaxed text-foreground/90 tracking-tight">{rule}</p>
                         </div>
                         <div className="shrink-0 px-2.5 py-1 rounded-lg bg-blue-500/5 border border-blue-500/10 opacity-0 group-hover:opacity-100 transition-all duration-500">
-                            <span className="text-[8px] font-black uppercase tracking-widest text-blue-400">Binding</span>
+                            <span className="text-[8px] font-black uppercase tracking-widest text-blue-400">{t("Binding")}</span>
                         </div>
                   </div>
                 </motion.div>
@@ -306,7 +309,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
       <div className="h-full overflow-y-auto p-6 sm:p-10 lg:p-14 relative z-10 custom-scrollbar">
         {!template ? (
           <div className="rounded-3xl border border-dashed border-border bg-muted/20 p-12 text-center text-sm font-black tracking-tight text-muted-foreground">
-            No lease agreement configured yet.
+            {t("No lease agreement configured yet.")}
           </div>
         ) : (
           <motion.div 
@@ -323,7 +326,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                 <div className="relative z-10 max-w-2xl mx-auto space-y-8">
                     <div className="text-center space-y-2 border-b-2 border-neutral-300 pb-8 mb-8">
                         <h1 className="text-[1.35rem] font-black uppercase tracking-widest text-black">{contractTitle}</h1>
-                        <p className="text-neutral-500 italic text-sm">This is the configured lease agreement for {propertyData.name}.</p>
+                        <p className="text-neutral-500 italic text-sm">{t("This is the configured lease agreement for {name}.", { name: propertyData.name })}</p>
                     </div>
 
                     <div className="space-y-8 text-[15px] leading-relaxed text-neutral-800">
@@ -394,7 +397,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
         )}
       </div>
     );
-  }, [activeTool, loading, loadError, propertyData]);
+  }, [activeTool, loading, loadError, propertyData, t]);
 
   if (variant === "icons") {
     return (
@@ -417,6 +420,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                     : "cursor-pointer bg-card/60 text-foreground hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card hover:shadow-lg active:scale-95"
                 )}
                 disabled={disabled}
+                aria-label={t(tool.label)}
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -433,7 +437,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                     ? "right-full mr-3 top-1/2 -translate-y-1/2 group-hover:-translate-x-1" 
                     : "-top-10 left-1/2 -translate-x-1/2 translate-y-2 group-hover:-translate-y-1"
                 )}>
-                  {tool.label}
+                  {t(tool.label)}
                 </div>
               </button>
             );
@@ -458,7 +462,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
               type="button"
-              aria-label="Close tool modal backdrop"
+              aria-label={t("Close tool modal backdrop")}
               className="absolute inset-0 cursor-default bg-black/70"
               onClick={() => setActiveTool(null)}
             />
@@ -478,20 +482,21 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                     {activeTool.key === "amenities" && <LayoutGrid className="size-6 text-emerald-300" />}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.25em] opacity-80 mb-1">Property Configuration</p>
-                    <p className="truncate text-xl font-black tracking-tight text-foreground sm:text-2xl">{activeTool.label}</p>
+                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.25em] opacity-80 mb-1">{t("Property Configuration")}</p>
+                    <p className="truncate text-xl font-black tracking-tight text-foreground sm:text-2xl">{t(activeTool.label)}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-4">
                   <div className="hidden items-center gap-3 rounded-xl border border-border bg-background px-4 py-2.5 shadow-inner md:flex">
                     <Building2 className="size-4.5 text-muted-foreground" />
-                    <span className="max-w-[200px] truncate text-xs font-black text-foreground">{propertyData?.name ?? "Loading..."}</span>
+                    <span className="max-w-[200px] truncate text-xs font-black text-foreground">{propertyData?.name ?? t("Loading...")}</span>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => setActiveTool(null)}
+                    aria-label={t("Close")}
                     className="group flex size-12 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-lg transition-all hover:scale-110 hover:bg-muted hover:text-foreground active:scale-95"
                   >
                     <X className="size-5 group-hover:rotate-90 transition-transform duration-300" />
@@ -535,10 +540,10 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                     ? "cursor-not-allowed border-border bg-muted/30 text-muted-foreground"
                     : "cursor-pointer border-border bg-background text-foreground hover:-translate-y-0.5 hover:border-primary/20 hover:bg-muted active:translate-y-0"
                 )}
-                title={disabled ? "Select a unit first to open tools" : `Open ${tool.label} modal`}
+                title={disabled ? t("Select a unit first to open tools") : t("Open {tool} modal", { tool: t(tool.label) })}
               >
                 <Icon className={cn("size-4.5", !disabled && "text-primary/70 group-hover:text-primary group-hover:scale-110 transition-transform")} />
-                {tool.label}
+                {t(tool.label)}
               </button>
             );
           })}

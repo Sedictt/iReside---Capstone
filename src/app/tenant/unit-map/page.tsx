@@ -3,6 +3,8 @@
 import VisualBuilder from "@/components/landlord/visual-planner/VisualBuilder";
 import { TenantMapNotReady } from "@/components/tenant/TenantMapNotReady";
 import { useState, useEffect, useCallback } from "react";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 interface TenantUnitMapData {
     property: { id: string; name: string; address: string };
@@ -29,6 +31,7 @@ interface TenantUnitMapData {
 }
 
 export default function TenantUnitMapPage() {
+    const { t } = useLanguageContext();
     const [loading, setLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -51,20 +54,20 @@ export default function TenantUnitMapPage() {
             console.log("Tenant unit-map API:", status, data);
 
             if (!res.ok) {
-                setError(data.error || "Failed to load unit map");
+                setError(tr(data.error || tr("Failed to load unit map")));
                 return;
             }
 
             // If we get data but no property, it means no active lease found
             if (!data.property) {
-                setError("No active lease found for this account");
+                setError(tr("No active lease found for this account"));
                 return;
             }
 
             setUnitMapData(data);
         } catch (err) {
             console.error("Unit map load error:", err);
-            setError(err instanceof Error ? err.message : "An error occurred while loading the unit map.");
+            setError(err instanceof Error ? tr(err.message) : tr("An error occurred while loading the unit map."));
         } finally {
             setLoading(false);
             setIsRefreshing(false);
@@ -80,7 +83,7 @@ export default function TenantUnitMapPage() {
             <div className="flex-1 flex items-center justify-center bg-background dark:bg-background-dark min-h-[60vh]">
                 <div className="flex flex-col items-center gap-4">
                     <div className="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    <p className="text-neutral-500 dark:text-neutral-400 text-sm font-medium">Loading your unit map...</p>
+                    <p className="text-neutral-500 dark:text-neutral-400 text-sm font-medium">{t("Loading your unit map...")}</p>
                 </div>
             </div>
         );
@@ -90,9 +93,9 @@ export default function TenantUnitMapPage() {
         return (
             <div className="flex-1 flex items-center justify-center bg-background dark:bg-background-dark min-h-[60vh] p-6">
                 <div className="flex flex-col items-center gap-4 text-center max-w-md">
-                    <p className="text-neutral-800 dark:text-neutral-200 font-bold">{error || "No unit map found"}</p>
+                    <p className="text-neutral-800 dark:text-neutral-200 font-bold">{error || t("No unit map found")}</p>
                     <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                        You need an active lease to view your unit map.
+                        {t("You need an active lease to view your unit map.")}
                     </p>
                 </div>
             </div>

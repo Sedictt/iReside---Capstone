@@ -39,6 +39,8 @@ import {
 import { cn } from "@/lib/utils";
 import { generateUnitList, renumberUnitsList, type NumberingStyle } from "@/lib/unit-naming";
 import { useAppToast } from "@/hooks/useAppToast";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
 import { PROPERTY_LIMITS, startingNumberRule, unitPrefixRule } from "@/lib/validation/schemas/properties.schema";
@@ -78,6 +80,7 @@ export function MapSetupWizard({
     initialFloorConfigs,
 }: MapSetupWizardProps) {
     const toast = useAppToast();
+    const { t } = useLanguageContext();
     const hasInitialData = Boolean(initialUnits && initialUnits.length > 0 && initialFloorConfigs !== undefined);
     const [units, setUnits] = useState<DbUnit[]>(initialUnits || []);
     const [floorConfigs, setFloorConfigs] = useState<FloorConfig[]>(initialFloorConfigs || []);
@@ -275,7 +278,7 @@ export function MapSetupWizard({
                 onSetupComplete();
             }
         } catch {
-            setError("Unable to load property floor plan.");
+            setError(tr("Unable to load property floor plan."));
         } finally {
             setIsLoading(false);
         }
@@ -310,11 +313,11 @@ export function MapSetupWizard({
                     : 1);
 
             if (nextFloorNumber > PROPERTY_LIMITS.maxFloor) {
-                setError(`Floor cannot exceed ${PROPERTY_LIMITS.maxFloor}.`);
+                setError(t("Floor cannot exceed {max}.", { max: PROPERTY_LIMITS.maxFloor }));
                 return;
             }
             if (floorConfigs.some(fc => fc.floor_number === nextFloorNumber)) {
-                setError("This floor already exists.");
+                setError(t("This floor already exists."));
                 return;
             }
 
@@ -342,11 +345,11 @@ export function MapSetupWizard({
             if (!res.ok) {
                 setFloorConfigs(prev => prev.filter(f => f.id !== newFloor.id));
                 const body = await res.json().catch(() => ({}));
-                throw new Error(body?.error || "Failed to add new floor.");
+                throw new Error(body?.error || t("Failed to add new floor."));
             }
             setError(null);
         } catch (err) {
-            setError(err instanceof Error && err.message ? err.message : "Failed to add new floor.");
+            setError(err instanceof Error && err.message ? tr(err.message) : t("Failed to add new floor."));
         } finally {
             setIsSaving(false);
         }
@@ -354,7 +357,7 @@ export function MapSetupWizard({
 
     const handleRemoveFloor = async (floorKey: string) => {
         if (floorConfigs.length <= 1) {
-            setError("You must have at least one floor.");
+            setError(t("You must have at least one floor."));
             return;
         }
 
@@ -376,11 +379,11 @@ export function MapSetupWizard({
             if (!res.ok) {
                 setFloorConfigs(previousFloors);
                 await loadData();
-                throw new Error("Failed to remove floor");
+                throw new Error(t("Failed to remove floor"));
             }
             setError(null);
         } catch {
-            setError("Failed to remove floor.");
+            setError(t("Failed to remove floor."));
         } finally {
             setIsSaving(false);
         }
@@ -395,7 +398,7 @@ export function MapSetupWizard({
 
         if (previewEmptyFloors) {
             setIsSaving(false);
-            toast.success(`Removed ${emptyKeys.length} empty ${emptyKeys.length === 1 ? "floor" : "floors"}.`);
+            toast.success(t(emptyKeys.length === 1 ? "Removed {count} empty floor." : "Removed {count} empty floors.", { count: emptyKeys.length }));
             return;
         }
 
@@ -411,12 +414,12 @@ export function MapSetupWizard({
             if (!allOk) {
                 setFloorConfigs(previousFloors);
                 await loadData();
-                throw new Error("Failed to remove some empty floors");
+                throw new Error(t("Failed to remove some empty floors"));
             }
-            toast.success(`Removed ${emptyKeys.length} empty ${emptyKeys.length === 1 ? "floor" : "floors"}.`);
+            toast.success(t(emptyKeys.length === 1 ? "Removed {count} empty floor." : "Removed {count} empty floors.", { count: emptyKeys.length }));
         } catch (err: any) {
-            setError("Failed to clean up empty floors.");
-            toast.error(err.message || "Failed to remove empty floors.");
+            setError(t("Failed to clean up empty floors."));
+            toast.error(tr(err.message || t("Failed to remove empty floors.")));
         } finally {
             setIsSaving(false);
         }
@@ -452,10 +455,10 @@ export function MapSetupWizard({
             );
             await Promise.all(promises);
             setError(null);
-            toast.success("Units distributed evenly across floors!");
+            toast.success(t("Units distributed evenly across floors!"));
         } catch {
-            setError("Failed to distribute units evenly across floors.");
-            toast.error("Failed to distribute units evenly across floors.");
+            setError(t("Failed to distribute units evenly across floors."));
+            toast.error(t("Failed to distribute units evenly across floors."));
         } finally {
             setIsSaving(false);
         }
@@ -479,19 +482,24 @@ export function MapSetupWizard({
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
                 renumberForm.setServerErrors(data.fieldErrors);
-                throw new Error(data.error || "Failed to rename units.");
+                throw new Error(data.error || t("Failed to rename units."));
             }
             if (data.units) {
                 setUnits(data.units);
             }
             setIsRenumberModalOpen(false);
             setError(null);
-            toast.success("Units successfully renumbered!", {
-                description: `Applied ${renumberStyle === "floor_based" ? "floor-based" : "sequential"} numbering with prefix "${renumberPrefix}".`,
+            toast.success(t("Units successfully renumbered!"), {
+                description: t(
+                    renumberStyle === "floor_based"
+                        ? "Applied floor-based numbering with prefix \"{prefix}\"."
+                        : "Applied sequential numbering with prefix \"{prefix}\".",
+                    { prefix: renumberPrefix }
+                ),
             });
         } catch (err: any) {
-            setError(err.message || "Failed to batch rename units.");
-            toast.error(err.message || "Failed to batch rename units.");
+            setError(tr(err.message || t("Failed to batch rename units.")));
+            toast.error(tr(err.message || t("Failed to batch rename units.")));
         } finally {
             setIsRenumbering(false);
         }
@@ -520,14 +528,14 @@ export function MapSetupWizard({
                 body: JSON.stringify({ floor: newFloor, autoRenumber: true }),
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Failed to update floor");
+            if (!res.ok) throw new Error(data.error || t("Failed to update floor"));
             if (data.units) {
                 setUnits(data.units);
             }
         } catch (err: any) {
             setUnits(previousUnits);
-            setError("Failed to save changes. Please check your connection.");
-            toast.error(err.message || "Failed to save floor change.");
+            setError(t("Failed to save changes. Please check your connection."));
+            toast.error(tr(err.message || t("Failed to save floor change.")));
         }
     };
 
@@ -542,7 +550,7 @@ export function MapSetupWizard({
             setUnits(renumberUnitsList(remaining));
             setUnitToDelete(null);
             setIsDeletingUnit(false);
-            toast.success(`Unit ${deletingName} removed.`);
+            toast.success(t("Unit {name} removed.", { name: deletingName }));
             return;
         }
 
@@ -552,7 +560,7 @@ export function MapSetupWizard({
             });
             const data = await res.json();
             if (!res.ok) {
-                throw new Error(data.error || "Failed to remove unit");
+                throw new Error(data.error || t("Failed to remove unit"));
             }
 
             if (data.units) {
@@ -563,9 +571,9 @@ export function MapSetupWizard({
             }
 
             setUnitToDelete(null);
-            toast.success(`Unit ${deletingName} removed and numbering updated.`);
+            toast.success(t("Unit {name} removed and numbering updated.", { name: deletingName }));
         } catch (err: any) {
-            toast.error(err.message || "Failed to remove unit");
+            toast.error(tr(err.message || t("Failed to remove unit")));
         } finally {
             setIsDeletingUnit(false);
         }
@@ -701,10 +709,10 @@ export function MapSetupWizard({
                 body: JSON.stringify({ propertyId, positions }),
             });
 
-            toast.success("Units successfully laid out on map!");
+            toast.success(t("Units successfully laid out on map!"));
             onSetupComplete();
         } catch {
-            setError("Generation failed. Please try placing units manually.");
+            setError(t("Generation failed. Please try placing units manually."));
         } finally {
             setIsSaving(false);
         }
@@ -752,7 +760,7 @@ export function MapSetupWizard({
             setIsBulkOrganizerOpen(false);
             setError(null);
         } catch {
-            setError("Failed to reorganize units. Please try again.");
+            setError(t("Failed to reorganize units. Please try again."));
         } finally {
             setIsSaving(false);
         }
@@ -763,7 +771,7 @@ export function MapSetupWizard({
             <div className="flex-1 flex items-center justify-center bg-background">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="size-10 text-primary animate-spin" />
-                    <p className="text-muted-foreground text-sm font-black uppercase tracking-widest">Building Layout…</p>
+                    <p className="text-muted-foreground text-sm font-black uppercase tracking-widest">{t("Building Layout…")}</p>
                 </div>
             </div>
         );
@@ -781,11 +789,11 @@ export function MapSetupWizard({
                         <div className="flex items-center gap-2">
                             <h1 className="text-sm font-bold tracking-tight text-foreground">{propertyName}</h1>
                             <span className="inline-flex items-center rounded-md bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-bold border border-primary/20">
-                                Step 2 of 5: Unit Map
+                                {t("Step 2 of 5: Unit Map")}
                             </span>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                            Review your rooms and floors before generating your unit map
+                            {t("Review your rooms and floors before generating your unit map")}
                         </p>
                     </div>
                 </div>
@@ -796,11 +804,11 @@ export function MapSetupWizard({
                             {isAllAssigned ? (
                                 <span className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                                     <CheckCircle2 className="size-3.5" />
-                                    All {totalUnits} Rooms Assigned
+                                    {t("All {count} Rooms Assigned", { count: totalUnits })}
                                 </span>
                             ) : (
                                 <span className="font-medium text-muted-foreground">
-                                    <strong className="text-foreground">{assignedUnitsCount}</strong> of {totalUnits} Assigned ({progress}%)
+                                    {t("{assigned} of {total} Assigned ({progress}%)", { assigned: assignedUnitsCount, total: totalUnits, progress })}
                                 </span>
                             )}
                         </div>
@@ -821,7 +829,7 @@ export function MapSetupWizard({
                                 setIsTourOpen(true);
                                 setTourStepIndex(0);
                             }}
-                            title="Open Guided Tour"
+                            title={t("Open Guided Tour")}
                             className={cn(
                                 "inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border text-xs font-semibold transition-all active:scale-95 cursor-pointer",
                                 effectiveTourOpen
@@ -830,7 +838,7 @@ export function MapSetupWizard({
                             )}
                         >
                             <Compass className="size-3.5" />
-                            <span className="hidden sm:inline">Guided Tour</span>
+                            <span className="hidden sm:inline">{t("Guided Tour")}</span>
                         </button>
                         
                         <button
@@ -854,7 +862,7 @@ export function MapSetupWizard({
                             ) : (
                                 <ArrowRight className="size-3.5 group-hover:translate-x-0.5 transition-transform" />
                             )}
-                            <span>Generate Unit Map</span>
+                            <span>{t("Generate Unit Map")}</span>
                         </button>
                     </div>
                 </div>
@@ -897,7 +905,7 @@ export function MapSetupWizard({
                                         onClick={() => setError(null)}
                                         className="text-xs font-bold underline hover:no-underline"
                                     >
-                                        Dismiss
+                                        {t("Dismiss")}
                                     </button>
                                 </div>
                             )}
@@ -906,10 +914,10 @@ export function MapSetupWizard({
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-border/60">
                                 <div>
                                     <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                                        Check Your Rooms & Floors
+                                        {t("Check Your Rooms & Floors")}
                                     </h1>
                                     <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground">
-                                        Everything is organized. You can move rooms, adjust counts per floor, or click Generate Unit Map below.
+                                        {t("Everything is organized. You can move rooms, adjust counts per floor, or click Generate Unit Map below.")}
                                     </p>
                                 </div>
 
@@ -932,7 +940,7 @@ export function MapSetupWizard({
                                             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
                                         >
                                             <Hash className="size-3.5 text-primary" />
-                                            <span>Renumber Rooms</span>
+                                            <span>{t("Renumber Rooms")}</span>
                                         </button>
 
                                         {floorConfigs.length > 1 && (
@@ -945,7 +953,7 @@ export function MapSetupWizard({
                                                     className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
                                                 >
                                                     <Equal className="size-3.5 text-primary" />
-                                                    <span>Divide Evenly</span>
+                                                    <span>{t("Divide Evenly")}</span>
                                                 </button>
                                             </>
                                         )}
@@ -959,7 +967,7 @@ export function MapSetupWizard({
                                             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
                                         >
                                             <SlidersHorizontal className="size-3.5 text-primary" />
-                                            <span>Rooms Per Floor</span>
+                                            <span>{t("Rooms Per Floor")}</span>
                                         </button>
                                     </div>
 
@@ -979,7 +987,7 @@ export function MapSetupWizard({
                                             </span>
                                         )}
                                         <Plus className="size-3.5 stroke-[2.5]" />
-                                        <span>Add Floor</span>
+                                        <span>{t("Add Floor")}</span>
                                     </button>
                                 </div>
                             </div>
@@ -993,10 +1001,15 @@ export function MapSetupWizard({
                                         </div>
                                         <div>
                                             <h4 className="text-sm font-bold text-foreground">
-                                                {emptyFloors.length} {emptyFloors.length === 1 ? "floor has" : "floors have"} no rooms
+                                                {t(emptyFloors.length === 1 ? "{count} floor has no rooms" : "{count} floors have no rooms", { count: emptyFloors.length })}
                                             </h4>
                                             <p className="text-xs text-muted-foreground mt-0.5">
-                                                All your {totalUnits} rooms are on {populatedFloors.length} {populatedFloors.length === 1 ? "floor" : "floors"}. Clean up the extra empty floors with one click, or use Divide Evenly to spread rooms across all floors.
+                                                {t(
+                                                    populatedFloors.length === 1
+                                                        ? "All your {total} rooms are on {count} floor. Clean up the extra empty floors with one click, or use Divide Evenly to spread rooms across all floors."
+                                                        : "All your {total} rooms are on {count} floors. Clean up the extra empty floors with one click, or use Divide Evenly to spread rooms across all floors.",
+                                                    { total: totalUnits, count: populatedFloors.length }
+                                                )}
                                             </p>
                                         </div>
                                     </div>
@@ -1008,7 +1021,7 @@ export function MapSetupWizard({
                                             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border/80 hover:border-destructive/40 hover:bg-destructive/10 text-xs font-bold text-foreground hover:text-destructive transition-all shadow-xs cursor-pointer active:scale-95 disabled:opacity-50"
                                         >
                                             <Trash2 className="size-3.5 text-destructive" />
-                                            <span>Remove {emptyFloors.length} Empty {emptyFloors.length === 1 ? "Floor" : "Floors"}</span>
+                                            <span>{t(emptyFloors.length === 1 ? "Remove {count} Empty Floor" : "Remove {count} Empty Floors", { count: emptyFloors.length })}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -1020,7 +1033,7 @@ export function MapSetupWizard({
                                 {units.some(u => u.floor === -1) && (
                                     <div className="w-full">
                                         <FloorLane
-                                            floor={{ id: "unassigned", floor_number: -1, floor_key: "unassigned", display_name: "Unassigned Rooms (Holding Area)", sort_order: -999 }}
+                                            floor={{ id: "unassigned", floor_number: -1, floor_key: "unassigned", display_name: t("Unassigned Rooms (Holding Area)"), sort_order: -999 }}
                                             units={sortUnitsSequential(units.filter(u => u.floor === -1))}
                                             onRemove={() => {}}
                                             canRemove={false}
@@ -1042,28 +1055,28 @@ export function MapSetupWizard({
                                         </div>
 
                                         <h3 className="text-xl font-bold tracking-tight text-foreground mb-2">
-                                            No Floors Created Yet
+                                            {t("No Floors Created Yet")}
                                         </h3>
                                         <p className="max-w-md text-xs font-medium leading-relaxed text-muted-foreground mb-8">
-                                            Your building needs at least one floor level before units can be placed on the architectural map. Add your property&apos;s levels below to begin.
+                                            {t("Your building needs at least one floor level before units can be placed on the architectural map. Add your property's levels below to begin.")}
                                         </p>
 
                                         {/* Step Guide Cards */}
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl mb-8 text-left">
                                             <div className="rounded-xl border border-border/70 bg-card p-4 shadow-xs">
                                                 <div className="flex size-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-[11px] font-bold mb-2">1</div>
-                                                <p className="text-xs font-bold text-foreground">Create Levels</p>
-                                                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">Add Ground Floor, Floor 1, Floor 2, etc.</p>
+                                                <p className="text-xs font-bold text-foreground">{t("Create Levels")}</p>
+                                                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">{t("Add Ground Floor, Floor 1, Floor 2, etc.")}</p>
                                             </div>
                                             <div className="rounded-xl border border-border/70 bg-card p-4 shadow-xs">
                                                 <div className="flex size-6 items-center justify-center rounded-lg bg-muted text-muted-foreground text-[11px] font-bold mb-2">2</div>
-                                                <p className="text-xs font-bold text-foreground">Assign Units</p>
-                                                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">Drag units from the pool to their floors.</p>
+                                                <p className="text-xs font-bold text-foreground">{t("Assign Units")}</p>
+                                                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">{t("Drag units from the pool to their floors.")}</p>
                                             </div>
                                             <div className="rounded-xl border border-border/70 bg-card p-4 shadow-xs">
                                                 <div className="flex size-6 items-center justify-center rounded-lg bg-muted text-muted-foreground text-[11px] font-bold mb-2">3</div>
-                                                <p className="text-xs font-bold text-foreground">Generate Unit-map</p>
-                                                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">Auto-build your architectural unit-map layout.</p>
+                                                <p className="text-xs font-bold text-foreground">{t("Generate Unit-map")}</p>
+                                                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">{t("Auto-build your architectural unit-map layout.")}</p>
                                             </div>
                                         </div>
 
@@ -1075,7 +1088,7 @@ export function MapSetupWizard({
                                                 className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground transition-all hover:brightness-105 active:scale-95 disabled:opacity-50 shadow-sm"
                                             >
                                                 {isSaving ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4 stroke-[2.5]" />}
-                                                Add First Floor (Floor 1)
+                                                {t("Add First Floor (Floor 1)")}
                                             </button>
                                             <button
                                                 onClick={() => handleAddFloor(0)}
@@ -1083,7 +1096,7 @@ export function MapSetupWizard({
                                                 className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-semibold text-foreground transition-all hover:bg-muted active:scale-95 disabled:opacity-50"
                                             >
                                                 <Plus className="size-4" />
-                                                Add Ground Floor
+                                                {t("Add Ground Floor")}
                                             </button>
                                         </div>
                                     </div>
@@ -1127,9 +1140,9 @@ export function MapSetupWizard({
                                                 <h4 className="text-sm font-bold text-foreground">
                                                     {isAllAssigned 
                                                         ? emptyFloors.length > 0
-                                                            ? `All ${totalUnits} rooms assigned to ${populatedFloors.length} ${populatedFloors.length === 1 ? "floor" : "floors"} (${emptyFloors.length} empty)`
-                                                            : `All ${totalUnits} rooms assigned across ${floorConfigs.length} ${floorConfigs.length === 1 ? "floor" : "floors"}`
-                                                        : `${assignedUnitsCount} of ${totalUnits} rooms assigned (${totalUnits - assignedUnitsCount} unassigned)`
+                                                            ? t(populatedFloors.length === 1 ? "All {total} rooms assigned to {count} floor ({empty} empty)" : "All {total} rooms assigned to {count} floors ({empty} empty)", { total: totalUnits, count: populatedFloors.length, empty: emptyFloors.length })
+                                                            : t(floorConfigs.length === 1 ? "All {total} rooms assigned across {count} floor" : "All {total} rooms assigned across {count} floors", { total: totalUnits, count: floorConfigs.length })
+                                                        : t("{assigned} of {total} rooms assigned ({unassigned} unassigned)", { assigned: assignedUnitsCount, total: totalUnits, unassigned: totalUnits - assignedUnitsCount })
                                                     }
                                                 </h4>
                                                 <span className={cn(
@@ -1138,13 +1151,13 @@ export function MapSetupWizard({
                                                         ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
                                                         : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
                                                 )}>
-                                                    {isAllAssigned ? "Ready to Build" : "Action Needed"}
+                                                    {isAllAssigned ? t("Ready to Build") : t("Action Needed")}
                                                 </span>
                                             </div>
                                             <p className="text-xs text-muted-foreground mt-0.5">
                                                 {isAllAssigned
-                                                    ? "Everything looks good! Click Generate Unit Map to create your interactive room layout."
-                                                    : "Assign remaining rooms to their floors or click Divide Evenly to finish quickly."
+                                                    ? t("Everything looks good! Click Generate Unit Map to create your interactive room layout.")
+                                                    : t("Assign remaining rooms to their floors or click Divide Evenly to finish quickly.")
                                                 }
                                             </p>
                                         </div>
@@ -1158,7 +1171,7 @@ export function MapSetupWizard({
                                                 disabled={isSaving}
                                                 className="px-4 py-2.5 rounded-xl border border-border bg-card hover:bg-muted text-xs font-bold text-foreground transition-all shadow-xs cursor-pointer"
                                             >
-                                                Divide Evenly
+                                                {t("Divide Evenly")}
                                             </button>
                                         )}
 
@@ -1178,7 +1191,7 @@ export function MapSetupWizard({
                                             ) : (
                                                 <ArrowRight className="size-4" />
                                             )}
-                                            <span>Generate Unit Map</span>
+                                            <span>{t("Generate Unit Map")}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -1218,14 +1231,14 @@ export function MapSetupWizard({
                                         <Hash className="size-5" />
                                     </div>
                                     <div>
-                                        <h3 className="text-base font-bold text-foreground">Renumber Your Rooms</h3>
-                                        <p className="text-xs text-muted-foreground">Choose a clean numbering format for all your rooms</p>
+                                        <h3 className="text-base font-bold text-foreground">{t("Renumber Your Rooms")}</h3>
+                                        <p className="text-xs text-muted-foreground">{t("Choose a clean numbering format for all your rooms")}</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setIsRenumberModalOpen(false)}
                                     className="flex size-8 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer"
-                                    aria-label="Close dialog"
+                                    aria-label={t("Close dialog")}
                                 >
                                     <X className="size-4" />
                                 </button>
@@ -1234,7 +1247,7 @@ export function MapSetupWizard({
                             <div className="space-y-4">
                                 {/* Prefix */}
                                 <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-foreground">Room Label</label>
+                                    <label className="text-xs font-semibold text-foreground">{t("Room Label")}</label>
                                     <div className="flex flex-wrap gap-1.5">
                                         {["Unit", "Room", "Studio", "Bed", "Apt"].map((preset) => (
                                             <button
@@ -1258,7 +1271,7 @@ export function MapSetupWizard({
                                         type="text"
                                         value={renumberPrefix}
                                         onChange={(e) => setRenumberPrefix(e.target.value)}
-                                        placeholder="Or type custom label (e.g. Rm)"
+                                        placeholder={t("Or type custom label (e.g. Rm)")}
                                         className={cn(
                                             "w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-medium text-foreground outline-none focus:border-primary transition-colors",
                                             renumberForm.errorFor("prefix") && fieldErrorClass
@@ -1269,7 +1282,7 @@ export function MapSetupWizard({
 
                                 {/* Scheme */}
                                 <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-foreground">Numbering Style</label>
+                                    <label className="text-xs font-semibold text-foreground">{t("Numbering Style")}</label>
                                     <div className="grid grid-cols-2 gap-2.5">
                                         <button
                                             type="button"
@@ -1281,7 +1294,7 @@ export function MapSetupWizard({
                                                     : "bg-muted/40 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                                             )}
                                         >
-                                            <p className="text-xs font-bold text-foreground">By Floor</p>
+                                            <p className="text-xs font-bold text-foreground">{t("By Floor")}</p>
                                             <p className="text-[11px] text-muted-foreground mt-0.5">101, 102 / 201, 202</p>
                                         </button>
 
@@ -1295,14 +1308,14 @@ export function MapSetupWizard({
                                                     : "bg-muted/40 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                                             )}
                                         >
-                                            <p className="text-xs font-bold text-foreground">Continuous</p>
+                                            <p className="text-xs font-bold text-foreground">{t("Continuous")}</p>
                                             <p className="text-[11px] text-muted-foreground mt-0.5">1, 2, 3, 4...</p>
                                         </button>
                                     </div>
 
                                     {renumberStyle === "sequential" && (
                                         <div className="pt-1">
-                                            <label className="text-[11px] font-semibold text-muted-foreground">Starting Number</label>
+                                            <label className="text-[11px] font-semibold text-muted-foreground">{t("Starting Number")}</label>
                                             <input
                                                 {...renumberForm.fieldProps("startingNumber")}
                                                 min={1} max={PROPERTY_LIMITS.maxStartingNumber} step={1}
@@ -1324,7 +1337,7 @@ export function MapSetupWizard({
                                 <div className="rounded-xl border border-border/80 bg-muted/20 p-3.5 space-y-2">
                                     <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                                         <Eye className="size-3.5 text-primary" />
-                                        <span>Sample preview ({units.length} total rooms):</span>
+                                        <span>{t("Sample preview ({count} total rooms):", { count: units.length })}</span>
                                     </div>
                                     <div className="flex flex-wrap items-center gap-1.5">
                                         {generateUnitList(
@@ -1342,7 +1355,7 @@ export function MapSetupWizard({
                                         ))}
                                         {units.length > 6 && (
                                             <span className="text-xs font-medium text-muted-foreground">
-                                                +{units.length - 6} more
+                                                {t("+{count} more", { count: units.length - 6 })}
                                             </span>
                                         )}
                                     </div>
@@ -1357,7 +1370,7 @@ export function MapSetupWizard({
                                     disabled={isRenumbering}
                                     className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-all disabled:opacity-50 cursor-pointer"
                                 >
-                                    Cancel
+                                    {t("Cancel")}
                                 </button>
                                 <button
                                     type="button"
@@ -1366,7 +1379,7 @@ export function MapSetupWizard({
                                     className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground transition-all hover:brightness-105 active:scale-95 disabled:opacity-50 shadow-sm cursor-pointer"
                                 >
                                     {isRenumbering ? <Loader2 className="size-3.5 animate-spin" /> : <CheckCircle2 className="size-3.5" />}
-                                    <span>Apply Room Numbers</span>
+                                    <span>{t("Apply Room Numbers")}</span>
                                 </button>
                             </div>
                         </motion.div>
@@ -1390,7 +1403,7 @@ export function MapSetupWizard({
                                         <Trash2 className="size-5" />
                                     </div>
                                     <div>
-                                        <h3 className="text-base font-bold text-foreground">Remove Unit</h3>
+                                        <h3 className="text-base font-bold text-foreground">{t("Remove Unit")}</h3>
                                         <p className="text-xs text-muted-foreground">{unitToDelete.name}</p>
                                     </div>
                                 </div>
@@ -1398,14 +1411,14 @@ export function MapSetupWizard({
                                     onClick={() => !isDeletingUnit && setUnitToDelete(null)}
                                     disabled={isDeletingUnit}
                                     className="flex size-8 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-all disabled:opacity-50"
-                                    aria-label="Close dialog"
+                                    aria-label={t("Close dialog")}
                                 >
                                     <X className="size-4" />
                                 </button>
                             </div>
 
                             <p className="text-xs text-muted-foreground leading-relaxed">
-                                Are you sure you want to remove <span className="font-bold text-foreground">{unitToDelete.name}</span> from this property? The remaining units will automatically adapt their numbers sequentially.
+                                {t("Are you sure you want to remove")} <span className="font-bold text-foreground">{unitToDelete.name}</span> {t("from this property? The remaining units will automatically adapt their numbers sequentially.")}
                             </p>
 
                             <div className="flex items-center justify-end gap-2.5 pt-2">
@@ -1415,7 +1428,7 @@ export function MapSetupWizard({
                                     disabled={isDeletingUnit}
                                     className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-all disabled:opacity-50"
                                 >
-                                    Cancel
+                                    {t("Cancel")}
                                 </button>
                                 <button
                                     type="button"
@@ -1424,7 +1437,7 @@ export function MapSetupWizard({
                                     className="inline-flex items-center gap-2 rounded-xl bg-destructive px-5 py-2 text-xs font-semibold text-destructive-foreground hover:bg-destructive/90 transition-all active:scale-95 disabled:opacity-50 shadow-sm"
                                 >
                                     {isDeletingUnit ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
-                                    <span>{isDeletingUnit ? "Removing..." : "Remove Unit"}</span>
+                                    <span>{isDeletingUnit ? t("Removing...") : t("Remove Unit")}</span>
                                 </button>
                             </div>
                         </motion.div>

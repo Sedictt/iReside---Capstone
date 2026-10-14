@@ -22,6 +22,7 @@ import {
     type MissionSlide, 
     MISSION_ICONS 
 } from "@/lib/missions-config";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface MissionSlideshowModalProps {
     mission: MissionConfig | null;
@@ -39,6 +40,7 @@ export function MissionSlideshowModal({
     isCompleted = false,
 }: MissionSlideshowModalProps) {
     const router = useRouter();
+    const { t } = useLanguageContext();
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [imageErrorMap, setImageErrorMap] = useState<Record<string, boolean>>({});
@@ -170,14 +172,14 @@ export function MissionSlideshowModal({
                             <div>
                                 <div className="flex items-center gap-2">
                                     <h2 className="text-base font-black tracking-tight text-foreground sm:text-lg">
-                                        {mission.title}
+                                        {t(mission.title)}
                                     </h2>
                                     <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-primary">
-                                        {mission.category}
+                                        {t(mission.category)}
                                     </span>
                                 </div>
                                 <p className="text-[11px] font-medium text-muted-foreground">
-                                    Step {currentSlideIndex + 1} of {totalSlides} • {mission.estimatedTime}
+                                    {t("Step {step} of {total} • {time}", { step: currentSlideIndex + 1, total: totalSlides, time: t(mission.estimatedTime) })}
                                 </p>
                             </div>
                         </div>
@@ -187,14 +189,14 @@ export function MissionSlideshowModal({
                             <button
                                 onClick={() => setIsFullscreen(!isFullscreen)}
                                 className="flex size-9 items-center justify-center rounded-xl bg-white/5 text-muted-foreground transition-all hover:bg-white/10 hover:text-foreground"
-                                aria-label={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                                aria-label={isFullscreen ? t("Exit Fullscreen") : t("Fullscreen")}
                             >
                                 {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
                             </button>
                             <button
                                 onClick={onClose}
                                 className="flex size-9 items-center justify-center rounded-xl bg-white/5 text-muted-foreground transition-all hover:bg-white/10 hover:text-foreground"
-                                aria-label="Close Slideshow"
+                                aria-label={t("Close Slideshow")}
                             >
                                 <X className="size-4" />
                             </button>
@@ -224,7 +226,7 @@ export function MissionSlideshowModal({
                                     <div className="relative flex max-h-full max-w-full items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-surface-1 shadow-2xl">
                                         <img
                                             src={currentSlide.image}
-                                            alt={currentSlide.title}
+                                            alt={t(currentSlide.title)}
                                             className="max-h-[52vh] w-auto max-w-full object-contain select-none"
                                             onError={() => {
                                                 setImageErrorMap((prev) => ({
@@ -241,17 +243,17 @@ export function MissionSlideshowModal({
                                             <ImageIcon className="size-7" />
                                         </div>
                                         <h3 className="mb-1 text-base font-black tracking-tight text-foreground">
-                                            {currentSlide?.title}
+                                            {currentSlide ? t(currentSlide.title) : null}
                                         </h3>
                                         <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
-                                            Custom screenshot ready for upload. Drop your annotated image at:
+                                            {t("Custom screenshot ready for upload. Drop your annotated image at:")}
                                         </p>
                                         <code className="mb-4 rounded-xl border border-white/10 bg-black/50 px-3 py-1.5 font-mono text-[11px] text-primary select-all">
                                             {currentSlide?.image}
                                         </code>
                                         <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground/70">
                                             <HelpCircle className="size-3.5" />
-                                            <span>Place arrows and highlights directly on your screenshot file.</span>
+                                            <span>{t("Place arrows and highlights directly on your screenshot file.")}</span>
                                         </div>
                                     </div>
                                 )}
@@ -262,7 +264,7 @@ export function MissionSlideshowModal({
                         <button
                             onClick={handlePrev}
                             disabled={isFirstSlide}
-                            aria-label="Previous Slide"
+                            aria-label={t("Previous Slide")}
                             className={cn(
                                 "absolute left-4 z-10 flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-card/80 text-foreground shadow-xl backdrop-blur-md transition-all hover:bg-white/10 hover:scale-105 active:scale-95 disabled:opacity-0 disabled:pointer-events-none",
                             )}
@@ -273,7 +275,7 @@ export function MissionSlideshowModal({
                         <button
                             onClick={handleNext}
                             disabled={isLastSlide}
-                            aria-label="Next Slide"
+                            aria-label={t("Next Slide")}
                             className={cn(
                                 "absolute right-4 z-10 flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-card/80 text-foreground shadow-xl backdrop-blur-md transition-all hover:bg-white/10 hover:scale-105 active:scale-95 disabled:opacity-0 disabled:pointer-events-none",
                             )}
@@ -289,16 +291,16 @@ export function MissionSlideshowModal({
                             <div className="max-w-2xl space-y-1">
                                 <div className="flex items-center gap-2">
                                     <h4 className="text-sm font-black tracking-tight text-foreground sm:text-base">
-                                        {currentSlide?.title}
+                                        {currentSlide ? t(currentSlide.title) : null}
                                     </h4>
                                     {currentSlide?.tip && (
                                         <span className="hidden rounded-lg bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-500 sm:inline-block">
-                                            Tip
+                                            {t("Tip")}
                                         </span>
                                     )}
                                 </div>
                                 <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
-                                    {currentSlide?.description}
+                                    {currentSlide ? t(currentSlide.description) : null}
                                 </p>
                             </div>
 
@@ -310,7 +312,7 @@ export function MissionSlideshowModal({
                                         <button
                                             key={idx}
                                             onClick={() => setCurrentSlideIndex(idx)}
-                                            aria-label={`Jump to step ${idx + 1}`}
+                                            aria-label={t("Jump to step {step}", { step: idx + 1 })}
                                             className={cn(
                                                 "h-2 rounded-full transition-all duration-300",
                                                 idx === currentSlideIndex 
@@ -329,7 +331,7 @@ export function MissionSlideshowModal({
                                         onClick={handleGoToFeature}
                                         className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-bold text-foreground transition-all hover:bg-white/10 hover:border-white/20"
                                     >
-                                        <span>{mission.actionLabel}</span>
+                                        <span>{t(mission.actionLabel)}</span>
                                         <ExternalLink className="size-3.5 text-muted-foreground" />
                                     </button>
 
@@ -339,7 +341,7 @@ export function MissionSlideshowModal({
                                             onClick={handleNext}
                                             className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-xs font-black text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 active:scale-95"
                                         >
-                                            <span>Next Step</span>
+                                            <span>{t("Next Step")}</span>
                                             <ChevronRight className="size-4" />
                                         </button>
                                     ) : (
@@ -355,11 +357,11 @@ export function MissionSlideshowModal({
                                         >
                                             <CheckCircle2 className="size-4" />
                                             <span>
-                                                {justCompleted 
-                                                    ? "Completed!" 
-                                                    : isCompleted 
-                                                        ? "Mission Completed" 
-                                                        : "Complete Mission"}
+                                                {justCompleted
+                                                    ? t("Completed!")
+                                                    : isCompleted
+                                                        ? t("Mission Completed")
+                                                        : t("Complete Mission")}
                                             </span>
                                         </button>
                                     )}

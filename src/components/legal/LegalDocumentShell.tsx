@@ -28,6 +28,7 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react"
+import { useLanguageContext } from "@/context/LanguageContext"
 
 const ICONS = {
   info: Info,
@@ -96,6 +97,7 @@ export function LegalDocumentShell({
   summary,
   sections,
 }: LegalDocumentShellProps) {
+  const { t } = useLanguageContext()
   const [activeSection, setActiveSection] = useState<string>(sections[0]?.id ?? "")
   const [scrollProgress, setScrollProgress] = useState(0)
   const [searchQuery, setSearchQuery] = useState("")
@@ -231,15 +233,15 @@ export function LegalDocumentShell({
             >
               <Link href="/">
                 <ArrowLeft className="size-4" aria-hidden="true" />
-                <span className="hidden sm:inline">Back to iReside</span>
-                <span className="sr-only sm:hidden">Back to iReside</span>
+                <span className="hidden sm:inline">{t("Back to iReside")}</span>
+                <span className="sr-only sm:hidden">{t("Back to iReside")}</span>
               </Link>
             </Button>
             <div className="h-6 w-px bg-border hidden sm:block print:hidden" aria-hidden="true" />
             <div className="flex items-center gap-2 text-foreground font-display font-black text-lg tracking-tight select-none">
               <span className="text-primary font-black">i</span>Reside
               <span className="text-xs uppercase font-bold tracking-widest text-muted-foreground px-1.5 py-0.5 rounded-md bg-muted">
-                Legal
+                {t("Legal")}
               </span>
             </div>
           </div>
@@ -249,8 +251,8 @@ export function LegalDocumentShell({
               variant="outline"
               size="icon-sm"
               onClick={() => window.print()}
-              aria-label={`Print ${title}`}
-              title={`Print ${title}`}
+              aria-label={t("Print {title}", { title })}
+              title={t("Print {title}", { title })}
               className="rounded-xl border-border shadow-xs hover:border-primary/30 text-muted-foreground hover:text-foreground"
             >
               <Printer className="size-4" aria-hidden="true" />
@@ -264,12 +266,12 @@ export function LegalDocumentShell({
               {copied ? (
                 <>
                   <Check className="size-3.5 text-emerald-600" aria-hidden="true" />
-                  <span className="text-emerald-600 font-medium text-xs">Copied</span>
+                  <span className="text-emerald-600 font-medium text-xs">{t("Copied")}</span>
                 </>
               ) : (
                 <>
                   <Copy className="size-3.5" aria-hidden="true" />
-                  <span className="text-xs">Copy link</span>
+                  <span className="text-xs">{t("Copy link")}</span>
                 </>
               )}
             </Button>
@@ -286,20 +288,20 @@ export function LegalDocumentShell({
             {intro}
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
-            Last updated{" "}
+            {t("Last updated")}{" "}
             <time dateTime={lastUpdatedIso} className="text-foreground font-semibold">
               {lastUpdated}
             </time>
             <span aria-hidden="true"> · </span>
             <span className="sr-only">, </span>
-            Version {version}
+            {t("Version {version}", { version })}
           </p>
         </div>
 
         <div className="mt-8 bg-card border border-border p-4 rounded-2xl shadow-xs print:hidden">
           <div className="relative max-w-md">
             <label htmlFor="legal-search" className="sr-only">
-              Search this document
+              {t("Search this document")}
             </label>
             <Search
               className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"
@@ -318,7 +320,7 @@ export function LegalDocumentShell({
           </div>
           <p role="status" aria-live="polite" className="mt-2 text-xs text-muted-foreground min-h-4">
             {trimmedQuery
-              ? `${filteredSections.length} of ${sections.length} sections match “${searchQuery.trim()}”`
+              ? t("{count} of {total} sections match “{query}”", { count: filteredSections.length, total: sections.length, query: searchQuery.trim() })
               : ""}
           </p>
         </div>
@@ -335,7 +337,7 @@ export function LegalDocumentShell({
                   id="legal-toc-heading"
                   className="text-xs font-bold uppercase tracking-wider text-foreground font-display"
                 >
-                  Contents
+                  {t("Contents")}
                 </h2>
               </div>
               <ol className="space-y-1">
@@ -382,9 +384,9 @@ export function LegalDocumentShell({
             {/* Mobile table of contents */}
             <details className="lg:hidden rounded-2xl border border-border bg-card p-4 print:hidden">
               <summary className="cursor-pointer text-sm font-bold text-foreground font-display">
-                Contents
+                {t("Contents")}
               </summary>
-              <nav aria-label={`${title} contents`} className="mt-3">
+              <nav aria-label={t("{title} contents", { title })} className="mt-3">
                 <ol className="space-y-1 text-sm">
                   {sections.map((section) => (
                     <li key={section.id}>
@@ -408,11 +410,10 @@ export function LegalDocumentShell({
                   <Search className="size-6" aria-hidden="true" />
                 </div>
                 <h2 className="text-lg font-bold text-foreground mb-1 font-display">
-                  No matches found
+                  {t("No matches found")}
                 </h2>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
-                  Nothing in this document matches “{searchQuery.trim()}”. Try a different word,
-                  such as “cookies”, “retention”, or “AI”.
+                  {t("Nothing in this document matches “{query}”. Try a different word, such as “cookies”, “retention”, or “AI”.", { query: searchQuery.trim() })}
                 </p>
                 <Button
                   variant="outline"
@@ -420,7 +421,7 @@ export function LegalDocumentShell({
                   onClick={() => setSearchQuery("")}
                   className="rounded-xl border-border"
                 >
-                  Clear search
+                  {t("Clear search")}
                 </Button>
               </div>
             )}
@@ -463,17 +464,17 @@ export function LegalDocumentShell({
                       size="sm"
                       onClick={() => handleCopySection(section.id)}
                       className="rounded-lg border-border text-muted-foreground hover:text-foreground self-start sm:self-auto gap-1.5 h-8 px-2.5 print:hidden"
-                      aria-label={`Copy link to section ${numberOf(section.id)}, ${section.title}`}
+                      aria-label={t("Copy link to section {number}, {title}", { number: numberOf(section.id), title: section.title })}
                     >
                       {copiedSectionId === section.id ? (
                         <>
                           <Check className="size-3.5 text-emerald-600" aria-hidden="true" />
-                          <span className="text-xs text-emerald-600 font-medium">Copied</span>
+                          <span className="text-xs text-emerald-600 font-medium">{t("Copied")}</span>
                         </>
                       ) : (
                         <>
                           <Copy className="size-3.5" aria-hidden="true" />
-                          <span className="text-xs">Copy link</span>
+                          <span className="text-xs">{t("Copy link")}</span>
                         </>
                       )}
                     </Button>
@@ -497,7 +498,7 @@ export function LegalDocumentShell({
           className="rounded-full shadow-lg border-border bg-card/85 backdrop-blur-md h-10 px-3 gap-1 hover:border-primary text-xs font-semibold"
         >
           <ArrowUp className="size-3.5" aria-hidden="true" />
-          Back to top
+          {t("Back to top")}
         </Button>
       </div>
     </div>

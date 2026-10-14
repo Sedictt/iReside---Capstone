@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
-import type { LeaseStatus, PaymentStatus } from "@/types/database";
+import type { LeaseStatus, LeaseTermType, PaymentStatus } from "@/types/database";
+import { leaseEndSortValue, normalizeTermType } from "@/lib/lease-term";
 
 type TenantStatus = "Active" | "Moving Out" | "Evicted";
 type TenantPaymentStatus = "paid" | "late" | "pending";
@@ -12,7 +13,11 @@ type TenantItem = {
     unit: string;
     status: TenantStatus;
     rentAmount: number | null;
+    /** null for open-ended leases until a move-out date is agreed. */
     leaseEnd: string | null;
+    leaseTerm: LeaseTermType;
+    leaseTermType: LeaseTermType;
+    leaseStart: string | null;
     phone: string;
     email: string;
     avatar: string;
@@ -90,7 +95,7 @@ export async function GET(request: Request) {
 
     let leaseQuery = supabase
         .from("leases")
-        .select("id, tenant_id, unit_id, status, end_date, monthly_rent")
+        .select("id, tenant_id, unit_id, status, start_date, end_date, term_type, monthly_rent")
         .eq("landlord_id", userId)
         .in("status", ["active", "expired", "terminated"]);
 
@@ -276,7 +281,8 @@ export async function GET(request: Request) {
     });
 
     // Build best-lease-per-tenant map to avoid duplicate tenant IDs
-    // Prefers: active > expired/terminated, then later end_date
+    // Prefers: active > expired/terminated, then the later end date. An
+    // open-ended lease has no end date and counts as the latest.
     const bestLeasePerTenant = new Map<string, (typeof leaseRows)[0]>();
     for (const lease of leaseRows) {
         const existing = bestLeasePerTenant.get(lease.tenant_id);
@@ -287,10 +293,7 @@ export async function GET(request: Request) {
             const existingScore = existing.status === "active" ? 2 : 1;
             if (
                 leaseScore > existingScore ||
-                (leaseScore === existingScore &&
-                    lease.end_date &&
-                    existing.end_date &&
-                    lease.end_date > existing.end_date)
+                (leaseScore === existingScore && leaseEndSortValue(lease) > leaseEndSortValue(existing))
             ) {
                 bestLeasePerTenant.set(lease.tenant_id, lease);
             }
@@ -322,6 +325,9 @@ export async function GET(request: Request) {
             status: resolveTenantStatus(lease.status, hasMoveOut),
             rentAmount: typeof lease.monthly_rent === "number" ? lease.monthly_rent : null,
             leaseEnd: lease.end_date ?? null,
+            leaseTerm: normalizeTermType(lease.term_type),
+            leaseTermType: normalizeTermType(lease.term_type),
+            leaseStart: lease.start_date ?? null,
             phone: isNonEmptyString(tenant?.phone) ? tenant.phone : "Not provided",
             email: isNonEmptyString(tenant?.email) ? tenant.email : "Not provided",
             avatar: initials || "NA",

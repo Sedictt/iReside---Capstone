@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import { ArrowRight, Compass, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface UnitMapExploreOrReturnModalProps {
     isOpen: boolean;
@@ -21,6 +22,7 @@ export function UnitMapExploreOrReturnModal({
     isDark = false,
     propertyName,
 }: UnitMapExploreOrReturnModalProps) {
+    const { t } = useLanguageContext();
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape" && isOpen) {
@@ -64,23 +66,26 @@ export function UnitMapExploreOrReturnModal({
                     </div>
                     <div>
                         <div className="flex items-center gap-1 text-xs font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
-                            <span>Step 2 Complete •</span>
-                            <span>Layout Saved</span>
+                            <span>{t("Step 2 Complete •")}</span>
+                            <span>{t("Layout Saved")}</span>
                         </div>
                         <h2
                             id="explore-or-return-title"
                             className="text-xl sm:text-2xl font-black tracking-tight leading-tight"
                         >
-                            Unit Map Ready
+                            {t("Unit Map Ready")}
                         </h2>
                     </div>
                 </div>
 
                 {/* Subtext */}
                 <p className={cn("text-sm leading-relaxed", isDark ? "text-zinc-300" : "text-zinc-600")}>
-                    Your units and hallways have been organized on the canvas
-                    {propertyName ? <> for <span className="font-bold">{propertyName}</span></> : ""}.
-                    Next up in onboarding: Set up your water and electric rates so your bills are ready for tenants.
+                    {propertyName ? (
+                        <>{t("Your units and hallways have been organized on the canvas for")} <span className="font-bold">{propertyName}</span>.</>
+                    ) : (
+                        t("Your units and hallways have been organized on the canvas.")
+                    )}{" "}
+                    {t("Next up in onboarding: Set up your water and electric rates so your bills are ready for tenants.")}
                 </p>
 
                 {/* Choice Actions */}
@@ -91,7 +96,7 @@ export function UnitMapExploreOrReturnModal({
                             onClick={onProceedToBilling}
                             className="w-full group inline-flex items-center justify-center gap-2 h-12 px-5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm shadow-md shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer"
                         >
-                            <span>Next: Set Up Water &amp; Electricity</span>
+                            <span>{t("Next: Set Up Water & Electricity")}</span>
                             <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                         </button>
                     ) : null}
@@ -108,7 +113,7 @@ export function UnitMapExploreOrReturnModal({
                             )}
                         >
                             <Compass className="size-4" />
-                            <span>Continue Exploring Map</span>
+                            <span>{t("Continue Exploring Map")}</span>
                         </button>
 
                         <button
@@ -123,7 +128,7 @@ export function UnitMapExploreOrReturnModal({
                                     : "bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:brightness-105"
                             )}
                         >
-                            <span>Return to Dashboard</span>
+                            <span>{t("Return to Dashboard")}</span>
                             <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                         </button>
                     </div>
@@ -131,7 +136,7 @@ export function UnitMapExploreOrReturnModal({
 
                 {/* Footer hint */}
                 <p className={cn("text-center text-xs", isDark ? "text-zinc-500" : "text-zinc-400")}>
-                    You can return to the dashboard anytime using the navigation menu.
+                    {t("You can return to the dashboard anytime using the navigation menu.")}
                 </p>
             </div>
         </div>

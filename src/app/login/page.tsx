@@ -16,6 +16,8 @@ import { useState, Suspense, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -74,6 +76,7 @@ function clearStaleLandlordData() {
 
 
 function LoginContent() {
+    const { t } = useLanguageContext();
     const [error, setError] = useState<string | null>(null);
     const [activationBanner, setActivationBanner] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -136,7 +139,9 @@ function LoginContent() {
                 setPrefilledEmail(emailParam);
             }
             setActivationBanner(
-                `Account claimed successfully! Please sign in with your new credentials${emailParam ? ` as ${emailParam}` : ""} to proceed to setup.`
+                emailParam
+                    ? t("Account claimed successfully! Please sign in with your new credentials as {email} to proceed to setup.", { email: emailParam })
+                    : t("Account claimed successfully! Please sign in with your new credentials to proceed to setup.")
             );
             setTimeout(() => {
                 setPassword("");
@@ -160,13 +165,13 @@ function LoginContent() {
                 }
             } else if (searchParams.get("claimed") === "true") {
                 setActivationBanner(
-                    "Account claimed successfully! Please sign in with your new credentials to proceed to setup."
+                    t("Account claimed successfully! Please sign in with your new credentials to proceed to setup.")
                 );
             }
         } catch {
             // best-effort
         }
-    }, [searchParams]);
+    }, [searchParams, t]);
 
     const handleRecoveryProceed = async () => {
         if (!pendingRecovery) return;
@@ -223,8 +228,8 @@ function LoginContent() {
                     password,
                 });
                 if (!signInErr && signInData?.session) {
-                    toast.success("Account Claimed Successfully!", {
-                        description: "Continuing directly to property setup...",
+                    toast.success(t("Account Claimed Successfully!"), {
+                        description: t("Continuing directly to property setup..."),
                     });
                     if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
                         window.location.replace("/setup");
@@ -247,7 +252,7 @@ function LoginContent() {
         setPendingRecovery(null);
         setPrefilledEmail(email);
         setActivationBanner(
-            `Account claimed successfully! Please sign in with your new credentials as ${email} to proceed to setup.`
+            t("Account claimed successfully! Please sign in with your new credentials as {email} to proceed to setup.", { email })
         );
         setTimeout(() => {
             setPassword("");
@@ -282,7 +287,7 @@ function LoginContent() {
         setShowActivationModal(false);
         setPrefilledEmail(newEmail);
         setActivationBanner(
-            `Account claimed successfully! Please sign in with your new credentials as ${newEmail}.`
+            t("Account claimed successfully! Please sign in with your new credentials as {email}.", { email: newEmail })
         );
 
         // Force a full page reload to clear any stale in-memory auth state.
@@ -322,16 +327,16 @@ function LoginContent() {
                 password,
             });
             const timeoutPromise = new Promise<{ data: any; error: any }>((_, reject) =>
-                setTimeout(() => reject(new Error("Authentication request timed out. Please check your network and try again.")), 12000)
+                setTimeout(() => reject(new Error(t("Authentication request timed out. Please check your network and try again."))), 12000)
             );
 
             const { data, error } = await Promise.race([signInPromise, timeoutPromise]);
 
             if (error) {
                 if (error.message?.toLowerCase().includes("schema")) {
-                    setError("Login failed due to a Supabase auth schema issue. Please contact support.");
+                    setError(t("Login failed due to a Supabase auth schema issue. Please contact support."));
                 } else {
-                    setError(error.message);
+                    setError(t(error.message));
                 }
                 return;
             }
@@ -387,13 +392,13 @@ function LoginContent() {
                         }
                     } else {
                         const errData = await twoFactorRes.json().catch(() => null);
-                        setError(errData?.error || "Failed to initiate Two-Factor Authentication. Please try again.");
+                        setError(t(errData?.error || "Failed to initiate Two-Factor Authentication. Please try again."));
                         setLoading(false);
                         return;
                     }
                 } catch (twoFactorErr) {
                     console.error("[Login] 2FA challenge check error:", twoFactorErr);
-                    setError("Unable to complete security verification. Please check your connection and try again.");
+                    setError(t("Unable to complete security verification. Please check your connection and try again."));
                     setLoading(false);
                     return;
                 }
@@ -402,7 +407,7 @@ function LoginContent() {
             await completeSuccessfulLogin(data.user, role);
         } catch (err) {
             console.error('[Login] Unexpected error:', err);
-            setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
+            setError(err instanceof Error ? t(err.message) : t("An unexpected error occurred. Please try again."));
         } finally {
             setLoading(false);
         }
@@ -490,7 +495,7 @@ function LoginContent() {
         const cleanOtp = twoFactorOtp.replace(/\D/g, "");
         const otpError = otpRule(cleanOtp);
         if (otpError) {
-            setTwoFactorError(otpError);
+            setTwoFactorError(t(otpError));
             return;
         }
 
@@ -509,7 +514,7 @@ function LoginContent() {
 
             const data = await res.json();
             if (!res.ok || data.error) {
-                setTwoFactorError(data.error || "Verification failed. Please try again.");
+                setTwoFactorError(t(data.error || "Verification failed. Please try again."));
                 setTwoFactorLoading(false);
                 return;
             }
@@ -519,7 +524,7 @@ function LoginContent() {
             setTwoFactorChallenge(null);
             await completeSuccessfulLogin(userData, role);
         } catch (err) {
-            setTwoFactorError(err instanceof Error ? err.message : "Verification failed. Please try again.");
+            setTwoFactorError(err instanceof Error ? t(err.message) : t("Verification failed. Please try again."));
         } finally {
             setTwoFactorLoading(false);
         }
@@ -544,10 +549,10 @@ function LoginContent() {
             if (res.ok) {
                 setTwoFactorCooldown(60);
             } else {
-                setTwoFactorError(data.error || "Failed to resend code.");
+                setTwoFactorError(t(data.error || "Failed to resend code."));
             }
         } catch {
-            setTwoFactorError("Failed to resend code. Please try again.");
+            setTwoFactorError(t("Failed to resend code. Please try again."));
         } finally {
             setIsResendingTwoFactor(false);
         }
@@ -681,8 +686,9 @@ function LoginContent() {
                         href="/docs"
                         className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors hidden sm:inline-block"
                     >
-                        Documentation
+                        {t("Documentation")}
                     </Link>
+                    <LanguageToggle variant="compact" />
                     <ThemeToggle className="rounded-xl border border-border bg-card/80 shadow-xs" />
                 </div>
             </header>
@@ -744,13 +750,13 @@ function LoginContent() {
                         {/* Text Content */}
                         <div className="relative z-10 space-y-5">
                             <h1 className="text-4xl xl:text-6xl font-black tracking-tight text-foreground leading-[1.08]">
-                                Dedicated <br />
-                                <span className="text-primary underline decoration-primary/30 decoration-6 underline-offset-6">property</span> <br />
-                                operations.
+                                {t("login.hero.dedicated", undefined, "Dedicated")} <br />
+                                <span className="text-primary underline decoration-primary/30 decoration-6 underline-offset-6">{t("login.hero.property", undefined, "property")}</span> <br />
+                                {t("login.hero.operations", undefined, "operations.")}
                             </h1>
 
                             <p className="text-lg text-muted-foreground font-normal leading-relaxed max-w-lg">
-                                Unified workspace for portfolio operations, automated financials, and direct resident engagement.
+                                {t("Unified workspace for portfolio operations, automated financials, and direct resident engagement.")}
                             </p>
                         </div>
 
@@ -765,10 +771,10 @@ function LoginContent() {
                                 </div>
                                 <div className="flex flex-col text-left">
                                     <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
-                                        Download iReside App
+                                        {t("Download iReside App")}
                                     </span>
                                     <span className="text-xs text-muted-foreground">
-                                        For Windows & Android
+                                        {t("For Windows & Android")}
                                     </span>
                                 </div>
                                 <ArrowRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all ml-2 shrink-0" />
@@ -791,10 +797,10 @@ function LoginContent() {
                                             <ShieldCheck className="size-6" />
                                         </div>
                                         <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-                                            Two-Factor Verification
+                                            {t("Two-Factor Verification")}
                                         </h2>
                                         <p className="text-sm text-muted-foreground leading-relaxed">
-                                            Enter the 6-digit verification code sent to{" "}
+                                            {t("Enter the 6-digit verification code sent to")}{" "}
                                             <span className="font-mono font-bold text-foreground">
                                                 {twoFactorChallenge.email}
                                             </span>.
@@ -825,7 +831,7 @@ function LoginContent() {
                                                 htmlFor="two-factor-code"
                                                 className="block text-xs font-semibold text-foreground/90 select-none"
                                             >
-                                                6-Digit Verification Code
+                                                {t("6-Digit Verification Code")}
                                             </label>
                                             <input
                                                 id="two-factor-code"
@@ -850,11 +856,11 @@ function LoginContent() {
                                             {twoFactorLoading ? (
                                                 <>
                                                     <Loader2 className="size-4 animate-spin" />
-                                                    <span>Verifying...</span>
+                                                    <span>{t("Verifying...")}</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <span>Verify & Sign In</span>
+                                                    <span>{t("Verify & Sign In")}</span>
                                                     <ArrowRight className="size-4" />
                                                 </>
                                             )}
@@ -868,10 +874,10 @@ function LoginContent() {
                                                 className="font-semibold text-primary hover:underline transition-colors disabled:text-muted-foreground disabled:no-underline cursor-pointer"
                                             >
                                                 {isResendingTwoFactor
-                                                    ? "Sending code..."
+                                                    ? t("Sending code...")
                                                     : twoFactorCooldown > 0
-                                                    ? `Resend code in ${twoFactorCooldown}s`
-                                                    : "Resend Code"}
+                                                    ? t("Resend code in {seconds}s", { seconds: twoFactorCooldown })
+                                                    : t("Resend Code")}
                                             </button>
 
                                             <button
@@ -879,7 +885,7 @@ function LoginContent() {
                                                 onClick={handleCancelTwoFactor}
                                                 className="font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                                             >
-                                                Back to sign in
+                                                {t("Back to sign in")}
                                             </button>
                                         </div>
                                     </form>
@@ -889,10 +895,10 @@ function LoginContent() {
                                     {/* Card Header */}
                                     <div className="space-y-1.5">
                                         <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-                                            Sign In
+                                            {t("Sign In")}
                                         </h2>
                                         <p className="text-sm text-muted-foreground">
-                                            Enter your credentials to access your account.
+                                            {t("Enter your credentials to access your account.")}
                                         </p>
                                     </div>
 
@@ -941,7 +947,7 @@ function LoginContent() {
                                                     htmlFor="email"
                                                     className="block text-xs font-semibold text-foreground/90 select-none"
                                                 >
-                                                    Email Address
+                                                    {t("Email Address")}
                                                 </label>
                                                 <input maxLength={254}
                                                     {...loginForm.fieldProps("email")}
@@ -960,7 +966,7 @@ function LoginContent() {
                                                         loginForm.errorFor("email") && AUTH_INPUT_ERROR
                                                     )}
                                                 />
-                                                <FieldError id={loginForm.errorId("email")} message={loginForm.errorFor("email")} />
+                                                <FieldError id={loginForm.errorId("email")} message={loginForm.errorFor("email") && t(loginForm.errorFor("email")!)} />
                                             </div>
 
                                             {/* Password Field */}
@@ -970,13 +976,13 @@ function LoginContent() {
                                                         htmlFor="password"
                                                         className="block text-xs font-semibold text-foreground/90 select-none"
                                                     >
-                                                        Password
+                                                        {t("Password")}
                                                     </label>
                                                     <Link 
                                                         href="/forgot-password" 
                                                         className="text-xs font-semibold text-primary hover:underline transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-xs"
                                                     >
-                                                        Forgot Password?
+                                                        {t("Forgot Password?")}
                                                     </Link>
                                                 </div>
                                                 <div className="relative">
@@ -1001,7 +1007,7 @@ function LoginContent() {
                                                         type="button"
                                                         onClick={() => setIsPasswordVisible(!isPasswordVisible)}
                                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                                                        aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+                                                        aria-label={isPasswordVisible ? t("Hide password") : t("Show password")}
                                                         aria-pressed={isPasswordVisible}
                                                     >
                                                         {isPasswordVisible ? (
@@ -1011,7 +1017,7 @@ function LoginContent() {
                                                         )}
                                                     </button>
                                                 </div>
-                                                <FieldError id={loginForm.errorId("password")} message={loginForm.errorFor("password")} />
+                                                <FieldError id={loginForm.errorId("password")} message={loginForm.errorFor("password") && t(loginForm.errorFor("password")!)} />
                                             </div>
                                         </div>
 
@@ -1024,11 +1030,11 @@ function LoginContent() {
                                             {loading ? (
                                                 <>
                                                     <Loader2 className="size-4 animate-spin" />
-                                                    <span>Authenticating...</span>
+                                                    <span>{t("Authenticating...")}</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <span>Sign In</span>
+                                                    <span>{t("Sign In")}</span>
                                                     <ArrowRight className="size-4" />
                                                 </>
                                             )}
@@ -1038,12 +1044,12 @@ function LoginContent() {
                                     {/* Resident Activation Link (Single Clean Footnote) */}
                                     <div className="pt-2 text-center">
                                         <p className="text-xs text-muted-foreground">
-                                            Invited as a resident?{" "}
+                                            {t("Invited as a resident?")}{" "}
                                             <Link 
                                                 href="/signup/tenant" 
                                                 className="font-semibold text-primary hover:underline transition-colors"
                                             >
-                                                Activate with Invite Code
+                                                {t("Activate with Invite Code")}
                                             </Link>
                                         </p>
                                     </div>
@@ -1076,15 +1082,15 @@ function LoginContent() {
                     <span>© 2026 iReside Technologies</span>
                     <span>•</span>
                     <Link href="/privacy" className="hover:text-foreground transition-colors">
-                        Privacy Policy
+                        {t("Privacy Policy")}
                     </Link>
                     <span>•</span>
                     <Link href="/terms" className="hover:text-foreground transition-colors">
-                        Terms of Service
+                        {t("Terms of Service")}
                     </Link>
                     <span>•</span>
                     <Link href="/download" className="hover:text-foreground transition-colors">
-                        Desktop & Mobile
+                        {t("Desktop & Mobile")}
                     </Link>
                 </div>
             </footer>

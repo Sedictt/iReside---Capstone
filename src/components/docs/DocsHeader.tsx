@@ -8,6 +8,7 @@ import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 const REPOSITORY_URL = "https://github.com/Sedictt/iReside---Capstone";
 
@@ -17,6 +18,7 @@ interface DocsHeaderProps {
 }
 
 export function DocsHeader({ onMenuToggle, isMenuOpen }: DocsHeaderProps) {
+  const { t } = useLanguageContext();
   const router = useRouter();
   const { user, profile } = useAuth();
   const [query, setQuery] = useState("");
@@ -37,7 +39,7 @@ export function DocsHeader({ onMenuToggle, isMenuOpen }: DocsHeaderProps) {
             type="button"
             onClick={onMenuToggle}
             className="flex items-center justify-center rounded-lg p-2 text-text-medium hover:bg-surface-2 lg:hidden"
-            aria-label={isMenuOpen ? "Close navigation" : "Open navigation"}
+            aria-label={isMenuOpen ? t("Close navigation") : t("Open navigation")}
             aria-expanded={isMenuOpen}
           >
             {isMenuOpen ? <X className="size-4" aria-hidden="true" /> : <Menu className="size-5" aria-hidden="true" />}
@@ -46,19 +48,19 @@ export function DocsHeader({ onMenuToggle, isMenuOpen }: DocsHeaderProps) {
           <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-90">
             <Logo className="h-8 w-auto" />
             <span className="hidden text-xl font-black tracking-tight text-text-high sm:inline-block">
-              iReside <span className="text-primary font-medium">Docs</span>
+              iReside <span className="text-primary font-medium">{t("Docs")}</span>
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-6 lg:flex" aria-label="Documentation">
+          <nav className="hidden items-center gap-6 lg:flex" aria-label={t("Documentation")}>
             <Link href="/docs/introduction" className="text-sm font-medium text-text-medium transition-colors hover:text-primary">
-              Guides
+              {t("Guides")}
             </Link>
             <Link href="/docs" className="text-sm font-medium text-text-medium transition-colors hover:text-primary">
-              Interactive Manual
+              {t("Interactive Manual")}
             </Link>
             <Link href="/docs/technical" className="text-sm font-medium text-text-medium transition-colors hover:text-primary">
-              Technical
+              {t("Technical")}
             </Link>
           </nav>
         </div>
@@ -71,8 +73,8 @@ export function DocsHeader({ onMenuToggle, isMenuOpen }: DocsHeaderProps) {
               maxLength={60}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search the manual…"
-              aria-label="Search the manual"
+              placeholder={t("Search the manual…")}
+              aria-label={t("Search the manual")}
               className="h-10 w-64 rounded-full border border-divider bg-surface-1 pl-10 pr-4 text-sm outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 [&::-webkit-search-cancel-button]:hidden"
             />
           </form>
@@ -80,7 +82,7 @@ export function DocsHeader({ onMenuToggle, isMenuOpen }: DocsHeaderProps) {
           <div className="flex items-center gap-1 border-l border-divider pl-4">
             <ThemeToggle variant="sidebar" className="size-9" />
             <Button variant="ghost" size="icon" className="size-9 text-text-medium" asChild>
-              <a href={REPOSITORY_URL} target="_blank" rel="noopener noreferrer" aria-label="Source code on GitHub">
+              <a href={REPOSITORY_URL} target="_blank" rel="noopener noreferrer" aria-label={t("Source code on GitHub")}>
                 <Github className="size-5" aria-hidden="true" />
               </a>
             </Button>
@@ -89,10 +91,10 @@ export function DocsHeader({ onMenuToggle, isMenuOpen }: DocsHeaderProps) {
                 {user ? (
                   <Link href={portalHref}>
                     <BookOpen className="mr-1.5 size-4" aria-hidden="true" />
-                    Open portal
+                    {t("Open portal")}
                   </Link>
                 ) : (
-                  <Link href="/login">Sign in</Link>
+                  <Link href="/login">{t("Sign in")}</Link>
                 )}
               </Button>
             </div>

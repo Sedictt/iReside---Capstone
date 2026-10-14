@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import { ArrowRight, ArrowLeft, CheckCircle2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export interface DashboardTourStep {
     id: number;
@@ -65,6 +66,7 @@ export function DashboardTourSpotlight({
     onClose,
     onCompleteTour,
 }: DashboardTourSpotlightProps) {
+    const { t } = useLanguageContext();
     const step = DASHBOARD_TOUR_STEPS[currentStepIndex] || DASHBOARD_TOUR_STEPS[0];
     const isFirst = currentStepIndex === 0;
     const isLast = currentStepIndex === DASHBOARD_TOUR_STEPS.length - 1;
@@ -96,14 +98,14 @@ export function DashboardTourSpotlight({
                             {step.id}
                         </span>
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                            Tour: Step {step.id} of {DASHBOARD_TOUR_STEPS.length}
+                            {t("Tour: Step {step} of {total}", { step: step.id, total: DASHBOARD_TOUR_STEPS.length })}
                         </span>
                     </div>
                     <button
                         type="button"
                         onClick={onClose}
                         className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-                        aria-label="Exit tour"
+                        aria-label={t("Exit tour")}
                     >
                         <X className="size-4" />
                     </button>
@@ -116,24 +118,24 @@ export function DashboardTourSpotlight({
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                             <span className="relative inline-flex rounded-full size-2 bg-primary"></span>
                         </span>
-                        <span className="truncate">Highlighted: {step.targetElementLabel}</span>
+                        <span className="truncate">{t("Highlighted: {label}", { label: t(step.targetElementLabel) })}</span>
                     </div>
                 )}
 
                 {/* Body Content */}
                 <div className="space-y-1.5">
                     <h3 id="dashboard-tour-title" className="text-base font-black text-foreground">
-                        {step.title}
+                        {t(step.title)}
                     </h3>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                        {step.description}
+                        {t(step.description)}
                     </p>
                 </div>
 
                 {/* Helpful Tip */}
                 {step.tip && (
                     <div className="rounded-xl bg-muted/40 border border-border/50 p-2.5 text-[11px] text-muted-foreground italic">
-                        {step.tip}
+                        {t(step.tip)}
                     </div>
                 )}
 
@@ -151,7 +153,7 @@ export function DashboardTourSpotlight({
                         )}
                     >
                         <ArrowLeft className="size-3.5" />
-                        <span>Previous</span>
+                        <span>{t("Previous")}</span>
                     </button>
 
                     <div className="flex items-center gap-1">
@@ -174,7 +176,7 @@ export function DashboardTourSpotlight({
                             onClick={onCompleteTour}
                             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:brightness-105 transition-all cursor-pointer active:scale-95"
                         >
-                            <span>Finish Tour</span>
+                            <span>{t("Finish Tour")}</span>
                             <CheckCircle2 className="size-3.5" />
                         </button>
                     ) : (
@@ -183,7 +185,7 @@ export function DashboardTourSpotlight({
                             onClick={onNext}
                             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:brightness-105 transition-all cursor-pointer active:scale-95"
                         >
-                            <span>Next</span>
+                            <span>{t("Next")}</span>
                             <ArrowRight className="size-3.5" />
                         </button>
                     )}

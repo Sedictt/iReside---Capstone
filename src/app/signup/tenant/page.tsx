@@ -28,6 +28,8 @@ import { useState, useEffect } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 const featureCategories = [
     {
@@ -100,6 +102,7 @@ const onboardingSteps = [
 export default function TenantInformationPage() {
     const [mounted, setMounted] = useState(false);
     const [activeCategory, setActiveCategory] = useState(0);
+    const { t } = useLanguageContext();
 
     useEffect(() => {
         setMounted(true);
@@ -123,13 +126,14 @@ export default function TenantInformationPage() {
                         animate={{ opacity: 1, x: 0 }}
                         className="flex items-center gap-4"
                     >
+                        <LanguageToggle variant="compact" />
                         <ThemeToggle />
                         <Link
                             href="/login"
                             className="flex items-center gap-2 text-sm font-black text-muted-foreground hover:text-foreground transition-colors"
                         >
                             <ArrowLeft className="size-4" />
-                            Back to Login
+                            <span className="hidden sm:inline">{t("Back to Login")}</span>
                         </Link>
                     </motion.div>
                 </div>
@@ -151,15 +155,15 @@ export default function TenantInformationPage() {
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-black uppercase tracking-widest mb-8"
                     >
                         <Lock className="size-3.5" />
-                        Private Residency — Invite Only
+                        {t("Private Residency — Invite Only")}
                     </motion.div>
 
                     <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] mb-6">
-                        Your resident<br />
-                        <span className="text-primary">dashboard</span>
+                        {t("Your resident")}<br />
+                        <span className="text-primary">{t("dashboard")}</span>
                     </h1>
                     <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-                        Once invited, you can manage your lease, pay rent, submit maintenance requests, and message your landlord — all from one dashboard.
+                        {t("Once invited, you can manage your lease, pay rent, submit maintenance requests, and message your landlord — all from one dashboard.")}
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -167,14 +171,14 @@ export default function TenantInformationPage() {
                             href="/apply"
                             className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-black text-base shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5"
                         >
-                            I have an invite
+                            {t("I have an invite")}
                             <ArrowRight className="size-5" />
                         </Link>
                         <a
                             href="#features"
                             className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl border border-border bg-card text-foreground font-black text-base hover:bg-muted transition-all"
                         >
-                            See what's included
+                            {t("See what's included")}
                             <ChevronRight className="size-5" />
                         </a>
                     </div>
@@ -189,10 +193,10 @@ export default function TenantInformationPage() {
                 >
                     <div className="text-center mb-12">
                         <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">
-                            Getting started is simple
+                            {t("Getting started is simple")}
                         </h2>
                         <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-                            Once you receive your invitation, you will be up and running in minutes.
+                            {t("Once you receive your invitation, you will be up and running in minutes.")}
                         </p>
                     </div>
 
@@ -206,14 +210,14 @@ export default function TenantInformationPage() {
                                 className="relative rounded-3xl border border-border bg-card p-8 shadow-sm"
                             >
                                 <div className="absolute -top-4 left-8 px-3 py-1 rounded-2xl bg-primary text-primary-foreground text-xs font-black uppercase tracking-widest">
-                                    Step {step.number}
+                                    {t("Step {number}", { number: step.number })}
                                 </div>
                                 <div className="mt-4">
                                     <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6">
                                         <step.icon className="size-6" />
                                     </div>
-                                    <h3 className="text-xl font-black tracking-tight mb-3">{step.title}</h3>
-                                    <p className="text-muted-foreground">{step.description}</p>
+                                    <h3 className="text-xl font-black tracking-tight mb-3">{t(step.title)}</h3>
+                                    <p className="text-muted-foreground">{t(step.description)}</p>
                                 </div>
                             </motion.div>
                         ))}
@@ -230,10 +234,10 @@ export default function TenantInformationPage() {
                 >
                     <div className="text-center mb-12">
                         <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">
-                            Everything you need, one platform
+                            {t("Everything you need, one platform")}
                         </h2>
                         <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-                            Manage your entire residency from your personal dashboard.
+                            {t("Manage your entire residency from your personal dashboard.")}
                         </p>
                     </div>
 
@@ -251,7 +255,7 @@ export default function TenantInformationPage() {
                                 )}
                             >
                                 <category.icon className="size-4" />
-                                {category.title}
+                                {t(category.title)}
                             </button>
                         ))}
                     </div>
@@ -281,8 +285,8 @@ export default function TenantInformationPage() {
                                     >
                                         <feature.icon className="size-5" />
                                     </div>
-                                    <h4 className="font-black mb-1">{feature.label}</h4>
-                                    <p className="text-sm text-muted-foreground">{feature.desc}</p>
+                                    <h4 className="font-black mb-1">{t(feature.label)}</h4>
+                                    <p className="text-sm text-muted-foreground">{t(feature.desc)}</p>
                                 </div>
                             ))}
                         </motion.div>
@@ -298,19 +302,19 @@ export default function TenantInformationPage() {
                 >
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-black uppercase tracking-widest mb-6">
                         <CheckCircle2 className="size-3.5" />
-                        Invite Only Community
+                        {t("Invite Only Community")}
                     </div>
                     <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">
-                        Ready to get started?
+                        {t("Ready to get started?")}
                     </h2>
                     <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-8">
-                        If you have received an invitation from your property manager, click below to access your resident portal.
+                        {t("If you have received an invitation from your property manager, click below to access your resident portal.")}
                     </p>
                     <Link
                         href="/login"
                         className="inline-flex items-center gap-2 px-10 py-4 rounded-2xl bg-primary text-primary-foreground font-black text-lg shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5"
                     >
-                        Access Resident Portal
+                        {t("Access Resident Portal")}
                         <ArrowRight className="size-5" />
                     </Link>
                 </motion.section>
@@ -320,7 +324,7 @@ export default function TenantInformationPage() {
             <footer className="border-t border-border/50 py-8">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
                     <p className="text-sm text-muted-foreground">
-                        © 2026 iReside Technologies. All rights reserved.
+                        {t("© 2026 iReside Technologies. All rights reserved.")}
                     </p>
                 </div>
             </footer>

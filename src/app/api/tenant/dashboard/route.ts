@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/supabase/auth";
 import type { NotificationType, PaymentStatus } from "@/types/database";
 import { resolveLeaseBillingDueDate } from "@/lib/billing/utils";
+import { normalizeTermType, type LeaseTermType } from "@/lib/lease-term";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,9 @@ type LeaseSummary = {
     id: string;
     status: string;
     startDate: string;
-    endDate: string;
+    /** null for open-ended leases until a move-out date is agreed. */
+    endDate: string | null;
+    termType: LeaseTermType;
     monthlyRent: number;
     securityDeposit: number;
     unitName: string | null;
@@ -208,12 +211,13 @@ export async function GET() {
         supabase
             .from("leases")
             .select(`
-                id, status, start_date, end_date, monthly_rent, security_deposit, terms,
+                id, status, start_date, end_date, term_type, monthly_rent, security_deposit, terms,
                 unit:units(id, name, property:properties(id, name, address, city)),
                 landlord:profiles!leases_landlord_id_fkey(full_name, email, phone, avatar_url, avatar_bg_color)
             `)
             .eq("tenant_id", user.id)
-            .order("end_date", { ascending: false })
+            // Newest tenancy first; open-ended leases have no end date so start_date is the stable key.
+            .order("start_date", { ascending: false })
             .limit(5),
         supabase
             .from("payments")
@@ -294,7 +298,8 @@ export async function GET() {
             id: activeLease.id,
             status: activeLease.status,
             startDate: activeLease.start_date,
-            endDate: activeLease.end_date,
+            endDate: activeLease.end_date ?? null,
+            termType: normalizeTermType(activeLease.term_type),
             monthlyRent: Number(activeLease.monthly_rent ?? 0),
             securityDeposit: Number(activeLease.security_deposit ?? 0),
             unitName: unit?.name ?? null,

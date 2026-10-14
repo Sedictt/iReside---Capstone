@@ -1,4 +1,5 @@
 import { Unit, DbUnit, QuickActionType, QuickActionGuardResult, FloorId } from "./types";
+import { tr } from "@/hooks/useLanguage";
 
 /** Standard uniform size in pixels for all units across the map */
 export const STANDARD_UNIT_WIDTH = 200;
@@ -65,7 +66,8 @@ export const dbUnitToCanvasUnit = (dbUnit: DbUnit): Unit => {
         bedrooms: dbUnit.beds,
         baths: dbUnit.baths,
         leaseStart: dbUnit.lease_start,
-        leaseEnd: dbUnit.lease_end,
+        leaseEnd: dbUnit.lease_end ?? null,
+        leaseTermType: dbUnit.lease_term_type ?? dbUnit.lease_term ?? dbUnit.term_type ?? null,
         maintenanceDate: dbUnit.maintenance_created_at,
         maintenanceTitle: dbUnit.maintenance_title,
         maintenanceDescription: dbUnit.maintenance_description,
@@ -88,9 +90,9 @@ export const parseFloorNumber = (floorId: FloorId): number | null => {
 
 export const getFloorDisplayLabel = (floorId: FloorId, customName?: string) => {
     if (customName) return customName;
-    if (floorId === "ground") return "Ground";
+    if (floorId === "ground") return tr("Ground");
     const floorNumber = parseFloorNumber(floorId);
-    if (floorNumber !== null) return `Floor ${floorNumber}`;
+    if (floorNumber !== null) return tr("Floor {number}", { number: floorNumber });
     return floorId.replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 };
 

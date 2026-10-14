@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Unit, Corridor, Structure } from "../types";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface VisualCanvasProps {
     units: Unit[];
@@ -28,6 +29,7 @@ export function VisualCanvas({
     onUnitDragStart,
     children
 }: VisualCanvasProps) {
+    const { t } = useLanguageContext();
     return (
         <div 
             className="absolute inset-0 overflow-hidden"
@@ -60,7 +62,7 @@ export function VisualCanvas({
                     }}
                 >
                     <div className="flex items-center justify-center h-full">
-                        <span className="text-xs font-medium text-muted-foreground">{corridor.label}</span>
+                        <span className="text-xs font-medium text-muted-foreground">{t(corridor.label)}</span>
                     </div>
                 </div>
             ))}
@@ -85,7 +87,7 @@ export function VisualCanvas({
                         {structure.type === 'elevator' ? 'elevator' : 'stairs'}
                     </span>
                     <span className="text-xs font-medium text-muted-foreground text-center px-1">
-                        {structure.label}
+                        {t(structure.label)}
                     </span>
                 </div>
             ))}

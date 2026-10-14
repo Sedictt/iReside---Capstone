@@ -68,9 +68,10 @@ import { useHighContrast } from "@/hooks/useHighContrast";
 import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
 import { TimeFormatToggle } from "@/components/ui/TimeFormatToggle";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { SecurityKeyManagementCard } from "@/components/auth/SecurityKeyManagementCard";
 import { TwoFactorManagementCard } from "@/components/auth/TwoFactorManagementCard";
+import { tr } from "@/hooks/useLanguage";
 
 // --- Types ---
 type SettingsCategory = "Identity" | "Accessibility" | "Security" | "Notifications" | "Billing" | "Data";
@@ -191,6 +192,7 @@ function ToggleSwitch({ enabled, onToggle, size = "default" }: { enabled: boolea
 }
 
 function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: string; onTabChange: (tab: string) => void }) {
+    const { t } = useLanguageContext();
     return (
         <div className="relative">
             <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 pt-0.5 scrollbar-hide px-0.5">
@@ -206,7 +208,7 @@ function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: s
                                 : "neumorphic-extruded text-muted-foreground hover:text-foreground font-bold"
                         )}
                     >
-                        {tab}
+                        {t(tab)}
                     </button>
                 ))}
             </div>
@@ -219,7 +221,8 @@ function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: s
 export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
     const router = useRouter();
     const { profile, loading, refreshProfile } = useAuth();
-    const { t, isFilipino } = useLanguage();
+    const { t, locale } = useLanguageContext();
+    const tErr = (message?: string) => (message ? t(message) : message);
     const supabase = createClient();
 
     // UI State
@@ -459,7 +462,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
             const profileInvalid = Boolean(profileForm.errors.full_name || profileForm.errors.phone || profileForm.errors.address || profileForm.errors.bio);
             if (!profileInvalid && emergencyInvalid && activeSubTab !== "Emergency Contact") setActiveSubTab("Emergency Contact");
             if (profileInvalid && activeSubTab !== "Profile") setActiveSubTab("Profile");
-            toast.error("Please fix the highlighted fields before saving.");
+            toast.error(t("Please fix the highlighted fields before saving."));
             return;
         }
         setIsSaving(true);
@@ -507,9 +510,9 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
             if (privateError) throw privateError;
 
             await refreshProfile();
-            toast.success("Profile updated successfully");
+            toast.success(t("Profile updated successfully"));
         } catch (error: any) {
-            toast.error(error.message || "Failed to update profile");
+            toast.error(tr(error.message || t("Failed to update profile")));
         } finally {
             setIsSaving(false);
         }
@@ -548,7 +551,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 setConfirmPassword("");
                 passwordForm.reset();
             } else {
-                setPasswordError(result.error || "Failed to update password.");
+                setPasswordError(tr(result.error || "Failed to update password."));
             }
         } catch {
             setPasswordError("An unexpected error occurred.");
@@ -558,7 +561,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
     };
 
     const handleRevokeSession = async (sessionId: string) => {
-        const loadingToast = toast.loading("Revoking session...");
+        const loadingToast = toast.loading(t("Revoking session..."));
         try {
             const res = await fetch("/api/auth/sessions", {
                 method: "DELETE",
@@ -568,7 +571,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Failed to revoke session");
 
-            toast.success("Session revoked successfully", { id: loadingToast });
+            toast.success(t("Session revoked successfully"), { id: loadingToast });
             dispatchSessions({
                 type: 'FETCH_SESSIONS_SUCCESS',
                 payload: {
@@ -577,13 +580,13 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 },
             });
         } catch (error: any) {
-            toast.error(error.message || "Failed to revoke session", { id: loadingToast });
+            toast.error(tr(error.message || t("Failed to revoke session")), { id: loadingToast });
         }
     };
 
     const handleSignOutOthers = async () => {
         dispatchSessions({ type: 'FETCH_SESSIONS_START' });
-        const loadingToast = toast.loading("Signing out other devices...");
+        const loadingToast = toast.loading(t("Signing out other devices..."));
         try {
             const { error } = await supabase.auth.signOut({ scope: "others" });
             if (error) throw error;
@@ -594,7 +597,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 body: JSON.stringify({ scope: "others" }),
             }).catch(() => null);
 
-            toast.success("Signed out of all other devices successfully", { id: loadingToast });
+            toast.success(t("Signed out of all other devices successfully"), { id: loadingToast });
             const { data } = await (supabase as any).from('user_sessions').select('*').order('updated_at', { ascending: false });
             if (data) {
                 dispatchSessions({ 
@@ -603,13 +606,13 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 });
             }
         } catch (error: any) {
-            toast.error(error.message || "Failed to sign out other devices", { id: loadingToast });
+            toast.error(tr(error.message || t("Failed to sign out other devices")), { id: loadingToast });
             dispatchSessions({ type: 'FETCH_SESSIONS_ERROR' });
         }
     };
 
     const handleSignOutAll = async () => {
-        const loadingToast = toast.loading("Signing out everywhere...");
+        const loadingToast = toast.loading(t("Signing out everywhere..."));
         try {
             await fetch("/api/auth/sessions", {
                 method: "DELETE",
@@ -619,14 +622,14 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
 
             await signOut({ scope: "global" });
         } catch (error: any) {
-            toast.error(error.message || "Failed to sign out globally", { id: loadingToast });
+            toast.error(tr(error.message || t("Failed to sign out globally")), { id: loadingToast });
         }
     };
 
     const handleDeleteAccount = async () => {
         if (deleteConfirmText !== "DELETE") return;
         
-        toast.error("Account deletion is not yet implemented. Please contact support.");
+        toast.error(t("Account deletion is not yet implemented. Please contact support."));
         setShowDeleteConfirm(false);
         setDeleteConfirmText("");
     };
@@ -637,14 +640,14 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 case "Profile":
                     return (
                         <div className="space-y-6 sm:space-y-8">
-                            <GlassCard title="Avatar & Identity" description="Your primary identification photo.">
+                            <GlassCard title={t("Avatar & Identity")} description={t("Your primary identification photo.")}>
                                 <div className="flex flex-col items-center py-4">
                                     <div 
                                         className="group relative flex size-32 sm:size-40 items-center justify-center rounded-[2.5rem] sm:rounded-[3rem] neumorphic-inset shadow-xl transition-transform hover:scale-105"
                                         style={{ backgroundColor: profile?.avatar_bg_color || "#3B82F6" }}
                                     >
                                         {profile?.avatar_url ? (
-                                            <Image src={profile.avatar_url} alt="Avatar" fill sizes="160px" className="rounded-[2.3rem] sm:rounded-[2.8rem] object-cover" />
+                                            <Image src={profile.avatar_url} alt={t("Avatar")} fill sizes="160px" className="rounded-[2.3rem] sm:rounded-[2.8rem] object-cover" />
                                         ) : (
                                             <span className="text-4xl sm:text-5xl font-black text-white">
                                                 {(formData.full_name || profile?.full_name || "T").charAt(0).toUpperCase()}
@@ -654,31 +657,31 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                             type="button"
                                             onClick={() => setIsAvatarPickerOpen(true)}
                                             className="absolute -bottom-2 -right-2 flex size-10 sm:size-12 items-center justify-center rounded-2xl neumorphic-primary text-primary-foreground transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-md"
-                                            title="Change avatar"
+                                            title={t("Change avatar")}
                                         >
                                             <Camera className="size-5 sm:size-6" />
                                         </button>
                                     </div>
-                                    <h4 className="mt-5 sm:mt-6 text-lg sm:text-xl font-black text-foreground">{formData.full_name || profile?.full_name || "Resident"}</h4>
-                                    <p className="text-xs sm:text-sm text-muted-foreground">Verified Resident</p>
+                                    <h4 className="mt-5 sm:mt-6 text-lg sm:text-xl font-black text-foreground">{formData.full_name || profile?.full_name || t("Resident")}</h4>
+                                    <p className="text-xs sm:text-sm text-muted-foreground">{t("Verified Resident")}</p>
                                 </div>
                             </GlassCard>
 
-                            <GlassCard title="Profile Information" description="Basic details about you.">
+                            <GlassCard title={t("Profile Information")} description={t("Basic details about you.")}>
                                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                    <SettingField label="Full Name" icon={User} description="Your verified name.">
+                                    <SettingField label={t("Full Name")} icon={User} description={t("Your verified name.")}>
                                         <input maxLength={TEXT_LIMITS.personName}
                                             {...profileForm.fieldProps("full_name")}
-                                            aria-label="Full name"
+                                            aria-label={t("Full name")}
                                             type="text"
                                             autoComplete="name"
                                             value={formData.full_name}
                                             onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                                             className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("full_name") && "ring-1 ring-rose-500/50")}
                                         />
-                                        <FieldError id={profileForm.errorId("full_name")} message={profileForm.errorFor("full_name")} />
+                                        <FieldError id={profileForm.errorId("full_name")} message={tErr(profileForm.errorFor("full_name"))} />
                                     </SettingField>
-                                    <SettingField label="Email" icon={Mail} description="Your verified email.">
+                                    <SettingField label={t("Email")} icon={Mail} description={t("Your verified email.")}>
                                         <input maxLength={50}
                                             type="email"
                                             value={formData.email}
@@ -686,10 +689,10 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                             className="w-full cursor-not-allowed rounded-xl neumorphic-inset opacity-60 px-4 py-3 text-sm text-muted-foreground"
                                         />
                                     </SettingField>
-                                    <SettingField label="Phone Number" icon={Phone}>
+                                    <SettingField label={t("Phone Number")} icon={Phone}>
                                         <input maxLength={25}
                                             {...profileForm.fieldProps("phone")}
-                                            aria-label="Phone number"
+                                            aria-label={t("Phone number")}
                                             type="tel"
                                             inputMode="tel"
                                             autoComplete="tel"
@@ -697,31 +700,31 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                             className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("phone") && "ring-1 ring-rose-500/50")}
                                         />
-                                        <FieldError id={profileForm.errorId("phone")} message={profileForm.errorFor("phone")} />
+                                        <FieldError id={profileForm.errorId("phone")} message={tErr(profileForm.errorFor("phone"))} />
                                     </SettingField>
-                                    <SettingField label="Address" icon={Home}>
+                                    <SettingField label={t("Address")} icon={Home}>
                                         <input maxLength={TEXT_LIMITS.address}
                                             {...profileForm.fieldProps("address")}
-                                            aria-label="Address"
+                                            aria-label={t("Address")}
                                             type="text"
                                             autoComplete="street-address"
                                             value={formData.address}
                                             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                                             className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("address") && "ring-1 ring-rose-500/50")}
                                         />
-                                        <FieldError id={profileForm.errorId("address")} message={profileForm.errorFor("address")} />
+                                        <FieldError id={profileForm.errorId("address")} message={tErr(profileForm.errorFor("address"))} />
                                     </SettingField>
                                     <div className="md:col-span-2">
-                                        <SettingField label="Bio" icon={FileText} description="Tell landlords a bit about yourself.">
+                                        <SettingField label={t("Bio")} icon={FileText} description={t("Tell landlords a bit about yourself.")}>
                                             <textarea maxLength={BIO_MAX_LENGTH}
                                                 {...profileForm.fieldProps("bio")}
-                                                aria-label="Bio"
+                                                aria-label={t("Bio")}
                                                 rows={4}
                                                 value={formData.bio}
                                                 onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                                                 className={cn("w-full resize-none rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("bio") && "ring-1 ring-rose-500/50")}
                                             />
-                                            <FieldError id={profileForm.errorId("bio")} message={profileForm.errorFor("bio")} />
+                                            <FieldError id={profileForm.errorId("bio")} message={tErr(profileForm.errorFor("bio"))} />
                                         </SettingField>
                                     </div>
                                 </div>
@@ -730,30 +733,30 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                     );
                 case "Emergency Contact":
                     return (
-                        <GlassCard title="Emergency Contact" description="Someone we can contact in case of emergency.">
+                        <GlassCard title={t("Emergency Contact")} description={t("Someone we can contact in case of emergency.")}>
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <SettingField label="Contact Name" icon={User}>
+                                <SettingField label={t("Contact Name")} icon={User}>
                                     <input maxLength={TEXT_LIMITS.personName}
                                         {...profileForm.fieldProps("emergency_name")}
-                                        aria-label="Emergency contact name"
+                                        aria-label={t("Emergency contact name")}
                                         type="text"
                                         value={formData.emergency_name}
                                         onChange={(e) => setFormData({ ...formData, emergency_name: e.target.value })}
                                         className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("emergency_name") && "ring-1 ring-rose-500/50")}
                                     />
-                                    <FieldError id={profileForm.errorId("emergency_name")} message={profileForm.errorFor("emergency_name")} />
+                                    <FieldError id={profileForm.errorId("emergency_name")} message={tErr(profileForm.errorFor("emergency_name"))} />
                                 </SettingField>
-                                <SettingField label="Contact Phone" icon={Phone}>
+                                <SettingField label={t("Contact Phone")} icon={Phone}>
                                     <input maxLength={25}
                                         {...profileForm.fieldProps("emergency_phone")}
-                                        aria-label="Emergency contact phone"
+                                        aria-label={t("Emergency contact phone")}
                                         type="tel"
                                         inputMode="tel"
                                         value={formData.emergency_phone}
                                         onChange={(e) => setFormData({ ...formData, emergency_phone: e.target.value })}
                                         className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("emergency_phone") && "ring-1 ring-rose-500/50")}
                                     />
-                                    <FieldError id={profileForm.errorId("emergency_phone")} message={profileForm.errorFor("emergency_phone")} />
+                                    <FieldError id={profileForm.errorId("emergency_phone")} message={tErr(profileForm.errorFor("emergency_phone"))} />
                                 </SettingField>
                             </div>
                         </GlassCard>
@@ -770,8 +773,8 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
             >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
                     <div>
-                        <h2 className="text-2xl sm:text-3xl font-black text-foreground">Profile</h2>
-                        <p className="text-xs sm:text-sm text-muted-foreground">Control your personal information.</p>
+                        <h2 className="text-2xl sm:text-3xl font-black text-foreground">{t("Profile")}</h2>
+                        <p className="text-xs sm:text-sm text-muted-foreground">{t("Control your personal information.")}</p>
                     </div>
                     <button
                         type="button"
@@ -779,7 +782,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                         disabled={isSaving}
                         className="flex items-center gap-2 rounded-xl sm:rounded-2xl neumorphic-primary px-6 sm:px-8 py-2.5 sm:py-3.5 text-xs sm:text-sm font-black text-primary-foreground shadow-md transition-all active:scale-95 disabled:opacity-50 cursor-pointer w-fit"
                     >
-                        {isSaving ? "Saving..." : <><Save className="size-4 sm:size-5" /> Save Changes</>}
+                        {isSaving ? t("Saving...") : <><Save className="size-4 sm:size-5" /> {t("Save Changes")}</>}
                     </button>
                 </div>
 
@@ -801,13 +804,13 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
             switch (activeSubTab) {
                 case "Account":
                     return (
-                        <GlassCard title="Change Password" description="Ensure your account is using a long, random password to stay secure.">
+                        <GlassCard title={t("Change Password")} description={t("Ensure your account is using a long, random password to stay secure.")}>
                             <div className="space-y-6 max-w-lg">
-                                <SettingField label="Current Password" icon={Key}>
+                                <SettingField label={t("Current Password")} icon={Key}>
                                     <div className="relative">
                                         <input maxLength={CURRENT_PASSWORD_MAX_LENGTH}
                                             {...passwordForm.fieldProps("currentPassword")}
-                                            aria-label="Current password"
+                                            aria-label={t("Current password")}
                                             type={showCurrentPassword ? "text" : "password"}
                                             autoComplete="current-password"
                                             value={currentPassword}
@@ -818,18 +821,19 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         <button
                                             type="button"
                                             onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                            aria-label={showCurrentPassword ? t("Hide password") : t("Show password")}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                                         >
                                             {showCurrentPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                         </button>
                                     </div>
-                                    <FieldError id={passwordForm.errorId("currentPassword")} message={passwordForm.errorFor("currentPassword")} />
+                                    <FieldError id={passwordForm.errorId("currentPassword")} message={tErr(passwordForm.errorFor("currentPassword"))} />
                                 </SettingField>
-                                <SettingField label="New Password" icon={Key}>
+                                <SettingField label={t("New Password")} icon={Key}>
                                     <div className="relative">
                                         <input maxLength={PASSWORD_MAX_LENGTH}
                                             {...passwordForm.fieldProps("newPassword")}
-                                            aria-label="New password"
+                                            aria-label={t("New password")}
                                             type={showNewPassword ? "text" : "password"}
                                             autoComplete="new-password"
                                             value={newPassword}
@@ -840,17 +844,18 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         <button
                                             type="button"
                                             onClick={() => setShowNewPassword(!showNewPassword)}
+                                            aria-label={showNewPassword ? t("Hide password") : t("Show password")}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                                         >
                                             {showNewPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                         </button>
                                     </div>
-                                    <FieldError id={passwordForm.errorId("newPassword")} message={passwordForm.errorFor("newPassword")} />
+                                    <FieldError id={passwordForm.errorId("newPassword")} message={tErr(passwordForm.errorFor("newPassword"))} />
                                 </SettingField>
-                                <SettingField label="Confirm New Password" icon={Key}>
+                                <SettingField label={t("Confirm New Password")} icon={Key}>
                                     <input maxLength={PASSWORD_MAX_LENGTH}
                                         {...passwordForm.fieldProps("confirmPassword")}
-                                        aria-label="Confirm new password"
+                                        aria-label={t("Confirm new password")}
                                         type="password"
                                         autoComplete="new-password"
                                         value={confirmPassword}
@@ -858,7 +863,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         placeholder="••••••••"
                                         className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", passwordForm.errorFor("confirmPassword") && "ring-1 ring-rose-500/50")}
                                     />
-                                    <FieldError id={passwordForm.errorId("confirmPassword")} message={passwordForm.errorFor("confirmPassword")} />
+                                    <FieldError id={passwordForm.errorId("confirmPassword")} message={tErr(passwordForm.errorFor("confirmPassword"))} />
                                 </SettingField>
                                 
                                 {/* Password Strength Indicator */}
@@ -878,19 +883,19 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                             ))}
                                         </div>
                                         <p className="text-xs text-muted-foreground">
-                                            {newPassword.length < 8 ? "Weak" : newPassword.length < 10 ? "Fair" : "Strong"} password
+                                            {newPassword.length < 8 ? t("Weak password") : newPassword.length < 10 ? t("Fair password") : t("Strong password")}
                                         </p>
                                     </div>
                                 )}
                                 
                                 {passwordSuccess && (
                                     <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                                        <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Password updated successfully!</p>
+                                        <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">{t("Password updated successfully!")}</p>
                                     </div>
                                 )}
                                 {passwordError && (
                                     <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20">
-                                        <p className="text-sm text-rose-600 dark:text-rose-400 font-medium">{passwordError}</p>
+                                        <p className="text-sm text-rose-600 dark:text-rose-400 font-medium">{t(passwordError)}</p>
                                     </div>
                                 )}
                                 <button 
@@ -899,7 +904,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     disabled={passwordUpdating}
                                     className="w-full rounded-xl sm:rounded-2xl neumorphic-primary py-3 text-sm font-black text-primary-foreground transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer"
                                 >
-                                    {passwordUpdating ? "Updating..." : "Update Password"}
+                                    {passwordUpdating ? t("Updating...") : t("Update Password")}
                                 </button>
                             </div>
                         </GlassCard>
@@ -917,12 +922,12 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                     );
                 case "Sessions":
                     return (
-                        <GlassCard title="Active Sessions" description="Devices and browsers currently logged into your tenant account.">
+                        <GlassCard title={t("Active Sessions")} description={t("Devices and browsers currently logged into your tenant account.")}>
                             <div className="space-y-4 max-w-xl">
                                 {isSessionsLoading && sessions.length === 0 ? (
-                                    <div className="text-center py-6 text-xs text-muted-foreground uppercase tracking-widest font-black">Loading sessions...</div>
+                                    <div className="text-center py-6 text-xs text-muted-foreground uppercase tracking-widest font-black">{t("Loading sessions...")}</div>
                                 ) : sessions.length === 0 ? (
-                                    <div className="text-center py-6 text-xs text-muted-foreground uppercase tracking-widest font-black">No active sessions found</div>
+                                    <div className="text-center py-6 text-xs text-muted-foreground uppercase tracking-widest font-black">{t("No active sessions found")}</div>
                                 ) : (
                                     sessions.map((sess) => {
                                         const deviceInfo = parseUserAgent(sess.user_agent);
@@ -949,12 +954,12 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                             <h4 className="text-sm font-black text-foreground truncate">{deviceInfo.label}</h4>
                                                             {isCurrent && (
                                                                 <span className="rounded-md bg-primary/20 px-2 py-0.5 text-[10px] font-black text-primary uppercase tracking-wider shrink-0">
-                                                                    This Device
+                                                                    {t("This Device")}
                                                                 </span>
                                                             )}
                                                         </div>
                                                         <p className="text-[11px] text-muted-foreground truncate">
-                                                            {isCurrent ? "Active now" : <>Last active <ClientOnlyDate date={sess.updated_at} format={{ month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }} /></>} • IP: {sess.ip || "Unknown IP"}
+                                                            {isCurrent ? t("Active now") : <>{t("Last active")} <ClientOnlyDate date={sess.updated_at} locale={locale} format={{ month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }} /></>} • IP: {sess.ip || t("Unknown IP")}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -964,9 +969,9 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                         type="button"
                                                         onClick={() => handleRevokeSession(sess.id)}
                                                         className="px-3 py-1.5 rounded-xl text-xs font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 transition-colors shrink-0 cursor-pointer"
-                                                        title="Revoke this device"
+                                                        title={t("Revoke this device")}
                                                     >
-                                                        Revoke
+                                                        {t("Revoke")}
                                                     </button>
                                                 )}
                                             </div>
@@ -982,7 +987,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                             disabled={isSessionsLoading}
                                             className="flex items-center gap-2 text-xs font-black text-amber-600 dark:text-amber-400 hover:underline transition-colors disabled:opacity-50 cursor-pointer"
                                         >
-                                            <LogOut className="size-3.5" /> Sign out all other devices
+                                            <LogOut className="size-3.5" /> {t("Sign out all other devices")}
                                         </button>
 
                                         <button 
@@ -991,7 +996,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                             disabled={isSessionsLoading}
                                             className="flex items-center gap-2 text-xs font-black text-rose-600 dark:text-rose-400 hover:underline transition-colors disabled:opacity-50 cursor-pointer"
                                         >
-                                            <ShieldCheck className="size-3.5" /> Sign out of all devices (Global Reset)
+                                            <ShieldCheck className="size-3.5" /> {t("Sign out of all devices (Global Reset)")}
                                         </button>
                                     </div>
                                 )}
@@ -1009,8 +1014,8 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 className="space-y-6 sm:space-y-8"
             >
                 <div>
-                    <h2 className="text-2xl sm:text-3xl font-black text-foreground">Security & Login</h2>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Protect your account and manage active sessions.</p>
+                    <h2 className="text-2xl sm:text-3xl font-black text-foreground">{t("Security & Login")}</h2>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{t("Protect your account and manage active sessions.")}</p>
                 </div>
 
                 <SubNav 
@@ -1033,8 +1038,8 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
             className="space-y-6 sm:space-y-8"
         >
             <div>
-                <h2 className="text-2xl sm:text-3xl font-black text-foreground">Notifications</h2>
-                <p className="text-xs sm:text-sm text-muted-foreground">Choose how and when you want to be alerted.</p>
+                <h2 className="text-2xl sm:text-3xl font-black text-foreground">{t("Notifications")}</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">{t("Choose how and when you want to be alerted.")}</p>
             </div>
 
             <SubNav 
@@ -1049,7 +1054,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                         <table className="w-full text-left">
                             <thead>
                                 <tr className="border-b border-border/60 bg-muted/30">
-                                    <th className="px-6 sm:px-8 py-4 sm:py-5 text-xs font-black uppercase tracking-widest text-muted-foreground">Activity Type</th>
+                                    <th className="px-6 sm:px-8 py-4 sm:py-5 text-xs font-black uppercase tracking-widest text-muted-foreground">{t("Activity Type")}</th>
                                     <th className="px-4 py-4 sm:py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">Email</th>
                                     <th className="px-4 py-4 sm:py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">Push</th>
                                     <th className="px-4 py-4 sm:py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">SMS</th>
@@ -1065,8 +1070,8 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 ].map((item) => (
                                     <tr key={item.key} className="transition-colors hover:bg-muted/10">
                                         <td className="px-6 sm:px-8 py-5 sm:py-6">
-                                            <h4 className="text-sm font-black text-foreground">{item.label}</h4>
-                                            <p className="text-xs text-muted-foreground">{item.desc}</p>
+                                            <h4 className="text-sm font-black text-foreground">{t(item.label)}</h4>
+                                            <p className="text-xs text-muted-foreground">{t(item.desc)}</p>
                                         </td>
                                         <td className="px-4 py-5 sm:py-6 text-center">
                                             <ToggleSwitch 
@@ -1111,18 +1116,18 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     communityPush: true,
                                     offersPush: false,
                                 });
-                                toast.info("Reset to default preferences");
+                                toast.info(t("Reset to default preferences"));
                             }}
                             className="text-xs font-black text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                         >
-                            Reset to Defaults
+                            {t("Reset to Defaults")}
                         </button>
                         <button 
                             type="button"
-                            onClick={() => toast.success("Notification preferences saved")}
+                            onClick={() => toast.success(t("Notification preferences saved"))}
                             className="rounded-xl neumorphic-primary px-5 py-2 text-xs font-black text-primary-foreground shadow-md transition-all active:scale-95 cursor-pointer"
                         >
-                            Save Preferences
+                            {t("Save Preferences")}
                         </button>
                     </div>
                 </GlassCard>
@@ -1136,7 +1141,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 case "Payment Methods":
                     return (
                         <div className="space-y-6">
-                            <GlassCard title="Payment Methods" description="Manage your payment options.">
+                            <GlassCard title={t("Payment Methods")} description={t("Manage your payment options.")}>
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between p-4 rounded-2xl border border-primary/30 bg-primary/5 neumorphic-panel">
                                         <div className="flex items-center gap-3">
@@ -1145,18 +1150,18 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                             </div>
                                             <div>
                                                 <p className="text-sm font-medium text-foreground">GCash (E-Wallet)</p>
-                                                <p className="text-xs text-muted-foreground">Connected</p>
+                                                <p className="text-xs text-muted-foreground">{t("Connected")}</p>
                                             </div>
                                         </div>
-                                        <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-black text-primary">DEFAULT</span>
+                                        <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-black text-primary">{t("DEFAULT")}</span>
                                     </div>
                                     
                                     <button 
                                         type="button"
-                                        onClick={() => toast.info("Additional payment methods can be configured during checkout.")}
+                                        onClick={() => toast.info(t("Additional payment methods can be configured during checkout."))}
                                         className="flex items-center justify-center gap-2 w-full p-4 rounded-2xl border border-dashed border-border/80 text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all cursor-pointer"
                                     >
-                                        <Plus className="size-4" /> Add Payment Method
+                                        <Plus className="size-4" /> {t("Add Payment Method")}
                                     </button>
                                 </div>
                             </GlassCard>
@@ -1164,7 +1169,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                     );
                 case "History":
                     return (
-                        <GlassCard title="Payment History" description="Your recent transactions.">
+                        <GlassCard title={t("Payment History")} description={t("Your recent transactions.")}>
                             <div className="space-y-3">
                                 {[
                                     { date: "Feb 1, 2026", amount: "₱2,450.00", status: "Paid", receipt: "#REC-2026-02" },
@@ -1186,7 +1191,8 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                             <span className="text-sm font-black text-foreground">{item.amount}</span>
                                             <button 
                                                 type="button"
-                                                onClick={() => toast.success(`Downloading ${item.receipt}`)}
+                                                onClick={() => toast.success(t("Downloading {receipt}", { receipt: item.receipt }))}
+                                                aria-label={t("Download receipt {receipt}", { receipt: item.receipt })}
                                                 className="opacity-0 group-hover:opacity-100 text-xs text-primary hover:text-primary/80 font-medium transition-all cursor-pointer"
                                             >
                                                 <Download className="size-4" />
@@ -1208,8 +1214,8 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 className="space-y-6 sm:space-y-8"
             >
                 <div>
-                    <h2 className="text-2xl sm:text-3xl font-black text-foreground">Billing & Payments</h2>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Manage your payment methods and view transaction history.</p>
+                    <h2 className="text-2xl sm:text-3xl font-black text-foreground">{t("Billing & Payments")}</h2>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{t("Manage your payment methods and view transaction history.")}</p>
                 </div>
 
                 <SubNav 
@@ -1230,9 +1236,9 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
             switch (activeSubTab) {
                 case "Export":
                     return (
-                        <GlassCard title="Data Export" description="Download a copy of your data from iReside.">
+                        <GlassCard title={t("Data Export")} description={t("Download a copy of your data from iReside.")}>
                             <div className="space-y-6 max-w-lg">
-                                <p className="text-sm text-muted-foreground">Request a copy of your personal data including profile, lease history, payment records, and communications.</p>
+                                <p className="text-sm text-muted-foreground">{t("Request a copy of your personal data including profile, lease history, payment records, and communications.")}</p>
                                 
                                 <div className="grid gap-3">
                                     {[
@@ -1248,8 +1254,8 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                     <item.icon className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-medium text-foreground">{item.label}</p>
-                                                    <p className="text-xs text-muted-foreground">{item.desc}</p>
+                                                    <p className="text-sm font-medium text-foreground">{t(item.label)}</p>
+                                                    <p className="text-xs text-muted-foreground">{t(item.desc)}</p>
                                                 </div>
                                             </div>
                                         </label>
@@ -1258,14 +1264,14 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
 
                                 <div className="flex items-center justify-between pt-4 border-t border-border/40">
                                     <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                        <Info className="size-3" /> Export may take up to 24 hours.
+                                        <Info className="size-3" /> {t("Export may take up to 24 hours.")}
                                     </p>
                                     <button 
                                         type="button"
-                                        onClick={() => toast.success("Export request submitted. You will receive an email once ready.")}
+                                        onClick={() => toast.success(t("Export request submitted. You will receive an email once ready."))}
                                         className="flex items-center gap-2 rounded-xl sm:rounded-2xl neumorphic-primary px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-black text-primary-foreground transition-all active:scale-95 shadow-md cursor-pointer"
                                     >
-                                        <Download className="size-4" /> Request Export
+                                        <Download className="size-4" /> {t("Request Export")}
                                     </button>
                                 </div>
                             </div>
@@ -1273,20 +1279,20 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                     );
                 case "Danger":
                     return (
-                        <GlassCard className="border border-rose-500/30 bg-rose-500/5" title="Danger Zone" description="Irreversible account actions.">
+                        <GlassCard className="border border-rose-500/30 bg-rose-500/5" title={t("Danger Zone")} description={t("Irreversible account actions.")}>
                             <div className="space-y-6 max-w-lg">
                                 <div className="flex items-start gap-4">
                                     <div className="size-12 rounded-xl bg-rose-500/10 flex items-center justify-center flex-shrink-0 text-rose-500">
                                         <AlertTriangle className="size-6" />
                                     </div>
                                     <div>
-                                        <h4 className="text-base font-black text-rose-600 dark:text-rose-400">Delete Account</h4>
-                                        <p className="text-sm text-muted-foreground mt-1">Permanently delete your account and all associated data. This action cannot be undone.</p>
+                                        <h4 className="text-base font-black text-rose-600 dark:text-rose-400">{t("Delete Account")}</h4>
+                                        <p className="text-sm text-muted-foreground mt-1">{t("Permanently delete your account and all associated data. This action cannot be undone.")}</p>
                                     </div>
                                 </div>
 
                                 <div className="rounded-2xl neumorphic-inset p-4">
-                                    <h5 className="text-sm font-black text-foreground mb-3">What will be deleted:</h5>
+                                    <h5 className="text-sm font-black text-foreground mb-3">{t("What will be deleted:")}</h5>
                                     <ul className="space-y-2">
                                         {[
                                             "Your profile and personal information",
@@ -1297,7 +1303,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         ].map((text) => (
                                             <li key={text} className="flex items-center gap-2 text-sm text-muted-foreground">
                                                 <X className="size-3 text-rose-500 flex-shrink-0" />
-                                                {text}
+                                                {t(text)}
                                             </li>
                                         ))}
                                     </ul>
@@ -1309,7 +1315,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     onClick={() => setShowDeleteConfirm(true)}
                                     className="px-6 py-3 rounded-xl sm:rounded-2xl bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-black transition-all shadow-md cursor-pointer"
                                 >
-                                    I understand, delete my account
+                                    {t("I understand, delete my account")}
                                 </button>
                             ) : (
                                 <motion.div
@@ -1318,13 +1324,13 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     className="space-y-4 border-t border-rose-500/20 pt-4"
                                 >
                                     <p className="text-sm text-muted-foreground">
-                                        Please type <span className="text-rose-600 dark:text-rose-400 font-mono font-black">DELETE</span> to confirm:
+                                        {t("Please type")} <span className="text-rose-600 dark:text-rose-400 font-mono font-black">DELETE</span> {t("to confirm:")}
                                     </p>
                                     <input maxLength={60}
                                         type="text"
                                         value={deleteConfirmText}
                                         onChange={(e) => setDeleteConfirmText(e.target.value)}
-                                        placeholder="Type DELETE"
+                                        placeholder={t("Type DELETE")}
                                         className="w-full max-w-xs rounded-xl neumorphic-inset border border-rose-500/30 px-4 py-3 text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-rose-500 transition-colors"
                                     />
                                     <div className="flex gap-3">
@@ -1339,14 +1345,14 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                                     : "bg-muted text-muted-foreground cursor-not-allowed"
                                             )}
                                         >
-                                            Permanently Delete
+                                            {t("Permanently Delete")}
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(""); }}
                                             className="px-4 py-3 rounded-xl sm:rounded-2xl border border-border text-xs sm:text-sm font-black text-muted-foreground hover:text-foreground transition-all cursor-pointer"
                                         >
-                                            Cancel
+                                            {t("Cancel")}
                                         </button>
                                     </div>
                                 </motion.div>
@@ -1365,8 +1371,8 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 className="space-y-6 sm:space-y-8"
             >
                 <div>
-                    <h2 className="text-2xl sm:text-3xl font-black text-foreground">Data & Privacy</h2>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Manage your data and account longevity.</p>
+                    <h2 className="text-2xl sm:text-3xl font-black text-foreground">{t("Data & Privacy")}</h2>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{t("Manage your data and account longevity.")}</p>
                 </div>
 
                 <SubNav 
@@ -1392,9 +1398,9 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
             >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-2xl sm:text-3xl font-black text-foreground">Display &amp; Accessibility</h2>
+                        <h2 className="text-2xl sm:text-3xl font-black text-foreground">{t("Display & Accessibility")}</h2>
                         <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                            Customize text readability, contrast, and visual appearance for optimal comfort.
+                            {t("Customize text readability, contrast, and visual appearance for optimal comfort.")}
                         </p>
                     </div>
                 </div>
@@ -1402,28 +1408,28 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 <div className="space-y-6">
                     <GlassCard 
                         title={t("Language")} 
-                        description={isFilipino ? "Pumili sa pagitan ng pang-araw-araw na Filipino (Taglish) o Standard English." : "Choose between everyday conversational Filipino (Taglish) and standard English."}
+                        description={t("Choose between everyday conversational Filipino (Taglish) and standard English.")}
                     >
                         <LanguageToggle variant="segmented" showPreview={true} />
                     </GlassCard>
 
                     <GlassCard 
-                        title="Text Size & Readability" 
-                        description="Adjust the interface typography scale without distorting card layouts or button heights."
+                        title={t("Text Size & Readability")} 
+                        description={t("Adjust the interface typography scale without distorting card layouts or button heights.")}
                     >
                         <FontSizeToggle variant="slider" showPreview={true} />
                     </GlassCard>
 
                     <GlassCard 
-                        title="Time & Clock Format" 
-                        description="Choose between 12-hour (AM/PM) and 24-hour military format for your dashboard, clock, and notifications."
+                        title={t("Time & Clock Format")} 
+                        description={t("Choose between 12-hour (AM/PM) and 24-hour military format for your dashboard, clock, and notifications.")}
                     >
                         <TimeFormatToggle variant="segmented" showPreview={true} />
                     </GlassCard>
 
                     <GlassCard 
-                        title="Universal High Contrast" 
-                        description="Reinforces borders, sharpens text outlines, and improves visibility across all tenant pages per WCAG 2.1 AAA standards."
+                        title={t("Universal High Contrast")} 
+                        description={t("Reinforces borders, sharpens text outlines, and improves visibility across all tenant pages per WCAG 2.1 AAA standards.")}
                     >
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-muted/30 border border-border/60">
                             <div className="flex items-start gap-4">
@@ -1437,16 +1443,16 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2">
-                                        <h4 className="text-sm font-bold text-foreground">Universal High Contrast</h4>
+                                        <h4 className="text-sm font-bold text-foreground">{t("Universal High Contrast")}</h4>
                                         <span className={cn(
                                             "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
                                             isHighContrast ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" : "bg-muted text-muted-foreground"
                                         )}>
-                                            {isHighContrast ? "Active (WCAG AAA)" : "Off"}
+                                            {isHighContrast ? t("Active (WCAG AAA)") : t("Off")}
                                         </span>
                                     </div>
                                     <p className="text-xs text-muted-foreground mt-1">
-                                        Replaces soft shadows with solid high-contrast borders and high-visibility text.
+                                        {t("Replaces soft shadows with solid high-contrast borders and high-visibility text.")}
                                     </p>
                                 </div>
                             </div>
@@ -1460,7 +1466,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         : "bg-muted text-foreground border-border hover:bg-muted/80"
                                 )}
                             >
-                                {isHighContrast ? "Disable High Contrast" : "Enable High Contrast"}
+                                {isHighContrast ? t("Disable High Contrast") : t("Enable High Contrast")}
                             </button>
                         </div>
                     </GlassCard>
@@ -1482,7 +1488,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
     };
 
     return loading ? (
-        <PageLoader message="Loading your settings..." />
+        <PageLoader message={t("Loading your settings...")} />
     ) : (
         <div className="space-y-6 sm:space-y-10">
             {/* Top Navigation Bar */}
@@ -1495,25 +1501,25 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                     <div className="size-8 rounded-full neumorphic-extruded flex items-center justify-center transition-all group-hover:scale-105 group-hover:text-primary">
                         <ChevronLeft className="size-4" />
                     </div>
-                    <span className="text-xs sm:text-sm font-black tracking-wide hidden sm:inline">Back to Dashboard</span>
-                    <span className="text-xs font-black tracking-wide sm:hidden">Dashboard</span>
+                    <span className="text-xs sm:text-sm font-black tracking-wide hidden sm:inline">{t("Back to Dashboard")}</span>
+                    <span className="text-xs font-black tracking-wide sm:hidden">{t("Dashboard")}</span>
                 </button>
 
                 <div className="flex items-center gap-2 sm:gap-3">
                     {/* Background Sync Status Indicator */}
                     <div
                         className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-sm bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-                        title="Synced with cloud database"
+                        title={t("Synced with cloud database")}
                     >
                         <CheckCircle2 className="size-3.5 text-emerald-500" />
-                        <span className="hidden sm:inline">Synced with cloud</span>
-                        <span className="sm:hidden">Synced</span>
+                        <span className="hidden sm:inline">{t("Synced with cloud")}</span>
+                        <span className="sm:hidden">{t("Synced")}</span>
                     </div>
 
                     <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-muted/40 border border-border/40 text-xs font-bold text-muted-foreground">
-                        <span>Control Center</span>
+                        <span>{t("Control Center")}</span>
                         <span className="text-muted-foreground/40">•</span>
-                        <span className="text-foreground font-black">{activeTab}</span>
+                        <span className="text-foreground font-black">{t(activeTab)}</span>
                     </div>
                 </div>
             </div>
@@ -1527,9 +1533,9 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 <Layout className="size-4.5" />
                             </div>
                             <div>
-                                <h1 className="text-base font-black text-foreground leading-tight">Settings</h1>
+                                <h1 className="text-base font-black text-foreground leading-tight">{t("Settings")}</h1>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                    {SIDEBAR_ITEMS.find(i => i.id === activeTab)?.label}
+                                    {t(SIDEBAR_ITEMS.find(i => i.id === activeTab)?.label ?? "")}
                                 </p>
                             </div>
                         </div>
@@ -1537,7 +1543,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                         {/* Swipe / Slide affordance hint */}
                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-full border border-border/40 select-none">
                             <SlidersHorizontal className="size-3 text-primary/70" />
-                            <span>Swipe to reveal</span>
+                            <span>{t("Swipe to reveal")}</span>
                             <ChevronRight className="size-3 text-primary animate-pulse" />
                         </div>
                     </div>
@@ -1556,7 +1562,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     <button
                                         type="button"
                                         onClick={() => scrollMobileTabs("left")}
-                                        aria-label="Scroll tabs left"
+                                        aria-label={t("Scroll tabs left")}
                                         className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto"
                                     >
                                         <ChevronLeft className="size-3.5" />
@@ -1587,7 +1593,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                         )}
                                     >
                                         <Icon className={cn("size-4 transition-transform", isActive ? "scale-110 text-primary" : "text-muted-foreground")} />
-                                        <span>{item.label}</span>
+                                        <span>{t(item.label)}</span>
                                         {isActive && (
                                             <span className="size-1.5 rounded-full bg-primary" />
                                         )}
@@ -1609,8 +1615,8 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     <button
                                         type="button"
                                         onClick={() => scrollMobileTabs("right")}
-                                        aria-label="Scroll tabs right"
-                                        title="Slide to view more tabs"
+                                        aria-label={t("Scroll tabs right")}
+                                        title={t("Slide to view more tabs")}
                                         className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto animate-pulse hover:animate-none"
                                     >
                                         <ChevronRight className="size-3.5" />
@@ -1633,8 +1639,8 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                             </div>
                             {!isSidebarCollapsed && (
                                 <div>
-                                    <h1 className="text-xl font-black text-foreground">Settings</h1>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Control Center</p>
+                                    <h1 className="text-xl font-black text-foreground">{t("Settings")}</h1>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Control Center")}</p>
                                 </div>
                             )}
                         </div>
@@ -1643,7 +1649,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 type="button"
                                 onClick={() => setIsSidebarCollapsed(true)}
                                 className="size-8 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all cursor-pointer"
-                                title="Collapse sidebar"
+                                title={t("Collapse sidebar")}
                             >
                                 <ChevronLeft className="size-4" />
                             </button>
@@ -1656,7 +1662,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                 type="button"
                                 onClick={() => setIsSidebarCollapsed(false)}
                                 className="size-8 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all cursor-pointer"
-                                title="Expand sidebar"
+                                title={t("Expand sidebar")}
                             >
                                 <ChevronRight className="size-4" />
                             </button>
@@ -1672,7 +1678,7 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     key={item.id}
                                     type="button"
                                     onClick={() => setActiveTab(item.id)}
-                                    title={isSidebarCollapsed ? `${item.label} — ${item.description}` : undefined}
+                                    title={isSidebarCollapsed ? `${t(item.label)} — ${t(item.description)}` : undefined}
                                     className={cn(
                                         "group relative flex flex-col transition-all duration-300 text-left cursor-pointer",
                                         isSidebarCollapsed
@@ -1695,10 +1701,10 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                                     {!isSidebarCollapsed && (
                                         <>
                                             <span className={cn("mt-3 text-sm font-black transition-colors", isActive ? "text-primary" : "text-foreground group-hover:text-primary")}>
-                                                {item.label}
+                                                {t(item.label)}
                                             </span>
                                             <span className="text-[10px] font-medium text-muted-foreground mt-0.5 line-clamp-1">
-                                                {item.description}
+                                                {t(item.description)}
                                             </span>
                                         </>
                                     )}

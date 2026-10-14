@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { X } from "lucide-react";
 import { Unit } from "../types";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 interface TransferRequestModalProps {
     isOpen: boolean;
@@ -14,6 +16,7 @@ export const TransferRequestModal = ({
     onClose,
     unit
 }: TransferRequestModalProps) => {
+    const { t } = useLanguageContext();
     const [reason, setReason] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -31,7 +34,7 @@ export const TransferRequestModal = ({
             await new Promise(resolve => setTimeout(resolve, 1500));
             setSuccess(true);
         } catch (err) {
-            setError("Failed to submit request. Please try again.");
+            setError(tr("Failed to submit request. Please try again."));
         } finally {
             setIsSubmitting(false);
         }
@@ -55,7 +58,7 @@ export const TransferRequestModal = ({
                         className="relative w-full max-w-lg flex flex-col rounded-[2.5rem] border border-border bg-card shadow-[0_32px_80px_-20px_rgba(0,0,0,0.5)] overflow-hidden"
                     >
                         <div className="absolute right-6 top-6 z-10">
-                            <button onClick={onClose} className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground">
+                            <button onClick={onClose} aria-label={t("Close")} className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground">
                                 <X className="size-6" />
                             </button>
                         </div>
@@ -67,9 +70,9 @@ export const TransferRequestModal = ({
                                 </div>
                                 <div>
                                     <h2 className="text-2xl font-black tracking-tight text-foreground">
-                                        Transfer Request
+                                        {t("Transfer Request")}
                                     </h2>
-                                    <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Target Unit {unit.name}</p>
+                                    <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">{t("Target Unit {name}", { name: unit.name })}</p>
                                 </div>
                             </div>
 
@@ -82,20 +85,20 @@ export const TransferRequestModal = ({
                                     <div className="size-20 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6">
                                         <span className="material-icons-round text-5xl">check_circle</span>
                                     </div>
-                                    <h3 className="text-xl font-black text-foreground mb-2">Request Submitted</h3>
-                                    <p className="text-muted-foreground">Your transfer request for Unit {unit.name} has been sent to the administration for review.</p>
+                                    <h3 className="text-xl font-black text-foreground mb-2">{t("Request Submitted")}</h3>
+                                    <p className="text-muted-foreground">{t("Your transfer request for Unit {name} has been sent to the administration for review.", { name: unit.name })}</p>
                                 </motion.div>
                             ) : (
                                 <form onSubmit={onSubmit} className="space-y-8">
                                     <div className="p-5 rounded-2xl bg-muted/30 border border-border">
                                         <p className="text-sm text-muted-foreground leading-relaxed">
-                                            You are requesting to transfer your current lease to <span className="font-black text-foreground">Unit {unit.name}</span>. This request is subject to eligibility checks and landlord approval.
+                                            {t("You are requesting to transfer your current lease to")} <span className="font-black text-foreground">{t("Unit {name}", { name: unit.name })}</span>. {t("This request is subject to eligibility checks and landlord approval.")}
                                         </p>
                                     </div>
 
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between ml-1">
-                                            <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Transfer Justification</label>
+                                            <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">{t("Transfer Justification")}</label>
                                             <span className="text-[10px] font-medium text-muted-foreground/70 select-none">
                                                 {reason.length} / 500
                                             </span>
@@ -105,7 +108,7 @@ export const TransferRequestModal = ({
                                             maxLength={500}
                                             value={reason}
                                             onChange={(e) => setReason(e.target.value)}
-                                            placeholder="Please explain why you'd like to transfer (e.g., needing more space, preferred floor...)"
+                                            placeholder={t("Please explain why you'd like to transfer (e.g., needing more space, preferred floor...)")}
                                             className="w-full min-h-[140px] rounded-2xl border border-border bg-muted/20 px-5 py-4 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
                                         />
                                     </div>
@@ -125,11 +128,11 @@ export const TransferRequestModal = ({
                                         {isSubmitting ? (
                                             <>
                                                 <span className="material-icons-round animate-spin">refresh</span>
-                                                Processing...
+                                                {t("Processing...")}
                                             </>
                                         ) : (
                                             <>
-                                                Submit Request
+                                                {t("Submit Request")}
                                                 <span className="material-icons-round">arrow_forward</span>
                                             </>
                                         )}

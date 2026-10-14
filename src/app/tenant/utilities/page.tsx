@@ -17,8 +17,10 @@ import { cn } from "@/lib/utils";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { FieldError } from "@/components/ui/field-error";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { textRule, todayIsoDate } from "@/lib/validation/rules";
 import { BOOKING_NOTES_MAX, bookingDateRule } from "@/lib/validation/schemas/operations.schema";
+import { tr } from "@/hooks/useLanguage";
 
 interface Amenity {
     id: string;
@@ -83,9 +85,9 @@ const getIconByName = (name: string | null) => {
 };
 
 // Date formatting
-const formatBookingDate = (dateStr: string): string => {
+const formatBookingDate = (dateStr: string, locale = 'en-US'): string => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    return date.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' });
 };
 
 // Client-side date hook to avoid hydration
@@ -124,6 +126,7 @@ interface BookingModalData {
 }
 
 export default function TenantUtilitiesPage() {
+    const { t, locale } = useLanguageContext();
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [bookingModal, setBookingModal] = useState<BookingModalData | null>(null);
     
@@ -171,7 +174,7 @@ export default function TenantUtilitiesPage() {
                 setCategories(amenitiesData.categories || ["All"]);
                 setBookings(bookingsData.bookings || []);
             } catch (err) {
-                setError(err instanceof Error ? err.message : "An error occurred");
+                setError(err instanceof Error ? tr(err.message) : t("An error occurred"));
             } finally {
                 setLoading(false);
             }
@@ -188,7 +191,7 @@ export default function TenantUtilitiesPage() {
             });
 
             if (!res.ok) {
-                throw new Error("Failed to cancel booking");
+                throw new Error(t("Failed to cancel booking"));
             }
 
             // Update local state
@@ -198,9 +201,9 @@ export default function TenantUtilitiesPage() {
                 )
             );
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to cancel booking");
+            setError(err instanceof Error ? tr(err.message) : t("Failed to cancel booking"));
         }
-    }, []);
+    }, [t]);
 
     // Handle booking submission
     const handleSubmitBooking = useCallback(async () => {
@@ -237,7 +240,7 @@ export default function TenantUtilitiesPage() {
                     ...(data.fieldErrors?.booking_date ? { bookingDate: data.fieldErrors.booking_date } : {}),
                     ...(data.fieldErrors?.notes ? { bookingNotes: data.fieldErrors.notes } : {}),
                 });
-                setBookingError(data.error || "Failed to create booking");
+                setBookingError(tr(data.error || t("Failed to create booking")));
                 return;
             }
 
@@ -253,11 +256,11 @@ export default function TenantUtilitiesPage() {
             setBookingNotes("");
             bookingForm.reset();
         } catch (err) {
-            setBookingError(err instanceof Error ? err.message : "Failed to create booking");
+            setBookingError(err instanceof Error ? tr(err.message) : t("Failed to create booking"));
         } finally {
             setSubmitting(false);
         }
-    }, [bookingModal, bookingDate, bookingDuration, bookingNotes, bookingForm, submitting]);
+    }, [bookingModal, bookingDate, bookingDuration, bookingNotes, bookingForm, submitting, t]);
 
     // Prepare modal data from amenity
     const openBookingModal = (amenity: Amenity) => {
@@ -268,7 +271,7 @@ export default function TenantUtilitiesPage() {
             description: amenity.description || "",
             price: amenity.price_per_unit,
             unit: amenity.unit_type,
-            capacity: amenity.capacity ? `${amenity.capacity} people` : "N/A",
+            capacity: amenity.capacity ? t("{count} people", { count: amenity.capacity }) : t("N/A"),
             image: amenity.image_url || "/amenities/default.png",
             icon_name: amenity.icon_name || "Zap",
             color: getColorByType(amenity.type),
@@ -290,7 +293,7 @@ export default function TenantUtilitiesPage() {
         ? (() => {
             const hours = bookingDuration === "All Day" ? 8 : 
                           bookingDuration === "4 Hours" ? 4 : 2;
-            return bookingModal.price === 0 ? "Free" : `₱${bookingModal.price * hours}`;
+            return bookingModal.price === 0 ? t("Free") : `₱${bookingModal.price * hours}`;
         })()
         : "₱0";
 
@@ -310,10 +313,10 @@ export default function TenantUtilitiesPage() {
                                     animate={{ opacity: 1, x: 0 }}
                                     className="flex h-6 items-center rounded-full bg-primary/10 px-3 text-[10px] font-black uppercase tracking-[0.2em] text-primary"
                                 >
-                                    Facilities
+                                    {t("Facilities")}
                                 </motion.span>
                                 <span className="h-px w-12 bg-border" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Community Access</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Community Access")}</span>
                             </div>
                             <motion.h1 
                                 initial={{ opacity: 0, y: 20 }}
@@ -321,7 +324,7 @@ export default function TenantUtilitiesPage() {
                                 transition={{ delay: 0.1 }}
                                 className="text-5xl font-black tracking-tight text-foreground md:text-6xl lg:text-7xl"
                             >
-                                <span className="text-primary">Facilities</span>
+                                <span className="text-primary">{t("Facilities")}</span>
                             </motion.h1>
                             <motion.p 
                                 initial={{ opacity: 0, y: 20 }}
@@ -329,7 +332,7 @@ export default function TenantUtilitiesPage() {
                                 transition={{ delay: 0.2 }}
                                 className="max-w-xl text-lg font-medium text-muted-foreground/80 leading-relaxed"
                             >
-                                Discover and manage shared facilities, equipment, and services available in your residence.
+                                {t("Discover and manage shared facilities, equipment, and services available in your residence.")}
                             </motion.p>
                         </section>
                     </div>
@@ -340,12 +343,12 @@ export default function TenantUtilitiesPage() {
                 {/* Error State */}
                 {error && (
                     <div className="rounded-2xl p-4 text-red-600 neumorphic-inset text-center">
-                        <p className="font-medium">{error}</p>
+                        <p className="font-medium">{t(error)}</p>
                         <button 
                             onClick={() => setError(null)}
                             className="mt-2 text-sm underline"
                         >
-                            Dismiss
+                            {t("Dismiss")}
                         </button>
                     </div>
                 )}
@@ -354,7 +357,7 @@ export default function TenantUtilitiesPage() {
                     {/* Main Content: Discovery */}
                     <div className="lg:col-span-2 flex flex-col gap-6">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-2xl font-black tracking-tight">Available Facilities</h2>
+                            <h2 className="text-2xl font-black tracking-tight">{t("Available Facilities")}</h2>
                             <div className="flex gap-2 flex-wrap">
                                 {categories.map(cat => (
                                     <button 
@@ -367,7 +370,7 @@ export default function TenantUtilitiesPage() {
                                                 : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                                         )}
                                     >
-                                        {cat}
+                                        {t(cat)}
                                     </button>
                                 ))}
                             </div>
@@ -383,7 +386,7 @@ export default function TenantUtilitiesPage() {
                         ) : filteredAmenities.length === 0 ? (
                             /* Empty State */
                             <div className="flex flex-col items-center justify-center py-12 text-center">
-                                <p className="text-muted-foreground">No amenities available{selectedCategory !== "All" ? ` in ${selectedCategory}` : ""}.</p>
+                                <p className="text-muted-foreground">{selectedCategory !== "All" ? t("No amenities available in {category}.", { category: t(selectedCategory) }) : t("No amenities available.")}</p>
                             </div>
                         ) : (
                             <div className="grid gap-6 sm:grid-cols-2">
@@ -410,40 +413,40 @@ export default function TenantUtilitiesPage() {
                                                         return <Icon className="size-4" />;
                                                     })()}
                                                 </div>
-                                                <span className="text-xs font-black uppercase tracking-wider text-white drop-shadow-md">{amenity.type}</span>
+                                                <span className="text-xs font-black uppercase tracking-wider text-white drop-shadow-md">{t(amenity.type)}</span>
                                             </div>
                                         </div>
 
                                         <div className="flex flex-1 flex-col p-6">
                                             <h3 className="text-xl font-black text-foreground">{amenity.name}</h3>
-                                            <p className="mt-2 text-sm text-muted-foreground/80 line-clamp-2">{amenity.description || "No description available."}</p>
+                                            <p className="mt-2 text-sm text-muted-foreground/80 line-clamp-2">{amenity.description || t("No description available.")}</p>
                                             
                                             <div className="mt-4 flex items-center gap-4 border-t border-border/50 pt-4">
                                                 <div className="flex items-center gap-1.5 text-xs font-black text-muted-foreground">
                                                     <Users className="size-3.5" />
-                                                    {amenity.capacity ? `${amenity.capacity} people` : "N/A"}
+                                                    {amenity.capacity ? t("{count} people", { count: amenity.capacity }) : t("N/A")}
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-xs font-black text-muted-foreground">
                                                     <MapPin className="size-3.5" />
-                                                    {amenity.location_details || "N/A"}
+                                                    {amenity.location_details || t("N/A")}
                                                 </div>
                                             </div>
 
                                             <div className="mt-6 flex items-center justify-between">
                                                 <div className="flex flex-col">
-                                                    <span className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground">Booking Rate</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground">{t("Booking Rate")}</span>
                                                     <div className="flex items-baseline gap-1">
                                                         <span className="text-xl font-black text-foreground">
-                                                            {amenity.price_per_unit === 0 ? "Free" : `₱${amenity.price_per_unit}`}
+                                                            {amenity.price_per_unit === 0 ? t("Free") : `₱${amenity.price_per_unit}`}
                                                         </span>
-                                                        {amenity.price_per_unit > 0 && <span className="text-xs font-black text-muted-foreground">/{amenity.unit_type}</span>}
+                                                        {amenity.price_per_unit > 0 && <span className="text-xs font-black text-muted-foreground">/{t(amenity.unit_type)}</span>}
                                                     </div>
                                                 </div>
                                                 <button 
                                                     onClick={() => openBookingModal(amenity)}
                                                     className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-black transition-all active:scale-95 neumorphic-primary"
                                                 >
-                                                    {amenity.price_per_unit === 0 ? "Borrow" : "Rent Now"}
+                                                    {amenity.price_per_unit === 0 ? t("Borrow") : t("Rent Now")}
                                                     <ArrowRight className="size-4" />
                                                 </button>
                                             </div>
@@ -461,7 +464,7 @@ export default function TenantUtilitiesPage() {
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="font-black tracking-tight flex items-center gap-2">
                                     <Calendar className="size-5 text-primary" />
-                                    My Reservations
+                                    {t("My Reservations")}
                                 </h3>
                             </div>
 
@@ -473,7 +476,7 @@ export default function TenantUtilitiesPage() {
                                         ))}
                                     </div>
                                 ) : bookings.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground py-4 text-center">No reservations yet.</p>
+                                    <p className="text-sm text-muted-foreground py-4 text-center">{t("No reservations yet.")}</p>
                                 ) : (
                                     bookings
                                         .filter(b => b.status !== 'cancelled')
@@ -485,10 +488,10 @@ export default function TenantUtilitiesPage() {
                                                     <div className="flex items-start justify-between">
                                                         <div className="flex flex-col">
                                                             <span className="text-sm font-black text-foreground">{booking.amenity.name}</span>
-                                                            <span className="mt-1 text-xs font-black text-muted-foreground">{formatBookingDate(booking.booking_date)}</span>
+                                                            <span className="mt-1 text-xs font-black text-muted-foreground">{formatBookingDate(booking.booking_date, locale)}</span>
                                                             <span className="text-xs text-muted-foreground/70">{formatBookingTime(booking.start_time, booking.end_time)}</span>
                                                         </div>
-                                                        <div className={cn("rounded-full p-1.5", statusConfig.color)}>
+                                                        <div title={t(statusConfig.label)} aria-label={t(statusConfig.label)} className={cn("rounded-full p-1.5", statusConfig.color)}>
                                                             {booking.status === 'confirmed' ? (
                                                                 <CheckCircle2 className="size-4" />
                                                             ) : (
@@ -498,14 +501,14 @@ export default function TenantUtilitiesPage() {
                                                     </div>
                                                     <div className="mt-3 flex items-center justify-between">
                                                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                                                            {booking.total_price === 0 ? "Free" : `₱${booking.total_price}`}
+                                                            {booking.total_price === 0 ? t("Free") : `₱${booking.total_price}`}
                                                         </span>
                                                         {booking.status === 'pending' && (
                                                             <button 
                                                                 onClick={() => handleCancelBooking(booking.id)}
                                                                 className="text-[10px] font-black uppercase text-red-500 opacity-0 transition-opacity group-hover:opacity-100"
                                                             >
-                                                                Cancel
+                                                                {t("Cancel")}
                                                             </button>
                                                         )}
                                                     </div>
@@ -522,8 +525,8 @@ export default function TenantUtilitiesPage() {
                                 <LucideIcons.History className="size-5" />
                             </div>
                             <div className="flex-1">
-                                <p className="text-sm font-black">Past Bookings</p>
-                                <p className="text-xs">Review your facility usage history</p>
+                                <p className="text-sm font-black">{t("Past Bookings")}</p>
+                                <p className="text-xs">{t("Review your facility usage history")}</p>
                             </div>
                             <LucideIcons.ChevronRight className="size-4" />
                         </div>
@@ -549,8 +552,8 @@ export default function TenantUtilitiesPage() {
                             className="relative w-full max-w-lg rounded-[2.5rem] p-8 neumorphic-panel"
                         >
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-2xl font-black">Request Access</h3>
-                                <button onClick={() => setBookingModal(null)} className="rounded-full p-2 transition-colors neumorphic-extruded hover:text-foreground text-muted-foreground">
+                                <h3 className="text-2xl font-black">{t("Request Access")}</h3>
+                                <button onClick={() => setBookingModal(null)} aria-label={t("Close")} className="rounded-full p-2 transition-colors neumorphic-extruded hover:text-foreground text-muted-foreground">
                                     <AlertCircle className="size-5 rotate-45" />
                                 </button>
                             </div>
@@ -564,14 +567,14 @@ export default function TenantUtilitiesPage() {
                                 </div>
                                 <div>
                                     <p className="font-black text-foreground">{bookingModal.name}</p>
-                                    <p className="text-xs text-muted-foreground">{bookingModal.type} • {bookingModal.capacity}</p>
+                                    <p className="text-xs text-muted-foreground">{t(bookingModal.type)} • {bookingModal.capacity}</p>
                                 </div>
                             </div>
 
                             <div className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="flex flex-col gap-1.5">
-                                        <label htmlFor="booking-date" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Date</label>
+                                        <label htmlFor="booking-date" className="text-xs font-black uppercase tracking-wider text-muted-foreground">{t("Date")}</label>
                                         <div className="flex items-center gap-2 rounded-xl p-3 neumorphic-inset">
                                             <Calendar className="size-4 text-primary" />
                                             <input
@@ -589,7 +592,7 @@ export default function TenantUtilitiesPage() {
                                         <FieldError id={bookingForm.errorId("bookingDate")} message={bookingForm.errorFor("bookingDate")} />
                                     </div>
                                     <div className="flex flex-col gap-1.5">
-                                        <label htmlFor="booking-duration" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Duration</label>
+                                        <label htmlFor="booking-duration" className="text-xs font-black uppercase tracking-wider text-muted-foreground">{t("Duration")}</label>
                                         <div className="flex items-center gap-2 rounded-xl p-3 neumorphic-inset">
                                             <Clock className="size-4 text-primary" />
                                             <select 
@@ -598,21 +601,21 @@ export default function TenantUtilitiesPage() {
                                                 onChange={(e) => setBookingDuration(e.target.value)}
                                                 className="bg-transparent text-sm font-medium outline-none"
                                             >
-                                                <option value="2 Hours">2 Hours</option>
-                                                <option value="4 Hours">4 Hours</option>
-                                                <option value="All Day">All Day</option>
+                                                <option value="2 Hours">{t("2 Hours")}</option>
+                                                <option value="4 Hours">{t("4 Hours")}</option>
+                                                <option value="All Day">{t("All Day")}</option>
                                             </select>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="flex flex-col gap-1.5">
-                                    <label htmlFor="booking-notes" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Notes (Optional)</label>
+                                    <label htmlFor="booking-notes" className="text-xs font-black uppercase tracking-wider text-muted-foreground">{t("Notes (Optional)")}</label>
                                     <textarea
                                         {...bookingForm.fieldProps("bookingNotes")}
                                         maxLength={BOOKING_NOTES_MAX}
                                         id="booking-notes"
-                                        placeholder="Tell us about your event..."
+                                        placeholder={t("Tell us about your event...")}
                                         value={bookingNotes}
                                         onChange={(e) => setBookingNotes(e.target.value)}
                                         className={cn("min-h-[100px] w-full rounded-xl p-3 text-sm outline-none neumorphic-inset", bookingForm.errorFor("bookingNotes") && "ring-1 ring-rose-500/60")}
@@ -622,14 +625,14 @@ export default function TenantUtilitiesPage() {
                                 {bookingError && (
                                     <p role="alert" className="flex items-start gap-1.5 text-xs font-medium text-rose-600 dark:text-rose-400">
                                         <AlertCircle aria-hidden="true" className="mt-px size-3.5 shrink-0" />
-                                        <span>{bookingError}</span>
+                                        <span>{t(bookingError)}</span>
                                     </p>
                                 )}
                             </div>
 
                             <div className="mt-8 flex items-center justify-between border-t border-border pt-6">
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground">Estimated Cost</span>
+                                    <span className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground">{t("Estimated Cost")}</span>
                                     <span className="text-2xl font-black text-foreground">
                                         {estimatedCost}
                                     </span>
@@ -642,10 +645,10 @@ export default function TenantUtilitiesPage() {
                                     {submitting ? (
                                         <>
                                             <Loader2 className="size-4 animate-spin" />
-                                            Submitting...
+                                            {t("Submitting...")}
                                         </>
                                     ) : (
-                                        "Confirm Request"
+                                        t("Confirm Request")
                                     )}
                                 </button>
                             </div>

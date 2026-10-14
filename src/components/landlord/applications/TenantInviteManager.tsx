@@ -10,6 +10,7 @@ import { useFormValidation } from "@/hooks/useFormValidation";
 import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
 import { moneyRule, parseNumericInput } from "@/lib/validation/rules";
 import { inviteExpiryRule } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type InviteMode = "property" | "unit";
 type InviteApplicationType = "online" | "face_to_face";
@@ -34,6 +35,7 @@ import {
     type InvitePaymentTerms,
     type PaymentPreview,
 } from "@/lib/tenant-invite-payment-terms";
+import { tr } from "@/hooks/useLanguage";
 
 export type InviteListItem = {
     id: string;
@@ -73,6 +75,8 @@ export function TenantInviteManager({
     invites: InviteListItem[];
     onRefresh: () => void;
 }) {
+    const { t } = useLanguageContext();
+    const tOpt = (message?: string) => (message ? t(message) : message);
     const [mode, setMode] = useState<InviteMode>("property");
     const [applicationType, setApplicationType] = useState<InviteApplicationType>("face_to_face");
     const [requiredRequirements, setRequiredRequirements] = useState<InviteRequirementKey[]>([
@@ -188,24 +192,26 @@ export function TenantInviteManager({
 
     const createInvite = async () => {
         if (!propertyId) {
-            toast.error("Please select a property first.");
+            toast.error(t("Please select a property first."));
             return;
         }
         if (mode === "unit" && !unitId) {
-            toast.error("Please select a specific vacant unit.");
+            toast.error(t("Please select a specific vacant unit."));
             return;
         }
         if (applicationType === "online" && requiredRequirements.length === 0) {
-            toast.error("Please select at least one required document.");
+            toast.error(t("Please select at least one required document."));
             return;
         }
         if (submitting) return;
         if (!inviteForm.validateAll()) {
             toast.error(
-                inviteForm.errors.customAdvance ||
-                    inviteForm.errors.customDeposit ||
-                    inviteForm.errors.expiresAt ||
-                    "Please fix the highlighted fields."
+                t(
+                    inviteForm.errors.customAdvance ||
+                        inviteForm.errors.customDeposit ||
+                        inviteForm.errors.expiresAt ||
+                        "Please fix the highlighted fields."
+                )
             );
             return;
         }
@@ -247,12 +253,12 @@ export function TenantInviteManager({
                 throw new Error(payload.error || "Failed to create invite.");
             }
             setFreshInvite(payload.invite);
-            toast.success("Private invite link and QR code generated successfully!");
+            toast.success(t("Private invite link and QR code generated successfully!"));
             onRefresh();
         } catch (createError) {
-            const errorMsg = createError instanceof Error ? createError.message : "Failed to create invite.";
-            setError(errorMsg);
-            toast.error(errorMsg);
+            const errorMsg = t(createError instanceof Error ? createError.message : "Failed to create invite.");
+            setError(tr(errorMsg));
+            toast.error(tr(errorMsg));
         } finally {
             setSubmitting(false);
         }
@@ -268,12 +274,12 @@ export function TenantInviteManager({
             if (!response.ok) {
                 throw new Error("Failed to revoke invite.");
             }
-            toast.success("Invite link successfully revoked.");
+            toast.success(t("Invite link successfully revoked."));
             onRefresh();
         } catch (revokeError) {
-            const errorMsg = revokeError instanceof Error ? revokeError.message : "Failed to revoke invite.";
-            setError(errorMsg);
-            toast.error(errorMsg);
+            const errorMsg = t(revokeError instanceof Error ? revokeError.message : "Failed to revoke invite.");
+            setError(tr(errorMsg));
+            toast.error(tr(errorMsg));
         }
     };
 
@@ -287,9 +293,9 @@ export function TenantInviteManager({
                 setCopiedUrl(true);
                 setTimeout(() => setCopiedUrl(false), 1500);
             }
-            toast.success("Invite link copied to clipboard!");
+            toast.success(t("Invite link copied to clipboard!"));
         } catch (err) {
-            toast.error("Failed to copy link.");
+            toast.error(t("Failed to copy link."));
         }
     };
 
@@ -352,13 +358,13 @@ export function TenantInviteManager({
                 <div className="max-w-2xl pr-20 sm:pr-0">
                     <div className="mb-2 sm:mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 sm:px-3 sm:py-1">
                         <Link2 className="size-3 sm:size-3.5 text-primary" />
-                        <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-primary">Private Share Links</span>
+                        <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-primary">{t("Private Share Links")}</span>
                     </div>
                     <h2 className="text-2xl font-black tracking-tight text-foreground sm:text-4xl text-balance">
-                        Private Links & QR Codes
+                        {t("Private Links & QR Codes")}
                     </h2>
                     <p className="mt-2 sm:mt-3 text-sm sm:text-base leading-relaxed text-muted-foreground hidden sm:block">
-                        Generate exclusive invite links or scannable QR codes. Allow future tenants to apply for your properties without opening public registration.
+                        {t("Generate exclusive invite links or scannable QR codes. Allow future tenants to apply for your properties without opening public registration.")}
                     </p>
                 </div>
                 <div className="absolute top-4 right-4 flex items-center gap-2 sm:static sm:flex-row sm:w-auto">
@@ -370,19 +376,19 @@ export function TenantInviteManager({
                                 ? "border-primary bg-primary/5 text-primary" 
                                 : "border-border bg-background text-foreground"
                         }`}
-                        title="Toggle History"
+                        title={t("Toggle History")}
                     >
                         <History className="size-4" />
-                        <span className="hidden sm:inline">{showHistory ? "Hide" : `History (${invites.length})`}</span>
+                        <span className="hidden sm:inline">{showHistory ? t("Hide") : t("History ({count})", { count: invites.length })}</span>
                     </button>
                     <button
                         type="button"
                         onClick={onRefresh}
                         className="inline-flex size-10 sm:h-12 sm:w-auto items-center justify-center sm:gap-2 rounded-[14px] sm:rounded-2xl border border-border bg-background sm:px-5 text-xs font-black uppercase tracking-[0.2em] text-foreground transition-all hover:bg-muted active:scale-95"
-                        title="Refresh"
+                        title={t("Refresh")}
                     >
                         <RefreshCw className="size-4" />
-                        <span className="hidden sm:inline">Refresh</span>
+                        <span className="hidden sm:inline">{t("Refresh")}</span>
                     </button>
                 </div>
             </div>
@@ -397,9 +403,9 @@ export function TenantInviteManager({
                 <div className="flex flex-col sm:rounded-[1.75rem] sm:border sm:border-border sm:bg-background/50 sm:p-6 sm:shadow-sm xl:p-8">
                     <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-4 sm:pb-5">
                         <div>
-                            <h3 className="text-lg sm:text-xl font-black text-foreground">Generator Settings</h3>
+                            <h3 className="text-lg sm:text-xl font-black text-foreground">{t("Generator Settings")}</h3>
                             <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-muted-foreground hidden sm:block">
-                                {isAdvanced ? "Configure custom scope, screening mode, and document checklist." : "Quickly create an invite link with sensible default settings."}
+                                {isAdvanced ? t("Configure custom scope, screening mode, and document checklist.") : t("Quickly create an invite link with sensible default settings.")}
                             </p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -418,7 +424,7 @@ export function TenantInviteManager({
                                             : "text-muted-foreground hover:text-foreground"
                                     )}
                                 >
-                                    Simple
+                                    {t("Simple")}
                                 </button>
                                 <button
                                     type="button"
@@ -430,7 +436,7 @@ export function TenantInviteManager({
                                             : "text-muted-foreground hover:text-foreground"
                                     )}
                                 >
-                                    Advanced
+                                    {t("Advanced")}
                                 </button>
                             </div>
                             <div className="relative">
@@ -438,17 +444,17 @@ export function TenantInviteManager({
                                     type="button"
                                     onClick={() => setShowHelpTooltip(!showHelpTooltip)}
                                     onBlur={() => setTimeout(() => setShowHelpTooltip(false), 200)}
-                                    aria-label="Toggle help information"
-                                    title="Toggle help information"
+                                    aria-label={t("Toggle help information")}
+                                    title={t("Toggle help information")}
                                     className="relative inline-flex items-center justify-center rounded-xl border border-border bg-card p-2.5 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
                                 >
                                     <CircleHelp className="size-5" />
                                 </button>
                                 {showHelpTooltip && (
                                     <div className="absolute right-0 top-12 z-30 w-72 rounded-2xl border border-border bg-background p-4 text-left text-xs font-black leading-relaxed text-foreground shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200">
-                                        <p className="font-black uppercase tracking-wider text-primary">Configuration Guide</p>
-                                        <p className="mt-3 text-muted-foreground">Scope: Choose if this link allows applicants to pick any vacant unit in the property, or if it&apos;s locked to a specific unit.</p>
-                                        <p className="mt-2 text-muted-foreground">Application Mode: Online mode requires tenants to upload documents immediately. In-person allows you to verify physical documents later.</p>
+                                        <p className="font-black uppercase tracking-wider text-primary">{t("Configuration Guide")}</p>
+                                        <p className="mt-3 text-muted-foreground">{t("Scope: Choose if this link allows applicants to pick any vacant unit in the property, or if it's locked to a specific unit.")}</p>
+                                        <p className="mt-2 text-muted-foreground">{t("Application Mode: Online mode requires tenants to upload documents immediately. In-person allows you to verify physical documents later.")}</p>
                                     </div>
                                 )}
                             </div>
@@ -458,7 +464,7 @@ export function TenantInviteManager({
                     {isAdvanced && (
                         <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 animate-in fade-in duration-200">
                             <div className="space-y-3">
-                                <p id="scope-group-label" className="text-xs font-black uppercase tracking-wider text-muted-foreground">1. Select Scope</p>
+                                <p id="scope-group-label" className="text-xs font-black uppercase tracking-wider text-muted-foreground">{t("1. Select Scope")}</p>
                                 <div role="radiogroup" aria-labelledby="scope-group-label" className="grid grid-cols-2 gap-2 sm:gap-3">
                                     {scopeControls.map((control) => {
                                         const Icon = control.icon;
@@ -484,9 +490,9 @@ export function TenantInviteManager({
                                                 <Icon className="size-4 sm:size-5" />
                                             </div>
                                             <div className="space-y-0.5 sm:space-y-1">
-                                                <p className="text-[10px] sm:text-xs font-black uppercase tracking-wider">{control.label}</p>
+                                                <p className="text-[10px] sm:text-xs font-black uppercase tracking-wider">{t(control.label)}</p>
                                                 <p className="text-[9px] sm:text-[10px] leading-snug opacity-70 font-medium">
-                                                    {control.description}
+                                                    {t(control.description)}
                                                 </p>
                                             </div>
                                         </button>
@@ -496,7 +502,7 @@ export function TenantInviteManager({
                         </div>
 
                         <div className="space-y-3">
-                            <p id="mode-group-label" className="text-xs font-black uppercase tracking-wider text-muted-foreground">2. Application Mode</p>
+                            <p id="mode-group-label" className="text-xs font-black uppercase tracking-wider text-muted-foreground">{t("2. Application Mode")}</p>
                             <div role="radiogroup" aria-labelledby="mode-group-label" className="grid grid-cols-2 gap-2 sm:gap-3">
                                 {applicationTypeControls.map((control) => {
                                     const Icon = control.icon;
@@ -522,9 +528,9 @@ export function TenantInviteManager({
                                                 <Icon className="size-4 sm:size-5" />
                                             </div>
                                             <div className="space-y-0.5 sm:space-y-1">
-                                                <p className="text-[10px] sm:text-xs font-black uppercase tracking-wider">{control.label}</p>
+                                                <p className="text-[10px] sm:text-xs font-black uppercase tracking-wider">{t(control.label)}</p>
                                                 <p className="text-[9px] sm:text-[10px] leading-snug opacity-70 font-medium">
-                                                    {control.description}
+                                                    {t(control.description)}
                                                 </p>
                                             </div>
                                         </button>
@@ -537,8 +543,8 @@ export function TenantInviteManager({
 
                     {isAdvanced && applicationType === "online" && (
                         <div className="mb-8 rounded-[1.75rem] border border-primary/20 bg-primary/5 p-4 sm:p-5 animate-in fade-in zoom-in duration-300">
-                            <p id="docs-group-label" className="text-xs font-black uppercase tracking-wider text-primary">3. Required Documents</p>
-                            <p className="mt-1 text-xs text-muted-foreground font-medium">Tenant must upload these to complete their application.</p>
+                            <p id="docs-group-label" className="text-xs font-black uppercase tracking-wider text-primary">{t("3. Required Documents")}</p>
+                            <p className="mt-1 text-xs text-muted-foreground font-medium">{t("Tenant must upload these to complete their application.")}</p>
                             <div role="group" aria-labelledby="docs-group-label" className="mt-3 grid gap-2 sm:grid-cols-2">
                                 {REQUIREMENT_OPTIONS.map((option) => {
                                     const checked = requiredRequirements.includes(option.key);
@@ -565,14 +571,14 @@ export function TenantInviteManager({
                                             }`}
                                         >
                                             <span className="inline-flex items-center gap-1.5 w-full justify-between">
-                                                <span>{option.label}</span>
+                                                <span>{t(option.label)}</span>
                                                 {option.key === "valid_id" && (
                                                     <span className="relative inline-flex items-center ml-1.5" onClick={(e) => e.stopPropagation()}>
-                                                        <Tooltip content={VALID_ID_TOOLTIP} side="top" sideOffset={8}>
+                                                        <Tooltip content={t(VALID_ID_TOOLTIP)} side="top" sideOffset={8}>
                                                             <span
                                                                 role="button"
                                                                 tabIndex={0}
-                                                                aria-label="Valid ID Information"
+                                                                aria-label={t("Valid ID Information")}
                                                                 className="focus:outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-primary rounded-full inline-flex"
                                                             >
                                                                 <CircleHelp
@@ -594,10 +600,10 @@ export function TenantInviteManager({
                         <div className="mb-6 rounded-[1.75rem] border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 p-4 sm:p-5 space-y-4 animate-in fade-in zoom-in duration-300">
                             <div>
                                 <p className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
-                                    Move-in Payment Terms
+                                    {t("Move-in Payment Terms")}
                                 </p>
                                 <p className="mt-0.5 text-xs text-muted-foreground font-medium">
-                                    Configure upfront advance rent and security deposit required from the tenant.
+                                    {t("Configure upfront advance rent and security deposit required from the tenant.")}
                                 </p>
                             </div>
 
@@ -605,7 +611,7 @@ export function TenantInviteManager({
                                 {/* Advance Rent */}
                                 <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 dark:border-white/5 dark:bg-black/20 p-3.5 space-y-2.5">
                                     <div className="flex items-center justify-between">
-                                        <p className="text-xs font-black uppercase tracking-wider text-amber-900/80 dark:text-amber-200">Advance Rent</p>
+                                        <p className="text-xs font-black uppercase tracking-wider text-amber-900/80 dark:text-amber-200">{t("Advance Rent")}</p>
                                         <p className="text-sm font-black text-amber-900 dark:text-amber-50">
                                             PHP {currentPaymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </p>
@@ -628,7 +634,7 @@ export function TenantInviteManager({
                                                         : "border border-amber-500/20 bg-background/60 text-muted-foreground hover:bg-background hover:text-foreground"
                                                 )}
                                             >
-                                                {opt.label}
+                                                {t(opt.label)}
                                             </button>
                                         ))}
                                     </div>
@@ -642,16 +648,16 @@ export function TenantInviteManager({
                                                 min="0" max="99999999.99"
                                                 step="0.01"
                                                 {...inviteForm.fieldProps("customAdvance")}
-                                                aria-label="Custom advance amount"
+                                                aria-label={t("Custom advance amount")}
                                                 value={customAdvance}
                                                 onChange={(e) => setCustomAdvance(e.target.value)}
-                                                placeholder="Custom amount"
+                                                placeholder={t("Custom amount")}
                                                 className={cn(
                                                     "h-8 w-full rounded-lg border border-border bg-background pl-11 pr-2.5 text-xs font-black text-foreground outline-none focus:border-primary",
                                                     inviteForm.errorFor("customAdvance") && fieldErrorClass
                                                 )}
                                             />
-                                            <FieldError id={inviteForm.errorId("customAdvance")} message={inviteForm.errorFor("customAdvance")} />
+                                            <FieldError id={inviteForm.errorId("customAdvance")} message={tOpt(inviteForm.errorFor("customAdvance"))} />
                                         </div>
                                     )}
                                 </div>
@@ -659,7 +665,7 @@ export function TenantInviteManager({
                                 {/* Security Deposit */}
                                 <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 dark:border-white/5 dark:bg-black/20 p-3.5 space-y-2.5">
                                     <div className="flex items-center justify-between">
-                                        <p className="text-xs font-black uppercase tracking-wider text-amber-900/80 dark:text-amber-200">Security Deposit</p>
+                                        <p className="text-xs font-black uppercase tracking-wider text-amber-900/80 dark:text-amber-200">{t("Security Deposit")}</p>
                                         <p className="text-sm font-black text-amber-900 dark:text-amber-50">
                                             PHP {currentPaymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </p>
@@ -682,7 +688,7 @@ export function TenantInviteManager({
                                                         : "border border-amber-500/20 bg-background/60 text-muted-foreground hover:bg-background hover:text-foreground"
                                                 )}
                                             >
-                                                {opt.label}
+                                                {t(opt.label)}
                                             </button>
                                         ))}
                                     </div>
@@ -696,16 +702,16 @@ export function TenantInviteManager({
                                                 min="0" max="99999999.99"
                                                 step="0.01"
                                                 {...inviteForm.fieldProps("customDeposit")}
-                                                aria-label="Custom security deposit"
+                                                aria-label={t("Custom security deposit")}
                                                 value={customDeposit}
                                                 onChange={(e) => setCustomDeposit(e.target.value)}
-                                                placeholder="Custom amount"
+                                                placeholder={t("Custom amount")}
                                                 className={cn(
                                                     "h-8 w-full rounded-lg border border-border bg-background pl-11 pr-2.5 text-xs font-black text-foreground outline-none focus:border-primary",
                                                     inviteForm.errorFor("customDeposit") && fieldErrorClass
                                                 )}
                                             />
-                                            <FieldError id={inviteForm.errorId("customDeposit")} message={inviteForm.errorFor("customDeposit")} />
+                                            <FieldError id={inviteForm.errorId("customDeposit")} message={tOpt(inviteForm.errorFor("customDeposit"))} />
                                         </div>
                                     )}
                                 </div>
@@ -715,7 +721,7 @@ export function TenantInviteManager({
                             <div className="rounded-xl border border-amber-500/20 bg-background/60 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                 <div>
                                     <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                                        Total Estimated Move-in
+                                        {t("Total Estimated Move-in")}
                                     </span>
                                     <p className="text-base font-black text-foreground">
                                         PHP {currentPaymentPreview.totalMoveInAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -723,15 +729,15 @@ export function TenantInviteManager({
                                 </div>
                                 <span className="text-[11px] font-medium text-muted-foreground sm:text-right">
                                     {mode === "unit" ? (
-                                        <>Calculated for unit: <span className="font-bold text-foreground">{propertyUnits.find(u => u.id === unitId)?.name || "Selected Unit"}</span></>
+                                        <>{t("Calculated for unit:")} <span className="font-bold text-foreground">{propertyUnits.find(u => u.id === unitId)?.name || t("Selected Unit")}</span></>
                                     ) : (
-                                        <>Preview based on: <span className="font-bold text-foreground">{propertyUnits.find(u => u.id === previewUnitId)?.name || "vacant unit"}</span> (scales per unit)</>
+                                        <>{t("Preview based on:")} <span className="font-bold text-foreground">{propertyUnits.find(u => u.id === previewUnitId)?.name || t("vacant unit")}</span> {t("(scales per unit)")}</>
                                     )}
                                 </span>
                             </div>
 
                             <p className="text-[11px] font-medium text-amber-950/80 dark:text-amber-200/80 leading-relaxed">
-                                {currentPaymentPreview.disclaimer}
+                                {t(currentPaymentPreview.disclaimer)}
                             </p>
                         </div>
                     )}
@@ -741,7 +747,7 @@ export function TenantInviteManager({
                             <div className="flex items-center gap-3">
                                 <div className="h-px flex-1 bg-border/50" />
                                 <span className="text-xs font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">
-                                    {applicationType === "online" ? "4. Details & Expiration" : "3. Details & Expiration"}
+                                    {applicationType === "online" ? t("4. Details & Expiration") : t("3. Details & Expiration")}
                                 </span>
                                 <div className="h-px flex-1 bg-border/50" />
                             </div>
@@ -750,7 +756,7 @@ export function TenantInviteManager({
                         <div className="grid gap-6 md:grid-cols-2">
                             <div className="group space-y-2">
                                 <label htmlFor="select-property" className="text-xs font-black uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
-                                    Select Property
+                                    {t("Select Property")}
                                 </label>
                             <div className="relative">
                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
@@ -766,7 +772,7 @@ export function TenantInviteManager({
                                     }}
                                     className="h-12 w-full appearance-none rounded-xl border border-border bg-card pl-10 pr-10 text-sm font-black text-foreground shadow-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background"
                                 >
-                                    <option value="" disabled>Choose a property...</option>
+                                    <option value="" disabled>{t("Choose a property...")}</option>
                                     {properties.map((property) => (
                                         <option key={property.id} value={property.id}>
                                             {property.name}
@@ -782,7 +788,7 @@ export function TenantInviteManager({
                             {isAdvanced && mode === "unit" && (
                                 <div className="group space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                                     <label htmlFor="select-unit" className="text-xs font-black uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
-                                        Select Vacant Unit
+                                        {t("Select Vacant Unit")}
                                     </label>
                                 <div className="relative">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
@@ -796,7 +802,7 @@ export function TenantInviteManager({
                                         disabled={!propertyId}
                                     >
                                         <option value="" disabled>
-                                            {!propertyId ? "Select a property first" : "Choose a unit..."}
+                                            {!propertyId ? t("Select a property first") : t("Choose a unit...")}
                                         </option>
                                         {propertyUnits.map((unit) => (
                                             <option key={unit.id} value={unit.id}>
@@ -814,7 +820,7 @@ export function TenantInviteManager({
                             {isAdvanced && mode === "property" && (
                                 <div className="group space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                                     <label htmlFor="preview-unit" className="text-xs font-black uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
-                                        Rent Preview Unit
+                                        {t("Rent Preview Unit")}
                                     </label>
                                 <div className="relative">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
@@ -828,7 +834,7 @@ export function TenantInviteManager({
                                         disabled={!propertyId}
                                     >
                                         <option value="">
-                                            {!propertyId ? "Select a property first" : "Use first vacant unit"}
+                                            {!propertyId ? t("Select a property first") : t("Use first vacant unit")}
                                         </option>
                                         {propertyUnits.map((unit) => (
                                             <option key={unit.id} value={unit.id}>
@@ -846,7 +852,7 @@ export function TenantInviteManager({
                             <div className="group space-y-2">
                                 <div className="flex items-center justify-between">
                                     <label htmlFor="expires-at" className="text-xs font-black uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
-                                        Link Expiration
+                                        {t("Link Expiration")}
                                     </label>
                                 </div>
                             <div className="relative overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:border-primary/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 dark:focus-within:ring-offset-background">
@@ -869,7 +875,7 @@ export function TenantInviteManager({
                                     [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0"
                                 />
                             </div>
-                            <FieldError id={inviteForm.errorId("expiresAt")} message={inviteForm.errorFor("expiresAt")} />
+                            <FieldError id={inviteForm.errorId("expiresAt")} message={tOpt(inviteForm.errorFor("expiresAt"))} />
                             <div className="flex flex-wrap items-center gap-2 pt-1">
                                 {[
                                     { label: "+1 Day", days: 1 },
@@ -895,7 +901,7 @@ export function TenantInviteManager({
                                                     : "border-border bg-background text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-foreground"
                                             )}
                                         >
-                                            {preset.label}
+                                            {t(preset.label)}
                                         </button>
                                     );
                                 })}
@@ -912,7 +918,7 @@ export function TenantInviteManager({
                             className="inline-flex h-12 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-black text-primary-foreground shadow-[0_8px_16px_-6px_rgba(var(--primary-rgb),0.4)] transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
                         >
                             <Link2 className="size-5" />
-                            {submitting ? "Generating..." : "Generate Invite"}
+                            {submitting ? t("Generating...") : t("Generate Invite")}
                         </button>
                     </div>
                 </div>
@@ -928,31 +934,31 @@ export function TenantInviteManager({
                         <div className="flex w-full flex-col items-center animate-in fade-in zoom-in duration-500">
                             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1">
                                 <ShieldCheck className="size-4 text-primary" />
-                                <span className="text-xs font-black uppercase tracking-wider text-primary">Generated Invite</span>
+                                <span className="text-xs font-black uppercase tracking-wider text-primary">{t("Generated Invite")}</span>
                             </div>
                             <div className="relative mb-6 rounded-3xl border-2 border-border bg-white p-3 shadow-xl">
-                                <Image src={freshInvite.qrUrl} alt="Invite QR code" width={176} height={176} className="rounded-xl" />
+                                <Image src={freshInvite.qrUrl} alt={t("Invite QR code")} width={176} height={176} className="rounded-xl" />
                             </div>
                             <div className="mb-6 w-full rounded-2xl border border-border bg-background p-4 text-left">
-                                <p className="mb-2 text-xs font-black uppercase tracking-wider text-muted-foreground">Share URL</p>
+                                <p className="mb-2 text-xs font-black uppercase tracking-wider text-muted-foreground">{t("Share URL")}</p>
                                 <p className="text-sm font-medium text-foreground break-all">{freshInvite.shareUrl}</p>
                             </div>
                             {freshInvite.paymentPreview && (
                                 <div className="mb-6 w-full rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 p-4 text-left space-y-1">
-                                    <p className="mb-2 text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Move-in Payment Terms</p>
+                                    <p className="mb-2 text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">{t("Move-in Payment Terms")}</p>
                                     <div className="flex items-center justify-between text-xs font-semibold text-amber-900 dark:text-amber-50">
-                                        <span>Advance Rent:</span>
+                                        <span>{t("Advance Rent:")}</span>
                                         <span>PHP {freshInvite.paymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                     </div>
                                     <div className="flex items-center justify-between text-xs font-semibold text-amber-900 dark:text-amber-50">
-                                        <span>Security Deposit:</span>
+                                        <span>{t("Security Deposit:")}</span>
                                         <span>PHP {freshInvite.paymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                     </div>
                                     <div className="pt-2 mt-2 border-t border-amber-500/20 flex items-center justify-between text-xs font-black text-amber-950 dark:text-amber-100">
-                                        <span>Total Move-in:</span>
+                                        <span>{t("Total Move-in:")}</span>
                                         <span>PHP {(freshInvite.paymentPreview.totalMoveInAmount ?? (freshInvite.paymentPreview.advanceAmount + freshInvite.paymentPreview.securityDepositAmount)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                     </div>
-                                    <p className="mt-2 text-[11px] font-medium text-amber-950/80 dark:text-amber-200/80 leading-relaxed">{freshInvite.paymentPreview.disclaimer}</p>
+                                    <p className="mt-2 text-[11px] font-medium text-amber-950/80 dark:text-amber-200/80 leading-relaxed">{t(freshInvite.paymentPreview.disclaimer)}</p>
                                 </div>
                             )}
                             <button
@@ -968,12 +974,12 @@ export function TenantInviteManager({
                                 {copiedUrl ? (
                                     <>
                                         <Check className="size-4" />
-                                        Copied!
+                                        {t("Copied!")}
                                     </>
                                 ) : (
                                     <>
                                         <Copy className="size-4" />
-                                        Copy Link
+                                        {t("Copy Link")}
                                     </>
                                 )}
                             </button>
@@ -984,7 +990,7 @@ export function TenantInviteManager({
                                 <QrCode className="size-8 text-muted-foreground" />
                             </div>
                             <p className="text-sm font-medium leading-relaxed text-muted-foreground">
-                                Configure settings and generate <br /> to preview QR code and link here.
+                                {t("Configure settings and generate")} <br /> {t("to preview QR code and link here.")}
                             </p>
                         </div>
                     )}
@@ -996,14 +1002,14 @@ export function TenantInviteManager({
                     <div className="mb-4 flex items-center justify-between border-b border-border/50 pb-4">
                         <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                             <History className="size-4" />
-                            Recent Invites History
+                            {t("Recent Invites History")}
                         </h3>
                     </div>
                     <div className="grid gap-4">
                         {invites.length === 0 ? (
                             <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-border bg-background/40 py-12 text-center text-sm font-medium text-muted-foreground">
                                 <Link2 className="mb-3 size-8 opacity-20" />
-                                No tenant invite links have been created yet.
+                                {t("No tenant invite links have been created yet.")}
                             </div>
                         ) : (
                             invites.map((invite) => (
@@ -1015,13 +1021,13 @@ export function TenantInviteManager({
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2">
                                                 <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-primary">
-                                                    {invite.mode === "unit" ? "Unit Invite" : "Property Invite"}
+                                                    {invite.mode === "unit" ? t("Unit Invite") : t("Property Invite")}
                                                 </span>
                                                 <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-primary">
-                                                    {invite.applicationType === "online" ? "Online" : "Face to face"}
+                                                    {invite.applicationType === "online" ? t("Online") : t("Face to face")}
                                                 </span>
                                                 <span className={`rounded-md px-2 py-0.5 text-[9px] font-black uppercase tracking-widest ${invite.status === "active" ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"}`}>
-                                                    {invite.status}
+                                                    {t(invite.status)}
                                                 </span>
                                             </div>
                                             <p className="text-base font-black text-foreground">
@@ -1043,7 +1049,7 @@ export function TenantInviteManager({
                                                     className="inline-flex h-10 w-full lg:w-auto items-center justify-center gap-1.5 rounded-xl bg-red-600 px-3 text-xs font-black uppercase tracking-wider text-white transition-colors hover:bg-red-700 active:scale-95 shadow-[0_4px_12px_rgba(220,38,38,0.3)]"
                                                 >
                                                     <AlertTriangle className="size-4 animate-pulse" />
-                                                    Confirm
+                                                    {t("Confirm")}
                                                 </button>
                                                 <button
                                                     type="button"
@@ -1053,7 +1059,7 @@ export function TenantInviteManager({
                                                     }}
                                                     className="inline-flex h-10 w-full lg:w-auto items-center justify-center rounded-xl border border-border bg-card px-3 text-xs font-black uppercase tracking-wider text-muted-foreground hover:bg-muted active:scale-95"
                                                 >
-                                                    Cancel
+                                                    {t("Cancel")}
                                                 </button>
                                             </div>
                                         ) : (
@@ -1068,7 +1074,7 @@ export function TenantInviteManager({
                                                     className="inline-flex h-10 w-full lg:w-auto items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-2 text-[10px] sm:text-xs font-black uppercase tracking-wider text-foreground transition-colors hover:bg-muted"
                                                 >
                                                     <QrCode className="size-4" />
-                                                    View QR
+                                                    {t("View QR")}
                                                 </a>
                                                 <button
                                                     type="button"
@@ -1083,12 +1089,12 @@ export function TenantInviteManager({
                                                     {copiedId === invite.id ? (
                                                         <>
                                                             <Check className="size-4" />
-                                                            Copied!
+                                                            {t("Copied!")}
                                                         </>
                                                     ) : (
                                                         <>
                                                             <Copy className="size-4" />
-                                                            Copy Link
+                                                            {t("Copy Link")}
                                                         </>
                                                     )}
                                                 </button>
@@ -1106,7 +1112,7 @@ export function TenantInviteManager({
                                                         className="inline-flex h-10 w-full lg:w-auto items-center justify-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/5 px-2 text-[10px] sm:text-xs font-black uppercase tracking-wider text-red-600 transition-colors hover:bg-red-500/10 active:scale-95"
                                                     >
                                                         <XCircle className="size-4" />
-                                                        Revoke
+                                                        {t("Revoke")}
                                                     </button>
                                                 )}
                                             </div>
@@ -1127,11 +1133,12 @@ export function TenantInviteManager({
                         <div className="mb-4 flex items-center justify-between">
                             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1">
                                 <ShieldCheck className="size-4 text-primary animate-pulse" />
-                                <span className="text-[10px] font-black uppercase tracking-wider text-primary">Generated Invite</span>
+                                <span className="text-[10px] font-black uppercase tracking-wider text-primary">{t("Generated Invite")}</span>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setFreshInvite(null)}
+                                aria-label={t("Close")}
                                 className="flex size-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:text-foreground active:scale-90 transition-all font-black text-lg"
                             >
                                 ×
@@ -1141,32 +1148,32 @@ export function TenantInviteManager({
                         {/* QR Code */}
                         <div className="flex flex-col items-center">
                             <div className="relative mb-4 rounded-3xl border border-border bg-white p-3 shadow-xl">
-                                <Image src={freshInvite.qrUrl} alt="Invite QR code" width={160} height={160} className="rounded-xl" />
+                                <Image src={freshInvite.qrUrl} alt={t("Invite QR code")} width={160} height={160} className="rounded-xl" />
                             </div>
-                            <p className="text-xs font-semibold text-muted-foreground mb-4">Scan QR code or copy the link below</p>
+                            <p className="text-xs font-semibold text-muted-foreground mb-4">{t("Scan QR code or copy the link below")}</p>
                         </div>
 
                         {/* Share URL */}
                         <div className="mb-4 w-full rounded-2xl border border-border bg-card/50 p-3 text-left">
-                            <p className="mb-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">Share URL</p>
+                            <p className="mb-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t("Share URL")}</p>
                             <p className="text-xs font-medium text-foreground break-all">{freshInvite.shareUrl}</p>
                         </div>
 
                         {/* Payment Preview */}
                         {freshInvite.paymentPreview && (
                             <div className="mb-5 w-full rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 p-3.5 text-left text-xs">
-                                <p className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Move-in Payment Terms</p>
+                                <p className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">{t("Move-in Payment Terms")}</p>
                                 <div className="space-y-1 font-semibold text-amber-900 dark:text-amber-100">
                                     <div className="flex justify-between">
-                                        <span>Advance Rent:</span>
+                                        <span>{t("Advance Rent:")}</span>
                                         <span>PHP {freshInvite.paymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span>Security Deposit:</span>
+                                        <span>{t("Security Deposit:")}</span>
                                         <span>PHP {freshInvite.paymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                     </div>
                                     <div className="pt-1.5 mt-1.5 border-t border-amber-500/20 flex justify-between font-black text-amber-950 dark:text-white">
-                                        <span>Total Move-in:</span>
+                                        <span>{t("Total Move-in:")}</span>
                                         <span>PHP {(freshInvite.paymentPreview.totalMoveInAmount ?? (freshInvite.paymentPreview.advanceAmount + freshInvite.paymentPreview.securityDepositAmount)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                     </div>
                                 </div>
@@ -1188,12 +1195,12 @@ export function TenantInviteManager({
                                 {copiedId === "fresh" ? (
                                     <>
                                         <Check className="size-4" />
-                                        Copied!
+                                        {t("Copied!")}
                                     </>
                                 ) : (
                                     <>
                                         <Copy className="size-4" />
-                                        Copy Link
+                                        {t("Copy Link")}
                                     </>
                                 )}
                             </button>
@@ -1202,7 +1209,7 @@ export function TenantInviteManager({
                                 onClick={() => setFreshInvite(null)}
                                 className="inline-flex h-11 items-center justify-center rounded-xl border border-border bg-card px-4 text-xs font-black uppercase tracking-wider text-foreground hover:bg-muted active:scale-95"
                             >
-                                Done
+                                {t("Done")}
                             </button>
                         </div>
                     </div>

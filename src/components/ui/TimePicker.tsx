@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { Clock, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface TimePickerProps {
     value?: string | null; // "HH:mm" (24h format, e.g. "22:00")
@@ -63,6 +64,7 @@ export function TimePicker({
     size = "md",
     presets = DEFAULT_PRESETS,
 }: TimePickerProps) {
+    const { t } = useLanguageContext();
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const [placement, setPlacement] = useState<{
@@ -194,7 +196,7 @@ export function TimePicker({
             >
                 <div className="flex items-center gap-2">
                     <Clock className={cn("size-3.5 text-primary", size === "sm" && "size-3")} />
-                    <span>{value ? formatDisplayTime(value) : placeholder}</span>
+                    <span>{value ? formatDisplayTime(value) : t(placeholder)}</span>
                 </div>
                 <ChevronDown
                     className={cn(
@@ -238,9 +240,9 @@ export function TimePicker({
                                         value={selectedHour}
                                         onChange={(e) => handleHourChange(parseInt(e.target.value, 10) || 1)}
                                         className="neumorphic-inset size-10 rounded-xl text-center text-lg font-black text-foreground outline-none focus:ring-2 focus:ring-primary/50"
-                                        title="Type exact hour (1-12)"
+                                        title={t("Type exact hour (1-12)")}
                                     />
-                                    <span className="text-[9px] uppercase font-bold text-muted-foreground mt-1">Hour</span>
+                                    <span className="text-[9px] uppercase font-bold text-muted-foreground mt-1">{t("Hour")}</span>
                                 </div>
 
                                 <span className="text-xl font-bold text-primary mb-3.5">:</span>
@@ -255,9 +257,9 @@ export function TimePicker({
                                         onChange={(e) => handleMinuteChange(e.target.value)}
                                         onBlur={handleMinuteBlur}
                                         className="neumorphic-inset size-10 rounded-xl text-center text-lg font-black text-foreground outline-none focus:ring-2 focus:ring-primary/50"
-                                        title="Type exact minute (00-59)"
+                                        title={t("Type exact minute (00-59)")}
                                     />
-                                    <span className="text-[9px] uppercase font-bold text-muted-foreground mt-1">Min</span>
+                                    <span className="text-[9px] uppercase font-bold text-muted-foreground mt-1">{t("Min")}</span>
                                 </div>
                             </div>
 
@@ -284,7 +286,7 @@ export function TimePicker({
                         {/* Quick Presets */}
                         <div className="mb-3">
                             <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                                Quick Pick
+                                {t("Quick Pick")}
                             </p>
                             <div className="flex flex-wrap gap-1.5">
                                 {presets.map((preset) => {
@@ -311,7 +313,7 @@ export function TimePicker({
                         {/* Hours Grid */}
                         <div className="mb-3 border-t border-border/40 pt-3">
                             <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                                Hour
+                                {t("Hour")}
                             </p>
                             <div className="grid grid-cols-6 gap-1">
                                 {HOURS.map((h) => {
@@ -339,9 +341,9 @@ export function TimePicker({
                         <div className="border-t border-border/40 pt-3">
                             <div className="flex items-center justify-between mb-1.5">
                                 <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                                    Minute Intervals
+                                    {t("Minute Intervals")}
                                 </p>
-                                <span className="text-[9px] text-muted-foreground/70 font-medium">Or type above</span>
+                                <span className="text-[9px] text-muted-foreground/70 font-medium">{t("Or type above")}</span>
                             </div>
                             <div className="grid grid-cols-4 gap-1.5">
                                 {MINUTE_PRESETS.map((m) => {
@@ -372,7 +374,7 @@ export function TimePicker({
                                 onClick={() => setIsOpen(false)}
                                 className="w-full rounded-xl neumorphic-primary py-2 text-center text-xs font-black uppercase tracking-wider text-primary-foreground transition-all hover:scale-[1.01] active:scale-95"
                             >
-                                Apply Time
+                                {t("Apply Time")}
                             </button>
                         </div>
                     </motion.div>

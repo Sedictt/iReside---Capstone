@@ -7,6 +7,7 @@ import { useState, useRef, useEffect, useReducer } from "react";
 import { createPortal } from "react-dom";
 
 import { DEFAULT_AVATAR_URL } from "@/lib/constants";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface Inquiry {
     id: string;
@@ -22,6 +23,7 @@ interface Inquiry {
 const FALLBACK_AVATAR = DEFAULT_AVATAR_URL;
 
 export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: boolean }) {
+    const { t } = useLanguageContext();
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
     const menuRef = useRef<HTMLDivElement>(null);
@@ -145,10 +147,10 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                             </div>
                             <div>
                                 <h2 className="text-xl font-black text-foreground dark:text-white">
-                                    {simplifiedMode ? "Messages from People" : "Recent Inquiries"}
+                                    {simplifiedMode ? t("Messages from People") : t("Recent Inquiries")}
                                 </h2>
                                 <p className="text-sm text-muted-foreground">
-                                    {simplifiedMode ? "Talk to people interested in your house" : "Respond quickly to convert more prospects"}
+                                    {simplifiedMode ? t("Talk to people interested in your house") : t("Respond quickly to convert more prospects")}
                                 </p>
                             </div>
                         </div>
@@ -156,7 +158,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                             href="/landlord/messages"
                             className="group flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:text-white"
                         >
-                            <span>{simplifiedMode ? "See All Messages" : "View All"}</span>
+                            <span>{simplifiedMode ? t("See All Messages") : t("View All")}</span>
                             <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
                         </a>
                     </div>
@@ -185,7 +187,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                         </div>
                     ) : fetchState.error ? (
                         <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6">
-                            <p className="text-sm text-red-600 dark:text-red-300">{fetchState.error}</p>
+                            <p className="text-sm text-red-600 dark:text-red-300">{t(fetchState.error)}</p>
                         </div>
                     ) : fetchState.inquiries.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -227,6 +229,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     <div className="absolute top-3 right-3 z-20">
                                         <button
                                             id={`menu-btn-${inquiry.id}`}
+                                            aria-label={t("More options")}
                                             className="p-2 rounded-lg bg-white/10 backdrop-blur-sm hover:bg-white/20 border border-white/20 transition-all group/menu"
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -241,7 +244,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     {inquiry.isUnread && (
                                         <div className="absolute top-3 right-14 flex items-center gap-1.5 bg-lime-500 text-white px-2.5 py-1 rounded-full text-xs font-black shadow-lg animate-pulse z-10">
                                             <Mail className="size-3" />
-                                            New
+                                            {t("New")}
                                         </div>
                                     )}
 
@@ -296,7 +299,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                         onClick={() => setActiveChat(inquiry)}
                                         className="w-full rounded-xl bg-primary py-2.5 text-sm font-black text-primary-foreground shadow-lg transition-all hover:brightness-110 hover:shadow-xl"
                                     >
-                                        {simplifiedMode ? "Answer Now" : "Reply now"}
+                                        {simplifiedMode ? t("Answer Now") : t("Reply now")}
                                     </button>
                                 </div>
                             </motion.div>
@@ -307,9 +310,9 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                             <div className="mb-4 inline-flex size-16 items-center justify-center rounded-full bg-muted dark:bg-neutral-800/50">
                                 <MessageSquare className="size-8 text-muted-foreground dark:text-neutral-600" />
                             </div>
-                            <h3 className="mb-2 text-lg font-black text-foreground dark:text-white">No Recent Inquiries</h3>
+                            <h3 className="mb-2 text-lg font-black text-foreground dark:text-white">{t("No Recent Inquiries")}</h3>
                             <p className="mx-auto max-w-sm text-sm text-muted-foreground dark:text-neutral-400">
-                                When potential tenants message you through applications, they will appear here.
+                                {t("When potential tenants message you through applications, they will appear here.")}
                             </p>
                         </div>
                     )}
@@ -342,7 +345,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                         >
                             <CheckCircle className="size-4 text-muted-foreground transition-colors group-hover/item:text-foreground dark:group-hover/item:text-white" />
                             <span className="text-sm text-muted-foreground transition-colors group-hover/item:text-foreground dark:text-neutral-300 dark:group-hover/item:text-white">
-                                {simplifiedMode ? "Got it" : (fetchState.inquiries.find(i => i.id === openMenuId)?.isUnread ? 'Mark as Read' : 'Mark as Unread')}
+                                {simplifiedMode ? t("Got it") : (fetchState.inquiries.find(i => i.id === openMenuId)?.isUnread ? t('Mark as Read') : t('Mark as Unread'))}
                             </span>
                         </button>
 
@@ -355,7 +358,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                         >
                             <Eye className="size-4 text-muted-foreground transition-colors group-hover/item:text-foreground dark:group-hover/item:text-white" />
                             <span className="text-sm text-muted-foreground transition-colors group-hover/item:text-foreground dark:text-neutral-300 dark:group-hover/item:text-white">
-                                {simplifiedMode ? "See House" : "View Property"}
+                                {simplifiedMode ? t("See House") : t("View Property")}
                             </span>
                         </button>
 
@@ -372,7 +375,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                         >
                             <Archive className="size-4 text-muted-foreground transition-colors group-hover/item:text-foreground dark:group-hover/item:text-white" />
                             <span className="text-sm text-muted-foreground transition-colors group-hover/item:text-foreground dark:text-neutral-300 dark:group-hover/item:text-white">
-                                {simplifiedMode ? "Save" : "Archive"}
+                                {simplifiedMode ? t("Save") : t("Archive")}
                             </span>
                         </button>
 
@@ -390,7 +393,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                         >
                             <Trash2 className="size-4 text-red-400 group-hover/item:text-red-300 transition-colors" />
                             <span className="text-sm text-red-400 group-hover/item:text-red-300 transition-colors">
-                                {simplifiedMode ? "Remove" : "Delete"}
+                                {simplifiedMode ? t("Remove") : t("Delete")}
                             </span>
                         </button>
                     </div>
@@ -435,6 +438,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     setActiveChat(null);
                                     setMessageInput("");
                                 }}
+                                aria-label={t("Close chat")}
                                 className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-white/10 dark:hover:text-white"
                             >
                                 <X className="size-4" />
@@ -475,7 +479,8 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                             setMessageInput("");
                                         }
                                     }}
-                                    placeholder="Type a message…"
+                                    placeholder={t("Type a message…")}
+                                    aria-label={t("Type a message…")}
                                     className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-lime-500/50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-neutral-500"
                                 />
                                 <button
@@ -488,6 +493,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                         setMessageInput("");
                                     }}
                                     disabled={!messageInput.trim()}
+                                    aria-label={t("Send message")}
                                     className="p-2.5 rounded-xl bg-lime-600 hover:bg-lime-500 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
                                 >
                                     <Send className="size-4" />

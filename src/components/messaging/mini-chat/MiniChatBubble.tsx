@@ -7,6 +7,7 @@ import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
 import { getSafeAvatarBgColor } from "@/lib/constants";
 import type { MiniChatContact, MiniChatMessage, MiniChatOutboundStatus } from "./types";
 import { formatFullTimestamp, formatTime, isImageMessage } from "./utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface MiniChatBubbleProps {
     message: MiniChatMessage;
@@ -18,21 +19,23 @@ interface MiniChatBubbleProps {
 }
 
 function StatusIcon({ status }: { status: MiniChatOutboundStatus | undefined }) {
+    const { t } = useLanguageContext();
     switch (status) {
         case "sending":
-            return <Clock3 className="size-3 text-muted-foreground" aria-label="Sending" />;
+            return <Clock3 className="size-3 text-muted-foreground" aria-label={t("Sending")} />;
         case "seen":
-            return <CheckCheck className="size-3 text-emerald-500" aria-label="Seen" />;
+            return <CheckCheck className="size-3 text-emerald-500" aria-label={t("Seen")} />;
         case "delivered":
-            return <CheckCheck className="size-3 text-muted-foreground" aria-label="Delivered" />;
+            return <CheckCheck className="size-3 text-muted-foreground" aria-label={t("Delivered")} />;
         case "failed":
-            return <AlertCircle className="size-3 text-red-500" aria-label="Not sent" />;
+            return <AlertCircle className="size-3 text-red-500" aria-label={t("Not sent")} />;
         default:
-            return <Check className="size-3 text-muted-foreground" aria-label="Sent" />;
+            return <Check className="size-3 text-muted-foreground" aria-label={t("Sent")} />;
     }
 }
 
 export function MiniChatBubble({ message, contact, isFirstInGroup, isLastInGroup, onRetry, onDiscard }: MiniChatBubbleProps) {
+    const { t } = useLanguageContext();
     const isOwn = message.isOwn;
     const hasImage = isImageMessage(message);
     const hasFile = Boolean(message.fileUrl) && !hasImage;
@@ -93,11 +96,11 @@ export function MiniChatBubble({ message, contact, isFirstInGroup, isLastInGroup
                             target="_blank"
                             rel="noreferrer"
                             className="relative block overflow-hidden rounded-[14px] bg-black/5 dark:bg-white/5"
-                            aria-label="Open image in a new tab"
+                            aria-label={t("Open image in a new tab")}
                         >
                             <Image
                                 src={message.fileUrl}
-                                alt={message.fileName ?? "Shared image"}
+                                alt={message.fileName ?? t("Shared image")}
                                 width={320}
                                 height={240}
                                 unoptimized={message.fileUrl.startsWith("blob:")}
@@ -107,7 +110,7 @@ export function MiniChatBubble({ message, contact, isFirstInGroup, isLastInGroup
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
                                     <div className="flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white">
                                         <div className="size-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                        Sending
+                                        {t("Sending")}
                                     </div>
                                 </div>
                             )}
@@ -130,15 +133,15 @@ export function MiniChatBubble({ message, contact, isFirstInGroup, isLastInGroup
                                 <FileText className="size-4" />
                             </span>
                             <span className="min-w-0">
-                                <span className="block truncate text-xs font-semibold">{message.fileName || message.content || "Attachment"}</span>
-                                <span className="block text-[10px] text-muted-foreground">Open attachment</span>
+                                <span className="block truncate text-xs font-semibold">{message.fileName || message.content || t("Attachment")}</span>
+                                <span className="block text-[10px] text-muted-foreground">{t("Open attachment")}</span>
                             </span>
                         </a>
                     )}
 
                     {!message.fileUrl && (
                         message.isRedacted ? (
-                            <p className="flex items-start gap-1.5 whitespace-pre-wrap" title="Sensitive content was hidden">
+                            <p className="flex items-start gap-1.5 whitespace-pre-wrap" title={t("Sensitive content was hidden")}>
                                 <ShieldAlert className="mt-0.5 size-3.5 shrink-0 opacity-70" aria-hidden="true" />
                                 <span>{message.redactedContent || "••••••••"}</span>
                             </p>
@@ -154,20 +157,20 @@ export function MiniChatBubble({ message, contact, isFirstInGroup, isLastInGroup
                         {isFailed ? (
                             <span className="flex items-center gap-1.5 text-red-500">
                                 <StatusIcon status="failed" />
-                                <span className="font-semibold">Not sent</span>
+                                <span className="font-semibold">{t("Not sent")}</span>
                                 <button
                                     type="button"
                                     onClick={() => onRetry?.(message.id)}
                                     className="inline-flex items-center gap-0.5 rounded px-1 font-semibold text-foreground hover:bg-muted"
                                 >
-                                    <RotateCcw className="size-3" aria-hidden="true" /> Retry
+                                    <RotateCcw className="size-3" aria-hidden="true" /> {t("Retry")}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => onDiscard?.(message.id)}
                                     className="inline-flex items-center gap-0.5 rounded px-1 font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
                                 >
-                                    <Trash2 className="size-3" aria-hidden="true" /> Delete
+                                    <Trash2 className="size-3" aria-hidden="true" /> {t("Delete")}
                                 </button>
                             </span>
                         ) : (

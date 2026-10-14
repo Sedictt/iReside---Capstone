@@ -24,6 +24,7 @@ import {
   ChevronRight,
   BookOpen
 } from "lucide-react"
+import { useLanguageContext } from "@/context/LanguageContext"
 
 interface Section {
   id: string
@@ -33,13 +34,14 @@ interface Section {
 }
 
 export default function TermsPage() {
+  const { t, isFilipino } = useLanguageContext()
   const [activeSection, setActiveSection] = useState<string>("acceptance")
   const [scrollProgress, setScrollProgress] = useState<number>(0)
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [copied, setCopied] = useState<boolean>(false)
   const [copiedSectionId, setCopiedSectionId] = useState<string | null>(null)
 
-  const SECTIONS: Section[] = [
+  const SECTIONS_EN: Section[] = [
     {
       id: "acceptance",
       title: "1. Acceptance of Terms",
@@ -191,6 +193,182 @@ export default function TermsPage() {
     }
   ]
 
+  // Filipino courtesy translation; the English version above prevails in case of conflict.
+  const SECTIONS_FIL: Section[] = [
+    {
+      id: "acceptance",
+      title: "1. Pagtanggap sa mga Tuntunin",
+      icon: FileText,
+      content: (
+        <p className="leading-relaxed">
+          Sa pag-access at paggamit ng iReside, sumasang-ayon kang sumunod sa mga Tuntunin ng
+          Serbisyong ito. Kung hindi ka sumasang-ayon sa mga tuntuning ito, mangyaring huwag
+          gamitin ang aming platform.
+        </p>
+      )
+    },
+    {
+      id: "description",
+      title: "2. Paglalarawan ng Serbisyo",
+      icon: Settings,
+      content: (
+        <p className="leading-relaxed">
+          Ang iReside ay isang property management platform na nagbibigay-daan sa mga landlord na
+          pamahalaan ang kanilang mga ari-arian, maglista ng mga unit, at makipag-ugnayan sa mga
+          tenant. Pinapayagan din ng platform ang mga tenant na tumingin ng mga listing, magsumite
+          ng mga aplikasyon, at pamahalaan ang kanilang karanasan sa pag-upa.
+        </p>
+      )
+    },
+    {
+      id: "accounts",
+      title: "3. Mga Account ng User",
+      icon: UserCheck,
+      content: (
+        <p className="leading-relaxed">
+          Kailangang gumawa ng account ang mga landlord para maglista ng mga ari-arian at
+          pamahalaan ang kaugnayan sa mga tenant. Awtomatikong nakakatanggap ng account ang mga
+          tenant kapag naaprubahan ang aplikasyon at ang kasunduan sa pag-upa (lease). Ikaw ang
+          may pananagutan sa pagpapanatiling kumpidensyal ng iyong mga credential sa account.
+        </p>
+      )
+    },
+    {
+      id: "landlord",
+      title: "4. Mga Responsibilidad ng Landlord",
+      icon: ClipboardCheck,
+      content: (
+        <ul className="list-disc pl-6 space-y-3">
+          <li>Magbigay ng tumpak na impormasyon at listing ng ari-arian</li>
+          <li>Panatilihing ligtas at matitirahan ang mga ari-arian</li>
+          <li>Sumunod sa lahat ng naaangkop na batas at regulasyon sa pabahay</li>
+          <li>Hawakan nang responsable ang datos at personal na impormasyon ng mga tenant</li>
+          <li>Iproseso ang mga security deposit at bayad sa upa sa pamamagitan ng mga aprubadong paraan</li>
+        </ul>
+      )
+    },
+    {
+      id: "tenant",
+      title: "5. Mga Responsibilidad ng Tenant",
+      icon: Home,
+      content: (
+        <ul className="list-disc pl-6 space-y-3">
+          <li>Magbigay ng tumpak na personal at pinansyal na impormasyon</li>
+          <li>Magbayad ng upa sa tamang oras sa pamamagitan ng platform o ng napagkasunduang paraan</li>
+          <li>Panatilihin sa maayos na kondisyon ang ari-arian</li>
+          <li>Sumunod sa mga tuntunin ng kontrata (lease) at sa mga alituntunin ng komunidad</li>
+          <li>Agad na i-report ang mga problemang kailangang ipaayos</li>
+        </ul>
+      )
+    },
+    {
+      id: "fees",
+      title: "6. Mga Bayarin at Pagbabayad",
+      icon: CreditCard,
+      content: (
+        <p className="leading-relaxed">
+          Ang iReside ay self-hosted at walang tuloy-tuloy na sentral na SaaS fee. Lahat ng
+          transaksyon ay direktang binabayaran sa landlord.
+          Ibinibigay ang iReside sa pamamagitan ng isang beses na deployment model at ibinibigay
+          bilang isang independiyente at hiwalay na property management instance. Hindi
+          naniningil ang development team ng tuloy-tuloy na sentral na SaaS subscription fee,
+          sentral na porsyento ng komisyon, o fee sa pagproseso ng transaksyon sa platform. Ang
+          bawat deployment ay pinamamahalaan nang nagsasarili ng landlord, at lahat ng
+          transaksyong pinansyal (gaya ng bayad sa upa o singil sa utilities) ay direktang
+          binabayaran sa pagitan ng mga landlord at tenant sa ilalim ng kanilang mga kasunduan sa
+          pag-upa. Ang anumang kahilingan para sa opsyonal na maintenance support, custom na
+          pagpapahusay ng feature, o karagdagang integrasyon ng sistema ay labas sa default na
+          saklaw ng deployment at inaasikaso nang isa-isa, batay sa bawat kaso, sa ilalim ng
+          hiwalay na mga kasunduan sa serbisyo.
+        </p>
+      )
+    },
+    {
+      id: "privacy",
+      title: "7. Privacy ng Datos",
+      icon: ShieldCheck,
+      content: (
+        <p className="leading-relaxed">
+          Ang paggamit mo ng iReside ay saklaw din ng aming Patakaran sa Privacy. Kinokolekta,
+          iniimbak, at pinoproseso namin ang personal na datos alinsunod sa mga naaangkop na batas
+          sa privacy, pangunahin na ang Data Privacy Act of 2012 ng Pilipinas (Republic Act No.
+          10173). Tingnan ang aming <Link href="/privacy" className="text-primary hover:text-primary-dark font-medium underline underline-offset-4">Patakaran sa Privacy</Link> para sa mga detalye.
+        </p>
+      )
+    },
+    {
+      id: "cookies",
+      title: "8. Paggamit ng Cookie",
+      icon: Cookie,
+      content: (
+        <p className="leading-relaxed">
+          Gumagamit kami ng first-party cookies at browser storage para panatilihin kang naka-sign
+          in at tandaan ang iyong mga setting. Hindi kami gumagamit ng advertising o third-party
+          tracking cookies. Maaari mong suriin ang iyong mga kagustuhan sa cookie anumang oras mula
+          sa Patakaran sa Privacy. Kailangan ang mga essential cookie para gumana ang platform.
+        </p>
+      )
+    },
+    {
+      id: "liability",
+      title: "9. Limitasyon ng Pananagutan",
+      icon: AlertTriangle,
+      content: (
+        <p className="leading-relaxed">
+          Walang pananagutan ang iReside sa mga kilos ng mga user, sa kondisyon ng mga ari-arian,
+          o sa mga alitan sa pagitan ng mga landlord at tenant. Ang aming platform ay nagsisilbi
+          lamang bilang kasangkapan sa komunikasyon at pamamahala. Inirerekomenda naming
+          magsagawa ng due diligence at humingi ng propesyonal na payo para sa mga desisyon sa
+          pag-upa.
+        </p>
+      )
+    },
+    {
+      id: "termination",
+      title: "10. Pagwawakas",
+      icon: Ban,
+      content: (
+        <p className="leading-relaxed">
+          May karapatan kaming suspindihin o wakasan ang mga account na lumalabag sa mga
+          tuntuning ito, sangkot sa ilegal na gawain, o nakapipinsala sa ibang user. Maaari mong
+          hilingin ang pagbura ng iyong account at personal na datos anumang oras sa
+          pakikipag-ugnayan sa amin o sa iyong landlord, gaya ng inilalarawan sa aming Patakaran
+          sa Privacy.
+        </p>
+      )
+    },
+    {
+      id: "changes",
+      title: "11. Mga Pagbabago sa mga Tuntunin",
+      icon: RefreshCw,
+      content: (
+        <p className="leading-relaxed">
+          Maaari naming i-update ang mga tuntuning ito paminsan-minsan. Aabisuhan namin ang mga
+          user tungkol sa mahahalagang pagbabago sa pamamagitan ng email o notipikasyon sa
+          platform. Ang patuloy na paggamit ng iReside pagkatapos ng mga pagbabago ay
+          nangangahulugan ng pagtanggap sa mga na-update na tuntunin.
+        </p>
+      )
+    },
+    {
+      id: "contact",
+      title: "12. Pakikipag-ugnayan",
+      icon: Mail,
+      content: (
+        <p className="leading-relaxed">
+          Para sa mga tanong tungkol sa mga Tuntunin ng Serbisyong ito, makipag-ugnayan sa amin
+          sa{" "}
+          <a href="mailto:ireside.official.mail@gmail.com" className="text-primary hover:text-primary-dark font-medium underline underline-offset-4">
+            ireside.official.mail@gmail.com
+          </a>
+          .
+        </p>
+      )
+    }
+  ]
+
+  const SECTIONS = isFilipino ? SECTIONS_FIL : SECTIONS_EN
+
   // Update scroll progress bar
   useEffect(() => {
     const handleScroll = () => {
@@ -292,13 +470,13 @@ export default function TermsPage() {
             <Link href="/">
               <Button variant="outline" size="sm" className="rounded-xl flex items-center gap-2 border-border shadow-xs hover:border-primary/30">
                 <ArrowLeft className="size-4" />
-                <span className="hidden sm:inline">Back to iReside</span>
+                <span className="hidden sm:inline">{t("Back to iReside")}</span>
               </Button>
             </Link>
             <div className="h-6 w-px bg-border hidden sm:block" />
             <div className="flex items-center gap-2 text-foreground font-display font-black text-lg tracking-tight select-none">
               <span className="text-primary font-black">i</span>Reside
-              <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground px-1.5 py-0.5 rounded-md bg-muted">Legal</span>
+              <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground px-1.5 py-0.5 rounded-md bg-muted">{t("Legal")}</span>
             </div>
           </div>
 
@@ -307,7 +485,7 @@ export default function TermsPage() {
               variant="outline" 
               size="icon-sm" 
               onClick={handlePrint}
-              title="Print Document"
+              title={t("Print Document")}
               className="rounded-xl border-border shadow-xs hover:border-primary/30 text-muted-foreground hover:text-foreground"
             >
               <Printer className="size-4" />
@@ -321,12 +499,12 @@ export default function TermsPage() {
               {copied ? (
                 <>
                   <Check className="size-3.5 text-emerald-500" />
-                  <span className="text-emerald-500 font-medium text-xs">Copied</span>
+                  <span className="text-emerald-500 font-medium text-xs">{t("Copied")}</span>
                 </>
               ) : (
                 <>
                   <Copy className="size-3.5" />
-                  <span className="text-xs">Copy Link</span>
+                  <span className="text-xs">{t("Copy Link")}</span>
                 </>
               )}
             </Button>
@@ -338,11 +516,18 @@ export default function TermsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-6">
         <div className="max-w-3xl">
           <h1 className="text-4xl md:text-5xl font-black tracking-tight font-display text-foreground mb-4">
-            Terms of Service
+            {t("Terms of Service")}
           </h1>
           <p className="text-muted-foreground text-base leading-relaxed md:text-lg">
-            Please read these terms carefully before accessing or using the platform. Last updated on <span className="text-foreground font-semibold">October 8, 2026</span>.
+            {t("Please read these terms carefully before accessing or using the platform. Last updated on")} <span className="text-foreground font-semibold">{t("October 8, 2026")}</span>.
           </p>
+          {isFilipino && (
+            <p className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground/90">
+              Ang bersyong Filipino na ito ay salin para sa inyong kaginhawahan lamang. Kung may
+              pagkakaiba o salungatan sa pagitan ng bersyong Filipino at ng bersyong English, ang
+              bersyong English ang masusunod.
+            </p>
+          )}
         </div>
 
         {/* Dynamic Controls Bar */}
@@ -352,7 +537,7 @@ export default function TermsPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <input maxLength={60} 
               type="text" 
-              placeholder="Search terms (e.g. rent, liability, landlords)..."
+              placeholder={t("Search terms (e.g. rent, liability, landlords)...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 text-sm bg-background border border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-foreground placeholder:text-muted-foreground transition-all"
@@ -369,7 +554,7 @@ export default function TermsPage() {
           <aside className="hidden lg:block w-72 shrink-0 sticky top-24 self-start bg-card border border-border rounded-3xl p-5 shadow-xs">
             <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
               <BookOpen className="size-4 text-primary" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-foreground font-display">Table of Contents</h2>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-foreground font-display">{t("Table of Contents")}</h2>
             </div>
             <nav className="space-y-1">
               {SECTIONS.map((sec) => {
@@ -415,9 +600,9 @@ export default function TermsPage() {
                 <div className="inline-flex items-center justify-center size-12 rounded-2xl bg-amber-500/10 text-amber-500 mb-4">
                   <Search className="size-6" />
                 </div>
-                <h3 className="text-lg font-bold text-foreground mb-1 font-display">No matches found</h3>
+                <h3 className="text-lg font-bold text-foreground mb-1 font-display">{t("No matches found")}</h3>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
-                  We couldn&apos;t find any terms matching &ldquo;{searchQuery}&rdquo;. Try typing terms like &ldquo;rent&rdquo;, &ldquo;landlord&rdquo;, or &ldquo;privacy&rdquo;.
+                  {t("We couldn't find any terms matching “{query}”. Try typing terms like “rent”, “landlord”, or “privacy”.", { query: searchQuery })}
                 </p>
                 <Button 
                   variant="outline" 
@@ -425,7 +610,7 @@ export default function TermsPage() {
                   onClick={() => setSearchQuery("")}
                   className="rounded-xl border-border"
                 >
-                  Clear Search Filter
+                  {t("Clear Search Filter")}
                 </Button>
               </div>
             )}
@@ -469,17 +654,17 @@ export default function TermsPage() {
                       size="sm"
                       onClick={() => handleCopySection(sec.id)}
                       className="rounded-lg border-border text-muted-foreground hover:text-foreground self-start sm:self-auto gap-1.5 h-7 px-2"
-                      title="Copy link to this section"
+                      title={t("Copy link to this section")}
                     >
                       {copiedSectionId === sec.id ? (
                         <>
                           <Check className="size-3.5 text-emerald-500" />
-                          <span className="text-[10px] text-emerald-500 font-medium">Copied!</span>
+                          <span className="text-[10px] text-emerald-500 font-medium">{t("Copied!")}</span>
                         </>
                       ) : (
                         <>
                           <Copy className="size-3.5" />
-                          <span className="text-[10px]">Copy Link</span>
+                          <span className="text-[10px]">{t("Copy Link")}</span>
                         </>
                       )}
                     </Button>
@@ -505,7 +690,7 @@ export default function TermsPage() {
           onClick={() => typeof window !== "undefined" && window.scrollTo({ top: 0, behavior: "smooth" })}
           className="rounded-full shadow-lg border-border bg-card/85 backdrop-blur-md h-9 px-3 gap-1 hover:border-primary text-xs font-semibold"
         >
-          Back to Top
+          {t("Back to Top")}
         </Button>
       </div>
     </div>

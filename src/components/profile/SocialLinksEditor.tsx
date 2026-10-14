@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Facebook, Twitter, Linkedin, Instagram, Globe, Save, X, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
 import { validateSocialHandleOrUrl } from "@/lib/validation/landlord-settings";
@@ -29,6 +30,7 @@ type SocialLinksEditorProps = {
 };
 
 export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorProps) {
+    const { t } = useLanguageContext();
     const [isEditing, setIsEditing] = useState(false);
     const [socials, setSocials] = useState<Socials>(initialSocials);
     const [isSaving, setIsSaving] = useState(false);
@@ -59,10 +61,10 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
             ) as Socials;
             await onSave(trimmed);
             setIsEditing(false);
-            toast.success("Social links updated");
+            toast.success(t("Social links updated"));
         } catch (error) {
             console.error(error);
-            toast.error("Failed to update social links");
+            toast.error(t("Failed to update social links"));
         } finally {
             setIsSaving(false);
         }
@@ -97,14 +99,14 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                         </a>
                     )}
                     {!socials.facebook && !socials.twitter && !socials.linkedin && !socials.instagram && (
-                        <p className="text-xs text-muted-foreground italic">No social links added yet</p>
+                        <p className="text-xs text-muted-foreground italic">{t("No social links added yet")}</p>
                     )}
                 </div>
                 <button 
                     onClick={() => setIsEditing(true)}
                     className="text-[10px] font-black tracking-widest uppercase px-4 py-2 rounded-full neumorphic-extruded text-muted-foreground hover:text-foreground transition-all cursor-pointer"
                 >
-                    Edit Socials
+                    {t("Edit Socials")}
                 </button>
             </div>
         );
@@ -113,8 +115,8 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
     return (
         <div className="neumorphic-inset border border-border/50 rounded-3xl p-6 w-full max-w-sm animate-in fade-in zoom-in duration-300 bg-background/50">
             <div className="flex items-center justify-between mb-6">
-                <h4 className="text-xs font-black tracking-widest uppercase text-foreground">Edit Social Links</h4>
-                <button onClick={() => setIsEditing(false)} className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                <h4 className="text-xs font-black tracking-widest uppercase text-foreground">{t("Edit Social Links")}</h4>
+                <button onClick={() => setIsEditing(false)} className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer" aria-label={t("Close")}>
                     <X size={18} />
                 </button>
             </div>
@@ -191,7 +193,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                 disabled={isSaving}
                 className="w-full flex items-center justify-center gap-2 neumorphic-primary py-3 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all disabled:opacity-50 cursor-pointer"
             >
-                {isSaving ? "Saving..." : <><Save size={14} /> Save Social Links</>}
+                {isSaving ? t("Saving...") : <><Save size={14} /> {t("Save Social Links")}</>}
             </button>
         </div>
     );

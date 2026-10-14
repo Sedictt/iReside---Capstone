@@ -32,6 +32,7 @@ import {
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
 import { createClient } from "@/lib/supabase/client";
 import { setupDictionary } from "@/lib/i18n/setup-translations";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface AccountActivationModalProps {
   isOpen: boolean;
@@ -46,6 +47,7 @@ export function AccountActivationModal({
   onComplete,
   initialFullName,
 }: AccountActivationModalProps) {
+  const { t } = useLanguageContext();
   const [step, setStep] = useState<1 | 2>(1);
   const [fullName, setFullName] = useState("");
   const [newEmail, setNewEmail] = useState("");
@@ -91,8 +93,8 @@ export function AccountActivationModal({
   const handleProceedToSetup = async () => {
     if (isRedirecting) return;
     if (securityKey && (!hasDownloadedKey || !isSecurityKeyAcknowledged)) {
-      toast.warning("Please Download Your Spare Key", {
-        description: setupDictionary.accountClaiming.step3SaveWarning,
+      toast.warning(t("Please Download Your Spare Key"), {
+        description: t(setupDictionary.accountClaiming.step3SaveWarning),
         id: "save-recovery-key-warning",
       });
       return;
@@ -209,7 +211,7 @@ export function AccountActivationModal({
     markFieldTouched("email");
     const emailValidation = validateAdminEmail(newEmail);
     if (!emailValidation.isValid) {
-      setError(emailValidation.error || "Please enter a valid email address.");
+      setError(t(emailValidation.error || "Please enter a valid email address."));
       return;
     }
 
@@ -223,16 +225,16 @@ export function AccountActivationModal({
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Failed to send verification code. Please try again.");
+        setError(t(data.error || "Failed to send verification code. Please try again."));
         return;
       }
 
       setOtpSent(true);
       setOtpCooldown(60);
-      toast.success(`Verification code sent to ${newEmail.trim()}`);
+      toast.success(t("Verification code sent to {email}", { email: newEmail.trim() }));
       setTimeout(() => otpInputRef.current?.focus(), 150);
     } catch {
-      setError("Network error while sending verification code. Please try again.");
+      setError(t("Network error while sending verification code. Please try again."));
     } finally {
       setIsSendingOtp(false);
     }
@@ -254,7 +256,7 @@ export function AccountActivationModal({
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Incorrect verification code. Please check and try again.");
+        setError(t(data.error || "Incorrect verification code. Please check and try again."));
         setIsOtpVerified(false);
         return false;
       }
@@ -262,7 +264,7 @@ export function AccountActivationModal({
       setIsOtpVerified(true);
       return true;
     } catch {
-      setError("Network error while validating verification code. Please try again.");
+      setError(t("Network error while validating verification code. Please try again."));
       setIsOtpVerified(false);
       return false;
     } finally {
@@ -280,13 +282,13 @@ export function AccountActivationModal({
     if (cleanDigits.length === 6) {
       const nameCheck = validateAdminFullName(fullName);
       if (!nameCheck.isValid) {
-        setError(nameCheck.error || "Please enter your full name first.");
+        setError(t(nameCheck.error || "Please enter your full name first."));
         return;
       }
 
       const emailCheck = validateAdminEmail(newEmail);
       if (!emailCheck.isValid) {
-        setError(emailCheck.error || "Please enter a valid email address first.");
+        setError(t(emailCheck.error || "Please enter a valid email address first."));
         return;
       }
 
@@ -304,20 +306,20 @@ export function AccountActivationModal({
 
     const nameCheck = validateAdminFullName(fullName);
     if (!nameCheck.isValid) {
-      setError(nameCheck.error || "Please provide your full name.");
+      setError(t(nameCheck.error || "Please provide your full name."));
       nameInputRef.current?.focus();
       return;
     }
 
     const emailCheck = validateAdminEmail(newEmail);
     if (!emailCheck.isValid) {
-      setError(emailCheck.error || "Please provide a valid email address.");
+      setError(t(emailCheck.error || "Please provide a valid email address."));
       emailInputRef.current?.focus();
       return;
     }
 
     if (!/^\d{6}$/.test(otpCode.trim())) {
-      setError("Please enter the 6-digit verification code sent to your email.");
+      setError(t("Please enter the 6-digit verification code sent to your email."));
       otpInputRef.current?.focus();
       return;
     }
@@ -339,14 +341,14 @@ export function AccountActivationModal({
 
     const passCheck = validateAdminPassword(newPassword, false, { name: fullName, email: newEmail });
     if (!passCheck.isValid) {
-      setError(passCheck.error || "Password does not meet security requirements.");
+      setError(t(passCheck.error || "Password does not meet security requirements."));
       passwordInputRef.current?.focus();
       return;
     }
 
     const confirmCheck = validateConfirmPassword(newPassword, confirmPassword);
     if (!confirmCheck.isValid) {
-      setError(confirmCheck.error || "Passwords do not match.");
+      setError(t(confirmCheck.error || "Passwords do not match."));
       return;
     }
 
@@ -371,7 +373,7 @@ export function AccountActivationModal({
       clearTimeout(timeoutId);
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Failed to complete account setup. Please try again.");
+        setError(t(data.error || "Failed to complete account setup. Please try again."));
         return;
       }
 
@@ -451,9 +453,9 @@ export function AccountActivationModal({
     } catch (err: any) {
       clearTimeout(timeoutId);
       if (err?.name === "AbortError") {
-        setError("Request timed out. Please check your connection and try again.");
+        setError(t("Request timed out. Please check your connection and try again."));
       } else {
-        setError("An unexpected network error occurred while updating your account.");
+        setError(t("An unexpected network error occurred while updating your account."));
       }
     } finally {
       setIsSubmitting(false);
@@ -483,10 +485,10 @@ export function AccountActivationModal({
               </div>
               <div className="space-y-1">
                 <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">
-                  Account Claimed Successfully
+                  {t("Account Claimed Successfully")}
                 </h2>
                 <p className="text-sm sm:text-base text-muted-foreground">
-                  Workspace linked to <span className="font-bold text-foreground">{claimedEmail}</span>
+                  {t("Workspace linked to")} <span className="font-bold text-foreground">{claimedEmail}</span>
                 </p>
               </div>
             </div>
@@ -500,13 +502,13 @@ export function AccountActivationModal({
                   setHasDownloadedKey(true);
                   setIsSecurityKeyAcknowledged(true);
                 }}
-                title="Emergency Spare Key (Landlord Security Recovery Key)"
-                description={setupDictionary.accountClaiming.step3Subtitle}
+                title={t("Emergency Spare Key (Landlord Security Recovery Key)")}
+                description={t(setupDictionary.accountClaiming.step3Subtitle)}
                 accountEmail={claimedEmail}
               />
             ) : (
               <div className="p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-base text-muted-foreground">
-                Your credentials are saved. Please sign in with your updated credentials to start property setup.
+                {t("Your credentials are saved. Please sign in with your updated credentials to start property setup.")}
               </div>
             )}
 
@@ -526,18 +528,18 @@ export function AccountActivationModal({
                 {isRedirecting ? (
                   <>
                     <Loader2 className="size-5 animate-spin" />
-                    <span>{setupDictionary.accountClaiming.connectingToSignIn}</span>
+                    <span>{t(setupDictionary.accountClaiming.connectingToSignIn)}</span>
                   </>
                 ) : (
                   <>
-                    <span>Proceed to Sign In</span>
+                    <span>{t(setupDictionary.accountClaiming.proceedToSignIn)}</span>
                     <ArrowRight className="size-6 stroke-[3]" />
                   </>
                 )}
               </button>
               {securityKey && !hasDownloadedKey && (
                 <p className="mt-3 text-center text-xs sm:text-sm font-semibold text-muted-foreground">
-                  Please click &ldquo;Download Key&rdquo; above to proceed to sign in.
+                  {t("Please click “Download Key” above to proceed to sign in.")}
                 </p>
               )}
             </div>
@@ -553,10 +555,10 @@ export function AccountActivationModal({
                 </div>
                 <div className="flex items-center gap-2 text-sm sm:text-base font-bold text-muted-foreground">
                   <span className="text-primary font-black text-base sm:text-lg">
-                    Step {step} of 2
+                    {t(setupDictionary.common.stepIndicator, { current: step, total: 2 })}
                   </span>
                   <span>•</span>
-                  <span>{step === 1 ? "~1 min" : "~30 sec"}</span>
+                  <span>{step === 1 ? t("~1 min") : t("~30 sec")}</span>
                 </div>
               </div>
 
@@ -582,7 +584,7 @@ export function AccountActivationModal({
                   className="min-h-[44px] px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-muted/70 text-foreground border border-border/80 hover:bg-muted transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <Check className="size-4 text-emerald-600 stroke-[3]" />
-                  <span>Step 1: {fullName || "Name & Email"} (Click to edit)</span>
+                  <span>{t("Step 1: {name} (Click to edit)", { name: fullName || t("Name & Email") })}</span>
                 </button>
               )}
 
@@ -592,13 +594,13 @@ export function AccountActivationModal({
                   className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground"
                 >
                   {step === 1
-                    ? setupDictionary.accountClaiming.step1Title
-                    : setupDictionary.accountClaiming.step2Title}
+                    ? t(setupDictionary.accountClaiming.step1Title)
+                    : t(setupDictionary.accountClaiming.step2Title)}
                 </h2>
                 <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mt-1.5">
                   {step === 1
-                    ? setupDictionary.accountClaiming.step1Instruction
-                    : setupDictionary.accountClaiming.step2Instruction}
+                    ? t(setupDictionary.accountClaiming.step1Instruction)
+                    : t(setupDictionary.accountClaiming.step2Instruction)}
                 </p>
               </div>
             </div>
@@ -622,7 +624,7 @@ export function AccountActivationModal({
                       }}
                       className="text-xs sm:text-sm font-bold underline hover:no-underline text-rose-700 dark:text-rose-300 block cursor-pointer mt-1"
                     >
-                      Return to verification step
+                      {t("Return to verification step")}
                     </button>
                   )}
                 </div>
@@ -648,7 +650,7 @@ export function AccountActivationModal({
                       htmlFor="admin-fullname-input"
                       className="block text-base sm:text-lg font-bold text-foreground cursor-pointer select-none"
                     >
-                      {setupDictionary.accountClaiming.fullNameLabel}
+                      {t(setupDictionary.accountClaiming.fullNameLabel)}
                     </label>
                     <div className="relative">
                       <User className="size-5 text-muted-foreground absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -664,7 +666,7 @@ export function AccountActivationModal({
                           setFullName(e.target.value);
                           if (error) setError(null);
                         }}
-                        placeholder="e.g. Roberto Reyes"
+                        placeholder={t(setupDictionary.accountClaiming.fullNamePlaceholder)}
                         className="w-full min-h-[54px] rounded-xl border border-border/90 bg-background pl-12 pr-4 text-base sm:text-lg font-semibold text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-3 focus:ring-primary/20"
                       />
                     </div>
@@ -676,7 +678,7 @@ export function AccountActivationModal({
                       htmlFor="admin-email-input"
                       className="block text-base sm:text-lg font-bold text-foreground cursor-pointer select-none"
                     >
-                      {setupDictionary.accountClaiming.emailLabel}
+                      {t(setupDictionary.accountClaiming.emailLabel)}
                     </label>
                     <div className="flex gap-2.5">
                       <div className="relative flex-1">
@@ -711,7 +713,7 @@ export function AccountActivationModal({
                         ) : (
                           <>
                             <Send className="size-4" />
-                            <span>{otpSent ? "Resend" : "Send Code"}</span>
+                            <span>{otpSent ? t("Resend") : t(setupDictionary.accountClaiming.sendCode)}</span>
                           </>
                         )}
                       </button>
@@ -725,22 +727,22 @@ export function AccountActivationModal({
                         htmlFor="admin-otp-input"
                         className="block text-base sm:text-lg font-bold text-foreground cursor-pointer select-none"
                       >
-                        {setupDictionary.accountClaiming.codeLabel}
+                        {t(setupDictionary.accountClaiming.codeLabel)}
                       </label>
                       {isVerifyingOtp ? (
                         <span className="text-xs sm:text-sm font-bold text-primary flex items-center gap-1.5">
                           <Loader2 className="size-3.5 animate-spin" />
-                          Verifying code...
+                          {t("Verifying code...")}
                         </span>
                       ) : isOtpVerified ? (
                         <span className="text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                           <Check className="size-4 stroke-[3]" />
-                          Code verified
+                          {t("Code verified")}
                         </span>
                       ) : otpSent ? (
                         <span className="text-xs sm:text-sm font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                           <Check className="size-4 stroke-[3]" />
-                          Code sent to inbox
+                          {t("Code sent to inbox")}
                         </span>
                       ) : null}
                     </div>
@@ -757,7 +759,7 @@ export function AccountActivationModal({
                         disabled={isVerifyingOtp}
                         value={otpCode}
                         onChange={(e) => handleOtpChange(e.target.value)}
-                        placeholder="Enter 6-digit code"
+                        placeholder={t(setupDictionary.accountClaiming.codePlaceholder)}
                         className={cn(
                           "w-full min-h-[54px] rounded-xl border bg-background px-4 text-center font-mono text-xl sm:text-2xl tracking-[0.3em] font-bold text-foreground placeholder:font-sans placeholder:tracking-normal placeholder:text-sm sm:placeholder:text-base placeholder:text-muted-foreground/50 transition-colors focus:outline-none focus:ring-3",
                           error && otpCode.length === 6
@@ -770,7 +772,7 @@ export function AccountActivationModal({
                     </div>
                     {!otpSent && (
                       <p className="text-xs sm:text-sm text-muted-foreground pt-0.5">
-                        Click &ldquo;Send Code&rdquo; above to receive your 6-digit confirmation code.
+                        {t("Click “Send Code” above to receive your 6-digit confirmation code.")}
                       </p>
                     )}
                   </div>
@@ -790,11 +792,11 @@ export function AccountActivationModal({
                       {isVerifyingOtp ? (
                         <>
                           <Loader2 className="size-5 animate-spin" />
-                          <span>Verifying Code...</span>
+                          <span>{t("Verifying Code...")}</span>
                         </>
                       ) : (
                         <>
-                          <span>Continue to Password</span>
+                          <span>{t(setupDictionary.accountClaiming.continueToPassword)}</span>
                           <ArrowRight className="size-6 stroke-[3]" />
                         </>
                       )}
@@ -818,7 +820,7 @@ export function AccountActivationModal({
                       htmlFor="admin-new-password"
                       className="block text-base sm:text-lg font-bold text-foreground cursor-pointer select-none"
                     >
-                      {setupDictionary.accountClaiming.passwordLabel}
+                      {t(setupDictionary.accountClaiming.passwordLabel)}
                     </label>
                     <div className="relative">
                       <Lock className="size-5 text-muted-foreground absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -834,14 +836,14 @@ export function AccountActivationModal({
                           setNewPassword(e.target.value);
                           if (error) setError(null);
                         }}
-                        placeholder="At least 8 characters"
+                        placeholder={t(setupDictionary.accountClaiming.passwordPlaceholder)}
                         className="w-full min-h-[54px] rounded-xl border border-border/90 bg-background pl-12 pr-14 text-base sm:text-lg font-semibold text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-3 focus:ring-primary/20"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword((prev) => !prev)}
                         className="min-h-[48px] min-w-[48px] absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center p-2 rounded-lg"
-                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        aria-label={showPassword ? t(setupDictionary.accountClaiming.hidePassword) : t(setupDictionary.accountClaiming.showPassword)}
                       >
                         {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                       </button>
@@ -871,7 +873,7 @@ export function AccountActivationModal({
                         </div>
                         <div className="flex items-center justify-between text-xs sm:text-sm text-muted-foreground">
                           <span>
-                            Strength:{" "}
+                            {t("Strength:")}{" "}
                             <span
                               className={cn(
                                 "font-bold",
@@ -882,20 +884,20 @@ export function AccountActivationModal({
                                   : "text-rose-500"
                               )}
                             >
-                              {passwordStrength.label}
+                              {t(passwordStrength.label)}
                             </span>
                           </span>
                           <span className="text-xs text-muted-foreground">
                             {passwordStrength.error
-                              ? "Fix the items below to continue"
+                              ? t("Fix the items below to continue")
                               : passwordStrength.score >= 3
-                              ? "Meets requirements"
-                              : "Add length or variety to strengthen"}
+                              ? t("Meets requirements")
+                              : t("Add length or variety to strengthen")}
                           </span>
                         </div>
                         <ul
                           className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs sm:text-sm"
-                          aria-label="Password requirements"
+                          aria-label={t("Password requirements")}
                         >
                           {[
                             { ok: passwordStrength.checks.hasMinLength, text: "At least 8 characters" },
@@ -920,13 +922,13 @@ export function AccountActivationModal({
                                 className={cn("size-3.5 shrink-0 stroke-[3]", item.ok ? "" : "opacity-30")}
                                 aria-hidden="true"
                               />
-                              <span>{item.text}</span>
+                              <span>{t(item.text)}</span>
                             </li>
                           ))}
                         </ul>
                         {passwordStrength.error && (
                           <p className="text-xs sm:text-sm font-semibold text-rose-600 dark:text-rose-400" role="alert">
-                            {passwordStrength.error}
+                            {t(passwordStrength.error)}
                           </p>
                         )}
                       </div>
@@ -940,7 +942,7 @@ export function AccountActivationModal({
                         htmlFor="admin-confirm-password"
                         className="block text-base sm:text-lg font-bold text-foreground cursor-pointer select-none"
                       >
-                        {setupDictionary.accountClaiming.confirmPasswordLabel}
+                        {t(setupDictionary.accountClaiming.confirmPasswordLabel)}
                       </label>
                       {confirmPassword && (
                         <span
@@ -954,10 +956,10 @@ export function AccountActivationModal({
                           {confirmPassword === newPassword ? (
                             <>
                               <Check className="size-4 stroke-[3]" />
-                              Passwords match
+                              {t("Passwords match")}
                             </>
                           ) : (
-                            "Passwords do not match yet"
+                            t("Passwords do not match yet")
                           )}
                         </span>
                       )}
@@ -975,14 +977,14 @@ export function AccountActivationModal({
                           setConfirmPassword(e.target.value);
                           if (error) setError(null);
                         }}
-                        placeholder="Re-enter your password"
+                        placeholder={t(setupDictionary.accountClaiming.confirmPasswordPlaceholder)}
                         className="w-full min-h-[54px] rounded-xl border border-border/90 bg-background pl-12 pr-14 text-base sm:text-lg font-semibold text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-primary focus:outline-none focus:ring-3 focus:ring-primary/20"
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword((prev) => !prev)}
                         className="min-h-[48px] min-w-[48px] absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center p-2 rounded-lg"
-                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                        aria-label={showConfirmPassword ? t(setupDictionary.accountClaiming.hidePassword) : t(setupDictionary.accountClaiming.showPassword)}
                       >
                         {showConfirmPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                       </button>
@@ -1001,7 +1003,7 @@ export function AccountActivationModal({
                       className="min-h-[56px] px-5 rounded-2xl border border-border bg-background hover:bg-muted text-foreground font-bold text-base transition-colors flex items-center justify-center gap-2 shrink-0 cursor-pointer active:scale-[0.98] disabled:opacity-50"
                     >
                       <ArrowLeft className="size-4" />
-                      <span>{setupDictionary.common.back}</span>
+                      <span>{t(setupDictionary.common.back)}</span>
                     </button>
                     <button
                       type="submit"
@@ -1011,11 +1013,11 @@ export function AccountActivationModal({
                       {isSubmitting ? (
                         <>
                           <Loader2 className="size-5 animate-spin" />
-                          <span>{setupDictionary.accountClaiming.claimingButton}</span>
+                          <span>{t(setupDictionary.accountClaiming.claimingButton)}</span>
                         </>
                       ) : (
                         <>
-                          <span>{setupDictionary.accountClaiming.claimButton}</span>
+                          <span>{t(setupDictionary.accountClaiming.claimButton)}</span>
                           <ArrowRight className="size-6 stroke-[3]" />
                         </>
                       )}

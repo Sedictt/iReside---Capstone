@@ -42,6 +42,8 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import { utilityRateRule } from "@/lib/validation/schemas/properties.schema";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 type UtilityConfigDraft = {
  localId: string;
@@ -216,6 +218,7 @@ export function BillingOperationsPanel({
 	isTourActive?: boolean;
 	tourStepIndex?: number;
 }) {
+	const { t } = useLanguageContext();
 	const [state, dispatch] = useReducer(reducer, initialState);
 	const {
 		workspace,
@@ -317,7 +320,7 @@ export function BillingOperationsPanel({
 				});
 			} catch (err) {
 				console.error(err);
-				if (alive) dispatch({ type: "SET_MESSAGE", payload: { type: "error", value: "Unable to load billing settings." } });
+				if (alive) dispatch({ type: "SET_MESSAGE", payload: { type: "error", value: t("Unable to load billing settings.") } });
 			} finally {
 				if (alive) dispatch({ type: "SET_LOADING", payload: false });
 			}
@@ -369,16 +372,16 @@ export function BillingOperationsPanel({
 		const items: ConfigDiffItem[] = [];
 
 		const getStrategyLabel = (c: UtilityConfigDraft) => {
-			if (c.billing_mode === "included_in_rent") return "Included in Rent";
-			if (c.responsibility_mode === "tenant_direct") return "Direct to Provider";
-			return `Submetered (₱${c.rate_per_unit}/${c.unit_label === "kwh" ? "kWh" : "m³"})`;
+			if (c.billing_mode === "included_in_rent") return t("Included in Rent");
+			if (c.responsibility_mode === "tenant_direct") return t("Direct to Provider");
+			return t("Submetered ({rate})", { rate: `₱${c.rate_per_unit}/${c.unit_label === "kwh" ? "kWh" : "m³"}` });
 		};
 
 		for (const curr of configs) {
 			const prop = propertyMap.get(curr.property_id);
-			const propertyName = prop?.name || "Property";
+			const propertyName = prop?.name || t("Property");
 			const unit = prop?.units.find(u => u.id === curr.unit_id);
-			const unitName = unit ? unit.name : (curr.unit_id ? "Custom Unit" : null);
+			const unitName = unit ? unit.name : (curr.unit_id ? t("Custom Unit") : null);
 
 			const orig = originalMap.get(curr.localId) || (curr.id ? originalById.get(curr.id) : undefined);
 
@@ -392,7 +395,7 @@ export function BillingOperationsPanel({
 					unitId: curr.unit_id,
 					unitName,
 					utilityType: curr.utility_type,
-					summary: `New rule added for ${unitName || "unassigned unit"}`,
+					summary: t("New rule added for {unit}", { unit: unitName || t("unassigned unit") }),
 					newValue: getStrategyLabel(curr),
 				});
 			} else {
@@ -407,13 +410,16 @@ export function BillingOperationsPanel({
 					const newLabel = getStrategyLabel(curr);
 					let changeDesc = "";
 					if (isStrategyDiff) {
-						changeDesc = `Strategy changed from ${orig.billing_mode === "included_in_rent" ? "Included" : (orig.responsibility_mode === "tenant_direct" ? "Direct" : "Submetered")} to ${curr.billing_mode === "included_in_rent" ? "Included" : (curr.responsibility_mode === "tenant_direct" ? "Direct" : "Submetered")}`;
+						changeDesc = t("Strategy changed from {from} to {to}", {
+							from: t(orig.billing_mode === "included_in_rent" ? "Included" : (orig.responsibility_mode === "tenant_direct" ? "Direct" : "Submetered")),
+							to: t(curr.billing_mode === "included_in_rent" ? "Included" : (curr.responsibility_mode === "tenant_direct" ? "Direct" : "Submetered")),
+						});
 					} else if (isRateDiff) {
-						changeDesc = `Rate updated from ₱${orig.rate_per_unit} to ₱${curr.rate_per_unit}`;
+						changeDesc = t("Rate updated from {from} to {to}", { from: `₱${orig.rate_per_unit}`, to: `₱${curr.rate_per_unit}` });
 					} else if (isUnitDiff) {
-						changeDesc = "Assigned unit changed";
+						changeDesc = t("Assigned unit changed");
 					} else if (isDateDiff) {
-						changeDesc = `Effective date changed from ${orig.effective_from} to ${curr.effective_from}`;
+						changeDesc = t("Effective date changed from {from} to {to}", { from: orig.effective_from, to: curr.effective_from });
 					}
 
 					items.push({
@@ -442,13 +448,13 @@ export function BillingOperationsPanel({
 					type: "deleted",
 					localId: orig.localId,
 					propertyId: orig.property_id,
-					propertyName: prop?.name || "Property",
+					propertyName: prop?.name || t("Property"),
 					unitId: orig.unit_id,
-					unitName: unit ? unit.name : "Unit",
+					unitName: unit ? unit.name : t("Unit"),
 					utilityType: orig.utility_type,
-					summary: `Unit rule removed (reverts to Property Default)`,
+					summary: t("Unit rule removed (reverts to Property Default)"),
 					oldValue: getStrategyLabel(orig),
-					newValue: "Property Default",
+					newValue: t("Property Default"),
 				});
 			}
 		}
@@ -458,7 +464,7 @@ export function BillingOperationsPanel({
 			totalCount: items.length,
 			isDirty: items.length > 0,
 		};
-	}, [configs, state.deletedConfigIds, workspace]);
+	}, [configs, state.deletedConfigIds, workspace, t]);
 
 	const isRatesDirty = diff.isDirty;
 	const isPanelDirty = viewMode === "gcash" ? isGcashDirty : isRatesDirty;
@@ -482,7 +488,7 @@ export function BillingOperationsPanel({
 				if (!cleanName || cleanName.length < 2) {
 					dispatch({
 						type: "SET_MESSAGE",
-						payload: { type: "error", value: "Please provide a valid Account Name (minimum 2 characters)." }
+						payload: { type: "error", value: t("Please provide a valid Account Name (minimum 2 characters).") }
 					});
 					return false;
 				}
@@ -490,7 +496,7 @@ export function BillingOperationsPanel({
 				if (!/^09\d{9}$/.test(cleanNumber)) {
 					dispatch({
 						type: "SET_MESSAGE",
-						payload: { type: "error", value: "Please provide a valid 11-digit GCash mobile number starting with 09 (e.g. 09171234567)." }
+						payload: { type: "error", value: t("Please provide a valid 11-digit GCash mobile number starting with 09 (e.g. 09171234567).") }
 					});
 					return false;
 				}
@@ -527,7 +533,7 @@ export function BillingOperationsPanel({
 			const response = await fetch("/api/landlord/payment-settings", { method: "POST", body: formData });
 			if (!response.ok) {
 				const errorData = await response.json().catch(() => null);
-				throw new Error(errorData?.error || "Failed to save settings.");
+				throw new Error(errorData?.error || t("Failed to save settings."));
 			}
 			const payload = (await response.json()) as BillingWorkspace;
 			
@@ -606,12 +612,12 @@ export function BillingOperationsPanel({
 			onSaved?.(payload);
 			return true;
 		} catch (error: any) {
-			dispatch({ type: "SET_MESSAGE", payload: { type: "error", value: error?.message || "Failed to save settings." } });
+			dispatch({ type: "SET_MESSAGE", payload: { type: "error", value: error?.message || t("Failed to save settings.") } });
 			return false;
 		} finally {
 			dispatch({ type: "SET_SAVING", payload: false });
 		}
-	}, [viewMode, accountName, accountNumber, isEnabled, removeQr, state.qrFile, configs, qrPreview, state.deletedConfigIds, onSaved]);
+	}, [viewMode, accountName, accountNumber, isEnabled, removeQr, state.qrFile, configs, qrPreview, state.deletedConfigIds, onSaved, t]);
 
 	const discard = useCallback(() => {
 		if (viewMode === "gcash") {
@@ -654,7 +660,7 @@ export function BillingOperationsPanel({
 			if (!cleanName || cleanName.length < 2) {
 				dispatch({
 					type: "SET_MESSAGE",
-					payload: { type: "error", value: "Please provide a valid Account Name (minimum 2 characters)." }
+					payload: { type: "error", value: t("Please provide a valid Account Name (minimum 2 characters).") }
 				});
 				return;
 			}
@@ -662,7 +668,7 @@ export function BillingOperationsPanel({
 			if (!/^09\d{9}$/.test(cleanNumber)) {
 				dispatch({
 					type: "SET_MESSAGE",
-					payload: { type: "error", value: "Please provide a valid 11-digit GCash mobile number starting with 09 (e.g. 09171234567)." }
+					payload: { type: "error", value: t("Please provide a valid 11-digit GCash mobile number starting with 09 (e.g. 09171234567).") }
 				});
 				return;
 			}
@@ -678,7 +684,7 @@ export function BillingOperationsPanel({
 			}
 		}
 		setShowSaveConfirm(true);
-	}, [viewMode, accountName, accountNumber, configs]);
+	}, [viewMode, accountName, accountNumber, configs, t]);
 
 	const handleConfirmDiscard = useCallback(() => {
 		discard();
@@ -720,7 +726,7 @@ export function BillingOperationsPanel({
 		return (
 			<div className="flex h-64 flex-col items-center justify-center space-y-4 rounded-3xl neumorphic-panel">
 				<Loader2 className="size-8 animate-spin text-primary" />
-				<p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Loading settings...</p>
+				<p className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t("Loading settings...")}</p>
 			</div>
 		);
 	}
@@ -750,20 +756,20 @@ export function BillingOperationsPanel({
 							<div className="p-8 border-b border-border/40 flex items-center justify-between sticky top-0 bg-card z-10">
 								<div>
 									<div className="flex items-center gap-3">
-										<h3 className="text-xl font-black text-foreground">Review Pending Changes</h3>
+										<h3 className="text-xl font-black text-foreground">{t("Review Pending Changes")}</h3>
 										<span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-wider">
-											{pendingChangesCount} {pendingChangesCount === 1 ? "Update" : "Updates"}
+											{pendingChangesCount === 1 ? t("{count} Update", { count: pendingChangesCount }) : t("{count} Updates", { count: pendingChangesCount })}
 										</span>
 									</div>
 									<p className="text-xs text-muted-foreground mt-1">
 										{pendingChangesCount > 0 
-											? "Verify your changes before writing them to the live utility configuration."
-											: "No pending changes. All configurations match the saved settings."}
+											? t("Verify your changes before writing them to the live utility configuration.")
+											: t("No pending changes. All configurations match the saved settings.")}
 									</p>
 								</div>
 								<button 
 									onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: false })}
-									className="size-10 flex items-center justify-center rounded-xl hover:neumorphic-inset transition-colors cursor-pointer"
+									aria-label={t("Close")} className="size-10 flex items-center justify-center rounded-xl hover:neumorphic-inset transition-colors cursor-pointer"
 								>
 									<X className="size-5 text-muted-foreground" />
 								</button>
@@ -773,9 +779,9 @@ export function BillingOperationsPanel({
 								{diff.items.length === 0 ? (
 									<div className="flex flex-col items-center justify-center py-12 text-center">
 										<CheckCircle2 className="size-12 text-emerald-500 mb-3 opacity-80" />
-										<p className="text-sm font-bold text-foreground">All Configurations Up to Date</p>
+										<p className="text-sm font-bold text-foreground">{t("All Configurations Up to Date")}</p>
 										<p className="text-xs text-muted-foreground mt-1 max-w-xs">
-											There are no unsaved edits. Any changes made to building rates or unit rules will appear here for review.
+											{t("There are no unsaved edits. Any changes made to building rates or unit rules will appear here for review.")}
 										</p>
 									</div>
 								) : (
@@ -795,28 +801,28 @@ export function BillingOperationsPanel({
 															<p className="text-sm font-black text-foreground">
 																{item.propertyName}
 																<span className="text-muted-foreground font-normal ml-1.5">
-																	• {item.unitName || "Building Default"}
+																	• {item.unitName || t("Building Default")}
 																</span>
 															</p>
 															<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/70">
-																{item.utilityType} Management
+																{t("{utility} Management", { utility: t(item.utilityType) })}
 															</span>
 														</div>
 													</div>
 													<div>
 														{item.type === "added" && (
 															<span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider">
-																New Rule
+																{t("New Rule")}
 															</span>
 														)}
 														{item.type === "modified" && (
 															<span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider">
-																Modified
+																{t("Modified")}
 															</span>
 														)}
 														{item.type === "deleted" && (
 															<span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 text-[10px] font-black uppercase tracking-wider">
-																Removed
+																{t("Removed")}
 															</span>
 														)}
 													</div>
@@ -852,14 +858,14 @@ export function BillingOperationsPanel({
 											className="px-4 py-3 rounded-xl border border-red-500/20 text-red-600 hover:bg-red-500/10 text-xs font-black uppercase tracking-wider transition-all cursor-pointer inline-flex items-center gap-2"
 										>
 											<RotateCcw className="size-3.5" />
-											Discard All
+											{t("Discard All")}
 										</button>
 										<div className="flex items-center gap-2">
 											<button 
 												onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: false })}
 												className="px-5 py-3 rounded-xl hover:neumorphic-inset text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-foreground transition-all cursor-pointer"
 											>
-												Back to Editor
+												{t("Back to Editor")}
 											</button>
 											<button 
 												onClick={handleRequestSave}
@@ -867,7 +873,7 @@ export function BillingOperationsPanel({
 												className="px-6 py-3 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-widest text-primary-foreground hover:opacity-95 active:scale-95 disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-2"
 											>
 												{saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-												Save Changes
+												{t("Save Changes")}
 											</button>
 										</div>
 									</>
@@ -876,7 +882,7 @@ export function BillingOperationsPanel({
 										onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: false })}
 										className="w-full py-3.5 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all cursor-pointer"
 									>
-										Close
+										{t("Close")}
 									</button>
 								)}
 							</div>
@@ -907,11 +913,12 @@ export function BillingOperationsPanel({
 								<div className="flex items-center justify-between">
 									<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
 										<Info className="size-3" />
-										Strategy Guide
+										{t("Strategy Guide")}
 									</div>
 									<button 
 										onClick={() => dispatch({ type: 'SET_HELP', payload: null })}
-										className="size-10 flex items-center justify-center rounded-xl hover:neumorphic-inset transition-colors"
+										aria-label={t("Close")} className="size-10 flex items-center justify-center rounded-xl hover:neumorphic-inset transition-colors"
+
 									>
 										<X className="size-5 text-muted-foreground" />
 									</button>
@@ -930,7 +937,8 @@ export function BillingOperationsPanel({
 									onClick={() => dispatch({ type: 'SET_HELP', payload: null })}
 									className="w-full py-4 rounded-2xl bg-primary text-white font-black text-sm shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
 								>
-									Got it, thanks!
+									{t("Got it, thanks!")}
+
 								</button>
 							</div>
 						</motion.div>
@@ -958,33 +966,33 @@ export function BillingOperationsPanel({
 								</div>
 								<div className="space-y-1">
 									<h3 className="text-lg font-black text-foreground">
-										Discard Unsaved Changes?
+										{t("Discard Unsaved Changes?")}
 									</h3>
 									<p className="text-xs text-muted-foreground leading-relaxed">
-										Are you sure you want to revert your edits? Any unsaved modifications will be permanently lost.
+										{t("Are you sure you want to revert your edits? Any unsaved modifications will be permanently lost.")}
 									</p>
 								</div>
 							</div>
 
 							<div className="rounded-2xl border border-border/70 bg-muted/30 p-4 space-y-2 text-xs">
 								<div className="flex justify-between items-center">
-									<span className="text-muted-foreground font-medium">Scope</span>
+									<span className="text-muted-foreground font-medium">{t("Scope")}</span>
 									<span className="font-bold text-foreground">
-										{viewMode === "gcash" ? "GCash Payment Settings" : (propertyId !== "all" && workspace.properties.find(p => p.id === propertyId)?.name) || "All Properties"}
+										{viewMode === "gcash" ? t("GCash Payment Settings") : (propertyId !== "all" && workspace.properties.find(p => p.id === propertyId)?.name) || t("All Properties")}
 									</span>
 								</div>
 								{viewMode === "rates" && (
 									<div className="flex justify-between items-center border-t border-border/40 pt-2">
-										<span className="text-muted-foreground font-medium">Pending Edits</span>
+										<span className="text-muted-foreground font-medium">{t("Pending Edits")}</span>
 										<span className="font-black text-amber-600 dark:text-amber-400">
-											{pendingChangesCount} {pendingChangesCount === 1 ? "rule modification" : "rule modifications"}
+											{pendingChangesCount === 1 ? t("{count} rule modification", { count: pendingChangesCount }) : t("{count} rule modifications", { count: pendingChangesCount })}
 										</span>
 									</div>
 								)}
 								<div className="flex justify-between items-center border-t border-border/40 pt-2">
-									<span className="text-muted-foreground font-medium">Action</span>
+									<span className="text-muted-foreground font-medium">{t("Action")}</span>
 									<span className="font-medium text-foreground">
-										Revert back to last saved state
+										{t("Revert back to last saved state")}
 									</span>
 								</div>
 							</div>
@@ -995,7 +1003,7 @@ export function BillingOperationsPanel({
 									onClick={() => setShowDiscardConfirm(false)}
 									className="flex-1 py-3 rounded-xl border border-border/80 hover:neumorphic-inset font-bold text-xs text-muted-foreground hover:text-foreground transition-all cursor-pointer"
 								>
-									Keep Editing
+									{t("Keep Editing")}
 								</button>
 								<button
 									type="button"
@@ -1003,7 +1011,7 @@ export function BillingOperationsPanel({
 									className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-black text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 cursor-pointer"
 								>
 									<RotateCcw className="size-3.5" />
-									Discard Changes
+									{t("Discard Changes")}
 								</button>
 							</div>
 						</motion.div>
@@ -1032,12 +1040,12 @@ export function BillingOperationsPanel({
 								</div>
 								<div className="space-y-1">
 									<h3 className="text-lg font-black text-foreground">
-										Confirm & Save Changes?
+										{t("Confirm & Save Changes?")}
 									</h3>
 									<p className="text-xs text-muted-foreground leading-relaxed">
 										{viewMode === "gcash"
-											? "Apply your updated GCash recipient credentials. Tenants will see these details immediately when paying rent."
-											: "Apply updated utility rates and rules to the live configuration for this property."}
+											? t("Apply your updated GCash recipient credentials. Tenants will see these details immediately when paying rent.")
+											: t("Apply updated utility rates and rules to the live configuration for this property.")}
 									</p>
 								</div>
 							</div>
@@ -1046,20 +1054,20 @@ export function BillingOperationsPanel({
 								{viewMode === "rates" ? (
 									<>
 										<div className="flex justify-between items-center">
-											<span className="text-muted-foreground font-medium">Target Property</span>
+											<span className="text-muted-foreground font-medium">{t("Target Property")}</span>
 											<span className="font-bold text-foreground">
-												{(propertyId !== "all" && workspace.properties.find(p => p.id === propertyId)?.name) || "All Properties"}
+												{(propertyId !== "all" && workspace.properties.find(p => p.id === propertyId)?.name) || t("All Properties")}
 											</span>
 										</div>
 										<div className="flex justify-between items-center border-t border-border/40 pt-2">
-											<span className="text-muted-foreground font-medium">Total Updates</span>
+											<span className="text-muted-foreground font-medium">{t("Total Updates")}</span>
 											<span className="font-black text-primary">
-												{pendingChangesCount} {pendingChangesCount === 1 ? "rule" : "rules"}
+												{pendingChangesCount === 1 ? t("{count} rule", { count: pendingChangesCount }) : t("{count} rules", { count: pendingChangesCount })}
 											</span>
 										</div>
 										{diff.items.filter(i => i.type === "modified").length > 0 && (
 											<div className="flex justify-between items-center">
-												<span className="text-muted-foreground">Modified Rules</span>
+												<span className="text-muted-foreground">{t("Modified Rules")}</span>
 												<span className="font-bold text-foreground">
 													{diff.items.filter(i => i.type === "modified").length}
 												</span>
@@ -1067,7 +1075,7 @@ export function BillingOperationsPanel({
 										)}
 										{diff.items.filter(i => i.type === "added").length > 0 && (
 											<div className="flex justify-between items-center">
-												<span className="text-muted-foreground">New Overrides</span>
+												<span className="text-muted-foreground">{t("New Overrides")}</span>
 												<span className="font-bold text-emerald-600 dark:text-emerald-400">
 													+{diff.items.filter(i => i.type === "added").length}
 												</span>
@@ -1075,7 +1083,7 @@ export function BillingOperationsPanel({
 										)}
 										{diff.items.filter(i => i.type === "deleted").length > 0 && (
 											<div className="flex justify-between items-center">
-												<span className="text-muted-foreground">Removed Overrides</span>
+												<span className="text-muted-foreground">{t("Removed Overrides")}</span>
 												<span className="font-bold text-red-500">
 													-{diff.items.filter(i => i.type === "deleted").length}
 												</span>
@@ -1085,17 +1093,17 @@ export function BillingOperationsPanel({
 								) : (
 									<>
 										<div className="flex justify-between items-center">
-											<span className="text-muted-foreground font-medium">Account Name</span>
+											<span className="text-muted-foreground font-medium">{t("Account Name")}</span>
 											<span className="font-bold text-foreground truncate max-w-[200px]">{accountName}</span>
 										</div>
 										<div className="flex justify-between items-center border-t border-border/40 pt-2">
-											<span className="text-muted-foreground font-medium">GCash Number</span>
+											<span className="text-muted-foreground font-medium">{t("GCash Number")}</span>
 											<span className="font-mono font-bold text-foreground">{accountNumber}</span>
 										</div>
 										<div className="flex justify-between items-center border-t border-border/40 pt-2">
-											<span className="text-muted-foreground font-medium">Rent Invoices</span>
+											<span className="text-muted-foreground font-medium">{t("Rent Invoices")}</span>
 											<span className={cn("font-bold", isEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground")}>
-												{isEnabled ? "Enabled (Active)" : "Disabled"}
+												{isEnabled ? t("Enabled (Active)") : t("Disabled")}
 											</span>
 										</div>
 									</>
@@ -1109,7 +1117,7 @@ export function BillingOperationsPanel({
 									disabled={saving}
 									className="flex-1 py-3 rounded-xl border border-border/80 hover:neumorphic-inset font-bold text-xs text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50"
 								>
-									Cancel
+									{t("Cancel")}
 								</button>
 								<button
 									type="button"
@@ -1118,7 +1126,7 @@ export function BillingOperationsPanel({
 									className="flex-[1.3] py-3 rounded-xl neumorphic-primary text-primary-foreground font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
 								>
 									{saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-									Confirm & Save
+									{t("Confirm & Save")}
 								</button>
 							</div>
 						</motion.div>
@@ -1155,15 +1163,15 @@ export function BillingOperationsPanel({
 												<div className="flex items-center gap-2">
 													<span className="size-2 rounded-full bg-amber-500 animate-pulse" />
 													<span className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
-														Unsaved Changes
+														{t("Unsaved Changes")}
 													</span>
 												</div>
 												<p className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5 font-medium">
 													<span className="font-black text-foreground">
 														{pendingChangesCount}
-													</span> {pendingChangesCount === 1 ? "change pending" : "changes pending"}
+													</span> {pendingChangesCount === 1 ? t("change pending") : t("changes pending")}
 													{propertyId !== "all" && workspace.properties.find(p => p.id === propertyId) ? (
-														<span className="hidden sm:inline"> for {workspace.properties.find(p => p.id === propertyId)?.name}</span>
+														<span className="hidden sm:inline"> {t("for {property}", { property: workspace.properties.find(p => p.id === propertyId)?.name ?? "" })}</span>
 													) : null}
 												</p>
 											</div>
@@ -1175,10 +1183,10 @@ export function BillingOperationsPanel({
 													type="button"
 													onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: true })}
 													className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-border/70 hover:neumorphic-inset text-xs font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer"
-													title="Review specific changes"
+													title={t("Review specific changes")}
 												>
 													<Eye className="size-3.5" />
-													<span className="hidden md:inline">Review</span>
+													<span className="hidden md:inline">{t("Review")}</span>
 												</button>
 
 												<button
@@ -1186,10 +1194,10 @@ export function BillingOperationsPanel({
 													onClick={handleRequestDiscard}
 													disabled={saving}
 													className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-red-500/20 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
-													title="Revert all unsaved changes"
+													title={t("Revert all unsaved changes")}
 												>
 													<RotateCcw className="size-3.5" />
-													<span className="hidden md:inline">Discard</span>
+													<span className="hidden md:inline">{t("Discard")}</span>
 												</button>
 
 												<button
@@ -1199,7 +1207,7 @@ export function BillingOperationsPanel({
 													className="group relative inline-flex items-center gap-2.5 overflow-hidden rounded-xl neumorphic-primary px-6 py-2.5 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-md transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
 												>
 													{saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-													Save Changes
+													{t("Save Changes")}
 												</button>
 											</div>
 
@@ -1207,7 +1215,7 @@ export function BillingOperationsPanel({
 												type="button"
 												onClick={() => dispatch({ type: 'SET_FOOTER_EXPANDED', payload: false })}
 												className="size-8 flex items-center justify-center rounded-lg hover:neumorphic-inset transition-colors cursor-pointer"
-												title="Collapse dock"
+												title={t("Collapse dock")}
 											>
 												<ChevronDown className="size-4 text-muted-foreground" />
 											</button>
@@ -1220,7 +1228,7 @@ export function BillingOperationsPanel({
 											exit={{ opacity: 0, scale: 0.6 }}
 											onClick={() => dispatch({ type: 'SET_FOOTER_EXPANDED', payload: true })}
 											className="flex size-11 items-center justify-center text-primary transition-all hover:bg-primary/5 cursor-pointer relative"
-											title={`Expand console (${pendingChangesCount} unsaved)`}
+											title={t("Expand console ({count} unsaved)", { count: pendingChangesCount })}
 										>
 											<span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-amber-500" />
 											<ChevronUp className="size-5" />
@@ -1252,6 +1260,7 @@ export function BillingOperationsPanel({
 						<button
 							type="button"
 							onClick={() => dispatch({ type: 'SET_MESSAGE', payload: null })}
+							aria-label={t("Dismiss")}
 							className="size-8 flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer text-muted-foreground hover:text-foreground"
 						>
 							<X className="size-4" />
@@ -1273,8 +1282,8 @@ export function BillingOperationsPanel({
 												<Smartphone className="size-6" />
 											</div>
 											<div>
-												<h3 className="text-lg sm:text-xl font-black text-foreground tracking-tight">GCash Direct Payments</h3>
-												<p className="text-xs text-muted-foreground mt-0.5">Receive rent and utility payments directly to your GCash account</p>
+												<h3 className="text-lg sm:text-xl font-black text-foreground tracking-tight">{t("GCash Direct Payments")}</h3>
+												<p className="text-xs text-muted-foreground mt-0.5">{t("Receive rent and utility payments directly to your GCash account")}</p>
 											</div>
 										</div>
 
@@ -1285,7 +1294,7 @@ export function BillingOperationsPanel({
 												: "bg-muted text-muted-foreground border border-border"
 										)}>
 											<span className={cn("size-2 rounded-full", isEnabled ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/50")} />
-											<span>{isEnabled ? "Accepting Payments" : "Payments Disabled"}</span>
+											<span>{isEnabled ? t("Accepting Payments") : t("Payments Disabled")}</span>
 										</div>
 									</div>
 
@@ -1294,11 +1303,11 @@ export function BillingOperationsPanel({
 										<div className="space-y-1.5 min-w-0">
 											<div className="flex items-center gap-1.5 px-1 whitespace-nowrap min-w-0">
 												<User className="size-3.5 text-primary shrink-0" />
-												<label className="text-xs font-black uppercase tracking-wider text-foreground/80 whitespace-nowrap">Account Name</label>
+												<label className="text-xs font-black uppercase tracking-wider text-foreground/80 whitespace-nowrap">{t("Account Name")}</label>
 											</div>
 											<input
 												value={accountName}
-												placeholder="e.g. Marina Reyes"
+												placeholder={t("e.g. Marina Reyes")}
 												maxLength={60}
 												onChange={(event) => {
 													const sanitized = event.target.value.replace(/[^a-zA-Z\s.,'-]/g, "");
@@ -1314,11 +1323,11 @@ export function BillingOperationsPanel({
 											{accountName.length > 0 && accountName.trim().length < 2 ? (
 												<p className="px-1 text-[11px] font-bold text-rose-500 flex items-center gap-1 whitespace-nowrap">
 													<AlertCircle className="size-3 shrink-0" />
-													Minimum 2 characters required
+													{t("Minimum 2 characters required")}
 												</p>
 											) : (
 												<p className="px-1 text-[11px] text-muted-foreground whitespace-nowrap truncate">
-													Must match your verified GCash name
+													{t("Must match your verified GCash name")}
 												</p>
 											)}
 										</div>
@@ -1326,7 +1335,7 @@ export function BillingOperationsPanel({
 										<div className="space-y-1.5 min-w-0">
 											<div className="flex items-center gap-1.5 px-1 whitespace-nowrap min-w-0">
 												<Phone className="size-3.5 text-primary shrink-0" />
-												<label className="text-xs font-black uppercase tracking-wider text-foreground/80 whitespace-nowrap">GCash Number</label>
+												<label className="text-xs font-black uppercase tracking-wider text-foreground/80 whitespace-nowrap">{t("GCash Number")}</label>
 											</div>
 											<input
 												type="tel"
@@ -1350,16 +1359,16 @@ export function BillingOperationsPanel({
 											{accountNumber.length >= 2 && !accountNumber.startsWith("09") ? (
 												<p className="px-1 text-[11px] font-bold text-rose-500 flex items-center gap-1 whitespace-nowrap">
 													<AlertCircle className="size-3 shrink-0" />
-													Must begin with 09 (e.g. 0917...)
+													{t("Must begin with 09 (e.g. 0917...)")}
 												</p>
 											) : accountNumber.length > 0 && accountNumber.length < 11 ? (
 												<p className="px-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1 whitespace-nowrap">
 													<AlertCircle className="size-3 shrink-0" />
-													{11 - accountNumber.length} more digit{11 - accountNumber.length > 1 ? "s" : ""} needed
+													{11 - accountNumber.length > 1 ? t("{count} more digits needed", { count: 11 - accountNumber.length }) : t("{count} more digit needed", { count: 11 - accountNumber.length })}
 												</p>
 											) : (
 												<p className="px-1 text-[11px] text-muted-foreground whitespace-nowrap truncate">
-													11-digit mobile number starting with 09
+													{t("11-digit mobile number starting with 09")}
 												</p>
 											)}
 										</div>
@@ -1369,15 +1378,16 @@ export function BillingOperationsPanel({
 									<div className="rounded-2xl border border-border/80 neumorphic-inset/30 p-4 sm:p-5 flex items-center justify-between gap-4">
 										<div className="space-y-0.5 pr-2">
 											<div className="flex items-center gap-2">
-												<span className="text-sm font-black text-foreground">Enable GCash for Rent Invoices</span>
+												<span className="text-sm font-black text-foreground">{t("Enable GCash for Rent Invoices")}</span>
 												{isEnabled && (
 													<span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase tracking-wider">
-														Active
+														{t("Active")}
 													</span>
 												)}
 											</div>
 											<p className="text-xs text-muted-foreground leading-relaxed">
-												When enabled, tenants will see this recipient and QR code when paying monthly rent.
+												{t("When enabled, tenants will see this recipient and QR code when paying monthly rent.")}
+
 											</p>
 										</div>
 										<button
@@ -1405,7 +1415,7 @@ export function BillingOperationsPanel({
 									<div className="pt-4 border-t border-border/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
 										<div className="flex items-center gap-2 text-xs text-muted-foreground">
 											<ShieldCheck className="size-4 text-emerald-500 shrink-0" />
-											<span>Direct transfers • Zero platform deduction</span>
+											<span>{t("Direct transfers • Zero platform deduction")}</span>
 										</div>
 
 										{!embedded && (
@@ -1416,7 +1426,7 @@ export function BillingOperationsPanel({
 												className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl neumorphic-primary px-6 py-3 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-md transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer shrink-0"
 											>
 												{saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-												Save GCash Settings
+												{t("Save GCash Settings")}
 											</button>
 										)}
 									</div>
@@ -1429,10 +1439,10 @@ export function BillingOperationsPanel({
 									<div className="flex items-center justify-between pb-3 border-b border-border/60">
 										<div className="flex items-center gap-2">
 											<div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-											<span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Tenant View Preview</span>
+											<span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">{t("Tenant View Preview")}</span>
 										</div>
 										<span className="text-[10px] font-bold text-muted-foreground/60 px-2 py-0.5 rounded-md bg-muted/50 border border-border/50">
-											Live Card
+											{t("Live Card")}
 										</span>
 									</div>
 
@@ -1442,10 +1452,10 @@ export function BillingOperationsPanel({
 										<div className="flex items-center justify-between px-1">
 											<div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase tracking-wider shadow-sm">
 												<Smartphone className="size-3" />
-												GCash Direct
+												{t("GCash Direct")}
 											</div>
 											<span className={cn("text-[10px] font-bold", isEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground")}>
-												● {isEnabled ? "Accepting" : "Disabled"}
+												● {isEnabled ? t("Accepting") : t("Disabled")}
 											</span>
 										</div>
 
@@ -1454,14 +1464,14 @@ export function BillingOperationsPanel({
 											<div className="group/qr relative mx-auto aspect-square w-48 overflow-hidden rounded-2xl bg-white p-3.5 shadow-md border border-neutral-200/80 dark:border-neutral-700/80 flex flex-col items-center justify-center transition-all">
 												{qrPreview ? (
 													<>
-														<Image src={qrPreview} alt="GCash QR Preview" width={180} height={180} unoptimized className="h-full w-full object-contain" />
+														<Image src={qrPreview} alt={t("GCash QR Preview")} width={180} height={180} unoptimized className="h-full w-full object-contain" />
 														{/* Hover overlay */}
 														<label
 															htmlFor="side-qr-upload"
 															className="absolute inset-0 bg-black/60 opacity-0 group-hover/qr:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 text-white cursor-pointer"
 														>
 															<Upload className="size-6 text-white" />
-															<span className="text-xs font-black tracking-wide">Replace QR</span>
+															<span className="text-xs font-black tracking-wide">{t("Replace QR")}</span>
 														</label>
 														<button
 															type="button"
@@ -1470,7 +1480,7 @@ export function BillingOperationsPanel({
 																dispatch({ type: 'UPDATE_PAYMENT', payload: { removeQr: true, qrFile: null, qrPreview: null } });
 															}}
 															className="absolute top-2 right-2 z-10 size-7 rounded-lg bg-red-600 hover:bg-red-700 text-white flex items-center justify-center opacity-0 group-hover/qr:opacity-100 transition-opacity shadow-sm cursor-pointer"
-															title="Remove QR code"
+															title={t("Remove QR code")}
 														>
 															<Trash2 className="size-3.5" />
 														</button>
@@ -1484,8 +1494,8 @@ export function BillingOperationsPanel({
 															<Upload className="size-4" />
 														</div>
 														<div className="space-y-0.5">
-															<span className="text-[11px] font-black text-foreground block">Upload GCash QR</span>
-															<span className="text-[9px] text-muted-foreground block">Click to select image</span>
+															<span className="text-[11px] font-black text-foreground block">{t("Upload GCash QR")}</span>
+															<span className="text-[9px] text-muted-foreground block">{t("Click to select image")}</span>
 														</div>
 													</label>
 												)}
@@ -1501,7 +1511,7 @@ export function BillingOperationsPanel({
 													const file = handleMediaSelection(event, {
 														preset: "image",
 														maxSizeBytes: 5 * 1024 * 1024,
-														notify: (msg, desc) => toast.error(msg, { description: desc }),
+														notify: (msg, desc) => toast.error(tr(msg), { description: desc }),
 													});
 													if (file) {
 														dispatch({ type: 'UPDATE_PAYMENT', payload: { qrFile: file, qrPreview: URL.createObjectURL(file), removeQr: false } });
@@ -1518,7 +1528,7 @@ export function BillingOperationsPanel({
 														className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-xs font-bold text-red-600 dark:text-red-400 transition-all cursor-pointer shadow-xs"
 													>
 														<Trash2 className="size-3" />
-														<span>Remove QR</span>
+														<span>{t("Remove QR")}</span>
 													</button>
 												</div>
 											)}
@@ -1526,7 +1536,7 @@ export function BillingOperationsPanel({
 
 										{/* Recipient Info */}
 										<div className="space-y-1 pt-1 border-t border-border/40">
-											<p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">Official Recipient</p>
+											<p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">{t("Official Recipient")}</p>
 											<h4 className="text-base sm:text-lg font-black text-foreground truncate flex items-center justify-center gap-1.5">
 												{accountName || "Juan Dela Cruz"}
 												{accountName && <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />}
@@ -1539,13 +1549,13 @@ export function BillingOperationsPanel({
 
 										{/* Helper Notice */}
 										<p className="text-[11px] text-muted-foreground leading-relaxed px-2 border-t border-border/40 pt-3">
-											Tenants scan this QR code or use the number in their GCash app to send direct payments.
+											{t("Tenants scan this QR code or use the number in their GCash app to send direct payments.")}
 										</p>
 									</div>
 
 									<div className="flex items-center justify-center gap-1.5 text-[10px] font-black text-muted-foreground/60 pt-1">
 										<ShieldCheck className="size-3.5 text-primary/70" />
-										<span>Verified iReside Landlord Payment Channel</span>
+										<span>{t("Verified iReside Landlord Payment Channel")}</span>
 									</div>
 								</div>
 							</div>
@@ -1576,11 +1586,11 @@ export function BillingOperationsPanel({
  <div className="flex items-center gap-3">
  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md neumorphic-inset text-[10px] font-black text-muted-foreground uppercase tracking-widest">
  <Target className="size-3" />
- {property.units.length} Units Active
+ {t("{count} Units Active", { count: property.units.length })}
  </span>
  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 text-[10px] font-black text-emerald-600 uppercase tracking-widest">
  <ShieldCheck className="size-3" />
- Verified
+ {t("Verified")}
  </span>
  </div>
  </div>
@@ -1605,7 +1615,7 @@ export function BillingOperationsPanel({
  <div className="flex items-center justify-between px-2">
  <div className={cn("flex items-center gap-3 px-4 py-2 rounded-2xl border text-sm font-black uppercase tracking-wider ", meta.tint, meta.bg, meta.border)}>
  <meta.icon className="size-4" />
- {meta.label} Rates
+ {t("{utility} Rates", { utility: t(meta.label) })}
  </div>
  <button
  onClick={() => addOverride(property.id, type)}
@@ -1623,7 +1633,7 @@ export function BillingOperationsPanel({
  <div className="size-8 flex items-center justify-center rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-all">
  <Plus className="size-4" />
  </div>
- Customize Specific Room
+ {t("Customize Specific Room")}
  </button>
  </div>
 
@@ -1631,7 +1641,7 @@ export function BillingOperationsPanel({
  <div className="space-y-4">
  <div className="flex items-center gap-2 pl-4">
  <div className="size-1.5 rounded-full bg-primary" />
- <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Building Default Rate</span>
+ <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("Building Default Rate")}</span>
  </div>
  <UtilityConfigEditor
  config={baseConfig}
@@ -1643,20 +1653,20 @@ export function BillingOperationsPanel({
  dispatch({
  type: 'SET_HELP',
  payload: {
- title: "Billing Strategy",
+ title: t("Billing Strategy"),
  content: (
  <div className="space-y-4">
  <div className="p-4 rounded-2xl neumorphic-inset ">
- <p className="font-black text-foreground mb-1">Included in Rent</p>
- <p>The utility cost is part of the rent. Tenants don&apos;t pay anything extra.</p>
+ <p className="font-black text-foreground mb-1">{t("Included in Rent")}</p>
+ <p>{t("The utility cost is part of the rent. Tenants don't pay anything extra.")}</p>
  </div>
  <div className="p-4 rounded-2xl neumorphic-inset ">
- <p className="font-black text-foreground mb-1">Submetered (Landlord Managed)</p>
- <p>The property has one main bill that you pay. You use submeters to bill tenants for their specific usage through iReside.</p>
+ <p className="font-black text-foreground mb-1">{t("Submetered (Landlord Managed)")}</p>
+ <p>{t("The property has one main bill that you pay. You use submeters to bill tenants for their specific usage through iReside.")}</p>
  </div>
  <div className="p-4 rounded-2xl neumorphic-inset ">
- <p className="font-black text-foreground mb-1">Direct to Provider</p>
- <p>Tenants have their own separate accounts and meters. They receive and pay their own bills directly to the utility company.</p>
+ <p className="font-black text-foreground mb-1">{t("Direct to Provider")}</p>
+ <p>{t("Tenants have their own separate accounts and meters. They receive and pay their own bills directly to the utility company.")}</p>
  </div>
  </div>
  )
@@ -1671,7 +1681,7 @@ export function BillingOperationsPanel({
  <div className="flex items-center gap-2 pl-4">
  <Target className={cn("size-4", overrides.length > 0 ? "text-amber-600" : "text-muted-foreground/30")} />
  <span className={cn("text-[10px] font-black uppercase tracking-widest", overrides.length > 0 ? "text-amber-600" : "text-muted-foreground/30")}>
- Custom Room Rates
+ {t("Custom Room Rates")}
  </span>
  </div>
 
@@ -1689,20 +1699,20 @@ export function BillingOperationsPanel({
  dispatch({
  type: 'SET_HELP',
  payload: {
- title: "Billing Strategy",
+ title: t("Billing Strategy"),
  content: (
  <div className="space-y-4">
  <div className="p-4 rounded-2xl neumorphic-inset ">
- <p className="font-black text-foreground mb-1">Included in Rent</p>
- <p>Utilities are covered by the rent payment.</p>
+ <p className="font-black text-foreground mb-1">{t("Included in Rent")}</p>
+ <p>{t("Utilities are covered by the rent payment.")}</p>
  </div>
  <div className="p-4 rounded-2xl neumorphic-inset ">
- <p className="font-black text-foreground mb-1">Submetered</p>
- <p>You bill tenants based on their submeter readings.</p>
+ <p className="font-black text-foreground mb-1">{t("Submetered")}</p>
+ <p>{t("You bill tenants based on their submeter readings.")}</p>
  </div>
  <div className="p-4 rounded-2xl neumorphic-inset ">
- <p className="font-black text-foreground mb-1">Direct</p>
- <p>Tenants pay the utility company directly.</p>
+ <p className="font-black text-foreground mb-1">{t("Direct")}</p>
+ <p>{t("Tenants pay the utility company directly.")}</p>
  </div>
  </div>
  )
@@ -1714,7 +1724,7 @@ export function BillingOperationsPanel({
  </div>
  ) : (
  <div className="flex-1 min-h-[100px] flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-border/50 neumorphic-inset opacity-40">
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">No customizations active</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">{t("No customizations active")}</p>
  </div>
  )}
  </div>
@@ -1727,11 +1737,11 @@ export function BillingOperationsPanel({
 					{embedded && (
 						<div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 rounded-2xl neumorphic-panel mt-8">
 							<div>
-								<p className="text-sm font-black text-foreground">Save Utility Rate Rules</p>
+								<p className="text-sm font-black text-foreground">{t("Save Utility Rate Rules")}</p>
 								<p className="text-xs text-muted-foreground mt-0.5">
 									{isPanelDirty
-										? `${pendingChangesCount} unsaved ${pendingChangesCount === 1 ? "change" : "changes"} ready to apply.`
-										: "All default rates and unit overrides are saved and up to date."}
+										? (pendingChangesCount === 1 ? t("{count} unsaved change ready to apply.", { count: pendingChangesCount }) : t("{count} unsaved changes ready to apply.", { count: pendingChangesCount }))
+										: t("All default rates and unit overrides are saved and up to date.")}
 								</p>
 							</div>
 							<div className="flex items-center gap-3">
@@ -1744,7 +1754,7 @@ export function BillingOperationsPanel({
 											className="px-4 py-2.5 rounded-xl border border-red-500/20 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 text-xs font-black transition-all cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
 										>
 											<RotateCcw className="size-3.5" />
-											Discard
+											{t("Discard")}
 										</button>
 										<button
 											type="button"
@@ -1752,7 +1762,7 @@ export function BillingOperationsPanel({
 											className="px-4 py-2.5 rounded-xl border border-border/60 hover:neumorphic-inset text-xs font-black text-muted-foreground hover:text-foreground transition-all cursor-pointer inline-flex items-center gap-1.5"
 										>
 											<Eye className="size-3.5" />
-											Review Changes
+											{t("Review Changes")}
 										</button>
 									</>
 								)}
@@ -1763,7 +1773,7 @@ export function BillingOperationsPanel({
 									className="inline-flex items-center gap-2 rounded-xl neumorphic-primary px-6 py-2.5 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-md transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
 								>
 									{saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-									Save Changes
+									{t("Save Changes")}
 								</button>
 							</div>
 						</div>
@@ -1783,14 +1793,16 @@ function Field({
  children: ReactNode;
  onHelp?: () => void;
 }) {
+ const { t } = useLanguageContext();
  return (
  <div className="block space-y-2 min-w-0">
  <div className="flex items-center gap-2 pl-1 whitespace-nowrap min-w-0">
- <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">{label}</span>
+ <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground whitespace-nowrap">{t(label)}</span>
  {onHelp && (
  <button 
  type="button"
  onClick={onHelp}
+ aria-label={t("Help")}
  className="text-muted-foreground/40 hover:text-primary transition-colors"
  >
  <HelpCircle className="size-3" />
@@ -1819,6 +1831,7 @@ function UtilityConfigEditor({
  onHelp?: () => void;
  mounted?: boolean;
 }) {
+ const { t } = useLanguageContext();
  const Icon = config.utility_type === "water" ? Droplets : Zap;
  
  // Unified derived state
@@ -1862,11 +1875,11 @@ function UtilityConfigEditor({
  "text-[10px] font-black uppercase tracking-[0.2em]",
  isOverride ? "text-amber-500" : "text-primary"
  )}>
- {isOverride ? "Custom Room Rate" : "Building Default Rate"}
+ {isOverride ? t("Custom Room Rate") : t("Building Default Rate")}
  </span>
  {!isOverride && (
  <p className="text-sm font-black text-foreground">
- Applies to all rooms unless customized
+ {t("Applies to all rooms unless customized")}
  </p>
  )}
  </div>
@@ -1879,11 +1892,12 @@ function UtilityConfigEditor({
  onChange={(e) => onChange(config.localId, { unit_id: e.target.value || null })}
  className="rounded-xl border border-amber-500/30 bg-card px-4 py-2 text-xs font-black text-amber-600 outline-none focus:ring-4 focus:ring-amber-500/10 "
  >
- <option value="">Select Unit...</option>
+ <option value="">{t("Select Unit...")}</option>
  {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
  </select>
  <button
  onClick={onRemove}
+ aria-label={t("Remove custom rate")}
  className="size-9 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all border border-red-100"
  >
  <Trash2 className="size-4" />
@@ -1897,7 +1911,7 @@ function UtilityConfigEditor({
  <div className="space-y-6">
  {!isOverride && (
  <div className="relative flex items-center gap-4">
- <span className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/30">1. Select Logic</span>
+ <span className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/30">{t("1. Select Logic")}</span>
  <div className="h-px flex-1 bg-border/40" />
  </div>
  )}
@@ -1918,7 +1932,7 @@ function UtilityConfigEditor({
  )}
  >
  {strategy === "included" && <CheckCircle2 className="size-3" />}
- Included
+ {t("Included")}
  </button>
  <button 
  onClick={() => onChange(config.localId, { billing_mode: "tenant_paid", responsibility_mode: "landlord_bills" })}
@@ -1930,7 +1944,7 @@ function UtilityConfigEditor({
  )}
  >
  {strategy === "submetered" && <CheckCircle2 className="size-3" />}
- Submetered
+ {t("Submetered")}
  </button>
  <button 
  onClick={() => onChange(config.localId, { billing_mode: "tenant_paid", responsibility_mode: "tenant_direct" })}
@@ -1942,7 +1956,7 @@ function UtilityConfigEditor({
  )}
  >
  {strategy === "direct" && <CheckCircle2 className="size-3" />}
- Direct
+ {t("Direct")}
  </button>
  </div>
  </Field>
@@ -1961,7 +1975,7 @@ function UtilityConfigEditor({
  >
  {!isOverride && (
  <div className="relative flex items-center gap-4">
- <span className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/30">2. Rates & Billing</span>
+ <span className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/30">{t("2. Rates & Billing")}</span>
  <div className="h-px flex-1 bg-border/40" />
  </div>
  )}
@@ -2008,7 +2022,7 @@ function UtilityConfigEditor({
  ) : config.rate_per_unit <= 0 && (
  <p className="mt-1 text-[11px] font-bold text-amber-500 flex items-center gap-1">
  <AlertCircle className="size-3 shrink-0" />
- Rate must be greater than ₱0.00
+ {t("Rate must be greater than ₱0.00")}
  </p>
  )}
  </Field>
@@ -2065,19 +2079,20 @@ function UtilityConfigEditor({
  </div>
  <div className="space-y-1.5">
  <div className="flex items-center gap-2">
- <p className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground">How This Works</p>
+ <p className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground">{t("How This Works")}</p>
  {isSubmetered && config.rate_per_unit === 0 && (
- <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-[8px] font-black uppercase text-amber-600 tracking-tighter">Action Required</span>
+ <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-[8px] font-black uppercase text-amber-600 tracking-tighter">{t("Action Required")}</span>
  )}
  </div>
  <p className="text-xs text-muted-foreground leading-relaxed font-medium">
- {strategy === "included" && "Utilities are included in the room rent. Tenants will not receive separate utility bills."}
+ {strategy === "included" && t("Utilities are included in the room rent. Tenants will not receive separate utility bills.")}
  {strategy === "submetered" && (
  config.rate_per_unit === 0 
- ? "Notice: Rate is set to ₱0.00. Enter your standard rate so monthly usage is calculated automatically."
- : "You pay the main utility bill and bill each room based on submeter readings each month."
+ ? t("Notice: Rate is set to ₱0.00. Enter your standard rate so monthly usage is calculated automatically.")
+ : t("You pay the main utility bill and bill each room based on submeter readings each month.")
  )}
- {strategy === "direct" && "Tenants pay the utility provider directly with their own account. Charges will not appear on their rent bill."}
+ {strategy === "direct" && t("Tenants pay the utility provider directly with their own account. Charges will not appear on their rent bill.")}
+
  </p>
  </div>
  </div>

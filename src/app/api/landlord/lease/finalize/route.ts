@@ -6,6 +6,7 @@ import { generateMonthlyInvoices } from "@/lib/billing/server";
 import { databaseErrorResponse, parseJsonBody } from "@/lib/validation/server";
 import { leaseFinalizeSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { generateTemporaryPassword } from "@/lib/security/passwords";
+import type { LeaseTermType } from "@/lib/lease-term";
 
 /** Temporary password from a CSPRNG (see lib/security/passwords). */
 function generateTempPassword(length = 12): string {
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
         application_id,
         unit_id,
         lease_start,
+        lease_term_type,
         lease_end,
         monthly_rent,
         security_deposit,
@@ -161,6 +163,7 @@ export async function POST(request: Request) {
                     unitId: unit_id,
                     applicationId: application_id,
                     leaseStart: lease_start,
+                    leaseTermType: lease_term_type,
                     leaseEnd: lease_end,
                     monthlyRent: monthly_rent,
                     securityDeposit: security_deposit,
@@ -202,6 +205,7 @@ export async function POST(request: Request) {
         unitId: unit_id,
         applicationId: application_id,
         leaseStart: lease_start,
+        leaseTermType: lease_term_type,
         leaseEnd: lease_end,
         monthlyRent: monthly_rent,
         securityDeposit: security_deposit,
@@ -221,7 +225,9 @@ interface FinalizeLeaseParams {
     unitId: string;
     applicationId: string;
     leaseStart: string;
-    leaseEnd: string;
+    leaseTermType: LeaseTermType;
+    /** Required for fixed terms; null for open-ended leases. */
+    leaseEnd: string | null;
     monthlyRent: number;
     securityDeposit?: number;
     landlordSignature: string;
@@ -241,7 +247,8 @@ async function finalizeLease(params: FinalizeLeaseParams) {
             tenant_id: params.tenantId,
             landlord_id: params.landlordId,
             start_date: params.leaseStart,
-            end_date: params.leaseEnd,
+            term_type: params.leaseTermType,
+            end_date: params.leaseTermType === "fixed" ? params.leaseEnd : null,
             monthly_rent: params.monthlyRent,
             security_deposit: params.securityDeposit || 0,
             status: "active",

@@ -47,7 +47,7 @@ export function LanguageToggle({
           className
         )}
         role="group"
-        aria-label="Language selector"
+        aria-label={t("Language selector")}
       >
         <div className="flex items-center px-1 text-muted-foreground" title="Wika / Language">
           <Globe className="size-3.5" />
@@ -133,7 +133,7 @@ export function LanguageToggle({
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {langItem.description}
+                      {t(langItem.description)}
                     </p>
                   </div>
                 </div>
@@ -198,11 +198,11 @@ export function LanguageToggle({
               </div>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Standard professional English interface for international and multi-tenant operations.
+              {t("Standard professional English interface for international and multi-tenant operations.")}
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-border/40 flex items-center gap-2 text-[11px] font-semibold text-muted-foreground">
-            <span>Sample:</span>
+            <span>{t("Sample:")}</span>
             <span className="font-mono text-foreground">Rent Due</span>
             <span>•</span>
             <span className="font-mono text-foreground">Occupied</span>
@@ -261,7 +261,7 @@ export function LanguageToggle({
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-border/40 flex items-center gap-2 text-[11px] font-semibold text-muted-foreground">
-            <span>Sample:</span>
+            <span>{t("Sample:")}</span>
             <span className="font-mono text-primary font-bold">Upa sa Kwarto</span>
             <span>•</span>
             <span className="font-mono text-primary font-bold">May Nakatira</span>

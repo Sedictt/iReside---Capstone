@@ -10,6 +10,7 @@ import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { FieldError } from "@/components/ui/field-error";
 import { PROPERTY_LIMITS, amenityNameRule } from "@/lib/validation/schemas/properties.schema";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface AmenityChipProps {
     amenity: string;
@@ -28,6 +29,8 @@ function AmenityChip({
     onToggle,
     onRemove,
 }: AmenityChipProps) {
+    const { t } = useLanguageContext();
+    const displayName = isCustom ? amenity : t(amenity);
     const textRef = useRef<HTMLSpanElement>(null);
     const [isTruncated, setIsTruncated] = useState(false);
 
@@ -53,7 +56,7 @@ function AmenityChip({
             onClick={onToggle}
             onMouseEnter={checkTruncation}
             aria-pressed={isSelected}
-            title={isTruncated ? amenity : undefined}
+            title={isTruncated ? displayName : undefined}
             className={cn(
                 isCustom
                     ? "w-full px-4 py-3 pr-8 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all text-left truncate flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
@@ -67,13 +70,13 @@ function AmenityChip({
         >
             {isSelected && <Check className="size-3 shrink-0 stroke-[3]" />}
             <span ref={textRef} className="truncate">
-                {amenity}
+                {displayName}
             </span>
         </button>
     );
 
     const wrappedButton = isTruncated ? (
-        <Tooltip content={amenity} side="top" sideOffset={6}>
+        <Tooltip content={displayName} side="top" sideOffset={6}>
             {button}
         </Tooltip>
     ) : (
@@ -88,8 +91,8 @@ function AmenityChip({
                     <button
                         type="button"
                         onClick={onRemove}
-                        title={`Delete "${amenity}" from choices`}
-                        aria-label={`Delete custom amenity choice ${amenity}`}
+                        title={t("Delete \"{amenity}\" from choices", { amenity })}
+                        aria-label={t("Delete custom amenity choice {amenity}", { amenity })}
                         className={cn(
                             "absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full opacity-60 hover:opacity-100 transition-opacity cursor-pointer",
                             isSelected
@@ -124,6 +127,7 @@ export function PropertyAmenitiesSelector({
     variant = "default",
     className,
 }: PropertyAmenitiesSelectorProps) {
+    const { t } = useLanguageContext();
     const isDarkVariant = variant === "dark";
     const [inputValue, setInputValue] = useState("");
 
@@ -164,7 +168,7 @@ export function PropertyAmenitiesSelector({
 
         const result = addCustomAmenity(trimmed);
         if (!result.success) {
-            toast.error(result.error || "Unable to add custom amenity.");
+            toast.error(t(result.error || "Unable to add custom amenity."));
             return;
         }
 
@@ -176,7 +180,7 @@ export function PropertyAmenitiesSelector({
 
         setInputValue("");
         addForm.reset();
-        toast.success(`"${addedName}" added! It is now saved as a choice for all your properties.`);
+        toast.success(t("\"{name}\" added! It is now saved as a choice for all your properties.", { name: addedName }));
     };
 
     const handleRemoveCustomChoice = (amenityName: string, e: React.MouseEvent) => {
@@ -186,7 +190,7 @@ export function PropertyAmenitiesSelector({
         if (selectedAmenities.some((a) => a.toLowerCase() === amenityName.toLowerCase())) {
             onChange(selectedAmenities.filter((a) => a.toLowerCase() !== amenityName.toLowerCase()));
         }
-        toast.info(`"${amenityName}" removed from your custom choices.`);
+        toast.info(t("\"{name}\" removed from your custom choices.", { name: amenityName }));
     };
 
     return (
@@ -210,11 +214,11 @@ export function PropertyAmenitiesSelector({
                             isDarkVariant ? "text-white/60" : "text-muted-foreground"
                         )}
                     >
-                        Amenities & Facilities
+                        {t("Amenities & Facilities")}
                     </h3>
                 </div>
                 <span className="text-[10px] font-black text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">
-                    {selectedAmenities.length} Selected
+                    {t("{count} Selected", { count: selectedAmenities.length })}
                 </span>
             </div>
 
@@ -226,7 +230,7 @@ export function PropertyAmenitiesSelector({
                         isDarkVariant ? "text-white/40" : "text-muted-foreground"
                     )}
                 >
-                    Standard Amenities
+                    {t("Standard Amenities")}
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {defaultAmenities.map((amenity) => (
@@ -253,7 +257,7 @@ export function PropertyAmenitiesSelector({
                                 isDarkVariant ? "text-white/40" : "text-muted-foreground"
                             )}
                         >
-                            Your Custom Amenities
+                            {t("Your Custom Amenities")}
                         </p>
                         <span
                             className={cn(
@@ -261,7 +265,7 @@ export function PropertyAmenitiesSelector({
                                 isDarkVariant ? "text-white/30" : "text-muted-foreground/60"
                             )}
                         >
-                            Saved for your account
+                            {t("Saved for your account")}
                         </span>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -291,7 +295,7 @@ export function PropertyAmenitiesSelector({
                         isDarkVariant ? "text-white/40" : "text-muted-foreground"
                     )}
                 >
-                    Add Custom Amenity
+                    {t("Add Custom Amenity")}
                 </label>
                 <form onSubmit={handleAddCustom} className="flex gap-2">
                     <input
@@ -300,7 +304,7 @@ export function PropertyAmenitiesSelector({
                         type="text"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
-                        placeholder="e.g. Rooftop Lounge, Study Hall..."
+                        placeholder={t("e.g. Rooftop Lounge, Study Hall...")}
                         maxLength={PROPERTY_LIMITS.amenityMax}
                         className={cn(
                             "flex-1 rounded-xl px-4 py-3 text-xs font-semibold outline-none transition-all",
@@ -321,7 +325,7 @@ export function PropertyAmenitiesSelector({
                         )}
                     >
                         <Plus className="size-3.5 stroke-[3]" />
-                        <span>Add</span>
+                        <span>{t("Add")}</span>
                     </button>
                 </form>
                 <FieldError id={addForm.errorId("customAmenity")} message={addForm.errorFor("customAmenity")} className="px-1" />
@@ -331,7 +335,7 @@ export function PropertyAmenitiesSelector({
                         isDarkVariant ? "text-white/30" : "text-muted-foreground/60"
                     )}
                 >
-                    Custom amenities are automatically saved to your account so you can reuse them in future properties.
+                    {t("Custom amenities are automatically saved to your account so you can reuse them in future properties.")}
                 </p>
             </div>
         </div>

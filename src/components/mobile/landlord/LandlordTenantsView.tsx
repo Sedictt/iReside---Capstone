@@ -29,7 +29,10 @@ import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropertySelector';
 import { triggerHaptic } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
+import { useLanguageContext } from '@/context/LanguageContext';
 import { toast } from 'sonner';
+import { formatTenure, leaseEndState, leaseTermLabel } from '@/lib/lease-term';
+import { tr } from '@/hooks/useLanguage';
 
 interface TenantItem {
     id: string;
@@ -38,7 +41,14 @@ interface TenantItem {
     unit: string;
     status: 'Active' | 'Moving Out' | 'Evicted';
     rentAmount: number | null;
+    leaseStart?: string | null;
+    /** Null for open-ended leases until a move-out date is agreed. */
     leaseEnd: string | null;
+    /** "open_ended" (default) or "fixed"; the API may use any of these keys. */
+    leaseTermType?: string | null;
+    term_type?: string | null;
+    termType?: string | null;
+    lease_term?: string | null;
     phone: string;
     email: string;
     avatar: string;
@@ -47,6 +57,19 @@ interface TenantItem {
     paymentStatus: 'paid' | 'late' | 'pending';
     onboardingStatus: 'pending' | 'in_progress' | 'completed' | 'not_started';
 }
+
+/** Lease-term shape for the shared helpers. */
+const tenantLeaseTerm = (tenant: Pick<TenantItem, 'leaseStart' | 'leaseEnd' | 'leaseTermType' | 'term_type' | 'termType' | 'lease_term'>) => ({
+    term_type: tenant.leaseTermType ?? tenant.term_type ?? tenant.termType ?? tenant.lease_term ?? null,
+    end_date: tenant.leaseEnd,
+    start_date: tenant.leaseStart ?? null,
+});
+
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+    paid: 'Paid',
+    late: 'Late',
+    pending: 'Pending',
+};
 
 interface TenantDetailProfile {
     id: string;
@@ -62,7 +85,8 @@ interface TenantDetailLease {
     id: string;
     status: string;
     start_date: string;
-    end_date: string;
+    end_date: string | null;
+    term_type?: string | null;
     monthly_rent: number;
     security_deposit?: number;
     unit?: {
@@ -77,6 +101,7 @@ interface TenantDetailLease {
 export function LandlordTenantsView() {
     const router = useRouter();
     const { selectedPropertyId } = useProperty();
+    const { t, locale, language } = useLanguageContext();
 
     const [tenants, setTenants] = useState<TenantItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -103,7 +128,7 @@ export function LandlordTenantsView() {
             setTenants(Array.isArray(data.tenants) ? data.tenants : []);
         } catch (err) {
             console.error('Error fetching landlord tenants:', err);
-            toast.error('Failed to load tenant roster');
+            toast.error(tr('Failed to load tenant roster'));
         } finally {
             setLoading(false);
         }
@@ -118,17 +143,22 @@ export function LandlordTenantsView() {
         return `₱${amt.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
     };
 
-    const formatDate = (dateStr?: string | null) => {
-        if (!dateStr) return 'N/A';
-        const d = new Date(dateStr);
-        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    };
-
-    const getDaysRemaining = (endStr?: string | null) => {
-        if (!endStr) return null;
-        const end = new Date(endStr);
-        const today = new Date();
-        return Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    /** "Time left" cell: countdown for dated terms, tenure for open-ended leases. */
+    const describeTimeLeft = (tenant: TenantItem): { label: string; highlight: boolean } => {
+        const term = tenantLeaseTerm(tenant);
+        const state = leaseEndState(term);
+        switch (state.kind) {
+            case 'open_ended': {
+                const tenure = formatTenure(term.start_date, undefined, language);
+                return { label: tenure || t('Open-ended'), highlight: false };
+            }
+            case 'moving_out':
+                return { label: state.daysLeft === 0 ? t('Moving out today') : t('{count} days', { count: state.daysLeft }), highlight: state.daysLeft <= 30 };
+            case 'ended':
+                return { label: t('Ended'), highlight: true };
+            case 'fixed':
+                return { label: t('{count} days', { count: state.daysLeft }), highlight: state.daysLeft <= 60 };
+        }
     };
 
     // Metrics summary
@@ -201,7 +231,7 @@ export function LandlordTenantsView() {
                             fetchTenants();
                         }}
                         className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-card text-muted-foreground hover:text-foreground active:scale-95 transition-all shadow-2xs"
-                        aria-label="Refresh roster"
+                        aria-label={t("Refresh roster")}
                     >
                         <RefreshCw className={cn("size-4", loading && "animate-spin text-primary")} />
                     </button>
@@ -210,7 +240,7 @@ export function LandlordTenantsView() {
                 {/* Metrics Bar */}
                 <div className="grid grid-cols-4 gap-2">
                     <div className="p-2.5 rounded-2xl bg-card border border-slate-200 dark:border-white/10 flex flex-col justify-between">
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Total</span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{t("Total")}</span>
                         <span className="text-lg font-black text-foreground mt-0.5">{metrics.total}</span>
                     </div>
 
@@ -221,7 +251,7 @@ export function LandlordTenantsView() {
                         }}
                         className="p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col justify-between cursor-pointer active:scale-97 transition-all"
                     >
-                        <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Paid</span>
+                        <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">{t("Paid")}</span>
                         <span className="text-lg font-black text-foreground mt-0.5">{metrics.paidCount}</span>
                     </div>
 
@@ -237,7 +267,7 @@ export function LandlordTenantsView() {
                                 : "bg-card border-slate-200 dark:border-white/10"
                         )}
                     >
-                        <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Late</span>
+                        <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">{t("Late")}</span>
                         <div className="flex items-center justify-between">
                             <span className="text-lg font-black text-foreground mt-0.5">{metrics.lateCount}</span>
                             {metrics.lateCount > 0 && (
@@ -253,7 +283,7 @@ export function LandlordTenantsView() {
                         }}
                         className="p-2.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex flex-col justify-between cursor-pointer active:scale-97 transition-all"
                     >
-                        <span className="text-[9px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Moving</span>
+                        <span className="text-[9px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">{t("Moving")}</span>
                         <span className="text-lg font-black text-foreground mt-0.5">{metrics.movingOutCount}</span>
                     </div>
                 </div>
@@ -265,7 +295,7 @@ export function LandlordTenantsView() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search tenant, unit, phone, or email..."
+                        placeholder={t("Search tenant, unit, phone, or email...")}
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
                     />
                     {searchQuery && (
@@ -292,7 +322,7 @@ export function LandlordTenantsView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        All ({tenants.length})
+                        {t('All ({count})', { count: tenants.length })}
                     </button>
                     <button
                         onClick={() => {
@@ -306,7 +336,7 @@ export function LandlordTenantsView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Active
+                        {t('Active')}
                     </button>
                     <button
                         onClick={() => {
@@ -320,7 +350,7 @@ export function LandlordTenantsView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Late
+                        {t('Late')}
                         {metrics.lateCount > 0 && (
                             <span className="ml-1 px-1.5 py-0.2 rounded-full bg-amber-500 text-white text-[9px] font-black">
                                 {metrics.lateCount}
@@ -339,7 +369,7 @@ export function LandlordTenantsView() {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        Moving
+                        {t('Moving')}
                     </button>
                 </div>
 
@@ -348,14 +378,15 @@ export function LandlordTenantsView() {
                     {filteredTenants.length === 0 ? (
                         <div className="p-8 text-center rounded-2xl bg-card border border-slate-200 dark:border-white/10 flex flex-col items-center gap-2.5">
                             <Users className="size-10 text-muted-foreground/40 stroke-1" />
-                            <h4 className="text-sm font-bold text-foreground">No Tenants Found</h4>
+                            <h4 className="text-sm font-bold text-foreground">{t("No Tenants Found")}</h4>
                             <p className="text-xs text-muted-foreground max-w-xs">
-                                {searchQuery ? 'No tenants match your search filter.' : 'No tenants found in this category.'}
+                                {searchQuery ? t('No tenants match your search filter.') : t('No tenants found in this category.')}
                             </p>
                         </div>
                     ) : (
                         filteredTenants.map((tenant) => {
-                            const days = getDaysRemaining(tenant.leaseEnd);
+                            const timeLeft = describeTimeLeft(tenant);
+                            const tenantIsOpenEnded = leaseEndState(tenantLeaseTerm(tenant)).kind === 'open_ended';
                             const isLate = tenant.paymentStatus === 'late';
                             const isMoving = tenant.status === 'Moving Out';
 
@@ -393,7 +424,7 @@ export function LandlordTenantsView() {
                                                 </h3>
                                                 <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-0.5 truncate">
                                                     <span className="font-bold text-foreground">
-                                                        Unit {tenant.unit}
+                                                        {t('Unit {unit}', { unit: tenant.unit })}
                                                     </span>
                                                     <span>•</span>
                                                     <span className="truncate">{tenant.property}</span>
@@ -410,33 +441,35 @@ export function LandlordTenantsView() {
                                                 ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
                                                 : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                                         )}>
-                                            {isMoving ? 'Moving Out' : isLate ? 'Late Dues' : 'Up to Date'}
+                                            {isMoving ? t('Moving Out') : isLate ? t('Late Dues') : t('Up to Date')}
                                         </span>
                                     </div>
 
                                     {/* Snapshot Metrics */}
                                     <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-xs">
                                         <div>
-                                            <span className="text-[10px] text-muted-foreground block font-bold uppercase">Monthly Rent</span>
+                                            <span className="text-[10px] text-muted-foreground block font-bold uppercase">{t("Monthly Rent")}</span>
                                             <span className="font-bold text-foreground">
                                                 {formatCurrency(tenant.rentAmount)}
                                             </span>
                                         </div>
                                         <div>
-                                            <span className="text-[10px] text-muted-foreground block font-bold uppercase">Lease Ends</span>
+                                            <span className="text-[10px] text-muted-foreground block font-bold uppercase">{t("Lease Term")}</span>
                                             <span className="font-semibold text-foreground">
-                                                {tenant.leaseEnd ? formatDate(tenant.leaseEnd) : 'No Lease'}
+                                                {leaseTermLabel(tenantLeaseTerm(tenant), undefined, language)}
                                             </span>
                                         </div>
                                         <div>
-                                            <span className="text-[10px] text-muted-foreground block font-bold uppercase">Time Left</span>
+                                            <span className="text-[10px] text-muted-foreground block font-bold uppercase">
+                                                {tenantIsOpenEnded ? t('Tenure') : t('Time Left')}
+                                            </span>
                                             <span className={cn(
                                                 "font-semibold",
-                                                typeof days === 'number' && days <= 60 
-                                                    ? "text-amber-600 dark:text-amber-400 font-bold" 
+                                                timeLeft.highlight
+                                                    ? "text-amber-600 dark:text-amber-400 font-bold"
                                                     : "text-muted-foreground"
                                             )}>
-                                                {typeof days === 'number' ? `${days} days` : 'N/A'}
+                                                {timeLeft.label}
                                             </span>
                                         </div>
                                     </div>
@@ -447,7 +480,7 @@ export function LandlordTenantsView() {
                                             onClick={() => openTenantDetail(tenant)}
                                             className="text-xs font-bold text-primary flex items-center gap-1 active:scale-95 transition-all"
                                         >
-                                            View Details
+                                            {t('View Details')}
                                             <ChevronRight className="size-3.5" />
                                         </button>
 
@@ -457,7 +490,7 @@ export function LandlordTenantsView() {
                                                     href={`tel:${tenant.phone}`}
                                                     onClick={() => triggerHaptic('light')}
                                                     className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-muted-foreground hover:text-foreground active:scale-95 transition-all"
-                                                    aria-label="Call tenant"
+                                                    aria-label={t("Call tenant")}
                                                 >
                                                     <Phone className="size-3.5" />
                                                 </a>
@@ -467,7 +500,7 @@ export function LandlordTenantsView() {
                                                     href={`mailto:${tenant.email}`}
                                                     onClick={() => triggerHaptic('light')}
                                                     className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-muted-foreground hover:text-foreground active:scale-95 transition-all"
-                                                    aria-label="Email tenant"
+                                                    aria-label={t("Email tenant")}
                                                 >
                                                     <Mail className="size-3.5" />
                                                 </a>
@@ -476,7 +509,7 @@ export function LandlordTenantsView() {
                                                 href={`/mobile/landlord/messages?tenantId=${tenant.id}`}
                                                 onClick={() => triggerHaptic('light')}
                                                 className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-muted-foreground hover:text-foreground active:scale-95 transition-all"
-                                                aria-label="Message tenant"
+                                                aria-label={t("Message tenant")}
                                             >
                                                 <MessageSquare className="size-3.5" />
                                             </Link>
@@ -508,13 +541,14 @@ export function LandlordTenantsView() {
                                             {selectedTenant.name}
                                         </h3>
                                         <p className="text-xs text-muted-foreground">
-                                            Unit {selectedTenant.unit} • {selectedTenant.property}
+                                            {t('Unit {unit}', { unit: selectedTenant.unit })} • {selectedTenant.property}
                                         </p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setSelectedTenant(null)}
                                     className="p-1.5 rounded-full text-muted-foreground hover:text-foreground"
+                                    aria-label={t('Close')}
                                 >
                                     <X className="size-5" />
                                 </button>
@@ -529,7 +563,7 @@ export function LandlordTenantsView() {
                                         className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 flex items-center justify-center gap-2 text-xs font-bold text-foreground active:scale-98 transition-all"
                                     >
                                         <Phone className="size-4 text-emerald-500" />
-                                        Call ({selectedTenant.phone})
+                                        {t('Call ({phone})', { phone: selectedTenant.phone })}
                                     </a>
                                 ) : null}
 
@@ -539,36 +573,36 @@ export function LandlordTenantsView() {
                                     className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 flex items-center justify-center gap-2 text-xs font-bold text-foreground active:scale-98 transition-all"
                                 >
                                     <MessageSquare className="size-4 text-blue-500" />
-                                    Send Chat
+                                    {t('Send Chat')}
                                 </Link>
                             </div>
 
                             {/* Contact & Personal Information */}
                             <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 space-y-2 text-xs">
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                                    Contact & Profile
+                                    {t('Contact & Profile')}
                                 </span>
                                 <div className="flex justify-between items-center py-1 border-b border-slate-200/40 dark:border-white/5">
-                                    <span className="text-muted-foreground">Email:</span>
+                                    <span className="text-muted-foreground">{t("Email:")}</span>
                                     <span className="font-semibold text-foreground truncate max-w-[200px]">
-                                        {selectedTenant.email || 'N/A'}
+                                        {selectedTenant.email || t('N/A')}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center py-1 border-b border-slate-200/40 dark:border-white/5">
-                                    <span className="text-muted-foreground">Phone:</span>
+                                    <span className="text-muted-foreground">{t("Phone:")}</span>
                                     <span className="font-semibold text-foreground">
-                                        {selectedTenant.phone || 'N/A'}
+                                        {selectedTenant.phone || t('N/A')}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center py-1">
-                                    <span className="text-muted-foreground">Payment Standing:</span>
+                                    <span className="text-muted-foreground">{t("Payment Standing:")}</span>
                                     <span className={cn(
                                         "font-bold uppercase text-[10px] px-2 py-0.5 rounded-md",
                                         selectedTenant.paymentStatus === 'paid' 
                                             ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" 
                                             : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
                                     )}>
-                                        {selectedTenant.paymentStatus}
+                                        {t(PAYMENT_STATUS_LABELS[selectedTenant.paymentStatus] ?? selectedTenant.paymentStatus)}
                                     </span>
                                 </div>
                             </div>
@@ -576,23 +610,25 @@ export function LandlordTenantsView() {
                             {/* Lease Information */}
                             <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 space-y-2 text-xs">
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                                    Tenancy Agreement
+                                    {t('Tenancy Agreement')}
                                 </span>
                                 <div className="flex justify-between items-center py-1 border-b border-slate-200/40 dark:border-white/5">
-                                    <span className="text-muted-foreground">Monthly Rent:</span>
+                                    <span className="text-muted-foreground">{t("Monthly Rent:")}</span>
                                     <span className="font-black text-foreground">
                                         {formatCurrency(selectedTenant.rentAmount)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center py-1 border-b border-slate-200/40 dark:border-white/5">
-                                    <span className="text-muted-foreground">Lease Term:</span>
+                                    <span className="text-muted-foreground">{t("Lease Term:")}</span>
                                     <span className="font-semibold text-foreground">
-                                        Until {formatDate(selectedTenant.leaseEnd)}
+                                        {leaseTermLabel(detailLease
+                                            ? { term_type: detailLease.term_type ?? tenantLeaseTerm(selectedTenant).term_type, end_date: detailLease.end_date, start_date: detailLease.start_date }
+                                            : tenantLeaseTerm(selectedTenant), undefined, language)}
                                     </span>
                                 </div>
                                 {detailLease?.security_deposit && (
                                     <div className="flex justify-between items-center py-1">
-                                        <span className="text-muted-foreground">Security Deposit:</span>
+                                        <span className="text-muted-foreground">{t("Security Deposit:")}</span>
                                         <span className="font-semibold text-foreground">
                                             {formatCurrency(detailLease.security_deposit)}
                                         </span>
@@ -607,13 +643,13 @@ export function LandlordTenantsView() {
                                     className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold flex items-center justify-center gap-1.5 active:scale-98 transition-all shadow-xs"
                                 >
                                     <FileText className="size-4" />
-                                    Manage Leases
+                                    {t('Manage Leases')}
                                 </Link>
                                 <button
                                     onClick={() => setSelectedTenant(null)}
                                     className="py-3 px-4 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-muted-foreground hover:text-foreground active:scale-98 transition-all"
                                 >
-                                    Close
+                                    {t('Close')}
                                 </button>
                             </div>
                         </div>

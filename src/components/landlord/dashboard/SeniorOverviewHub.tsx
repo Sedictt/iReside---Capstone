@@ -41,7 +41,7 @@ export function SeniorOverviewHub({
     onOpenVacantUnits,
     className,
 }: SeniorOverviewHubProps) {
-    const { t, isFilipino } = useLanguage();
+    const { t } = useLanguage();
     const hasOverdue = overdueCount > 0;
     const hasMaintenance = maintenanceCount > 0;
     const needsAttention = hasOverdue || hasMaintenance;
@@ -53,7 +53,7 @@ export function SeniorOverviewHub({
 
     return (
         <section 
-            aria-label="Today's Overview" 
+            aria-label={t("Today's Overview")} 
             className={cn(
                 "relative z-0 h-auto w-full rounded-[2rem] p-6 sm:p-8 bg-card dark:bg-zinc-900 border border-border/60 shadow-sm transition-all space-y-6 overflow-hidden",
                 className
@@ -148,7 +148,7 @@ export function SeniorOverviewHub({
                                 {hasOverdue ? (
                                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100/90 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-900/60">
                                         <span className="flex size-3.5 items-center justify-center rounded-full bg-rose-600 dark:bg-rose-500 text-white text-[9px] font-black leading-none shrink-0">!</span>
-                                        <span>{isFilipino ? `${overdueCount} tenant ang hindi pa bayad` : `${overdueCount} tenant${overdueCount === 1 ? "" : "s"} have not paid`}</span>
+                                        <span>{overdueCount === 1 ? t("{count} tenant has not paid", { count: overdueCount }) : t("{count} tenants have not paid", { count: overdueCount })}</span>
                                     </div>
                                 ) : isRentPaymentsEmpty ? (
                                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-muted dark:bg-zinc-800/60 text-muted-foreground dark:text-zinc-300 border border-border/60 dark:border-zinc-700/50">

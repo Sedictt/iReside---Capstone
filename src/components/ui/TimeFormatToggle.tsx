@@ -4,6 +4,7 @@ import React from "react";
 import { Clock } from "lucide-react";
 import { useTimeFormat, TimeFormat } from "@/hooks/useTimeFormat";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export interface TimeFormatToggleProps {
   variant?: "segmented" | "compact";
@@ -17,6 +18,7 @@ export function TimeFormatToggle({
   showPreview = true,
 }: TimeFormatToggleProps) {
   const { timeFormat, setTimeFormat, toggleTimeFormat, is24Hour } = useTimeFormat();
+  const { t } = useLanguageContext();
 
   // Compact variant: Clean segmented switch for clocks / headers
   if (variant === "compact") {
@@ -27,7 +29,7 @@ export function TimeFormatToggle({
           className
         )}
         role="group"
-        aria-label="Time format selector"
+        aria-label={t("Time format selector")}
       >
         <button
           type="button"
@@ -42,7 +44,7 @@ export function TimeFormatToggle({
               : "text-muted-foreground hover:text-foreground"
           )}
           aria-pressed={!is24Hour}
-          title="Switch to 12-hour format (AM/PM)"
+          title={t("Switch to 12-hour format (AM/PM)")}
         >
           12H
         </button>
@@ -59,7 +61,7 @@ export function TimeFormatToggle({
               : "text-muted-foreground hover:text-foreground"
           )}
           aria-pressed={is24Hour}
-          title="Switch to 24-hour format"
+          title={t("Switch to 24-hour format")}
         >
           24H
         </button>
@@ -96,15 +98,15 @@ export function TimeFormatToggle({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-foreground">12-Hour Format</span>
+                <span className="text-sm font-bold text-foreground">{t("12-Hour Format")}</span>
                 {!is24Hour && (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                    Active
+                    {t("Active")}
                   </span>
                 )}
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Standard clock with AM/PM indicator
+                {t("Standard clock with AM/PM indicator")}
               </p>
             </div>
           </div>
@@ -140,15 +142,15 @@ export function TimeFormatToggle({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-foreground">24-Hour Format</span>
+                <span className="text-sm font-bold text-foreground">{t("24-Hour Format")}</span>
                 {is24Hour && (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                    Active
+                    {t("Active")}
                   </span>
                 )}
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Military / 24H clock without AM/PM
+                {t("Military / 24H clock without AM/PM")}
               </p>
             </div>
           </div>

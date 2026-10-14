@@ -43,6 +43,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useBrand } from "@/context/BrandContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 // Dynamically import HTMLFlipBook to ensure SSR compatibility
 const HTMLFlipBook = dynamic(() => import("react-pageflip"), {
@@ -180,6 +181,7 @@ export function EBookReader({
   const pathname = usePathname();
   const { profile } = useAuth();
   const brand = useBrand();
+  const { t } = useLanguageContext();
 
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
@@ -198,7 +200,12 @@ export function EBookReader({
   const allowed = allowedAudiences.length > 0 ? allowedAudiences : ALL_AUDIENCES;
   const targetAudience = useMemo(() => toManualAudience(audience, allowed), [audience, allowed]);
   const canSwitchAudience = allowed.length > 1;
-  const manual = MANUAL_TITLES[targetAudience];
+  const rawManual = MANUAL_TITLES[targetAudience];
+  const manual = {
+    short: t(rawManual.short),
+    cover: t(rawManual.cover),
+    tagline: t(rawManual.tagline),
+  };
 
   const backLink = useMemo(
     () => resolveDocsBackLink({ defaultBackHref, pathname, userRole: profile?.role ?? null }),
@@ -351,20 +358,20 @@ export function EBookReader({
     try {
       await navigator.clipboard.writeText(code);
       setCopiedCodeId(id);
-      toast.success("Copied to clipboard");
+      toast.success(t("Copied to clipboard"));
       setTimeout(() => setCopiedCodeId(null), 2500);
     } catch {
-      toast.error("Could not copy to clipboard");
+      toast.error(t("Could not copy to clipboard"));
     }
   };
 
   const handleDownloadPdf = async () => {
     try {
-      toast.loading("Preparing the PDF…", { id: "docs-pdf" });
+      toast.loading(t("Preparing the PDF…"), { id: "docs-pdf" });
       await generateDocsPdf(targetAudience);
-      toast.success(`${manual.short} downloaded`, { id: "docs-pdf" });
+      toast.success(t("{manual} downloaded", { manual: manual.short }), { id: "docs-pdf" });
     } catch {
-      toast.error("The PDF could not be generated.", { id: "docs-pdf" });
+      toast.error(t("The PDF could not be generated."), { id: "docs-pdf" });
     }
   };
 
@@ -372,12 +379,12 @@ export function EBookReader({
   const isBackCover = currentPage >= totalBookPages - 1;
 
   const pageLabel = useMemo(() => {
-    if (currentPage === 0) return `Cover / ${totalBookPages}`;
-    if (currentPage >= totalBookPages - 1) return `Back / ${totalBookPages}`;
+    if (currentPage === 0) return t("Cover / {total}", { total: totalBookPages });
+    if (currentPage >= totalBookPages - 1) return t("Back / {total}", { total: totalBookPages });
     const leftNum = currentPage;
     const rightNum = Math.min(currentPage + 1, totalBookPages - 1);
-    return `${leftNum} – ${rightNum} of ${totalBookPages}`;
-  }, [currentPage, totalBookPages]);
+    return t("{left} – {right} of {total}", { left: leftNum, right: rightNum, total: totalBookPages });
+  }, [currentPage, totalBookPages, t]);
 
   const isCrossPortalLink = (href: string) =>
     (pathname?.startsWith("/landlord") && href.startsWith("/tenant")) ||
@@ -404,7 +411,7 @@ export function EBookReader({
           { title: "Source of truth", body: "source-of-truth-db.sql and supabase/migrations define the schema; vercel.json defines scheduled jobs." },
         ];
     }
-  }, [targetAudience]);
+  }, [targetAudience]).map((tip) => ({ title: t(tip.title), body: t(tip.body) }));
 
   return (
     <div
@@ -432,8 +439,8 @@ export function EBookReader({
               className="h-8 px-2.5 rounded-lg hover:bg-zinc-100 text-xs font-semibold text-zinc-700 hover:text-zinc-950 flex items-center gap-1.5 transition-colors"
             >
               <ArrowLeft className="size-3.5" aria-hidden="true" />
-              <span className="hidden md:inline">{backLink.label}</span>
-              <span className="md:hidden">Back</span>
+              <span className="hidden md:inline">{t(backLink.label)}</span>
+              <span className="md:hidden">{t("Back")}</span>
             </Link>
           )}
         </div>
@@ -441,7 +448,7 @@ export function EBookReader({
         {canSwitchAudience ? (
           <div
             role="tablist"
-            aria-label="Choose a manual"
+            aria-label={t("Choose a manual")}
             className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 p-1 rounded-xl bg-zinc-100 border border-zinc-200/80 flex items-center shadow-xs"
           >
             {allowed.map((entry) => {
@@ -461,8 +468,8 @@ export function EBookReader({
                   )}
                 >
                   <Icon className="size-3.5" aria-hidden="true" />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                  <span className="sm:hidden">{tab.shortLabel}</span>
+                  <span className="hidden sm:inline">{t(tab.label)}</span>
+                  <span className="sm:hidden">{t(tab.shortLabel)}</span>
                 </button>
               );
             })}
@@ -478,11 +485,11 @@ export function EBookReader({
           <button
             type="button"
             onClick={() => setShowSearchModal(true)}
-            aria-label="Search this manual"
+            aria-label={t("Search this manual")}
             className="h-8 px-3 rounded-lg bg-zinc-100/90 hover:bg-zinc-200 text-xs text-zinc-700 border border-zinc-200/80 flex items-center gap-2 transition-all shadow-xs"
           >
             <Search className="size-3.5 text-zinc-500" aria-hidden="true" />
-            <span className="hidden lg:inline">Search topics…</span>
+            <span className="hidden lg:inline">{t("Search topics…")}</span>
           </button>
 
           {showWrittenGuidesLink && (
@@ -491,14 +498,14 @@ export function EBookReader({
               className="hidden md:flex h-8 px-3 rounded-lg hover:bg-zinc-100 text-xs font-semibold text-zinc-700 hover:text-zinc-950 items-center gap-1.5 transition-colors"
             >
               <BookOpen className="size-3.5" aria-hidden="true" />
-              Written guides
+              {t("Written guides")}
             </Link>
           )}
 
           <button
             type="button"
             onClick={handleDownloadPdf}
-            aria-label={`Download the ${manual.short} as PDF`}
+            aria-label={t("Download the {manual} as PDF", { manual: manual.short })}
             className="h-8 px-3.5 rounded-lg bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all"
           >
             <Download className="size-3.5" aria-hidden="true" />
@@ -511,7 +518,7 @@ export function EBookReader({
       <button
         type="button"
         onClick={handleTurnPrev}
-        aria-label="Previous page"
+        aria-label={t("Previous page")}
         className="absolute left-3 sm:left-8 top-1/2 -translate-y-1/2 z-30 size-11 sm:size-12 rounded-full bg-white/90 hover:bg-white active:scale-95 text-zinc-700 hover:text-zinc-950 backdrop-blur-md flex items-center justify-center transition-all shadow-xl border border-zinc-200 group"
       >
         <ChevronLeft className="size-6 group-hover:-translate-x-0.5 transition-transform" aria-hidden="true" />
@@ -520,7 +527,7 @@ export function EBookReader({
       <button
         type="button"
         onClick={handleTurnNext}
-        aria-label="Next page"
+        aria-label={t("Next page")}
         className="absolute right-3 sm:right-8 top-1/2 -translate-y-1/2 z-30 size-11 sm:size-12 rounded-full bg-white/90 hover:bg-white active:scale-95 text-zinc-700 hover:text-zinc-950 backdrop-blur-md flex items-center justify-center transition-all shadow-xl border border-zinc-200 group"
       >
         <ChevronRight className="size-6 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
@@ -595,14 +602,14 @@ export function EBookReader({
                   <div className="h-0.5 w-12 bg-zinc-950" />
                   <p className="text-xs text-zinc-600 leading-relaxed max-w-sm">{manual.tagline}</p>
                   <p className="text-[10px] text-zinc-500">
-                    {articles.length} topics · Edition {DOCS_EDITION}
+                    {t("{count} topics · Edition {edition}", { count: articles.length, edition: DOCS_EDITION })}
                   </p>
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-zinc-200">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[9px] uppercase text-zinc-400 block font-semibold">Official manual</span>
+                      <span className="text-[9px] uppercase text-zinc-400 block font-semibold">{t("Official manual")}</span>
                       <span className="text-xs font-bold text-zinc-900">{brand.propertyName || "iReside"}</span>
                     </div>
                     <button
@@ -610,7 +617,7 @@ export function EBookReader({
                       onClick={handleTurnNext}
                       className="px-4 py-2 bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm active:scale-95"
                     >
-                      <span>Open</span>
+                      <span>{t("ebook.action.open", undefined, "Open")}</span>
                       <ChevronRight className="size-4" aria-hidden="true" />
                     </button>
                   </div>
@@ -622,14 +629,14 @@ export function EBookReader({
                 <div className="flex-1 min-h-0 flex flex-col justify-between space-y-2">
                   <div>
                     <div className="flex items-center justify-between border-b-2 border-zinc-900 pb-1.5 mb-2">
-                      <span className="text-[9.5px] font-bold uppercase tracking-wider text-zinc-900">Contents</span>
-                      <span className="text-[9.5px] font-mono text-zinc-400">Page 1</span>
+                      <span className="text-[9.5px] font-bold uppercase tracking-wider text-zinc-900">{t("Contents")}</span>
+                      <span className="text-[9.5px] font-mono text-zinc-400">{t("Page {page}", { page: 1 })}</span>
                     </div>
                     <h2 className="text-lg font-black text-zinc-950 font-serif leading-tight">{manual.short}</h2>
-                    <p className="text-[10px] text-zinc-500 mt-0.5">Select a topic to turn to its page.</p>
+                    <p className="text-[10px] text-zinc-500 mt-0.5">{t("Select a topic to turn to its page.")}</p>
                   </div>
 
-                  <nav className="space-y-0.5 py-1 flex-1 overflow-y-auto max-h-[390px] pr-1" aria-label="Table of contents">
+                  <nav className="space-y-0.5 py-1 flex-1 overflow-y-auto max-h-[390px] pr-1" aria-label={t("Table of contents")}>
                     {articles.map((article, idx) => (
                       <button
                         key={article.id}
@@ -642,7 +649,7 @@ export function EBookReader({
                             {(idx + 1).toString().padStart(2, "0")}
                           </span>
                           <span className="text-[10px] font-semibold text-zinc-800 group-hover:text-zinc-950 truncate">
-                            {article.title}
+                            {t(article.title)}
                           </span>
                         </div>
                         <span className="text-[8.5px] font-mono text-zinc-400 group-hover:text-zinc-950 font-bold shrink-0">
@@ -654,7 +661,7 @@ export function EBookReader({
 
                   <div className="pt-2 border-t border-zinc-200 flex items-center justify-between text-[9px] text-zinc-400">
                     <span>{manual.short}</span>
-                    <span>Contents</span>
+                    <span>{t("Contents")}</span>
                   </div>
                 </div>
               </BookPage>
@@ -676,33 +683,33 @@ export function EBookReader({
                     <div className="flex-1 min-h-0 flex flex-col justify-between space-y-2.5">
                       <article className="space-y-2.5 flex-1 overflow-y-auto max-h-[470px] pr-1" aria-labelledby={`docs-${article.id}-title`}>
                         <div className="flex items-center justify-between border-b border-zinc-200 pb-1.5 text-[8.5px] uppercase tracking-wider text-zinc-400">
-                          <span className="font-bold text-zinc-900">{article.categoryLabel}</span>
-                          <span>Page {pageNumber} · {article.readTime}</span>
+                          <span className="font-bold text-zinc-900">{t(article.categoryLabel)}</span>
+                          <span>{t("Page {page}", { page: pageNumber })} · {t(article.readTime)}</span>
                         </div>
 
                         <div className="space-y-0.5">
                           <h3 id={`docs-${article.id}-title`} className="text-base sm:text-lg font-black text-zinc-950 font-serif leading-snug tracking-tight">
-                            {article.title}
+                            {t(article.title)}
                           </h3>
-                          <p className="text-[10.5px] text-zinc-600 leading-relaxed">{article.summary}</p>
+                          <p className="text-[10.5px] text-zinc-600 leading-relaxed">{t(article.summary)}</p>
                         </div>
 
                         {article.prerequisites && article.prerequisites.length > 0 && (
                           <div className="p-2 bg-zinc-50 border border-zinc-200/80 rounded-sm">
                             <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-zinc-700">
                               <ClipboardList className="size-3" aria-hidden="true" />
-                              Before you start
+                              {t("Before you start")}
                             </div>
                             <ul className="mt-1 space-y-0.5 pl-4 list-disc text-[10px] text-zinc-600">
                               {article.prerequisites.map((item) => (
-                                <li key={item}>{item}</li>
+                                <li key={item}>{t(item)}</li>
                               ))}
                             </ul>
                           </div>
                         )}
 
                         {article.steps && article.steps.length > 0 && (
-                          <ol className="space-y-1.5 pt-0.5" aria-label="Steps">
+                          <ol className="space-y-1.5 pt-0.5" aria-label={t("Steps")}>
                             {article.steps.map((step, stepIdx) => {
                               const codeId = `${article.id}-${stepIdx}`;
                               return (
@@ -711,13 +718,13 @@ export function EBookReader({
                                     <span className="size-3.5 bg-zinc-900 text-white font-mono text-[8.5px] font-bold flex items-center justify-center shrink-0" aria-hidden="true">
                                       {stepIdx + 1}
                                     </span>
-                                    <h4 className="font-bold text-zinc-900 text-[10.5px] tracking-tight">{step.title}</h4>
+                                    <h4 className="font-bold text-zinc-900 text-[10.5px] tracking-tight">{t(step.title)}</h4>
                                   </div>
-                                  <p className="text-[10px] text-zinc-600 pl-5.5 leading-relaxed">{step.description}</p>
+                                  <p className="text-[10px] text-zinc-600 pl-5.5 leading-relaxed">{t(step.description)}</p>
                                   {step.tip && (
                                     <p className="ml-5.5 mt-0.5 flex items-start gap-1 p-1 bg-amber-500/10 border border-amber-500/20 text-[9px] text-amber-800 rounded leading-snug">
-                                      <span className="font-bold shrink-0">Tip:</span>
-                                      <span>{step.tip}</span>
+                                      <span className="font-bold shrink-0">{t("Tip:")}</span>
+                                      <span>{t(step.tip)}</span>
                                     </p>
                                   )}
                                   {step.codeSnippet && (
@@ -726,10 +733,10 @@ export function EBookReader({
                                       <button
                                         type="button"
                                         onClick={() => void handleCopyCode(step.codeSnippet!, codeId)}
-                                        aria-label="Copy command"
+                                        aria-label={t("Copy command")}
                                         className="absolute right-1 top-1 px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[7.5px] font-bold uppercase transition-colors"
                                       >
-                                        {copiedCodeId === codeId ? "Copied" : "Copy"}
+                                        {copiedCodeId === codeId ? t("Copied") : t("Copy")}
                                       </button>
                                     </div>
                                   )}
@@ -742,13 +749,13 @@ export function EBookReader({
                         {article.result && (
                           <div className="flex items-start gap-1.5 p-2 bg-emerald-500/10 border border-emerald-500/25 rounded-sm text-[10px] text-emerald-900 leading-snug">
                             <CheckCircle2 className="size-3.5 shrink-0 mt-px text-emerald-600" aria-hidden="true" />
-                            <p><span className="font-bold">Result:</span> {article.result}</p>
+                            <p><span className="font-bold">{t("Result:")}</span> {t(article.result)}</p>
                           </div>
                         )}
 
                         {article.contentMarkdown && (
                           <pre className="bg-zinc-950 text-zinc-300 p-2.5 border border-zinc-800 text-[9px] font-mono whitespace-pre overflow-x-auto">
-                            {article.contentMarkdown.trim()}
+                            {t(article.contentMarkdown.trim())}
                           </pre>
                         )}
                       </article>
@@ -758,16 +765,16 @@ export function EBookReader({
                           isCrossPortalLink(article.actionShortcut.href) ? (
                             <span
                               className="px-2 py-0.5 rounded bg-zinc-100 text-zinc-500 text-[9px] font-semibold tracking-wide border border-zinc-200"
-                              title={`Available in the ${article.audience === "tenant" ? "tenant" : "landlord"} portal.`}
+                              title={article.audience === "tenant" ? t("Available in the tenant portal.") : t("Available in the landlord portal.")}
                             >
-                              {article.actionShortcut.label} ({article.audience === "tenant" ? "tenant" : "landlord"} portal)
+                              {t(article.actionShortcut.label)} ({article.audience === "tenant" ? t("tenant portal") : t("landlord portal")})
                             </span>
                           ) : (
                             <Link
                               href={article.actionShortcut.href}
                               className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-white text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5"
                             >
-                              <span>{article.actionShortcut.label}</span>
+                              <span>{t(article.actionShortcut.label)}</span>
                               <ExternalLink className="size-2.5" aria-hidden="true" />
                             </Link>
                           )
@@ -785,12 +792,12 @@ export function EBookReader({
               <BookPage density="soft" isLeftPage className="p-7 sm:p-9 flex flex-col justify-between bg-white">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between border-b-2 border-zinc-900 pb-2 text-[9px] uppercase tracking-wider text-zinc-400">
-                    <span className="font-bold text-zinc-900">Help &amp; support</span>
-                    <span>Page {(articles.length + 2).toString().padStart(2, "0")}</span>
+                    <span className="font-bold text-zinc-900">{t("Help & support")}</span>
+                    <span>{t("Page {page}", { page: (articles.length + 2).toString().padStart(2, "0") })}</span>
                   </div>
                   <div>
-                    <h3 className="text-lg sm:text-xl font-black text-zinc-950 font-serif leading-snug">Need more help?</h3>
-                    <p className="text-[11px] text-zinc-600 mt-1 leading-relaxed">Where to go when this manual does not answer your question.</p>
+                    <h3 className="text-lg sm:text-xl font-black text-zinc-950 font-serif leading-snug">{t("Need more help?")}</h3>
+                    <p className="text-[11px] text-zinc-600 mt-1 leading-relaxed">{t("Where to go when this manual does not answer your question.")}</p>
                   </div>
                   <div className="space-y-2.5 pt-1">
                     {supportTips.map((tip, idx) => (
@@ -803,7 +810,7 @@ export function EBookReader({
                 </div>
                 <div className="pt-2 border-t border-zinc-200 flex items-center justify-between text-[9px] text-zinc-400">
                   <span>{manual.short}</span>
-                  <span>Help</span>
+                  <span>{t("Help")}</span>
                 </div>
               </BookPage>
 
@@ -811,12 +818,12 @@ export function EBookReader({
               <BookPage density="soft" isRightPage className="p-7 sm:p-9 flex flex-col justify-between bg-white">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between border-b border-zinc-200 pb-2 text-[9px] uppercase tracking-wider text-zinc-400">
-                    <span className="font-bold text-zinc-900">Quick reference</span>
-                    <span>Reader controls</span>
+                    <span className="font-bold text-zinc-900">{t("Quick reference")}</span>
+                    <span>{t("Reader controls")}</span>
                   </div>
                   <div>
-                    <h3 className="text-lg sm:text-xl font-black text-zinc-950 font-serif leading-snug">Keyboard controls</h3>
-                    <p className="text-[11px] text-zinc-600 mt-1 leading-relaxed">Turn pages with the keyboard or the on-screen buttons.</p>
+                    <h3 className="text-lg sm:text-xl font-black text-zinc-950 font-serif leading-snug">{t("Keyboard controls")}</h3>
+                    <p className="text-[11px] text-zinc-600 mt-1 leading-relaxed">{t("Turn pages with the keyboard or the on-screen buttons.")}</p>
                   </div>
                   <dl className="space-y-2 pt-2">
                     {[
@@ -826,15 +833,15 @@ export function EBookReader({
                       ["Search", "Search button in the header"],
                     ].map(([label, keys]) => (
                       <div key={label} className="p-2.5 bg-zinc-50 border border-zinc-200 flex items-center justify-between text-xs gap-3">
-                        <dt className="font-medium text-zinc-800">{label}</dt>
-                        <dd><kbd className="px-2 py-0.5 rounded bg-zinc-200 text-zinc-800 font-mono text-[10px]">{keys}</kbd></dd>
+                        <dt className="font-medium text-zinc-800">{t(label)}</dt>
+                        <dd><kbd className="px-2 py-0.5 rounded bg-zinc-200 text-zinc-800 font-mono text-[10px]">{t(keys)}</kbd></dd>
                       </div>
                     ))}
                   </dl>
                 </div>
                 <div className="pt-2 border-t border-zinc-200 flex items-center justify-between text-[9px] text-zinc-400">
                   <span>{manual.short}</span>
-                  <span>Reference</span>
+                  <span>{t("Reference")}</span>
                 </div>
               </BookPage>
 
@@ -860,9 +867,9 @@ export function EBookReader({
                     className="px-4 py-2 bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
                   >
                     <RotateCcw className="size-3.5" aria-hidden="true" />
-                    <span>Back to front</span>
+                    <span>{t("Back to front")}</span>
                   </button>
-                  <span className="text-[9px] text-zinc-400 uppercase tracking-wider">Edition {DOCS_EDITION}</span>
+                  <span className="text-[9px] text-zinc-400 uppercase tracking-wider">{t("Edition {edition}", { edition: DOCS_EDITION })}</span>
                 </div>
               </BookPage>
             </HTMLFlipBook>
@@ -876,7 +883,7 @@ export function EBookReader({
           <button
             type="button"
             onClick={() => setZoomLevel((z) => (z === 1 ? 1.12 : 1))}
-            aria-label={zoomLevel === 1 ? "Zoom in" : "Zoom out"}
+            aria-label={zoomLevel === 1 ? t("Zoom in") : t("Zoom out")}
             aria-pressed={zoomLevel !== 1}
             className="size-8 rounded-lg hover:bg-zinc-100 flex items-center justify-center text-zinc-600 hover:text-zinc-900 transition-colors"
           >
@@ -885,7 +892,7 @@ export function EBookReader({
           <button
             type="button"
             onClick={() => setShowTOC((value) => !value)}
-            aria-label="Table of contents"
+            aria-label={t("Table of contents")}
             aria-expanded={showTOC}
             className={cn(
               "size-8 rounded-lg flex items-center justify-center transition-colors",
@@ -897,19 +904,19 @@ export function EBookReader({
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-3">
-          <button type="button" onClick={() => handleJumpToPage(0)} aria-label="Front cover" className="size-7 rounded-lg hover:bg-zinc-100 flex items-center justify-center text-zinc-500 hover:text-zinc-900 active:scale-95 transition-all">
+          <button type="button" onClick={() => handleJumpToPage(0)} aria-label={t("Front cover")} className="size-7 rounded-lg hover:bg-zinc-100 flex items-center justify-center text-zinc-500 hover:text-zinc-900 active:scale-95 transition-all">
             <ChevronsLeft className="size-4" aria-hidden="true" />
           </button>
-          <button type="button" onClick={handleTurnPrev} aria-label="Previous page" className="size-7 rounded-lg hover:bg-zinc-100 flex items-center justify-center text-zinc-700 hover:text-zinc-950 active:scale-95 transition-all">
+          <button type="button" onClick={handleTurnPrev} aria-label={t("Previous page")} className="size-7 rounded-lg hover:bg-zinc-100 flex items-center justify-center text-zinc-700 hover:text-zinc-950 active:scale-95 transition-all">
             <ChevronLeft className="size-4" aria-hidden="true" />
           </button>
           <div className="px-2.5 sm:px-3 py-0.5 rounded-md bg-zinc-100 font-mono text-[11px] sm:text-xs font-semibold text-zinc-800 select-none border border-zinc-200/80" aria-live="polite">
             {pageLabel}
           </div>
-          <button type="button" onClick={handleTurnNext} aria-label="Next page" className="size-7 rounded-lg hover:bg-zinc-100 flex items-center justify-center text-zinc-700 hover:text-zinc-950 active:scale-95 transition-all">
+          <button type="button" onClick={handleTurnNext} aria-label={t("Next page")} className="size-7 rounded-lg hover:bg-zinc-100 flex items-center justify-center text-zinc-700 hover:text-zinc-950 active:scale-95 transition-all">
             <ChevronRight className="size-4" aria-hidden="true" />
           </button>
-          <button type="button" onClick={() => handleJumpToPage(totalBookPages - 1)} aria-label="Back cover" className="size-7 rounded-lg hover:bg-zinc-100 flex items-center justify-center text-zinc-500 hover:text-zinc-900 active:scale-95 transition-all">
+          <button type="button" onClick={() => handleJumpToPage(totalBookPages - 1)} aria-label={t("Back cover")} className="size-7 rounded-lg hover:bg-zinc-100 flex items-center justify-center text-zinc-500 hover:text-zinc-900 active:scale-95 transition-all">
             <ChevronsRight className="size-4" aria-hidden="true" />
           </button>
         </div>
@@ -920,7 +927,7 @@ export function EBookReader({
             onClick={() => {
               const next = flipAnimationMode === "realistic" ? "fast" : "realistic";
               setFlipAnimationMode(next);
-              toast.success(next === "realistic" ? "Page turn animation on" : "Page turn animation off");
+              toast.success(next === "realistic" ? t("Page turn animation on") : t("Page turn animation off"));
             }}
             aria-pressed={flipAnimationMode === "realistic"}
             className={cn(
@@ -928,12 +935,12 @@ export function EBookReader({
               flipAnimationMode === "realistic" ? "bg-zinc-900 text-white border-zinc-900" : "bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-700"
             )}
           >
-            Animation {flipAnimationMode === "realistic" ? "on" : "off"}
+            {flipAnimationMode === "realistic" ? t("Animation on") : t("Animation off")}
           </button>
           <button
             type="button"
             onClick={() => setIsMuted((value) => !value)}
-            aria-label={isMuted ? "Unmute page sound" : "Mute page sound"}
+            aria-label={isMuted ? t("Unmute page sound") : t("Mute page sound")}
             aria-pressed={isMuted}
             className="size-8 rounded-lg hover:bg-zinc-100 flex items-center justify-center text-zinc-500 hover:text-zinc-900 transition-colors"
           >
@@ -942,7 +949,7 @@ export function EBookReader({
           <button
             type="button"
             onClick={toggleFullscreen}
-            aria-label={isFullscreen ? "Exit full screen" : "Full screen"}
+            aria-label={isFullscreen ? t("Exit full screen") : t("Full screen")}
             aria-pressed={isFullscreen}
             className="size-8 rounded-lg hover:bg-zinc-100 flex items-center justify-center text-zinc-500 hover:text-zinc-900 transition-colors"
           >
@@ -964,9 +971,9 @@ export function EBookReader({
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
               <h2 id="docs-search-title" className="flex items-center gap-2 text-zinc-900 font-bold text-sm">
                 <Search className="size-4 text-zinc-700" aria-hidden="true" />
-                Search the {manual.short}
+                {t("Search the {manual}", { manual: manual.short })}
               </h2>
-              <button type="button" onClick={() => setShowSearchModal(false)} aria-label="Close search" className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-800">
+              <button type="button" onClick={() => setShowSearchModal(false)} aria-label={t("Close search")} className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-800">
                 <X className="size-4" aria-hidden="true" />
               </button>
             </div>
@@ -978,12 +985,12 @@ export function EBookReader({
                 autoFocus
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search topics (for example GCash, lease, repair)…"
-                aria-label="Search topics"
+                placeholder={t("Search topics (for example GCash, lease, repair)…")}
+                aria-label={t("Search topics")}
                 className="w-full h-10 pl-4 pr-10 rounded-lg bg-zinc-50 border border-zinc-200 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 [&::-webkit-search-cancel-button]:hidden"
               />
               {searchQuery && (
-                <button type="button" onClick={() => setSearchQuery("")} aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-800">
+                <button type="button" onClick={() => setSearchQuery("")} aria-label={t("Clear search")} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-800">
                   <X className="size-3.5" aria-hidden="true" />
                 </button>
               )}
@@ -999,19 +1006,19 @@ export function EBookReader({
                     className="w-full p-2.5 rounded-lg bg-zinc-50 hover:bg-zinc-100 text-left transition-all flex items-center justify-between text-xs group border border-zinc-100"
                   >
                     <div className="min-w-0">
-                      <h5 className="font-bold text-zinc-900 group-hover:text-zinc-950">{article.title}</h5>
-                      <p className="text-[11px] text-zinc-500 line-clamp-1">{article.summary}</p>
+                      <h5 className="font-bold text-zinc-900 group-hover:text-zinc-950">{t(article.title)}</h5>
+                      <p className="text-[11px] text-zinc-500 line-clamp-1">{t(article.summary)}</p>
                     </div>
-                    <span className="text-[10px] font-mono text-zinc-900 ml-2 shrink-0 font-bold">Open →</span>
+                    <span className="text-[10px] font-mono text-zinc-900 ml-2 shrink-0 font-bold">{t("ebook.action.open", undefined, "Open")} →</span>
                   </button>
                 ))}
 
                 {searchResponse.results.length === 0 && (
                   <p className="text-xs text-zinc-500 text-center py-4">
-                    No matching topics.
+                    {t("No matching topics.")}
                     {searchResponse.didYouMean && (
                       <>
-                        {" "}Did you mean{" "}
+                        {" "}{t("Did you mean")}{" "}
                         <button type="button" onClick={() => setSearchQuery(searchResponse.didYouMean!)} className="font-bold text-zinc-900 underline">
                           {searchResponse.didYouMean}
                         </button>
@@ -1029,24 +1036,24 @@ export function EBookReader({
       {/* Table of contents drawer */}
       {showTOC && (
         <nav
-          aria-label="Table of contents"
+          aria-label={t("Table of contents")}
           className="absolute bottom-14 left-4 sm:left-8 z-50 w-80 max-h-[460px] rounded-xl bg-white border border-zinc-200 p-4 shadow-2xl backdrop-blur-xl overflow-y-auto custom-scrollbar-premium space-y-2"
         >
           <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
             <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
               <BookOpen className="size-3.5 text-zinc-700" aria-hidden="true" />
-              Contents
+              {t("Contents")}
             </h4>
-            <button type="button" onClick={() => setShowTOC(false)} aria-label="Close contents" className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-800">
+            <button type="button" onClick={() => setShowTOC(false)} aria-label={t("Close contents")} className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-800">
               <X className="size-4" aria-hidden="true" />
             </button>
           </div>
           <div className="space-y-1">
             <button type="button" onClick={() => handleJumpToPage(0)} className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-bold text-zinc-800 hover:bg-zinc-100 transition-all">
-              Front cover
+              {t("Front cover")}
             </button>
             <button type="button" onClick={() => handleJumpToPage(1)} className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-bold text-zinc-800 hover:bg-zinc-100 transition-all">
-              Contents
+              {t("Contents")}
             </button>
             {articles.map((article, idx) => (
               <button
@@ -1055,7 +1062,7 @@ export function EBookReader({
                 onClick={() => handleJumpToArticle(article.id)}
                 className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-medium transition-all flex items-center justify-between text-zinc-700 hover:bg-zinc-100"
               >
-                <span className="truncate max-w-[190px]">{article.title}</span>
+                <span className="truncate max-w-[190px]">{t(article.title)}</span>
                 <span className="font-mono text-[9px] text-zinc-400 font-bold">p.{idx + 2}</span>
               </button>
             ))}

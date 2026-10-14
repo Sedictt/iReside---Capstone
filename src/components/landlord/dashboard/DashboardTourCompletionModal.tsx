@@ -3,6 +3,7 @@
 import React from "react";
 import { CheckCircle2, LayoutDashboard, Map, Users, ArrowRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export interface DashboardTourCompletionModalProps {
     isOpen: boolean;
@@ -17,7 +18,9 @@ export function DashboardTourCompletionModal({
     onNavigate,
     propertyName,
 }: DashboardTourCompletionModalProps) {
+    const { t } = useLanguageContext();
     if (!isOpen) return null;
+    const [doneBefore, doneAfter] = t("Congratulations! You have completed the 5-stage setup for {property}. Your property, unit map, utility rates, tenants, and dashboard are ready for daily operations.").split("{property}");
 
     return (
         <div 
@@ -51,24 +54,28 @@ export function DashboardTourCompletionModal({
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <span className="text-xs font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
-                            Onboarding Complete
+                            {t("Onboarding Complete")}
                         </span>
                         <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                            All Features Unlocked
+                            {t("All Features Unlocked")}
                         </span>
                     </div>
                     <h1 id="dashboard-tour-complete-title" className="text-2xl sm:text-3xl font-black tracking-tight text-foreground leading-tight">
-                        You&apos;re All Set Up!
+                        {t("You're All Set Up!")}
                     </h1>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                        Congratulations! You have completed the 5-stage setup{propertyName ? <> for <span className="font-bold text-foreground">{propertyName}</span></> : ""}. Your property, unit map, utility rates, tenants, and dashboard are ready for daily operations.
+                        {propertyName ? (
+                            <>{doneBefore}<span className="font-bold text-foreground">{propertyName}</span>{doneAfter}</>
+                        ) : (
+                            t("Congratulations! You have completed the 5-stage setup. Your property, unit map, utility rates, tenants, and dashboard are ready for daily operations.")
+                        )}
                     </p>
                 </div>
 
                 {/* Next Steps Card */}
                 <div className="rounded-2xl border border-border/70 bg-muted/20 p-4 sm:p-5 space-y-3">
                     <h3 className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-                        Where would you like to go next?
+                        {t("Where would you like to go next?")}
                     </h3>
 
                     <div className="flex flex-col gap-2.5">
@@ -83,10 +90,10 @@ export function DashboardTourCompletionModal({
                                 </div>
                                 <div>
                                     <h4 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
-                                        Open Unit Map
+                                        {t("Open Unit Map")}
                                     </h4>
                                     <p className="text-xs sm:text-sm text-muted-foreground">
-                                        See occupied units, who is staying where, and vacant rooms.
+                                        {t("See occupied units, who is staying where, and vacant rooms.")}
                                     </p>
                                 </div>
                             </div>
@@ -104,10 +111,10 @@ export function DashboardTourCompletionModal({
                                 </div>
                                 <div>
                                     <h4 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
-                                        View Tenant Directory
+                                        {t("View Tenant Directory")}
                                     </h4>
                                     <p className="text-xs sm:text-sm text-muted-foreground">
-                                        See tenant contact info, contracts, and payment history.
+                                        {t("See tenant contact info, contracts, and payment history.")}
                                     </p>
                                 </div>
                             </div>
@@ -124,7 +131,7 @@ export function DashboardTourCompletionModal({
                         className="w-full h-12 flex items-center justify-center gap-2 px-7 rounded-2xl text-sm font-bold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-105 transition-all cursor-pointer active:scale-95"
                     >
                         <LayoutDashboard className="size-4" />
-                        <span>Explore Operational Dashboard</span>
+                        <span>{t("Explore Operational Dashboard")}</span>
                     </button>
                 </div>
             </div>

@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ArrowDown, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguageContext } from '@/context/LanguageContext';
 
 interface PullToRefreshProps {
     onRefresh: () => Promise<any> | void;
@@ -17,6 +18,7 @@ export function PullToRefresh({
     className,
     pullThreshold = 60,
 }: PullToRefreshProps) {
+    const { t } = useLanguageContext();
     const [pullDistance, setPullDistance] = useState(0);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isPulling, setIsPulling] = useState(false);
@@ -137,7 +139,7 @@ export function PullToRefresh({
                     {isRefreshing ? (
                         <>
                             <RefreshCw className="size-3.5 animate-spin" />
-                            <span className="text-[11px] font-bold">Refreshing…</span>
+                            <span className="text-[11px] font-bold">{t('Refreshing…')}</span>
                         </>
                     ) : (
                         <>
@@ -151,7 +153,7 @@ export function PullToRefresh({
                                 }}
                             />
                             <span className="text-[11px] font-bold">
-                                {isReady ? 'Release to refresh' : 'Pull to refresh'}
+                                {isReady ? t('Release to refresh') : t('Pull to refresh')}
                             </span>
                         </>
                     )}

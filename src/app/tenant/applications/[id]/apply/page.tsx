@@ -25,6 +25,7 @@ import {
     X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 // import { properties, Property } from "@/lib/data"; // Removed legacy data
 const properties = [
     { 
@@ -48,6 +49,7 @@ const PropertyDetailModal = ({ property, isLiked, onLike, open, onOpenChange }: 
 export default function RentApplicationPage() {
     const params = useParams();
     const router = useRouter();
+    const { t } = useLanguageContext();
     const propertyId = params.id as string;
     const property = properties.find((p) => p.id === propertyId) || properties[0];
 
@@ -74,7 +76,7 @@ export default function RentApplicationPage() {
         referenceName: "",
         referencePhone: "",
         moveInDate: "2024-03-15",
-        leaseTerm: "12 months",
+        leaseTerm: "Open-ended",
         unit: "Unit 201 (2nd Floor)",
         notes: "",
     });
@@ -133,11 +135,11 @@ export default function RentApplicationPage() {
                 </motion.div>
 
                 <h1 className="text-4xl md:text-5xl font-black mb-6 tracking-tight text-white leading-tight">
-                    Application <br /><span className="text-primary italic">Successfully</span> Sent
+                    {t("Application")} <br /><span className="text-primary italic">{t("Successfully")}</span> {t("Sent")}
                 </h1>
 
                 <p className="text-white/60 text-lg mb-12 leading-relaxed">
-                    Excellent Choice! Your application for <span className="text-white font-black">{property.name}</span> is now being reviewed by the team. We usually respond within 24 hours.
+                    {t("Excellent Choice! Your application for {property} is now being reviewed by the team. We usually respond within 24 hours.", { property: property.name })}
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
@@ -146,13 +148,13 @@ export default function RentApplicationPage() {
                         className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white text-black font-black hover:bg-white/90 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-white/5"
                     >
                         <Zap className="size-4" />
-                        Track Progress
+                        {t("Track Progress")}
                     </Link>
                     <Link
                         href="/tenant/dashboard"
                         className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-black transition-all flex items-center justify-center gap-3 backdrop-blur-md active:scale-95"
                     >
-                        Return to Dashboard
+                        {t("Return to Dashboard")}
                         <ArrowRight className="size-4 opacity-50" />
                     </Link>
                 </div>
@@ -193,14 +195,14 @@ export default function RentApplicationPage() {
                                 className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-white/40 hover:text-primary transition-colors group"
                             >
                                 <ChevronLeft className="size-4 transition-transform group-hover:-translate-x-1" />
-                                Return to Applications
+                                {t("Return to Applications")}
                             </button>
                             <h1 className="text-4xl font-black text-white tracking-tighter leading-none">
-                                Application <br />
-                                <span className="text-primary italic">Process</span>
+                                {t("Application")} <br />
+                                <span className="text-primary italic">{t("Process")}</span>
                             </h1>
                             <p className="text-white/40 text-sm leading-relaxed max-w-xs">
-                                Complete these steps to secure your future home at {property.name}.
+                                {t("Complete these steps to secure your future home at {property}.", { property: property.name })}
                             </p>
                         </div>
 
@@ -238,10 +240,10 @@ export default function RentApplicationPage() {
                                                 "text-sm font-black transition-colors leading-tight",
                                                 isActive ? "text-white" : "text-white/60"
                                             )}>
-                                                {step.title}
+                                                {t(step.title)}
                                             </p>
                                             <p className="text-[10px] text-white/40 mt-1 truncate max-w-[180px]">
-                                                {isActive ? "Currently editing" : step.desc}
+                                                {isActive ? t("Currently editing") : t(step.desc)}
                                             </p>
                                         </div>
 
@@ -272,7 +274,7 @@ export default function RentApplicationPage() {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                                 <div className="absolute inset-0 p-6 flex flex-col justify-end">
                                     <div className="bg-primary/80 backdrop-blur-md text-white text-[10px] font-black px-3 py-1 rounded-full w-fit mb-2 shadow-lg">
-                                        AVAILABLE NOW
+                                        {t("AVAILABLE NOW")}
                                     </div>
                                     <h3 className="text-xl font-black text-white truncate">{property.name}</h3>
                                     <p className="text-xs text-white/70 flex items-center gap-1.5 mt-1">
@@ -283,11 +285,11 @@ export default function RentApplicationPage() {
                             </div>
                             <div className="p-5 grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <p className="text-[10px] text-white/30 uppercase font-black tracking-widest leading-none">Monthly Rent</p>
+                                    <p className="text-[10px] text-white/30 uppercase font-black tracking-widest leading-none">{t("Monthly Rent")}</p>
                                     <p className="text-lg font-black text-white">{property.price}</p>
                                 </div>
                                 <div className="space-y-1 text-right">
-                                    <p className="text-[10px] text-white/30 uppercase font-black tracking-widest leading-none">Refundable</p>
+                                    <p className="text-[10px] text-white/30 uppercase font-black tracking-widest leading-none">{t("Refundable")}</p>
                                     <p className="text-lg font-black text-primary">₱25K</p>
                                 </div>
                             </div>
@@ -319,16 +321,16 @@ export default function RentApplicationPage() {
                                                 return <Icon className="size-5" />;
                                             })()}
                                         </div>
-                                        <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Step {currentStep} of 4</span>
+                                        <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">{t("Step {current} of {total}", { current: currentStep, total: 4 })}</span>
                                     </div>
                                     <h2 className="text-3xl font-black text-white tracking-tight mb-3">
-                                        {currentStep === 1 && "Personal Identity"}
-                                        {currentStep === 2 && "Career & Finance"}
-                                        {currentStep === 3 && "Verification Vault"}
-                                        {currentStep === 4 && "Final Proclamation"}
+                                        {currentStep === 1 && t("Personal Identity")}
+                                        {currentStep === 2 && t("Career & Finance")}
+                                        {currentStep === 3 && t("Verification Vault")}
+                                        {currentStep === 4 && t("Final Proclamation")}
                                     </h2>
                                     <p className="text-white/50 text-sm leading-relaxed max-w-2xl">
-                                        {steps[currentStep - 1].desc}. Accuracy in this section accelerates the landlord approval window.
+                                        {t(steps[currentStep - 1].desc)}. {t("Accuracy in this section accelerates the landlord approval window.")}
                                     </p>
                                 </header>
 
@@ -340,30 +342,30 @@ export default function RentApplicationPage() {
                                                 <div className="md:col-span-2 p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-start gap-3">
                                                     <Info className="size-4 text-primary shrink-0 mt-0.5" />
                                                     <p className="text-[10px] text-white/60 leading-relaxed uppercase tracking-wider font-black">
-                                                        Note: Name must exactly match the name on the lease contract and government-issued ID.
+                                                        {t("Note: Name must exactly match the name on the lease contract and government-issued ID.")}
                                                     </p>
                                                 </div>
-                                                <FormField label="First Name" value={formData.firstName} onChange={(v: string) => setFormData(prev => ({ ...prev, firstName: v }))} placeholder="e.g. Jane" />
-                                                <FormField label="Last Name" value={formData.lastName} onChange={(v: string) => setFormData(prev => ({ ...prev, lastName: v }))} placeholder="e.g. Cooper" />
-                                                <FormField label="Email" value={formData.email} onChange={(v: string) => setFormData(prev => ({ ...prev, email: v }))} type="email" placeholder="email@example.com" />
-                                                <FormField label="Phone" value={formData.phone} onChange={(v: string) => setFormData(prev => ({ ...prev, phone: v }))} placeholder="+63 900 000 0000" />
+                                                <FormField label={t("First Name")} value={formData.firstName} onChange={(v: string) => setFormData(prev => ({ ...prev, firstName: v }))} placeholder={t("e.g. Jane")} />
+                                                <FormField label={t("Last Name")} value={formData.lastName} onChange={(v: string) => setFormData(prev => ({ ...prev, lastName: v }))} placeholder={t("e.g. Cooper")} />
+                                                <FormField label={t("Email")} value={formData.email} onChange={(v: string) => setFormData(prev => ({ ...prev, email: v }))} type="email" placeholder="email@example.com" />
+                                                <FormField label={t("Phone")} value={formData.phone} onChange={(v: string) => setFormData(prev => ({ ...prev, phone: v }))} placeholder="+63 900 000 0000" />
                                                 <div className="md:col-span-2">
                                                     <div className="flex items-center gap-2 mb-4">
                                                         <div className="h-px flex-1 bg-white/10" />
-                                                        <span className="text-[10px] font-black uppercase tracking-widest text-white/20 whitespace-nowrap">Emergency Contact</span>
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-white/20 whitespace-nowrap">{t("Emergency Contact")}</span>
                                                         <div className="h-px flex-1 bg-white/10" />
                                                     </div>
                                                 </div>
-                                                <FormField label="Contact Person" value={formData.emergencyContactName} onChange={(v: string) => setFormData(prev => ({ ...prev, emergencyContactName: v }))} placeholder="Full Name" />
-                                                <FormField label="Contact Phone" value={formData.emergencyContactPhone} onChange={(v: string) => setFormData(prev => ({ ...prev, emergencyContactPhone: v }))} placeholder="Mobile Number" />
+                                                <FormField label={t("Contact Person")} value={formData.emergencyContactName} onChange={(v: string) => setFormData(prev => ({ ...prev, emergencyContactName: v }))} placeholder={t("Full Name")} />
+                                                <FormField label={t("Contact Phone")} value={formData.emergencyContactPhone} onChange={(v: string) => setFormData(prev => ({ ...prev, emergencyContactPhone: v }))} placeholder={t("Mobile Number")} />
                                                 <div className="md:col-span-2">
-                                                    <FormField label="Desired Move-in" value={formData.moveInDate} onChange={(v: string) => setFormData(prev => ({ ...prev, moveInDate: v }))} type="date" />
+                                                    <FormField label={t("Desired Move-in")} value={formData.moveInDate} onChange={(v: string) => setFormData(prev => ({ ...prev, moveInDate: v }))} type="date" />
                                                 </div>
                                             </div>
 
                                             <div className="mt-2">
                                                 <UnitSelector
-                                                    label="Select Your Apartment Residence"
+                                                    label={t("Select Your Apartment Residence")}
                                                     value={formData.unit}
                                                     onChange={(v: string) => setFormData(prev => ({ ...prev, unit: v }))}
                                                     onSeeMore={() => setIsUnitModalOpen(true)}
@@ -379,30 +381,30 @@ export default function RentApplicationPage() {
                                     {currentStep === 2 && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                             <div className="md:col-span-2">
-                                                <FormField label="Current Vocation" value={formData.occupation} onChange={(v: string) => setFormData(prev => ({ ...prev, occupation: v }))} placeholder="e.g. Senior Creative Director" />
+                                                <FormField label={t("Current Vocation")} value={formData.occupation} onChange={(v: string) => setFormData(prev => ({ ...prev, occupation: v }))} placeholder={t("e.g. Senior Creative Director")} />
                                             </div>
-                                            <FormField label="Company Name" value={formData.employer} onChange={(v: string) => setFormData(prev => ({ ...prev, employer: v }))} placeholder="e.g. Apple Inc." />
-                                            <FormField label="Monthly Gross (₱)" value={formData.monthlyIncome} onChange={(v: string) => setFormData(prev => ({ ...prev, monthlyIncome: v }))} type="number" placeholder="0.00" />
+                                            <FormField label={t("Company Name")} value={formData.employer} onChange={(v: string) => setFormData(prev => ({ ...prev, employer: v }))} placeholder={t("e.g. Apple Inc.")} />
+                                            <FormField label={t("Monthly Gross (₱)")} value={formData.monthlyIncome} onChange={(v: string) => setFormData(prev => ({ ...prev, monthlyIncome: v }))} type="number" placeholder="0.00" />
                                             
                                             <div className="md:col-span-2">
                                                 <div className="flex items-center gap-2 mb-4">
                                                     <div className="h-px flex-1 bg-white/10" />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/20 whitespace-nowrap">Background Reference (Mandatory)</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/20 whitespace-nowrap">{t("Background Reference (Mandatory)")}</span>
                                                     <div className="h-px flex-1 bg-white/10" />
                                                 </div>
                                                 <p className="text-[10px] text-amber-400 font-black uppercase tracking-wider mb-2 text-center opacity-60">
-                                                    To avoid future problems and unpaid rent — References will be contacted, this is mandatory.
+                                                    {t("To avoid future problems and unpaid rent — References will be contacted, this is mandatory.")}
                                                 </p>
                                             </div>
-                                            <FormField label="Reference Person" value={formData.referenceName} onChange={(v: string) => setFormData(prev => ({ ...prev, referenceName: v }))} placeholder="Employer or Previous Landlord" />
-                                            <FormField label="Reference Contact" value={formData.referencePhone} onChange={(v: string) => setFormData(prev => ({ ...prev, referencePhone: v }))} placeholder="Mobile Number" />
+                                            <FormField label={t("Reference Person")} value={formData.referenceName} onChange={(v: string) => setFormData(prev => ({ ...prev, referenceName: v }))} placeholder={t("Employer or Previous Landlord")} />
+                                            <FormField label={t("Reference Contact")} value={formData.referencePhone} onChange={(v: string) => setFormData(prev => ({ ...prev, referencePhone: v }))} placeholder={t("Mobile Number")} />
 
                                             <div className="md:col-span-2 p-6 rounded-3xl bg-blue-500/5 border border-blue-500/10 flex items-start gap-4 shadow-inner">
                                                 <Shield className="size-6 text-blue-400 shrink-0 mt-0.5" />
                                                 <div className="space-y-1">
-                                                    <p className="text-sm font-black text-blue-400/90 tracking-tight">Source of Income Verification</p>
+                                                    <p className="text-sm font-black text-blue-400/90 tracking-tight">{t("Source of Income Verification")}</p>
                                                     <p className="text-xs text-blue-300/60 leading-relaxed font-medium">
-                                                        To ensure stable and continuous rent payments. All financial details are strictly confidential.
+                                                        {t("To ensure stable and continuous rent payments. All financial details are strictly confidential.")}
                                                     </p>
                                                 </div>
                                             </div>
@@ -411,10 +413,10 @@ export default function RentApplicationPage() {
 
                                     {currentStep === 3 && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <UploadCard title="Government ID" desc="Any govt-issued ID (Name match is mandatory)" required />
-                                            <UploadCard title="Proof of Income" desc="COE, Latest Payslip, or Work Contract" required />
-                                            <UploadCard title="Background Check" desc="Consent for Reference Calls" required />
-                                            <UploadCard title="Move-in Photo/Video" desc="Initial unit condition records" required />
+                                            <UploadCard title={t("Government ID")} desc={t("Any govt-issued ID (Name match is mandatory)")} required />
+                                            <UploadCard title={t("Proof of Income")} desc={t("COE, Latest Payslip, or Work Contract")} required />
+                                            <UploadCard title={t("Background Check")} desc={t("Consent for Reference Calls")} required />
+                                            <UploadCard title={t("Move-in Photo/Video")} desc={t("Initial unit condition records")} required />
                                         </div>
                                     )}
 
@@ -422,16 +424,16 @@ export default function RentApplicationPage() {
                                         <div className="space-y-6 pb-4">
                                             {/* Summary Grid */}
                                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                                                <SummaryItem label="Applicant" value={`${formData.firstName} ${formData.lastName}`} icon={User} />
-                                                <SummaryItem label="Selected Unit" value={formData.unit} icon={Home} />
-                                                <SummaryItem label="Planned Move" value={formData.moveInDate} icon={Calendar} />
+                                                <SummaryItem label={t("Applicant")} value={`${formData.firstName} ${formData.lastName}`} icon={User} />
+                                                <SummaryItem label={t("Selected Unit")} value={formData.unit} icon={Home} />
+                                                <SummaryItem label={t("Planned Move")} value={formData.moveInDate} icon={Calendar} />
                                             </div>
 
                                             {/* Requirements Roadmap - Tenant View */}
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between">
-                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">Acceptance Roadmap</h4>
-                                                    <span className="text-[8px] font-black bg-primary/20 text-primary border border-primary/20 px-2 py-0.5 rounded uppercase tracking-tighter">7 Mandatory Steps</span>
+                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">{t("Acceptance Roadmap")}</h4>
+                                                    <span className="text-[8px] font-black bg-primary/20 text-primary border border-primary/20 px-2 py-0.5 rounded uppercase tracking-tighter">{t("7 Mandatory Steps")}</span>
                                                 </div>
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -449,8 +451,8 @@ export default function RentApplicationPage() {
                                                                 <span className="text-[10px] font-black">{item.id}</span>
                                                             </div>
                                                             <div>
-                                                                <p className="text-[11px] font-black text-white tracking-tight">{item.label}</p>
-                                                                <p className="text-[9px] text-white/30 font-medium leading-none mt-1">{item.desc}</p>
+                                                                <p className="text-[11px] font-black text-white tracking-tight">{t(item.label)}</p>
+                                                                <p className="text-[9px] text-white/30 font-medium leading-none mt-1">{t(item.desc)}</p>
                                                             </div>
                                                         </div>
                                                     ))}
@@ -464,11 +466,11 @@ export default function RentApplicationPage() {
                                                         <Shield className="size-6 text-amber-500" />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <h4 className="text-white font-black text-lg">Strict Acceptance Policy</h4>
+                                                        <h4 className="text-white font-black text-lg">{t("Strict Acceptance Policy")}</h4>
                                                         <p className="text-white/40 text-sm leading-relaxed">
-                                                            I acknowledge that completion of this form does not guarantee residency. Moving in requires <span className="text-amber-500 font-black italic underline decoration-amber-500/30">Upfront Payment (1 Month Advance & 2 Months Security Deposit)</span>. 
+                                                            {t("I acknowledge that completion of this form does not guarantee residency. Moving in requires")} <span className="text-amber-500 font-black italic underline decoration-amber-500/30">{t("Upfront Payment (1 Month Advance & 2 Months Security Deposit)")}</span>. 
                                                             <br />
-                                                            <span className="text-red-400 font-black text-xs">❌ No Installments. No "pay later" arrangements.</span>
+                                                            <span className="text-red-400 font-black text-xs">❌ {t('No Installments. No "pay later" arrangements.')}</span>
                                                         </p>
                                                     </div>
                                                 </div>
@@ -479,8 +481,8 @@ export default function RentApplicationPage() {
                                                     <CheckCircle2 className="size-6 text-emerald-500" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-sm font-black text-white uppercase tracking-tight">Data Ready for Vault</h4>
-                                                    <p className="text-xs text-white/40 font-medium">By submitting, you agree to the background verification process.</p>
+                                                    <h4 className="text-sm font-black text-white uppercase tracking-tight">{t("Data Ready for Vault")}</h4>
+                                                    <p className="text-xs text-white/40 font-medium">{t("By submitting, you agree to the background verification process.")}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -498,7 +500,7 @@ export default function RentApplicationPage() {
                                         )}
                                     >
                                         <ChevronLeft className="size-4" />
-                                        Previous
+                                        {t("Previous")}
                                     </button>
 
                                     <button
@@ -511,11 +513,11 @@ export default function RentApplicationPage() {
                                         {isSubmitting ? (
                                             <>
                                                 <div className="size-5 border-3 border-black/30 border-t-black rounded-full animate-spin" />
-                                                Submitting...
+                                                {t("Submitting...")}
                                             </>
                                         ) : (
                                             <>
-                                                {currentStep === 4 ? "Submit Official Application" : "Continue Process"}
+                                                {currentStep === 4 ? t("Submit Official Application") : t("Continue Process")}
                                                 <ChevronRight className="size-5" />
                                             </>
                                         )}
@@ -526,9 +528,9 @@ export default function RentApplicationPage() {
 
                         {/* Footer Seals */}
                         <div className="mt-4 flex flex-wrap items-center justify-center gap-8 opacity-30 group">
-                            <Seal icon={ShieldCheck} label="Bank-Level Encryption" />
-                            <Seal icon={Lock} label="DPA Compliance" />
-                            <Seal icon={Zap} label="Instant Verification" />
+                            <Seal icon={ShieldCheck} label={t("Bank-Level Encryption")} />
+                            <Seal icon={Lock} label={t("DPA Compliance")} />
+                            <Seal icon={Zap} label={t("Instant Verification")} />
                         </div>
                     </div>
                 </div>
@@ -586,6 +588,7 @@ const PROPERTY_UNITS: Record<string, any[]> = {
 };
 
 function UnitSelector({ label, value, onChange, options, onSeeMore, propertyId }: any) {
+    const { t } = useLanguageContext();
     const selectedUnit = options.find((opt: any) => value.startsWith(opt.name));
     const isSelected = !!selectedUnit;
 
@@ -610,18 +613,18 @@ function UnitSelector({ label, value, onChange, options, onSeeMore, propertyId }
                     </div>
 
                     <div className="space-y-0.5">
-                        <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Residence Configuration</p>
+                        <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">{t("Residence Configuration")}</p>
                         {isSelected ? (
                             <div className="flex items-baseline gap-2">
                                 <span className="text-lg font-black text-white tracking-tighter">
                                     {selectedUnit.name}
                                 </span>
                                 <span className="text-xs font-black text-primary italic">
-                                    {selectedUnit.floor}
+                                    {t(selectedUnit.floor)}
                                 </span>
                             </div>
                         ) : (
-                            <p className="text-sm font-black text-white/20 italic">No residence selected yet...</p>
+                            <p className="text-sm font-black text-white/20 italic">{t("No residence selected yet...")}</p>
                         )}
                     </div>
                 </div>
@@ -629,7 +632,7 @@ function UnitSelector({ label, value, onChange, options, onSeeMore, propertyId }
                 <div className="pr-1 gap-2 flex items-center">
                     {isSelected && (
                         <div className="hidden sm:flex flex-col items-end mr-4">
-                            <p className="text-[8px] font-black text-white/20 uppercase tracking-widest">Pricing Adjust.</p>
+                            <p className="text-[8px] font-black text-white/20 uppercase tracking-widest">{t("Pricing Adjust.")}</p>
                             <p className="text-[10px] font-black text-primary">{selectedUnit.price}</p>
                         </div>
                     )}
@@ -643,7 +646,7 @@ function UnitSelector({ label, value, onChange, options, onSeeMore, propertyId }
                                 : "bg-primary text-black shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]"
                         )}
                     >
-                        <span className="relative z-10">{isSelected ? "Change Unit" : "Select Unit"}</span>
+                        <span className="relative z-10">{isSelected ? t("Change Unit") : t("Select Unit")}</span>
                         {!isSelected && <ArrowRight className="size-4 relative z-10 animate-bounce-x" />}
                     </button>
                 </div>
@@ -653,6 +656,7 @@ function UnitSelector({ label, value, onChange, options, onSeeMore, propertyId }
 }
 
 function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) {
+    const { t } = useLanguageContext();
     const floors = Array.from(new Set(options.map((opt: any) => opt.floor)));
     const [selectedFloor, setSelectedFloor] = useState<string>(floors[0] as string);
 
@@ -683,7 +687,7 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                     >
                         {/* Sidebar Selector */}
                         <div className="w-full md:w-[240px] bg-white/[0.02] border-b md:border-b-0 md:border-r border-white/5 p-8 flex flex-col shrink-0">
-                            <h4 className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-8 px-2">Level Gallery</h4>
+                            <h4 className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-8 px-2">{t("Level Gallery")}</h4>
                             <div className="space-y-2 overflow-y-auto custom-scrollbar flex-1 -mx-2 px-2">
                                 {floors.map((floor: any) => (
                                     <button
@@ -700,7 +704,7 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                                             "size-1.5 rounded-full transition-all",
                                             selectedFloor === floor ? "bg-black" : "bg-white/10 group-hover/floor:bg-primary"
                                         )} />
-                                        <span className="text-xs uppercase tracking-widest">{floor}</span>
+                                        <span className="text-xs uppercase tracking-widest">{t(floor)}</span>
                                     </button>
                                 ))}
                             </div>
@@ -711,13 +715,13 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                             <header className="p-8 pb-4 flex justify-between items-center">
                                 <div className="space-y-1">
                                     <h3 className="text-2xl font-black text-white tracking-tighter">
-                                        Unit <span className="text-primary italic">Selection</span>
+                                        {t("Unit")} <span className="text-primary italic">{t("Selection")}</span>
                                     </h3>
                                     <p className="text-[10px] text-white/20 font-black uppercase tracking-widest">
-                                        Showing Units on <span className="text-white">{selectedFloor}</span>
+                                        {t("Showing Units on")} <span className="text-white">{t(selectedFloor)}</span>
                                     </p>
                                 </div>
-                                <button onClick={onClose} className="size-12 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center text-white/40 hover:text-white">
+                                <button onClick={onClose} aria-label={t("Close")} className="size-12 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center text-white/40 hover:text-white">
                                     <X className="size-5" />
                                 </button>
                             </header>
@@ -756,14 +760,14 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                                                                     {opt.name}
                                                                 </p>
                                                                 <p className="text-[10px] font-black text-white/30 uppercase tracking-tighter italic">
-                                                                    Modern Architecture
+                                                                    {t("Modern Architecture")}
                                                                 </p>
                                                             </div>
                                                             <span className={cn(
                                                                 "text-[8px] px-2.5 py-1 rounded-full font-black uppercase tracking-tighter",
                                                                 opt.status === "Available" ? "bg-primary text-black" : "bg-yellow-500/20 text-yellow-500 border border-yellow-500/30"
                                                             )}>
-                                                                {opt.status}
+                                                                {t(opt.status)}
                                                             </span>
                                                         </div>
                                                         <div className="pt-4 border-t border-white/5 flex items-center justify-between">
@@ -815,6 +819,7 @@ function FormField({ label, value, onChange, placeholder, type = "text" }: any) 
 }
 
 function UploadCard({ title, desc, required }: any) {
+    const { t } = useLanguageContext();
     return (
         <div className="group relative border-2 border-dashed border-white/5 hover:border-primary/50 rounded-3xl p-5 transition-all bg-white/[0.01] cursor-pointer hover:bg-primary/[0.02] flex flex-col items-center text-center">
             <div className="size-12 rounded-2xl bg-white/5 flex items-center justify-center mb-3 group-hover:bg-primary group-hover:text-black transition-all duration-300 shadow-xl">
@@ -824,7 +829,7 @@ function UploadCard({ title, desc, required }: any) {
             <p className="text-[10px] text-white/40 mt-0.5 font-medium">{desc}</p>
             {required && (
                 <div className="mt-3 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-[8px] font-black text-red-400 uppercase tracking-tighter">
-                    Required Action
+                    {t("Required Action")}
                 </div>
             )}
         </div>

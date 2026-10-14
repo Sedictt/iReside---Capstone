@@ -8,7 +8,8 @@
  * directly with `useFormValidation`.
  *
  * Limits mirror the database: money columns are numeric(12,2) / numeric(10,2),
- * lease dates are constrained by `lease_dates_valid` (end_date > start_date).
+ * lease dates are constrained by `lease_dates_valid` (end_date IS NULL OR end_date > start_date;
+ * open-ended leases have no end date, fixed-term leases require one).
  *
  * @module lib/validation/rules
  */

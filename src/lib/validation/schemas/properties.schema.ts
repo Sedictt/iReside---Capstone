@@ -97,6 +97,9 @@ export const RENEWAL_LIMITS = {
   maxRules: 20,
   ruleMax: 120,
   memoMax: 500,
+  maxTerms: 6,
+  maxTermMonths: 60,
+  termLabelMax: 60,
 } as const;
 
 export const PAYMENT_SETTING_LIMITS = {
@@ -423,6 +426,14 @@ export const unitIdSchema = zUuid("Unit ID");
 // Renewal settings
 // ---------------------------------------------------------------------------
 
+/** One fixed-term renewal offer (e.g. 12 months). */
+export const renewalTermOfferSchema = z.object({
+  months: zInteger("Renewal term", { min: 1, max: RENEWAL_LIMITS.maxTermMonths }),
+  label: z.string({ error: "Term label must be text." }).trim().max(RENEWAL_LIMITS.termLabelMax, `Term label cannot exceed ${RENEWAL_LIMITS.termLabelMax} characters.`).nullish().transform((v) => v ?? ""),
+  price_label: z.string({ error: "Price label must be text." }).trim().max(RENEWAL_LIMITS.termLabelMax, `Price label cannot exceed ${RENEWAL_LIMITS.termLabelMax} characters.`).nullish().transform((v) => v ?? ""),
+  is_popular: z.boolean({ error: "Popular flag must be true or false." }).optional(),
+});
+
 export const renewalSettingsSchema = z
   .object({
     base_rent_adjustment: numberish("Increase").default(0),
@@ -439,10 +450,26 @@ export const renewalSettingsSchema = z
       .nullish()
       .transform((value) => value ?? ""),
     is_enabled: z.boolean({ error: "Enabled must be true or false." }).default(true),
+    /**
+     * Optional fixed-term renewal offers shown to tenants on fixed-term leases.
+     * Empty means the default 6 / 12 / 24 month options apply.
+     */
+    renewal_terms: z
+      .array(renewalTermOfferSchema, { error: "Renewal terms must be a list." })
+      .max(RENEWAL_LIMITS.maxTerms, `You can offer at most ${RENEWAL_LIMITS.maxTerms} renewal terms.`)
+      .nullish()
+      .transform((value) => value ?? []),
   })
   .superRefine((settings, ctx) => {
     const message = renewalAdjustmentRule(settings.base_rent_adjustment, settings.adjustment_type);
     if (message) ctx.addIssue({ code: "custom", path: ["base_rent_adjustment"], message });
+    const seen = new Set<number>();
+    settings.renewal_terms.forEach((term, index) => {
+      if (seen.has(term.months)) {
+        ctx.addIssue({ code: "custom", path: ["renewal_terms", index, "months"], message: `A ${term.months}-month term is listed more than once.` });
+      }
+      seen.add(term.months);
+    });
   })
   .transform((settings) => ({
     ...settings,

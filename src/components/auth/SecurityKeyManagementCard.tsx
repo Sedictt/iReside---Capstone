@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
 import { useFormValidation } from "@/hooks/useFormValidation";
@@ -33,6 +34,7 @@ export function SecurityKeyManagementCard({
     className,
     accountEmail,
 }: SecurityKeyManagementCardProps) {
+    const { t } = useLanguageContext();
     const [isLoading, setIsLoading] = useState(true);
     const [hasSecurityKey, setHasSecurityKey] = useState(false);
     const [updatedAt, setUpdatedAt] = useState<string | null>(null);
@@ -101,15 +103,15 @@ export function SecurityKeyManagementCard({
             });
             const data = await res.json();
             if (!res.ok) {
-                setRotationError(data.error || "Failed to dispatch verification code.");
+                setRotationError(t(data.error || "Failed to dispatch verification code."));
             } else {
-                setOtpSentMessage(data.message || "Verification code sent to your email.");
+                setOtpSentMessage(t(data.message || "Verification code sent to your email."));
                 setOtpCooldown(60);
-                toast.success("Verification code sent to your registered email.");
+                toast.success(t("Verification code sent to your registered email."));
             }
         } catch (err) {
             console.error("[SecurityKeyManagementCard] Error sending OTP:", err);
-            setRotationError("Failed to dispatch verification code. Please try again.");
+            setRotationError(t("Failed to dispatch verification code. Please try again."));
         } finally {
             setIsSendingOtp(false);
         }
@@ -136,16 +138,16 @@ export function SecurityKeyManagementCard({
             const data = await res.json();
             if (!res.ok) {
                 rotateForm.setServerErrors(data.fieldErrors);
-                setRotationError(data.error || "Failed to rotate security key. Please check your credentials.");
+                setRotationError(t(data.error || "Failed to rotate security key. Please check your credentials."));
             } else if (data.newSecurityKey) {
                 setNewSecurityKey(data.newSecurityKey);
                 setHasSecurityKey(true);
                 setUpdatedAt(data.updatedAt || new Date().toISOString());
-                toast.success("New security recovery key generated!");
+                toast.success(t("New security recovery key generated!"));
             }
         } catch (err) {
             console.error("[SecurityKeyManagementCard] Error rotating key:", err);
-            setRotationError("An unexpected error occurred. Please try again.");
+            setRotationError(t("An unexpected error occurred. Please try again."));
         } finally {
             setIsRotating(false);
         }
@@ -153,7 +155,7 @@ export function SecurityKeyManagementCard({
 
     const handleCloseModal = () => {
         if (newSecurityKey && !isAcknowledged) {
-            toast.error("Please confirm that you have safely stored your new recovery key.");
+            toast.error(t("Please confirm that you have safely stored your new recovery key."));
             return;
         }
         setIsModalOpen(false);
@@ -184,24 +186,24 @@ export function SecurityKeyManagementCard({
                         <div>
                             <div className="flex items-center gap-2.5 flex-wrap">
                                 <h3 className="text-base sm:text-lg font-black text-foreground">
-                                    Security Recovery Key
+                                    {t("Security Recovery Key")}
                                 </h3>
                                 {isLoading ? (
                                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground">
-                                        <Loader2 className="size-3 animate-spin" /> Checking...
+                                        <Loader2 className="size-3 animate-spin" /> {t("Checking...")}
                                     </span>
                                 ) : hasSecurityKey ? (
                                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                        <CheckCircle2 className="size-3" /> Active & Encrypted
+                                        <CheckCircle2 className="size-3" /> {t("Active & Encrypted")}
                                     </span>
                                 ) : (
                                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                        <AlertCircle className="size-3" /> Not Configured
+                                        <AlertCircle className="size-3" /> {t("Not Configured")}
                                     </span>
                                 )}
                             </div>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                                Single-use emergency recovery mechanism protected by AES-256-GCM encryption.
+                                {t("Single-use emergency recovery mechanism protected by AES-256-GCM encryption.")}
                             </p>
                         </div>
                     </div>
@@ -219,26 +221,26 @@ export function SecurityKeyManagementCard({
                         className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border shrink-0 active:scale-95 cursor-pointer"
                     >
                         <RefreshCw className="size-3.5" />
-                        <span>{hasSecurityKey ? "Rotate Recovery Key" : "Generate Recovery Key"}</span>
+                        <span>{hasSecurityKey ? t("Rotate Recovery Key") : t("Generate Recovery Key")}</span>
                     </button>
                 </div>
 
                 {/* Information Card & Status Details */}
                 <div className="rounded-xl bg-muted/40 border border-border/50 p-4 space-y-3 text-xs">
                     <p className="text-muted-foreground leading-relaxed">
-                        If you ever lose access to your registered email inbox or get locked out of your account, you can use your single-use security recovery key to regain access. For maximum security, keys are encrypted at rest and are never stored or displayed in plain text after generation.
+                        {t("If you ever lose access to your registered email inbox or get locked out of your account, you can use your single-use security recovery key to regain access. For maximum security, keys are encrypted at rest and are never stored or displayed in plain text after generation.")}
                     </p>
 
                     <div className="pt-2 border-t border-border/40 grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-[11px]">
                         <div className="flex items-center gap-2">
                             <ShieldCheck className="size-4 text-emerald-500 shrink-0" />
-                            <span className="text-muted-foreground">Storage Method:</span>
+                            <span className="text-muted-foreground">{t("Storage Method:")}</span>
                             <span className="font-semibold text-foreground">AES-256-GCM (Zero Plaintext)</span>
                         </div>
 
                         <div className="flex items-center gap-2">
                             <KeyRound className="size-4 text-primary shrink-0" />
-                            <span className="text-muted-foreground">Last Rotated:</span>
+                            <span className="text-muted-foreground">{t("Last Rotated:")}</span>
                             <span className="font-semibold text-foreground">
                                 {updatedAt ? (
                                     <ClientOnlyDate
@@ -246,7 +248,7 @@ export function SecurityKeyManagementCard({
                                         format={{ month: "short", day: "numeric", year: "numeric" }}
                                     />
                                 ) : (
-                                    "Initial Account Setup"
+                                    t("Initial Account Setup")
                                 )}
                             </span>
                         </div>
@@ -281,12 +283,12 @@ export function SecurityKeyManagementCard({
                                     </div>
                                     <div>
                                         <h3 className="text-base font-bold text-foreground">
-                                            {newSecurityKey ? "New Security Recovery Key" : "Rotate Security Recovery Key"}
+                                            {newSecurityKey ? t("New Security Recovery Key") : t("Rotate Security Recovery Key")}
                                         </h3>
                                         <p className="text-xs text-muted-foreground">
                                             {newSecurityKey
-                                                ? "Save your new recovery key safely."
-                                                : "Verify your identity to generate a new key."}
+                                                ? t("Save your new recovery key safely.")
+                                                : t("Verify your identity to generate a new key.")}
                                         </p>
                                     </div>
                                 </div>
@@ -295,7 +297,7 @@ export function SecurityKeyManagementCard({
                                     type="button"
                                     onClick={handleCloseModal}
                                     className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                                    aria-label="Close modal"
+                                    aria-label={t("Close modal")}
                                 >
                                     <X className="size-4" />
                                 </button>
@@ -308,8 +310,8 @@ export function SecurityKeyManagementCard({
                                         securityKey={newSecurityKey}
                                         isAcknowledged={isAcknowledged}
                                         onToggleAcknowledge={setIsAcknowledged}
-                                        title="New Single-Use Recovery Key"
-                                        description="Your previous security key has been invalidated. Save this new recovery key in a password manager or offline file."
+                                        title={t("New Single-Use Recovery Key")}
+                                        description={t("Your previous security key has been invalidated. Save this new recovery key in a password manager or offline file.")}
                                         accountEmail={accountEmail}
                                     />
 
@@ -320,7 +322,7 @@ export function SecurityKeyManagementCard({
                                         className="w-full h-10 rounded-xl bg-primary text-primary-foreground text-xs font-bold transition-all hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
                                     >
                                         <CheckCircle2 className="size-4" />
-                                        <span>Done & Close</span>
+                                        <span>{t("Done & Close")}</span>
                                     </button>
                                 </div>
                             ) : (
@@ -328,11 +330,10 @@ export function SecurityKeyManagementCard({
                                     <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-300 space-y-1">
                                         <p className="font-semibold flex items-center gap-1.5">
                                             <AlertCircle className="size-3.5 shrink-0" />
-                                            Immediate Invalidation
+                                            {t("Immediate Invalidation")}
                                         </p>
                                         <p className="leading-relaxed text-[11px] opacity-90">
-                                            Generating a new key immediately revokes any previously issued recovery key.
-                                            You will need your current password and a verification code sent to your registered email.
+                                            {t("Generating a new key immediately revokes any previously issued recovery key. You will need your current password and a verification code sent to your registered email.")}
                                         </p>
                                     </div>
 
@@ -347,18 +348,18 @@ export function SecurityKeyManagementCard({
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                                             <Lock className="size-3.5 text-muted-foreground" />
-                                            Current Password
+                                            {t("Current Password")}
                                         </label>
                                         <div className="relative flex items-center">
                                             <input maxLength={CURRENT_PASSWORD_MAX_LENGTH}
                                                 {...rotateForm.fieldProps("currentPassword")}
-                                                aria-label="Current password"
+                                                aria-label={t("Current password")}
                                                 type={showPassword ? "text" : "password"}
                                                 required
                                                 autoComplete="current-password"
                                                 value={currentPassword}
                                                 onChange={(e) => setCurrentPassword(e.target.value)}
-                                                placeholder="Enter your current password"
+                                                placeholder={t("Enter your current password")}
                                                 className={cn(
                                                     "h-10 w-full rounded-xl border border-border bg-background pl-3.5 pr-10 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary",
                                                     rotateForm.errorFor("currentPassword") && fieldErrorClass
@@ -368,7 +369,7 @@ export function SecurityKeyManagementCard({
                                                 type="button"
                                                 onClick={() => setShowPassword(!showPassword)}
                                                 className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors p-1"
-                                                aria-label={showPassword ? "Hide password" : "Show password"}
+                                                aria-label={showPassword ? t("Hide password") : t("Show password")}
                                             >
                                                 {showPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
                                             </button>
@@ -381,7 +382,7 @@ export function SecurityKeyManagementCard({
                                         <div className="flex items-center justify-between">
                                             <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                                                 <Mail className="size-3.5 text-muted-foreground" />
-                                                Email Verification Code
+                                                {t("Email Verification Code")}
                                             </label>
                                             <button
                                                 type="button"
@@ -390,15 +391,15 @@ export function SecurityKeyManagementCard({
                                                 className="text-[11px] font-bold text-primary hover:underline disabled:opacity-50 disabled:no-underline cursor-pointer"
                                             >
                                                 {isSendingOtp
-                                                    ? "Sending..."
+                                                    ? t("Sending...")
                                                     : otpCooldown > 0
-                                                    ? `Resend in ${otpCooldown}s`
-                                                    : "Send Code to Email"}
+                                                    ? t("Resend in {seconds}s", { seconds: otpCooldown })
+                                                    : t("Send Code to Email")}
                                             </button>
                                         </div>
                                         <input
                                             {...rotateForm.fieldProps("otpCode")}
-                                            aria-label="Email verification code"
+                                            aria-label={t("Email verification code")}
                                             type="text"
                                             inputMode="numeric"
                                             autoComplete="one-time-code"
@@ -406,7 +407,7 @@ export function SecurityKeyManagementCard({
                                             maxLength={6}
                                             value={otpCode}
                                             onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                                            placeholder="6-digit verification code"
+                                            placeholder={t("6-digit verification code")}
                                             className={cn(
                                                 "h-10 w-full rounded-xl border border-border bg-background px-3.5 text-xs text-foreground font-mono tracking-widest placeholder:tracking-normal placeholder:font-sans placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary",
                                                 rotateForm.errorFor("otpCode") && fieldErrorClass
@@ -427,7 +428,7 @@ export function SecurityKeyManagementCard({
                                             onClick={handleCloseModal}
                                             className="px-4 py-2 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                                         >
-                                            Cancel
+                                            {t("Cancel")}
                                         </button>
                                         <button
                                             type="submit"
@@ -437,12 +438,12 @@ export function SecurityKeyManagementCard({
                                             {isRotating ? (
                                                 <>
                                                     <Loader2 className="size-3.5 animate-spin" />
-                                                    <span>Verifying & Generating...</span>
+                                                    <span>{t("Verifying & Generating...")}</span>
                                                 </>
                                             ) : (
                                                 <>
                                                     <KeyRound className="size-3.5" />
-                                                    <span>Verify & Generate Key</span>
+                                                    <span>{t("Verify & Generate Key")}</span>
                                                 </>
                                             )}
                                         </button>

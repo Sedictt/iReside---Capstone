@@ -2,6 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useTimeFormat } from '@/hooks/useTimeFormat';
+import { useLanguageContext } from '@/context/LanguageContext';
+
+/** Display locale: an explicit prop wins; otherwise English keeps en-US and Filipino uses the UI locale. */
+function useDisplayLocale(localeProp?: string): string {
+  const { isFilipino, locale } = useLanguageContext();
+  return localeProp ?? (isFilipino ? locale : 'en-US');
+}
 
 interface ClientOnlyDateProps {
   date: string | Date;
@@ -10,7 +17,8 @@ interface ClientOnlyDateProps {
   children?: (formatted: string) => React.ReactNode;
 }
 
-export function ClientOnlyDate({ date, format, locale = 'en-US', children }: ClientOnlyDateProps) {
+export function ClientOnlyDate({ date, format, locale: localeProp, children }: ClientOnlyDateProps) {
+  const locale = useDisplayLocale(localeProp);
   const [formatted, setFormatted] = useState<string>('');
 
   useEffect(() => {
@@ -50,7 +58,8 @@ interface ClientOnlyTimeProps {
   children?: (formatted: string) => React.ReactNode;
 }
 
-export function ClientOnlyTime({ date, format, locale = 'en-US', children }: ClientOnlyTimeProps) {
+export function ClientOnlyTime({ date, format, locale: localeProp, children }: ClientOnlyTimeProps) {
+  const locale = useDisplayLocale(localeProp);
   const [formatted, setFormatted] = useState<string>('');
   const { is24Hour } = useTimeFormat();
 

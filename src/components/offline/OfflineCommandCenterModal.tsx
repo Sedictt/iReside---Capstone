@@ -33,6 +33,7 @@ import {
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type ActiveView = 
   | "menu" 
@@ -46,6 +47,7 @@ type ActiveView =
   | "emergency";
 
 export function OfflineCommandCenterModal() {
+  const { t } = useLanguageContext();
   const { isOnline } = useNetworkStatus();
   const { user, profile } = useAuth();
   const router = useRouter();
@@ -102,10 +104,10 @@ export function OfflineCommandCenterModal() {
             </div>
             <div className="flex flex-col text-left">
               <span className="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">
-                {!isOnline ? "Dead-Zone Mode" : "Action Reminders"}
+                {!isOnline ? t("Dead-Zone Mode") : t("Action Reminders")}
               </span>
               <span className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium">
-                {tasks.length > 0 ? `${tasks.length} offline reminder${tasks.length > 1 ? "s" : ""}` : "Operating in local vault"}
+                {tasks.length > 0 ? (tasks.length > 1 ? t("{count} offline reminders", { count: tasks.length }) : t("{count} offline reminder", { count: tasks.length })) : t("Operating in local vault")}
               </span>
             </div>
             <button
@@ -113,7 +115,7 @@ export function OfflineCommandCenterModal() {
               className="ml-2 px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-transform active:scale-95 flex items-center gap-1.5 cursor-pointer shadow-sm"
             >
               <Maximize2 className="size-3.5" />
-              Open List
+              {t("Open List")}
             </button>
           </div>
         </motion.div>
@@ -147,7 +149,7 @@ export function OfflineCommandCenterModal() {
                   <button
                     onClick={() => setActiveView("menu")}
                     className="size-9 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-neutral-300 flex items-center justify-center transition-transform active:scale-95 cursor-pointer shrink-0"
-                    title="Back to Operations Menu"
+                    title={t("Back to Operations Menu")}
                   >
                     <ArrowLeft className="size-4" />
                   </button>
@@ -179,23 +181,23 @@ export function OfflineCommandCenterModal() {
                       )}
                     >
                       {isOnline
-                        ? "Connection Restored • Action Reminders"
-                        : "Offline • Dead-Zone Mode"}
+                        ? t("Connection Restored • Action Reminders")
+                        : t("Offline • Dead-Zone Mode")}
                     </span>
                     {tasks.length > 0 && (
                       <span className="text-[10px] font-black bg-amber-500/15 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/30">
-                        {tasks.length} reminder{tasks.length > 1 ? "s" : ""}
+                        {tasks.length > 1 ? t("{count} reminders", { count: tasks.length }) : t("{count} reminder", { count: tasks.length })}
                       </span>
                     )}
                   </div>
                   <h2 className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white mt-0.5">
                     {isOnline
-                      ? "Offline Action Reminders"
+                      ? t("Offline Action Reminders")
                       : activeView === "menu"
-                      ? "Dead-Zone Command Center"
+                      ? t("Dead-Zone Command Center")
                       : activeView === "tasks_review"
-                      ? "Recorded Reminders Checklist"
-                      : getSubViewTitle(activeView)}
+                      ? t("Recorded Reminders Checklist")
+                      : t(getSubViewTitle(activeView))}
                   </h2>
                 </div>
               </div>
@@ -208,14 +210,14 @@ export function OfflineCommandCenterModal() {
                     className="px-3.5 py-1.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     <ClipboardList className="size-4" />
-                    <span>View Reminders ({tasks.length})</span>
+                    <span>{t("View Reminders ({count})", { count: tasks.length })}</span>
                   </button>
                 )}
 
                 {/* Minimize Button: Always Available in both Online & Offline modes */}
                 <button
                   onClick={() => setIsMinimized(true)}
-                  title="Minimize to floating bottom dock"
+                  title={t("Minimize to floating bottom dock")}
                   className="flex size-9 items-center justify-center rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white transition-colors cursor-pointer"
                 >
                   <Minimize2 className="size-4" />
@@ -225,7 +227,7 @@ export function OfflineCommandCenterModal() {
                 {isOnline && (
                   <button
                     onClick={() => setIsDismissedOnline(true)}
-                    title="Close reminders modal"
+                    title={t("Close reminders modal")}
                     className="flex size-9 items-center justify-center rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white transition-colors cursor-pointer"
                   >
                     <X className="size-4" />
@@ -252,10 +254,10 @@ export function OfflineCommandCenterModal() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-neutral-400">
-                      Select an Operation to Note Down in Dead Zone
+                      {t("Select an Operation to Note Down in Dead Zone")}
                     </span>
                     <span className="text-xs text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1.5">
-                      <ClipboardList className="size-3.5" /> Saves as Action Reminder
+                      <ClipboardList className="size-3.5" /> {t("Saves as Action Reminder")}
                     </span>
                   </div>
 
@@ -273,15 +275,15 @@ export function OfflineCommandCenterModal() {
                               <CreditCard className="size-5" />
                             </div>
                             <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                              Payments
+                              {t("Payments")}
                             </span>
                           </div>
                           <div>
                             <div className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                              Payment Collections
+                              {t("Payment Collections")}
                             </div>
                             <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1 leading-relaxed line-clamp-2">
-                              Note down cash collected & issue offline reminders.
+                              {t("Note down cash collected & issue offline reminders.")}
                             </p>
                           </div>
                         </button>
@@ -297,15 +299,15 @@ export function OfflineCommandCenterModal() {
                               <Wrench className="size-5" />
                             </div>
                             <span className="text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400 bg-red-500/10 px-2.5 py-0.5 rounded-full border border-red-500/20">
-                              Maintenance
+                              {t("Maintenance")}
                             </span>
                           </div>
                           <div>
                             <div className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
-                              Maintenance Tickets
+                              {t("Maintenance Tickets")}
                             </div>
                             <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1 leading-relaxed line-clamp-2">
-                              Note urgent repairs & technician tasks on-site.
+                              {t("Note urgent repairs & technician tasks on-site.")}
                             </p>
                           </div>
                         </button>
@@ -321,15 +323,15 @@ export function OfflineCommandCenterModal() {
                               <UserPlus className="size-5" />
                             </div>
                             <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20">
-                              Registration
+                              {t("Registration")}
                             </span>
                           </div>
                           <div>
                             <div className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                              Tenant Registration
+                              {t("Tenant Registration")}
                             </div>
                             <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1 leading-relaxed line-clamp-2">
-                              Note walk-in resident details & generate offline voucher.
+                              {t("Note walk-in resident details & generate offline voucher.")}
                             </p>
                           </div>
                         </button>
@@ -345,15 +347,15 @@ export function OfflineCommandCenterModal() {
                               <Users className="size-5" />
                             </div>
                             <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
-                              Tenant List
+                              {t("Tenant List")}
                             </span>
                           </div>
                           <div>
                             <div className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                              Tenant Directory
+                              {t("Tenant Directory")}
                             </div>
                             <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1 leading-relaxed line-clamp-2">
-                              Search cached tenant profiles, contacts & room numbers.
+                              {t("Search cached tenant profiles, contacts & room numbers.")}
                             </p>
                           </div>
                         </button>
@@ -369,15 +371,15 @@ export function OfflineCommandCenterModal() {
                               <FileSignature className="size-5" />
                             </div>
                             <span className="text-[10px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/20">
-                              Lease List
+                              {t("Lease List")}
                             </span>
                           </div>
                           <div>
                             <div className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                              Leases & Move-Ins
+                              {t("Leases & Move-Ins")}
                             </div>
                             <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1 leading-relaxed line-clamp-2">
-                              Review contracts & capture biometric signatures on-screen.
+                              {t("Review contracts & capture biometric signatures on-screen.")}
                             </p>
                           </div>
                         </button>
@@ -393,15 +395,15 @@ export function OfflineCommandCenterModal() {
                               <Zap className="size-5" />
                             </div>
                             <span className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2.5 py-0.5 rounded-full border border-cyan-500/20">
-                              Utilities
+                              {t("Utilities")}
                             </span>
                           </div>
                           <div>
                             <div className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
-                              Corridor Sub-Meters
+                              {t("Corridor Sub-Meters")}
                             </div>
                             <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1 leading-relaxed line-clamp-2">
-                              Walk hallways noting power & water with instant ₱ calculation.
+                              {t("Walk hallways noting power & water with instant ₱ calculation.")}
                             </p>
                           </div>
                         </button>
@@ -419,15 +421,15 @@ export function OfflineCommandCenterModal() {
                               <ShieldAlert className="size-5" />
                             </div>
                             <span className="text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400 bg-red-500/10 px-2.5 py-0.5 rounded-full border border-red-500/20">
-                              Urgent
+                              {t("Urgent")}
                             </span>
                           </div>
                           <div>
                             <div className="text-sm font-bold text-red-600 dark:text-red-300 group-hover:text-red-500 dark:group-hover:text-red-200 transition-colors">
-                              Emergency Hazard Hotline
+                              {t("Emergency Hazard Hotline")}
                             </div>
                             <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1 leading-relaxed line-clamp-2">
-                              1-tap phone dialer & pre-filled SMS for immediate hazards.
+                              {t("1-tap phone dialer & pre-filled SMS for immediate hazards.")}
                             </p>
                           </div>
                         </button>
@@ -443,15 +445,15 @@ export function OfflineCommandCenterModal() {
                               <CreditCard className="size-5" />
                             </div>
                             <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                              Payment
+                              {t("Payment")}
                             </span>
                           </div>
                           <div>
                             <div className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                              Stage GCash Payment Proof
+                              {t("Stage GCash Payment Proof")}
                             </div>
                             <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1 leading-relaxed line-clamp-2">
-                              Note receipt reference code for record keeping.
+                              {t("Note receipt reference code for record keeping.")}
                             </p>
                           </div>
                         </button>
@@ -467,15 +469,15 @@ export function OfflineCommandCenterModal() {
                               <FileSignature className="size-5" />
                             </div>
                             <span className="text-[10px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/20">
-                              Lease
+                              {t("Lease")}
                             </span>
                           </div>
                           <div>
                             <div className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                              Move-In Lease Contract
+                              {t("Move-In Lease Contract")}
                             </div>
                             <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1 leading-relaxed line-clamp-2">
-                              Review contract clauses & draw biometric signature.
+                              {t("Review contract clauses & draw biometric signature.")}
                             </p>
                           </div>
                         </button>
@@ -520,8 +522,8 @@ export function OfflineCommandCenterModal() {
                 />
                 <span className="text-[11px] font-semibold text-slate-700 dark:text-neutral-300">
                   {isOnline
-                    ? "Online • Review reminders & navigate to record in live forms"
-                    : "Operating in dead zone • All notes saved to checklist"}
+                    ? t("Online • Review reminders & navigate to record in live forms")
+                    : t("Operating in dead zone • All notes saved to checklist")}
                 </span>
               </div>
 
@@ -529,7 +531,7 @@ export function OfflineCommandCenterModal() {
                 onClick={() => setIsMinimized(true)}
                 className="text-[11px] font-bold text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 transition-colors flex items-center gap-1 cursor-pointer"
               >
-                Minimize to Dock <ArrowRight className="size-3" />
+                {t("Minimize to Dock")} <ArrowRight className="size-3" />
               </button>
             </div>
           </motion.div>
@@ -567,14 +569,15 @@ function OfflineRemindersChecklistView({
   onBackToMenu: () => void; 
   onNavigate: (url: string) => void;
 }) {
+  const { t, locale } = useLanguageContext();
   const handleClearAll = () => {
     offlineTaskManager.clearAll();
-    toast.success("All offline reminders cleared.");
+    toast.success(t("All offline reminders cleared."));
   };
 
   const handleDismiss = (taskId: string) => {
     offlineTaskManager.removeTask(taskId);
-    toast.info("Reminder dismissed.");
+    toast.info(t("Reminder dismissed."));
   };
 
   if (tasks.length === 0) {
@@ -584,16 +587,16 @@ function OfflineRemindersChecklistView({
           <Check className="size-8" />
         </div>
         <div className="space-y-1">
-          <h4 className="text-xl font-black text-slate-900 dark:text-white">All Reminders Cleared!</h4>
+          <h4 className="text-xl font-black text-slate-900 dark:text-white">{t("All Reminders Cleared!")}</h4>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 max-w-sm">
-            There are no pending offline notes or action reminders.
+            {t("There are no pending offline notes or action reminders.")}
           </p>
         </div>
         <button
           onClick={onBackToMenu}
           className="mt-3 px-6 py-2.5 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-xs transition-transform active:scale-95 shadow-md cursor-pointer"
         >
-          Return to Operations Menu
+          {t("Return to Operations Menu")}
         </button>
       </div>
     );
@@ -605,12 +608,14 @@ function OfflineRemindersChecklistView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/[0.02]">
         <div>
           <span className="text-xs font-black text-slate-900 dark:text-white">
-            {tasks.length} Action{tasks.length > 1 ? "s" : ""} Noted Down While in Dead Zone
+            {tasks.length > 1
+              ? t("{count} Actions Noted Down While in Dead Zone", { count: tasks.length })
+              : t("{count} Action Noted Down While in Dead Zone", { count: tasks.length })}
           </span>
           <p className="text-xs text-slate-500 dark:text-neutral-400 mt-0.5">
             {isOnline
-              ? "Use these notes to record transactions into the system. Click 'Open Module' to navigate, or check off when recorded."
-              : "Saved in your offline notepad. You can review your notes here before returning online."}
+              ? t("Use these notes to record transactions into the system. Click 'Open Module' to navigate, or check off when recorded.")
+              : t("Saved in your offline notepad. You can review your notes here before returning online.")}
           </p>
         </div>
 
@@ -618,7 +623,7 @@ function OfflineRemindersChecklistView({
           onClick={handleClearAll}
           className="px-4 py-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-600 text-slate-600 dark:text-neutral-300 font-bold text-xs transition-all shadow-xs shrink-0 cursor-pointer flex items-center justify-center gap-1.5"
         >
-          <Trash2 className="size-3.5" /> Clear All
+          <Trash2 className="size-3.5" /> {t("Clear All")}
         </button>
       </div>
 
@@ -668,10 +673,10 @@ function OfflineRemindersChecklistView({
                           : "bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400"
                       )}
                     >
-                      {task.type.replace("_", " ")}
+                      {t(task.type.replace("_", " "))}
                     </span>
                     <span className="text-[11px] text-slate-400 dark:text-neutral-500 font-medium">
-                      Noted at {new Date(task.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {t("Noted at {time}", { time: new Date(task.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) })}
                     </span>
                   </div>
 
@@ -691,9 +696,9 @@ function OfflineRemindersChecklistView({
                     type="button"
                     onClick={() => onNavigate(task.actionUrl)}
                     className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-neutral-200 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
-                    title={`Navigate to ${task.actionLabel}`}
+                    title={t("Navigate to {destination}", { destination: t(task.actionLabel) })}
                   >
-                    <ExternalLink className="size-3.5" /> {task.actionLabel}
+                    <ExternalLink className="size-3.5" /> {t(task.actionLabel)}
                   </button>
                 )}
 
@@ -701,10 +706,10 @@ function OfflineRemindersChecklistView({
                   type="button"
                   onClick={() => handleDismiss(task.id)}
                   className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition-transform active:scale-95 cursor-pointer shadow-sm flex items-center gap-1.5"
-                  title="Mark as recorded"
+                  title={t("Mark as recorded")}
                 >
                   <Check className="size-3.5" />
-                  <span>Mark Done</span>
+                  <span>{t("Mark Done")}</span>
                 </button>
               </div>
             </div>
@@ -719,7 +724,7 @@ function OfflineRemindersChecklistView({
           onClick={onBackToMenu}
           className="px-4 py-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-neutral-300 text-xs font-bold transition-colors cursor-pointer flex items-center gap-2"
         >
-          <ArrowLeft className="size-3.5" /> Return to Operations Menu
+          <ArrowLeft className="size-3.5" /> {t("Return to Operations Menu")}
         </button>
       </div>
     </div>
@@ -730,6 +735,7 @@ function OfflineRemindersChecklistView({
    1. IN-LIGHTBOX SUB-VIEW: PAYMENTS
    ========================================================================= */
 function OfflinePaymentsView({ onDone }: { onDone: () => void }) {
+  const { t } = useLanguageContext();
   const [unit, setUnit] = useState("Unit 101");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Rent");
@@ -762,7 +768,7 @@ function OfflinePaymentsView({ onDone }: { onDone: () => void }) {
     const existing = OfflineStorage.get<any[]>(historyKey)?.data || [];
     OfflineStorage.set(historyKey, [payload, ...existing], null, "payments");
 
-    toast.success(`Payment note for ₱${Number(amount).toLocaleString()} saved to Reminders!`);
+    toast.success(t("Payment note for {amount} saved to Reminders!", { amount: `₱${Number(amount).toLocaleString()}` }));
     setSubmitted(true);
     setTimeout(() => {
       onDone();
@@ -776,9 +782,9 @@ function OfflinePaymentsView({ onDone }: { onDone: () => void }) {
           <Check className="size-8" />
         </div>
         <div className="space-y-1">
-          <h4 className="text-lg font-black text-slate-900 dark:text-white">Payment Reminder Saved</h4>
+          <h4 className="text-lg font-black text-slate-900 dark:text-white">{t("Payment Reminder Saved")}</h4>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400">
-            Added to your offline checklist so you can record it in your ledger later.
+            {t("Added to your offline checklist so you can record it in your ledger later.")}
           </p>
         </div>
       </div>
@@ -789,18 +795,18 @@ function OfflinePaymentsView({ onDone }: { onDone: () => void }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Unit / Tenant</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Unit / Tenant")}</label>
           <input maxLength={60}
             type="text"
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
-            placeholder="e.g. Unit 101 - Juan Dela Cruz"
+            placeholder={t("e.g. Unit 101 - Juan Dela Cruz")}
             className="w-full mt-1.5 px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-primary/30 outline-none transition-all"
             required
           />
         </div>
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Amount (₱)</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Amount (₱)")}</label>
           <input max={9999999.99} step="0.01"
             type="number"
             value={amount}
@@ -815,26 +821,26 @@ function OfflinePaymentsView({ onDone }: { onDone: () => void }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Category</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Category")}</label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             className="w-full mt-1.5 px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-zinc-900 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-primary/30 outline-none transition-all cursor-pointer"
           >
-            <option value="Rent">Monthly Rent</option>
-            <option value="Electricity">Electricity Dues</option>
-            <option value="Water">Water Dues</option>
-            <option value="Security Deposit">Security Deposit</option>
-            <option value="Other">Other Assessment</option>
+            <option value="Rent">{t("Monthly Rent")}</option>
+            <option value="Electricity">{t("Electricity Dues")}</option>
+            <option value="Water">{t("Water Dues")}</option>
+            <option value="Security Deposit">{t("Security Deposit")}</option>
+            <option value="Other">{t("Other Assessment")}</option>
           </select>
         </div>
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Receipt / Reference Note</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Receipt / Reference Note")}</label>
           <input maxLength={250}
             type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="e.g. Paid in cash at hallway"
+            placeholder={t("e.g. Paid in cash at hallway")}
             className="w-full mt-1.5 px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-primary/30 outline-none transition-all"
           />
         </div>
@@ -846,13 +852,13 @@ function OfflinePaymentsView({ onDone }: { onDone: () => void }) {
           onClick={onDone}
           className="px-5 py-2.5 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-neutral-300 text-xs font-bold transition-colors cursor-pointer"
         >
-          Cancel
+          {t("Cancel")}
         </button>
         <button
           type="submit"
           className="px-6 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition-transform active:scale-95 cursor-pointer shadow-md flex items-center gap-2"
         >
-          <CreditCard className="size-4" /> Save to Action Reminders
+          <CreditCard className="size-4" /> {t("Save to Action Reminders")}
         </button>
       </div>
     </form>
@@ -863,6 +869,7 @@ function OfflinePaymentsView({ onDone }: { onDone: () => void }) {
    2. IN-LIGHTBOX SUB-VIEW: MAINTENANCE
    ========================================================================= */
 function OfflineMaintenanceView({ onDone }: { onDone: () => void }) {
+  const { t } = useLanguageContext();
   const [unit, setUnit] = useState("Unit 101");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("Plumbing");
@@ -898,7 +905,7 @@ function OfflineMaintenanceView({ onDone }: { onDone: () => void }) {
     const existing = OfflineStorage.get<any[]>(historyKey)?.data || [];
     OfflineStorage.set(historyKey, [payload, ...existing], null, "maintenance");
 
-    toast.success(`Maintenance note saved to Reminders!`);
+    toast.success(t("Maintenance note saved to Reminders!"));
     setSubmitted(true);
     setTimeout(() => {
       onDone();
@@ -912,9 +919,9 @@ function OfflineMaintenanceView({ onDone }: { onDone: () => void }) {
           <Check className="size-8" />
         </div>
         <div className="space-y-1">
-          <h4 className="text-lg font-black text-slate-900 dark:text-white">Maintenance Note Saved</h4>
+          <h4 className="text-lg font-black text-slate-900 dark:text-white">{t("Maintenance Note Saved")}</h4>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400">
-            Added to your offline checklist so you can log the ticket once online.
+            {t("Added to your offline checklist so you can log the ticket once online.")}
           </p>
         </div>
       </div>
@@ -925,23 +932,23 @@ function OfflineMaintenanceView({ onDone }: { onDone: () => void }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Unit / Location</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Unit / Location")}</label>
           <input maxLength={60}
             type="text"
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
-            placeholder="e.g. Unit 203 / 2nd Floor Hallway"
+            placeholder={t("e.g. Unit 203 / 2nd Floor Hallway")}
             className="w-full mt-1.5 px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-primary/30 outline-none transition-all"
             required
           />
         </div>
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Issue Headline</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Issue Headline")}</label>
           <input maxLength={60}
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Leaking pipe under bathroom sink"
+            placeholder={t("e.g. Leaking pipe under bathroom sink")}
             className="w-full mt-1.5 px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-primary/30 outline-none transition-all"
             required
           />
@@ -950,42 +957,42 @@ function OfflineMaintenanceView({ onDone }: { onDone: () => void }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Category</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Category")}</label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             className="w-full mt-1.5 px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-zinc-900 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-primary/30 outline-none transition-all cursor-pointer"
           >
-            <option value="Plumbing">Plumbing & Water</option>
-            <option value="Electrical">Electrical & Power</option>
-            <option value="Aircon">Air Conditioning</option>
-            <option value="Lock & Keys">Locks & Security</option>
-            <option value="Structural">Structural / Carpentry</option>
-            <option value="Other">Other Hazard</option>
+            <option value="Plumbing">{t("Plumbing & Water")}</option>
+            <option value="Electrical">{t("Electrical & Power")}</option>
+            <option value="Aircon">{t("Air Conditioning")}</option>
+            <option value="Lock & Keys">{t("Locks & Security")}</option>
+            <option value="Structural">{t("Structural / Carpentry")}</option>
+            <option value="Other">{t("Other Hazard")}</option>
           </select>
         </div>
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Urgency Level</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Urgency Level")}</label>
           <select
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
             className="w-full mt-1.5 px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-zinc-900 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-primary/30 outline-none transition-all cursor-pointer"
           >
-            <option value="Urgent">🚨 Urgent (Immediate Hazard)</option>
-            <option value="High">⚠️ High Priority</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low (Routine Check)</option>
+            <option value="Urgent">{t("🚨 Urgent (Immediate Hazard)")}</option>
+            <option value="High">{t("⚠️ High Priority")}</option>
+            <option value="Medium">{t("Medium")}</option>
+            <option value="Low">{t("Low (Routine Check)")}</option>
           </select>
         </div>
       </div>
 
       <div>
-        <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Detailed Description</label>
+        <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Detailed Description")}</label>
         <textarea maxLength={500}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          placeholder="Describe symptoms, exact location, or instructions for technician..."
+          placeholder={t("Describe symptoms, exact location, or instructions for technician...")}
           className="w-full mt-1.5 p-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-primary/30 outline-none transition-all resize-none"
         />
       </div>
@@ -996,13 +1003,13 @@ function OfflineMaintenanceView({ onDone }: { onDone: () => void }) {
           onClick={onDone}
           className="px-5 py-2.5 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-neutral-300 text-xs font-bold transition-colors cursor-pointer"
         >
-          Cancel
+          {t("Cancel")}
         </button>
         <button
           type="submit"
           className="px-6 py-2.5 rounded-2xl bg-red-600 hover:bg-red-500 text-white text-xs font-black transition-transform active:scale-95 cursor-pointer shadow-md flex items-center gap-2"
         >
-          <Wrench className="size-4" /> Save to Action Reminders
+          <Wrench className="size-4" /> {t("Save to Action Reminders")}
         </button>
       </div>
     </form>
@@ -1013,6 +1020,7 @@ function OfflineMaintenanceView({ onDone }: { onDone: () => void }) {
    3. IN-LIGHTBOX SUB-VIEW: TENANT REGISTRATION
    ========================================================================= */
 function OfflineRegistrationView({ onDone }: { onDone: () => void }) {
+  const { t } = useLanguageContext();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [unit, setUnit] = useState("Unit 102");
@@ -1047,7 +1055,7 @@ function OfflineRegistrationView({ onDone }: { onDone: () => void }) {
     OfflineStorage.set(key, [payload, ...existing], null, "tenants");
 
     setVoucherCode(generatedVoucher);
-    toast.success(`Tenant ${name} added to Action Reminders!`);
+    toast.success(t("Tenant {name} added to Action Reminders!", { name }));
   };
 
   if (voucherCode) {
@@ -1057,9 +1065,9 @@ function OfflineRegistrationView({ onDone }: { onDone: () => void }) {
           <Check className="size-8" />
         </div>
         <div className="space-y-2">
-          <h4 className="text-xl font-black text-slate-900 dark:text-white">Walk-In Registration Noted</h4>
+          <h4 className="text-xl font-black text-slate-900 dark:text-white">{t("Walk-In Registration Noted")}</h4>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400">
-            Give this offline voucher token to the tenant. The reminder has been saved to your checklist.
+            {t("Give this offline voucher token to the tenant. The reminder has been saved to your checklist.")}
           </p>
           <div className="mt-4 px-6 py-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-mono font-black text-xl tracking-widest inline-block select-all shadow-inner">
             {voucherCode}
@@ -1069,7 +1077,7 @@ function OfflineRegistrationView({ onDone }: { onDone: () => void }) {
           onClick={onDone}
           className="mt-3 px-6 py-2.5 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-xs transition-transform active:scale-95 shadow-md cursor-pointer"
         >
-          Return to Hub
+          {t("Return to Hub")}
         </button>
       </div>
     );
@@ -1079,18 +1087,18 @@ function OfflineRegistrationView({ onDone }: { onDone: () => void }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Full Name</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Full Name")}</label>
           <input maxLength={50}
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Maria Santos"
+            placeholder={t("e.g. Maria Santos")}
             className="w-full mt-1.5 px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-primary/30 outline-none transition-all"
             required
           />
         </div>
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Mobile Phone Number</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Mobile Phone Number")}</label>
           <input maxLength={15}
             type="tel"
             value={phone}
@@ -1104,18 +1112,18 @@ function OfflineRegistrationView({ onDone }: { onDone: () => void }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Assigned Unit</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Assigned Unit")}</label>
           <input maxLength={10}
             type="text"
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
-            placeholder="e.g. Unit 102"
+            placeholder={t("e.g. Unit 102")}
             className="w-full mt-1.5 px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-primary/30 outline-none transition-all"
             required
           />
         </div>
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Monthly Rent (₱)</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Monthly Rent (₱)")}</label>
           <input min={0} max={9999999.99} step="0.01"
             type="number"
             value={rent}
@@ -1133,13 +1141,13 @@ function OfflineRegistrationView({ onDone }: { onDone: () => void }) {
           onClick={onDone}
           className="px-5 py-2.5 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-neutral-300 text-xs font-bold transition-colors cursor-pointer"
         >
-          Cancel
+          {t("Cancel")}
         </button>
         <button
           type="submit"
           className="px-6 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black transition-transform active:scale-95 cursor-pointer shadow-md flex items-center gap-2"
         >
-          <UserPlus className="size-4" /> Save Registration Reminder
+          <UserPlus className="size-4" /> {t("Save Registration Reminder")}
         </button>
       </div>
     </form>
@@ -1150,6 +1158,7 @@ function OfflineRegistrationView({ onDone }: { onDone: () => void }) {
    4. IN-LIGHTBOX SUB-VIEW: TENANT LIST
    ========================================================================= */
 function OfflineTenantListView() {
+  const { t } = useLanguageContext();
   const [search, setSearch] = useState("");
 
   const sampleTenants = useMemo(() => [
@@ -1161,10 +1170,10 @@ function OfflineTenantListView() {
   ], []);
 
   const filtered = sampleTenants.filter(
-    (t) =>
-      t.name.toLowerCase().includes(search.toLowerCase()) ||
-      t.unit.toLowerCase().includes(search.toLowerCase()) ||
-      t.phone.includes(search)
+    (tenantRow) =>
+      tenantRow.name.toLowerCase().includes(search.toLowerCase()) ||
+      tenantRow.unit.toLowerCase().includes(search.toLowerCase()) ||
+      tenantRow.phone.includes(search)
   );
 
   return (
@@ -1175,7 +1184,7 @@ function OfflineTenantListView() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by tenant name, unit number, or phone..."
+          placeholder={t("Search by tenant name, unit number, or phone...")}
           className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-primary/30 outline-none transition-all"
         />
       </div>
@@ -1194,7 +1203,7 @@ function OfflineTenantListView() {
                 <div className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   {tenant.name}
                   <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold">
-                    {tenant.status}
+                    {t(tenant.status)}
                   </span>
                 </div>
                 <div className="text-xs text-slate-500 dark:text-neutral-400 font-medium mt-0.5">
@@ -1206,15 +1215,15 @@ function OfflineTenantListView() {
             <div className="flex items-center gap-2.5">
               {tenant.balance > 0 ? (
                 <span className="text-xs font-black text-amber-600 dark:text-amber-400 bg-amber-500/10 px-3 py-1 rounded-xl border border-amber-500/20">
-                  ₱{tenant.balance.toLocaleString()} Due
+                  {t("{amount} Due", { amount: `₱${tenant.balance.toLocaleString()}` })}
                 </span>
               ) : (
-                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Paid ✓</span>
+                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{t("Paid ✓")}</span>
               )}
               <a
                 href={`tel:${tenant.phone}`}
                 className="size-9 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-neutral-300 flex items-center justify-center transition-colors shadow-xs"
-                title="Direct Phone Call"
+                title={t("Direct Phone Call")}
               >
                 <PhoneCall className="size-4" />
               </a>
@@ -1230,6 +1239,7 @@ function OfflineTenantListView() {
    5. IN-LIGHTBOX SUB-VIEW: LEASES & BIOMETRIC MOVE-IN SIGNER
    ========================================================================= */
 function OfflineLeasesView({ onDone }: { onDone: () => void }) {
+  const { t } = useLanguageContext();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
@@ -1311,7 +1321,7 @@ function OfflineLeasesView({ onDone }: { onDone: () => void }) {
       }
     );
 
-    toast.success("Biometric contract saved to Reminders!");
+    toast.success(t("Biometric contract saved to Reminders!"));
     setSealed(true);
     setTimeout(() => {
       onDone();
@@ -1325,9 +1335,9 @@ function OfflineLeasesView({ onDone }: { onDone: () => void }) {
           <Check className="size-8" />
         </div>
         <div className="space-y-1">
-          <h4 className="text-lg font-black text-slate-900 dark:text-white">Lease Signature Saved</h4>
+          <h4 className="text-lg font-black text-slate-900 dark:text-white">{t("Lease Signature Saved")}</h4>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400">
-            Stored in local storage. You can reference this when formalizing the lease online.
+            {t("Stored in local storage. You can reference this when formalizing the lease online.")}
           </p>
         </div>
       </div>
@@ -1338,23 +1348,23 @@ function OfflineLeasesView({ onDone }: { onDone: () => void }) {
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Tenant Signer</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Tenant Signer")}</label>
           <input maxLength={50}
             type="text"
             value={signerName}
             onChange={(e) => setSignerName(e.target.value)}
             className="w-full mt-1.5 px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-primary/30 outline-none transition-all"
-            placeholder="Full legal name"
+            placeholder={t("Full legal name")}
           />
         </div>
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Assigned Unit</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Assigned Unit")}</label>
           <input maxLength={10}
             type="text"
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
             className="w-full mt-1.5 px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-primary/30 outline-none transition-all"
-            placeholder="e.g. Unit 102"
+            placeholder={t("e.g. Unit 102")}
           />
         </div>
       </div>
@@ -1362,14 +1372,14 @@ function OfflineLeasesView({ onDone }: { onDone: () => void }) {
       <div>
         <div className="flex items-center justify-between mb-1.5">
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">
-            Draw Move-In Digital Signature
+            {t("Draw Move-In Digital Signature")}
           </label>
           {hasSignature && (
             <button
               onClick={clearCanvas}
               className="text-xs text-slate-400 hover:text-red-500 flex items-center gap-1 font-bold cursor-pointer transition-colors"
             >
-              <Trash2 className="size-3.5" /> Clear Signature
+              <Trash2 className="size-3.5" /> {t("Clear Signature")}
             </button>
           )}
         </div>
@@ -1377,7 +1387,7 @@ function OfflineLeasesView({ onDone }: { onDone: () => void }) {
         <div className="relative border border-slate-200 dark:border-white/10 rounded-2xl bg-slate-100/80 dark:bg-[#07090e] overflow-hidden touch-none h-40 flex items-center justify-center shadow-inner">
           {!hasSignature && (
             <span className="absolute text-slate-400 dark:text-neutral-600 text-xs font-semibold pointer-events-none select-none">
-              ✍️ Sign with finger or stylus here
+              {t("✍️ Sign with finger or stylus here")}
             </span>
           )}
           <canvas
@@ -1402,7 +1412,7 @@ function OfflineLeasesView({ onDone }: { onDone: () => void }) {
           onClick={onDone}
           className="px-5 py-2.5 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-neutral-300 text-xs font-bold transition-colors cursor-pointer"
         >
-          Cancel
+          {t("Cancel")}
         </button>
         <button
           type="submit"
@@ -1410,7 +1420,7 @@ function OfflineLeasesView({ onDone }: { onDone: () => void }) {
           disabled={!hasSignature}
           className="px-6 py-2.5 rounded-2xl bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white text-xs font-black transition-transform active:scale-95 cursor-pointer shadow-md flex items-center gap-2"
         >
-          <FileSignature className="size-4" /> Save Signature Reminder
+          <FileSignature className="size-4" /> {t("Save Signature Reminder")}
         </button>
       </div>
     </div>
@@ -1421,6 +1431,7 @@ function OfflineLeasesView({ onDone }: { onDone: () => void }) {
    6. IN-LIGHTBOX SUB-VIEW: CORRIDOR SUB-METERS
    ========================================================================= */
 function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
+  const { t } = useLanguageContext();
   const [unit, setUnit] = useState("Unit 101");
   const [meterType, setMeterType] = useState<"Electricity" | "Water">("Electricity");
   const [prevReading, setPrevReading] = useState("1420");
@@ -1434,7 +1445,7 @@ function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (consumption <= 0) {
-      toast.error("Current reading must be greater than previous reading.");
+      toast.error(t("Current reading must be greater than previous reading."));
       return;
     }
 
@@ -1461,7 +1472,7 @@ function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
     const existing = OfflineStorage.get<any[]>(historyKey)?.data || [];
     OfflineStorage.set(historyKey, [payload, ...existing], null, "utilities");
 
-    toast.success(`Reading note for ${unit} saved to Reminders!`);
+    toast.success(t("Reading note for {unit} saved to Reminders!", { unit }));
     setLogged(true);
     setTimeout(() => {
       onDone();
@@ -1475,9 +1486,9 @@ function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
           <Check className="size-8" />
         </div>
         <div className="space-y-1">
-          <h4 className="text-lg font-black text-slate-900 dark:text-white">Meter Note Saved</h4>
+          <h4 className="text-lg font-black text-slate-900 dark:text-white">{t("Meter Note Saved")}</h4>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400">
-            Added to your checklist. You can reference this reading when creating invoices.
+            {t("Added to your checklist. You can reference this reading when creating invoices.")}
           </p>
         </div>
       </div>
@@ -1488,18 +1499,18 @@ function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
     <form onSubmit={handleSave} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Unit Number</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Unit Number")}</label>
           <input maxLength={10}
             type="text"
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
             className="w-full mt-1.5 px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-primary/30 outline-none transition-all"
-            placeholder="e.g. Unit 101"
+            placeholder={t("e.g. Unit 101")}
             required
           />
         </div>
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Utility Type</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Utility Type")}</label>
           <div className="grid grid-cols-2 gap-2 mt-1.5">
             <button
               type="button"
@@ -1514,7 +1525,7 @@ function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
                   : "bg-slate-50/80 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-neutral-400"
               )}
             >
-              ⚡ Electricity (kWh)
+              {t("⚡ Electricity (kWh)")}
             </button>
             <button
               type="button"
@@ -1529,7 +1540,7 @@ function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
                   : "bg-slate-50/80 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-neutral-400"
               )}
             >
-              💧 Water (m³)
+              {t("💧 Water (m³)")}
             </button>
           </div>
         </div>
@@ -1537,7 +1548,7 @@ function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
 
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Previous</label>
+          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Previous")}</label>
           <input min={0} max={9999999}
             type="number"
             value={prevReading}
@@ -1547,7 +1558,7 @@ function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
           />
         </div>
         <div>
-          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Current</label>
+          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Current")}</label>
           <input min={0} max={9999999}
             type="number"
             value={currReading}
@@ -1557,7 +1568,7 @@ function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
           />
         </div>
         <div>
-          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Rate (₱)</label>
+          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Rate (₱)")}</label>
           <input min={0} max={99999.99}
             type="number"
             value={rate}
@@ -1573,7 +1584,7 @@ function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
       <div className="p-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 flex items-center justify-between shadow-xs">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
-            Calculated Usage
+            {t("Calculated Usage")}
           </span>
           <div className="text-base font-black text-slate-900 dark:text-white">
             {consumption} {meterType === "Electricity" ? "kWh" : "m³"}
@@ -1581,7 +1592,7 @@ function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
         </div>
         <div className="text-right">
           <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
-            Computed Charge
+            {t("Computed Charge")}
           </span>
           <div className="text-lg font-black text-cyan-600 dark:text-cyan-300">
             ₱{charge.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -1595,13 +1606,13 @@ function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
           onClick={onDone}
           className="px-5 py-2.5 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-neutral-300 text-xs font-bold transition-colors cursor-pointer"
         >
-          Cancel
+          {t("Cancel")}
         </button>
         <button
           type="submit"
           className="px-6 py-2.5 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-black transition-transform active:scale-95 cursor-pointer shadow-md flex items-center gap-2"
         >
-          <Zap className="size-4" /> Save to Action Reminders
+          <Zap className="size-4" /> {t("Save to Action Reminders")}
         </button>
       </div>
     </form>
@@ -1612,17 +1623,18 @@ function OfflineUtilitiesView({ onDone }: { onDone: () => void }) {
    7. IN-LIGHTBOX SUB-VIEW: EMERGENCY HOTLINE
    ========================================================================= */
 function OfflineEmergencyView() {
+  const { t } = useLanguageContext();
   return (
     <div className="space-y-4 py-2">
       <div className="p-5 rounded-2xl border border-red-500/20 bg-red-500/5">
         <div className="flex items-center gap-2.5 text-red-600 dark:text-red-400">
           <ShieldAlert className="size-5 shrink-0" />
           <span className="text-xs font-black uppercase tracking-wider">
-            Direct Telephony & Emergency Radio Fallback
+            {t("Direct Telephony & Emergency Radio Fallback")}
           </span>
         </div>
         <p className="text-xs text-slate-600 dark:text-neutral-300 mt-2 leading-relaxed">
-          When cellular data is dead, your phone's standard GSM connection can still place a direct phone call or send an emergency SMS directly to property management:
+          {t("When cellular data is dead, your phone's standard GSM connection can still place a direct phone call or send an emergency SMS directly to property management:")}
         </p>
       </div>
 
@@ -1631,13 +1643,13 @@ function OfflineEmergencyView() {
           href="tel:09171234567"
           className="p-4 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-black text-sm text-center flex items-center justify-center gap-2.5 shadow-md transition-transform active:scale-95"
         >
-          <PhoneCall className="size-5" /> Call Property Hotline
+          <PhoneCall className="size-5" /> {t("Call Property Hotline")}
         </a>
         <a
           href="sms:09171234567?body=EMERGENCY%20HAZARD:%20Need%20immediate%20property%20assistance."
           className="p-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-900 dark:text-white font-bold text-sm text-center flex items-center justify-center gap-2.5 transition-transform active:scale-95 shadow-xs"
         >
-          <MessageSquare className="size-5" /> Send Emergency SMS
+          <MessageSquare className="size-5" /> {t("Send Emergency SMS")}
         </a>
       </div>
     </div>

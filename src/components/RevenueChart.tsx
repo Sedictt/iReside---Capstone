@@ -14,6 +14,7 @@ import {
 import { Bar } from "react-chartjs-2";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { useTheme } from "next-themes";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 ChartJS.register(
     CategoryScale,
@@ -54,6 +55,12 @@ const data = {
 export default function RevenueChart() {
     const [mounted, setMounted] = useState(false);
     const { resolvedTheme } = useTheme();
+    const { t } = useLanguageContext();
+    const chartData = useMemo(() => ({
+        ...data,
+        labels: data.labels.map((label) => t(label)),
+        datasets: data.datasets.map((dataset) => ({ ...dataset, label: t(dataset.label) })),
+    }), [t]);
     const isDark = resolvedTheme !== "light";
 
     const options = useMemo(() => ({
@@ -153,10 +160,10 @@ export default function RevenueChart() {
     if (!mounted) {
         return (
             <div className="flex included-skeleton h-full w-full animate-pulse items-center justify-center rounded-lg bg-muted/50">
-                <span className="text-muted-foreground">Loading chart...</span>
+                <span className="text-muted-foreground">{t("Loading chart...")}</span>
             </div>
         );
     }
 
-    return <Bar options={options} data={data} />;
+    return <Bar options={options} data={chartData} />;
 }

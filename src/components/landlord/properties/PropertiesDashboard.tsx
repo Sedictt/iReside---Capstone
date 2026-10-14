@@ -25,6 +25,7 @@ import { useAppToast } from "@/hooks/useAppToast";
 import { PropertyTenantsModal } from "./PropertyTenantsModal";
 import { PropertyMaintenanceModal } from "./PropertyMaintenanceModal";
 import { AnimatedFilterPills } from "@/components/ui/AnimatedFilterPills";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type PropertyStatus = "Performing" | "Stable" | "Attention Required";
 
@@ -77,6 +78,7 @@ const getStyleByStatus = (status: PropertyStatus) => {
 import { useInstantData } from "@/lib/hooks/useInstantData";
 
 export function PropertiesDashboard() {
+    const { t } = useLanguageContext();
     const {
         data: propertiesData,
         isLoading,
@@ -92,7 +94,7 @@ export function PropertiesDashboard() {
             });
             const payload = (await response.json()) as { properties?: PropertyCard[]; error?: string };
             if (!response.ok) {
-                throw new Error(payload.error || "Failed to load properties.");
+                throw new Error(payload.error || t("Failed to load properties."));
             }
             return payload.properties ?? [];
         },
@@ -125,7 +127,7 @@ export function PropertiesDashboard() {
 
     const handleExportCSV = useCallback(() => {
         if (!properties || properties.length === 0) {
-            toast.error("No properties found in portfolio to export.");
+            toast.error(t("No properties found in portfolio to export."));
             return;
         }
 
@@ -194,8 +196,8 @@ export function PropertiesDashboard() {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
-        toast.success(`Exported ${properties.length} properties to CSV!`);
-    }, [properties, toast]);
+        toast.success(t("Exported {count} properties to CSV!", { count: properties.length }));
+    }, [properties, toast, t]);
 
     // Prevent premature empty state: true if data is undefined, hook reports loading, or revalidating with empty cache
     const isDataLoading = isLoading || propertiesData === undefined || (isRevalidating && properties.length === 0);
@@ -221,13 +223,13 @@ export function PropertiesDashboard() {
                     <div>
                         <div className="neumorphic-inset-card mb-6 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium text-muted-foreground">
                             <Building2 className="size-5" />
-                            <span>Portfolio Management</span>
+                            <span>{t("Portfolio Management")}</span>
                         </div>
                         <h1 className="mb-2 text-4xl font-black tracking-tight text-foreground md:text-5xl">
-                            Property Portfolio
+                            {t("Property Portfolio")}
                         </h1>
                         <p className="max-w-xl text-lg text-muted-foreground">
-                            Real-time performance metrics and operational health for your entire real estate portfolio.
+                            {t("Real-time performance metrics and operational health for your entire real estate portfolio.")}
                         </p>
                     </div>
 
@@ -242,7 +244,7 @@ export function PropertiesDashboard() {
                                 aria-haspopup="true"
                             >
                                 <Download className="size-4 text-primary" />
-                                <span>Export Portfolio</span>
+                                <span>{t("Export Portfolio")}</span>
                                 <ChevronDown className={cn("size-3.5 text-muted-foreground transition-transform duration-200", isExportOpen && "rotate-180")} />
                             </button>
 
@@ -256,7 +258,7 @@ export function PropertiesDashboard() {
                                         className="neumorphic-panel absolute right-0 top-full mt-2 z-50 w-64 overflow-hidden rounded-2xl p-2 shadow-2xl border border-border/80 backdrop-blur-xl"
                                     >
                                         <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                                            Export Formats
+                                            {t("Export Formats")}
                                         </div>
                                         <button
                                             type="button"
@@ -270,8 +272,8 @@ export function PropertiesDashboard() {
                                                 <FileSpreadsheet className="size-4" />
                                             </div>
                                             <div>
-                                                <div className="font-black text-foreground group-hover:text-primary">CSV Export</div>
-                                                <div className="text-[10px] text-muted-foreground font-medium">Inventory & metrics (.csv)</div>
+                                                <div className="font-black text-foreground group-hover:text-primary">{t("CSV Export")}</div>
+                                                <div className="text-[10px] text-muted-foreground font-medium">{t("Inventory & metrics (.csv)")}</div>
                                             </div>
                                         </button>
                                     </motion.div>
@@ -281,7 +283,7 @@ export function PropertiesDashboard() {
 
                         <Link href="/landlord/properties/new" className="neumorphic-primary flex h-12 items-center gap-2 rounded-xl px-6 font-black text-primary-foreground transition-all hover:brightness-110">
                             <Plus className="size-4" />
-                            Add Property
+                            {t("Add Property")}
                         </Link>
                     </div>
                 </div>
@@ -293,9 +295,9 @@ export function PropertiesDashboard() {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <AnimatedFilterPills
                     variant="neumorphic"
-                    options={FILTER_TABS as any}
+                    options={FILTER_TABS.map((tab) => ({ id: tab, label: t(tab) }))}
                     activeId={activeTab}
-                    onChange={(tab) => setActiveTab(tab)}
+                    onChange={(tab) => setActiveTab(tab as typeof FILTER_TABS[number])}
                     layoutGroupId="properties-portfolio-filter"
                 />
 
@@ -303,7 +305,7 @@ export function PropertiesDashboard() {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                     <input maxLength={60}
                         type="text"
-                        placeholder="Filter portfolio by name or location..."
+                        placeholder={t("Filter portfolio by name or location...")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="neumorphic-inset h-11 w-full rounded-xl pl-11 pr-4 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
@@ -324,13 +326,13 @@ export function PropertiesDashboard() {
                 {!isDataLoading && loadError && (
                     <div className="neumorphic-panel rounded-3xl py-20 text-center">
                         <Building2 className="mx-auto mb-4 size-12 text-red-500 dark:text-red-400" />
-                        <h3 className="mb-2 text-xl font-black text-foreground">Failed to load portfolio</h3>
-                        <p className="mb-6 text-sm text-red-600 dark:text-red-300">{loadError}</p>
+                        <h3 className="mb-2 text-xl font-black text-foreground">{t("Failed to load portfolio")}</h3>
+                        <p className="mb-6 text-sm text-red-600 dark:text-red-300">{t(loadError)}</p>
                         <button
                             onClick={() => void mutateProperties()}
                             className="neumorphic-extruded h-11 rounded-xl px-5 font-medium text-foreground transition-colors"
                         >
-                            Retry
+                            {t("Retry")}
                         </button>
                     </div>
                 )}
@@ -372,7 +374,7 @@ export function PropertiesDashboard() {
                                                             : "text-primary border-primary/30"
                                                 )}>
                                                     <Building2 className="size-3" />
-                                                    <span>{property.type === "dormitory" ? "Dormitory" : property.type === "boarding_house" ? "Boarding House" : "Apartment"}</span>
+                                                    <span>{t(property.type === "dormitory" ? "Dormitory" : property.type === "boarding_house" ? "Boarding House" : "Apartment")}</span>
                                                 </div>
                                                 <div className={cn(
                                                     "neumorphic-inset-card inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap",
@@ -384,7 +386,7 @@ export function PropertiesDashboard() {
                                                         "size-1.5 rounded-full animate-pulse",
                                                         property.status === "Performing" || property.status === "Stable" ? "bg-emerald-500" : "bg-amber-500"
                                                     )} />
-                                                    {property.status}
+                                                    {t(property.status)}
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground font-medium">
@@ -420,15 +422,15 @@ export function PropertiesDashboard() {
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <p className="text-xs font-black uppercase tracking-wider text-muted-foreground/80">Occupancy</p>
+                                                    <p className="text-xs font-black uppercase tracking-wider text-muted-foreground/80">{t("Occupancy")}</p>
                                                     <div className="flex items-baseline gap-1.5">
                                                         <span className="text-xl font-black text-foreground">{property.metrics.occupied}</span>
-                                                        <span className="text-xs font-medium text-muted-foreground">/ {totalUnits} Units</span>
+                                                        <span className="text-xs font-medium text-muted-foreground">{t("/ {count} Units", { count: totalUnits })}</span>
                                                     </div>
                                                     <p className={cn(
                                                         "text-[10px] font-black uppercase tracking-tight",
                                                         occupancyPercent > 80 ? "text-emerald-500" : "text-amber-500"
-                                                    )}>{occupancyPercent}% occupied</p>
+                                                    )}>{t("{percent}% occupied", { percent: occupancyPercent })}</p>
                                                 </div>
                                             </div>
 
@@ -445,13 +447,13 @@ export function PropertiesDashboard() {
                                                     <Wrench className="size-6" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-xs font-black uppercase tracking-wider text-muted-foreground/80">Maintenance</p>
+                                                    <p className="text-xs font-black uppercase tracking-wider text-muted-foreground/80">{t("Maintenance")}</p>
                                                     <p className={cn(
                                                         "text-xl font-black",
                                                         property.metrics.maintenance > 3 ? "text-amber-600 dark:text-amber-400" : "text-foreground"
                                                     )}>
                                                         {property.metrics.maintenance}
-                                                        <span className="ml-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Active</span>
+                                                        <span className="ml-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("Active")}</span>
                                                     </p>
                                                 </div>
                                             </div>
@@ -464,7 +466,7 @@ export function PropertiesDashboard() {
                                                 className="neumorphic-extruded flex-1 lg:w-40 h-12 px-6 flex items-center justify-center gap-2 rounded-xl font-black text-foreground transition-all"
                                             >
                                                 <Settings className="size-4" />
-                                                <span>Manage</span>
+                                                <span>{t("Manage")}</span>
                                             </button>
                                         </div>
                                     </div>
@@ -481,22 +483,22 @@ export function PropertiesDashboard() {
                         <Building2 className="mx-auto mb-4 size-12 text-muted-foreground" />
                         {properties.length === 0 ? (
                             <>
-                                <h3 className="mb-2 text-xl font-black text-foreground">No properties added yet</h3>
+                                <h3 className="mb-2 text-xl font-black text-foreground">{t("No properties added yet")}</h3>
                                 <p className="mb-6 text-sm text-muted-foreground max-w-md mx-auto">
-                                    Your real estate portfolio is currently empty. Add your first property asset to start managing units, tenants, and performance metrics.
+                                    {t("Your real estate portfolio is currently empty. Add your first property asset to start managing units, tenants, and performance metrics.")}
                                 </p>
                                 <Link
                                     href="/landlord/properties/new"
                                     className="neumorphic-primary inline-flex h-11 items-center gap-2 rounded-xl px-5 font-black text-primary-foreground transition-all hover:brightness-110"
                                 >
                                     <Plus className="size-4" />
-                                    <span>Add Your First Property</span>
+                                    <span>{t("Add Your First Property")}</span>
                                 </Link>
                             </>
                         ) : (
                             <>
-                                <h3 className="mb-2 text-xl font-black text-foreground">No matching assets</h3>
-                                <p className="text-sm text-muted-foreground">Try adjusting your filters or search query.</p>
+                                <h3 className="mb-2 text-xl font-black text-foreground">{t("No matching assets")}</h3>
+                                <p className="text-sm text-muted-foreground">{t("Try adjusting your filters or search query.")}</p>
                                 {(searchQuery || activeTab !== "All Portfolio") && (
                                     <button
                                         type="button"
@@ -506,7 +508,7 @@ export function PropertiesDashboard() {
                                         }}
                                         className="mt-4 neumorphic-extruded inline-flex h-10 items-center gap-2 rounded-xl px-4 text-xs font-bold text-foreground transition-all"
                                     >
-                                        Reset filters
+                                        {t("Reset filters")}
                                     </button>
                                 )}
                             </>
@@ -545,10 +547,10 @@ export function PropertiesDashboard() {
                                 
                                 <div className="mb-6 flex items-center gap-4">
                                     <div className="size-16 rounded-2xl overflow-hidden shrink-0 relative">
-                                        <Image src={activeProperty.image} fill alt="Property" className="object-cover" />
+                                        <Image src={activeProperty.image} fill alt={t("Property")} className="object-cover" />
                                     </div>
                                     <div>
-                                        <p className="mb-1 text-sm font-black uppercase tracking-wider text-primary">Quick Actions</p>
+                                        <p className="mb-1 text-sm font-black uppercase tracking-wider text-primary">{t("Quick Actions")}</p>
                                         <h2 className="text-2xl font-black leading-tight text-foreground">{activeProperty.name}</h2>
                                     </div>
                                 </div>
@@ -560,14 +562,14 @@ export function PropertiesDashboard() {
                                         <div className="neumorphic-inset-card size-12 text-primary rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                             <Edit3 className="size-5" />
                                         </div>
-                                        <span className="text-sm font-medium text-foreground">Edit Property</span>
+                                        <span className="text-sm font-medium text-foreground">{t("Edit Property")}</span>
                                     </Link>
                                     
                                     <Link href={`/landlord/unit-map?property=${activeProperty.id}`} className="neumorphic-extruded group flex flex-col items-center justify-center rounded-2xl p-4 transition-all">
                                         <div className="neumorphic-inset-card size-12 text-primary rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                             <Map className="size-5" />
                                         </div>
-                                        <span className="text-sm font-medium text-foreground">View Floor Plan</span>
+                                        <span className="text-sm font-medium text-foreground">{t("View Floor Plan")}</span>
                                     </Link>
 
 
@@ -582,7 +584,7 @@ export function PropertiesDashboard() {
                                         <div className="neumorphic-inset-card size-12 text-emerald-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                             <Users className="size-5" />
                                         </div>
-                                        <span className="text-sm font-medium text-foreground">View Tenants</span>
+                                        <span className="text-sm font-medium text-foreground">{t("View Tenants")}</span>
                                     </button>
 
                                     <button
@@ -596,7 +598,7 @@ export function PropertiesDashboard() {
                                         <div className="neumorphic-inset-card size-12 text-amber-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                             <Wrench className="size-5" />
                                         </div>
-                                        <span className="text-sm font-medium text-foreground">Maintenance</span>
+                                        <span className="text-sm font-medium text-foreground">{t("Maintenance")}</span>
                                     </button>
                                 </div>
                             </motion.div>

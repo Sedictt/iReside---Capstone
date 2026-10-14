@@ -26,10 +26,8 @@ async function createLeaseRecord(
         terms: Record<string, any>;
     }
 ) {
-    const startDate = new Date(data.start_date);
-    const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + 12);
-
+    // Quick-approve never collects lease terms, so the lease is open-ended
+    // (month-to-month) with no end date until a move-out is agreed.
     const { data: lease, error } = await supabase
         .from("leases")
         .insert({
@@ -38,7 +36,8 @@ async function createLeaseRecord(
             landlord_id: data.landlord_id,
             status: "pending_signature",
             start_date: data.start_date,
-            end_date: endDate.toISOString().split('T')[0],
+            term_type: "open_ended",
+            end_date: null,
             monthly_rent: data.monthly_rent,
             security_deposit: data.security_deposit,
             terms: data.terms as Json,

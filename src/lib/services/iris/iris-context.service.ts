@@ -8,6 +8,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import type { BuildingWifiInfo, TenantAiContext, TenantLandlordInfo } from "./iris.types";
 import { isPreseededPhone, isPreseededEmail } from "@/lib/validation/brand-setup";
+import { leaseTermLabel } from "@/lib/lease-term";
 
 export class IrisContextService {
   constructor(private readonly supabase: SupabaseClient<Database>) {}
@@ -206,7 +207,8 @@ export class IrisContextService {
       systemPrompt += `LEASE INFORMATION:\n`;
       systemPrompt += `- Status: ${lease.status}\n`;
       systemPrompt += `- Start Date: ${new Date(lease.start_date).toLocaleDateString()}\n`;
-      systemPrompt += `- End Date: ${new Date(lease.end_date).toLocaleDateString()}\n`;
+      // "Open-ended" / "Ends Mar 15, 2027" / "Moving out …" — never new Date(null).
+      systemPrompt += `- Term: ${leaseTermLabel(lease)}\n`;
       systemPrompt += `- Monthly Rent: ₱${Number(lease.monthly_rent).toLocaleString()}\n`;
       systemPrompt += `- Security Deposit: ₱${Number(lease.security_deposit).toLocaleString()}\n`;
       if (lease.terms) {

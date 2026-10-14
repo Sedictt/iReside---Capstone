@@ -50,6 +50,8 @@ function readingCellError(cell: ReadingDraftCell, label: string) {
 	return currentReadingRule(cell.current, cell.previous, { label, required: false });
 }
 import { useProperty } from "@/context/PropertyContext";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 import { useLandlordSetup } from "@/hooks/useLandlordSetup";
 import type { BillingWorkspace, InvoiceListItem } from "@/lib/billing/server";
 import { BillingOperationsPanel } from "@/components/landlord/BillingOperationsPanel";
@@ -262,7 +264,7 @@ function buildDraftsFromWorkspace(
 
 			draftsList.push({
 				unitId: unit.id,
-				unitName: unit.name || "Unknown Unit",
+				unitName: unit.name || tr("Unknown Unit"),
 				propertyId: property.id || "",
 				propertyName: property.name || "",
 				leaseId,
@@ -317,7 +319,7 @@ function buildDraftsFromWorkspace(
 
 			draftsList.push({
 				unitId: lease.unit.id,
-				unitName: lease.unit.name || "Unknown Unit",
+				unitName: lease.unit.name || tr("Unknown Unit"),
 				propertyId: lease.property?.id || "",
 				propertyName: lease.property?.name || "",
 				leaseId: lease.id,
@@ -355,6 +357,7 @@ function buildDraftsFromWorkspace(
 export function UtilityBillingDashboard() {
 	const searchParams = useSearchParams();
 	const router = useRouter();
+	const { t, locale } = useLanguageContext();
 	const { selectedPropertyId: globalPropertyId, properties, updateSetupStep } = useProperty();
 	const setup = useLandlordSetup();
 	const [activeTab, setActiveTab] = useState<"readings" | "verify" | "rates" | "history">("readings");
@@ -533,13 +536,13 @@ export function UtilityBillingDashboard() {
 				setDrafts(newDrafts);
 				monthlyDraftsRef.current[selectedMonth] = newDrafts;
 				if (typeof navigator !== "undefined" && !navigator.onLine) {
-					toast.info("Offline Mode: Hydrated utility records and rates from local cache.");
+					toast.info(t("Offline Mode: Hydrated utility records and rates from local cache."));
 				}
 			} else {
 				if (typeof navigator !== "undefined" && !navigator.onLine) {
-					toast.error("Offline: No local utility cache found.");
+					toast.error(t("Offline: No local utility cache found."));
 				} else {
-					toast.error("Failed to load billing information");
+					toast.error(t("Failed to load billing information"));
 				}
 			}
 		} catch (err) {
@@ -548,10 +551,10 @@ export function UtilityBillingDashboard() {
 			if (cachedWorkspace?.data) {
 				setWorkspace(cachedWorkspace.data);
 				if (typeof navigator !== "undefined" && !navigator.onLine) {
-					toast.info("Loaded cached utility workspace offline.");
+					toast.info(t("Loaded cached utility workspace offline."));
 				}
 			} else {
-				toast.error("Failed to load billing information");
+				toast.error(t("Failed to load billing information"));
 			}
 		} finally {
 			setLoading(false);
@@ -761,7 +764,7 @@ export function UtilityBillingDashboard() {
 		setIsOnboardingModalOpen(false);
 		setIsTourOpen(false);
 		setDismissedThisVisit(true);
-		toast.info("Billing setup postponed. Save your rates or GCash details anytime to finish this step.");
+		toast.info(t("Billing setup postponed. Save your rates or GCash details anytime to finish this step."));
 		router.push("/landlord/tenants");
 	};
 
@@ -772,7 +775,7 @@ export function UtilityBillingDashboard() {
 
 	const handleContinueExploringBilling = () => {
 		setIsCompletionModalOpen(false);
-		toast.info("You can continue exploring your utility billing workspace. Next up: Configure your tenants.");
+		toast.info(t("You can continue exploring your utility billing workspace. Next up: Configure your tenants."));
 	};
 
 	const handleReturnToDashboardFromBilling = () => {
@@ -833,7 +836,7 @@ export function UtilityBillingDashboard() {
 		});
 		if (invalidKeys.length > 0) {
 			setTouchedReadings((prev) => ({ ...prev, ...Object.fromEntries(invalidKeys.map((key) => [key, true])) }));
-			toast.error("Fix the highlighted meter readings before saving.");
+			toast.error(t("Fix the highlighted meter readings before saving."));
 			return;
 		}
 
@@ -873,7 +876,7 @@ export function UtilityBillingDashboard() {
 		});
 
 		if (toSave.length === 0) {
-			toast.info("No readings entered yet. Enter meter numbers before saving.");
+			toast.info(t("No readings entered yet. Enter meter numbers before saving."));
 			return;
 		}
 
@@ -894,7 +897,7 @@ export function UtilityBillingDashboard() {
 			}));
 			updateDraftsAndCache(updated);
 
-			toast.success(`Saved ${toSave.length} readings locally! They will sync automatically when reconnected.`);
+			toast.success(t("Saved {count} readings locally! They will sync automatically when reconnected.", { count: toSave.length }));
 			return;
 		}
 
@@ -912,7 +915,8 @@ export function UtilityBillingDashboard() {
 
 			if (!res.ok) {
 				const errJson = await res.json().catch(() => ({}));
-				throw new Error(errJson.error || `Save failed with status ${res.status}`);
+				throw new Error(errJson.error || t("Save failed with status {status}", { status: res.status }));
+
 			}
 			const json = await res.json();
 			
@@ -920,9 +924,9 @@ export function UtilityBillingDashboard() {
 				const invoiceResult = json.invoiceResult;
 				const created = invoiceResult?.created ?? 0;
 				const updated = invoiceResult?.updated ?? 0;
-				toast.success(`Saved readings and issued/updated ${created + updated} monthly invoices for tenants!`);
+				toast.success(t("Saved readings and issued/updated {count} monthly invoices for tenants!", { count: created + updated }));
 			} else {
-				toast.success(`Successfully saved ${toSave.length} submeter readings as draft`);
+				toast.success(t("Successfully saved {count} submeter readings as draft", { count: toSave.length }));
 			}
 
 			// Optimistically mark recorded in local state and cache
@@ -952,10 +956,11 @@ export function UtilityBillingDashboard() {
 					electricity: { ...d.electricity, exists: d.electricity.current !== "" ? true : d.electricity.exists },
 				}));
 				updateDraftsAndCache(updated);
-				toast.success(`Saved ${toSave.length} readings offline! Will sync upon reconnection.`);
+				toast.success(t("Saved {count} readings offline! Will sync upon reconnection.", { count: toSave.length }));
 			} else {
 				console.error("[UtilityBilling] Save error:", err);
-				toast.error(err.message || "Failed to save submeter readings");
+				toast.error(tr(err.message || t("Failed to save submeter readings")));
+
 			}
 		} finally {
 			setSaving(false);
@@ -981,7 +986,7 @@ export function UtilityBillingDashboard() {
 				...(waterError ? { [`${draft.unitId}:water`]: true } : {}),
 				...(electricityError ? { [`${draft.unitId}:electricity`]: true } : {}),
 			}));
-			toast.error(waterError || electricityError);
+			toast.error(tr((waterError || electricityError) ?? ""));
 			return;
 		}
 
@@ -1011,7 +1016,7 @@ export function UtilityBillingDashboard() {
 		}
 
 		if (toSave.length === 0) {
-			toast.info("Please enter at least one current reading");
+			toast.info(t("Please enter at least one current reading"));
 			return;
 		}
 
@@ -1028,15 +1033,16 @@ export function UtilityBillingDashboard() {
 			});
 			if (!res.ok) {
 				const errJson = await res.json().catch(() => ({}));
-				throw new Error(errJson.error || `Save failed with status ${res.status}`);
+				throw new Error(errJson.error || t("Save failed with status {status}", { status: res.status }));
+
 			}
-			toast.success(`Saved and billed readings for ${draft.unitName}`);
+			toast.success(t("Saved and billed readings for {unit}", { unit: draft.unitName }));
 			await fetchData();
 			await fetchPendingInvoices();
 			setSelectedUnitId(null);
 		} catch (e: any) {
 			console.error("[UtilityBilling] Single unit save error:", e);
-			toast.error(e.message || "Failed to save unit reading");
+			toast.error(tr(e.message || t("Failed to save unit reading")));
 		} finally {
 			setSaving(false);
 		}
@@ -1048,14 +1054,14 @@ export function UtilityBillingDashboard() {
 		if (!selectedMonth || !selectedMonth.includes("-")) return selectedMonth;
 		const [y, m] = selectedMonth.split("-");
 		const date = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1);
-		return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-	}, [selectedMonth]);
+		return date.toLocaleDateString(locale, { month: "short", year: "numeric" });
+	}, [selectedMonth, locale]);
 
 	if (loading && !workspace) {
 		return (
 			<div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
 				<Loader2 className="size-10 animate-spin text-primary" />
-				<p className="text-sm font-medium text-muted-foreground">Loading utility data...</p>
+				<p className="text-sm font-medium text-muted-foreground">{t("Loading utility data...")}</p>
 			</div>
 		);
 	}
@@ -1100,17 +1106,17 @@ export function UtilityBillingDashboard() {
 						<div>
 							<div className="flex items-center gap-2">
 								<span className="text-[11px] font-black uppercase tracking-wider text-primary">
-									Step 3 of 5 • Onboarding
+									{t("Step 3 of 5 • Onboarding")}
 								</span>
 								<span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-									Water &amp; Electricity Setup
+									{t("Water & Electricity Setup")}
 								</span>
 							</div>
 							<p className="text-sm font-bold text-foreground mt-0.5">
-								Set up your water and electric rates
+								{t("Set up your water and electric rates")}
 							</p>
 							<p className="text-xs text-muted-foreground leading-snug mt-0.5">
-								Make sure your rates are set so bills compute automatically, or continue to add your tenants.
+								{t("Make sure your rates are set so bills compute automatically, or continue to add your tenants.")}
 							</p>
 						</div>
 					</div>
@@ -1120,14 +1126,14 @@ export function UtilityBillingDashboard() {
 							onClick={() => setActiveTab("rates")}
 							className="flex-1 sm:flex-initial h-10 px-4 rounded-xl border border-border/80 bg-card hover:bg-muted text-foreground text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-98"
 						>
-							Check Rates
+							{t("Check Rates")}
 						</button>
 						<button
 							type="button"
 							onClick={handleCompleteOnboardingStep}
 							className="flex-1 sm:flex-initial h-10 px-5 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 active:scale-98"
 						>
-							<span>Next: Add Tenants</span>
+							<span>{t("Next: Add Tenants")}</span>
 							<ArrowRight className="size-3.5" />
 						</button>
 					</div>
@@ -1140,15 +1146,15 @@ export function UtilityBillingDashboard() {
 					<div className="flex items-center gap-2.5">
 						<span className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
 							<Zap className="size-3" />
-							Monthly Billing Cycle
+							{t("Monthly Billing Cycle")}
 						</span>
 						<span className="text-xs font-medium text-muted-foreground">{formattedCycleMonth}</span>
 					</div>
 					<h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-						Water &amp; Electricity Billing
+						{t("Water & Electricity Billing")}
 					</h1>
 					<p className="text-xs sm:text-sm text-muted-foreground max-w-2xl">
-						Record room meter readings, compute monthly usage, and send clear itemized bills to your tenants.
+						{t("Record room meter readings, compute monthly usage, and send clear itemized bills to your tenants.")}
 					</p>
 				</div>
 
@@ -1162,7 +1168,7 @@ export function UtilityBillingDashboard() {
 									"inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-card/60 px-4 text-xs font-semibold text-foreground transition-all hover:bg-muted active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm relative",
 									isTourOpen && tourStepIndex === 1 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_30px_rgba(155,119,255,0.85)] animate-pulse scale-105 bg-primary/10 border-primary font-bold z-30"
 								)}
-								title="Save entered readings without sending bills yet"
+								title={t("Save entered readings without sending bills yet")}
 							>
 								{isTourOpen && tourStepIndex === 1 && (
 									<span className="relative flex size-2 shrink-0">
@@ -1171,7 +1177,7 @@ export function UtilityBillingDashboard() {
 									</span>
 								)}
 								<Save className="size-3.5 text-muted-foreground" />
-								<span>Save Readings</span>
+								<span>{t("Save Readings")}</span>
 							</button>
 
 							<button 
@@ -1181,7 +1187,7 @@ export function UtilityBillingDashboard() {
 									"inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-5 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 cursor-pointer relative",
 									isTourOpen && tourStepIndex === 2 && "ring-4 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_35px_rgba(155,119,255,0.95)] animate-pulse scale-105 brightness-110 font-black z-30"
 								)}
-								title="Save readings and send monthly bills to your tenants"
+								title={t("Save readings and send monthly bills to your tenants")}
 							>
 								{isTourOpen && tourStepIndex === 2 && (
 									<span className="relative flex size-2 shrink-0">
@@ -1190,7 +1196,7 @@ export function UtilityBillingDashboard() {
 									</span>
 								)}
 								{saving ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
-								<span>Send Monthly Bills</span>
+								<span>{t("Send Monthly Bills")}</span>
 							</button>
 						</>
 					)}
@@ -1217,7 +1223,7 @@ export function UtilityBillingDashboard() {
 						id: "rates", 
 						label: "Electricity & Water Rates", 
 						icon: Settings2,
-						badge: isRatesDirty ? "Unsaved" : undefined,
+						badge: isRatesDirty ? t("Unsaved") : undefined,
 						badgeAlert: isRatesDirty
 					},
 					{ 
@@ -1250,7 +1256,7 @@ export function UtilityBillingDashboard() {
 							</span>
 						)}
 						<tab.icon className={cn("size-3.5 shrink-0", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
-						<span>{tab.label}</span>
+						<span>{t(tab.label)}</span>
 						{tab.badge && (
 							<span className={cn(
 								"px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold",
@@ -1278,11 +1284,11 @@ export function UtilityBillingDashboard() {
 							onChange={(e) => setFilterStatus(e.target.value as any)}
 							className="h-9 w-full sm:w-auto rounded-xl border border-border/70 bg-card pl-3 pr-8 text-xs font-semibold text-foreground focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all cursor-pointer appearance-none"
 						>
-							<option value="all">All Rooms ({filterCounts.all})</option>
-							<option value="occupied">Occupied ({filterCounts.occupied})</option>
-							<option value="vacant">Vacant ({filterCounts.vacant})</option>
-							<option value="needs_reading">Needs Reading ({filterCounts.needsReading})</option>
-							<option value="recorded">Recorded ({filterCounts.recorded})</option>
+							<option value="all">{t("All Rooms ({count})", { count: filterCounts.all })}</option>
+							<option value="occupied">{t("Occupied ({count})", { count: filterCounts.occupied })}</option>
+							<option value="vacant">{t("Vacant ({count})", { count: filterCounts.vacant })}</option>
+							<option value="needs_reading">{t("Needs Reading ({count})", { count: filterCounts.needsReading })}</option>
+							<option value="recorded">{t("Recorded ({count})", { count: filterCounts.recorded })}</option>
 						</select>
 						<ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground pointer-events-none" />
 					</div>
@@ -1291,7 +1297,7 @@ export function UtilityBillingDashboard() {
 					<div className="relative flex-1 min-w-0">
 						<Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
 						<input maxLength={60} 
-							placeholder="Search by room or tenant name..." 
+							placeholder={t("Search by room or tenant name...")} 
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
 							className="h-9 w-full rounded-xl border border-border/70 bg-card pl-8.5 pr-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all"
@@ -1342,14 +1348,14 @@ export function UtilityBillingDashboard() {
 								<div className="space-y-1">
 									<div className="flex items-center gap-2">
 										<span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-											All Rooms Currently Vacant
+											{t("All Rooms Currently Vacant")}
 										</span>
 									</div>
 									<h3 className="text-base font-bold text-foreground">
-										No tenants have moved in yet
+										{t("No tenants have moved in yet")}
 									</h3>
 									<p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl">
-										Meter readings are only recorded once tenants live in the rooms. For now, check your Electricity &amp; Water Rates below, then proceed to add your tenants.
+										{t("Meter readings are only recorded once tenants live in the rooms. For now, check your Electricity & Water Rates below, then proceed to add your tenants.")}
 									</p>
 								</div>
 								<div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
@@ -1358,14 +1364,14 @@ export function UtilityBillingDashboard() {
 										onClick={() => setActiveTab("rates")}
 										className="flex-1 sm:flex-initial h-10 px-4 rounded-xl border border-border/80 bg-card hover:bg-muted text-foreground text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-98"
 									>
-										Check Rates
+										{t("Check Rates")}
 									</button>
 									<button
 										type="button"
 										onClick={handleCompleteOnboardingStep}
 										className="flex-1 sm:flex-initial h-10 px-5 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 active:scale-98"
 									>
-										<span>Next: Add Tenants</span>
+										<span>{t("Next: Add Tenants")}</span>
 										<ArrowRight className="size-3.5" />
 									</button>
 								</div>
@@ -1378,27 +1384,27 @@ export function UtilityBillingDashboard() {
 								<table className="w-full text-left border-collapse">
 									<thead>
 										<tr className="border-b border-border/70 text-xs font-bold text-muted-foreground">
-											<th className="px-6 py-4 bg-muted/30">Room &amp; Rent</th>
+											<th className="px-6 py-4 bg-muted/30">{t("Room & Rent")}</th>
 											<th className="px-6 py-3.5 text-center bg-sky-500/[0.08] dark:bg-sky-500/[0.12] border-x-2 border-sky-500/20 dark:border-sky-500/30">
 												<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/15 dark:bg-sky-500/25 text-sky-800 dark:text-sky-200 border border-sky-500/30 text-xs font-bold shadow-xs">
 													<Droplets className="size-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
-													<span>Water (m³)</span>
+													<span>{t("Water (m³)")}</span>
 												</div>
 												<div className="text-[10px] font-semibold text-sky-700/80 dark:text-sky-300/80 tracking-normal normal-case mt-1">
-													Previous → Current
+													{t("Previous → Current")}
 												</div>
 											</th>
 											<th className="px-6 py-3.5 text-center bg-amber-500/[0.08] dark:bg-amber-500/[0.12] border-r-2 border-amber-500/20 dark:border-amber-500/30">
 												<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 dark:bg-amber-500/25 text-amber-900 dark:text-amber-100 border border-amber-500/30 text-xs font-bold shadow-xs">
 													<Zap className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-													<span>Electricity (kWh)</span>
+													<span>{t("Electricity (kWh)")}</span>
 												</div>
 												<div className="text-[10px] font-semibold text-amber-700/80 dark:text-amber-300/80 tracking-normal normal-case mt-1">
-													Previous → Current
+													{t("Previous → Current")}
 												</div>
 											</th>
-											<th className="px-6 py-4 text-right bg-muted/30">Total Due</th>
-											<th className="px-6 py-4 text-right bg-muted/30">Actions</th>
+											<th className="px-6 py-4 text-right bg-muted/30">{t("Total Due")}</th>
+											<th className="px-6 py-4 text-right bg-muted/30">{t("Actions")}</th>
 										</tr>
 									</thead>
 									<tbody className="divide-y divide-border/50">
@@ -1407,8 +1413,8 @@ export function UtilityBillingDashboard() {
 												<td colSpan={5} className="px-6 py-16 text-center">
 													<div className="flex flex-col items-center gap-3 text-muted-foreground">
 														<Building2 className="size-10 opacity-30" />
-														<p className="text-sm font-semibold text-foreground">No rooms found</p>
-														<p className="text-xs text-muted-foreground">No rooms match your current search or filter criteria.</p>
+														<p className="text-sm font-semibold text-foreground">{t("No rooms found")}</p>
+														<p className="text-xs text-muted-foreground">{t("No rooms match your current search or filter criteria.")}</p>
 														<button
 															type="button"
 															onClick={() => {
@@ -1417,7 +1423,7 @@ export function UtilityBillingDashboard() {
 															}}
 															className="mt-1 px-4 py-2 rounded-xl bg-card border border-border/80 hover:bg-muted text-xs font-bold text-foreground transition-all cursor-pointer shadow-xs"
 														>
-															Reset Filters
+															{t("Reset Filters")}
 														</button>
 													</div>
 												</td>
@@ -1447,16 +1453,17 @@ export function UtilityBillingDashboard() {
 																<span className="text-sm font-bold text-foreground">{draft.unitName}</span>
 																{draft.occupancyStatus === "occupied" ? (
 																	<span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-																		Occupied {draft.tenantName ? `• ${draft.tenantName}` : ""}
+																		{t("Occupied")} {draft.tenantName ? `• ${draft.tenantName}` : ""}
+
 																	</span>
 																) : (
 																	<span className="text-[11px] font-medium text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full border border-border/60">
-																		Vacant
+																		{t("Vacant")}
 																	</span>
 																)}
 															</div>
 															<span className="text-xs text-muted-foreground">
-																Base Rent: ₱{draft.rentAmount.toLocaleString()} / mo
+																{t("Base Rent:")} ₱{draft.rentAmount.toLocaleString()} {t("/ mo")}
 															</span>
 														</div>
 													</td>
@@ -1482,7 +1489,7 @@ export function UtilityBillingDashboard() {
 																				step="0.01"
 																				type="number"
 																				inputMode="decimal"
-																				aria-label={`Water reading for ${draft.unitName}`}
+																				aria-label={t("Water reading for {unit}", { unit: draft.unitName })}
 																				aria-invalid={touchedReadings[`${draft.unitId}:water`] && readingCellError(draft.water, "Water reading") ? true : undefined}
 																				aria-describedby={touchedReadings[`${draft.unitId}:water`] && readingCellError(draft.water, "Water reading") ? `reading-${draft.unitId}-water-error` : undefined}
 																				onBlur={() => touchReading(`${draft.unitId}:water`)}
@@ -1538,7 +1545,7 @@ export function UtilityBillingDashboard() {
 																				step="0.01"
 																				type="number"
 																				inputMode="decimal"
-																				aria-label={`Electricity reading for ${draft.unitName}`}
+																				aria-label={t("Electricity reading for {unit}", { unit: draft.unitName })}
 																				aria-invalid={touchedReadings[`${draft.unitId}:electricity`] && readingCellError(draft.electricity, "Electricity reading") ? true : undefined}
 																				aria-describedby={touchedReadings[`${draft.unitId}:electricity`] && readingCellError(draft.electricity, "Electricity reading") ? `reading-${draft.unitId}-electricity-error` : undefined}
 																				onBlur={() => touchReading(`${draft.unitId}:electricity`)}
@@ -1581,7 +1588,7 @@ export function UtilityBillingDashboard() {
 															</span>
 															{draft.occupancyStatus === "occupied" && (waterCost > 0 || elecCost > 0) && (
 																<span className="text-[10px] text-muted-foreground font-medium">
-																	Rent + Utilities
+																	{t("Rent + Utilities")}
 																</span>
 															)}
 														</div>
@@ -1591,14 +1598,14 @@ export function UtilityBillingDashboard() {
 													<td className="px-6 py-4 text-right">
 														<div className="flex items-center justify-end gap-2">
 															{isComplete && (
-																<span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20" title="Both readings recorded for this cycle">
-																	<Check className="size-3" /> Ready
+																<span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20" title={t("Both readings recorded for this cycle")}>
+																	<Check className="size-3" /> {t("Ready")}
 																</span>
 															)}
 															<button 
 																onClick={() => setSelectedUnitId(draft.unitId)}
 																className="inline-flex items-center justify-center size-9 rounded-xl border border-border/80 text-muted-foreground transition-all hover:bg-muted hover:text-foreground cursor-pointer shadow-xs active:scale-95"
-																title="Inspect or adjust room details"
+																title={t("Inspect or adjust room details")}
 															>
 																<Edit3 className="size-4" />
 															</button>
@@ -1627,13 +1634,13 @@ export function UtilityBillingDashboard() {
 						<div className="rounded-2xl border border-border/50 bg-card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 							<div className="space-y-1">
 								<div className="flex items-center gap-2">
-									<h2 className="text-xl font-black text-foreground">Payment Verification Queue</h2>
+									<h2 className="text-xl font-black text-foreground">{t("Payment Verification Queue")}</h2>
 									<span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-600 border border-amber-500/20">
-										{pendingInvoices.length} Awaiting Review
+										{t("{count} Awaiting Review", { count: pendingInvoices.length })}
 									</span>
 								</div>
 								<p className="text-xs text-muted-foreground">
-									Inspect tenant-uploaded GCash screenshots, verify reference numbers, and issue official receipts in one click.
+									{t("Inspect tenant-uploaded GCash screenshots, verify reference numbers, and issue official receipts in one click.")}
 								</p>
 							</div>
 
@@ -1642,7 +1649,7 @@ export function UtilityBillingDashboard() {
 								className="shrink-0 flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
 							>
 								<QrCode className="size-3.5 text-primary" />
-								<span>Configure Receiving QR</span>
+								<span>{t("Configure Receiving QR")}</span>
 								<ArrowUpRight className="size-3" />
 							</Link>
 						</div>
@@ -1657,16 +1664,16 @@ export function UtilityBillingDashboard() {
 									<CheckCircle2 className="size-7" />
 								</div>
 								<div className="space-y-1">
-									<h3 className="text-lg font-black text-foreground">All Caught Up!</h3>
+									<h3 className="text-lg font-black text-foreground">{t("All Caught Up!")}</h3>
 									<p className="text-xs text-muted-foreground max-w-sm mx-auto">
-										There are no tenant payments currently awaiting verification. Incoming GCash transaction proofs will appear here automatically.
+										{t("There are no tenant payments currently awaiting verification. Incoming GCash transaction proofs will appear here automatically.")}
 									</p>
 								</div>
 								<Link 
 									href="/landlord/invoices" 
 									className="mt-2 text-xs font-bold text-primary hover:underline flex items-center gap-1"
 								>
-									<span>View Full Finance Ledger</span>
+									<span>{t("View Full Finance Ledger")}</span>
 									<ChevronRight className="size-3" />
 								</Link>
 							</div>
@@ -1690,18 +1697,18 @@ export function UtilityBillingDashboard() {
 													₱{inv.amount.toLocaleString()}
 												</span>
 												<span className="block text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full mt-1">
-													Needs Verification
+													{t("Needs Verification")}
 												</span>
 											</div>
 										</div>
 
 										<div className="flex items-center justify-between border-t border-border/40 pt-3 text-xs">
 											<div className="flex items-center gap-2">
-												<span className="text-muted-foreground">Method:</span>
+												<span className="text-muted-foreground">{t("Method:")}</span>
 												<span className="font-bold text-foreground capitalize">{inv.paymentMethod || "GCash"}</span>
 												{inv.referenceNumber && (
 													<span className="font-mono text-[10px] bg-muted px-2 py-0.5 rounded text-foreground font-bold">
-														Ref: {inv.referenceNumber}
+														{t("Ref:")} {inv.referenceNumber}
 													</span>
 												)}
 											</div>
@@ -1711,7 +1718,7 @@ export function UtilityBillingDashboard() {
 												className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-black text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all shadow-sm cursor-pointer"
 											>
 												<ShieldCheck className="size-3.5" />
-												<span>Review & Confirm</span>
+												<span>{t("Review & Confirm")}</span>
 											</button>
 										</div>
 									</div>
@@ -1759,11 +1766,11 @@ export function UtilityBillingDashboard() {
 								<div className="space-y-2">
 									<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
 										<BarChart3 className="size-3" />
-										Billing Archives
+										{t("Billing Archives")}
 									</div>
-									<h3 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">Audit Trail & Consumption History</h3>
+									<h3 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">{t("Audit Trail & Consumption History")}</h3>
 									<p className="text-xs md:text-sm text-muted-foreground max-w-md leading-relaxed font-medium">
-										Review past billing cycles, inspect historical consumption logs, and track utility recovery rates across your portfolio.
+										{t("Review past billing cycles, inspect historical consumption logs, and track utility recovery rates across your portfolio.")}
 									</p>
 								</div>
 								<div className="flex items-center gap-3">
@@ -1771,7 +1778,7 @@ export function UtilityBillingDashboard() {
 										href="/landlord/invoices?tab=ledger"
 										className="h-11 px-5 rounded-2xl bg-foreground text-background text-xs font-black uppercase tracking-wider hover:opacity-90 transition-all flex items-center gap-2 shadow-sm"
 									>
-										<span>Full Financial Ledger</span>
+										<span>{t("Full Financial Ledger")}</span>
 										<ArrowUpRight className="size-3.5" />
 									</Link>
 								</div>
@@ -1780,7 +1787,7 @@ export function UtilityBillingDashboard() {
 
 						<div className="space-y-4">
 							<div className="flex items-center gap-4 px-2 mb-2">
-								<span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 whitespace-nowrap">Cycle Logs</span>
+								<span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 whitespace-nowrap">{t("Cycle Logs")}</span>
 								<div className="h-px flex-1 bg-border/40" />
 							</div>
 
@@ -1790,9 +1797,9 @@ export function UtilityBillingDashboard() {
 									d.setDate(1);
 									d.setMonth(d.getMonth() - i);
 									const monthStr = d.toISOString().slice(0, 7);
-									const monthLabel = d.toLocaleDateString('en-US', { month: 'short' });
+									const monthLabel = d.toLocaleDateString(locale, { month: 'short' });
 									const yearLabel = d.getFullYear().toString();
-									const reportTitle = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+									const reportTitle = d.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
 									const summary = historySummaries[monthStr];
 									const totalElec = summary?.totalElec ?? 0;
 									const totalWater = summary?.totalWater ?? 0;
@@ -1826,7 +1833,7 @@ export function UtilityBillingDashboard() {
 																? "bg-emerald-500/10 text-emerald-600" 
 																: "bg-muted text-muted-foreground"
 													)}>
-														{isCurrentMonth ? "Active Cycle" : hasData ? "Closed" : "No Readings"}
+														{isCurrentMonth ? t("Active Cycle") : hasData ? t("Closed") : t("No Readings")}
 													</span>
 												</div>
 											</div>
@@ -1834,21 +1841,22 @@ export function UtilityBillingDashboard() {
 											{/* Metrics */}
 											<div className="md:col-span-7 flex items-center gap-8">
 												<div>
-													<span className="text-[9px] font-bold text-muted-foreground uppercase block">Electricity</span>
+													<span className="text-[9px] font-bold text-muted-foreground uppercase block">{t("Electricity")}</span>
 													<span className="text-xs font-black text-foreground font-mono">
 														{historySummariesLoading ? "..." : `${totalElec.toFixed(1)} kWh`}
 													</span>
 												</div>
 												<div>
-													<span className="text-[9px] font-bold text-muted-foreground uppercase block">Water</span>
+													<span className="text-[9px] font-bold text-muted-foreground uppercase block">{t("Water")}</span>
 													<span className="text-xs font-black text-foreground font-mono">
 														{historySummariesLoading ? "..." : `${totalWater.toFixed(1)} m³`}
 													</span>
 												</div>
 												<div>
-													<span className="text-[9px] font-bold text-muted-foreground uppercase block">Units Logged</span>
+													<span className="text-[9px] font-bold text-muted-foreground uppercase block">{t("Units Logged")}</span>
 													<span className="text-xs font-black text-foreground font-mono">
-														{historySummariesLoading ? "..." : `${readingCount} records`}
+														{historySummariesLoading ? "..." : t("{count} records", { count: readingCount })}
+
 													</span>
 												</div>
 											</div>
@@ -1928,6 +1936,7 @@ function UnitDetailModal({
 	onSave?: () => void;
 	saving?: boolean;
 }) {
+	const { t } = useLanguageContext();
 	if (!draft) return null;
 
 	return (
@@ -1955,12 +1964,12 @@ function UnitDetailModal({
 								</div>
 								<div>
 									<h2 className="text-xl font-black text-foreground">{draft.unitName}</h2>
-									<p className="text-xs text-muted-foreground">Unit Billing & Submeter Profile</p>
+									<p className="text-xs text-muted-foreground">{t("Unit Billing & Submeter Profile")}</p>
 								</div>
 							</div>
 							<button 
 								onClick={onClose} 
-								className="size-10 flex items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-muted transition-all"
+								aria-label={t("Close")} className="size-10 flex items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-muted transition-all"
 							>
 								<X className="size-5" />
 							</button>
@@ -1970,7 +1979,7 @@ function UnitDetailModal({
 						<div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<div className="rounded-2xl neumorphic-inset p-5">
-									<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground block mb-1">Base Monthly Rent</span>
+									<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground block mb-1">{t("Base Monthly Rent")}</span>
 									<div className="flex items-baseline gap-1.5">
 										<span className="text-lg font-black text-muted-foreground">₱</span>
 										<input min={0} max={9999999.99} step="0.01" 
@@ -1989,20 +1998,20 @@ function UnitDetailModal({
 									<div className="flex items-center gap-2">
 										<div className={`size-2 rounded-full ${draft.occupancyStatus === "occupied" ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/60"}`} />
 										<span className={`text-[10px] font-black uppercase tracking-wider ${draft.occupancyStatus === "occupied" ? "text-emerald-600" : "text-muted-foreground"}`}>
-											{draft.occupancyStatus === "occupied" ? "Lease Status" : "Unit Status"}
+											{draft.occupancyStatus === "occupied" ? t("Lease Status") : t("Unit Status")}
 										</span>
 									</div>
 									<span className="text-base font-black text-foreground mt-1">
 										{draft.occupancyStatus === "occupied"
-											? (draft.tenantName ? `Active Tenant: ${draft.tenantName}` : "Active Tenant Occupancy")
-											: "Vacant Unit (No Active Tenant)"}
+											? (draft.tenantName ? t("Active Tenant: {name}", { name: draft.tenantName }) : t("Active Tenant Occupancy"))
+											: t("Vacant Unit (No Active Tenant)")}
 									</span>
 								</div>
 							</div>
 
 							<ResourceSection 
 								type="water"
-								label="Water Submeter"
+								label={t("Water Submeter")}
 								icon={Droplets}
 								colorClass="sky"
 								draft={draft.water}
@@ -2011,7 +2020,7 @@ function UnitDetailModal({
 
 							<ResourceSection 
 								type="electricity"
-								label="Electricity Submeter"
+								label={t("Electricity Submeter")}
 								icon={Zap}
 								colorClass="amber"
 								draft={draft.electricity}
@@ -2026,7 +2035,7 @@ function UnitDetailModal({
 								onClick={onClose}
 								className="flex-1 py-3.5 rounded-2xl border border-border text-xs font-bold text-muted-foreground hover:bg-muted transition-all"
 							>
-								Cancel
+								{t("Cancel")}
 							</button>
 							<button 
 								type="button"
@@ -2035,7 +2044,7 @@ function UnitDetailModal({
 								className="flex-[2] flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 cursor-pointer"
 							>
 								{saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-								<span>Save & Bill This Unit</span>
+								<span>{t("Save & Bill This Unit")}</span>
 							</button>
 						</div>
 					</motion.div>
@@ -2069,6 +2078,7 @@ function ResourceSection({
 		rate: number;
 	}>) => void;
 }) {
+	const { t } = useLanguageContext();
 	const isSky = colorClass === "sky";
 	const bgClass = isSky ? "dark:border-sky-500/10" : "dark:border-amber-500/10";
 	const accentClass = isSky ? "text-sky-600 dark:text-sky-400" : "text-amber-600 dark:text-amber-400";
@@ -2099,7 +2109,7 @@ function ResourceSection({
 				<div className="md:col-span-3 space-y-4">
 					<div className="grid grid-cols-2 gap-3">
 						<div className="space-y-1">
-							<label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block">Previous</label>
+							<label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block">{t("Previous")}</label>
 							<input min={0} max={9999999} 
 								type="number" 
 								value={draft.previous}
@@ -2108,13 +2118,13 @@ function ResourceSection({
 							/>
 						</div>
 						<div className="space-y-1">
-							<label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block">Current</label>
+							<label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block">{t("Current")}</label>
 								<input min={0} max={9999999}
 									type="number"
 									step="0.01"
 									inputMode="decimal"
 									value={draft.current}
-									placeholder="Enter reading..."
+									placeholder={t("Enter reading...")}
 									onChange={(e) => onUpdate({ current: e.target.value })}
 									onBlur={() => setCurrentTouched(true)}
 									aria-invalid={currentTouched && currentError ? true : undefined}
@@ -2128,7 +2138,7 @@ function ResourceSection({
 
 				<div className="md:col-span-2 flex flex-col justify-center">
 					<div className="text-center p-3 rounded-xl neumorphic-panel border border-border/40">
-						<span className={cn("text-[9px] font-black uppercase tracking-widest block opacity-80", accentClass)}>Billing Rate</span>
+						<span className={cn("text-[9px] font-black uppercase tracking-widest block opacity-80", accentClass)}>{t("Billing Rate")}</span>
 						<div className="flex items-center justify-center gap-1 mt-1">
 							<span className="text-sm font-black text-muted-foreground">₱</span>
 							<input min={0} max={99999.99} 
@@ -2160,6 +2170,7 @@ function AuditDetailModal({ isOpen, onClose, month }: { isOpen: boolean; onClose
 		entered_at: string;
 	};
 
+	const { t, locale } = useLanguageContext();
 	const [loading, setLoading] = useState(false);
 	const [records, setRecords] = useState<AuditRecord[]>([]);
 
@@ -2174,8 +2185,8 @@ function AuditDetailModal({ isOpen, onClose, month }: { isOpen: boolean; onClose
 				const json = await res.json();
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				const mapped: AuditRecord[] = (json.readings || []).map((r: any) => ({
-					unit_name: r.unit?.name || r.unit_id || "Unknown Unit",
-					tenant_name: r.lease?.tenant?.full_name || "Unknown Tenant",
+					unit_name: r.unit?.name || r.unit_id || t("Unknown Unit"),
+					tenant_name: r.lease?.tenant?.full_name || t("Unknown Tenant"),
 					utility_type: r.utility_type,
 					previous_reading: r.previous_reading,
 					current_reading: r.current_reading,
@@ -2199,7 +2210,7 @@ function AuditDetailModal({ isOpen, onClose, month }: { isOpen: boolean; onClose
 
 	const [y, m] = month.split("-").map(Number);
 	const dateObj = new Date(y, m - 1);
-	const monthFormatted = dateObj.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+	const monthFormatted = dateObj.toLocaleDateString(locale, { month: "long", year: "numeric" });
 
 	let totalElec = 0;
 	let totalWater = 0;
@@ -2233,13 +2244,13 @@ function AuditDetailModal({ isOpen, onClose, month }: { isOpen: boolean; onClose
 								<History className="size-6" />
 							</div>
 							<div>
-								<h2 className="text-xl font-black text-foreground">{monthFormatted} Breakdown</h2>
-								<p className="text-xs text-muted-foreground">Historical Audit Record</p>
+								<h2 className="text-xl font-black text-foreground">{t("{month} Breakdown", { month: monthFormatted })}</h2>
+								<p className="text-xs text-muted-foreground">{t("Historical Audit Record")}</p>
 							</div>
 						</div>
 						<button 
 							onClick={onClose} 
-							className="size-10 flex items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-muted transition-all"
+							aria-label={t("Close")} className="size-10 flex items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-muted transition-all"
 						>
 							<X className="size-5" />
 						</button>
@@ -2250,21 +2261,21 @@ function AuditDetailModal({ isOpen, onClose, month }: { isOpen: boolean; onClose
 						{/* Summary Stats */}
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 							<div className="rounded-2xl neumorphic-panel p-5">
-								<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Total Electricity</span>
+								<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t("Total Electricity")}</span>
 								<div className="mt-2 flex items-baseline gap-2">
 									<span className="text-2xl font-black text-amber-500 font-mono">{totalElec.toFixed(1)}</span>
 									<span className="text-xs font-black text-muted-foreground">kWh</span>
 								</div>
 							</div>
 							<div className="rounded-2xl neumorphic-panel p-5">
-								<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Total Water</span>
+								<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t("Total Water")}</span>
 								<div className="mt-2 flex items-baseline gap-2">
 									<span className="text-2xl font-black text-sky-500 font-mono">{totalWater.toFixed(1)}</span>
 									<span className="text-xs font-black text-muted-foreground">m³</span>
 								</div>
 							</div>
 							<div className="rounded-2xl neumorphic-panel p-5">
-								<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Total Billed</span>
+								<span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t("Total Billed")}</span>
 								<div className="mt-2 flex items-baseline gap-1">
 									<span className="text-xs font-black text-muted-foreground">₱</span>
 									<span className="text-2xl font-black text-foreground font-mono">{totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
@@ -2282,19 +2293,19 @@ function AuditDetailModal({ isOpen, onClose, month }: { isOpen: boolean; onClose
 								<table className="w-full text-left border-collapse text-xs">
 									<thead>
 										<tr className="border-b border-border bg-muted/20">
-											<th className="px-6 py-4 font-bold text-muted-foreground">Unit</th>
-											<th className="px-6 py-4 font-bold text-muted-foreground">Type</th>
-											<th className="px-6 py-4 font-bold text-muted-foreground text-center">Prev</th>
-											<th className="px-6 py-4 font-bold text-muted-foreground text-center">Curr</th>
-											<th className="px-6 py-4 font-bold text-muted-foreground text-center">Usage</th>
-											<th className="px-6 py-4 font-bold text-muted-foreground text-right">Charge</th>
+											<th className="px-6 py-4 font-bold text-muted-foreground">{t("Unit")}</th>
+											<th className="px-6 py-4 font-bold text-muted-foreground">{t("Type")}</th>
+											<th className="px-6 py-4 font-bold text-muted-foreground text-center">{t("Prev")}</th>
+											<th className="px-6 py-4 font-bold text-muted-foreground text-center">{t("Curr")}</th>
+											<th className="px-6 py-4 font-bold text-muted-foreground text-center">{t("Usage")}</th>
+											<th className="px-6 py-4 font-bold text-muted-foreground text-right">{t("Charge")}</th>
 										</tr>
 									</thead>
 									<tbody className="divide-y divide-border font-mono">
 										{records.length === 0 ? (
 											<tr>
 												<td colSpan={6} className="px-6 py-12 text-center text-muted-foreground font-sans">
-													No utility readings recorded for this cycle.
+													{t("No utility readings recorded for this cycle.")}
 												</td>
 											</tr>
 										) : records.map((r, idx) => (
@@ -2302,9 +2313,9 @@ function AuditDetailModal({ isOpen, onClose, month }: { isOpen: boolean; onClose
 												<td className="px-6 py-3 font-sans font-bold text-foreground">{r.unit_name}</td>
 												<td className="px-6 py-3 font-sans capitalize">
 													{r.utility_type === "water" ? (
-														<span className="text-sky-600 font-bold">Water</span>
+														<span className="text-sky-600 font-bold">{t("Water")}</span>
 													) : (
-														<span className="text-amber-600 font-bold">Electric</span>
+														<span className="text-amber-600 font-bold">{t("Electric")}</span>
 													)}
 												</td>
 												<td className="px-6 py-3 text-center text-muted-foreground">{r.previous_reading}</td>
@@ -2325,8 +2336,9 @@ function AuditDetailModal({ isOpen, onClose, month }: { isOpen: boolean; onClose
 							onClick={onClose}
 							className="px-6 py-3 rounded-2xl border border-border text-xs font-bold text-foreground hover:bg-muted transition-all"
 						>
-							Close
+							{t("Close")}
 						</button>
+
 					</div>
 				</motion.div>
 			</div>

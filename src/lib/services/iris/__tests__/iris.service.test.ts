@@ -92,7 +92,8 @@ describe("IrisContextService", () => {
         id: "lease-1",
         status: "active",
         start_date: "2026-01-01",
-        end_date: "2026-12-31",
+        term_type: "fixed",
+        end_date: "2099-12-31",
         monthly_rent: 20000,
         security_deposit: 40000,
       } as any,
@@ -113,6 +114,31 @@ describe("IrisContextService", () => {
     expect(prompt).toContain("GreenPark_Guest");
     expect(prompt).not.toContain("WelcomeHome2024");
     expect(prompt).toContain("LANGUAGE MATCHING");
+    expect(prompt).toContain("- Term: Ends Dec 31, 2099");
+  });
+
+  it("describes an open-ended lease without an end date", () => {
+    const prompt = contextService.formatContextForAi({
+      profile: { id: "tenant-1", full_name: "Alice", email: "alice@example.com" } as any,
+      landlord: null,
+      lease: {
+        id: "lease-1",
+        status: "active",
+        start_date: "2026-01-01",
+        term_type: "open_ended",
+        end_date: null,
+        monthly_rent: 20000,
+        security_deposit: 40000,
+      } as any,
+      unit: null,
+      property: null,
+      maintenanceRequests: [],
+      payments: [],
+      wifiInfo: null,
+    });
+
+    expect(prompt).toContain("- Term: Open-ended");
+    expect(prompt).not.toContain("Invalid Date");
   });
 });
 

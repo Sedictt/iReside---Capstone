@@ -15,8 +15,10 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { otpRule } from "@/lib/validation/rules";
 import { CURRENT_PASSWORD_MAX_LENGTH, currentPasswordRule } from "@/lib/validation/schemas/account.schema";
+import { tr } from "@/hooks/useLanguage";
 
 interface TwoFactorManagementCardProps {
     apiEndpoint: string;
@@ -31,6 +33,7 @@ export function TwoFactorManagementCard({
     className,
     onStatusChange,
 }: TwoFactorManagementCardProps) {
+    const { t } = useLanguageContext();
     const [isLoading, setIsLoading] = useState(true);
     const [status, setStatus] = useState<"disabled" | "pending_otp" | "enabled">("disabled");
     const [maskedEmail, setMaskedEmail] = useState<string | null>(null);
@@ -87,7 +90,7 @@ export function TwoFactorManagementCard({
     const handleSendOtp = async () => {
         setIsSendingOtp(true);
         setOtpError(null);
-        const toastId = toast.loading("Sending verification code…");
+        const toastId = toast.loading(t("Sending verification code…"));
 
         try {
             const res = await fetch(apiEndpoint, {
@@ -99,18 +102,18 @@ export function TwoFactorManagementCard({
             const data = await res.json();
             if (!res.ok || data.error) {
                 const errMsg = data.error || "Failed to send verification code";
-                setOtpError(errMsg);
-                toast.error(errMsg, { id: toastId });
+                setOtpError(tr(errMsg));
+                toast.error(t(errMsg), { id: toastId });
             } else {
                 setStatus("pending_otp");
                 setMaskedEmail(data.email || null);
                 setOtpCooldown(60);
-                toast.success(`Verification code sent to ${data.email || "your email"}`, { id: toastId });
+                toast.success(t("Verification code sent to {email}", { email: data.email || t("your email") }), { id: toastId });
             }
         } catch (err) {
             const errMsg = err instanceof Error ? err.message : "Failed to send code";
-            setOtpError(errMsg);
-            toast.error(errMsg, { id: toastId });
+            setOtpError(tr(errMsg));
+            toast.error(t(errMsg), { id: toastId });
         } finally {
             setIsSendingOtp(false);
         }
@@ -122,13 +125,13 @@ export function TwoFactorManagementCard({
         const cleanOtp = otpInput.trim();
         const otpRuleError = otpRule(cleanOtp);
         if (otpRuleError) {
-            setOtpError(otpRuleError);
+            setOtpError(tr(otpRuleError));
             return;
         }
 
         setIsVerifyingOtp(true);
         setOtpError(null);
-        const toastId = toast.loading("Verifying code…");
+        const toastId = toast.loading(t("Verifying code…"));
 
         try {
             const res = await fetch(apiEndpoint, {
@@ -140,19 +143,19 @@ export function TwoFactorManagementCard({
             const data = await res.json();
             if (!res.ok || data.error) {
                 const errMsg = data.error || "Failed to verify code";
-                setOtpError(errMsg);
-                toast.error(errMsg, { id: toastId });
+                setOtpError(tr(errMsg));
+                toast.error(t(errMsg), { id: toastId });
             } else {
                 setStatus("enabled");
                 setMaskedEmail(data.email ? data.email.replace(/(.{2})(.*)(@.*)/, "$1***$3") : null);
                 setOtpInput("");
-                toast.success("Two-Factor Authentication enabled successfully!", { id: toastId });
+                toast.success(t("Two-Factor Authentication enabled successfully!"), { id: toastId });
                 onStatusChange?.(true);
             }
         } catch (err) {
             const errMsg = err instanceof Error ? err.message : "Verification failed";
-            setOtpError(errMsg);
-            toast.error(errMsg, { id: toastId });
+            setOtpError(tr(errMsg));
+            toast.error(t(errMsg), { id: toastId });
         } finally {
             setIsVerifyingOtp(false);
         }
@@ -169,7 +172,7 @@ export function TwoFactorManagementCard({
 
         setIsDisabling(true);
         setDisableError(null);
-        const toastId = toast.loading("Disabling Two-Factor Authentication…");
+        const toastId = toast.loading(t("Disabling Two-Factor Authentication…"));
 
         try {
             const res = await fetch(apiEndpoint, {
@@ -181,19 +184,19 @@ export function TwoFactorManagementCard({
             const data = await res.json();
             if (!res.ok || data.error) {
                 const errMsg = data.error || "Incorrect password";
-                setDisableError(errMsg);
-                toast.error(errMsg, { id: toastId });
+                setDisableError(tr(errMsg));
+                toast.error(t(errMsg), { id: toastId });
             } else {
                 setStatus("disabled");
                 setMaskedEmail(null);
                 setDisablePassword("");
-                toast.success("Two-Factor Authentication disabled successfully.", { id: toastId });
+                toast.success(t("Two-Factor Authentication disabled successfully."), { id: toastId });
                 onStatusChange?.(false);
             }
         } catch (err) {
             const errMsg = err instanceof Error ? err.message : "Failed to disable 2FA";
-            setDisableError(errMsg);
-            toast.error(errMsg, { id: toastId });
+            setDisableError(tr(errMsg));
+            toast.error(t(errMsg), { id: toastId });
         } finally {
             setIsDisabling(false);
         }
@@ -215,16 +218,16 @@ export function TwoFactorManagementCard({
                     <div>
                         <div className="flex items-center gap-2">
                             <h3 className="text-base sm:text-lg font-black text-foreground">
-                                Two-Factor Authentication
+                                {t("Two-Factor Authentication")}
                             </h3>
                             {status === "enabled" && (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                                    <CheckCircle2 className="size-3" /> Active
+                                    <CheckCircle2 className="size-3" /> {t("Active")}
                                 </span>
                             )}
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                            Add an extra layer of security requiring a 6-digit verification code whenever you sign in.
+                            {t("Add an extra layer of security requiring a 6-digit verification code whenever you sign in.")}
                         </p>
                     </div>
                 </div>
@@ -242,7 +245,7 @@ export function TwoFactorManagementCard({
                 <div className="space-y-6 max-w-lg">
                     <div className="p-4 rounded-2xl border border-border/60 bg-muted/20 space-y-2">
                         <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                            Two-factor authentication protects your account against unauthorized access. A secure one-time passcode will be delivered to your verified email address:
+                            {t("Two-factor authentication protects your account against unauthorized access. A secure one-time passcode will be delivered to your verified email address:")}
                         </p>
                         {accountEmail && (
                             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-background/50 border border-border/40 text-xs font-mono font-medium text-foreground">
@@ -261,12 +264,12 @@ export function TwoFactorManagementCard({
                         {isSendingOtp ? (
                             <>
                                 <Loader2 className="size-4 animate-spin" />
-                                <span>Sending Code...</span>
+                                <span>{t("Sending Code...")}</span>
                             </>
                         ) : (
                             <>
                                 <ShieldCheck className="size-4" />
-                                <span>Enable Two-Factor Authentication</span>
+                                <span>{t("Enable Two-Factor Authentication")}</span>
                             </>
                         )}
                     </button>
@@ -277,22 +280,22 @@ export function TwoFactorManagementCard({
                         <div className="flex items-center gap-2">
                             <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
                             <h4 className="text-xs font-black uppercase tracking-wider text-amber-500">
-                                Verification Required
+                                {t("Verification Required")}
                             </h4>
                         </div>
                         <p className="text-xs text-muted-foreground leading-relaxed">
-                            Enter the 6-digit code sent to{" "}
+                            {t("Enter the 6-digit code sent to")}{" "}
                             <span className="font-mono font-bold text-foreground">
-                                {maskedEmail || accountEmail || "your email"}
+                                {maskedEmail || accountEmail || t("your email")}
                             </span>{" "}
-                            to activate two-factor authentication.
+                            {t("to activate two-factor authentication.")}
                         </p>
                     </div>
 
                     <form onSubmit={handleVerifyOtp} noValidate className="space-y-4">
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-foreground uppercase tracking-wider block">
-                                6-Digit Verification Code
+                                {t("6-Digit Verification Code")}
                             </label>
                             <input
                                 type="text"
@@ -300,7 +303,7 @@ export function TwoFactorManagementCard({
                                 autoComplete="one-time-code"
                                 maxLength={6}
                                 autoFocus
-                                aria-label="6-digit verification code"
+                                aria-label={t("6-digit verification code")}
                                 aria-invalid={otpError ? true : undefined}
                                 aria-describedby={otpError ? "two-factor-otp-error" : undefined}
                                 value={otpInput}
@@ -316,7 +319,7 @@ export function TwoFactorManagementCard({
                         {otpError && (
                             <div id="two-factor-otp-error" role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-2.5 text-xs text-rose-500">
                                 <AlertCircle className="size-4 shrink-0 mt-0.5" />
-                                <span>{otpError}</span>
+                                <span>{t(otpError)}</span>
                             </div>
                         )}
 
@@ -329,12 +332,12 @@ export function TwoFactorManagementCard({
                                 {isVerifyingOtp ? (
                                     <>
                                         <Loader2 className="size-4 animate-spin" />
-                                        <span>Verifying...</span>
+                                        <span>{t("Verifying...")}</span>
                                     </>
                                 ) : (
                                     <>
                                         <CheckCircle2 className="size-4" />
-                                        <span>Verify & Enable 2FA</span>
+                                        <span>{t("Verify & Enable 2FA")}</span>
                                     </>
                                 )}
                             </button>
@@ -347,7 +350,7 @@ export function TwoFactorManagementCard({
                             >
                                 <RotateCcw className="size-3.5" />
                                 <span>
-                                    {otpCooldown > 0 ? `Resend (${otpCooldown}s)` : "Resend Code"}
+                                    {otpCooldown > 0 ? t("Resend ({seconds}s)", { seconds: otpCooldown }) : t("Resend Code")}
                                 </span>
                             </button>
 
@@ -360,7 +363,7 @@ export function TwoFactorManagementCard({
                                 }}
                                 className="w-full sm:w-auto text-xs text-muted-foreground hover:text-foreground font-medium py-2 px-3 transition-colors cursor-pointer"
                             >
-                                Cancel
+                                {t("Cancel")}
                             </button>
                         </div>
                     </form>
@@ -374,10 +377,10 @@ export function TwoFactorManagementCard({
                         </div>
                         <div className="space-y-1">
                             <p className="text-sm font-black text-foreground">
-                                Two-Factor Authentication is Active
+                                {t("Two-Factor Authentication is Active")}
                             </p>
                             <p className="text-xs text-muted-foreground leading-relaxed">
-                                Your account requires email verification on every sign-in.
+                                {t("Your account requires email verification on every sign-in.")}
                             </p>
                             {maskedEmail && (
                                 <div className="inline-flex items-center gap-1.5 text-xs font-mono text-muted-foreground mt-1">
@@ -392,10 +395,10 @@ export function TwoFactorManagementCard({
                     <div className="pt-4 border-t border-border/40 space-y-4">
                         <div className="space-y-1">
                             <h4 className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-                                Disable Protection
+                                {t("Disable Protection")}
                             </h4>
                             <p className="text-xs text-muted-foreground leading-relaxed">
-                                To disable two-factor authentication, please enter your current account password to confirm your identity.
+                                {t("To disable two-factor authentication, please enter your current account password to confirm your identity.")}
                             </p>
                         </div>
 
@@ -405,7 +408,7 @@ export function TwoFactorManagementCard({
                                     type={showDisablePassword ? "text" : "password"}
                                     maxLength={CURRENT_PASSWORD_MAX_LENGTH}
                                     autoComplete="current-password"
-                                    aria-label="Current account password"
+                                    aria-label={t("Current account password")}
                                     aria-invalid={disableError ? true : undefined}
                                     aria-describedby={disableError ? "two-factor-disable-error" : undefined}
                                     value={disablePassword}
@@ -413,13 +416,14 @@ export function TwoFactorManagementCard({
                                         setDisablePassword(e.target.value);
                                         if (disableError) setDisableError(null);
                                     }}
-                                    placeholder="Enter current password"
+                                    placeholder={t("Enter current password")}
                                     className="w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary pr-10"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowDisablePassword(!showDisablePassword)}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                    aria-label={showDisablePassword ? t("Hide password") : t("Show password")}
                                 >
                                     {showDisablePassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                 </button>
@@ -428,7 +432,7 @@ export function TwoFactorManagementCard({
                             {disableError && (
                                 <div id="two-factor-disable-error" role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-2.5 text-xs text-rose-500">
                                     <AlertCircle className="size-4 shrink-0 mt-0.5" />
-                                    <span>{disableError}</span>
+                                    <span>{t(disableError)}</span>
                                 </div>
                             )}
 
@@ -437,7 +441,7 @@ export function TwoFactorManagementCard({
                                 disabled={isDisabling || !disablePassword}
                                 className="w-full sm:w-auto rounded-xl py-3 px-6 text-xs font-black uppercase tracking-wider bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500/20 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                             >
-                                {isDisabling ? "Disabling..." : "Disable 2FA"}
+                                {isDisabling ? t("Disabling...") : t("Disable 2FA")}
                             </button>
                         </form>
                     </div>

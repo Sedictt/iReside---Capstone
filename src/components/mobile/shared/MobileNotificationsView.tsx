@@ -24,14 +24,18 @@ import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { MobileConfirmModal } from '@/components/mobile/shared/MobileConfirmModal';
 import { cn } from '@/lib/utils';
 import type { Notification, NotificationType } from '@/types/database';
+import { useLanguageContext } from '@/context/LanguageContext';
+import type { TranslationParams } from '@/lib/i18n';
 
-function formatTimeAgo(value: string) {
+type Translate = (phrase: string, params?: TranslationParams) => string;
+
+function formatTimeAgo(value: string, t: Translate, locale: string) {
     const timestamp = new Date(value);
     const now = new Date();
     const diffMs = now.getTime() - timestamp.getTime();
 
     if (Number.isNaN(diffMs) || diffMs < 0) {
-        return 'Recently';
+        return t('Recently');
     }
 
     const minute = 60 * 1000;
@@ -40,24 +44,24 @@ function formatTimeAgo(value: string) {
 
     if (diffMs < hour) {
         const minutes = Math.max(1, Math.floor(diffMs / minute));
-        return `${minutes}m ago`;
+        return t('{count}m ago', { count: minutes });
     }
 
     if (diffMs < day) {
         const hours = Math.max(1, Math.floor(diffMs / hour));
-        return `${hours}h ago`;
+        return t('{count}h ago', { count: hours });
     }
 
     const days = Math.floor(diffMs / day);
     if (days === 1) {
-        return 'Yesterday';
+        return t('Yesterday');
     }
 
     if (days < 7) {
-        return `${days}d ago`;
+        return t('{count}d ago', { count: days });
     }
 
-    return timestamp.toLocaleDateString('en-US', {
+    return timestamp.toLocaleDateString(locale, {
         month: 'short',
         day: 'numeric',
     });
@@ -86,6 +90,7 @@ export function MobileNotificationsView() {
 
     const { profile } = useAuth();
     const router = useRouter();
+    const { t, locale } = useLanguageContext();
 
     const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'urgent'>('all');
     const [isClearingAll, setIsClearingAll] = useState(false);
@@ -335,7 +340,7 @@ export function MobileNotificationsView() {
                                     : 'neumorphic-extruded text-muted-foreground hover:text-foreground'
                             )}
                         >
-                            <span>All</span>
+                            <span>{t('All')}</span>
                             <span className={cn(
                                 "px-1.5 py-0.5 rounded-full text-[9px] font-black leading-none",
                                 activeTab === 'all' ? "bg-white/20 text-white" : "bg-primary/10 text-primary"
@@ -353,7 +358,7 @@ export function MobileNotificationsView() {
                                     : 'neumorphic-extruded text-muted-foreground hover:text-foreground'
                             )}
                         >
-                            <span>Unread</span>
+                            <span>{t('Unread')}</span>
                             {unreadCount > 0 && (
                                 <span className={cn(
                                     "px-1.5 py-0.5 rounded-full text-[9px] font-black leading-none",
@@ -373,7 +378,7 @@ export function MobileNotificationsView() {
                                     : 'neumorphic-extruded text-muted-foreground hover:text-foreground'
                             )}
                         >
-                            <span>Urgent</span>
+                            <span>{t('Urgent')}</span>
                             {urgentCount > 0 && (
                                 <span className={cn(
                                     "px-1.5 py-0.5 rounded-full text-[9px] font-black leading-none",
@@ -390,17 +395,17 @@ export function MobileNotificationsView() {
                         <div className="flex items-center justify-between px-1 pt-1">
                             <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
                                 <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <span>{unreadCount} unread notification{unreadCount === 1 ? '' : 's'}</span>
+                                <span>{unreadCount === 1 ? t('1 unread notification') : t('{count} unread notifications', { count: unreadCount })}</span>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setShowMarkAllConfirm(true)}
                                 disabled={isClearingAll}
                                 className="neumorphic-extruded flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 active:scale-95 transition-all cursor-pointer hover:bg-emerald-500/5"
-                                title="Mark all notifications as read"
+                                title={t('Mark all notifications as read')}
                             >
                                 <CheckCheck className="size-3.5 shrink-0" />
-                                <span>Mark all as read</span>
+                                <span>{t('Mark all as read')}</span>
                             </button>
                         </div>
                     )}
@@ -415,7 +420,7 @@ export function MobileNotificationsView() {
                             onClick={() => refresh()}
                             className="underline font-bold hover:opacity-80 cursor-pointer"
                         >
-                            Retry
+                            {t('Retry')}
                         </button>
                     </div>
                 )}
@@ -451,17 +456,17 @@ export function MobileNotificationsView() {
                         <div className="space-y-1 max-w-[250px]">
                             <h3 className="text-sm font-black text-foreground">
                                 {activeTab === 'unread'
-                                    ? 'All caught up!'
+                                    ? t('All caught up!')
                                     : activeTab === 'urgent'
-                                    ? 'No urgent notices'
-                                    : 'No notifications yet'}
+                                    ? t('No urgent notices')
+                                    : t('No notifications yet')}
                             </h3>
                             <p className="text-xs text-muted-foreground leading-relaxed">
                                 {activeTab === 'unread'
-                                    ? 'You have read all your notifications.'
+                                    ? t('You have read all your notifications.')
                                     : activeTab === 'urgent'
-                                    ? 'There are no high-priority alerts needing your attention.'
-                                    : 'New updates, payment alerts, and announcements will appear here.'}
+                                    ? t('There are no high-priority alerts needing your attention.')
+                                    : t('New updates, payment alerts, and announcements will appear here.')}
                             </p>
                         </div>
                     </div>
@@ -495,7 +500,7 @@ export function MobileNotificationsView() {
                                                         'text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border',
                                                         visuals.badgeStyle
                                                     )}>
-                                                        {visuals.badge}
+                                                        {t(visuals.badge)}
                                                     </span>
                                                     {!item.read && (
                                                         <span className="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] shrink-0 animate-pulse" />
@@ -504,7 +509,7 @@ export function MobileNotificationsView() {
 
                                                 <span className="text-[10px] font-bold text-muted-foreground/70 flex items-center gap-1 shrink-0 font-mono">
                                                     <Clock className="size-3" />
-                                                    {formatTimeAgo(item.created_at)}
+                                                    {formatTimeAgo(item.created_at, t, locale)}
                                                 </span>
                                             </div>
 
@@ -529,8 +534,8 @@ export function MobileNotificationsView() {
                                                     void deleteNotification(item.id);
                                                 }}
                                                 className="neumorphic-inset-card flex size-7 items-center justify-center rounded-lg text-muted-foreground/50 hover:text-red-500 active:scale-95 transition-all cursor-pointer"
-                                                title="Delete notification"
-                                                aria-label="Delete"
+                                                title={t('Delete notification')}
+                                                aria-label={t('Delete notification')}
                                             >
                                                 <Trash2 className="size-3.5" />
                                             </button>
@@ -547,10 +552,12 @@ export function MobileNotificationsView() {
             {/* Mark All as Read Confirmation Modal */}
             <MobileConfirmModal
                 isOpen={showMarkAllConfirm}
-                title="Mark All as Read?"
-                description={`Are you sure you want to mark all ${unreadCount} unread notification${unreadCount === 1 ? '' : 's'} as read?`}
-                confirmLabel="Mark All Read"
-                cancelLabel="Cancel"
+                title={t('Mark All as Read?')}
+                description={unreadCount === 1
+                    ? t('Are you sure you want to mark 1 unread notification as read?')
+                    : t('Are you sure you want to mark all {count} unread notifications as read?', { count: unreadCount })}
+                confirmLabel={t('Mark All Read')}
+                cancelLabel={t('Cancel')}
                 variant="success"
                 isLoading={isClearingAll}
                 icon={<CheckCheck className="size-5" />}

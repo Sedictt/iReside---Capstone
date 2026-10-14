@@ -61,6 +61,7 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
                 propertyId: PROPERTY_ID,
                 unitId: UNIT_ID,
                 startDate: "2026-10-09",
+                termType: "fixed",
                 endDate: "2026-07-31", // before start date!
                 monthlyRent: 20000,
                 securityDeposit: 20000,
@@ -71,7 +72,8 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
         const data = await res.json();
 
         expect(res.status).toBe(400);
-        expect(data.error).toBe("Lease end date must be after start date.");
+        expect(data.error).toMatch(/^Lease end date must be after (the )?start date\.$/);
+        expect(data.fieldErrors?.endDate).toBeTruthy();
     });
 
     it("rejects request if dates have invalid year (e.g., year 0019)", async () => {
@@ -85,6 +87,7 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
                 propertyId: PROPERTY_ID,
                 unitId: UNIT_ID,
                 startDate: "0019-10-09",
+                termType: "fixed",
                 endDate: "0019-11-09",
                 monthlyRent: 20000,
                 securityDeposit: 20000,
@@ -122,7 +125,8 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
         expect(data.error).toBe("Please enter a valid email address.");
     });
 
-    it("successfully creates lease and upfront payment records when advance is collected", async () => {
+    /** Wires the happy-path admin client; returns the lease insert spy. */
+    function mockHappyPath() {
         const mockInsertPayment = vi.fn().mockResolvedValue({ error: null });
         const mockInsertLease = vi.fn().mockReturnValue({
             select: vi.fn().mockReturnValue({
@@ -188,6 +192,12 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
             return {};
         });
 
+        return { mockInsertPayment, mockInsertLease };
+    }
+
+    it("successfully creates lease and upfront payment records when advance is collected", async () => {
+        const { mockInsertPayment, mockInsertLease } = mockHappyPath();
+
         const req = new Request("http://localhost:3000/api/landlord/tenants/manual", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -198,6 +208,7 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
                 propertyId: PROPERTY_ID,
                 unitId: UNIT_ID,
                 startDate: "2026-10-09",
+                termType: "fixed",
                 endDate: "2027-10-09",
                 monthlyRent: 20000,
                 securityDeposit: 20000,
@@ -215,6 +226,60 @@ describe("Manual Tenant Onboarding API (/api/landlord/tenants/manual)", () => {
         expect(data.success).toBe(true);
         expect(data.leaseId).toBe("lease-999");
         expect(mockInsertPayment).toHaveBeenCalledTimes(2); // advance rent + security deposit
+        expect(mockInsertLease).toHaveBeenCalledWith(
+            expect.objectContaining({ term_type: "fixed", end_date: "2027-10-09" }),
+        );
+    });
+
+    it("creates an open-ended lease with no end date when no term type is given", async () => {
+        const { mockInsertLease } = mockHappyPath();
+
+        const req = new Request("http://localhost:3000/api/landlord/tenants/manual", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                fullName: "Lyle Cannon",
+                email: "lyle@example.com",
+                phone: "09123456789",
+                propertyId: PROPERTY_ID,
+                unitId: UNIT_ID,
+                startDate: "2026-10-09",
+                monthlyRent: 20000,
+                securityDeposit: 20000,
+            }),
+        });
+
+        const res = await POST(req);
+        const data = await res.json();
+
+        expect(res.status).toBe(200);
+        expect(data.leaseId).toBe("lease-999");
+        expect(mockInsertLease).toHaveBeenCalledWith(
+            expect.objectContaining({ term_type: "open_ended", end_date: null }),
+        );
+    });
+
+    it("rejects a fixed-term lease without an end date", async () => {
+        const req = new Request("http://localhost:3000/api/landlord/tenants/manual", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                fullName: "Lyle Cannon",
+                email: "lyle@example.com",
+                propertyId: PROPERTY_ID,
+                unitId: UNIT_ID,
+                startDate: "2026-10-09",
+                termType: "fixed",
+                monthlyRent: 20000,
+            }),
+        });
+
+        const res = await POST(req);
+        const data = await res.json();
+
+        expect(res.status).toBe(400);
+        expect(data.error).toMatch(/required for a fixed-term lease/);
+        expect(mockAdminFrom).not.toHaveBeenCalled();
     });
 
     it("rejects request if full name contains digits", async () => {

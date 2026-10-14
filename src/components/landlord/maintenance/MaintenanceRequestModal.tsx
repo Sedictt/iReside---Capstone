@@ -35,6 +35,8 @@ import {
  maintenanceDescriptionRule,
  maintenanceTitleRule,
 } from "@/lib/validation/schemas/operations.schema";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 
 type ProcessPlan = "landlord" | "third_party";
@@ -61,6 +63,7 @@ export function MaintenanceRequestModal({
  propertyId,
  units = [],
 }: MaintenanceRequestModalProps) {
+ const { t } = useLanguageContext();
  // View mode state
  const [currentImageIndex, setCurrentImageIndex] = useState(0);
  const [isImageLightboxOpen, setIsImageLightboxOpen] = useState(false);
@@ -133,13 +136,13 @@ export function MaintenanceRequestModal({
  {/* Header */}
  <div className="flex items-center justify-between px-8 pt-8 pb-6 shrink-0">
  <div>
- <h2 className="text-2xl font-black text-foreground">New Maintenance Request</h2>
- <p className="text-sm text-muted-foreground mt-1">Submit a new maintenance request for your property</p>
+ <h2 className="text-2xl font-black text-foreground">{t("New Maintenance Request")}</h2>
+ <p className="text-sm text-muted-foreground mt-1">{t("Submit a new maintenance request for your property")}</p>
  </div>
  <button
  onClick={onClose}
  className="p-3 hover:neumorphic-inset rounded-full transition-colors shrink-0"
- aria-label="Close"
+ aria-label={t("Close")}
  >
  <X className="size-5 text-muted-foreground" />
  </button>
@@ -175,7 +178,7 @@ export function MaintenanceRequestModal({
  if (!response.ok) {
  const body = (await response.json().catch(() => ({}))) as { error?: string; fieldErrors?: Record<string, string> };
  createForm.setServerErrors(body.fieldErrors);
- throw new Error(body.error ?? "Failed to create maintenance request.");
+ throw new Error(body.error ?? t("Failed to create maintenance request."));
  }
 
  const body = (await response.json()) as { request?: MaintenanceRequest };
@@ -185,7 +188,7 @@ export function MaintenanceRequestModal({
  }
  onClose();
  } catch (err) {
- setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+ setSubmitError(err instanceof Error ? tr(err.message) : t("Something went wrong. Please try again."));
  } finally {
  setIsSubmitting(false);
  }
@@ -195,7 +198,7 @@ export function MaintenanceRequestModal({
  {/* Unit */}
  <div>
  <label htmlFor="create-unit" className="mb-2 block text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- Unit <span className="text-red-500">*</span>
+ {t("Unit")} <span className="text-red-500">*</span>
  </label>
  <div className="relative group">
  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1.5 neumorphic-inset text-muted-foreground rounded-md group-focus-within:bg-primary/10 group-focus-within:text-primary transition-colors pointer-events-none ">
@@ -209,7 +212,7 @@ export function MaintenanceRequestModal({
  required
  className={cn("w-full appearance-none rounded-xl neumorphic-panel/50 py-3.5 pl-[3.25rem] pr-10 text-sm font-black text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all hover:border-border cursor-pointer", createForm.errorFor("unitId") && "ring-1 ring-rose-500/60")}
  >
- <option value="" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Select a unit</option>
+ <option value="" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("Select a unit")}</option>
  {units.map((unit) => (
  <option key={unit.id} value={unit.id} className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">
  {unit.name}
@@ -226,7 +229,7 @@ export function MaintenanceRequestModal({
  {/* Title */}
  <div>
  <label htmlFor="create-title" className="mb-2 block text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- Title <span className="text-red-500">*</span>
+ {t("Title")} <span className="text-red-500">*</span>
  </label>
  <div className="relative group">
  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1.5 neumorphic-inset text-muted-foreground rounded-md group-focus-within:bg-primary/10 group-focus-within:text-primary transition-colors pointer-events-none ">
@@ -240,7 +243,7 @@ export function MaintenanceRequestModal({
  value={createTitle}
  onChange={(e) => setCreateTitle(e.target.value)}
  required
- placeholder="Brief description of the issue"
+ placeholder={t("Brief description of the issue")}
  className={cn("w-full rounded-xl neumorphic-panel/50 py-3.5 pl-[3.25rem] pr-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all hover:border-border", createForm.errorFor("title") && "ring-1 ring-rose-500/60")}
  />
  </div>
@@ -250,7 +253,7 @@ export function MaintenanceRequestModal({
  {/* Priority */}
  <div>
  <label htmlFor="create-priority" className="mb-2 block text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- Priority
+ {t("Priority")}
  </label>
  <div className="relative group">
  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1.5 neumorphic-inset text-muted-foreground rounded-md group-focus-within:bg-primary/10 group-focus-within:text-primary transition-colors pointer-events-none ">
@@ -262,10 +265,10 @@ export function MaintenanceRequestModal({
  onChange={(e) => setCreatePriority(e.target.value as "Critical" | "High" | "Medium" | "Low")}
  className="w-full appearance-none rounded-xl neumorphic-panel/50 py-3.5 pl-[3.25rem] pr-10 text-sm font-black text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all hover:border-border cursor-pointer"
  >
- <option value="Critical" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Critical</option>
- <option value="High" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">High</option>
- <option value="Medium" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Medium (default)</option>
- <option value="Low" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Low</option>
+ <option value="Critical" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("Critical")}</option>
+ <option value="High" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("High")}</option>
+ <option value="Medium" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("Medium (default)")}</option>
+ <option value="Low" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("Low")}</option>
  </select>
  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
  <ChevronDown className="size-4" />
@@ -276,7 +279,7 @@ export function MaintenanceRequestModal({
  {/* Description */}
  <div>
  <label htmlFor="create-description" className="mb-2 block text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- Description <span className="text-red-500">*</span>
+ {t("Description")} <span className="text-red-500">*</span>
  </label>
  <textarea
  {...createForm.fieldProps("description")}
@@ -286,7 +289,7 @@ export function MaintenanceRequestModal({
  onChange={(e) => setCreateDescription(e.target.value)}
  required
  rows={5}
- placeholder="Provide details about the issue..."
+ placeholder={t("Provide details about the issue...")}
  className={cn("w-full rounded-xl neumorphic-panel/50 py-3.5 px-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all hover:border-border resize-none", createForm.errorFor("description") && "ring-1 ring-rose-500/60")}
  />
  <FieldError id={createForm.errorId("description")} message={createForm.errorFor("description")} />
@@ -309,7 +312,7 @@ export function MaintenanceRequestModal({
  disabled={isSubmitting}
  className="px-6 py-3 rounded-xl text-sm font-black text-muted-foreground hover:text-foreground hover:neumorphic-inset transition-all"
  >
- Cancel
+ {t("Cancel")}
  </button>
  <button
  type="submit"
@@ -320,12 +323,12 @@ export function MaintenanceRequestModal({
  {isSubmitting ? (
  <>
  <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
- Submitting...
+ {t("Submitting...")}
  </>
  ) : (
  <>
  <Send className="size-4" />
- Submit Request
+ {t("Submit Request")}
  </>
  )}
  </button>
@@ -346,10 +349,10 @@ export function MaintenanceRequestModal({
  const processSummary = processStep === "pending"
  ? null
  : selfRepairRequested && selfRepairDecision === "allow"
- ? "Tenant self-repair approved. They will handle this."
+ ? t("Tenant self-repair approved. They will handle this.")
  : processPlan === "landlord"
- ? "Landlord repair selected. Tenant will be notified."
- : `Third-party repair: ${thirdPartyPerson.trim()}`;
+ ? t("Landlord repair selected. Tenant will be notified.")
+ : t("Third-party repair: {name}", { name: thirdPartyPerson.trim() });
 
  const nextImage = () => {
  if (request.images && currentImageIndex < request.images.length - 1) {
@@ -393,7 +396,7 @@ export function MaintenanceRequestModal({
 
  if (!response.ok) {
  const errorBody = (await response.json().catch(() => ({}))) as { error?: string };
- throw new Error(errorBody.error || "Could not sync maintenance update. Please try again.");
+ throw new Error(errorBody.error || t("Could not sync maintenance update. Please try again."));
  }
 
  const body = (await response.json()) as { request?: Partial<MaintenanceRequest> };
@@ -405,7 +408,7 @@ export function MaintenanceRequestModal({
  onRequestUpdated?.(merged);
  return true;
  } catch (error) {
- setFormError(error instanceof Error && error.message ? error.message : "Could not sync maintenance update. Please try again.");
+ setFormError(error instanceof Error && error.message ? tr(error.message) : t("Could not sync maintenance update. Please try again."));
  return false;
  } finally {
  setIsSaving(false);
@@ -415,11 +418,11 @@ export function MaintenanceRequestModal({
  const handleProcess = async () => {
  if (processStep === "pending") {
  if (selfRepairRequested && selfRepairDecision === null) {
- setFormError("Please approve or deny the tenant's self-repair request first.");
+ setFormError(t("Please approve or deny the tenant's self-repair request first."));
  return;
  }
  if ((!selfRepairRequested || selfRepairDecision === "reject") && processPlan === "third_party" && thirdPartyPerson.trim().length === 0) {
- setFormError("Please provide the third-party repair person's name for tenant safety.");
+ setFormError(t("Please provide the third-party repair person's name for tenant safety."));
  return;
  }
 
@@ -497,11 +500,11 @@ export function MaintenanceRequestModal({
  <button
  onClick={() => setIsImageLightboxOpen(true)}
  className="absolute inset-0 w-full h-full outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
- aria-label="Enlarge photo"
+ aria-label={t("Enlarge photo")}
  >
  <Image
  src={request.images[currentImageIndex]}
- alt="Maintenance Issue"
+ alt={t("Maintenance Issue")}
  fill
  sizes="(max-width: 768px) 100vw, 45vw"
  className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -514,7 +517,7 @@ export function MaintenanceRequestModal({
  className="absolute top-6 right-6 z-20 inline-flex items-center gap-1.5 rounded-full bg-black/40 backdrop-blur-md px-3.5 py-2 text-xs font-black text-white hover:bg-black/60 transition-colors "
  >
  <Expand className="size-3.5" />
- Enlarge
+ {t("Enlarge")}
  </button>
 
  {request.images.length > 1 && (
@@ -564,7 +567,7 @@ export function MaintenanceRequestModal({
  request.status === "Assigned" ? "bg-cyan-500/90 text-white border-cyan-400/50" :
  "bg-emerald-500/90 text-white border-emerald-400/50"
  )}>
- {request.status}
+ {t(request.status)}
  </span>
  <span className={cn(
  "px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-widest backdrop-blur-md",
@@ -573,7 +576,7 @@ export function MaintenanceRequestModal({
  request.priority === "Medium" ? "bg-blue-500/90 text-white border-blue-400/50" :
  "bg-neutral-800/90 text-neutral-300 border-neutral-600"
  )}>
- {request.priority} Priority
+ {t("{priority} Priority", { priority: t(request.priority) })}
  </span>
  </div>
 
@@ -584,7 +587,7 @@ export function MaintenanceRequestModal({
  <Home className="size-3.5 text-white" />
  </div>
  <div className="min-w-0">
- <span className="text-[9px] font-black text-white/70 uppercase tracking-widest block">Property</span>
+ <span className="text-[9px] font-black text-white/70 uppercase tracking-widest block">{t("Property")}</span>
  <span className="text-sm font-black text-white block line-clamp-1">{request.property}</span>
  </div>
  </div>
@@ -594,7 +597,7 @@ export function MaintenanceRequestModal({
  <Zap className="size-3.5 text-white" />
  </div>
  <div className="min-w-0">
- <span className="text-[9px] font-black text-white/70 uppercase tracking-widest block">Unit</span>
+ <span className="text-[9px] font-black text-white/70 uppercase tracking-widest block">{t("Unit")}</span>
  <span className="text-sm font-black text-white block line-clamp-1">{request.unit}</span>
  </div>
  </div>
@@ -607,7 +610,7 @@ export function MaintenanceRequestModal({
  <button
  onClick={onClose}
  className="absolute top-6 right-6 p-2.5 neumorphic-inset hover:neumorphic-inset-foreground/10 text-muted-foreground hover:text-foreground rounded-full transition-all z-20 active:scale-90"
- aria-label="Close"
+ aria-label={t("Close")}
  >
  <X className="size-5" />
  </button>
@@ -617,11 +620,11 @@ export function MaintenanceRequestModal({
  <div>
  <div className="mb-6 flex flex-wrap items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
  <div className="flex items-center neumorphic-inset rounded-lg px-3 py-1.5 text-foreground/70">
- ID: {request.id.split('-')[0]}
+ {t("ID: {id}", { id: request.id.split('-')[0] })}
  </div>
  <div className="flex items-center gap-1.5 neumorphic-inset px-3 py-1.5 rounded-lg text-foreground/70">
  <Clock className="size-3.5" />
- Reported {request.reportedAt}
+ {t("Reported {date}", { date: request.reportedAt })}
  </div>
  </div>
 
@@ -637,7 +640,7 @@ export function MaintenanceRequestModal({
  <Bot className="size-4 text-primary" />
  </div>
  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
- IRIS AI Smart Triage
+ {t("IRIS AI Smart Triage")}
  </p>
  </div>
 
@@ -655,9 +658,9 @@ export function MaintenanceRequestModal({
  <ShieldCheck className="size-6 text-emerald-500" />
  </div>
  <div>
- <p className="text-base font-black text-foreground">Self-Repair Requested</p>
+ <p className="text-base font-black text-foreground">{t("Self-Repair Requested")}</p>
  <p className="text-sm font-medium text-muted-foreground">
- {selfRepairDecision === "allow" ? "You have approved this request." : selfRepairDecision === "reject" ? "You have denied this request." : "The tenant asks to handle this repair themselves."}
+ {selfRepairDecision === "allow" ? t("You have approved this request.") : selfRepairDecision === "reject" ? t("You have denied this request.") : t("The tenant asks to handle this repair themselves.")}
  </p>
  </div>
  </div>
@@ -667,13 +670,13 @@ export function MaintenanceRequestModal({
  onClick={() => setSelfRepairDecision("allow")}
  className={cn("px-5 py-2.5 rounded-xl text-sm font-black transition-all border", selfRepairDecision === "allow" ? "bg-emerald-500 text-white border-emerald-500 " : "bg-background text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/10")}
  >
- Approve
+ {t("Approve")}
  </button>
  <button 
  onClick={() => setSelfRepairDecision("reject")}
  className={cn("px-5 py-2.5 rounded-xl text-sm font-black transition-all border", selfRepairDecision === "reject" ? "bg-red-500 text-white border-red-500 " : "bg-background text-red-600 border-red-500/20 hover:bg-red-500/10")}
  >
- Deny
+ {t("Deny")}
  </button>
  </div>
  )}
@@ -684,7 +687,7 @@ export function MaintenanceRequestModal({
 
  {/* Involved Parties */}
  <div className="space-y-4">
- <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] pl-1">Involved Parties</h3>
+ <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] pl-1">{t("Involved Parties")}</h3>
  
  <div className="flex items-center gap-4 neumorphic-inset p-5 rounded-3xl ">
  <div
@@ -704,7 +707,7 @@ export function MaintenanceRequestModal({
  )}
  </div>
  <div className="flex-1 min-w-0">
- <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Primary Tenant</span>
+ <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">{t("Primary Tenant")}</span>
  <p className="text-lg font-black text-foreground truncate leading-tight">{request.tenant}</p>
  </div>
  <button className="p-3 rounded-2xl neumorphic-primary hover:bg-primary/90 transition-all active:scale-90 shrink-0">
@@ -718,7 +721,7 @@ export function MaintenanceRequestModal({
  <Calendar className="size-6 text-amber-500" />
  </div>
  <div>
- <span className="text-[10px] font-black text-amber-500/70 uppercase tracking-[0.2em]">Scheduled Window</span>
+ <span className="text-[10px] font-black text-amber-500/70 uppercase tracking-[0.2em]">{t("Scheduled Window")}</span>
  <p className="text-base font-black text-foreground">{request.scheduledFor}</p>
  </div>
  </div>
@@ -753,24 +756,24 @@ export function MaintenanceRequestModal({
  <div>
  <p className="text-sm font-black text-foreground">
  {request.tenantRepairStatus === "personnel_arrived" 
- ? "Personnel Has Arrived" 
- : request.tenantRepairStatus === "repairing" 
- ? "Repair In Progress" 
- : "Repair Marked as Done"}
+ ? t("Personnel Has Arrived")
+ : request.tenantRepairStatus === "repairing"
+ ? t("Repair In Progress")
+ : t("Repair Marked as Done")}
  </p>
  <p className="text-xs font-medium text-muted-foreground">
  {request.tenantRepairStatus === "personnel_arrived"
- ? "The tenant has confirmed the repair personnel has arrived."
+ ? t("The tenant has confirmed the repair personnel has arrived.")
  : request.tenantRepairStatus === "repairing"
- ? "The tenant is actively tracking the repair progress."
- : "The tenant has marked the repair as completed."}
+ ? t("The tenant is actively tracking the repair progress.")
+ : t("The tenant has marked the repair as completed.")}
  </p>
  </div>
  </div>
 
  {request.tenantProvidedPhotos && request.tenantProvidedPhotos.length > 0 && (
  <div className="space-y-2">
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Verification Photos</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Verification Photos")}</p>
  <div className="flex gap-2">
  {request.tenantProvidedPhotos.map((img, i) => (
  <button
@@ -781,7 +784,7 @@ export function MaintenanceRequestModal({
  }}
  className="relative size-20 rounded-xl overflow-hidden hover:border-primary/50 transition-all group"
  >
- <Image src={img} alt={`Tenant proof ${i + 1}`} fill sizes="80px" className="object-cover" />
+ <Image src={img} alt={t("Tenant proof {number}", { number: i + 1 })} fill sizes="80px" className="object-cover" />
  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
  <Expand className="size-5 text-white" />
  </div>
@@ -798,7 +801,7 @@ export function MaintenanceRequestModal({
  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-5 sm:p-6 space-y-3 animate-in fade-in slide-in-from-bottom-2">
  <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
  <CheckCircle2 className="size-5 shrink-0" />
- <h3 className="text-sm font-black">Action Confirmed</h3>
+ <h3 className="text-sm font-black">{t("Action Confirmed")}</h3>
  </div>
  <p className="text-sm text-emerald-700/80 dark:text-emerald-300/80 font-medium">{processSummary}</p>
  </div>
@@ -810,14 +813,14 @@ export function MaintenanceRequestModal({
  <div className="flex items-center gap-2 mb-2">
  <div className={cn("size-2 rounded-full", selfRepairDecision === "allow" ? "neumorphic-inset-foreground" : "bg-amber-500 animate-pulse")} />
  <h3 className="text-xs font-black text-foreground uppercase tracking-widest">
- {selfRepairDecision === "allow" ? "Action Managed by Tenant" : "Action Required"}
+ {selfRepairDecision === "allow" ? t("Action Managed by Tenant") : t("Action Required")}
  </h3>
  </div>
  
  <div className="space-y-4">
  <div>
  <label htmlFor="select-action" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block">
- Select Action
+ {t("Select Action")}
  </label>
  <div className="relative" ref={actionDropdownRef}>
  <button
@@ -833,7 +836,7 @@ export function MaintenanceRequestModal({
  {processPlan === "landlord" ? <Hammer className="size-3.5" /> : <UserRound className="size-3.5" />}
  </div>
  <span className="truncate">
- {processPlan === "landlord" ? "Landlord Repair (You handle it)" : "Third Party Repair (Assign contractor)"}
+ {processPlan === "landlord" ? t("Landlord Repair (You handle it)") : t("Third Party Repair (Assign contractor)")}
  </span>
  <ChevronDown className={cn("size-4 text-muted-foreground transition-transform duration-200", isActionDropdownOpen && "rotate-180 text-primary")} />
  </button>
@@ -863,7 +866,7 @@ export function MaintenanceRequestModal({
  <div className={cn("p-1.5 rounded-lg", processPlan === "landlord" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
  <Hammer className="size-3.5" />
  </div>
- <span>Landlord Repair (You handle it)</span>
+ <span>{t("Landlord Repair (You handle it)")}</span>
  </div>
  {processPlan === "landlord" && <Check className="size-4 text-primary" />}
  </div>
@@ -884,7 +887,7 @@ export function MaintenanceRequestModal({
  <div className={cn("p-1.5 rounded-lg", processPlan === "third_party" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
  <UserRound className="size-3.5" />
  </div>
- <span>Third Party Repair (Assign contractor)</span>
+ <span>{t("Third Party Repair (Assign contractor)")}</span>
  </div>
  {processPlan === "third_party" && <Check className="size-4 text-primary" />}
  </div>
@@ -898,7 +901,7 @@ export function MaintenanceRequestModal({
  {processPlan === "third_party" && (
  <div className="pt-2 animate-in slide-in-from-top-2 fade-in duration-200">
  <label htmlFor="repair-person-name" className="mb-2 block text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- Repair Person Name <span className="text-red-500">*</span>
+ {t("Repair Person Name")} <span className="text-red-500">*</span>
  </label>
  <div className="relative group">
  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1.5 neumorphic-inset text-muted-foreground rounded-md group-focus-within:bg-primary/10 group-focus-within:text-primary transition-colors pointer-events-none ">
@@ -909,7 +912,7 @@ export function MaintenanceRequestModal({
  type="text"
  value={thirdPartyPerson}
  onChange={(event) => setThirdPartyPerson(event.target.value)}
- placeholder="Enter full name for tenant safety"
+ placeholder={t("Enter full name for tenant safety")}
  className="w-full rounded-xl neumorphic-panel/50 py-3.5 pl-[3.25rem] pr-4 text-sm font-black text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/40 hover:border-border"
  />
  </div>
@@ -945,26 +948,26 @@ export function MaintenanceRequestModal({
  >
  {processStep === "pending" && (
  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
- To Process
+ {t("To Process")}
  <ArrowRight className="size-4 transition-transform group-hover/btn:translate-x-1" />
  </div>
  )}
  {processStep === "assigned" && (
  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
  <Hammer className="size-4 animate-bounce" />
- Repair On the Way
+ {t("Repair On the Way")}
  </div>
  )}
  {processStep === "in_progress" && (
  selfRepairDecision === "allow" ? (
  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
  <MessageSquare className="size-4 animate-pulse" />
- Notify Tenant
+ {t("Notify Tenant")}
  </div>
  ) : (
  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
  <CheckCircle2 className="size-4" />
- Mark as Completed
+ {t("Mark as Completed")}
  </div>
  )
  )}
@@ -972,12 +975,12 @@ export function MaintenanceRequestModal({
  selfRepairDecision === "allow" ? (
  <div className="flex items-center gap-2 animate-in zoom-in fade-in duration-300">
  <Clock className="size-5 shrink-0" />
- Waiting for Tenant Update
+ {t("Waiting for Tenant Update")}
  </div>
  ) : (
  <div className="flex items-center gap-2 animate-in zoom-in fade-in duration-300">
  <CheckCircle2 className="size-5 shrink-0" />
- Repair Completed
+ {t("Repair Completed")}
  </div>
  )
  )}
@@ -998,7 +1001,7 @@ export function MaintenanceRequestModal({
  className="w-full sm:w-auto px-6 py-4 rounded-2xl neumorphic-inset hover:neumorphic-inset/80 disabled:opacity-50 text-foreground transition-all /50 flex items-center justify-center gap-2 whitespace-nowrap text-sm font-black animate-in fade-in slide-in-from-bottom-2"
  >
  <Camera className="size-4" />
- Ask for Photo
+ {t("Ask for Photo")}
  </button>
  )}
  </div>
@@ -1012,14 +1015,14 @@ export function MaintenanceRequestModal({
  <button
  onClick={() => setIsImageLightboxOpen(false)}
  className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors z-50 "
- aria-label="Close Lightbox"
+ aria-label={t("Close Lightbox")}
  >
  <X className="size-6" />
  </button>
  
  <img
  src={request.images[currentImageIndex]}
- alt="Enlarged view"
+ alt={t("Enlarged view")}
  className="max-w-[90vw] max-h-[90vh] object-contain rounded-xl animate-in zoom-in-95 duration-300"
  />
 
@@ -1049,7 +1052,7 @@ export function MaintenanceRequestModal({
  "size-2.5 rounded-full transition-all",
  currentImageIndex === idx ? "bg-white w-8" : "bg-white/40 hover:bg-white"
  )}
- aria-label={`Go to image ${idx + 1}`}
+ aria-label={t("Go to image {number}", { number: idx + 1 })}
  />
  ))}
  </div>
@@ -1064,18 +1067,18 @@ export function MaintenanceRequestModal({
  <button
  onClick={() => setIsTenantPhotoLightboxOpen(false)}
  className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors z-50 "
- aria-label="Close Lightbox"
+ aria-label={t("Close Lightbox")}
  >
  <X className="size-6" />
  </button>
  
  <div className="absolute top-6 left-6 bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 px-4 py-2 rounded-full z-50">
- <span className="text-xs font-black text-emerald-400">Tenant Verification Photo</span>
+ <span className="text-xs font-black text-emerald-400">{t("Tenant Verification Photo")}</span>
  </div>
  
  <img
  src={request.tenantProvidedPhotos[tenantPhotoIndex]}
- alt="Tenant verification photo"
+ alt={t("Tenant verification photo")}
  className="max-w-[90vw] max-h-[90vh] object-contain rounded-xl animate-in zoom-in-95 duration-300"
  />
 
@@ -1105,7 +1108,7 @@ export function MaintenanceRequestModal({
  "size-2.5 rounded-full transition-all",
  tenantPhotoIndex === idx ? "bg-white w-8" : "bg-white/40 hover:bg-white"
  )}
- aria-label={`Go to photo ${idx + 1}`}
+ aria-label={t("Go to photo {number}", { number: idx + 1 })}
  />
  ))}
  </div>

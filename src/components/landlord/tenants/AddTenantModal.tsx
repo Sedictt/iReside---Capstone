@@ -1,6 +1,8 @@
 'use client'
 
-import { applicantNameRule, monthlyRentRule } from '@/lib/validation/schemas/tenant-lifecycle.schema'
+import { applicantNameRule, leaseTermEndDateRule, monthlyRentRule } from '@/lib/validation/schemas/tenant-lifecycle.schema'
+import { DEFAULT_LEASE_TERM_TYPE, type LeaseTermType } from '@/lib/lease-term'
+import { LeaseDurationPresets, LeaseTermReveal, LeaseTermTypeField } from '@/components/landlord/lease/LeaseTermTypeField'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { m as motion, AnimatePresence } from "framer-motion"
@@ -31,6 +33,8 @@ import { cn, formatCurrencyInput, parseCurrency } from '@/lib/utils'
 import { useProperty } from '@/context/PropertyContext'
 import { toast } from 'sonner'
 import type { WalkInUnit } from '@/components/landlord/applications/application-intake-shared'
+import { useLanguageContext } from '@/context/LanguageContext'
+import { tr } from "@/hooks/useLanguage";
 
 const WalkInApplicationModal = dynamic(
   () => import('@/components/landlord/applications/WalkInApplicationModal').then(mod => mod.WalkInApplicationModal),
@@ -54,6 +58,7 @@ export function AddTenantModal({
   initialTab = 'invite',
   onOpenWalkIn 
 }: AddTenantModalProps) {
+  const { t } = useLanguageContext()
   const { properties, selectedPropertyId, refreshProperties } = useProperty()
   
   const normalizeTab = (tab?: OnboardingTab): 'quick_add' | 'invite' | 'walk_in' => {
@@ -75,6 +80,7 @@ export function AddTenantModal({
     propertyId: '',
     unitId: '',
     startDate: '',
+    termType: DEFAULT_LEASE_TERM_TYPE as LeaseTermType,
     endDate: '',
     monthlyRent: '',
     securityDeposit: '',
@@ -156,7 +162,6 @@ export function AddTenantModal({
       const month = String(now.getMonth() + 1).padStart(2, '0')
       const day = String(now.getDate()).padStart(2, '0')
       const todayStr = `${year}-${month}-${day}`
-      const nextYearStr = `${year + 1}-${month}-${day}`
 
       const expDate = new Date(now)
       expDate.setDate(expDate.getDate() + 7)
@@ -169,7 +174,9 @@ export function AddTenantModal({
         propertyId: activeProp?.id || '',
         unitId: targetUnit?.id || '',
         startDate: todayStr,
-        endDate: nextYearStr,
+        // Open-ended (month-to-month) is the default; an end date is only set for fixed terms.
+        termType: DEFAULT_LEASE_TERM_TYPE,
+        endDate: '',
         monthlyRent: rentFormatted,
         securityDeposit: '',
       })
@@ -555,26 +562,23 @@ export function AddTenantModal({
   }
 
   const handleStartDateChange = (val: string) => {
-    setFormData(prev => {
-      const updated = { ...prev, startDate: val }
-      if (val) {
-        const d = new Date(val)
-        if (!isNaN(d.getTime())) {
-          if (!prev.endDate || prev.endDate <= val) {
-            const nextYear = new Date(d)
-            nextYear.setFullYear(nextYear.getFullYear() + 1)
-            updated.endDate = nextYear.toISOString().split('T')[0]
-          }
-        }
-      }
-      return updated
-    })
+    setFormData(prev => ({ ...prev, startDate: val }))
 
     setFieldErrors(prev => ({
       ...prev,
       startDate: undefined,
       endDate: undefined,
     }))
+  }
+
+  const handleTermTypeChange = (termType: LeaseTermType) => {
+    setFormData(prev => ({
+      ...prev,
+      termType,
+      // Open-ended leases carry no end date.
+      endDate: termType === 'fixed' ? prev.endDate : '',
+    }))
+    setFieldErrors(prev => ({ ...prev, endDate: undefined }))
   }
 
   const handleEndDateChange = (val: string) => {
@@ -631,14 +635,15 @@ export function AddTenantModal({
       }
     }
 
-    if (!formData.endDate) {
-      errs.endDate = 'Please select an end date.'
-    } else {
-      const endYear = new Date(formData.endDate).getFullYear()
-      if (endYear < 2000 || endYear > 2099) {
-        errs.endDate = 'Please enter a valid 4-digit year (e.g., 2026).'
+    // Same rule as the API: an end date is required (and must follow the start) only for fixed terms.
+    if (formData.termType === 'fixed') {
+      if (!formData.endDate) {
+        errs.endDate = 'Please select an end date for the fixed term.'
       } else if (formData.startDate && new Date(formData.endDate).getTime() <= new Date(formData.startDate).getTime()) {
         errs.endDate = 'End date must be after start date.'
+      } else {
+        const endError = leaseTermEndDateRule(formData.termType, formData.endDate, formData.startDate)
+        if (endError) errs.endDate = endError
       }
     }
 
@@ -661,7 +666,7 @@ export function AddTenantModal({
 
     if (Object.keys(errs).length > 0) {
       const firstError = Object.values(errs)[0]
-      toast.error(firstError)
+      toast.error(firstError ? t(firstError) : tr(firstError))
       return false
     }
     return true
@@ -682,7 +687,8 @@ export function AddTenantModal({
         propertyId: formData.propertyId,
         unitId: formData.unitId,
         startDate: formData.startDate,
-        endDate: formData.endDate,
+        termType: formData.termType,
+        endDate: formData.termType === 'fixed' ? formData.endDate : null,
         monthlyRent: currentRent,
         securityDeposit: currentDepositAmount,
         securityDepositMonths,
@@ -716,12 +722,12 @@ export function AddTenantModal({
         tempPassword: data.tempPassword,
         email: formData.email
       })
-      toast.success('Tenant added successfully')
+      toast.success(t('Tenant added successfully'))
       refreshProperties()
       onSuccess()
     } catch (error) {
       console.error('Error adding tenant:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to add tenant')
+      toast.error(t(error instanceof Error ? error.message : 'Failed to add tenant'))
     } finally {
       setLoading(false)
     }
@@ -729,23 +735,23 @@ export function AddTenantModal({
 
   const handleGenerateInvite = async () => {
     if (!inviteData.propertyId) {
-      toast.error('Please select a property')
+      toast.error(t('Please select a property'))
       return
     }
     if (isInviteAdvanced && inviteScope === 'unit' && !inviteUnitId) {
-      toast.error('Please select a unit')
+      toast.error(t('Please select a unit'))
       return
     }
     if (isInviteAdvanced && inviteAppType === 'online' && inviteRequirements.length === 0) {
-      toast.error('Select at least one required document for online applications')
+      toast.error(t('Select at least one required document for online applications'))
       return
     }
     if (inviteAdvanceAmount === '' || isNaN(currentInviteAdvanceAmount) || currentInviteAdvanceAmount < 0) {
-      toast.error('Please enter a valid advance rent amount.')
+      toast.error(t('Please enter a valid advance rent amount.'))
       return
     }
     if (inviteSecurityDepositAmount === '' || isNaN(currentInviteDepositAmount) || currentInviteDepositAmount < 0) {
-      toast.error('Please enter a valid security deposit amount.')
+      toast.error(t('Please enter a valid security deposit amount.'))
       return
     }
 
@@ -783,10 +789,10 @@ export function AddTenantModal({
         shareUrl: data.invite.shareUrl,
         qrUrl: data.invite.qrUrl
       })
-      toast.success('Onboarding link generated!')
+      toast.success(t('Onboarding link generated!'))
     } catch (error) {
       console.error('Error generating invite:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to generate link')
+      toast.error(t(error instanceof Error ? error.message : 'Failed to generate link'))
     } finally {
       setLoading(false)
     }
@@ -794,7 +800,7 @@ export function AddTenantModal({
 
   const handleStartWalkIn = () => {
     if (!walkInUnitId) {
-      toast.error('Please select a vacant unit for walk-in')
+      toast.error(t('Please select a vacant unit for walk-in'))
       return
     }
 
@@ -808,7 +814,7 @@ export function AddTenantModal({
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
-    toast.success('Copied to clipboard')
+    toast.success(t('Copied to clipboard'))
   }
 
   // Prevent background scrolling while modal is open
@@ -861,14 +867,14 @@ export function AddTenantModal({
                 {/* Header */}
                 <div className="shrink-0 flex items-center justify-between border-b border-white/5 neumorphic-inset px-6 sm:px-8 py-4 sm:py-5">
                   <div className="space-y-1">
-                    <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">Onboard Residents</h2>
+                    <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">{t("Onboard Residents")}</h2>
                     <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
-                      Choose an onboarding mode to get started
+                      {t("Choose an onboarding mode to get started")}
                     </p>
                   </div>
                   <button
                     onClick={onClose}
-                    aria-label="Close modal"
+                    aria-label={t("Close modal")}
                     className="rounded-2xl neumorphic-inset p-3 text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-500 cursor-pointer"
                   >
                     <X className="size-5" />
@@ -896,13 +902,13 @@ export function AddTenantModal({
                         )}
                       >
                         <tab.icon className="size-3.5" />
-                        <span>{tab.label}</span>
+                        <span>{t(tab.label)}</span>
                         {tab.recommended && (
                           <span className={cn(
                             "rounded-full px-1.5 py-0.5 text-[9px] font-black tracking-normal transition-colors",
                             isSelected ? "bg-primary text-primary-foreground font-bold" : "bg-primary/15 text-primary"
                           )}>
-                            Recommended
+                            {t("Recommended")}
                           </span>
                         )}
                       </button>
@@ -918,7 +924,7 @@ export function AddTenantModal({
                         <div className="flex items-center gap-2.5">
                           <UserPlus className="size-4 text-primary shrink-0" />
                           <span>
-                            <strong className="text-foreground">Quick Add Mode:</strong> Best for existing properties and residents already occupying units before using iReside.
+                            <strong className="text-foreground">{t("Quick Add Mode:")}</strong> {t("Best for existing properties and residents already occupying units before using iReside.")}
                           </span>
                         </div>
                       </div>
@@ -930,14 +936,14 @@ export function AddTenantModal({
                           <div className="flex items-center gap-2 pb-1 border-b border-white/5">
                             <User className="size-4 text-primary" />
                             <h3 className="text-xs font-black uppercase tracking-widest text-primary">
-                              Resident Profile
+                              {t("Resident Profile")}
                             </h3>
                           </div>
                           
                           {/* Full Name */}
                           <div className="space-y-1.5">
                             <label htmlFor="fullName" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                              Full Name
+                              {t("Full Name")}
                             </label>
                             <div className="relative">
                               <User className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
@@ -946,7 +952,7 @@ export function AddTenantModal({
                                 type="text"
                                 maxLength={50}
                                 autoComplete="name"
-                                placeholder="e.g. Maria Santos"
+                                placeholder={t("e.g. Maria Santos")}
                                 value={formData.fullName}
                                 onChange={(e) => handleFullNameChange(e.target.value)}
                                 onBlur={handleFullNameBlur}
@@ -959,7 +965,7 @@ export function AddTenantModal({
                             {fieldErrors.fullName && (
                               <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
                                 <AlertCircle className="size-3 shrink-0" />
-                                <span>{fieldErrors.fullName}</span>
+                                <span>{t(fieldErrors.fullName)}</span>
                               </p>
                             )}
                           </div>
@@ -967,7 +973,7 @@ export function AddTenantModal({
                           {/* Email Address */}
                           <div className="space-y-1.5">
                             <label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                              Email Address
+                              {t("Email Address")}
                             </label>
                             <div className="relative">
                               <Mail className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
@@ -976,7 +982,7 @@ export function AddTenantModal({
                                 type="email"
                                 maxLength={50}
                                 autoComplete="email"
-                                placeholder="e.g. maria.santos@gmail.com"
+                                placeholder={t("e.g. maria.santos@gmail.com")}
                                 value={formData.email}
                                 onChange={(e) => handleEmailChange(e.target.value)}
                                 onBlur={handleEmailBlur}
@@ -989,7 +995,7 @@ export function AddTenantModal({
                             {fieldErrors.email && (
                               <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
                                 <AlertCircle className="size-3 shrink-0" />
-                                <span>{fieldErrors.email}</span>
+                                <span>{t(fieldErrors.email)}</span>
                               </p>
                             )}
                           </div>
@@ -997,7 +1003,7 @@ export function AddTenantModal({
                           {/* Phone Number */}
                           <div className="space-y-1.5">
                             <label htmlFor="phone" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                              Phone Number
+                              {t("Phone Number")}
                             </label>
                             <div className="relative">
                               <Phone className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
@@ -1007,7 +1013,7 @@ export function AddTenantModal({
                                 inputMode="tel"
                                 maxLength={15}
                                 autoComplete="tel"
-                                placeholder="e.g. 0917 123 4567"
+                                placeholder={t("e.g. 0917 123 4567")}
                                 value={formData.phone}
                                 onChange={(e) => handlePhoneChange(e.target.value)}
                                 onBlur={handlePhoneBlur}
@@ -1020,7 +1026,7 @@ export function AddTenantModal({
                             {fieldErrors.phone && (
                               <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
                                 <AlertCircle className="size-3 shrink-0" />
-                                <span>{fieldErrors.phone}</span>
+                                <span>{t(fieldErrors.phone)}</span>
                               </p>
                             )}
                           </div>
@@ -1031,7 +1037,7 @@ export function AddTenantModal({
                           <div className="flex items-center gap-2 pb-1 border-b border-white/5">
                             <Building2 className="size-4 text-primary" />
                             <h3 className="text-xs font-black uppercase tracking-widest text-primary">
-                              Lease Agreement
+                              {t("Lease Agreement")}
                             </h3>
                           </div>
 
@@ -1039,7 +1045,7 @@ export function AddTenantModal({
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="space-y-1.5">
                               <label htmlFor="propertyId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                                Property
+                                {t("Property")}
                               </label>
                               <div className="relative">
                                 <Building2 className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40 pointer-events-none" />
@@ -1052,7 +1058,7 @@ export function AddTenantModal({
                                     fieldErrors.propertyId && "border border-red-500/50 ring-2 ring-red-500/20"
                                   )}
                                 >
-                                  <option value="" disabled>Select Property</option>
+                                  <option value="" disabled>{t("Select Property")}</option>
                                   {properties.map(p => (
                                     <option key={p.id} value={p.id}>{p.name}</option>
                                   ))}
@@ -1061,14 +1067,14 @@ export function AddTenantModal({
                               {fieldErrors.propertyId && (
                                 <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
                                   <AlertCircle className="size-3 shrink-0" />
-                                  <span>{fieldErrors.propertyId}</span>
+                                  <span>{t(fieldErrors.propertyId)}</span>
                                 </p>
                               )}
                             </div>
 
                             <div className="space-y-1.5">
                               <label htmlFor="unitId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                                Unit
+                                {t("Unit")}
                               </label>
                               <div className="relative">
                                 <Home className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40 pointer-events-none" />
@@ -1081,7 +1087,7 @@ export function AddTenantModal({
                                     fieldErrors.unitId && "border border-red-500/50 ring-2 ring-red-500/20"
                                   )}
                                 >
-                                  <option value="" disabled>Select Unit</option>
+                                  <option value="" disabled>{t("Select Unit")}</option>
                                   {availableUnits.map(u => (
                                     <option key={u.id} value={u.id}>{u.name} (₱{u.rentAmount.toLocaleString()})</option>
                                   ))}
@@ -1090,126 +1096,99 @@ export function AddTenantModal({
                               {fieldErrors.unitId && (
                                 <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
                                   <AlertCircle className="size-3 shrink-0" />
-                                  <span>{fieldErrors.unitId}</span>
+                                  <span>{t(fieldErrors.unitId)}</span>
                                 </p>
                               )}
                             </div>
                           </div>
 
-                          {/* Lease Dates */}
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1.5">
-                              <label htmlFor="startDate" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                                Start Date
-                              </label>
-                              <input
-                                id="startDate"
-                                type="date"
-                                min="2000-01-01"
-                                max="2099-12-31"
-                                value={formData.startDate}
-                                onChange={(e) => handleStartDateChange(e.target.value)}
-                                onBlur={() => {
-                                  if (!formData.startDate) {
-                                    setFieldErrors(prev => ({ ...prev, startDate: 'Please select a start date.' }))
-                                  }
-                                }}
-                                className={cn(
-                                  "w-full rounded-2xl neumorphic-inset px-3 sm:px-4 py-3.5 text-xs sm:text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
-                                  fieldErrors.startDate && "border border-red-500/50 ring-2 ring-red-500/20"
-                                )}
-                              />
-                              {fieldErrors.startDate && (
-                                <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
-                                  <AlertCircle className="size-3 shrink-0" />
-                                  <span>{fieldErrors.startDate}</span>
-                                </p>
+                          {/* Lease Start */}
+                          <div className="space-y-1.5">
+                            <label htmlFor="startDate" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                              {t("Start Date")}
+                            </label>
+                            <input
+                              id="startDate"
+                              type="date"
+                              min="2000-01-01"
+                              max="2099-12-31"
+                              value={formData.startDate}
+                              onChange={(e) => handleStartDateChange(e.target.value)}
+                              onBlur={() => {
+                                if (!formData.startDate) {
+                                  setFieldErrors(prev => ({ ...prev, startDate: 'Please select a start date.' }))
+                                }
+                              }}
+                              className={cn(
+                                "w-full rounded-2xl neumorphic-inset px-3 sm:px-4 py-3.5 text-xs sm:text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
+                                fieldErrors.startDate && "border border-red-500/50 ring-2 ring-red-500/20"
                               )}
-                            </div>
-                            <div className="space-y-1.5">
-                              <label htmlFor="endDate" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                                End Date
-                              </label>
-                              <input
-                                id="endDate"
-                                type="date"
-                                min={formData.startDate || "2000-01-01"}
-                                max="2099-12-31"
-                                value={formData.endDate}
-                                onChange={(e) => handleEndDateChange(e.target.value)}
-                                onBlur={() => {
-                                  if (!formData.endDate) {
-                                    setFieldErrors(prev => ({ ...prev, endDate: 'Please select an end date.' }))
-                                  } else if (formData.startDate && new Date(formData.endDate).getTime() <= new Date(formData.startDate).getTime()) {
-                                    setFieldErrors(prev => ({ ...prev, endDate: 'End date must be after start date.' }))
-                                  }
-                                }}
-                                className={cn(
-                                  "w-full rounded-2xl neumorphic-inset px-3 sm:px-4 py-3.5 text-xs sm:text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
-                                  fieldErrors.endDate && "border border-red-500/50 ring-2 ring-red-500/20"
-                                )}
-                              />
-                              {fieldErrors.endDate && (
-                                <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
-                                  <AlertCircle className="size-3 shrink-0" />
-                                  <span>{fieldErrors.endDate}</span>
-                                </p>
-                              )}
-                            </div>
+                            />
+                            {fieldErrors.startDate && (
+                              <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
+                                <AlertCircle className="size-3 shrink-0" />
+                                <span>{t(fieldErrors.startDate)}</span>
+                              </p>
+                            )}
                           </div>
 
-                          {/* Quick Duration Presets */}
-                          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60 mr-1">
-                              Duration:
-                            </span>
-                            {[
-                              { label: "6 Mo", months: 6 },
-                              { label: "1 Year (Standard)", months: 12 },
-                              { label: "2 Years", months: 24 },
-                            ].map((preset) => {
-                              const isMatched = (() => {
-                                if (!formData.startDate || !formData.endDate) return false
-                                const s = new Date(formData.startDate)
-                                const e = new Date(formData.endDate)
-                                const diffMonths = Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24 * 30.4375))
-                                return Math.abs(diffMonths - preset.months) <= 1
-                              })()
+                          {/* Lease Term: open-ended (default) or fixed with an end date */}
+                          <LeaseTermTypeField
+                            id="quick-add-term-type"
+                            value={formData.termType}
+                            onChange={handleTermTypeChange}
+                            compact
+                          />
 
-                              return (
-                                <button
-                                  key={preset.label}
-                                  type="button"
-                                  onClick={() => {
-                                    const base = formData.startDate ? new Date(formData.startDate) : new Date()
-                                    const target = new Date(base)
-                                    target.setFullYear(target.getFullYear() + Math.floor(preset.months / 12))
-                                    if (preset.months % 12 !== 0) {
-                                      target.setMonth(base.getMonth() + (preset.months % 12))
+                          <LeaseTermReveal show={formData.termType === 'fixed'}>
+                            <div className="space-y-3 pt-1">
+                              <div className="space-y-1.5">
+                                <label htmlFor="endDate" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                  {t("End Date")}
+                                </label>
+                                <input
+                                  id="endDate"
+                                  type="date"
+                                  min={formData.startDate || "2000-01-01"}
+                                  max="2099-12-31"
+                                  value={formData.endDate}
+                                  onChange={(e) => handleEndDateChange(e.target.value)}
+                                  onBlur={() => {
+                                    if (!formData.endDate) {
+                                      setFieldErrors(prev => ({ ...prev, endDate: 'Please select an end date for the fixed term.' }))
+                                    } else if (formData.startDate && new Date(formData.endDate).getTime() <= new Date(formData.startDate).getTime()) {
+                                      setFieldErrors(prev => ({ ...prev, endDate: 'End date must be after start date.' }))
                                     }
-                                    const y = target.getFullYear()
-                                    const m = String(target.getMonth() + 1).padStart(2, '0')
-                                    const d = String(target.getDate()).padStart(2, '0')
-                                    setFormData(prev => ({ ...prev, endDate: `${y}-${m}-${d}` }))
-                                    setFieldErrors(prev => ({ ...prev, endDate: undefined }))
                                   }}
                                   className={cn(
-                                    "rounded-xl px-2.5 py-1 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
-                                    isMatched
-                                      ? "bg-primary text-primary-foreground shadow-xs font-bold"
-                                      : "neumorphic-inset text-muted-foreground hover:text-foreground"
+                                    "w-full rounded-2xl neumorphic-inset px-3 sm:px-4 py-3.5 text-xs sm:text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",
+                                    fieldErrors.endDate && "border border-red-500/50 ring-2 ring-red-500/20"
                                   )}
-                                >
-                                  {preset.label}
-                                </button>
-                              )
-                            })}
-                          </div>
+                                />
+                                {fieldErrors.endDate && (
+                                  <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
+                                    <AlertCircle className="size-3 shrink-0" />
+                                    <span>{t(fieldErrors.endDate)}</span>
+                                  </p>
+                                )}
+                              </div>
+
+                              {/* Quick Duration Presets */}
+                              <LeaseDurationPresets
+                                startDate={formData.startDate}
+                                endDate={formData.endDate}
+                                onSelect={(iso) => {
+                                  setFormData(prev => ({ ...prev, endDate: iso }))
+                                  setFieldErrors(prev => ({ ...prev, endDate: undefined }))
+                                }}
+                              />
+                            </div>
+                          </LeaseTermReveal>
 
                           {/* Monthly Rent */}
                           <div className="space-y-1.5">
                             <label htmlFor="monthlyRent" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                              Monthly Rent
+                              {t("Monthly Rent")}
                             </label>
                             <div className="relative">
                               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
@@ -1231,7 +1210,7 @@ export function AddTenantModal({
                             {fieldErrors.monthlyRent && (
                               <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
                                 <AlertCircle className="size-3 shrink-0" />
-                                <span>{fieldErrors.monthlyRent}</span>
+                                <span>{t(fieldErrors.monthlyRent)}</span>
                               </p>
                             )}
                           </div>
@@ -1243,10 +1222,10 @@ export function AddTenantModal({
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                           <h4 className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-2">
                             <Coins className="size-4 text-primary" />
-                            Move-In Payment Terms
+                            {t("Move-In Payment Terms")}
                           </h4>
                           <p className="text-[11px] text-muted-foreground">
-                            Configure initial advance rent and security deposit required upon move-in.
+                            {t("Configure initial advance rent and security deposit required upon move-in.")}
                           </p>
                         </div>
 
@@ -1256,9 +1235,9 @@ export function AddTenantModal({
                             <div className="flex items-center justify-between gap-2">
                               <div>
                                 <span className="text-[11px] font-black uppercase tracking-wider text-foreground">
-                                  Advance Rent
+                                  {t("Advance Rent")}
                                 </span>
-                                <p className="text-[10px] text-muted-foreground">Applied towards first month(s)</p>
+                                <p className="text-[10px] text-muted-foreground">{t("Applied towards first month(s)")}</p>
                               </div>
                               <div className="inline-flex rounded-xl bg-background/50 p-1 border border-border/50">
                                 {[
@@ -1267,7 +1246,7 @@ export function AddTenantModal({
                                   { label: "2 Mo", months: 2 },
                                 ].map((opt) => (
                                   <button
-                                    key={opt.label}
+                                    key={t(opt.label)}
                                     type="button"
                                     onClick={() => {
                                       setAdvanceMonths(opt.months)
@@ -1281,7 +1260,7 @@ export function AddTenantModal({
                                         : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                                     )}
                                   >
-                                    {opt.label}
+                                    {t(opt.label)}
                                   </button>
                                 ))}
                               </div>
@@ -1289,7 +1268,7 @@ export function AddTenantModal({
 
                             <div className="space-y-1.5">
                               <label htmlFor="advanceAmount" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                                Advance Rent Amount
+                                {t("Advance Rent Amount")}
                               </label>
                               <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
@@ -1311,7 +1290,7 @@ export function AddTenantModal({
                               {fieldErrors.advanceAmount && (
                                 <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
                                   <AlertCircle className="size-3 shrink-0" />
-                                  <span>{fieldErrors.advanceAmount}</span>
+                                  <span>{t(fieldErrors.advanceAmount)}</span>
                                 </p>
                               )}
                             </div>
@@ -1324,7 +1303,7 @@ export function AddTenantModal({
                                 className="size-4 rounded accent-primary cursor-pointer"
                               />
                               <span className="text-xs font-semibold text-muted-foreground">
-                                Mark as already collected
+                                {t("Mark as already collected")}
                               </span>
                             </label>
                           </div>
@@ -1334,9 +1313,9 @@ export function AddTenantModal({
                             <div className="flex items-center justify-between gap-2">
                               <div>
                                 <span className="text-[11px] font-black uppercase tracking-wider text-foreground">
-                                  Security Deposit
+                                  {t("Security Deposit")}
                                 </span>
-                                <p className="text-[10px] text-muted-foreground">Held for damages & contingencies</p>
+                                <p className="text-[10px] text-muted-foreground">{t("Held for damages & contingencies")}</p>
                               </div>
                               <div className="inline-flex rounded-xl bg-background/50 p-1 border border-border/50">
                                 {[
@@ -1345,7 +1324,7 @@ export function AddTenantModal({
                                   { label: "2 Mo", months: 2 },
                                 ].map((opt) => (
                                   <button
-                                    key={opt.label}
+                                    key={t(opt.label)}
                                     type="button"
                                     onClick={() => {
                                       setSecurityDepositMonths(opt.months)
@@ -1359,7 +1338,7 @@ export function AddTenantModal({
                                         : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                                     )}
                                   >
-                                    {opt.label}
+                                    {t(opt.label)}
                                   </button>
                                 ))}
                               </div>
@@ -1367,7 +1346,7 @@ export function AddTenantModal({
 
                             <div className="space-y-1.5">
                               <label htmlFor="securityDepositAmount" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                                Security Deposit Amount
+                                {t("Security Deposit Amount")}
                               </label>
                               <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
@@ -1389,7 +1368,7 @@ export function AddTenantModal({
                               {fieldErrors.securityDepositAmount && (
                                 <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
                                   <AlertCircle className="size-3 shrink-0" />
-                                  <span>{fieldErrors.securityDepositAmount}</span>
+                                  <span>{t(fieldErrors.securityDepositAmount)}</span>
                                 </p>
                               )}
                             </div>
@@ -1402,7 +1381,7 @@ export function AddTenantModal({
                                 className="size-4 rounded accent-primary cursor-pointer"
                               />
                               <span className="text-xs font-semibold text-muted-foreground">
-                                Mark as already collected
+                                {t("Mark as already collected")}
                               </span>
                             </label>
                           </div>
@@ -1417,13 +1396,13 @@ export function AddTenantModal({
                             <div>
                               <div className="flex items-center gap-2">
                                 <span className="text-xs font-black uppercase tracking-wider text-foreground">
-                                  Total Move-In Settlement
+                                  {t("Total Move-In Settlement")}
                                 </span>
                                 {/* Screen-reader and alias for backward-compatible test assertions */}
                                 <span className="sr-only">Total Inception Settlement</span>
                               </div>
                               <p className="text-[11px] text-muted-foreground">
-                                Advance: ₱{formatCurrencyInput(currentAdvanceAmount, true)} + Deposit: ₱{formatCurrencyInput(currentDepositAmount, true)}
+                                {t("Advance: ₱{advance} + Deposit: ₱{deposit}", { advance: formatCurrencyInput(currentAdvanceAmount, true), deposit: formatCurrencyInput(currentDepositAmount, true) })}
                               </p>
                             </div>
                           </div>
@@ -1434,10 +1413,10 @@ export function AddTenantModal({
                             <span className="sr-only">₱{(currentAdvanceAmount + currentDepositAmount).toLocaleString()}</span>
                             <span className="text-[10px] font-bold text-muted-foreground">
                               {advancePaid && securityDepositPaid 
-                                ? "✓ Marked as collected" 
+                                ? t("✓ Marked as collected") 
                                 : advancePaid || securityDepositPaid 
-                                  ? "Partially collected" 
-                                  : "Pending collection upon move-in"}
+                                  ? t("Partially collected") 
+                                  : t("Pending collection upon move-in")}
                             </span>
                           </div>
                         </div>
@@ -1452,7 +1431,7 @@ export function AddTenantModal({
                         onClick={onClose}
                         className="flex-1 rounded-2xl neumorphic-inset py-3.5 text-sm font-black transition-all hover:neumorphic-inset cursor-pointer"
                       >
-                        Cancel
+                        {t("Cancel")}
                       </button>
                       <button
                         type="submit"
@@ -1462,9 +1441,9 @@ export function AddTenantModal({
                         {loading ? (
                           <div className="flex items-center justify-center gap-2">
                             <Loader2 className="size-4 animate-spin" />
-                            <span>Registering Resident…</span>
+                            <span>{t("Registering Resident…")}</span>
                           </div>
-                        ) : 'Register Resident'}
+                        ) : t('Register Resident')}
                       </button>
                     </div>
                   </form>
@@ -1476,9 +1455,9 @@ export function AddTenantModal({
                     <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar-premium px-6 sm:px-8 py-5 sm:py-6 space-y-6">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-[2rem] border border-primary/20 bg-primary/5 p-5">
                         <div className="space-y-1">
-                          <h3 className="text-base font-black text-foreground">Self-Onboarding Link</h3>
+                          <h3 className="text-base font-black text-foreground">{t("Self-Onboarding Link")}</h3>
                           <p className="text-xs text-muted-foreground">
-                            {isInviteAdvanced ? "Advanced mode: customize unit scope, screening mode, and document uploads." : "Simple mode: generate a shareable link or QR code instantly."}
+                            {isInviteAdvanced ? t("Advanced mode: customize unit scope, screening mode, and document uploads.") : t("Simple mode: generate a shareable link or QR code instantly.")}
                           </p>
                         </div>
                         <div className="inline-flex self-start sm:self-auto rounded-xl border border-border bg-background/80 p-1">
@@ -1494,7 +1473,7 @@ export function AddTenantModal({
                               !isInviteAdvanced ? "bg-foreground text-background shadow-xs" : "text-muted-foreground hover:text-foreground"
                             )}
                           >
-                            Simple
+                            {t("Simple")}
                           </button>
                           <button
                             type="button"
@@ -1504,7 +1483,7 @@ export function AddTenantModal({
                               isInviteAdvanced ? "bg-foreground text-background shadow-xs" : "text-muted-foreground hover:text-foreground"
                             )}
                           >
-                            Advanced
+                            {t("Advanced")}
                           </button>
                         </div>
                       </div>
@@ -1514,7 +1493,7 @@ export function AddTenantModal({
                         <div className="space-y-4 rounded-2xl border border-border/60 bg-muted/20 p-4 sm:p-5 animate-in fade-in duration-200">
                           {/* Scope */}
                           <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Invite Scope</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("Invite Scope")}</label>
                             <div className="grid grid-cols-2 gap-3">
                               <button
                                 type="button"
@@ -1530,8 +1509,8 @@ export function AddTenantModal({
                                 )}
                               >
                                 <Building2 className="size-4 mb-1" />
-                                <p className="text-xs font-bold">Property Wide</p>
-                                <p className="text-[10px] opacity-70">Any vacant unit</p>
+                                <p className="text-xs font-bold">{t("Property Wide")}</p>
+                                <p className="text-[10px] opacity-70">{t("Any vacant unit")}</p>
                               </button>
                               <button
                                 type="button"
@@ -1544,15 +1523,15 @@ export function AddTenantModal({
                                 )}
                               >
                                 <DoorOpen className="size-4 mb-1" />
-                                <p className="text-xs font-bold">Specific Unit</p>
-                                <p className="text-[10px] opacity-70">Targeted unit</p>
+                                <p className="text-xs font-bold">{t("Specific Unit")}</p>
+                                <p className="text-[10px] opacity-70">{t("Targeted unit")}</p>
                               </button>
                             </div>
                           </div>
 
                           {/* Application Type */}
                           <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Screening Mode</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("Screening Mode")}</label>
                             <div className="grid grid-cols-3 gap-2">
                               {[
                                 { key: 'existing_tenant' as const, label: 'Existing Resident', desc: 'Pre-existing lease' },
@@ -1570,8 +1549,8 @@ export function AddTenantModal({
                                       : "border-border bg-background text-muted-foreground hover:bg-muted/40"
                                   )}
                                 >
-                                  <p className="text-xs font-bold">{type.label}</p>
-                                  <p className="text-[9px] opacity-70 leading-tight">{type.desc}</p>
+                                  <p className="text-xs font-bold">{t(type.label)}</p>
+                                  <p className="text-[9px] opacity-70 leading-tight">{t(type.desc)}</p>
                                 </button>
                               ))}
                             </div>
@@ -1580,7 +1559,7 @@ export function AddTenantModal({
                           {/* Document Requirements if Online */}
                           {inviteAppType === 'online' && (
                             <div className="rounded-xl border border-primary/20 bg-primary/5 p-3.5 space-y-2">
-                              <p className="text-[10px] font-black uppercase tracking-widest text-primary">Required Documents</p>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-primary">{t("Required Documents")}</p>
                               <div className="grid grid-cols-2 gap-2">
                                 {[
                                   { key: 'valid_id', label: 'Government ID' },
@@ -1603,7 +1582,7 @@ export function AddTenantModal({
                                         checked ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground"
                                       )}
                                     >
-                                      {doc.label}
+                                      {t(doc.label)}
                                     </button>
                                   )
                                 })}
@@ -1616,7 +1595,7 @@ export function AddTenantModal({
                       {/* Property & Unit Form */}
                       <div className="space-y-4">
                         <div className="space-y-2">
-                          <label htmlFor="invitePropertyId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Target Property</label>
+                          <label htmlFor="invitePropertyId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("Target Property")}</label>
                           <div className="relative">
                             <Building2 className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                             <select
@@ -1626,7 +1605,7 @@ export function AddTenantModal({
                               onChange={(e) => handleInvitePropertyChange(e.target.value)}
                               className="w-full appearance-none rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                             >
-                              <option value="" disabled>Select Property</option>
+                              <option value="" disabled>{t("Select Property")}</option>
                               {properties.map(p => (
                                 <option key={p.id} value={p.id}>{p.name}</option>
                               ))}
@@ -1636,7 +1615,7 @@ export function AddTenantModal({
 
                         {isInviteAdvanced && inviteScope === 'unit' && (
                           <div className="space-y-2 animate-in fade-in duration-200">
-                            <label htmlFor="inviteUnitId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Target Vacant Unit</label>
+                            <label htmlFor="inviteUnitId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("Target Vacant Unit")}</label>
                             <div className="relative">
                               <DoorOpen className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                               <select
@@ -1646,7 +1625,7 @@ export function AddTenantModal({
                                 onChange={(e) => handleInviteUnitChange(e.target.value)}
                                 className="w-full appearance-none rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                               >
-                                <option value="" disabled>Select Unit</option>
+                                <option value="" disabled>{t("Select Unit")}</option>
                                 {inviteAvailableUnits.map(u => (
                                   <option key={u.id} value={u.id}>{u.name} (₱{Number(u.rentAmount || 0).toLocaleString()})</option>
                                 ))}
@@ -1660,10 +1639,10 @@ export function AddTenantModal({
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                             <h4 className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-2">
                               <Coins className="size-4 text-primary" />
-                              Move-In Payment Terms
+                              {t("Move-In Payment Terms")}
                             </h4>
                             <p className="text-[11px] text-muted-foreground">
-                              Configure upfront advance rent and security deposit required from residents.
+                              {t("Configure upfront advance rent and security deposit required from residents.")}
                             </p>
                           </div>
 
@@ -1673,9 +1652,9 @@ export function AddTenantModal({
                               <div className="flex items-center justify-between gap-2">
                                 <div>
                                   <span className="text-[11px] font-black uppercase tracking-wider text-foreground">
-                                    Advance Rent
+                                    {t("Advance Rent")}
                                   </span>
-                                  <p className="text-[10px] text-muted-foreground">Applied towards first month(s)</p>
+                                  <p className="text-[10px] text-muted-foreground">{t("Applied towards first month(s)")}</p>
                                 </div>
                                 <div className="inline-flex rounded-xl bg-background/50 p-1 border border-border/50">
                                   {[
@@ -1684,7 +1663,7 @@ export function AddTenantModal({
                                     { label: "2 Mo", months: 2 },
                                   ].map((opt) => (
                                     <button
-                                      key={opt.label}
+                                      key={t(opt.label)}
                                       type="button"
                                       onClick={() => {
                                         setInviteAdvanceMonths(opt.months)
@@ -1698,7 +1677,7 @@ export function AddTenantModal({
                                           : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                                       )}
                                     >
-                                      {opt.label}
+                                      {t(opt.label)}
                                     </button>
                                   ))}
                                 </div>
@@ -1706,7 +1685,7 @@ export function AddTenantModal({
 
                               <div className="space-y-1.5">
                                 <label htmlFor="inviteAdvanceAmount" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                                  Advance Rent Amount
+                                  {t("Advance Rent Amount")}
                                 </label>
                                 <div className="relative">
                                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
@@ -1728,7 +1707,7 @@ export function AddTenantModal({
                                 {inviteFieldErrors.advanceAmount && (
                                   <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
                                     <AlertCircle className="size-3 shrink-0" />
-                                    <span>{inviteFieldErrors.advanceAmount}</span>
+                                    <span>{t(inviteFieldErrors.advanceAmount)}</span>
                                   </p>
                                 )}
                               </div>
@@ -1739,9 +1718,9 @@ export function AddTenantModal({
                               <div className="flex items-center justify-between gap-2">
                                 <div>
                                   <span className="text-[11px] font-black uppercase tracking-wider text-foreground">
-                                    Security Deposit
+                                    {t("Security Deposit")}
                                   </span>
-                                  <p className="text-[10px] text-muted-foreground">Held for damages & contingencies</p>
+                                  <p className="text-[10px] text-muted-foreground">{t("Held for damages & contingencies")}</p>
                                 </div>
                                 <div className="inline-flex rounded-xl bg-background/50 p-1 border border-border/50">
                                   {[
@@ -1750,7 +1729,7 @@ export function AddTenantModal({
                                     { label: "2 Mo", months: 2 },
                                   ].map((opt) => (
                                     <button
-                                      key={opt.label}
+                                      key={t(opt.label)}
                                       type="button"
                                       onClick={() => {
                                         setInviteSecurityDepositMonths(opt.months)
@@ -1764,7 +1743,7 @@ export function AddTenantModal({
                                           : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                                       )}
                                     >
-                                      {opt.label}
+                                      {t(opt.label)}
                                     </button>
                                   ))}
                                 </div>
@@ -1772,7 +1751,7 @@ export function AddTenantModal({
 
                               <div className="space-y-1.5">
                                 <label htmlFor="inviteSecurityDepositAmount" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                                  Security Deposit Amount
+                                  {t("Security Deposit Amount")}
                                 </label>
                                 <div className="relative">
                                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/60">₱</span>
@@ -1794,7 +1773,7 @@ export function AddTenantModal({
                                 {inviteFieldErrors.securityDepositAmount && (
                                   <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500">
                                     <AlertCircle className="size-3 shrink-0" />
-                                    <span>{inviteFieldErrors.securityDepositAmount}</span>
+                                    <span>{t(inviteFieldErrors.securityDepositAmount)}</span>
                                   </p>
                                 )}
                               </div>
@@ -1810,12 +1789,12 @@ export function AddTenantModal({
                               <div>
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs font-black uppercase tracking-wider text-foreground">
-                                    Total Move-In Settlement Preview
+                                    {t("Total Move-In Settlement Preview")}
                                   </span>
                                   <span className="sr-only">Total Inception Settlement</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground">
-                                  Advance: ₱{formatCurrencyInput(currentInviteAdvanceAmount, true)} + Deposit: ₱{formatCurrencyInput(currentInviteDepositAmount, true)}
+                                  {t("Advance: ₱{advance} + Deposit: ₱{deposit}", { advance: formatCurrencyInput(currentInviteAdvanceAmount, true), deposit: formatCurrencyInput(currentInviteDepositAmount, true) })}
                                 </p>
                               </div>
                             </div>
@@ -1825,14 +1804,14 @@ export function AddTenantModal({
                               </span>
                               <span className="sr-only">₱{currentInviteTotalSettlement.toLocaleString()}</span>
                               <span className="text-[10px] font-bold text-muted-foreground">
-                                Required upon applicant approval
+                                {t("Required upon applicant approval")}
                               </span>
                             </div>
                           </div>
                         </div>
 
                         <div className="space-y-2">
-                          <label htmlFor="expiresAt" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Expiration (Optional)</label>
+                          <label htmlFor="expiresAt" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("Expiration (Optional)")}</label>
                           <div className="relative">
                             <Calendar className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                             <input
@@ -1871,7 +1850,7 @@ export function AddTenantModal({
                                     : "border-border bg-background text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                                 )}
                               >
-                                {preset.label}
+                                {t(preset.label)}
                               </button>
                             ))}
                           </div>
@@ -1886,7 +1865,7 @@ export function AddTenantModal({
                         onClick={onClose}
                         className="flex-1 rounded-2xl neumorphic-inset py-3.5 text-sm font-black transition-all hover:neumorphic-inset cursor-pointer"
                       >
-                        Cancel
+                        {t("Cancel")}
                       </button>
                       <button
                         onClick={handleGenerateInvite}
@@ -1896,9 +1875,9 @@ export function AddTenantModal({
                         {loading ? (
                           <div className="flex items-center justify-center gap-2">
                             <Loader2 className="size-4 animate-spin" />
-                            <span>Generating Link…</span>
+                            <span>{t("Generating Link…")}</span>
                           </div>
-                        ) : 'Generate Onboarding Link'}
+                        ) : t('Generate Onboarding Link')}
                       </button>
                     </div>
                   </div>
@@ -1912,44 +1891,44 @@ export function AddTenantModal({
                         <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                           <DoorOpen className="size-6" />
                         </div>
-                        <h3 className="text-lg font-black text-foreground">In-Person Walk-in Application</h3>
+                        <h3 className="text-lg font-black text-foreground">{t("In-Person Walk-in Application")}</h3>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          Intake prospective tenants visiting on-site with live verification, digital lease signing, and payment recording.
+                          {t("Intake prospective tenants visiting on-site with live verification, digital lease signing, and payment recording.")}
                         </p>
                       </div>
 
                       {/* 4-Step Intake Process Preview */}
                       <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 sm:p-5 space-y-3">
                         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
-                          4-Step Intake Process
+                          {t("4-Step Intake Process")}
                         </p>
                         <div className="grid gap-2.5 sm:grid-cols-2">
                           <div className="flex items-start gap-2.5 rounded-xl border border-border/40 bg-background/60 p-2.5 text-xs">
                             <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">1</span>
                             <div>
-                              <p className="font-bold text-foreground">Applicant Details</p>
-                              <p className="text-[11px] text-muted-foreground">Identity, employment & contact info</p>
+                              <p className="font-bold text-foreground">{t("Applicant Details")}</p>
+                              <p className="text-[11px] text-muted-foreground">{t("Identity, employment & contact info")}</p>
                             </div>
                           </div>
                           <div className="flex items-start gap-2.5 rounded-xl border border-border/40 bg-background/60 p-2.5 text-xs">
                             <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">2</span>
                             <div>
-                              <p className="font-bold text-foreground">Requirements Check</p>
-                              <p className="text-[11px] text-muted-foreground">Verify physical IDs & income proof</p>
+                              <p className="font-bold text-foreground">{t("Requirements Check")}</p>
+                              <p className="text-[11px] text-muted-foreground">{t("Verify physical IDs & income proof")}</p>
                             </div>
                           </div>
                           <div className="flex items-start gap-2.5 rounded-xl border border-border/40 bg-background/60 p-2.5 text-xs">
                             <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">3</span>
                             <div>
-                              <p className="font-bold text-foreground">Digital Lease Signing</p>
-                              <p className="text-[11px] text-muted-foreground">Sign agreement on screen or print</p>
+                              <p className="font-bold text-foreground">{t("Digital Lease Signing")}</p>
+                              <p className="text-[11px] text-muted-foreground">{t("Sign agreement on screen or print")}</p>
                             </div>
                           </div>
                           <div className="flex items-start gap-2.5 rounded-xl border border-border/40 bg-background/60 p-2.5 text-xs">
                             <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">4</span>
                             <div>
-                              <p className="font-bold text-foreground">Payment & Move-In</p>
-                              <p className="text-[11px] text-muted-foreground">Record downpayment & set occupied</p>
+                              <p className="font-bold text-foreground">{t("Payment & Move-In")}</p>
+                              <p className="text-[11px] text-muted-foreground">{t("Record downpayment & set occupied")}</p>
                             </div>
                           </div>
                         </div>
@@ -1959,7 +1938,7 @@ export function AddTenantModal({
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
                           <label htmlFor="walkInPropertyId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                            Target Property
+                            {t("Target Property")}
                           </label>
                           <div className="relative">
                             <Building2 className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
@@ -1975,7 +1954,7 @@ export function AddTenantModal({
                               }}
                               className="w-full appearance-none rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                             >
-                              <option value="" disabled>Select Property</option>
+                              <option value="" disabled>{t("Select Property")}</option>
                               {properties.map(p => (
                                 <option key={p.id} value={p.id}>{p.name}</option>
                               ))}
@@ -1985,7 +1964,7 @@ export function AddTenantModal({
 
                         <div className="space-y-2">
                           <label htmlFor="walkInUnitId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                            Target Vacant Unit
+                            {t("Target Vacant Unit")}
                           </label>
                           <div className="relative">
                             <DoorOpen className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
@@ -1997,11 +1976,11 @@ export function AddTenantModal({
                               className="w-full appearance-none rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4 disabled:opacity-50"
                             >
                               <option value="" disabled>
-                                {walkInAvailableUnits.length === 0 ? "No vacant units available" : "Select Vacant Unit"}
+                                {walkInAvailableUnits.length === 0 ? t("No vacant units available") : t("Select Vacant Unit")}
                               </option>
                               {walkInAvailableUnits.map(u => (
                                 <option key={u.id} value={u.id}>
-                                  {u.name} (₱{Number(u.rentAmount || 0).toLocaleString()}/mo)
+                                  {t("{unit} (₱{rent}/mo)", { unit: u.name, rent: Number(u.rentAmount || 0).toLocaleString() })}
                                 </option>
                               ))}
                             </select>
@@ -2017,7 +1996,7 @@ export function AddTenantModal({
                         onClick={onClose}
                         className="flex-1 rounded-2xl neumorphic-inset py-3.5 text-sm font-black transition-all hover:neumorphic-inset cursor-pointer"
                       >
-                        Cancel
+                        {t("Cancel")}
                       </button>
                       <button
                         type="button"
@@ -2025,7 +2004,7 @@ export function AddTenantModal({
                         disabled={!walkInUnitId}
                         className="flex-[2] inline-flex items-center justify-center gap-2 rounded-2xl neumorphic-primary py-3.5 text-sm font-black shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
                       >
-                        <span>Start Walk-in Application</span>
+                        <span>{t("Start Walk-in Application")}</span>
                         <ArrowRight className="size-4" />
                       </button>
                     </div>
@@ -2039,31 +2018,31 @@ export function AddTenantModal({
                     <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
                       <CheckCircle2 className="size-10" />
                     </div>
-                    <h2 className="text-2xl font-black text-foreground">Resident Registered!</h2>
-                    <p className="mt-2 text-muted-foreground">The resident has been successfully added to the system.</p>
+                    <h2 className="text-2xl font-black text-foreground">{t("Resident Registered!")}</h2>
+                    <p className="mt-2 text-muted-foreground">{t("The resident has been successfully added to the system.")}</p>
                     
                     {successData.tempPassword ? (
                       <div className="mt-8 rounded-[2rem] neumorphic-inset p-8">
                         <div className="mb-4 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground/60">
                           <AlertCircle className="size-4" />
-                          <span>Temporary Credentials</span>
+                          <span>{t("Temporary Credentials")}</span>
                         </div>
                         <div className="space-y-4">
                           <div className="flex items-center justify-between rounded-2xl bg-background p-4">
                             <div className="text-left">
-                              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Email</p>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("Email")}</p>
                               <p className="text-sm font-black text-foreground">{successData.email}</p>
                             </div>
-                            <button onClick={() => copyToClipboard(successData.email)} className="p-2 text-muted-foreground hover:text-primary">
+                            <button onClick={() => copyToClipboard(successData.email)} aria-label={t("Copy")} className="p-2 text-muted-foreground hover:text-primary">
                               <Copy className="size-4" />
                             </button>
                           </div>
                           <div className="flex items-center justify-between rounded-2xl bg-background p-4">
                             <div className="text-left">
-                              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Temp Password</p>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("Temp Password")}</p>
                               <p className="font-mono text-lg font-black text-primary tracking-wider">{successData.tempPassword}</p>
                             </div>
-                            <button onClick={() => copyToClipboard(successData.tempPassword!)} className="p-2 text-muted-foreground hover:text-primary">
+                            <button onClick={() => copyToClipboard(successData.tempPassword!)} aria-label={t("Copy")} className="p-2 text-muted-foreground hover:text-primary">
                               <Copy className="size-4" />
                             </button>
                           </div>
@@ -2071,7 +2050,7 @@ export function AddTenantModal({
                       </div>
                     ) : (
                       <div className="mt-8 rounded-[2rem] bg-emerald-500/5 p-8 text-emerald-600">
-                        <p className="text-sm font-black">This email is already registered on iReside. The resident can log in using their existing credentials.</p>
+                        <p className="text-sm font-black">{t("This email is already registered on iReside. The resident can log in using their existing credentials.")}</p>
                       </div>
                     )}
                   </>
@@ -2080,15 +2059,15 @@ export function AddTenantModal({
                     <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <QrCode className="size-10" />
                     </div>
-                    <h2 className="text-2xl font-black text-foreground">Onboarding Link Ready</h2>
-                    <p className="mt-2 text-muted-foreground">Share this with your residents to start self-onboarding.</p>
+                    <h2 className="text-2xl font-black text-foreground">{t("Onboarding Link Ready")}</h2>
+                    <p className="mt-2 text-muted-foreground">{t("Share this with your residents to start self-onboarding.")}</p>
 
                     <div className="mt-8 space-y-6">
                       <div className="flex items-center justify-center rounded-3xl neumorphic-inset p-6">
                         <div className="relative size-48 overflow-hidden rounded-2xl">
                           <Image 
                             src={inviteResult.qrUrl} 
-                            alt="QR Code" 
+                            alt={t("QR Code")} 
                             fill
                             sizes="192px"
                             className="object-contain"
@@ -2099,14 +2078,14 @@ export function AddTenantModal({
 
                       <div className="flex items-center justify-between rounded-2xl neumorphic-inset p-4">
                         <div className="text-left truncate max-w-[300px]">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Onboarding URL</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("Onboarding URL")}</p>
                           <p className="text-sm font-black text-foreground truncate">{inviteResult.shareUrl}</p>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={() => copyToClipboard(inviteResult.shareUrl)} className="p-2 text-muted-foreground hover:text-primary">
+                          <button onClick={() => copyToClipboard(inviteResult.shareUrl)} aria-label={t("Copy")} className="p-2 text-muted-foreground hover:text-primary">
                             <Copy className="size-4" />
                           </button>
-                          <button className="p-2 text-muted-foreground hover:text-primary">
+                          <button aria-label={t("Share")} className="p-2 text-muted-foreground hover:text-primary">
                             <Share2 className="size-4" />
                           </button>
                         </div>
@@ -2119,7 +2098,7 @@ export function AddTenantModal({
                   onClick={onClose}
                   className="mt-10 w-full rounded-2xl bg-foreground py-4 text-sm font-black text-background transition-all hover:bg-foreground/90 active:scale-95"
                 >
-                  Done
+                  {t("Done")}
                 </button>
               </div>
             )}

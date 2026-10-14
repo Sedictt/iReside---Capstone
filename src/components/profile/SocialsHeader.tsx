@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { SocialLinksEditor } from "./SocialLinksEditor";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type Socials = {
     facebook?: string;
@@ -29,6 +30,7 @@ type SocialsHeaderProps = {
 };
 
 export function SocialsHeader({ userId, initialSocials }: SocialsHeaderProps) {
+    const { t } = useLanguageContext();
     const [socials, setSocials] = useState<Socials>(initialSocials);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const supabase = createClient();
@@ -68,7 +70,7 @@ export function SocialsHeader({ userId, initialSocials }: SocialsHeaderProps) {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="size-12 rounded-2xl neumorphic-inset-card hover:neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all duration-300 group/social shadow-sm hover:-translate-y-1"
-                            title={social.label}
+                            title={t(social.label)}
                         >
                             <social.icon size={20} className="group-hover/social:scale-110 transition-transform" />
                         </a>
@@ -79,17 +81,17 @@ export function SocialsHeader({ userId, initialSocials }: SocialsHeaderProps) {
                 <button 
                     onClick={() => setIsModalOpen(true)}
                     className="flex items-center gap-3 px-6 h-12 rounded-2xl neumorphic-extruded border border-dashed border-border text-muted-foreground hover:text-foreground transition-all duration-300 group cursor-pointer"
-                    title="Manage Social Links"
+                    title={t("Manage Social Links")}
                 >
                     {hasAnySocial ? (
                         <>
                             <ExternalLink size={16} className="group-hover:rotate-12 transition-transform" />
-                            <span className="text-[10px] font-black tracking-widest uppercase">Manage Socials</span>
+                            <span className="text-[10px] font-black tracking-widest uppercase">{t("Manage Socials")}</span>
                         </>
                     ) : (
                         <>
                             <Plus size={16} className="group-hover:rotate-90 transition-transform" />
-                            <span className="text-[10px] font-black tracking-widest uppercase">Add Connectivity</span>
+                            <span className="text-[10px] font-black tracking-widest uppercase">{t("Add Connectivity")}</span>
                         </>
                     )}
                 </button>
@@ -109,10 +111,11 @@ export function SocialsHeader({ userId, initialSocials }: SocialsHeaderProps) {
                                     <div className="size-10 rounded-xl neumorphic-inset-card flex items-center justify-center text-primary">
                                         <Share2 size={20} className="text-primary" />
                                     </div>
-                                    <h3 className="text-xl font-display font-black tracking-tight text-foreground">Social Connectivity</h3>
+                                    <h3 className="text-xl font-display font-black tracking-tight text-foreground">{t("Social Connectivity")}</h3>
                                 </div>
                                 <button 
                                     onClick={() => setIsModalOpen(false)}
+                                    aria-label={t("Close")}
                                     className="size-10 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                                 >
                                     <X size={18} />
@@ -120,7 +123,7 @@ export function SocialsHeader({ userId, initialSocials }: SocialsHeaderProps) {
                             </div>
 
                             <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
-                                Connect your professional social channels to build trust and allow tenants to verify your business presence.
+                                {t("Connect your professional social channels to build trust and allow tenants to verify your business presence.")}
                             </p>
 
                             <SocialLinksEditor 

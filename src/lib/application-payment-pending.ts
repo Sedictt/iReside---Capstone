@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "crypto";
 
-import type { Json } from "@/types/database";
+import type { Json, LeaseTermType } from "@/types/database";
+import { normalizeTermType } from "@/lib/lease-term";
 
 export const PAYMENT_PENDING_DURATION_HOURS = 72;
 export const PAYMENT_PENDING_REQUIREMENT_TYPES = ["advance_rent", "security_deposit"] as const;
@@ -15,7 +16,10 @@ type ApplicationPaymentRequestStatus =
 
 type PaymentPendingLeaseData = {
     start_date: string;
-    end_date: string;
+    /** Defaults to open-ended; legacy configs without it are treated as open-ended. */
+    term_type?: LeaseTermType;
+    /** Only set for fixed terms; null/absent for open-ended leases. */
+    end_date?: string | null;
     monthly_rent: number;
     security_deposit: number;
     terms: Record<string, unknown>;
@@ -117,7 +121,10 @@ export function readPaymentPendingConfig(value: unknown): PaymentPendingConfig |
     if (!leaseData) return null;
 
     const start_date = typeof leaseData.start_date === "string" ? leaseData.start_date : "";
-    const end_date = typeof leaseData.end_date === "string" ? leaseData.end_date : "";
+    const term_type = normalizeTermType(leaseData.term_type);
+    // Open-ended leases carry no end date; a fixed term without one is treated as open-ended.
+    const end_date =
+        term_type === "fixed" && typeof leaseData.end_date === "string" && leaseData.end_date ? leaseData.end_date : null;
     const monthly_rent = Number(leaseData.monthly_rent);
     const security_deposit = Number(leaseData.security_deposit);
     const landlord_signature =
@@ -130,7 +137,6 @@ export function readPaymentPendingConfig(value: unknown): PaymentPendingConfig |
 
     if (
         !start_date ||
-        !end_date ||
         !landlord_signature ||
         !Number.isFinite(monthly_rent) ||
         monthly_rent <= 0 ||
@@ -148,6 +154,7 @@ export function readPaymentPendingConfig(value: unknown): PaymentPendingConfig |
         created_at,
         lease_data: {
             start_date,
+            term_type: end_date ? term_type : "open_ended",
             end_date,
             monthly_rent,
             security_deposit,

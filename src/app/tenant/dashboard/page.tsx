@@ -33,7 +33,21 @@ import LeaseRenewalReminder from "@/components/tenant/LeaseRenewalReminder";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { TenantDigitalClock } from "@/components/tenant/dashboard/TenantDigitalClock";
 import { getSafeAvatarBgColor } from "@/lib/constants";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguageContext } from "@/context/LanguageContext";
+import {
+    formatLeaseDate,
+    formatTenure,
+    leaseEndState,
+    leaseProgressPercent,
+    leaseTermDescription,
+    leaseTermLabel,
+    tenureSinceLabel,
+    termLengthMonths,
+    toIsoDate,
+    type LeaseTermLike,
+} from "@/lib/lease-term";
+import { addDaysIso } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { tr } from "@/hooks/useLanguage";
 
 type DashboardData = {
     userName: string;
@@ -41,7 +55,8 @@ type DashboardData = {
         id: string;
         status: string;
         startDate: string;
-        endDate: string;
+        endDate: string | null;
+        termType?: "open_ended" | "fixed" | string | null;
         monthlyRent: number;
         securityDeposit: number;
         unitName: string | null;
@@ -147,10 +162,13 @@ const formatCurrencyParts = (value: number) => {
     return { whole, decimal };
 };
 
-const formatDueDate = (value?: string | null) => {
+const formatDueDate = (value?: string | null, locale?: string) => {
     if (!value) return "No due date";
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "No due date";
+    if (locale && locale.startsWith("fil")) {
+        return date.toLocaleDateString(locale, { month: "long", day: "numeric", year: "numeric" });
+    }
     const day = date.getDate();
     const suffix = day % 10 === 1 && day !== 11
         ? "st"
@@ -161,6 +179,14 @@ const formatDueDate = (value?: string | null) => {
                 : "th";
     const month = date.toLocaleDateString("en-US", { month: "long" });
     return `${month} ${day}${suffix}, ${date.getFullYear()}`;
+};
+
+/** Month heading for a "YYYY-MM" key; English keeps the server label, other locales are formatted client-side. */
+const formatMonthKey = (monthKey: string, fallbackLabel: string, locale: string) => {
+    if (!locale.startsWith("fil")) return fallbackLabel;
+    const [year, month] = monthKey.split("-").map(Number);
+    if (!year || !month) return fallbackLabel;
+    return new Date(year, month - 1, 1).toLocaleDateString(locale, { month: "long", year: "numeric" });
 };
 
 const buildInvoiceLabel = (payment: DashboardData["overduePayments"][number]) => {
@@ -183,7 +209,7 @@ export default function TenantDashboard() {
     const searchParams = useSearchParams();
     const previewDays = searchParams.get("preview_days");
     const router = useRouter();
-    const { t, language } = useLanguage();
+    const { t, locale, language } = useLanguageContext();
     const [showBanner, setShowBanner] = useState(true);
     const [showMaintenanceSuccess, setShowMaintenanceSuccess] = useState(false);
     const [isLeaseModalOpen, setIsLeaseModalOpen] = useState(false);
@@ -225,7 +251,7 @@ export default function TenantDashboard() {
             } catch (error) {
                 if (isMounted) {
                     const errorMessage = error instanceof Error ? error.message : "Failed to load dashboard data.";
-                    setDashboardError(errorMessage);
+                    setDashboardError(tr(errorMessage));
                 }
             } finally {
                 if (isMounted) {
@@ -247,7 +273,7 @@ export default function TenantDashboard() {
     const lease = dashboardData?.lease ?? null;
     const paymentHistory = dashboardData?.paymentHistory ?? [];
     const upcomingMonths = dashboardData?.upcomingMonths ?? [];
-    const userName = dashboardData?.userName ?? "Resident";
+    const userName = dashboardData?.userName ?? t("Resident");
     const quickActions = dashboardData?.quickActions ?? DEFAULT_QUICK_ACTIONS;
 
     const isInitialLoading = dashboardLoading && !dashboardData;
@@ -281,33 +307,40 @@ export default function TenantDashboard() {
         [overduePayments]
     );
 
-    const leaseProgress = useMemo(() => {
-        if (!lease?.startDate || !lease?.endDate) {
-            return { monthsLeft: null, progressPercent: 0, endLabel: "No active lease" };
-        }
-        const leaseStartDate = new Date(lease.startDate);
-        const leaseEndDate = new Date(lease.endDate);
-        if (Number.isNaN(leaseStartDate.getTime()) || Number.isNaN(leaseEndDate.getTime())) {
-            return { monthsLeft: null, progressPercent: 0, endLabel: "No active lease" };
-        }
-        const totalMs = leaseEndDate.getTime() - leaseStartDate.getTime();
-        const elapsedMs = Math.min(Math.max(Date.now() - leaseStartDate.getTime(), 0), totalMs);
-        const progressPercent = totalMs > 0 ? Math.round((elapsedMs / totalMs) * 100) : 0;
-        const monthsLeft = Math.max(
-            0,
-            (leaseEndDate.getFullYear() - new Date().getFullYear()) * 12 + (leaseEndDate.getMonth() - new Date().getMonth())
-        );
-        const endLabel = leaseEndDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-        return { monthsLeft, progressPercent, endLabel };
-    }, [lease?.startDate, lease?.endDate]);
+    // Shared shape for the lease-term helpers (open-ended is the default; an end date only
+    // exists for fixed terms or once a move-out has been agreed).
+    const leaseTerm = useMemo<LeaseTermLike | null>(() => {
+        if (!lease) return null;
+        return {
+            start_date: lease.startDate,
+            end_date: lease.endDate ?? null,
+            term_type: lease.termType ?? null,
+            status: lease.status,
+        };
+    }, [lease]);
 
-    const daysRemaining = useMemo(() => {
-        if (previewDays) return parseInt(previewDays);
-        if (!lease?.endDate) return 0;
-        const end = new Date(lease.endDate).getTime();
-        const diff = end - Date.now();
-        return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-    }, [lease?.endDate, previewDays]);
+    const leaseEnd = useMemo(() => leaseEndState(leaseTerm), [leaseTerm]);
+
+    const leaseProgress = useMemo(() => {
+        if (!leaseTerm || !lease?.startDate) {
+            return { monthsLeft: null as number | null, progressPercent: 0, endLabel: "No active lease" };
+        }
+        if (leaseEnd.kind === "open_ended") {
+            return { monthsLeft: null, progressPercent: 0, endLabel: "Open-ended" };
+        }
+        const progressPercent = leaseProgressPercent(leaseTerm) ?? 0;
+        const monthsLeft = leaseEnd.daysLeft > 0 ? (termLengthMonths(toIsoDate(new Date()), leaseEnd.endDate) ?? 0) : 0;
+        return { monthsLeft, progressPercent, endLabel: formatLeaseDate(leaseEnd.endDate, undefined, language) };
+    }, [lease?.startDate, leaseTerm, leaseEnd, language]);
+
+    // `?preview_days=N` lets QA preview the renewal reminder as if a fixed term ended in N days.
+    const reminderLease = useMemo<LeaseTermLike | null>(() => {
+        const preview = previewDays ? parseInt(previewDays, 10) : NaN;
+        if (leaseTerm && Number.isFinite(preview)) {
+            return { ...leaseTerm, term_type: "fixed", end_date: addDaysIso(toIsoDate(new Date()), preview) };
+        }
+        return leaseTerm;
+    }, [leaseTerm, previewDays]);
 
     const utilitiesByLabel = useMemo(() => {
         const utilityAmountMap = new Map<string, number>();
@@ -351,7 +384,9 @@ export default function TenantDashboard() {
             actions.push({
                 id: "lease-review",
                 title: "Lease questions",
-                description: `${lease.propertyName ?? "Your lease"} ends ${leaseProgress.endLabel}. Review terms, dates, and deposit details.`,
+                description: leaseEnd.kind === "open_ended"
+                    ? `${lease.propertyName ?? "Your lease"} is on an open-ended, month-to-month term. Review terms, dates, and deposit details.`
+                    : `${lease.propertyName ?? "Your lease"} · ${leaseTermLabel(leaseTerm)}. Review terms, dates, and deposit details.`,
                 cta: "Open lease",
                 action: () => setIsLeaseModalOpen(true),
                 icon: FileText,
@@ -372,21 +407,21 @@ export default function TenantDashboard() {
         });
 
         return actions.slice(0, 3);
-    }, [lease, leaseProgress.endLabel, nextPayment, overduePayments.length, overdueTotal]);
+    }, [lease, leaseTerm, leaseEnd.kind, nextPayment, overduePayments.length, overdueTotal]);
 
     return (
         <div className="w-full relative md:pr-[104px] lg:pr-[112px]">
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <Image
                     src="https://images.unsplash.com/photo-1481277542470-605612bd2d61?q=80&w=2600&auto=format&fit=crop"
-                    alt="Background"
+                    alt=""
                     fill
                     className="object-cover opacity-[0.03]"
                     priority
                 />
             </div>
 
-            <LeaseRenewalReminder daysRemaining={daysRemaining} leaseId={lease?.id} />
+            <LeaseRenewalReminder lease={reminderLease} leaseId={lease?.id} />
 
             <div className="space-y-6 relative z-10 text-foreground">
                 <AnimatePresence>
@@ -408,6 +443,7 @@ export default function TenantDashboard() {
                             </div>
                             <button 
                                 onClick={() => setShowMaintenanceSuccess(false)}
+                                aria-label={t("Dismiss")}
                                 className="p-1 hover:bg-emerald-500/10 rounded-full transition-colors"
                             >
                                 <X className="size-4 text-emerald-600" />
@@ -419,10 +455,10 @@ export default function TenantDashboard() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2" data-tour-id="tour-dashboard-overview">
                     <div>
                         <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
-                            {language === "fil" ? `Maligayang pagbabalik, ${userName}` : `Welcome back, ${userName}`}
+                            {t("Welcome back, {name}", { name: userName })}
                         </h1>
                         <p className="mt-2 text-muted-foreground">
-                            {lease ? `${t("Everything is looking good at")} ${lease.propertyName}.` : t("Welcome to your iReside dashboard.")}
+                            {lease ? t("Everything is looking good at {property}.", { property: lease.propertyName ?? "" }) : t("Welcome to your iReside dashboard.")}
                         </p>
                     </div>
 
@@ -455,9 +491,9 @@ export default function TenantDashboard() {
                                     {isInitialLoading
                                         ? t("Calculating...")
                                         : nextPayment?.dueDate
-                                            ? `${t("Due")} ${formatDueDate(nextPayment.dueDate)}`
+                                            ? t("Due {date}", { date: t(formatDueDate(nextPayment.dueDate, locale)) })
                                             : upcomingMonths[0]?.dueDate
-                                                ? `${t("Due")} ${formatDueDate(upcomingMonths[0].dueDate)}`
+                                                ? t("Due {date}", { date: t(formatDueDate(upcomingMonths[0].dueDate, locale)) })
                                                 : t("No upcoming payments")}
                                 </p>
                             </div>
@@ -481,32 +517,83 @@ export default function TenantDashboard() {
                             </div>
                         </div>
 
-                        <div className="neumorphic-inset rounded-3xl p-6 space-y-4">
-                            <div className="flex items-center justify-between">
-                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t("Lease Progress")}</p>
-                                <span className="text-xs font-black text-primary">{leaseProgress.progressPercent}%</span>
-                            </div>
-                            <div className="h-2.5 bg-muted rounded-full overflow-hidden">
-                                <motion.div 
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${leaseProgress.progressPercent}%` }}
-                                    transition={{ duration: 1, ease: "easeOut" }}
-                                    className="h-full bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" 
-                                />
-                            </div>
-                            <div className="flex justify-between items-end pt-2">
-                                <div>
-                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{t("Remaining")}</p>
-                                    <p className="text-sm font-black text-foreground">
-                                        {leaseProgress.monthsLeft !== null ? `${leaseProgress.monthsLeft} ${t("months")}` : "--"}
-                                    </p>
+                        {lease && leaseEnd.kind === "open_ended" ? (
+                            /* Open-ended: show tenure instead of a countdown */
+                            <div className="neumorphic-inset rounded-3xl p-6 space-y-4" data-testid="lease-tenure-widget">
+                                <div className="flex items-center justify-between gap-2">
+                                    <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t("Your Tenure")}</p>
+                                    <span className="inline-flex shrink-0 items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 whitespace-nowrap">
+                                        <span className="size-1.5 rounded-full bg-primary" />
+                                        {t("Open-ended")}
+                                    </span>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{t("Expires")}</p>
-                                    <p className="text-sm font-black text-foreground">{leaseProgress.endLabel}</p>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 6 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, ease: "easeOut" }}
+                                    className="space-y-1"
+                                >
+                                    <p className="text-xl font-black tracking-tight text-foreground whitespace-nowrap">{tenureSinceLabel(lease.startDate, language)}</p>
+                                    <p className="text-sm font-black text-primary">{formatTenure(lease.startDate, undefined, language)} <span className="font-bold text-muted-foreground">· {t("month-to-month")}</span></p>
+                                </motion.div>
+                                <p className="text-[11px] text-muted-foreground leading-relaxed pt-1 border-t border-border/50">
+                                    {leaseTermDescription(leaseTerm, undefined, language)}
+                                </p>
+                            </div>
+                        ) : lease && leaseEnd.kind === "moving_out" ? (
+                            /* Open-ended with an agreed move-out date */
+                            <div className="neumorphic-inset rounded-3xl p-6 space-y-4" data-testid="lease-moving-out-widget">
+                                <div className="flex items-center justify-between gap-2">
+                                    <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t("Move-out Scheduled")}</p>
+                                    <span className="text-xs font-black text-primary">
+                                        {leaseEnd.daysLeft === 0 ? t("Today") : t("{count} days", { count: leaseEnd.daysLeft })}
+                                    </span>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-2xl font-black tracking-tight text-foreground">{t("Moving out")} {formatLeaseDate(leaseEnd.endDate, undefined, language)}</p>
+                                    <p className="text-sm font-black text-muted-foreground">{tenureSinceLabel(lease.startDate, language)} · {formatTenure(lease.startDate, undefined, language)}</p>
+                                </div>
+                                <p className="text-[11px] text-muted-foreground leading-relaxed pt-1 border-t border-border/50">
+                                    {leaseTermDescription(leaseTerm, undefined, language)}
+                                </p>
+                            </div>
+                        ) : (
+                            /* Fixed term (or no lease): countdown */
+                            <div className="neumorphic-inset rounded-3xl p-6 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t("Lease Progress")}</p>
+                                    <span className="text-xs font-black text-primary">{leaseProgress.progressPercent}%</span>
+                                </div>
+                                <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${leaseProgress.progressPercent}%` }}
+                                        transition={{ duration: 1, ease: "easeOut" }}
+                                        className="h-full bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]"
+                                    />
+                                </div>
+                                <div className="flex justify-between items-end pt-2">
+                                    <div>
+                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{t("Remaining")}</p>
+                                        <p className="text-sm font-black text-foreground">
+                                            {leaseProgress.monthsLeft === null
+                                                ? "--"
+                                                : leaseProgress.monthsLeft > 0
+                                                    ? t("{count} months", { count: leaseProgress.monthsLeft })
+                                                    : leaseEnd.kind === "fixed"
+                                                        ? t("{count} days", { count: leaseEnd.daysLeft })
+                                                        : t("Term ended")}
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
+                                            {leaseEnd.kind === "ended" ? t("Ended") : t("Expires")}
+                                        </p>
+                                        <p className="text-sm font-black text-foreground">{t(leaseProgress.endLabel)}</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
 
@@ -523,7 +610,7 @@ export default function TenantDashboard() {
                                 )}
                             >
                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
-                                    {monthForecast.monthLabel}
+                                    {formatMonthKey(monthForecast.month, monthForecast.monthLabel, locale)}
                                 </p>
                                 <p className="text-lg font-black text-foreground mt-1">
                                     ₱{formatCurrency(monthForecast.amount)}
@@ -536,7 +623,7 @@ export default function TenantDashboard() {
                                     )}
                                     {monthForecast.dueDate && (
                                         <span className="text-[9px] text-muted-foreground">
-                                            {t("Due")} {new Date(monthForecast.dueDate).toLocaleDateString(language === "fil" ? "fil-PH" : "en-US", { month: "short", day: "numeric" })}
+                                            {t("Due")} {new Date(monthForecast.dueDate).toLocaleDateString(locale, { month: "short", day: "numeric" })}
                                         </span>
                                     )}
                                 </div>
@@ -547,7 +634,7 @@ export default function TenantDashboard() {
 
                 {dashboardError && (
                     <div className="w-full bg-red-500/5 border border-red-500/20 rounded-xl p-4 text-sm text-red-400">
-                        {dashboardError}
+                        {t(dashboardError)}
                     </div>
                 )}
 
@@ -563,7 +650,7 @@ export default function TenantDashboard() {
                                     <Megaphone className="size-5" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-0.5">Announcement</p>
+                                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-0.5">{t("Announcement")}</p>
                                     <h3 className="font-black text-sm text-foreground">{announcement.title}</h3>
                                     <p className="text-xs text-muted-foreground mt-0.5">{announcement.message}</p>
                                 </div>
@@ -572,7 +659,7 @@ export default function TenantDashboard() {
                                 onClick={() => setShowBanner(false)}
                                 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors px-3 py-2"
                             >
-                                Dismiss
+                                {t("Dismiss")}
                             </button>
                         </motion.div>
                     )}
@@ -588,16 +675,16 @@ export default function TenantDashboard() {
                                     <AlertCircle className="size-5" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] mb-0.5">Payment Required</p>
-                                    <h3 className="font-black text-sm text-foreground">You have {overduePayments.length} overdue bills</h3>
-                                    <p className="text-xs text-muted-foreground mt-0.5">Totaling ₱{formatCurrency(overdueTotal, 2)} • Please settle your balance.</p>
+                                    <p className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] mb-0.5">{t("Payment Required")}</p>
+                                    <h3 className="font-black text-sm text-foreground">{t("You have {count} overdue bills", { count: overduePayments.length })}</h3>
+                                    <p className="text-xs text-muted-foreground mt-0.5">{t("Totaling {amount} • Please settle your balance.", { amount: `₱${formatCurrency(overdueTotal, 2)}` })}</p>
                                 </div>
                             </div>
                             <Link
                                 href={overduePayments[0]?.id ? `/tenant/payments/${overduePayments[0].id}/checkout` : "/tenant/payments"}
                                 className="neumorphic-primary bg-red-500 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                             >
-                                Pay Now
+                                {t("Pay Now")}
                             </Link>
                         </motion.div>
                     )}
@@ -607,7 +694,7 @@ export default function TenantDashboard() {
                     <div className="lg:col-span-2 space-y-8">
                         <div data-tour-id="tour-quick-actions">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Quick Services</h3>
+                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">{t("Quick Services")}</h3>
                             </div>
                             <div className="grid grid-cols-5 gap-2.5 sm:gap-3 lg:gap-4">
                                 {quickActions.map((quickActionItem) => {
@@ -621,22 +708,22 @@ export default function TenantDashboard() {
                                             <div className={cn("size-12 sm:size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 neumorphic-inset-card", quickActionItem.colorClass)}>
                                                 {IconComponent && <IconComponent className="size-6 sm:size-7" />}
                                             </div>
-                                            <span className="text-[10px] sm:text-xs font-black text-center group-hover:text-primary transition-colors uppercase tracking-wider truncate max-w-full">{quickActionItem.label}</span>
+                                            <span className="text-[10px] sm:text-xs font-black text-center group-hover:text-primary transition-colors uppercase tracking-wider truncate max-w-full">{t(quickActionItem.label)}</span>
                                         </Link>
                                     );
                                 })}
-                                <MoveOutRequest variant="quickAction" />
+                                <MoveOutRequest variant="quickAction" leaseEndDate={lease?.endDate ?? null} />
                             </div>
                         </div>
 
                         <div className="neumorphic-panel rounded-[2.5rem] p-8">
                             <div className="flex items-center justify-between mb-8">
                                 <div>
-                                    <h3 className="text-xl font-black text-foreground tracking-tight">Recent Activity</h3>
-                                    <p className="text-xs text-muted-foreground mt-1">Your latest updates and transactions</p>
+                                    <h3 className="text-xl font-black text-foreground tracking-tight">{t("Recent Activity")}</h3>
+                                    <p className="text-xs text-muted-foreground mt-1">{t("Your latest updates and transactions")}</p>
                                 </div>
                                 <Link href="/tenant/payments" className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary-dark transition-colors">
-                                    Full History
+                                    {t("Full History")}
                                 </Link>
                             </div>
 
@@ -658,16 +745,16 @@ export default function TenantDashboard() {
                                                     <div className="min-w-0">
                                                         <div className="flex items-center gap-2">
                                                             <p className="font-black text-sm text-foreground truncate">
-                                                                {paymentRecord.description ?? "Payment"}
+                                                                {paymentRecord.description ?? t("Payment")}
                                                             </p>
                                                             {(isAdvanceRent || isSecurityDeposit) && (
                                                                 <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 shrink-0">
-                                                                    {isAdvanceRent ? "Advance" : "Deposit"}
+                                                                    {isAdvanceRent ? t("Advance") : t("Deposit")}
                                                                 </span>
                                                             )}
                                                         </div>
                                                         <p className="text-[10px] text-muted-foreground mt-0.5 uppercase font-black tracking-wider">
-                                                            {paymentRecord.paidAt ? <>Settled <ClientOnlyDate date={paymentRecord.paidAt} /></> : <>Due <ClientOnlyDate date={paymentRecord.dueDate} /></>}
+                                                            {paymentRecord.paidAt ? <>{t("Settled")} <ClientOnlyDate date={paymentRecord.paidAt} /></> : <>{t("Due")} <ClientOnlyDate date={paymentRecord.dueDate} /></>}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -677,7 +764,7 @@ export default function TenantDashboard() {
                                                         "text-[8px] font-black uppercase tracking-[0.2em] mt-0.5",
                                                         paymentRecord.status === 'completed' ? "text-emerald-500" : "text-amber-500"
                                                     )}>
-                                                        {paymentRecord.status}
+                                                        {t(paymentRecord.status.charAt(0).toUpperCase() + paymentRecord.status.slice(1))}
                                                     </p>
                                                 </div>
                                             </div>
@@ -686,7 +773,7 @@ export default function TenantDashboard() {
                                 </div>
                             ) : (
                                 <div className="text-center py-12 border border-dashed border-border rounded-3xl bg-muted/20">
-                                    <p className="text-sm text-muted-foreground">No recent activity to show.</p>
+                                    <p className="text-sm text-muted-foreground">{t("No recent activity to show.")}</p>
                                 </div>
                             )}
                         </div>
@@ -697,10 +784,10 @@ export default function TenantDashboard() {
                             <div className="absolute top-0 right-0 size-32 bg-primary/5 blur-3xl -mr-8 -mt-8" />
                             <div className="relative z-10 space-y-6">
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Your Home</p>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">{t("Your Home")}</p>
                                     <h3 className="text-2xl font-black text-foreground tracking-tight leading-tight">
-                                        {lease?.propertyName ?? "Property"}<br/>
-                                        <span className="text-muted-foreground text-lg">{lease?.unitName ?? "Unit"}</span>
+                                        {lease?.propertyName ?? t("Property")}<br/>
+                                        <span className="text-muted-foreground text-lg">{lease?.unitName ?? t("Unit")}</span>
                                     </h3>
                                 </div>
 
@@ -710,7 +797,7 @@ export default function TenantDashboard() {
                                             <Zap className="size-5 text-amber-500" />
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Electricity</p>
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("Electricity")}</p>
                                             <p className="font-black text-sm text-foreground">₱{formatCurrency(electricityAmount ?? 0)}</p>
                                         </div>
                                     </div>
@@ -719,7 +806,7 @@ export default function TenantDashboard() {
                                             <Droplets className="size-5 text-blue-500" />
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Water</p>
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("Water")}</p>
                                             <p className="font-black text-sm text-foreground">₱{formatCurrency(waterAmount ?? 0)}</p>
                                         </div>
                                     </div>
@@ -727,21 +814,21 @@ export default function TenantDashboard() {
 
                                 <div className="pt-4 border-t border-border/50">
                                     <div className="flex justify-between items-center mb-4">
-                                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Lease Details</p>
+                                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{t("Lease Details")}</p>
                                         <button 
                                             onClick={() => setIsLeaseModalOpen(true)}
                                             className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline"
                                         >
-                                            View Contract
+                                            {t("View Contract")}
                                         </button>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-wider">Monthly Rent</p>
+                                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-wider">{t("Monthly Rent")}</p>
                                             <p className="text-sm font-black text-foreground">₱{formatCurrency(lease?.monthlyRent ?? 0)}</p>
                                         </div>
                                         <div>
-                                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-wider">Deposit</p>
+                                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-wider">{t("Deposit")}</p>
                                             <p className="text-sm font-black text-foreground">₱{formatCurrency(lease?.securityDeposit ?? 0)}</p>
                                         </div>
                                     </div>
@@ -757,7 +844,8 @@ export default function TenantDashboard() {
                         leaseData={{
                             id: dashboardData.lease.id,
                             start_date: dashboardData.lease.startDate,
-                            end_date: dashboardData.lease.endDate,
+                            end_date: dashboardData.lease.endDate ?? null,
+                            term_type: dashboardData.lease.termType ?? null,
                             monthly_rent: dashboardData.lease.monthlyRent,
                             security_deposit: dashboardData.lease.securityDeposit,
                             signed_at: dashboardData.lease.startDate, // Fallback

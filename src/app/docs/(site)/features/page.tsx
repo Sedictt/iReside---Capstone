@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { UnitMapFeatureSection } from "@/components/docs/UnitMapFeatureSection";
+import { T } from "@/context/LanguageContext";
 
 export default function FeaturesPage() {
   return (
@@ -18,15 +19,13 @@ export default function FeaturesPage() {
       {/* Header */}
       <section className="space-y-4">
         <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-          Platform Capabilities
+          <T>Platform Capabilities</T>
         </div>
         <h1 className="text-4xl font-black tracking-tight text-text-high sm:text-5xl">
-          Designed for Clarity and Control
+          <T>Designed for Clarity and Control</T>
         </h1>
         <p className="max-w-3xl text-xl leading-relaxed text-text-medium">
-          iReside goes beyond basic property management, providing specialized tools 
-          engineered specifically for private landlords and their tenants to organize 
-          their transactions directly.
+          <T>iReside goes beyond basic property management, providing specialized tools engineered specifically for private landlords and their tenants to organize their transactions directly.</T>
         </p>
       </section>
 
@@ -42,18 +41,18 @@ export default function FeaturesPage() {
               <FileText className="size-6" />
             </div>
           </div>
-          <h3 className="text-2xl font-black text-text-high">Document & Lease Manager</h3>
+          <h3 className="text-2xl font-black text-text-high"><T>Document & Lease Manager</T></h3>
           <p className="text-text-medium leading-relaxed">
-            Move away from disorganized file folders. Keep all essential records securely centralized and easy to reference.
+            <T>Move away from disorganized file folders. Keep all essential records securely centralized and easy to reference.</T>
           </p>
           <ul className="space-y-3 pt-2">
             <li className="flex items-start gap-2 text-sm text-text-medium">
               <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
-              <span>Step-by-step guided lease generation and signing via verification checks.</span>
+              <span><T>Step-by-step guided lease generation and signing via verification checks.</T></span>
             </li>
             <li className="flex items-start gap-2 text-sm text-text-medium">
               <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
-              <span>Digital document storage for important artifacts like contracts and IDs.</span>
+              <span><T>Digital document storage for important artifacts like contracts and IDs.</T></span>
             </li>
             <li className="flex items-start gap-2 text-sm text-text-medium">
               <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
@@ -69,22 +68,22 @@ export default function FeaturesPage() {
               <Wallet className="size-6" />
             </div>
           </div>
-          <h3 className="text-2xl font-black text-text-high">Financial Hub & Analytics</h3>
+          <h3 className="text-2xl font-black text-text-high"><T>Financial Hub & Analytics</T></h3>
           <p className="text-text-medium leading-relaxed">
-            Always know your financial positioning with straightforward tracking tools built for private rentals.
+            <T>Always know your financial positioning with straightforward tracking tools built for private rentals.</T>
           </p>
           <ul className="space-y-3 pt-2">
             <li className="flex items-start gap-2 text-sm text-text-medium">
               <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
-              <span>Track recurring payment deadlines, eliminating forgotten dates.</span>
+              <span><T>Track recurring payment deadlines, eliminating forgotten dates.</T></span>
             </li>
             <li className="flex items-start gap-2 text-sm text-text-medium">
               <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
-              <span>Create digital receipts automatically to minimize disputes or double entries.</span>
+              <span><T>Create digital receipts automatically to minimize disputes or double entries.</T></span>
             </li>
             <li className="flex items-start gap-2 text-sm text-text-medium">
               <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
-              <span>Visualize expenses against revenue dynamically in clear dashboards.</span>
+              <span><T>Visualize expenses against revenue dynamically in clear dashboards.</T></span>
             </li>
           </ul>
         </div>
@@ -96,22 +95,22 @@ export default function FeaturesPage() {
               <MessageSquare className="size-6" />
             </div>
           </div>
-          <h3 className="text-2xl font-black text-text-high">In-App Chat Messaging</h3>
+          <h3 className="text-2xl font-black text-text-high"><T>In-App Chat Messaging</T></h3>
           <p className="text-text-medium leading-relaxed">
-            Centralized communication ensures zero lost texts, preserving a clean history between landlords and tenants.
+            <T>Centralized communication ensures zero lost texts, preserving a clean history between landlords and tenants.</T>
           </p>
           <ul className="space-y-3 pt-2">
             <li className="flex items-start gap-2 text-sm text-text-medium">
               <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
-              <span>A professional boundary separating tenancy discussions from personal chat apps.</span>
+              <span><T>A professional boundary separating tenancy discussions from personal chat apps.</T></span>
             </li>
             <li className="flex items-start gap-2 text-sm text-text-medium">
               <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
-              <span>Real-time instant messaging built directly into the platform workflow.</span>
+              <span><T>Real-time instant messaging built directly into the platform workflow.</T></span>
             </li>
             <li className="flex items-start gap-2 text-sm text-text-medium">
               <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
-              <span>Attachment and media support for sharing pictures of premises or receipts.</span>
+              <span><T>Attachment and media support for sharing pictures of premises or receipts.</T></span>
             </li>
           </ul>
         </div>
@@ -123,22 +122,22 @@ export default function FeaturesPage() {
               <Wrench className="size-6" />
             </div>
           </div>
-          <h3 className="text-2xl font-black text-text-high">Maintenance Ticketing</h3>
+          <h3 className="text-2xl font-black text-text-high"><T>Maintenance Ticketing</T></h3>
           <p className="text-text-medium leading-relaxed">
-            Stop losing track of repair requests. Tenants can report issues immediately with photo evidence while landlords maintain an organized queue.
+            <T>Stop losing track of repair requests. Tenants can report issues immediately with photo evidence while landlords maintain an organized queue.</T>
           </p>
           <ul className="space-y-3 pt-2">
             <li className="flex items-start gap-2 text-sm text-text-medium">
               <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
-              <span>Tenants open maintenance requests with categorized urgency and image uploads.</span>
+              <span><T>Tenants open maintenance requests with categorized urgency and image uploads.</T></span>
             </li>
             <li className="flex items-start gap-2 text-sm text-text-medium">
               <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
-              <span>Landlords track issues across multiple states: Pending, In Progress, or Resolved.</span>
+              <span><T>Landlords track issues across multiple states: Pending, In Progress, or Resolved.</T></span>
             </li>
             <li className="flex items-start gap-2 text-sm text-text-medium">
               <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
-              <span>Easily cross-reference expenses incurred during repair directly on the dashboard.</span>
+              <span><T>Easily cross-reference expenses incurred during repair directly on the dashboard.</T></span>
             </li>
           </ul>
         </div>
@@ -151,9 +150,9 @@ export default function FeaturesPage() {
             <ShieldCheck className="size-8 text-zinc-300" />
           </div>
           <div>
-            <h3 className="text-xl font-black mb-2">Verified Landlords for Safe Transacting</h3>
+            <h3 className="text-xl font-black mb-2"><T>Verified Landlords for Safe Transacting</T></h3>
             <p className="text-zinc-400 leading-relaxed">
-              In iReside, to maintain the safety of the ecosystem, landlord users undergo screening administered completely by platform administrators. Once proven verified, landlords have the authority to manage their own custom standards and manually screen tenants under their criteria—giving private owners full autonomy while blocking malicious actors from entering the system.
+              <T>In iReside, to maintain the safety of the ecosystem, landlord users undergo screening administered completely by platform administrators. Once proven verified, landlords have the authority to manage their own custom standards and manually screen tenants under their criteria—giving private owners full autonomy while blocking malicious actors from entering the system.</T>
             </p>
           </div>
         </div>
@@ -163,7 +162,7 @@ export default function FeaturesPage() {
       <div className="flex items-center justify-end pt-8">
         <Button className="bg-primary hover:bg-primary-dark text-white rounded-xl h-12 px-8 font-black" asChild>
           <Link href="/docs/getting-started/quick-start">
-            Continue to Quick Start <ArrowRight className="ml-2 size-4" />
+            <T>Continue to Quick Start</T> <ArrowRight className="ml-2 size-4" />
           </Link>
         </Button>
       </div>

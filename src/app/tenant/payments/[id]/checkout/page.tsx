@@ -17,6 +17,8 @@ import { useFormValidation } from "@/hooks/useFormValidation";
 import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
 import { textRule } from "@/lib/validation/rules";
 import { BILLING_LIMITS } from "@/lib/validation/schemas/billing.schema";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 type InvoiceDetail = NonNullable<Awaited<ReturnType<typeof import("@/lib/billing/server").getInvoiceDetailForActor>>>;
 
@@ -428,6 +430,7 @@ function buildSelectivePreviewInvoice(invoiceId: string): InvoiceDetail {
 }
 
 function CheckoutPageContent() {
+    const { t } = useLanguageContext();
     const params = useParams();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -525,10 +528,10 @@ function CheckoutPageContent() {
     const paymentForm = useFormValidation(paymentValues, {
         referenceNumber: (value) => {
             if (method !== "gcash") return undefined;
-            if (!String(value ?? "").trim()) return "Reference number is required for GCash submissions.";
+            if (!String(value ?? "").trim()) return t("Reference number is required for GCash submissions.");
             return textRule(value, { label: "Reference number", max: BILLING_LIMITS.reference });
         },
-        receipt: (value) => (method === "gcash" && !value ? "A clear payment proof image is required." : undefined),
+        receipt: (value) => (method === "gcash" && !value ? t("A clear payment proof image is required.") : undefined),
         note: (value) => textRule(value, { label: "Note", max: BILLING_LIMITS.paymentNote }),
     });
 
@@ -579,7 +582,7 @@ function CheckoutPageContent() {
             `Offline GCash payment for Invoice #${invoice.invoiceNumber}`
         );
 
-        toast.success("Payment proof saved offline! It will submit to your Landlord automatically once online.");
+        toast.success(t("Payment proof saved offline! It will submit to your Landlord automatically once online."));
     };
 
     const submitPayment = async () => {
@@ -633,7 +636,7 @@ function CheckoutPageContent() {
                 // show why instead of queueing a request that can never succeed.
                 const data = await response.json().catch(() => ({}));
                 paymentForm.setServerErrors(data?.fieldErrors);
-                toast.error(data?.error || "Your payment could not be submitted. Check the details and try again.");
+                toast.error(tr(data?.error || t("Your payment could not be submitted. Check the details and try again.")));
                 return;
             }
 
@@ -671,7 +674,7 @@ function CheckoutPageContent() {
             });
             if (!response.ok) {
                 const data = await response.json().catch(() => ({}));
-                toast.error(data?.error || "Could not notify your landlord. Please try again.");
+                toast.error(tr(data?.error || t("Could not notify your landlord. Please try again.")));
                 return;
             }
             const payload = await response.json();
@@ -691,7 +694,7 @@ function CheckoutPageContent() {
     };
 
     if (loading) {
-        return <div className="flex min-h-[60vh] items-center justify-center text-foreground"><Loader2 className="mr-3 size-5 animate-spin" />Loading invoice checkout...</div>;
+        return <div className="flex min-h-[60vh] items-center justify-center text-foreground"><Loader2 className="mr-3 size-5 animate-spin" />{t("Loading invoice checkout...")}</div>;
     }
 
     if (!invoice) {
@@ -700,22 +703,22 @@ function CheckoutPageContent() {
                 <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
                     <AlertCircle className="size-7" />
                 </div>
-                <h2 className="text-xl font-black text-foreground">Invoice Unavailable</h2>
+                <h2 className="text-xl font-black text-foreground">{t("Invoice Unavailable")}</h2>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    This billing record could not be loaded or may have already been settled. You can check your active balance and payment history in the Finance Hub.
+                    {t("This billing record could not be loaded or may have already been settled. You can check your active balance and payment history in the Finance Hub.")}
                 </p>
                 <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
                     <Link
                         href="/tenant/payments"
                         className="w-full sm:w-auto rounded-2xl px-6 py-3 text-xs font-black uppercase tracking-wider neumorphic-primary"
                     >
-                        Go to Finance Hub
+                        {t("Go to Finance Hub")}
                     </Link>
                     <Link
                         href="/tenant/dashboard"
                         className="w-full sm:w-auto rounded-2xl border border-border/70 px-6 py-3 text-xs font-black uppercase tracking-wider text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                     >
-                        Back to Dashboard
+                        {t("Back to Dashboard")}
                     </Link>
                 </div>
             </div>
@@ -731,18 +734,18 @@ function CheckoutPageContent() {
                 <div className="absolute -top-24 -right-24 size-48 bg-emerald-500/10 blur-3xl rounded-full" />
                 <CheckCircle2 className={cn("mx-auto mb-5 size-12", isSettled ? "text-emerald-400" : "text-amber-400")} />
                 <h1 className="text-3xl font-black text-foreground">
-                    {isSettled ? "Invoice already paid" : "Payment submitted for review"}
+                    {isSettled ? t("Invoice already paid") : t("Payment submitted for review")}
                 </h1>
                 <p className="mt-3 text-sm leading-6 text-muted-foreground">
                     {isSettled
-                        ? "This transaction has been successfully settled and confirmed by your landlord. You can view the receipt in your payment history."
+                        ? t("This transaction has been successfully settled and confirmed by your landlord. You can view the receipt in your payment history.")
                         : invoice.status === "awaiting_in_person"
-                            ? "You've notified your landlord of an in-person payment. Once they confirm receipt of the cash, this invoice will be marked as paid."
-                            : "Your landlord has the proof, reference details, and invoice context. We kept the billing record open until they confirm the payment."}
+                            ? t("You've notified your landlord of an in-person payment. Once they confirm receipt of the cash, this invoice will be marked as paid.")
+                            : t("Your landlord has the proof, reference details, and invoice context. We kept the billing record open until they confirm the payment.")}
                 </p>
                 <div className="mt-6 flex justify-center gap-3">
-                    <Link href="/tenant/payments" className="rounded-2xl border border-border px-5 py-3 text-sm font-black text-foreground transition hover:bg-muted">Back to payments</Link>
-                    <Link href="/tenant/dashboard" className="rounded-2xl px-5 py-3 text-sm font-black transition hover:bg-primary/90 neumorphic-primary">Go to dashboard</Link>
+                    <Link href="/tenant/payments" className="rounded-2xl border border-border px-5 py-3 text-sm font-black text-foreground transition hover:bg-muted">{t("Back to payments")}</Link>
+                    <Link href="/tenant/dashboard" className="rounded-2xl px-5 py-3 text-sm font-black transition hover:bg-primary/90 neumorphic-primary">{t("Go to dashboard")}</Link>
                 </div>
             </div>
         );
@@ -763,13 +766,13 @@ function CheckoutPageContent() {
                         <div className="flex items-center gap-4">
                             <button 
                                 onClick={() => back()} 
-                                className="group flex size-10 items-center justify-center rounded-full text-foreground transition-all hover:bg-muted hover:scale-105 active:scale-95 neumorphic-inset-card"
+                                aria-label={t("Back")} className="group flex size-10 items-center justify-center rounded-full text-foreground transition-all hover:bg-muted hover:scale-105 active:scale-95 neumorphic-inset-card"
                             >
                                 <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
                             </button>
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Checkout Hub</p>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{t("Checkout Hub")}</p>
                                     <span className="size-1 rounded-full bg-border" />
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{invoice.property?.name}</p>
                                 </div>
@@ -797,8 +800,8 @@ function CheckoutPageContent() {
                                     <QrCode className="size-5" />
                                 </div>
                                 <div className="text-left">
-                                    <p className="text-sm font-black tracking-tight">GCash Wallet</p>
-                                    <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Digital Settlement</p>
+                                    <p className="text-sm font-black tracking-tight">{t("GCash Wallet")}</p>
+                                    <p className="text-[9px] font-black uppercase tracking-widest opacity-60">{t("Digital Settlement")}</p>
                                 </div>
                                 {method === "gcash" && <motion.div layoutId="active-pill" className="absolute inset-0 rounded-[1.7rem] border-2 border-primary/20 pointer-events-none" />}
                             </button>
@@ -817,8 +820,8 @@ function CheckoutPageContent() {
                                     <Wallet className="size-5" />
                                 </div>
                                 <div className="text-left">
-                                    <p className="text-sm font-black tracking-tight">Cash / In-Person</p>
-                                    <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Face-to-Face</p>
+                                    <p className="text-sm font-black tracking-tight">{t("Cash / In-Person")}</p>
+                                    <p className="text-[9px] font-black uppercase tracking-widest opacity-60">{t("Face-to-Face")}</p>
                                 </div>
                                 {method === "cash" && <motion.div layoutId="active-pill" className="absolute inset-0 rounded-[1.7rem] border-2 border-primary/20 pointer-events-none" />}
                             </button>
@@ -845,7 +848,7 @@ function CheckoutPageContent() {
                                                         value={referenceNumber}
                                                         onChange={(event) => setReferenceNumber(event.target.value)}
                                                         className={cn("w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10", paymentForm.errorFor("referenceNumber") && fieldErrorClass)}
-                                                        placeholder="13-digit GCash Ref #"
+                                                        placeholder={t("13-digit GCash Ref #")}
                                                     />
                                                     <FieldError id={paymentForm.errorId("referenceNumber")} message={paymentForm.errorFor("referenceNumber")} />
                                                 </Field>
@@ -860,10 +863,10 @@ function CheckoutPageContent() {
                                                         </div>
                                                         <div className="space-y-1">
                                                             <p className="text-sm font-black text-foreground truncate max-w-[240px]">
-                                                                {receipt ? receipt.name : "Upload Screenshot"}
+                                                                {receipt ? receipt.name : t("Upload Screenshot")}
                                                             </p>
                                                             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                                                JPG, PNG or WebP up to 5MB
+                                                                {t("JPG, PNG or WebP up to 5MB")}
                                                             </p>
                                                         </div>
                                                         <input
@@ -876,7 +879,7 @@ function CheckoutPageContent() {
                                                                 const validFile = handleMediaSelection(event, {
                                                                     preset: "image",
                                                                     maxSizeBytes: 5 * 1024 * 1024,
-                                                                    notify: (message, description) => toast.error(message, { description }),
+                                                                    notify: (message, description) => toast.error(tr(message), { description }),
                                                                 });
                                                                 setReceipt(validFile);
                                                                 paymentForm.touch("receipt");
@@ -889,12 +892,12 @@ function CheckoutPageContent() {
                                         </div>
 
                                         <div className="rounded-[2rem] p-6 backdrop-blur-3xl text-center flex flex-col justify-center neumorphic-panel">
-                                            <p className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-primary">Destination QR</p>
+                                            <p className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-primary">{t("Destination QR")}</p>
                                             <div className="group relative mx-auto mb-6 aspect-square w-full max-w-[200px] overflow-hidden rounded-3xl border border-border/50 bg-white p-3 shadow-md transition-all hover:scale-[1.02]">
                                                 {invoice.paymentDestination?.qr_image_url ? (
                                                     <Image 
                                                         src={invoice.paymentDestination.qr_image_url} 
-                                                        alt="Destination QR" 
+                                                        alt={t("Destination QR")} 
                                                         width={300} 
                                                         height={300} 
                                                         className="h-full w-full object-cover rounded-2xl"
@@ -906,7 +909,7 @@ function CheckoutPageContent() {
                                                 )}
                                             </div>
                                             <div className="space-y-1">
-                                                <p className="text-sm font-black text-foreground truncate">{invoice.paymentDestination?.account_name || "Landlord Wallet"}</p>
+                                                <p className="text-sm font-black text-foreground truncate">{invoice.paymentDestination?.account_name || t("Landlord Wallet")}</p>
                                                 <p className="text-[11px] font-black tracking-[0.1em] text-primary">{invoice.paymentDestination?.account_number || "---"}</p>
                                             </div>
                                         </div>
@@ -920,7 +923,7 @@ function CheckoutPageContent() {
                                                 value={note} 
                                                 onChange={(event) => setNote(event.target.value)} 
                                                 className="w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10" 
-                                                placeholder="Add a comment for the landlord..." 
+                                                placeholder={t("Add a comment for the landlord...")} 
                                             />
                                         </Field>
                                     </div>
@@ -937,18 +940,18 @@ function CheckoutPageContent() {
                                         <div className="md:col-span-2 rounded-[2rem] border border-amber-500/20 bg-amber-500/5 p-8 shadow-xl backdrop-blur-3xl h-full flex flex-col justify-center">
                                             <div className="flex items-center gap-3 text-lg font-black text-foreground">
                                                 <HandCoins className="size-6 text-amber-500" />
-                                                In-Person Settlement
+                                                {t("In-Person Settlement")}
                                             </div>
                                             <p className="mt-4 text-sm leading-relaxed text-muted-foreground font-medium max-w-2xl">
-                                                Coordinate with your landlord or building manager to settle this invoice via cash. Once paid, trigger the intent below so they can officially confirm the receipt.
+                                                {t("Coordinate with your landlord or building manager to settle this invoice via cash. Once paid, trigger the intent below so they can officially confirm the receipt.")}
                                             </p>
                                             
                                             {inPersonTriggered ? (
                                                 <div className="mt-8 flex items-center gap-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-5 text-emerald-600 dark:text-emerald-400 self-start">
                                                     <CheckCircle2 className="size-5 shrink-0" />
                                                     <div className="text-sm">
-                                                        <p className="font-black">Intent Successfully Triggered</p>
-                                                        <p className="opacity-80">Waiting for landlord to confirm your cash payment.</p>
+                                                        <p className="font-black">{t("Intent Successfully Triggered")}</p>
+                                                        <p className="opacity-80">{t("Waiting for landlord to confirm your cash payment.")}</p>
                                                     </div>
                                                 </div>
                                             ) : (
@@ -959,7 +962,7 @@ function CheckoutPageContent() {
                                                         className="inline-flex items-center justify-center gap-3 rounded-full bg-amber-500 px-8 py-4 text-sm font-black text-white transition-all hover:bg-amber-600 hover:scale-[1.02] active:scale-95 shadow-lg shadow-amber-500/20 disabled:opacity-60"
                                                     >
                                                         {submitting ? <Loader2 className="size-5 animate-spin" /> : <Wallet className="size-5" />}
-                                                        Notify Landlord of Payment
+                                                        {t("Notify Landlord of Payment")}
                                                     </button>
                                                 </div>
                                             )}
@@ -974,7 +977,7 @@ function CheckoutPageContent() {
                                                 value={note} 
                                                 onChange={(event) => setNote(event.target.value)} 
                                                 className="w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10" 
-                                                placeholder="Add a comment for the landlord..." 
+                                                placeholder={t("Add a comment for the landlord...")} 
                                             />
                                         </Field>
                                     </div>
@@ -990,7 +993,7 @@ function CheckoutPageContent() {
                     <section className="rounded-[2.5rem] p-8 backdrop-blur-2xl neumorphic-panel">
                         <div className="flex items-center gap-3 mb-6">
                             <Receipt className="size-5 text-primary" />
-                            <h2 className="text-lg font-black text-foreground tracking-tight">Invoice Summary</h2>
+                            <h2 className="text-lg font-black text-foreground tracking-tight">{t("Invoice Summary")}</h2>
                         </div>
 
                         <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
@@ -1020,7 +1023,7 @@ function CheckoutPageContent() {
                                                     "text-[9px] font-black uppercase tracking-widest",
                                                     isAlreadyPaid ? "text-emerald-500" : "text-amber-500"
                                                 )}>
-                                                    {isAlreadyPaid ? "Already Paid" : "Under Review"}
+                                                    {isAlreadyPaid ? t("Already Paid") : t("Under Review")}
                                                 </p>
                                             </div>
                                             <span className="text-xs font-black text-foreground line-through opacity-50">{formatPhpCurrency(item.amount)}</span>
@@ -1055,7 +1058,7 @@ function CheckoutPageContent() {
                                         )}
                                         <div className="flex-1 min-w-0">
                                             <p className="text-xs font-black text-foreground truncate">{item.label}</p>
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{item.category}</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{t(item.category.charAt(0).toUpperCase() + item.category.slice(1).replace(/_/g, " "))}</p>
                                         </div>
                                         <span className="text-xs font-black text-foreground whitespace-nowrap">{formatPhpCurrency(item.amount)}</span>
                                     </div>
@@ -1083,16 +1086,16 @@ function CheckoutPageContent() {
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-black capitalize text-foreground truncate">{reading.utility_type} Consumption</p>
+                                                <p className="text-xs font-black capitalize text-foreground truncate">{t(reading.utility_type === "electricity" ? "Electricity Consumption" : reading.utility_type === "water" ? "Water Consumption" : "{type} Consumption", { type: reading.utility_type })}</p>
                                                 <p className={cn(
                                                     "text-[9px] font-black uppercase tracking-widest",
                                                     isAlreadyPaid ? "text-emerald-500" : "text-amber-500"
                                                 )}>
-                                                    {isAlreadyPaid ? "Already Paid" : "Under Review"}
+                                                    {isAlreadyPaid ? t("Already Paid") : t("Under Review")}
                                                 </p>
                                             </div>
                                             <span className="text-xs font-black text-foreground line-through opacity-50">
-                                                {reading.billing_mode === "included_in_rent" ? "Bundled" : formatPhpCurrency(reading.computed_charge)}
+                                                {reading.billing_mode === "included_in_rent" ? t("Bundled") : formatPhpCurrency(reading.computed_charge)}
                                             </span>
                                         </div>
                                     );
@@ -1124,14 +1127,14 @@ function CheckoutPageContent() {
                                             </div>
                                         )}
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-black capitalize text-foreground truncate">{reading.utility_type} Consumption</p>
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Usage: {reading.usage} Units</p>
+                                            <p className="text-xs font-black capitalize text-foreground truncate">{t(reading.utility_type === "electricity" ? "Electricity Consumption" : reading.utility_type === "water" ? "Water Consumption" : "{type} Consumption", { type: reading.utility_type })}</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{t("Usage: {count} Units", { count: reading.usage })}</p>
                                         </div>
                                         <span className={cn(
                                             "text-xs font-black whitespace-nowrap",
                                             reading.billing_mode === "included_in_rent" ? "text-primary/60" : "text-foreground"
                                         )}>
-                                            {reading.billing_mode === "included_in_rent" ? "Bundled" : formatPhpCurrency(reading.computed_charge)}
+                                            {reading.billing_mode === "included_in_rent" ? t("Bundled") : formatPhpCurrency(reading.computed_charge)}
                                         </span>
                                     </div>
                                 );
@@ -1145,19 +1148,19 @@ function CheckoutPageContent() {
                                         <div className="flex flex-col mb-2">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest line-through decoration-muted-foreground/50">
-                                                    Original Total: {formatPhpCurrency(invoice.totalAmount)}
+                                                    {t("Original Total: {amount}", { amount: formatPhpCurrency(invoice.totalAmount) })}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <div className="size-1 rounded-full bg-emerald-500" />
                                                 <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">
-                                                    Paid to Date: {formatPhpCurrency(invoice.paidAmount)}
+                                                    {t("Paid to Date: {amount}", { amount: formatPhpCurrency(invoice.paidAmount) })}
                                                 </span>
                                             </div>
                                         </div>
                                     )}
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                                        {amountDue < (invoice.paidAmount > 0 ? invoice.balanceRemaining : invoice.totalAmount) ? "Selection Total" : (invoice.paidAmount > 0 ? "Remaining Balance" : "Total Amount Due")}
+                                        {amountDue < (invoice.paidAmount > 0 ? invoice.balanceRemaining : invoice.totalAmount) ? t("Selection Total") : (invoice.paidAmount > 0 ? t("Remaining Balance") : t("Total Amount Due"))}
                                     </p>
                                     <p className={cn(
                                         "text-3xl font-black tracking-tighter",
@@ -1167,14 +1170,14 @@ function CheckoutPageContent() {
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Due Date</p>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t("Due Date")}</p>
                                     <p className="text-xs font-black text-foreground">{formatDateLong(invoice.dueDate)}</p>
                                 </div>
                             </div>
                             
                             {amountDue === 0 && (
                                 <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider">
-                                    <Info className="size-3.5" /> Select at least one item to pay
+                                    <Info className="size-3.5" /> {t("Select at least one item to pay")}
                                 </div>
                             )}
 
@@ -1190,22 +1193,22 @@ function CheckoutPageContent() {
                                     )}
                                 >
                                     {submitting ? <Loader2 className="size-5 animate-spin" /> : <ShieldCheck className="size-5 transition-transform group-hover:scale-110" />}
-                                    Confirm & Settle Now
+                                    {t("Confirm & Settle Now")}
                                 </button>
                             )}
 
                             <p className="text-[9px] text-center text-muted-foreground font-medium uppercase tracking-widest leading-relaxed">
-                                Secure processing provided by iReside. <br/>All payments are subject to landlord review.
+                                {t("Secure processing provided by iReside.")} <br/>{t("All payments are subject to landlord review.")}
                             </p>
                         </div>
                     </section>
 
                     {/* Support Link */}
                     <div className="rounded-[2rem] p-6 text-center neumorphic-inset">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">Having Trouble?</p>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">{t("Having Trouble?")}</p>
                         <Link href="/tenant/messages" className="text-xs font-black text-primary hover:underline flex items-center justify-center gap-1.5">
                             <HelpCircle className="size-3.5" />
-                            Contact Property Manager
+                            {t("Contact Property Manager")}
                         </Link>
                     </div>
                 </aside>
@@ -1215,15 +1218,17 @@ function CheckoutPageContent() {
 }
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
-    return <label className="block space-y-2.5"><span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{label}</span>{children}</label>;
+    const { t } = useLanguageContext();
+    return <label className="block space-y-2.5"><span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t(label)}</span>{children}</label>;
 }
 
 export default function CheckoutPage() {
+    const { t } = useLanguageContext();
     return (
         <Suspense fallback={
             <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-foreground">
                 <Loader2 className="size-6 animate-spin text-primary" />
-                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Loading invoice checkout...</p>
+                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t("Loading invoice checkout...")}</p>
             </div>
         }>
             <CheckoutPageContent />

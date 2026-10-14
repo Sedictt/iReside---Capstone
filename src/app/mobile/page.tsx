@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import { useLanguageContext } from '@/context/LanguageContext'
 
 /**
  * /mobile root — immediately redirects to the correct role-based home screen.
@@ -12,6 +13,7 @@ import { useAuth } from '@/context/AuthContext'
 export default function MobileRootPage() {
     const { profile, loading } = useAuth()
     const router = useRouter()
+    const { t } = useLanguageContext()
 
     useEffect(() => {
         if (loading) return
@@ -36,7 +38,7 @@ export default function MobileRootPage() {
             <div
                 className="w-10 h-10 rounded-full border-2 border-muted border-t-[#5e9a7a] animate-spin"
                 role="status"
-                aria-label="Redirecting…"
+                aria-label={t('Redirecting…')}
             />
         </div>
     )

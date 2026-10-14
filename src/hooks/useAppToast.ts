@@ -2,24 +2,25 @@
 
 import { toast } from "sonner";
 import { playSound } from "@/hooks/useSound";
+import { tr } from "@/hooks/useLanguage";
 
 export function useAppToast() {
     return {
         success: (message: string, options?: any) => {
             playSound("success");
-            return toast.success(message, options);
+            return toast.success(tr(message), options);
         },
         error: (message: string, options?: any) => {
             playSound("error");
-            return toast.error(message, options);
+            return toast.error(tr(message), options);
         },
         info: (message: string, options?: any) => {
             // Optional: info sound
-            return toast.info(message, options);
+            return toast.info(tr(message), options);
         },
         warning: (message: string, options?: any) => {
             playSound("error", 0.3); // Subtle error sound for warnings
-            return toast.warning(message, options);
+            return toast.warning(tr(message), options);
         },
         promise: <T>(promise: Promise<T>, options: {
             loading: string;

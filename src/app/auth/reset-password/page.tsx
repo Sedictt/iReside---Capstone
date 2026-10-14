@@ -16,11 +16,14 @@ import { useState, Suspense, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { updateTenantPassword } from "@/lib/supabase/client-auth";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { useLanguageContext } from "@/context/LanguageContext";
 import { useRouter } from "next/navigation";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
 import { cn } from "@/lib/utils";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { confirmMatchRule, newPasswordRule, PASSWORD_MAX_LENGTH } from "@/lib/validation/rules";
+import { tr } from "@/hooks/useLanguage";
 
 function ResetPasswordContent() {
     const [newPassword, setNewPassword] = useState("");
@@ -38,6 +41,7 @@ function ResetPasswordContent() {
     const [countdown, setCountdown] = useState(3);
     const [mounted, setMounted] = useState(false);
     const router = useRouter();
+    const { t } = useLanguageContext();
 
     // Same new-password policy as setup, settings and the OTP reset flow.
     const form = useFormValidation(
@@ -48,8 +52,8 @@ function ResetPasswordContent() {
         },
     );
     const fieldErrors = {
-        newPassword: form.errorFor("newPassword"),
-        confirmPassword: form.errorFor("confirmPassword"),
+        newPassword: form.errorFor("newPassword") ? t(form.errorFor("newPassword")!) : undefined,
+        confirmPassword: form.errorFor("confirmPassword") ? t(form.errorFor("confirmPassword")!) : undefined,
     };
 
     useEffect(() => {
@@ -122,7 +126,7 @@ function ResetPasswordContent() {
             if (userRole === "tenant") {
                 const result = await updateTenantPassword(newPassword);
                 if (!result.success) {
-                    setError(result.error || "Failed to update password. Please try again.");
+                    setError(tr(result.error || "Failed to update password. Please try again."));
                     setLoading(false);
                     return;
                 }
@@ -132,7 +136,7 @@ function ResetPasswordContent() {
                 });
 
                 if (updateError) {
-                    setError(updateError.message);
+                    setError(tr(updateError.message));
                     setLoading(false);
                     return;
                 }
@@ -175,8 +179,9 @@ function ResetPasswordContent() {
                         className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5"
                     >
                         <ArrowLeft className="size-3.5" />
-                        Back to Login
+                        {t("Back to Login")}
                     </Link>
+                    <LanguageToggle variant="compact" />
                     <ThemeToggle className="rounded-xl border border-border bg-card/80" />
                 </div>
             </header>
@@ -187,7 +192,7 @@ function ResetPasswordContent() {
                     {checkingSession ? (
                         <div className="py-12 flex flex-col items-center justify-center gap-3 text-muted-foreground">
                             <Loader2 className="size-5 animate-spin text-primary" />
-                            <p className="text-xs">Checking authorization...</p>
+                            <p className="text-xs">{t("Checking authorization...")}</p>
                         </div>
                     ) : !hasSession ? (
                         /* Simple Expired Guard */
@@ -197,10 +202,10 @@ function ResetPasswordContent() {
                             </div>
                             <div className="space-y-1">
                                 <h1 className="text-lg font-bold text-foreground">
-                                    Link Expired or Invalid
+                                    {t("Link Expired or Invalid")}
                                 </h1>
                                 <p className="text-xs text-muted-foreground leading-relaxed">
-                                    This link has already been used or has expired.
+                                    {t("This link has already been used or has expired.")}
                                 </p>
                             </div>
                             <div className="pt-2">
@@ -208,7 +213,7 @@ function ResetPasswordContent() {
                                     href="/forgot-password"
                                     className="inline-flex items-center justify-center w-full h-10 bg-primary text-primary-foreground font-medium rounded-xl text-xs transition-colors hover:bg-primary/90"
                                 >
-                                    Request a new reset link
+                                    {t("Request a new reset link")}
                                 </Link>
                             </div>
                         </div>
@@ -218,10 +223,10 @@ function ResetPasswordContent() {
                             <div className="space-y-4 py-1">
                                 <div className="space-y-1 text-center sm:text-left">
                                     <h1 className="text-lg font-bold text-foreground">
-                                        Password Set Successfully
+                                        {t("Password Set Successfully")}
                                     </h1>
                                     <p className="text-xs text-muted-foreground">
-                                        Save your single-use security recovery key now before accessing your dashboard.
+                                        {t("Save your single-use security recovery key now before accessing your dashboard.")}
                                     </p>
                                 </div>
 
@@ -229,8 +234,8 @@ function ResetPasswordContent() {
                                     securityKey={securityKey}
                                     isAcknowledged={isAcknowledged}
                                     onToggleAcknowledge={setIsAcknowledged}
-                                    title="Your Security Recovery Key"
-                                    description="This single-use recovery key allows you to regain access to your account if you ever lose access to your email."
+                                    title={t("Your Security Recovery Key")}
+                                    description={t("This single-use recovery key allows you to regain access to your account if you ever lose access to your email.")}
                                 />
 
                                 <button
@@ -242,7 +247,7 @@ function ResetPasswordContent() {
                                     }}
                                     className="w-full h-10 bg-primary text-primary-foreground font-medium rounded-xl text-xs transition-colors hover:bg-primary/90 flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                                 >
-                                    <span>Continue to Dashboard</span>
+                                    <span>{t("Continue to Dashboard")}</span>
                                     <ArrowRight className="size-3.5" />
                                 </button>
                             </div>
@@ -253,10 +258,10 @@ function ResetPasswordContent() {
                                 </div>
                                 <div className="space-y-1">
                                     <h1 className="text-lg font-bold text-foreground">
-                                        Password Updated
+                                        {t("Password Updated")}
                                     </h1>
                                     <p className="text-xs text-muted-foreground">
-                                        Redirecting in {countdown}s...
+                                        {t("Redirecting in {seconds}s...", { seconds: countdown })}
                                     </p>
                                 </div>
                                 <button
@@ -267,7 +272,7 @@ function ResetPasswordContent() {
                                     }}
                                     className="w-full h-10 bg-primary text-primary-foreground font-medium rounded-xl text-xs transition-colors hover:bg-primary/90 flex items-center justify-center gap-1.5 mt-2"
                                 >
-                                    <span>Go to Dashboard</span>
+                                    <span>{t("Go to Dashboard")}</span>
                                     <ArrowRight className="size-3.5" />
                                 </button>
                             </div>
@@ -280,10 +285,10 @@ function ResetPasswordContent() {
                                     <KeyRound className="size-5" />
                                 </div>
                                 <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                                    Set New Password
+                                    {t("Set New Password")}
                                 </h1>
                                 <p className="text-xs text-muted-foreground">
-                                    Choose a new password (at least 8 characters, with letters and a number or symbol).
+                                    {t("Choose a new password (at least 8 characters, with letters and a number or symbol).")}
                                 </p>
                             </div>
 
@@ -293,7 +298,7 @@ function ResetPasswordContent() {
                                     className="p-3 rounded-xl bg-red-500/10 border border-red-500/25 flex items-start gap-2 text-red-600 dark:text-red-400 text-xs"
                                 >
                                     <AlertCircle className="size-4 shrink-0 mt-0.5" />
-                                    <p className="font-medium leading-relaxed">{error}</p>
+                                    <p className="font-medium leading-relaxed">{t(error)}</p>
                                 </div>
                             )}
 
@@ -303,7 +308,7 @@ function ResetPasswordContent() {
                                         htmlFor="new-password"
                                         className={cn("block text-xs font-medium transition-colors", fieldErrors.newPassword ? "text-red-600 dark:text-red-400" : "text-foreground")}
                                     >
-                                        New Password
+                                        {t("New Password")}
                                     </label>
                                     <div className="relative flex items-center">
                                         <input
@@ -326,7 +331,7 @@ function ResetPasswordContent() {
                                             type="button"
                                             onClick={() => setIsPasswordVisible(!isPasswordVisible)}
                                             className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-                                            aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+                                            aria-label={isPasswordVisible ? t("Hide password") : t("Show password")}
                                         >
                                             {isPasswordVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                         </button>
@@ -344,7 +349,7 @@ function ResetPasswordContent() {
                                         htmlFor="confirm-password"
                                         className={cn("block text-xs font-medium transition-colors", fieldErrors.confirmPassword ? "text-red-600 dark:text-red-400" : "text-foreground")}
                                     >
-                                        Confirm Password
+                                        {t("Confirm Password")}
                                     </label>
                                     <div className="relative flex items-center">
                                         <input
@@ -367,7 +372,7 @@ function ResetPasswordContent() {
                                             type="button"
                                             onClick={() => setIsConfirmVisible(!isConfirmVisible)}
                                             className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-                                            aria-label={isConfirmVisible ? "Hide password" : "Show password"}
+                                            aria-label={isConfirmVisible ? t("Hide password") : t("Show password")}
                                         >
                                             {isConfirmVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                         </button>
@@ -388,10 +393,10 @@ function ResetPasswordContent() {
                                     {loading ? (
                                         <>
                                             <Loader2 className="size-4 animate-spin" />
-                                            <span>Updating...</span>
+                                            <span>{t("Updating...")}</span>
                                         </>
                                     ) : (
-                                        <span>Update Password</span>
+                                        <span>{t("Update Password")}</span>
                                     )}
                                 </button>
                             </form>
@@ -404,9 +409,9 @@ function ResetPasswordContent() {
             <footer className="w-full max-w-lg mx-auto py-6 flex items-center justify-between text-xs text-muted-foreground/70">
                 <p>&copy; {new Date().getFullYear()} iReside</p>
                 <div className="flex items-center gap-4">
-                    <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-                    <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-                    <Link href="/help" className="hover:text-foreground transition-colors">Help</Link>
+                    <Link href="/privacy" className="hover:text-foreground transition-colors">{t("Privacy")}</Link>
+                    <Link href="/terms" className="hover:text-foreground transition-colors">{t("Terms")}</Link>
+                    <Link href="/help" className="hover:text-foreground transition-colors">{t("Help")}</Link>
                 </div>
             </footer>
         </div>

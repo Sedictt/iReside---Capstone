@@ -15,6 +15,7 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 ChartJS.register(
     CategoryScale,
@@ -40,6 +41,7 @@ type FinancialPerformanceChartProps = {
 };
 
 export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformanceChartProps) {
+    const { t } = useLanguageContext();
     const [activeTab, setActiveTab] = useState<"earnings" | "expenses" | "netIncome">("earnings");
     const { resolvedTheme } = useTheme();
     const isDark = resolvedTheme !== "light";
@@ -48,9 +50,9 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
 
     // Keep KPI terminology consistent in both default and simplified views.
     const labels = {
-        earnings: "Total Earnings",
-        expenses: "Expenses",
-        netIncome: "Net Income"
+        earnings: t("Total Earnings"),
+        expenses: t("Expenses"),
+        netIncome: t("Net Income")
     };
 
     // Data structures for different timeframes
@@ -88,10 +90,10 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
     };
 
     const data = {
-        labels: chartData[timeWindow].labels,
+        labels: chartData[timeWindow].labels.map((label) => t(label)),
         datasets: [
             {
-                label: "Amount",
+                label: t("Amount"),
                 data: getCurrentData(),
                 backgroundColor: (context: ScriptableContext<"bar">) => {
                     if (!context.chart.chartArea) return activeTab === "expenses" ? "#ef4444" : activeTab === "netIncome" ? "#3b82f6" : "#c4b0ff";
@@ -255,11 +257,12 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
                     <select
                         value={timeWindow}
                         onChange={(e) => setTimeWindow(e.target.value as "week" | "month" | "year")}
+                        aria-label={t("Time period")}
                         className="neumorphic-inset cursor-pointer appearance-none rounded-xl py-2.5 pl-6 pr-8 text-[10px] font-black uppercase tracking-[0.15em] text-foreground transition-all focus:outline-none min-w-[150px]"
                     >
-                        <option value="week">Weekly</option>
-                        <option value="month">Monthly</option>
-                        <option value="year">Yearly</option>
+                        <option value="week">{t("Weekly")}</option>
+                        <option value="month">{t("Monthly")}</option>
+                        <option value="year">{t("Yearly")}</option>
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground/40 group-hover/select:text-primary transition-colors">
                         <ChevronDown className="size-3.5" />

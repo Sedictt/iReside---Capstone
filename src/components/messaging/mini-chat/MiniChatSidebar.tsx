@@ -13,6 +13,7 @@ import { getSafeAvatarBgColor } from "@/lib/constants";
 import type { MiniChatContact } from "./types";
 import type { MiniChatController } from "./useMiniChat";
 import { getInitials } from "./utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export const SIDEBAR_EXPANDED_WIDTH_PX = 320;
 export const SIDEBAR_COLLAPSED_WIDTH_PX = 88;
@@ -42,6 +43,7 @@ function ConversationRow({
     isOpen: boolean;
     onOpen: () => void;
 }) {
+    const { t } = useLanguageContext();
     const avatar = (
         <ProfileCardTrigger
             userId={conversation.participantUserId ?? ""}
@@ -71,7 +73,7 @@ function ConversationRow({
                     <button
                         type="button"
                         onClick={onOpen}
-                        aria-label={`Open chat with ${conversation.name}${conversation.unread ? `, ${conversation.unreadCount} unread` : ""}`}
+                        aria-label={conversation.unread ? t("Open chat with {name}, {count} unread", { name: conversation.name, count: conversation.unreadCount }) : t("Open chat with {name}", { name: conversation.name })}
                         className={cn(
                             "rounded-full p-0.5 transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
                             isOpen && "ring-2 ring-primary/50"
@@ -90,7 +92,7 @@ function ConversationRow({
                 type="button"
                 onClick={onOpen}
                 data-open={isOpen ? "true" : "false"}
-                aria-label={`Open chat with ${conversation.name}`}
+                aria-label={t("Open chat with {name}", { name: conversation.name })}
                 className={cn(
                     "group flex w-full items-center gap-3 rounded-2xl p-2.5 text-left transition-colors",
                     "hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
@@ -138,6 +140,7 @@ export function MiniChatSidebar({ controller, onExpandedChange, renderLeading, d
         startConversationWithUser,
     } = controller;
 
+    const { t } = useLanguageContext();
     const [isHovered, setIsHovered] = useState(false);
     const [isFocusWithin, setIsFocusWithin] = useState(false);
     const trimmedQuery = searchQuery.trim();
@@ -161,7 +164,7 @@ export function MiniChatSidebar({ controller, onExpandedChange, renderLeading, d
     return (
         <aside
             data-tour-id={dataTourId}
-            aria-label="Messages"
+            aria-label={t("Messages")}
             className={cn(
                 "fixed right-0 top-0 z-50 hidden h-full flex-col overflow-hidden border-l border-border bg-card text-foreground md:flex",
                 "transition-[width] duration-500 ease-in-out",
@@ -189,11 +192,11 @@ export function MiniChatSidebar({ controller, onExpandedChange, renderLeading, d
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <MessageSquare className="size-4 text-primary" aria-hidden="true" />
-                                <h2 className="text-sm font-bold tracking-tight text-foreground">Messages</h2>
+                                <h2 className="text-sm font-bold tracking-tight text-foreground">{t("Messages")}</h2>
                             </div>
                             {hasUnreadConversations && (
                                 <span className="rounded-full border border-red-500/20 bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-500">
-                                    New
+                                    {t("New")}
                                 </span>
                             )}
                         </div>
@@ -208,15 +211,15 @@ export function MiniChatSidebar({ controller, onExpandedChange, renderLeading, d
                                 maxLength={60}
                                 value={searchQuery}
                                 onChange={(event) => setSearchQuery(event.target.value)}
-                                placeholder="Search messages or people…"
-                                aria-label="Search messages or people"
+                                placeholder={t("Search messages or people…")}
+                                aria-label={t("Search messages or people")}
                                 className="w-full rounded-xl border border-border/60 bg-muted/60 py-2 pl-9 pr-8 text-xs text-foreground outline-none transition-all placeholder:text-muted-foreground hover:bg-muted focus:border-primary/50 focus:bg-background [&::-webkit-search-cancel-button]:hidden"
                             />
                             {searchQuery && (
                                 <button
                                     type="button"
                                     onClick={clearSearch}
-                                    aria-label="Clear search"
+                                    aria-label={t("Clear search")}
                                     className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                 >
                                     <X className="size-3.5" aria-hidden="true" />
@@ -233,7 +236,7 @@ export function MiniChatSidebar({ controller, onExpandedChange, renderLeading, d
                     {renderLeading && !trimmedQuery && renderLeading({ isExpanded })}
 
                     {isLoadingConversations && conversations.length === 0 && (
-                        <ul className={cn("flex flex-col", isExpanded ? "gap-1" : "items-center gap-3")} aria-label="Loading conversations">
+                        <ul className={cn("flex flex-col", isExpanded ? "gap-1" : "items-center gap-3")} aria-label={t("Loading conversations")}>
                             {Array.from({ length: 4 }).map((_, index) => (
                                 <li key={index} className={cn("flex items-center gap-3", isExpanded ? "p-2.5" : "p-0.5")}>
                                     <Skeleton className="size-10 shrink-0 rounded-full" />
@@ -249,10 +252,10 @@ export function MiniChatSidebar({ controller, onExpandedChange, renderLeading, d
                     )}
 
                     {trimmedQuery && listedConversations.length > 0 && isExpanded && (
-                        <p className="px-2 pb-0.5 pt-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Recent chats</p>
+                        <p className="px-2 pb-0.5 pt-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("Recent chats")}</p>
                     )}
 
-                    <ul className={cn("flex flex-col", isExpanded ? "gap-1" : "items-center gap-3")} aria-label="Conversations">
+                    <ul className={cn("flex flex-col", isExpanded ? "gap-1" : "items-center gap-3")} aria-label={t("Conversations")}>
                         {listedConversations.map((conversation) => (
                             <ConversationRow
                                 key={conversation.id}
@@ -267,12 +270,12 @@ export function MiniChatSidebar({ controller, onExpandedChange, renderLeading, d
                     {isSearchingDirectory && isExpanded && (
                         <div className="mt-2 space-y-1">
                             <div className="flex items-center justify-between px-2 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                                <span>People &amp; directory</span>
+                                <span>{t("People & directory")}</span>
                                 {isSearching && <Loader2 className="size-3 animate-spin" aria-hidden="true" />}
                             </div>
 
                             {isSearching && directoryUsers.length === 0 && (
-                                <p className="animate-pulse px-3 py-2 text-xs text-muted-foreground">Searching users…</p>
+                                <p className="animate-pulse px-3 py-2 text-xs text-muted-foreground">{t("Searching users…")}</p>
                             )}
                             {!isSearching && searchError && (
                                 <p className="px-3 py-2 text-xs font-medium text-red-500">{searchError}</p>
@@ -305,7 +308,7 @@ export function MiniChatSidebar({ controller, onExpandedChange, renderLeading, d
                                             <span className="block truncate text-[10px] text-muted-foreground">{person.email}</span>
                                         </span>
                                         <span className="shrink-0 text-[10px] font-bold text-primary">
-                                            {isStarting ? <Loader2 className="size-3.5 animate-spin" aria-label="Starting chat" /> : "Chat"}
+                                            {isStarting ? <Loader2 className="size-3.5 animate-spin" aria-label={t("Starting chat")} /> : t("Chat")}
                                         </span>
                                     </button>
                                 );
@@ -314,13 +317,13 @@ export function MiniChatSidebar({ controller, onExpandedChange, renderLeading, d
                     )}
 
                     {!isLoadingConversations && !trimmedQuery && conversations.length === 0 && !conversationsError && (
-                        <p className={cn("text-xs text-muted-foreground", isExpanded ? "px-2 pt-2" : "sr-only")}>No conversations yet</p>
+                        <p className={cn("text-xs text-muted-foreground", isExpanded ? "px-2 pt-2" : "sr-only")}>{t("No conversations yet")}</p>
                     )}
 
                     {showNoMatches && isExpanded && (
                         <div className="px-4 py-8 text-center">
-                            <p className="text-xs font-bold text-foreground">No matches found</p>
-                            <p className="mt-0.5 text-[10px] text-muted-foreground">Nothing for &quot;{searchQuery}&quot;</p>
+                            <p className="text-xs font-bold text-foreground">{t("No matches found")}</p>
+                            <p className="mt-0.5 text-[10px] text-muted-foreground">{t("Nothing for \"{query}\"", { query: searchQuery })}</p>
                         </div>
                     )}
 
@@ -330,11 +333,11 @@ export function MiniChatSidebar({ controller, onExpandedChange, renderLeading, d
                             <button
                                 type="button"
                                 onClick={() => void refreshConversations(true)}
-                                aria-label="Retry loading conversations"
+                                aria-label={t("Retry loading conversations")}
                                 className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-semibold hover:bg-red-500/10"
                             >
                                 <RefreshCw className="size-3" aria-hidden="true" />
-                                {isExpanded && "Retry"}
+                                {isExpanded && t("Retry")}
                             </button>
                         </div>
                     )}
@@ -348,7 +351,7 @@ export function MiniChatSidebar({ controller, onExpandedChange, renderLeading, d
                         href={messagesHref}
                         className="flex w-full items-center justify-center rounded-xl border border-primary/30 bg-primary py-3 text-sm font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
                     >
-                        Open full messaging
+                        {t("Open full messaging")}
                     </Link>
                 </div>
             )}

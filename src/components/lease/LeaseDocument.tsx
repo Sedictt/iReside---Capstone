@@ -1,11 +1,15 @@
 import { m as motion } from "framer-motion";
 import { LeaseData } from "@/types/lease";
 import { cn } from "@/lib/utils";
+import { isFixedTerm } from "@/lib/lease-term";
+import { MOVE_OUT_NOTICE_DAYS } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export interface LeaseDocumentProps {
     id: string;
     start_date: string;
-    end_date: string;
+    end_date: string | null;
+    term_type?: string | null;
     monthly_rent: number;
     security_deposit: number;
     signed_at?: string | null;
@@ -43,7 +47,10 @@ export interface LeaseDocumentProps {
     disableAnimation?: boolean;
 }
 
+// The lease body is the legal contract and intentionally stays in English; only
+// assistive (non-printed) text such as image alt labels follows the UI language.
 export function LeaseDocument(leaseDataProps: LeaseDocumentProps) {
+    const { t } = useLanguageContext();
     const {
         id: leaseId,
         landlord,
@@ -51,6 +58,7 @@ export function LeaseDocument(leaseDataProps: LeaseDocumentProps) {
         unit,
         start_date,
         end_date,
+        term_type,
         monthly_rent,
         security_deposit,
         containerId,
@@ -87,7 +95,8 @@ export function LeaseDocument(leaseDataProps: LeaseDocumentProps) {
 
     const term = {
         start: formatDateStr(start_date),
-        end: formatDateStr(end_date)
+        end: end_date ? formatDateStr(end_date) : null,
+        fixed: isFixedTerm({ term_type, end_date }) && Boolean(end_date),
     };
 
     const getOrdinalSuffix = (dayOfMonth: number): string => {
@@ -170,9 +179,15 @@ export function LeaseDocument(leaseDataProps: LeaseDocumentProps) {
                     <h2 className="text-[12px] font-black uppercase tracking-widest text-zinc-950 border-b border-zinc-200 pb-0.5">
                         3. TERM OF LEASE
                     </h2>
-                    <p className="text-zinc-800">
-                        Term begins on <span className="font-black underline">{term.start}</span> and ends on <span className="font-black underline">{term.end}</span>.
-                    </p>
+                    {term.fixed ? (
+                        <p className="text-zinc-800">
+                            Term begins on <span className="font-black underline">{term.start}</span> and ends on <span className="font-black underline">{term.end}</span>.
+                        </p>
+                    ) : (
+                        <p className="text-zinc-800">
+                            This lease begins on <span className="font-black underline">{term.start}</span> and continues on a month-to-month basis with no fixed end date, for as long as rent is paid and the terms herein are observed. Either party may end the tenancy by giving at least <span className="font-black">{MOVE_OUT_NOTICE_DAYS} days</span>&apos; written notice.
+                        </p>
+                    )}
                 </div>
 
                 <div className="space-y-1.5">
@@ -242,7 +257,7 @@ export function LeaseDocument(leaseDataProps: LeaseDocumentProps) {
                                 {leaseDataProps.tenant_signature ? (
                                     <img 
                                         src={leaseDataProps.tenant_signature} 
-                                        alt="Tenant Signature" 
+                                        alt={t("Tenant Signature")} 
                                         className="h-10 max-w-full object-contain" 
                                     />
                                 ) : (
@@ -269,7 +284,7 @@ export function LeaseDocument(leaseDataProps: LeaseDocumentProps) {
                                 {leaseDataProps.landlord_signature ? (
                                     <img 
                                         src={leaseDataProps.landlord_signature} 
-                                        alt="Landlord Signature" 
+                                        alt={t("Landlord Signature")} 
                                         className="h-10 max-w-full object-contain" 
                                     />
                                 ) : (

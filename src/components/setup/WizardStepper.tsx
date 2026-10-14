@@ -3,6 +3,7 @@
 import React from "react";
 import { Check, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export interface StepItem {
   id: number;
@@ -28,31 +29,32 @@ export function WizardStepper({
   timeEstimate = "About 2 minutes left",
   className,
 }: WizardStepperProps) {
+  const { t } = useLanguageContext();
   const progressPercent = Math.round((currentStep / totalSteps) * 100);
 
   return (
     <div
       className={cn("w-full max-w-2xl mx-auto space-y-2 select-none", className)}
       role="region"
-      aria-label="Setup progress"
+      aria-label={t("Setup progress")}
     >
       {/* Top Text Indicator: Step X of Y + Time left */}
       <div className="flex items-center justify-between text-sm sm:text-base font-bold text-foreground">
         <div className="flex items-center gap-2">
           <span className="text-primary font-black text-base sm:text-lg">
-            {`Step ${currentStep} of ${totalSteps}`}
+            {t("Step {current} of {total}", { current: currentStep, total: totalSteps })}
           </span>
           <span className="text-muted-foreground/50 mx-1 hidden sm:inline" aria-hidden="true">
             •
           </span>
           <span className="text-foreground/90 font-bold hidden sm:inline">
-            {steps[currentStep - 1]?.label}
+            {steps[currentStep - 1]?.label ? t(steps[currentStep - 1].label) : null}
           </span>
         </div>
 
         {timeEstimate && (
           <span className="text-xs font-semibold text-muted-foreground bg-muted/60 px-2.5 py-0.5 rounded-full border border-border/60">
-            {timeEstimate}
+            {t(timeEstimate)}
           </span>
         )}
       </div>
@@ -64,7 +66,7 @@ export function WizardStepper({
         aria-valuenow={progressPercent}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuetext={`Step ${currentStep} of ${totalSteps}: ${steps[currentStep - 1]?.label}`}
+        aria-valuetext={`${t("Step {current} of {total}", { current: currentStep, total: totalSteps })}: ${steps[currentStep - 1]?.label ? t(steps[currentStep - 1].label) : ""}`}
       >
         <div
           className="h-full bg-primary rounded-full transition-all duration-300 ease-out"
@@ -73,7 +75,7 @@ export function WizardStepper({
       </div>
 
       {/* Clickable step tabs spanning full width */}
-      <nav aria-label="Completed setup steps" className="pt-1">
+      <nav aria-label={t("Completed setup steps")} className="pt-1">
         <ol className="grid grid-cols-3 gap-2 sm:gap-2.5 w-full">
           {steps.map((st) => {
             const isCurrent = st.id === currentStep;
@@ -87,7 +89,7 @@ export function WizardStepper({
                   disabled={!isAccessible || isCurrent}
                   onClick={() => onStepClick(st.id)}
                   aria-current={isCurrent ? "step" : undefined}
-                  aria-label={`${st.label}${isCompleted ? " (Completed, click to edit)" : ""}`}
+                  aria-label={`${t(st.label)}${isCompleted ? ` ${t("(Completed, click to edit)")}` : ""}`}
                   className={cn(
                     "w-full min-h-[40px] px-2 sm:px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary focus-visible:ring-offset-2",
                     isCurrent
@@ -111,7 +113,7 @@ export function WizardStepper({
                       {st.id}
                     </span>
                   )}
-                  <span className="truncate">{st.label}</span>
+                  <span className="truncate">{t(st.label)}</span>
                 </button>
               </li>
             );

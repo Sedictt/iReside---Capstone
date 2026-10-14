@@ -4,6 +4,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { RenewalStatus } from "@/types/database";
 import { databaseErrorResponse, parseJsonBody } from "@/lib/validation/server";
 import { isId, renewalTermRule, tenantRenewalRequestSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { isFixedTerm, leaseEndDate } from "@/lib/lease-term";
+
+// Not exported: Next.js route modules may only export handlers/config.
+const OPEN_ENDED_RENEWAL_ERROR = "This lease is open-ended and does not need renewal.";
 
 /**
  * POST /api/tenant/lease/[id]/renew
@@ -66,6 +70,13 @@ export async function POST(
       );
     }
 
+    // Only fixed-term leases have a term to renew. Open-ended leases simply
+    // continue while rent is paid and end through the move-out flow.
+    const currentEndDate = leaseEndDate(lease);
+    if (!isFixedTerm(lease) || !currentEndDate) {
+      return NextResponse.json({ error: OPEN_ENDED_RENEWAL_ERROR }, { status: 400 });
+    }
+
     // When the landlord configured specific renewal terms, only those can be requested.
     const property = lease.unit?.property;
     const offeredTerms: number[] = Array.isArray((property?.renewal_settings as any)?.renewal_terms)
@@ -80,7 +91,7 @@ export async function POST(
 
     // Check renewal window is open
     const renewalWindowDays = property?.renewal_window_days || 90;
-    const endDate = new Date(lease.end_date);
+    const endDate = new Date(currentEndDate);
     const windowOpenDate = new Date(endDate);
     windowOpenDate.setDate(windowOpenDate.getDate() - renewalWindowDays);
     const today = new Date();
@@ -122,7 +133,7 @@ export async function POST(
     }
 
     // Calculate proposed dates
-    const proposedStartDate = new Date(lease.end_date);
+    const proposedStartDate = new Date(currentEndDate);
     const proposedEndDate = new Date(proposedStartDate);
     proposedEndDate.setMonth(proposedEndDate.getMonth() + term_months);
 

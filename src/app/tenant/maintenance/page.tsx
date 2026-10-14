@@ -18,6 +18,7 @@ import Link from "next/link";
 import { TenantMaintenanceModal } from "@/components/tenant/maintenance/TenantMaintenanceModal";
 import { ViewToggle } from "@/components/shared/ViewToggle";
 import { useViewMode } from "@/hooks/useViewMode";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type MaintenanceStatus = "Pending" | "Assigned" | "In Progress" | "Resolved";
 type Priority = "Critical" | "High" | "Medium" | "Low";
@@ -43,6 +44,7 @@ interface MaintenanceRequest {
 }
 
 export default function TenantMaintenancePage() {
+    const { t } = useLanguageContext();
     const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -255,29 +257,29 @@ export default function TenantMaintenancePage() {
                 <div className="mb-6 p-4 rounded-2xl flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500 neumorphic-inset">
                     <span className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2">
                         <Zap className="size-4" />
-                        Preview Mode Active
+                        {t("Preview Mode Active")}
                     </span>
                     <div className="flex flex-wrap gap-2">
                         <Link href="/tenant/maintenance?preview=accepted_self_repair" className={cn("text-[10px] sm:text-xs font-black border px-3 py-1.5 rounded-lg transition-colors", previewMode === "accepted_self_repair" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
-                            Self-Repair (Approved)
+                            {t("Self-Repair (Approved)")}
                         </Link>
                         <Link href="/tenant/maintenance?preview=asking_for_photo" className={cn("text-[10px] sm:text-xs font-black border px-3 py-1.5 rounded-lg transition-colors", previewMode === "asking_for_photo" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
-                            Self-Repair (Photo)
+                            {t("Self-Repair (Photo)")}
                         </Link>
                         <Link href="/tenant/maintenance?preview=rejected_self_repair" className={cn("text-[10px] sm:text-xs font-black border px-3 py-1.5 rounded-lg transition-colors", previewMode === "rejected_self_repair" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
-                            Self-Repair (Denied)
+                            {t("Self-Repair (Denied)")}
                         </Link>
                         <Link href="/tenant/maintenance?preview=landlord_repair" className={cn("text-[10px] sm:text-xs font-black border px-3 py-1.5 rounded-lg transition-colors", previewMode === "landlord_repair" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
-                            Landlord Repair
+                            {t("Landlord Repair")}
                         </Link>
                         <Link href="/tenant/maintenance?preview=third_party_repair" className={cn("text-[10px] sm:text-xs font-black border px-3 py-1.5 rounded-lg transition-colors", previewMode === "third_party_repair" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
-                            Third-Party Repair
+                            {t("Third-Party Repair")}
                         </Link>
                         <Link href="/tenant/maintenance?preview=resolved" className={cn("text-[10px] sm:text-xs font-black border px-3 py-1.5 rounded-lg transition-colors", previewMode === "resolved" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:bg-muted")}>
-                            Resolved
+                            {t("Resolved")}
                         </Link>
                         <Link href="/tenant/maintenance" className="text-[10px] sm:text-xs font-black bg-background border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition-colors text-red-500 hover:text-red-600">
-                            Clear Preview
+                            {t("Clear Preview")}
                         </Link>
                     </div>
                 </div>
@@ -287,10 +289,10 @@ export default function TenantMaintenancePage() {
                 <div>
                     <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
                         <Wrench className="size-8 text-primary" />
-                        Maintenance Requests
+                        {t("Maintenance Requests")}
                     </h1>
                     <p className="text-muted-foreground mt-1">
-                        Track and manage repairs for your unit.
+                        {t("Track and manage repairs for your unit.")}
                     </p>
                 </div>
                 <Link
@@ -298,7 +300,7 @@ export default function TenantMaintenancePage() {
                     className="flex items-center gap-2 px-6 py-3 rounded-2xl font-black transition-all active:scale-95 w-fit neumorphic-primary"
                 >
                     <Plus className="size-5" />
-                    New Request
+                    {t("New Request")}
                 </Link>
             </div>
 
@@ -307,18 +309,18 @@ export default function TenantMaintenancePage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                 {/* Filters */}
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar w-full sm:w-auto">
-                    {statusTabs.map((t) => (
+                    {statusTabs.map((tab) => (
                         <button
-                            key={t}
-                            onClick={() => setFilter(t)}
+                            key={tab}
+                            onClick={() => setFilter(tab)}
                             className={cn(
                                 "px-4 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap uppercase tracking-widest",
-                                filter === t
+                                filter === tab
                                     ? "neumorphic-primary"
                                     : "neumorphic-extruded text-muted-foreground hover:text-foreground"
                             )}
                         >
-                            {t}
+                            {t(tab)}
                         </button>
                     ))}
                 </div>
@@ -343,18 +345,18 @@ export default function TenantMaintenancePage() {
             ) : error ? (
                 <div className="rounded-2xl p-8 text-center neumorphic-inset">
                     <AlertTriangle className="size-10 text-red-500 mx-auto mb-4" />
-                    <p className="text-red-500 font-black">{error}</p>
+                    <p className="text-red-500 font-black">{t(error)}</p>
                 </div>
             ) : filteredRequests.length === 0 ? (
                 <div className="rounded-3xl p-12 text-center neumorphic-panel">
                     <div className="size-20 rounded-full flex items-center justify-center mx-auto mb-6 neumorphic-inset-card">
                         <CheckCircle2 className="size-10 text-muted-foreground" />
                     </div>
-                    <h3 className="text-xl font-black mb-2">No requests found</h3>
+                    <h3 className="text-xl font-black mb-2">{t("No requests found")}</h3>
                     <p className="text-muted-foreground max-w-xs mx-auto mb-8">
                         {filter === 'All' 
-                            ? "You haven't submitted any maintenance requests yet."
-                            : `You don't have any requests marked as ${filter.toLowerCase()}.`
+                            ? t("You haven't submitted any maintenance requests yet.")
+                            : t("You don't have any requests marked as {status}.", { status: t(filter).toLowerCase() })
                         }
                     </p>
                     {filter === 'All' && (
@@ -362,7 +364,7 @@ export default function TenantMaintenancePage() {
                             href="/tenant/maintenance/new"
                             className="inline-flex items-center gap-2 text-primary font-black hover:underline"
                         >
-                            Submit your first request
+                            {t("Submit your first request")}
                             <ArrowRight className="size-4" />
                         </Link>
                     )}
@@ -402,6 +404,7 @@ export default function TenantMaintenancePage() {
 }
 
 function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceRequest, onClick?: () => void }) {
+    const { t } = useLanguageContext();
     const isCritical = request.priority === "Critical";
     const isPending = request.status === "Pending";
 
@@ -457,7 +460,7 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
             <div className="p-4 flex flex-col flex-1">
                 {/* Header & Meta */}
                 <div className="flex items-center justify-between mb-2 text-[10px] font-black text-muted-foreground/60 tracking-wider uppercase shrink-0">
-                    <span className="truncate max-w-[120px]">ID: {request.id.split('-')[0]}...</span>
+                    <span className="truncate max-w-[120px]">{t("ID:")} {request.id.split('-')[0]}...</span>
                 </div>
 
                 {/* Title */}
@@ -487,13 +490,13 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
                 {request.photoRequested && request.status === "In Progress" && (!request.tenantProvidedPhotos || request.tenantProvidedPhotos.length === 0) && (
                     <div className="mb-4 shrink-0 flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-lg w-fit">
                         <div className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
-                        <span className="text-xs font-black text-amber-700 dark:text-amber-400">Action Required: Upload Photo</span>
+                        <span className="text-xs font-black text-amber-700 dark:text-amber-400">{t("Action Required: Upload Photo")}</span>
                     </div>
                 )}
                 {request.repairMethod === "third_party" && request.status === "In Progress" && request.tenantRepairStatus === "done" && (!request.tenantProvidedPhotos || request.tenantProvidedPhotos.length === 0) && (
                     <div className="mb-4 shrink-0 flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-lg w-fit">
                         <div className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
-                        <span className="text-xs font-black text-amber-700 dark:text-amber-400">Action Required: Upload Photo</span>
+                        <span className="text-xs font-black text-amber-700 dark:text-amber-400">{t("Action Required: Upload Photo")}</span>
                     </div>
                 )}
 
@@ -510,7 +513,7 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
                         }}
                         className="text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 whitespace-nowrap group/btn active:scale-95 neumorphic-primary"
                     >
-                        Details
+                        {t("Details")}
                         <ArrowRight className="size-3.5 transition-transform group-hover/btn:translate-x-0.5" />
                     </button>
                 </div>
@@ -525,6 +528,7 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
 }
 
 function TenantMaintenanceListRow({ request, onClick }: { request: MaintenanceRequest, onClick?: () => void }) {
+    const { t } = useLanguageContext();
     const isCritical = request.priority === "Critical";
     const isPending = request.status === "Pending";
 
@@ -580,7 +584,7 @@ function TenantMaintenanceListRow({ request, onClick }: { request: MaintenanceRe
                     {request.photoRequested && request.status === "In Progress" && (!request.tenantProvidedPhotos || request.tenantProvidedPhotos.length === 0) && (
                         <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg">
                             <div className="size-1 rounded-full bg-amber-500 animate-pulse" />
-                            <span className="text-[9px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-tighter">Photo Needed</span>
+                            <span className="text-[9px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-tighter">{t("Photo Needed")}</span>
                         </div>
                     )}
                     
@@ -610,6 +614,7 @@ function TenantMaintenanceListRow({ request, onClick }: { request: MaintenanceRe
 }
 
 function PriorityBadge({ priority }: { priority: Priority }) {
+    const { t } = useLanguageContext();
     const config = {
         Critical: "bg-red-500 text-white border-red-400 shadow-sm",
         High: "bg-orange-500/90 backdrop-blur-md text-white border-orange-400/50 shadow-sm",
@@ -623,12 +628,13 @@ function PriorityBadge({ priority }: { priority: Priority }) {
             config[priority]
         )}>
             {priority === "Critical" && <AlertTriangle className="size-3" />}
-            {priority} Priority
+            {t("{priority} Priority", { priority: t(priority) })}
         </span>
     );
 }
 
 function StatusBadge({ status, tenantRepairStatus, isSelfRepair }: { status: MaintenanceStatus, tenantRepairStatus?: string, isSelfRepair?: boolean }) {
+    const { t } = useLanguageContext();
     const config = {
         Pending: "bg-amber-500 text-black border-amber-400 shadow-sm",
         Assigned: "bg-cyan-500/90 backdrop-blur-md text-white border-cyan-400/50 shadow-sm",
@@ -657,7 +663,7 @@ function StatusBadge({ status, tenantRepairStatus, isSelfRepair }: { status: Mai
             "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider",
             customClass
         )}>
-            {displayStatus}
+            {t(displayStatus)}
         </span>
     );
 }

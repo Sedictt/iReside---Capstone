@@ -265,9 +265,8 @@ export async function POST(
     const property = unit?.property || unit?.properties as any;
     const contractTemplate = property?.contract_template || {};
 
+    // Auto-created leases are open-ended (no fixed end date).
     const startDate = new Date().toISOString().split('T')[0];
-    const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + 12);
 
     // Use default values since financial data isn't stored in applications table
     const monthlyRent = 0; // Will be updated later if needed
@@ -281,7 +280,8 @@ export async function POST(
         landlord_id: userId,
         status: "pending_signature",
         start_date: startDate,
-        end_date: endDate.toISOString().split('T')[0],
+        term_type: "open_ended",
+        end_date: null,
         monthly_rent: monthlyRent,
         security_deposit: securityDeposit,
         terms: contractTemplate,

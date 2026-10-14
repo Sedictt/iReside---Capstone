@@ -25,6 +25,15 @@ import { cn } from "@/lib/utils";
 import { RoleBadge, type BadgeRole } from "@/components/profile/RoleBadge";
 import type { ContactItem } from "@/components/landlord/messages/types";
 import type { PaymentHistoryEntry } from "@/lib/messages/client";
+import { useLanguageContext } from "@/context/LanguageContext";
+
+const STATUS_FILTER_LABELS: Record<string, string> = {
+    all: "All",
+    paid: "Paid",
+    pending: "Pending",
+    failed: "Failed",
+    refunded: "Refunded",
+};
 
 interface PaymentHistoryModalProps {
     isOpen: boolean;
@@ -48,40 +57,41 @@ function getMethodIcon(methodLabel: string = "") {
     return <Wallet className="size-3.5 text-primary" />;
 }
 
-function getStatusBadge(statusTone: PaymentHistoryEntry["statusTone"], statusLabel: string) {
+function getStatusBadge(statusTone: PaymentHistoryEntry["statusTone"], rawStatusLabel: string, t: (phrase: string) => string) {
+    const statusLabel = rawStatusLabel ? t(rawStatusLabel) : "";
     switch (statusTone) {
         case "paid":
             return (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                     <CheckCircle2 className="size-3" />
-                    {statusLabel || "Paid"}
+                    {statusLabel || t("Paid")}
                 </span>
             );
         case "pending":
             return (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
                     <Clock className="size-3" />
-                    {statusLabel || "Pending"}
+                    {statusLabel || t("Pending")}
                 </span>
             );
         case "failed":
             return (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20">
                     <AlertCircle className="size-3" />
-                    {statusLabel || "Failed"}
+                    {statusLabel || t("Failed")}
                 </span>
             );
         case "refunded":
             return (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
                     <RotateCcw className="size-3" />
-                    {statusLabel || "Refunded"}
+                    {statusLabel || t("Refunded")}
                 </span>
             );
         default:
             return (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-surface-3 text-medium border border-divider">
-                    {statusLabel || "Status"}
+                    {statusLabel || t("Status")}
                 </span>
             );
     }
@@ -96,6 +106,7 @@ export function PaymentHistoryModal({
     isLoading = false,
     role = "landlord"
 }: PaymentHistoryModalProps) {
+    const { t } = useLanguageContext();
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
@@ -157,14 +168,14 @@ export function PaymentHistoryModal({
                             <div>
                                 <div className="flex items-center gap-2">
                                     <h3 className="text-xl font-black tracking-tight text-high">
-                                        Payment History
+                                        {t("Payment History")}
                                     </h3>
                                     <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                                        Ledger
+                                        {t("Ledger")}
                                     </span>
                                 </div>
                                 <p className="text-xs font-medium text-medium mt-0.5">
-                                    {contact?.name ? `Transactions with ${contact.name}` : "Conversation Payment Records"}
+                                    {contact?.name ? t("Transactions with {name}", { name: contact.name }) : t("Conversation Payment Records")}
                                     {contact?.unit ? ` • ${contact.unit}` : ""}
                                 </p>
                             </div>
@@ -174,7 +185,7 @@ export function PaymentHistoryModal({
                             type="button"
                             onClick={onClose}
                             className="rounded-2xl p-2.5 text-medium hover:text-high hover:bg-surface-2 transition-all active:scale-95"
-                            aria-label="Close modal"
+                            aria-label={t("Close modal")}
                         >
                             <X className="size-5" />
                         </button>
@@ -185,7 +196,7 @@ export function PaymentHistoryModal({
                         <div className="p-4 rounded-2xl neumorphic-inset-card border border-divider/40 flex flex-col justify-between">
                             <div className="flex items-center gap-1.5 text-disabled text-[10px] font-black uppercase tracking-wider">
                                 <TrendingUp className="size-3.5 text-emerald-500" />
-                                <span>Total Paid</span>
+                                <span>{t("Total Paid")}</span>
                             </div>
                             <div className="text-lg font-black text-emerald-500 mt-2">
                                 ₱{totalPaid.toLocaleString()}
@@ -195,7 +206,7 @@ export function PaymentHistoryModal({
                         <div className="p-4 rounded-2xl neumorphic-inset-card border border-divider/40 flex flex-col justify-between">
                             <div className="flex items-center gap-1.5 text-disabled text-[10px] font-black uppercase tracking-wider">
                                 <Receipt className="size-3.5 text-primary" />
-                                <span>Transactions</span>
+                                <span>{t("Transactions")}</span>
                             </div>
                             <div className="text-lg font-black text-high mt-2">
                                 {payments.length}
@@ -205,10 +216,10 @@ export function PaymentHistoryModal({
                         <div className="p-4 rounded-2xl neumorphic-inset-card border border-divider/40 flex flex-col justify-between">
                             <div className="flex items-center gap-1.5 text-disabled text-[10px] font-black uppercase tracking-wider">
                                 <Calendar className="size-3.5 text-blue-400" />
-                                <span>Latest Payment</span>
+                                <span>{t("Latest Payment")}</span>
                             </div>
                             <div className="text-xs font-black text-medium mt-2 truncate">
-                                {latestDate || "None"}
+                                {latestDate || t("None")}
                             </div>
                         </div>
                     </div>
@@ -220,7 +231,7 @@ export function PaymentHistoryModal({
                             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-3.5 text-disabled" />
                             <input maxLength={60}
                                 type="text"
-                                placeholder="Search by type, date, or amount..."
+                                placeholder={t("Search by type, date, or amount...")}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full pl-9 pr-4 py-2 text-xs rounded-xl neumorphic-inset-card border border-divider/60 bg-surface-2/60 text-high placeholder:text-disabled focus:outline-none focus:border-primary/50 transition-all"
@@ -229,6 +240,7 @@ export function PaymentHistoryModal({
                                 <button
                                     type="button"
                                     onClick={() => setSearchQuery("")}
+                                    aria-label={t("Clear search")}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-disabled hover:text-high text-xs"
                                 >
                                     <X className="size-3.5" />
@@ -250,7 +262,7 @@ export function PaymentHistoryModal({
                                             : "bg-surface-2 text-medium hover:text-high hover:bg-surface-3"
                                     )}
                                 >
-                                    {tab === "all" ? "All" : tab}
+                                    {t(STATUS_FILTER_LABELS[tab] ?? tab)}
                                 </button>
                             ))}
                         </div>
@@ -269,11 +281,11 @@ export function PaymentHistoryModal({
                                 <div className="p-3.5 rounded-full bg-surface-2 mb-3">
                                     <Wallet className="size-6 text-disabled" />
                                 </div>
-                                <p className="text-sm font-black text-high">No payment records found</p>
+                                <p className="text-sm font-black text-high">{t("No payment records found")}</p>
                                 <p className="text-xs font-medium text-disabled mt-1 max-w-xs">
                                     {searchQuery || statusFilter !== "all"
-                                        ? "Try adjusting your filters or search keywords."
-                                        : "There are no logged payment transactions for this conversation yet."}
+                                        ? t("Try adjusting your filters or search keywords.")
+                                        : t("There are no logged payment transactions for this conversation yet.")}
                                 </p>
                             </div>
                         ) : (
@@ -289,7 +301,7 @@ export function PaymentHistoryModal({
                                         <div className="flex flex-col min-w-0">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-xs font-black text-high truncate">
-                                                    {payment.typeLabel || "Payment"}
+                                                    {payment.typeLabel ? t(payment.typeLabel) : t("Payment")}
                                                 </span>
                                                 {payment.monthLabel && (
                                                     <span className="text-[10px] font-medium text-disabled hidden sm:inline-block">
@@ -303,7 +315,7 @@ export function PaymentHistoryModal({
                                                 </span>
                                                 {payment.methodLabel && (
                                                     <span className="text-[10px] font-medium text-medium px-1.5 py-0.2 rounded bg-surface-2">
-                                                        {payment.methodLabel}
+                                                        {t(payment.methodLabel)}
                                                     </span>
                                                 )}
                                             </div>
@@ -311,7 +323,7 @@ export function PaymentHistoryModal({
                                     </div>
 
                                     <div className="flex items-center gap-3 shrink-0">
-                                        {getStatusBadge(payment.statusTone, payment.statusLabel)}
+                                        {getStatusBadge(payment.statusTone, payment.statusLabel, t)}
                                         <div className="text-right">
                                             <span className="text-sm font-black text-emerald-500">
                                                 ₱{payment.amount.toLocaleString()}
@@ -326,14 +338,14 @@ export function PaymentHistoryModal({
                     {/* Footer */}
                     <div className="p-4 border-t border-divider/60 bg-surface-1/40 flex items-center justify-between">
                         <span className="text-[10px] font-medium text-disabled">
-                            Showing {filteredPayments.length} of {payments.length} transactions
+                            {t("Showing {shown} of {total} transactions", { shown: filteredPayments.length, total: payments.length })}
                         </span>
                         <button
                             type="button"
                             onClick={onClose}
                             className="px-5 py-2 rounded-xl bg-surface-2 hover:bg-surface-3 text-xs font-black text-high transition-all active:scale-95"
                         >
-                            Close
+                            {t("Close")}
                         </button>
                     </div>
                 </motion.div>

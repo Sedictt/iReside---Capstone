@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { generateLeasePdf } from "@/lib/lease-pdf";
 import { CheckCircle, Loader2, X } from "lucide-react";
 import { m as motion, AnimatePresence } from "framer-motion";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 // Dynamic import for DigitalSigner to avoid SSR errors with pdfjs-dist
 const DigitalSigner = dynamic(
@@ -17,6 +18,7 @@ export default function LeaseSignaturePage() {
     const params = useParams();
     const id = params?.id as string;
     const router = useRouter();
+    const { t } = useLanguageContext();
 
     const [signed, setSigned] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,15 +75,15 @@ export default function LeaseSignaturePage() {
                     <div className="mx-auto flex size-24 items-center justify-center rounded-full bg-emerald-500/10 mb-8 border border-emerald-500/20">
                         <CheckCircle className="size-12 text-emerald-500" />
                     </div>
-                    <h1 className="text-3xl font-black mb-4 tracking-tight">Lease Executed</h1>
+                    <h1 className="text-3xl font-black mb-4 tracking-tight">{t("Lease Executed")}</h1>
                     <p className="text-neutral-400 mb-10 leading-relaxed">
-                        Your agreement for <span className="text-white font-black">Unit 402, The Beacon Towers</span> has been finalized and secured.
+                        {t("Your agreement for {unit} has been finalized and secured.", { unit: "Unit 402, The Beacon Towers" })}
                     </p>
                     <button
                         onClick={() => router.push('/tenant/dashboard')}
                         className="w-full bg-primary hover:bg-primary/90 text-black font-black py-4 rounded-2xl transition-all shadow-xl shadow-primary/10 uppercase text-xs tracking-widest"
                     >
-                        Go to Dashboard
+                        {t("Go to Dashboard")}
                     </button>
                 </motion.div>
             </div>
@@ -92,8 +94,8 @@ export default function LeaseSignaturePage() {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center p-6">
                 <div className="text-center space-y-4">
-                    <p className="text-red-400 font-black">{error}</p>
-                    <button onClick={() => window.location.reload()} className="text-xs font-black uppercase tracking-widest text-white underline">Retry</button>
+                    <p className="text-red-400 font-black">{t(error)}</p>
+                    <button onClick={() => window.location.reload()} className="text-xs font-black uppercase tracking-widest text-white underline">{t("Retry")}</button>
                 </div>
             </div>
         );
@@ -110,14 +112,14 @@ export default function LeaseSignaturePage() {
                     >
                         <DigitalSigner 
                             initialFile={pdfBlob}
-                            title="Lease Agreement - Unit 402"
+                            title={t("Lease Agreement - {unit}", { unit: "Unit 402" })}
                             onSigned={handleSigned}
                         />
                     </motion.div>
                 ) : (
                     <div className="h-screen w-screen flex flex-col items-center justify-center gap-6">
                         <Loader2 className="size-10 animate-spin text-primary" />
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">Preparing Secure Document</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">{t("Preparing Secure Document")}</p>
                     </div>
                 )}
             </AnimatePresence>
@@ -131,7 +133,7 @@ export default function LeaseSignaturePage() {
                                 <div className="size-8 rounded-full bg-primary/20 animate-ping" />
                             </div>
                         </div>
-                        <p className="text-[11px] font-black uppercase tracking-[0.4em] animate-pulse">Encrypting & Finalizing</p>
+                        <p className="text-[11px] font-black uppercase tracking-[0.4em] animate-pulse">{t("Encrypting & Finalizing")}</p>
                     </div>
                 </div>
             )}

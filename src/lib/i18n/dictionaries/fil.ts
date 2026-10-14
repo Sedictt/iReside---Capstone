@@ -272,7 +272,7 @@ export const filDictionary: TranslationDictionary = {
   "Unit Map": "Mapa ng mga Kwarto",
   "Messages": "Mga Mensahe",
   "Finance Hub": "Mga Bayarin at Upa",
-  "Maintenance": "Pagkumpuni at Maintenance",
+  "Maintenance": "Maintenance",
   "Tenants": "Mga Nangungupahan",
   "Applications": "Mga Aplikasyon",
   "Leases": "Kontrata sa Upa",
@@ -330,7 +330,7 @@ export const filDictionary: TranslationDictionary = {
   "Amount Due": "Kailangang Bayaran",
   "Total Due": "Kabuuang Bayarin",
   "Due Date": "Araw ng Bayaran",
-  "Rent": "Upa sa Kwarto",
+  "Rent": "Upa",
   "Electricity": "Kuryente",
   "Water": "Tubig",
   "Security Deposit": "Security Deposit",
@@ -406,7 +406,7 @@ export const filDictionary: TranslationDictionary = {
   "Review Payments": "Suriin ang mga Bayad",
   "Record Readings": "I-record ang Metro",
   "Contracts & Tasks": "Mga Kontrata at Gawain",
-  "Review expiring lease contracts and pending tenant requests.": "Suriin ang mga kontratang malapit nang mapaso at mga kahilingan ng tenant.",
+  "Review lease contracts and pending tenant requests.": "Suriin ang mga kontrata sa pag-upa at mga kahilingan ng tenant.",
   "View All Contracts": "Tingnan Lahat ng Kontrata",
 
   // Quick Action Items
@@ -432,7 +432,7 @@ export const filDictionary: TranslationDictionary = {
   "Done": "Tapos Na",
   "Reset": "Ibalik sa Dati",
   "Frequently Used": "Madalas Gamitin",
-  "Custom": "Pasadyang Ayos",
+  "Custom": "Custom",
 
   // Tenant Experience & Actions
   "Pay Rent Now": "Magbayad ng Upa Na",

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 import {
  Calendar,
  User,
@@ -27,6 +28,7 @@ import { FieldError } from "@/components/ui/field-error";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { textRule } from "@/lib/validation/rules";
 import { LIFECYCLE_LIMITS } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { tr } from "@/hooks/useLanguage";
 
 interface MoveOutRequest {
  id: string;
@@ -45,7 +47,9 @@ interface MoveOutRequest {
  lease: {
  id: string;
  start_date: string;
- end_date: string;
+ /** Null for open-ended (month-to-month) leases. */
+ end_date: string | null;
+ term_type?: string | null;
  monthly_rent: number;
  security_deposit: number;
  unit: {
@@ -72,6 +76,7 @@ interface MoveOutRequestDetailsProps {
 }
 
 export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequestDetailsProps) {
+ const { t, locale } = useLanguageContext();
  const [actionLoading, setActionLoading] = useState<"approve" | "deny" | null>(null);
  const [showDenyDialog, setShowDenyDialog] = useState(false);
  const [isInspecting, setIsInspecting] = useState(false);
@@ -80,12 +85,12 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  // Same rule as PUT /api/landlord/move-out/[id]/deny.
  const denyForm = useFormValidation(
   { denialReason },
-  { denialReason: (value) => textRule(value, { label: "Denial reason", required: true, max: LIFECYCLE_LIMITS.denialReason }) }
+  { denialReason: (value) => textRule(value, { label: t("Denial reason"), required: true, max: LIFECYCLE_LIMITS.denialReason }) }
  );
 
  const handleApprove = async () => {
  if (actionLoading) return;
- if (!window.confirm("Are you sure you want to approve this move-out request? This will align the lease end date with the requested move-out date.")) return;
+ if (!window.confirm(t("Are you sure you want to approve this move-out request? This will align the lease end date with the requested move-out date."))) return;
  
  setActionLoading("approve");
  setError(null);
@@ -96,12 +101,12 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  
  if (!response.ok) {
  const data = await response.json();
- throw new Error(data.error || "Failed to approve request");
+ throw new Error(data.error || t("Failed to approve request"));
  }
  
  onUpdate();
  } catch (err: any) {
- setError(err.message);
+ setError(tr(err.message));
  } finally {
  setActionLoading(null);
  }
@@ -127,14 +132,14 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  if (responseData.fieldErrors?.denial_reason) {
  denyForm.setServerErrors({ denialReason: responseData.fieldErrors.denial_reason });
  }
- throw new Error(responseData.error || "Failed to deny request");
+ throw new Error(responseData.error || t("Failed to deny request"));
  }
  denyForm.reset();
  
  setShowDenyDialog(false);
  onUpdate();
  } catch (error: any) {
- setError(error.message);
+ setError(tr(error.message));
  } finally {
  setActionLoading(null);
  }
@@ -142,7 +147,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
 
  const handleComplete = async () => {
  if (actionLoading) return;
- if (!window.confirm("Are you sure you want to finalize this move-out? This will terminate the lease and mark the unit as vacant.")) return;
+ if (!window.confirm(t("Are you sure you want to finalize this move-out? This will terminate the lease and mark the unit as vacant."))) return;
  
  setActionLoading("approve"); // reuse loading state for simplicity or add a new one
  setError(null);
@@ -153,19 +158,19 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  
  if (!response.ok) {
  const responseData = await response.json();
- throw new Error(responseData.error || "Failed to complete move-out");
+ throw new Error(responseData.error || t("Failed to complete move-out"));
  }
  
  onUpdate();
  } catch (err: any) {
- setError(err.message);
+ setError(tr(err.message));
  } finally {
  setActionLoading(null);
  }
  };
 
  const formatDate = (dateStr: string) => {
- return new Date(dateStr).toLocaleDateString("en-US", {
+ return new Date(dateStr).toLocaleDateString(locale, {
  month: "long",
  day: "numeric",
  year: "numeric",
@@ -181,20 +186,20 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  },
  {
  title: request.status === "denied" ? "Request Denied" : "Landlord Approval",
- date: request.approved_at ? formatDate(request.approved_at) : (request.denied_at ? formatDate(request.denied_at) : "Pending"),
+ date: request.approved_at ? formatDate(request.approved_at) : (request.denied_at ? formatDate(request.denied_at) : t("Pending")),
  icon: request.status === "denied" ? XCircle : CheckCircle2,
  status: request.status === "pending" ? "pending" : "completed",
  color: request.status === "denied" ? "text-red-500" : "text-blue-500",
  },
  {
  title: "Move-Out Inspection",
- date: "Scheduled after approval",
+ date: t("Scheduled after approval"),
  icon: ShieldCheck,
  status: request.status === "approved" || request.status === "completed" ? "pending" : "upcoming",
  },
  {
  title: "Lease Terminated",
- date: "Final step",
+ date: t("Final step"),
  icon: FileText,
  status: request.status === "completed" ? "completed" : "upcoming",
  },
@@ -206,19 +211,20 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  <div className="flex items-center gap-5">
  <button
  onClick={onBack}
+ aria-label={t("Back")}
  className="group flex size-12 items-center justify-center rounded-2xl neumorphic-panel transition-all hover:border-primary/30 hover:neumorphic-inset active:scale-95"
  >
  <ChevronLeft className="size-5 text-muted-foreground group-hover:text-primary" />
  </button>
  <div className="space-y-1">
  <div className="flex items-center gap-3">
- <h1 className="text-3xl font-black tracking-tight text-foreground">Move-Out Request</h1>
+ <h1 className="text-3xl font-black tracking-tight text-foreground">{t("Move-Out Request")}</h1>
  <MoveOutStatusBadge status={request.status} />
  </div>
  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
- <span className="rounded-md neumorphic-inset px-1.5 py-0.5 font-mono text-[10px]">ID: {request.id.slice(0, 8)}</span>
+ <span className="rounded-md neumorphic-inset px-1.5 py-0.5 font-mono text-[10px]">{t("ID:")} {request.id.slice(0, 8)}</span>
  <span>•</span>
- <span>Submitted on {formatDate(request.created_at)}</span>
+ <span>{t("Submitted on {date}", { date: formatDate(request.created_at) })}</span>
  </div>
  </div>
  </div>
@@ -231,7 +237,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  className="flex h-11 items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/5 px-6 text-[10px] font-black uppercase tracking-widest text-red-500 transition-all hover:bg-red-500/10 active:scale-95 disabled:opacity-50"
  >
  <XCircle className="size-4" />
- Deny Request
+ {t("Deny Request")}
  </button>
  <button
  onClick={handleApprove}
@@ -243,7 +249,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  ) : (
  <CheckCircle2 className="size-4" />
  )}
- Approve Move-Out
+ {t("Approve Move-Out")}
  </button>
  </div>
  )}
@@ -283,7 +289,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  <Calendar className="size-6" />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Requested Move-Out</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Requested Move-Out")}</p>
  <p className="text-lg font-black text-foreground">{formatDate(request.requested_date)}</p>
  </div>
  </div>
@@ -292,15 +298,15 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  <Clock className="size-6" />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Current Lease Ends</p>
- <p className="text-lg font-black text-foreground">{formatDate(request.lease.end_date)}</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Current Lease Ends")}</p>
+ <p className="text-lg font-black text-foreground">{request.lease.end_date ? formatDate(request.lease.end_date) : t("Open-ended")}</p>
  </div>
  </div>
  </div>
  </div>
 
  <div className="flex flex-col gap-4 rounded-3xl neumorphic-panel p-6 ">
- <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tenant Profile</h3>
+ <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Tenant Profile")}</h3>
  <div className="flex items-center gap-4">
  <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary ring-4 ring-primary/5">
  <User className="size-7" />
@@ -312,7 +318,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  </div>
  <div className="flex flex-wrap gap-2 pt-2">
  <a href={`mailto:${request.lease.tenant.email}`} className="flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:neumorphic-inset">
- <Mail className="size-3.5" /> Email
+ <Mail className="size-3.5" /> {t("Email")}
  </a>
  {request.lease.tenant.phone && (
  <div className="flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
@@ -323,7 +329,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  </div>
 
  <div className="flex flex-col gap-4 rounded-3xl neumorphic-panel p-6 ">
- <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Property & Unit</h3>
+ <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Property & Unit")}</h3>
  <div className="flex items-center gap-4">
  <div className="flex size-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 ring-4 ring-amber-500/5">
  <Home className="size-7" />
@@ -343,10 +349,10 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  <div className="space-y-4">
  <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
  <MessageSquare className="size-3.5 text-primary" />
- Reason for Moving Out
+ {t("Reason for Moving Out")}
  </h3>
  <div className="rounded-2xl neumorphic-inset p-6 italic text-sm font-medium text-foreground leading-relaxed ring-1 ring-border/50">
- &quot;{request.reason || "No reason provided by tenant."}&quot;
+ &quot;{request.reason || t("No reason provided by tenant.")}&quot;
  </div>
  </div>
 
@@ -354,7 +360,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  <div className="space-y-4 pt-4 border-t border-border/50">
  <h3 className="text-[10px] font-black uppercase tracking-widest text-red-500 flex items-center gap-2">
  <XCircle className="size-3.5" />
- Reason for Denial
+ {t("Reason for Denial")}
  </h3>
  <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 italic text-sm font-medium text-red-600 leading-relaxed">
  &quot;{request.denial_reason}&quot;
@@ -366,7 +372,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  <div className="space-y-4 pt-4 border-t border-border/50">
  <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-2">
  <ShieldCheck className="size-3.5" />
- Inspection Notes
+ {t("Inspection Notes")}
  </h3>
  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6 text-sm font-medium text-foreground leading-relaxed">
  {request.inspection_notes}
@@ -383,16 +389,16 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  >
  <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center">
  <div className="flex-1 space-y-1">
- <h3 className="text-xl font-black uppercase tracking-tight">Pending Inspection</h3>
+ <h3 className="text-xl font-black uppercase tracking-tight">{t("Pending Inspection")}</h3>
  <p className="text-sm font-medium text-primary-foreground/80 max-w-lg">
- The move-out has been approved. Please perform the physical inspection to finalize security deposit deductions.
+ {t("The move-out has been approved. Please perform the physical inspection to finalize security deposit deductions.")}
  </p>
  </div>
  <button
  onClick={() => setIsInspecting(true)}
  className="flex h-12 items-center gap-2 rounded-2xl bg-white px-8 text-[10px] font-black uppercase tracking-widest text-primary transition-all hover:bg-white/90 active:scale-95"
  >
- Start Inspection
+ {t("Start Inspection")}
  <ArrowRight className="size-4" />
  </button>
  </div>
@@ -409,9 +415,9 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  >
  <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center">
  <div className="flex-1 space-y-1">
- <h3 className="text-xl font-black uppercase tracking-tight text-white">Inspection Completed</h3>
+ <h3 className="text-xl font-black uppercase tracking-tight text-white">{t("Inspection Completed")}</h3>
  <p className="text-sm font-medium text-white/80 max-w-lg">
- Refund amount: <span className="text-white font-black">₱{(request.deposit_refund_amount || 0).toLocaleString()}</span>. Finalize the move-out to terminate the lease.
+ {t("Refund amount:")} <span className="text-white font-black">₱{(request.deposit_refund_amount || 0).toLocaleString()}</span>. {t("Finalize the move-out to terminate the lease.")}
  </p>
  </div>
  <button
@@ -424,7 +430,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  ) : (
  <CheckCircle2 className="size-4" />
  )}
- Complete Move-Out
+ {t("Complete Move-Out")}
  </button>
  </div>
  <CheckCircle2 className="absolute -right-4 -bottom-4 size-32 text-white/5 rotate-12" />
@@ -435,11 +441,11 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  <div className="flex flex-col gap-6 lg:col-span-4">
  {(request.status === "completed" || request.checklist_data) && (
  <div className="rounded-3xl neumorphic-panel p-6 ">
- <h3 className="mb-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Clearance Checklist</h3>
+ <h3 className="mb-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Clearance Checklist")}</h3>
  <div className="space-y-2">
  {Object.entries(request.checklist_data || {}).map(([checklistKey, isCleared]) => (
  <div key={checklistKey} className="flex items-center justify-between rounded-xl /50 neumorphic-inset px-4 py-3">
- <span className="text-[11px] font-black capitalize text-foreground">{checklistKey.replace(/_/g, " ")}</span>
+ <span className="text-[11px] font-black capitalize text-foreground">{t(checklistKey.replace(/_/g, " "))}</span>
  {isCleared ? (
  <div className="flex size-6 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20">
  <CheckCircle2 className="size-3.5" />
@@ -456,7 +462,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  )}
 
  <div className="rounded-3xl neumorphic-panel p-6 ">
- <h3 className="mb-8 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Workflow Timeline</h3>
+ <h3 className="mb-8 text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Workflow Timeline")}</h3>
  <div className="relative space-y-8">
  <div className="absolute left-[15px] top-2 h-[calc(100%-16px)] w-px bg-border" />
 
@@ -475,7 +481,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  "text-xs font-black",
  event.status === "upcoming" ? "text-muted-foreground" : "text-foreground"
  )}>
- {event.title}
+ {t(event.title)}
  </p>
  <p className="text-[10px] font-medium text-muted-foreground">
  {event.date}
@@ -488,20 +494,20 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  </div>
 
  <div className="rounded-3xl neumorphic-inset p-6">
- <h3 className="mb-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Lease Financials</h3>
+ <h3 className="mb-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Lease Financials")}</h3>
  <div className="space-y-3">
  <div className="flex items-center justify-between">
- <span className="text-[11px] font-black text-muted-foreground">Monthly Rent</span>
+ <span className="text-[11px] font-black text-muted-foreground">{t("Monthly Rent")}</span>
  <span className="text-sm font-black text-foreground">₱{(request.lease?.monthly_rent || 0).toLocaleString()}</span>
  </div>
  <div className="flex items-center justify-between">
- <span className="text-[11px] font-black text-muted-foreground">Security Deposit</span>
+ <span className="text-[11px] font-black text-muted-foreground">{t("Security Deposit")}</span>
  <span className="text-sm font-black text-foreground">₱{(request.lease?.security_deposit || 0).toLocaleString()}</span>
  </div>
  <div className="pt-4 border-t border-border">
  <button className="flex w-full items-center justify-center gap-2 rounded-xl neumorphic-panel py-2.5 text-[10px] font-black uppercase tracking-widest text-foreground transition-all hover:neumorphic-inset active:scale-[0.98]">
  <FileText className="size-3.5" />
- Original Lease
+ {t("Original Lease")}
  </button>
  </div>
  </div>
@@ -526,18 +532,18 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  exit={{ opacity: 0, scale: 0.95, y: 20 }}
  className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] neumorphic-panel p-8 "
  >
- <h3 className="text-2xl font-black text-foreground tracking-tight">Deny Move-Out</h3>
+ <h3 className="text-2xl font-black text-foreground tracking-tight">{t("Deny Move-Out")}</h3>
  <p className="mt-2 text-sm font-medium text-muted-foreground leading-relaxed">
- Please provide a reason for denying this request. This will be shared with the tenant for their record.
+ {t("Please provide a reason for denying this request. This will be shared with the tenant for their record.")}
  </p>
 
  <div className="mt-6">
  <textarea maxLength={LIFECYCLE_LIMITS.denialReason}
  {...denyForm.fieldProps("denialReason")}
- aria-label="Denial reason"
+ aria-label={t("Denial reason")}
  value={denialReason}
  onChange={(e) => setDenialReason(e.target.value)}
- placeholder="e.g., Minimum stay requirements not met..."
+ placeholder={t("e.g., Minimum stay requirements not met...")}
  className={cn(
  "h-32 w-full rounded-2xl neumorphic-panel p-4 text-sm font-medium text-foreground focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/50",
  denyForm.errorFor("denialReason") && "ring-1 ring-rose-500/60"
@@ -551,7 +557,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  onClick={() => setShowDenyDialog(false)}
  className="flex-1 rounded-2xl py-3 text-[10px] font-black uppercase tracking-widest text-foreground transition-all hover:neumorphic-inset active:scale-95"
  >
- Cancel
+ {t("Cancel")}
  </button>
  <button
  onClick={handleDeny}
@@ -561,7 +567,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  {actionLoading === "deny" ? (
  <Loader2 className="mx-auto size-4 animate-spin" />
  ) : (
- "Confirm Denial"
+ t("Confirm Denial")
  )}
  </button>
  </div>

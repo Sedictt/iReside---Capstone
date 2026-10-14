@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { phoneRule } from "@/lib/validation/rules";
+import { useLanguageContext } from "@/context/LanguageContext";
+import { tr } from "@/hooks/useLanguage";
 
 type EditablePhoneProps = {
     initialPhone?: string | null;
@@ -15,6 +17,7 @@ type EditablePhoneProps = {
 
 export function EditablePhone({ initialPhone, userId, className }: EditablePhoneProps) {
     const router = useRouter();
+    const { t } = useLanguageContext();
     const [phone, setPhone] = useState(initialPhone || "");
     const [isEditing, setIsEditing] = useState(false);
     const [tempPhone, setTempPhone] = useState(initialPhone || "");
@@ -31,7 +34,7 @@ export function EditablePhone({ initialPhone, userId, className }: EditablePhone
     // Same phone rule as the settings forms and profile APIs (PH mobile aware).
     const validatePhone = (val: string): boolean => {
         const message = phoneRule(val, { required: true });
-        setError(message ?? null);
+        setError(message ? tr(message) : null);
         return !message;
     };
 
@@ -57,13 +60,13 @@ export function EditablePhone({ initialPhone, userId, className }: EditablePhone
 
             setPhone(tempPhone.trim());
             setIsEditing(false);
-            toast.success("Phone number updated successfully");
+            toast.success(t("Phone number updated successfully"));
             window.dispatchEvent(new CustomEvent("profile-updated"));
             router.refresh();
         } catch (err: any) {
             console.error("Failed to update phone:", err);
-            setError(err?.message || "Failed to update phone number");
-            toast.error("Failed to update phone number");
+            setError(tr(err?.message || "Failed to update phone number"));
+            toast.error(t("Failed to update phone number"));
         } finally {
             setSaving(false);
         }
@@ -77,7 +80,7 @@ export function EditablePhone({ initialPhone, userId, className }: EditablePhone
                         type="tel"
                         inputMode="tel"
                         autoComplete="tel"
-                        aria-label="Phone number"
+                        aria-label={t("Phone number")}
                         aria-invalid={error ? true : undefined}
                         aria-describedby={error ? `phone-error-${userId}` : undefined}
                         value={tempPhone}
@@ -91,7 +94,7 @@ export function EditablePhone({ initialPhone, userId, className }: EditablePhone
                 {error && (
                     <div id={`phone-error-${userId}`} role="alert" className="flex items-center gap-1.5 text-xs text-red-500 font-medium">
                         <AlertCircle size={13} className="shrink-0" />
-                        <span>{error}</span>
+                        <span>{t(error)}</span>
                     </div>
                 )}
                 <div className="flex items-center gap-2">
@@ -101,7 +104,7 @@ export function EditablePhone({ initialPhone, userId, className }: EditablePhone
                         className="flex items-center gap-1.5 px-3 py-1 rounded-lg neumorphic-primary text-[10px] font-black uppercase tracking-wider transition disabled:opacity-50"
                     >
                         {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
-                        Save
+                        {t("Save")}
                     </button>
                     <button
                         type="button"
@@ -114,7 +117,7 @@ export function EditablePhone({ initialPhone, userId, className }: EditablePhone
                         className="flex items-center gap-1.5 px-3 py-1 rounded-lg neumorphic-extruded text-muted-foreground hover:text-foreground text-[10px] font-black uppercase tracking-wider transition"
                     >
                         <X size={12} />
-                        Cancel
+                        {t("Cancel")}
                     </button>
                 </div>
             </form>
@@ -127,13 +130,13 @@ export function EditablePhone({ initialPhone, userId, className }: EditablePhone
                 type="button"
                 onClick={() => setIsEditing(true)}
                 className="group relative inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-bold text-red-500 dark:text-red-400 border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 transition-all cursor-pointer shadow-sm"
-                title="Add your phone number (Required for profile setup)"
+                title={t("Add your phone number (Required for profile setup)")}
             >
                 <span className="relative flex size-2 shrink-0">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
                     <span className="relative inline-flex rounded-full size-2 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.9)]" />
                 </span>
-                <span>Add Phone Number</span>
+                <span>{t("Add Phone Number")}</span>
                 <Plus size={13} className="group-hover:rotate-90 transition-transform" />
             </button>
         );
@@ -154,8 +157,8 @@ export function EditablePhone({ initialPhone, userId, className }: EditablePhone
                     setIsEditing(true);
                 }}
                 className="opacity-0 group-hover/phone:opacity-100 size-6 rounded-md hover:bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-primary transition-all cursor-pointer"
-                title="Edit phone number"
-                aria-label="Edit phone number"
+                title={t("Edit phone number")}
+                aria-label={t("Edit phone number")}
             >
                 <Pencil size={12} />
             </button>

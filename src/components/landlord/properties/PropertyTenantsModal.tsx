@@ -22,8 +22,10 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { formatTenure, leaseEndState, leaseTermLabel } from "@/lib/lease-term";
 import { TenantDetailModal } from "@/components/landlord/tenants/TenantDetailModal";
 import { AnimatedFilterPills } from "@/components/ui/AnimatedFilterPills";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface PropertyTenantsModalProps {
     isOpen: boolean;
@@ -40,7 +42,13 @@ interface TenantItem {
     unit: string;
     status: "Active" | "Moving Out" | "Evicted";
     rentAmount: number | null;
+    leaseStart?: string | null;
+    /** Null for open-ended leases until a move-out date is agreed. */
     leaseEnd: string | null;
+    leaseTermType?: string | null;
+    term_type?: string | null;
+    termType?: string | null;
+    lease_term?: string | null;
     phone: string;
     email: string;
     avatar: string;
@@ -57,6 +65,8 @@ export function PropertyTenantsModal({
     propertyName,
     propertyImage,
 }: PropertyTenantsModalProps) {
+    // Aliased: `t` is used below as the tenant loop variable.
+    const { t: translate, language } = useLanguageContext();
     const [tenants, setTenants] = useState<TenantItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
@@ -143,11 +153,11 @@ export function PropertyTenantsModal({
                                             {propertyName}
                                         </h3>
                                         <span className="shrink-0 rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[10px] font-black text-primary uppercase tracking-wider">
-                                            {tenants.length} {tenants.length === 1 ? "Tenant" : "Tenants"}
+                                            {tenants.length === 1 ? translate("{count} Tenant", { count: tenants.length }) : translate("{count} Tenants", { count: tenants.length })}
                                         </span>
                                     </div>
                                     <p className="text-xs text-neutral-400 font-medium truncate mt-0.5">
-                                        Active Occupancy & Tenant Roster
+                                        {translate("Active Occupancy & Tenant Roster")}
                                     </p>
                                 </div>
                             </div>
@@ -157,11 +167,12 @@ export function PropertyTenantsModal({
                                     href={`/landlord/tenants`}
                                     className="hidden sm:flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-neutral-300 hover:text-white hover:bg-white/10 transition-all"
                                 >
-                                    <span>Directory</span>
+                                    <span>{translate("Directory")}</span>
                                     <ExternalLink className="size-3.5" />
                                 </Link>
                                 <button
                                     onClick={onClose}
+                                    aria-label={translate("Close")}
                                     className="flex size-9 items-center justify-center rounded-xl bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white transition-all active:scale-95"
                                 >
                                     <X className="size-5" />
@@ -175,7 +186,7 @@ export function PropertyTenantsModal({
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-neutral-500" />
                                 <input maxLength={60}
                                     type="text"
-                                    placeholder="Search by tenant name, unit number, email..."
+                                    placeholder={translate("Search by tenant name, unit number, email...")}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full rounded-2xl border border-white/10 bg-white/5 pl-11 pr-4 py-2.5 text-xs font-medium text-white placeholder:text-neutral-500 outline-none focus:border-primary/50"
@@ -185,7 +196,12 @@ export function PropertyTenantsModal({
                             <AnimatedFilterPills
                                 variant="primary"
                                 size="sm"
-                                options={["all", "active", "moving out", "evicted"]}
+                                options={[
+                                    { id: "all", label: translate("All") },
+                                    { id: "active", label: translate("Active") },
+                                    { id: "moving out", label: translate("Moving Out") },
+                                    { id: "evicted", label: translate("Evicted") },
+                                ]}
                                 activeId={statusFilter}
                                 onChange={(tab) => setStatusFilter(tab)}
                                 layoutGroupId="property-tenants-filter-pills"
@@ -198,7 +214,7 @@ export function PropertyTenantsModal({
                                 <div className="flex flex-col items-center justify-center py-16 gap-3">
                                     <Loader2 className="size-8 text-primary animate-spin" />
                                     <p className="text-xs font-black uppercase tracking-widest text-neutral-500">
-                                        Loading Tenants…
+                                        {translate("Loading Tenants…")}
                                     </p>
                                 </div>
                             ) : filteredTenants.length === 0 ? (
@@ -206,18 +222,18 @@ export function PropertyTenantsModal({
                                     <div className="size-14 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center text-neutral-500 mb-4">
                                         <Users className="size-6" />
                                     </div>
-                                    <h4 className="text-base font-black text-white">No Tenants Found</h4>
+                                    <h4 className="text-base font-black text-white">{translate("No Tenants Found")}</h4>
                                     <p className="text-xs text-neutral-400 max-w-sm mt-1 mb-6">
                                         {searchQuery
-                                            ? "No tenants matched your search filter criteria."
-                                            : "There are currently no active tenants assigned to this property."}
+                                            ? translate("No tenants matched your search filter criteria.")
+                                            : translate("There are currently no active tenants assigned to this property.")}
                                     </p>
                                     <Link
                                         href="/landlord/tenants"
                                         className="flex items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-xs font-black uppercase tracking-wider text-black transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/20"
                                     >
                                         <UserPlus className="size-4" />
-                                        <span>Manage / Add Tenant</span>
+                                        <span>{translate("Manage / Add Tenant")}</span>
                                     </Link>
                                 </div>
                             ) : (
@@ -250,7 +266,7 @@ export function PropertyTenantsModal({
                                                         </p>
                                                         <div className="flex items-center gap-2 mt-0.5">
                                                             <span className="rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-black text-primary">
-                                                                {t.unit || "Unassigned"}
+                                                                {t.unit || translate("Unassigned")}
                                                             </span>
                                                             <span
                                                                 className={cn(
@@ -262,7 +278,7 @@ export function PropertyTenantsModal({
                                                                         : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
                                                                 )}
                                                             >
-                                                                {t.status}
+                                                                {translate(t.status)}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -272,19 +288,19 @@ export function PropertyTenantsModal({
                                                     {t.paymentStatus === "paid" && (
                                                         <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">
                                                             <CheckCircle2 className="size-3" />
-                                                            Paid
+                                                            {translate("Paid")}
                                                         </span>
                                                     )}
                                                     {t.paymentStatus === "late" && (
                                                         <span className="flex items-center gap-1 text-[10px] font-bold text-rose-400 bg-rose-500/10 px-2 py-1 rounded-lg border border-rose-500/20">
                                                             <AlertCircle className="size-3" />
-                                                            Late
+                                                            {translate("Late")}
                                                         </span>
                                                     )}
                                                     {t.paymentStatus === "pending" && (
                                                         <span className="flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20">
                                                             <Clock className="size-3" />
-                                                            Pending
+                                                            {translate("Pending")}
                                                         </span>
                                                     )}
                                                 </div>
@@ -299,13 +315,26 @@ export function PropertyTenantsModal({
                                                             <span className="font-bold text-white">
                                                                 ₱{t.rentAmount.toLocaleString()}
                                                             </span>
-                                                            <span className="text-[10px]">/mo</span>
+                                                            <span className="text-[10px]">{translate("/mo")}</span>
                                                         </div>
                                                     )}
-                                                    {t.leaseEnd && (
+                                                    {(t.leaseEnd || t.leaseStart) && (
                                                         <div className="flex items-center gap-1.5 truncate">
                                                             <Calendar className="size-3.5 text-neutral-500" />
-                                                            <span>End: {new Date(t.leaseEnd).toLocaleDateString()}</span>
+                                                            <span>
+                                                                {(() => {
+                                                                    const term = {
+                                                                        term_type: t.leaseTermType ?? t.term_type ?? t.termType ?? t.lease_term ?? null,
+                                                                        end_date: t.leaseEnd,
+                                                                        start_date: t.leaseStart ?? null,
+                                                                    };
+                                                                    if (leaseEndState(term).kind === "open_ended") {
+                                                                        const tenure = formatTenure(term.start_date, undefined, language);
+                                                                        return tenure ? `${translate("Open-ended")} · ${tenure}` : translate("Open-ended");
+                                                                    }
+                                                                    return leaseTermLabel(term, undefined, language);
+                                                                })()}
+                                                            </span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -324,7 +353,7 @@ export function PropertyTenantsModal({
                                                         <Link
                                                             href={`/landlord/messaging?tenantId=${t.id}`}
                                                             className="flex size-7 items-center justify-center rounded-lg bg-white/5 text-neutral-300 hover:bg-primary/20 hover:text-primary transition-all"
-                                                            title="Message Tenant"
+                                                            title={translate("Message Tenant")}
                                                         >
                                                             <MessageSquare className="size-3.5" />
                                                         </Link>
@@ -333,7 +362,7 @@ export function PropertyTenantsModal({
                                                             onClick={() => setSelectedTenantId(t.id)}
                                                             className="rounded-lg bg-white/5 px-2.5 py-1 text-[10px] font-bold text-neutral-300 hover:bg-white/10 hover:text-white transition-all"
                                                         >
-                                                            Profile
+                                                            {translate("Profile")}
                                                         </button>
                                                     </div>
                                                 </div>

@@ -23,6 +23,7 @@ import { useViewMode } from "@/hooks/useViewMode";
 import Link from "next/link";
 import { useProperty } from "@/context/PropertyContext";
 import { useInstantData } from "@/lib/hooks/useInstantData";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 type Priority = "Critical" | "High" | "Medium" | "Low";
 type Status = "Pending" | "Assigned" | "In Progress" | "Resolved";
@@ -58,6 +59,7 @@ export interface MaintenanceRequest {
 
 export function MaintenanceDashboard() {
  const { selectedPropertyId } = useProperty();
+ const { t } = useLanguageContext();
  const searchParams = useSearchParams();
  const [filter, setFilter] = useState<"All" | Status>("All");
  const [searchQuery, setSearchQuery] = useState(() => searchParams?.get("search") || "");
@@ -97,7 +99,7 @@ export function MaintenanceDashboard() {
  });
 
  const requests: MaintenanceRequest[] = requestsData ?? [];
- const error = fetchError?.message ?? null;
+ const error = fetchError ? t(fetchError.message) : null;
 
  useEffect(() => {
   const deepLinkId = searchParams?.get("id");
@@ -153,26 +155,26 @@ export function MaintenanceDashboard() {
  <div className="mb-2 p-4 bg-primary/10 border border-primary/20 rounded-2xl flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
  <span className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2">
  <Zap className="size-4" />
- Preview Mode Active
+ {t("Preview Mode Active")}
  </span>
  <div className="flex flex-wrap gap-2">
  <Link href="/landlord/maintenance?preview=self_repair_photo" className={cn("text-[10px] sm:text-xs font-black border px-3 py-1.5 rounded-lg transition-colors", previewMode === "self_repair_photo" ? "neumorphic-primary border-primary" : "bg-background text-foreground border-border hover:neumorphic-inset")}>
- Self-Repair Photo
+ {t("Self-Repair Photo")}
  </Link>
  <Link href="/landlord/maintenance?preview=tenant_repairing" className={cn("text-[10px] sm:text-xs font-black border px-3 py-1.5 rounded-lg transition-colors", previewMode === "tenant_repairing" ? "neumorphic-primary border-primary" : "bg-background text-foreground border-border hover:neumorphic-inset")}>
- Tenant Repairing
+ {t("Tenant Repairing")}
  </Link>
  <Link href="/landlord/maintenance?preview=tenant_done" className={cn("text-[10px] sm:text-xs font-black border px-3 py-1.5 rounded-lg transition-colors", previewMode === "tenant_done" ? "neumorphic-primary border-primary" : "bg-background text-foreground border-border hover:neumorphic-inset")}>
- Tenant Done
+ {t("Tenant Done")}
  </Link>
  <Link href="/landlord/maintenance?preview=third_party_tenant_done" className={cn("text-[10px] sm:text-xs font-black border px-3 py-1.5 rounded-lg transition-colors", previewMode === "third_party_tenant_done" ? "neumorphic-primary border-primary" : "bg-background text-foreground border-border hover:neumorphic-inset")}>
- Third-Party (Tenant Done)
+ {t("Third-Party (Tenant Done)")}
  </Link>
  <Link href="/landlord/maintenance?preview=resolved" className={cn("text-[10px] sm:text-xs font-black border px-3 py-1.5 rounded-lg transition-colors", previewMode === "resolved" ? "neumorphic-primary border-primary" : "bg-background text-foreground border-border hover:neumorphic-inset")}>
- Resolved
+ {t("Resolved")}
  </Link>
  <Link href="/landlord/maintenance" className="text-[10px] sm:text-xs font-black neumorphic-panel px-3 py-1.5 rounded-lg hover:neumorphic-inset transition-colors text-red-500 hover:text-red-600">
- Clear Preview
+ {t("Clear Preview")}
  </Link>
  </div>
  </div>
@@ -183,10 +185,10 @@ export function MaintenanceDashboard() {
  <div className="space-y-1">
  <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3 sm:text-4xl">
  <Wrench className="size-8 text-primary" />
- Maintenance Operations
+ {t("Maintenance Operations")}
  </h1>
  <p className="text-muted-foreground font-medium text-sm max-w-2xl">
- Coordinate, assign, and track property repairs and work orders across your portfolio.
+ {t("Coordinate, assign, and track property repairs and work orders across your portfolio.")}
  </p>
  </div>
  </div>
@@ -201,7 +203,7 @@ export function MaintenanceDashboard() {
  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
  <input maxLength={60}
  type="text"
- placeholder="Search by ID, tenant, unit or title..."
+ placeholder={t("Search by ID, tenant, unit or title...")}
  value={searchQuery}
  onChange={(event) => setSearchQuery(event.target.value)}
  className="w-full neumorphic-panel rounded-xl py-2.5 pl-11 pr-4 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/50 transition-all "
@@ -217,11 +219,11 @@ export function MaintenanceDashboard() {
  onChange={(e) => setFilter(e.target.value as any)}
  className="bg-transparent text-[10px] font-black uppercase tracking-widest text-foreground outline-none cursor-pointer min-w-[100px]"
  >
- <option value="All" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">All Status</option>
- <option value="Pending" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Pending</option>
- <option value="Assigned" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Assigned</option>
- <option value="In Progress" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">In Progress</option>
- <option value="Resolved" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Resolved</option>
+ <option value="All" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("All Status")}</option>
+ <option value="Pending" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("Pending")}</option>
+ <option value="Assigned" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("Assigned")}</option>
+ <option value="In Progress" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("In Progress")}</option>
+ <option value="Resolved" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("Resolved")}</option>
  </select>
  </div>
 
@@ -232,11 +234,11 @@ export function MaintenanceDashboard() {
  onChange={(e) => setPriorityFilter(e.target.value as any)}
  className="bg-transparent text-[10px] font-black uppercase tracking-widest text-foreground outline-none cursor-pointer min-w-[100px]"
  >
- <option value="All" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">All Priority</option>
- <option value="Critical" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Critical Only</option>
- <option value="High" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">High Only</option>
- <option value="Medium" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Medium Only</option>
- <option value="Low" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Low Only</option>
+ <option value="All" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("All Priority")}</option>
+ <option value="Critical" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("Critical Only")}</option>
+ <option value="High" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("High Only")}</option>
+ <option value="Medium" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("Medium Only")}</option>
+ <option value="Low" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("Low Only")}</option>
  </select>
  </div>
 
@@ -247,10 +249,10 @@ export function MaintenanceDashboard() {
  onChange={(e) => setSortBy(e.target.value as any)}
  className="bg-transparent text-[10px] font-black uppercase tracking-widest text-foreground outline-none cursor-pointer min-w-[150px]"
  >
- <option value="priority-desc" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Smart Triage</option>
- <option value="newest" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Newest First</option>
- <option value="oldest" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Oldest First</option>
- <option value="priority-asc" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">Priority (L-H)</option>
+ <option value="priority-desc" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("Smart Triage")}</option>
+ <option value="newest" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("Newest First")}</option>
+ <option value="oldest" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("Oldest First")}</option>
+ <option value="priority-asc" className="bg-card text-foreground dark:bg-zinc-900 dark:text-zinc-100">{t("Priority (L-H)")}</option>
  </select>
  </div>
 
@@ -311,10 +313,17 @@ export function MaintenanceDashboard() {
  <CheckCircle2 className="size-10 text-emerald-500" />
  </div>
  <h3 className="text-xl font-black text-foreground mb-2">
- No {priorityFilter !== "All" ? priorityFilter.toLowerCase() : ""} {filter !== "All" ? filter.toLowerCase() : ""} requests
+ {priorityFilter === "All" && filter === "All"
+ ? t("No requests")
+ : t("No {filters} requests", {
+ filters: [priorityFilter !== "All" ? t(priorityFilter) : "", filter !== "All" ? t(filter) : ""]
+ .filter(Boolean)
+ .join(" ")
+ .toLowerCase(),
+ })}
  </h3>
  <p className="text-muted-foreground text-sm max-w-sm">
- You&apos;re all caught up! Everything is running smoothly across your properties.
+ {t("You're all caught up! Everything is running smoothly across your properties.")}
  </p>
  </div>
  )}
@@ -337,6 +346,7 @@ export function MaintenanceDashboard() {
 function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, onClick?: () => void }) {
  const isCritical = request.priority === "Critical";
  const isPending = request.status === "Pending";
+ const { t } = useLanguageContext();
 
  return (
  <div
@@ -412,7 +422,7 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
  <Zap className="size-3.5" />
  </div>
  <span className="text-xs font-black uppercase tracking-wider">
- Unit {request.unit}
+ {t("Unit {unit}", { unit: request.unit })}
  </span>
  </div>
  </div>
@@ -436,7 +446,7 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
  )}
  </div>
  <div className="flex flex-col justify-center pl-4">
- <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">Tenant</span>
+ <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">{t("Tenant")}</span>
  <span className="text-xs font-black text-foreground truncate max-w-[100px]">{request.tenant}</span>
  </div>
  </div>
@@ -447,7 +457,7 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
  onClick?.();
  }}
  className="p-2.5 rounded-xl neumorphic-primary hover:bg-primary/90 transition-all active:scale-95"
- aria-label="View Details"
+ aria-label={t("View Details")}
  >
  <ArrowRight className="size-5" />
  </button>
@@ -460,6 +470,7 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
 function MaintenanceListRow({ request, onClick }: { request: MaintenanceRequest, onClick?: () => void }) {
  const isCritical = request.priority === "Critical";
  const isPending = request.status === "Pending";
+ const { t } = useLanguageContext();
 
  return (
  <div
@@ -496,7 +507,7 @@ function MaintenanceListRow({ request, onClick }: { request: MaintenanceRequest,
  </div>
  <div className="flex items-center gap-1.5 text-primary/70 whitespace-nowrap">
  <Zap className="size-3 text-primary/30" />
- Unit {request.unit}
+ {t("Unit {unit}", { unit: request.unit })}
  </div>
  </div>
  </div>
@@ -527,6 +538,7 @@ function MaintenanceListRow({ request, onClick }: { request: MaintenanceRequest,
 
 
 function PriorityBadge({ priority }: { priority: Priority }) {
+ const { t } = useLanguageContext();
  const config = {
  Critical: "bg-red-600 border-red-700 text-white",
  High: "bg-amber-500 border-amber-600 text-white",
@@ -540,12 +552,13 @@ function PriorityBadge({ priority }: { priority: Priority }) {
  config[priority]
  )}>
  {priority === "Critical" && <AlertTriangle className="size-3" />}
- {priority} Priority
+ {t("{priority} Priority", { priority: t(priority) })}
  </span>
  );
 }
 
 function StatusBadge({ status, tenantRepairStatus }: { status: Status, tenantRepairStatus?: string }) {
+ const { t } = useLanguageContext();
  const config = {
  Pending: "bg-amber-500 border-amber-600 text-white",
  Assigned: "bg-blue-600 border-blue-700 text-white",
@@ -574,7 +587,7 @@ function StatusBadge({ status, tenantRepairStatus }: { status: Status, tenantRep
  "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider ",
  customClass
  )}>
- {displayStatus}
+ {t(displayStatus)}
  </span>
  );
 }

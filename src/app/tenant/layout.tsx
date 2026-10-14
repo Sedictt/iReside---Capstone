@@ -12,6 +12,7 @@ import { ProfileCardProvider } from "@/context/ProfileCardContext";
 import { ProfileCard } from "@/components/ui/ProfileCard";
 import { NotificationBanner } from "@/components/navigation/NotificationBanner";
 import { PendingLeaseSignatureBanner } from "@/components/tenant/PendingLeaseSignatureBanner";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 export default function TenantLayout({
     children,
@@ -19,6 +20,7 @@ export default function TenantLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
+    const { t } = useLanguageContext();
     
     const isChatPage = pathname === "/tenant/messages";
     const isOnboardingPage = pathname.startsWith("/tenant/onboarding");
@@ -60,7 +62,7 @@ export default function TenantLayout({
                             <Suspense fallback={
                                 <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
                                     <Loader2 className="size-8 animate-spin text-primary" />
-                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Loading...</p>
+                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("Loading...")}</p>
                                 </div>
                             }>
                                 <div

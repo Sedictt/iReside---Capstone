@@ -9,6 +9,7 @@ import { fetchIrisHistory, getCachedIrisHistory, setCachedIrisHistory, type Iris
 import type { IrisCardData } from "@/lib/services/iris";
 import { ChatMessageMarkdown } from "@/components/ui/ChatMessageMarkdown";
 import { isPreseededPhone, isPreseededEmail } from "@/lib/validation/brand-setup";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface Message {
     id: string;
@@ -43,9 +44,39 @@ const buildWelcomeMessage = (firstName?: string | null) => {
     return `Welcome back${nameSegment}! 👋 I am your virtual property assistant. How can I help you settle in or manage your apartment today?`;
 };
 
+// Stored/cached in English (history + "welcome back" detection rely on it); translated only at render.
+const WELCOME_WITH_NAME = "Welcome back, {name}! 👋 I am your virtual property assistant. How can I help you settle in or manage your apartment today?";
+const WELCOME_NO_NAME = "Welcome back! 👋 I am your virtual property assistant. How can I help you settle in or manage your apartment today?";
+const IRIS_CONNECTION_ERROR = "I apologize, but I'm having trouble connecting right now. Please try again in a moment.";
+
+// Chip label is shown translated; the prompt sent to iRis falls back to the English label when no translation exists.
+const QUICK_FEATURES = [
+    { label: "WiFi Password", promptKey: "iris.quick_prompt.wifi" },
+    { label: "Landlord Contact", promptKey: "iris.quick_prompt.landlord" },
+    { label: "Rent Status", promptKey: "iris.quick_prompt.rent" },
+    { label: "Amenity Hours", promptKey: "iris.quick_prompt.amenities" },
+    { label: "Maintenance", promptKey: "iris.quick_prompt.maintenance" },
+];
+
+const RENT_STATUS_LABELS: Record<string, string> = {
+    pending: "Pending",
+    processing: "Processing",
+    completed: "Completed",
+    failed: "Failed",
+    refunded: "Refunded",
+    draft: "Draft",
+    pending_signature: "Pending Signature",
+    pending_tenant_signature: "Pending Tenant Signature",
+    pending_landlord_signature: "Pending Landlord Signature",
+    active: "Active",
+    expired: "Expired",
+    terminated: "Terminated",
+};
+
 export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
     const INITIAL_CHAT_SKELETON_COUNT = 6;
     const { profile, user } = useAuth();
+    const { t, locale } = useLanguageContext();
 
     const firstName = getFirstName(profile?.full_name ?? user?.user_metadata?.full_name ?? user?.email ?? null);
     const userInitials = getUserInitials(profile?.full_name ?? user?.user_metadata?.full_name ?? null);
@@ -230,13 +261,22 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
             const errorMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: "iris",
-                content: "I apologize, but I'm having trouble connecting right now. Please try again in a moment.",
+                content: IRIS_CONNECTION_ERROR,
                 timestamp: new Date(),
             };
             setMessages(prev => [...prev, errorMsg]);
         } finally {
             setIsTyping(false);
         }
+    };
+
+    const displayContent = (msg: Message) => {
+        if (msg.role !== "iris") return msg.content;
+        if (msg.content === IRIS_CONNECTION_ERROR) return t(IRIS_CONNECTION_ERROR);
+        if (msg.content === buildWelcomeMessage(firstName)) {
+            return firstName ? t(WELCOME_WITH_NAME, { name: firstName }) : t(WELCOME_NO_NAME);
+        }
+        return msg.content;
     };
 
     return (
@@ -249,7 +289,8 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                             type="button"
                             onClick={onBack}
                             className="flex sm:hidden items-center justify-center p-2 rounded-xl neumorphic-extruded transition-all active:scale-95 text-high hover:text-primary"
-                            title="Back to List"
+                            title={t("Back to List")}
+                            aria-label={t("Back to List")}
                         >
                             <ArrowLeft className="size-4" />
                         </button>
@@ -265,21 +306,21 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                     <div>
                         <h3 className="font-black text-foreground text-base">iRis Assistant</h3>
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] uppercase font-black text-primary tracking-widest bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">AI Concierge</span>
-                            <span className="text-[10px] text-muted-foreground font-medium">Always Available</span>
+                            <span className="text-[10px] uppercase font-black text-primary tracking-widest bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">{t("AI Concierge")}</span>
+                            <span className="text-[10px] text-muted-foreground font-medium">{t("Always Available")}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Dummy Tools to match layout & guide tour step 5 */}
                 <div className="flex items-center gap-2" data-tour-id="tour-messages-tools">
-                    <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors opacity-50 cursor-not-allowed" title="Search not available for iRis">
+                    <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors opacity-50 cursor-not-allowed" title={t("Search not available for iRis")}>
                         <Search className="size-4" />
                     </button>
-                    <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors opacity-50 cursor-not-allowed" title="Files not available for iRis">
+                    <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors opacity-50 cursor-not-allowed" title={t("Files not available for iRis")}>
                         <Folder className="size-4" />
                     </button>
-                    <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors opacity-50 cursor-not-allowed" title="Settings">
+                    <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors opacity-50 cursor-not-allowed" title={t("Settings")}>
                         <MoreVertical className="size-4" />
                     </button>
                 </div>
@@ -293,11 +334,11 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                             <Image src="/logos/favicon.png" alt="iRis" fill sizes="80px" className="object-cover" />
                         </div>
                         <span className="text-xs font-black text-muted-foreground uppercase tracking-widest bg-card px-4 py-1.5 rounded-full border border-border shadow-sm">
-                            Conversation with iRis • Private & Secured
+                            {t("Conversation with iRis • Private & Secured")}
                         </span>
                         <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-medium max-w-md text-center">
                             <AlertCircle className="size-3.5 text-muted-foreground/70 shrink-0" />
-                            <span>iRis is an AI assistant and can make mistakes. Always verify critical lease and payment details.</span>
+                            <span>{t("iRis is an AI assistant and can make mistakes. Always verify critical lease and payment details.")}</span>
                         </div>
                     </div>
 
@@ -341,7 +382,7 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                                 ? "bg-primary text-primary-foreground rounded-br-sm font-medium shadow-[0_10px_24px_-16px_rgba(109,152,56,0.55)]"
                                                 : "bg-card text-foreground rounded-bl-sm border border-border"
                                         )}>
-                                            <ChatMessageMarkdown content={msg.content} isUser={msg.role === "user"} />
+                                            <ChatMessageMarkdown content={displayContent(msg)} isUser={msg.role === "user"} />
                                         </div>
 
                                         {/* Wi-Fi Card */}
@@ -349,7 +390,7 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                             <div className="w-full bg-card border border-border rounded-xl overflow-hidden shadow-sm mt-1 relative group">
                                                 <div className="p-3.5 border-b border-border flex justify-between items-center relative z-10">
                                                     <div className="flex-1 min-w-0 pr-2">
-                                                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">Network Name (SSID)</p>
+                                                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">{t("Network Name (SSID)")}</p>
                                                         <p className="text-primary font-mono font-medium text-sm md:text-base select-all truncate">
                                                             {msg.card?.type === "wifi" ? msg.card.ssid : "TheLofts_Guest"}
                                                         </p>
@@ -358,14 +399,14 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                                         type="button"
                                                         onClick={() => copyToClipboard(msg.card?.type === "wifi" ? msg.card.ssid : "TheLofts_Guest", `ssid-${msg.id}`)}
                                                         className="p-2 text-muted-foreground hover:text-primary transition rounded-lg hover:bg-primary/10"
-                                                        title="Copy Network Name"
+                                                        title={t("Copy Network Name")}
                                                     >
                                                         {copiedKey === `ssid-${msg.id}` ? <Check className="size-4.5 text-emerald-500" /> : <Wifi className="size-4.5" />}
                                                     </button>
                                                 </div>
                                                 <div className="p-3.5 flex justify-between items-center relative z-10 hover:bg-muted/40 transition-colors">
                                                     <div className="flex-1 min-w-0 pr-2">
-                                                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">Password</p>
+                                                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">{t("Password")}</p>
                                                         <p className="text-primary font-mono font-medium text-sm md:text-base select-all truncate">
                                                             {msg.card?.type === "wifi" ? msg.card.password : "WelcomeHome2024"}
                                                         </p>
@@ -374,7 +415,7 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                                         type="button"
                                                         onClick={() => copyToClipboard(msg.card?.type === "wifi" ? msg.card.password : "WelcomeHome2024", `pass-${msg.id}`)}
                                                         className="p-2 text-muted-foreground hover:text-primary transition rounded-lg hover:bg-primary/10"
-                                                        title="Copy Password"
+                                                        title={t("Copy Password")}
                                                     >
                                                         {copiedKey === `pass-${msg.id}` ? <Check className="size-4.5 text-emerald-500" /> : <Copy className="size-4.5" />}
                                                     </button>
@@ -390,7 +431,7 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                                         <Building2 className="size-4" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider">Landlord & Property Management</p>
+                                                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider">{t("Landlord & Property Management")}</p>
                                                         <p className="font-bold text-foreground text-sm truncate">{msg.card.name}</p>
                                                         {msg.card.businessName && (
                                                             <p className="text-xs text-muted-foreground truncate">{msg.card.businessName}</p>
@@ -410,7 +451,7 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                                                 type="button"
                                                                 onClick={() => copyToClipboard(msg.card?.type === "landlord" && msg.card.phone ? msg.card.phone : "", `phone-${msg.id}`)}
                                                                 className="p-1.5 text-muted-foreground hover:text-primary transition rounded-md hover:bg-primary/10"
-                                                                title="Copy Phone"
+                                                                title={t("Copy Phone")}
                                                             >
                                                                 {copiedKey === `phone-${msg.id}` ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
                                                             </button>
@@ -428,7 +469,7 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                                                 type="button"
                                                                 onClick={() => copyToClipboard(msg.card?.type === "landlord" && msg.card.email ? msg.card.email : "", `email-${msg.id}`)}
                                                                 className="p-1.5 text-muted-foreground hover:text-primary transition rounded-md hover:bg-primary/10"
-                                                                title="Copy Email"
+                                                                title={t("Copy Email")}
                                                             >
                                                                 {copiedKey === `email-${msg.id}` ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
                                                             </button>
@@ -436,7 +477,7 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                                     )}
                                                     {(!msg.card.phone || isPreseededPhone(msg.card.phone)) && (!msg.card.email || isPreseededEmail(msg.card.email)) && (
                                                         <div className="p-3 text-muted-foreground text-xs italic">
-                                                            Direct contact details are not published yet. Please send a message via the Inquiries tab.
+                                                            {t("Direct contact details are not published yet. Please send a message via the Inquiries tab.")}
                                                         </div>
                                                     )}
                                                 </div>
@@ -449,32 +490,32 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                                 <div className="p-3.5 border-b border-border flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
                                                         <CreditCard className="size-4 text-primary" />
-                                                        <span className="text-xs font-bold text-foreground">Rent & Lease Summary</span>
+                                                        <span className="text-xs font-bold text-foreground">{t("Rent & Lease Summary")}</span>
                                                     </div>
                                                     <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                                                        {msg.card.status}
+                                                        {RENT_STATUS_LABELS[msg.card.status] ? t(RENT_STATUS_LABELS[msg.card.status]) : msg.card.status}
                                                     </span>
                                                 </div>
                                                 <div className="p-3.5 grid grid-cols-2 gap-3 text-xs">
                                                     <div>
-                                                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">Monthly Rent</p>
+                                                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">{t("Monthly Rent")}</p>
                                                         <p className="text-sm font-bold text-foreground">₱{msg.card.monthlyRent.toLocaleString()}</p>
                                                     </div>
                                                     {msg.card.dueDate && (
                                                         <div>
-                                                            <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">Schedule</p>
+                                                            <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">{t("Schedule")}</p>
                                                             <p className="text-xs font-medium text-foreground">{msg.card.dueDate}</p>
                                                         </div>
                                                     )}
                                                     {msg.card.securityDeposit !== undefined && (
                                                         <div>
-                                                            <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">Deposit</p>
+                                                            <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">{t("Deposit")}</p>
                                                             <p className="text-xs font-medium text-muted-foreground">₱{msg.card.securityDeposit.toLocaleString()}</p>
                                                         </div>
                                                     )}
                                                     {msg.card.lastPaymentDate && (
                                                         <div>
-                                                            <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">Last Payment</p>
+                                                            <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider mb-0.5">{t("Last Payment")}</p>
                                                             <p className="text-xs font-medium text-muted-foreground">{msg.card.lastPaymentDate}</p>
                                                         </div>
                                                     )}
@@ -483,14 +524,14 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                         )}
 
                                         <span className={cn("text-[10px] font-medium text-muted-foreground px-1", msg.role === "user" ? "text-right" : "text-left")}>
-                                            {msg.role === "user" ? "Seen" : msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {msg.role === "user" ? t("Seen") : msg.timestamp.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
                                         </span>
                                     </div>
 
                                     {msg.role === "user" && (
                                         <div className="shrink-0 mt-auto">
                                             <div className="size-8 rounded-full bg-card flex items-center justify-center font-black text-xs text-muted-foreground border border-border">
-                                                {userInitials}
+                                                {userInitials === "You" ? t("You") : userInitials}
                                             </div>
                                         </div>
                                     )}
@@ -522,16 +563,16 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                 <div className="max-w-4xl w-full flex flex-col gap-3 relative">
                     {/* Feature Suggester */}
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                        {["WiFi Password", "Landlord Contact", "Rent Status", "Amenity Hours", "Maintenance"].map((feature) => (
+                        {QUICK_FEATURES.map((feature) => (
                             <button
-                                key={feature}
+                                key={feature.label}
                                 type="button"
                                 className="whitespace-nowrap px-4 py-1.5 rounded-full text-[11px] font-black bg-background text-muted-foreground border border-border hover:border-primary hover:text-primary hover:bg-primary/5 transition-all active:scale-95"
                                 onClick={() => {
-                                    handleSend(feature);
+                                    handleSend(t(feature.promptKey, undefined, feature.label));
                                 }}
                             >
-                                {feature}
+                                {t(feature.label)}
                             </button>
                         ))}
                     </div>
@@ -548,7 +589,8 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                                         handleSend();
                                     }
                                 }}
-                                placeholder="Message iRis Assistant..."
+                                placeholder={t("Message iRis Assistant...")}
+                                aria-label={t("Message iRis")}
                                 disabled={isChatInitializing}
                                 className="flex-1 bg-transparent border-none outline-none resize-none pt-2.5 px-3 min-h-[44px] max-h-[120px] text-sm text-foreground placeholder:text-muted-foreground custom-scrollbar"
                                 rows={1}
@@ -556,6 +598,7 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                             <button
                                 onClick={() => handleSend()}
                                 disabled={!input.trim() || isChatInitializing}
+                                aria-label={t("Send message")}
                                 className="size-10 shrink-0 flex items-center justify-center rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:scale-100 disabled:hover:bg-primary"
                             >
                                 <ArrowUp className="size-5" />
@@ -566,14 +609,14 @@ export function TenantIrisChat({ onBack }: TenantIrisChatProps = {}) {
                         <div className="flex items-center gap-1.5">
                             <AlertCircle className="size-3 text-muted-foreground/70 shrink-0" />
                             <p className="text-[10px] text-muted-foreground font-medium">
-                                iRis can make mistakes. Verify important property and lease details.
+                                {t("iRis can make mistakes. Verify important property and lease details.")}
                             </p>
                         </div>
                         <span className="hidden sm:inline text-muted-foreground/30 text-[10px]">•</span>
                         <div className="flex items-center gap-1.5">
                             <ShieldCheck className="size-3 text-emerald-500/70 shrink-0" />
                             <p className="text-[10px] text-muted-foreground font-medium">
-                                Conversations are monitored by AI specifically for building administration.
+                                {t("Conversations are monitored by AI specifically for building administration.")}
                             </p>
                         </div>
                     </div>

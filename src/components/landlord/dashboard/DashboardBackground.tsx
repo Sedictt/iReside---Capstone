@@ -3,6 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { useLanguageContext } from "@/context/LanguageContext";
 
 interface DashboardBackgroundProps {
     image: string;
@@ -10,6 +11,7 @@ interface DashboardBackgroundProps {
 }
 
 export function DashboardBackground({ image, className }: DashboardBackgroundProps) {
+    const { t } = useLanguageContext();
     const isWhitelistedHost =
         image.startsWith("/") ||
         image.includes("images.unsplash.com") ||
@@ -22,7 +24,7 @@ export function DashboardBackground({ image, className }: DashboardBackgroundPro
         <div className={cn("absolute inset-0 overflow-hidden rounded-[2.5rem]", className)}>
             <Image
                 src={image}
-                alt="Dashboard Banner"
+                alt={t("Dashboard Banner")}
                 fill
                 sizes="100vw"
                 unoptimized={!isWhitelistedHost}
