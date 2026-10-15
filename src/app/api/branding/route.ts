@@ -13,7 +13,8 @@ interface CachedBrandingEntry {
 }
 const brandingMemoryCache = new Map<string, CachedBrandingEntry>();
 
-export function invalidateBrandingCache() {
+// Not exported: a route file may only export route handlers and config (Next.js build check).
+function invalidateBrandingCache() {
   brandingMemoryCache.clear();
 }
 
