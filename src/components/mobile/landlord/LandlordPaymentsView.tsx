@@ -12,8 +12,13 @@ import {
     XCircle, 
     Clock, 
     Maximize2, 
-    X
+    X,
+    Banknote,
+    Receipt,
+    Plus
 } from 'lucide-react';
+import { triggerHaptic } from '@/lib/haptics';
+import { MobileCollectPaymentDrawer } from '@/components/mobile/landlord/MobileCollectPaymentDrawer';
 import { cn } from '@/lib/utils';
 import { useLanguageContext } from '@/context/LanguageContext';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
@@ -62,6 +67,8 @@ export function LandlordPaymentsView() {
     }, [searchParams]);
     
     // Lightbox state for inspecting payment proof receipts
+    const [isCollectDrawerOpen, setIsCollectDrawerOpen] = useState(false);
+    const [selectedCollectInvoiceId, setSelectedCollectInvoiceId] = useState<string | null>(null);
     const [inspectInvoice, setInspectInvoice] = useState<InvoiceItem | null>(null);
     const [processingId, setProcessingId] = useState<string | null>(null);
     const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -183,9 +190,24 @@ export function LandlordPaymentsView() {
     return (
         <PullToRefresh onRefresh={fetchInvoices}>
             <div className="flex flex-col gap-3 pb-6">
-                {/* 1. Property Selector (Desktop-Matched Neumorphic Design) */}
-                <div className="px-4 pt-2.5 shrink-0">
-                    <MobilePropertySelector />
+                {/* 1. Property Selector & Fast Collect CTA */}
+                <div className="px-4 pt-2.5 shrink-0 flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                        <MobilePropertySelector />
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            triggerHaptic('light');
+                            setSelectedCollectInvoiceId(null);
+                            setIsCollectDrawerOpen(true);
+                        }}
+                        className="shrink-0 h-11 px-3.5 rounded-2xl neumorphic-primary text-primary-foreground font-black text-xs uppercase tracking-wider flex items-center gap-1.5 active:scale-95 shadow-sm cursor-pointer"
+                        aria-label={t("Record offline payment")}
+                    >
+                        <Receipt className="size-4" />
+                        <span className="inline">{t("Collect")}</span>
+                    </button>
                 </div>
 
                 {/* 2. Sticky Search & Tab Filter Bar (Matching Maintenance Page Behavior) */}
@@ -366,30 +388,48 @@ export function LandlordPaymentsView() {
                                         </div>
                                     )}
 
-                                    {/* Quick Review Actions for Pending Proofs */}
-                                    {canReview && (
+                                    {/* Action Row: Collect Offline Payment & Review Proofs */}
+                                    {(!isPaid || canReview) && (
                                         <div className="flex items-center gap-2 mt-1 pt-1">
-                                            <button
-                                                type="button"
-                                                onClick={() => setPendingReview({ invoice, action: 'confirm' })}
-                                                disabled={processingId === invoice.id}
-                                                className="flex-1 py-2.5 px-3 rounded-xl neumorphic-primary text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 shadow-sm disabled:opacity-50 cursor-pointer"
-                                            >
-                                                <CheckCircle2 className="size-3.5" />
-                                                <span>{processingId === invoice.id ? t('Saving…') : t('Approve')}</span>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setRejectionReason('');
-                                                    setPendingReview({ invoice, action: 'reject' });
-                                                }}
-                                                disabled={processingId === invoice.id}
-                                                className="py-2.5 px-4 rounded-xl neumorphic-extruded border border-red-500/25 bg-red-500/10 text-red-500 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50 cursor-pointer"
-                                            >
-                                                <XCircle className="size-3.5" />
-                                                <span>{t('Reject')}</span>
-                                            </button>
+                                            {!isPaid && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        triggerHaptic('light');
+                                                        setSelectedCollectInvoiceId(invoice.id);
+                                                        setIsCollectDrawerOpen(true);
+                                                    }}
+                                                    className="flex-1 py-2 px-3 rounded-xl neumorphic-extruded text-primary text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer hover:border-primary/40"
+                                                >
+                                                    <Banknote className="size-3.5" />
+                                                    <span>{t('Collect')}</span>
+                                                </button>
+                                            )}
+                                            {canReview && (
+                                                <>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setPendingReview({ invoice, action: 'confirm' })}
+                                                        disabled={processingId === invoice.id}
+                                                        className="flex-1 py-2 px-3 rounded-xl neumorphic-primary text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 shadow-sm disabled:opacity-50 cursor-pointer"
+                                                    >
+                                                        <CheckCircle2 className="size-3.5" />
+                                                        <span>{processingId === invoice.id ? t('Saving…') : t('Approve')}</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setRejectionReason('');
+                                                            setPendingReview({ invoice, action: 'reject' });
+                                                        }}
+                                                        disabled={processingId === invoice.id}
+                                                        className="py-2 px-3 rounded-xl neumorphic-extruded border border-red-500/25 bg-red-500/10 text-red-500 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50 cursor-pointer"
+                                                    >
+                                                        <XCircle className="size-3.5" />
+                                                        <span>{t('Reject')}</span>
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -478,13 +518,32 @@ export function LandlordPaymentsView() {
                                             tenant: <strong className="text-foreground font-bold">{pendingReview.invoice.tenantName}</strong>,
                                         })}
                                     </span>
-                                    <input
-                                        type="text"
-                                        placeholder={t("Reason (optional, e.g. blurry receipt)")}
-                                        value={rejectionReason}
-                                        onChange={(e) => setRejectionReason(e.target.value)}
-                                        className="w-full bg-slate-50 dark:bg-card border border-slate-300 dark:border-white/15 rounded-xl px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                                    />
+                                    <div className="space-y-1.5">
+                                        <div className="flex flex-wrap gap-1">
+                                            {[
+                                                t('Blurry screenshot'),
+                                                t('Amount mismatch'),
+                                                t('Reference # invalid'),
+                                                t('Duplicate proof'),
+                                            ].map((preset) => (
+                                                <button
+                                                    key={preset}
+                                                    type="button"
+                                                    onClick={() => setRejectionReason(preset)}
+                                                    className="px-2 py-0.5 rounded-lg bg-muted/60 text-[10px] font-bold text-muted-foreground hover:text-foreground active:scale-95"
+                                                >
+                                                    {preset}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <input
+                                            type="text"
+                                            placeholder={t("Reason (e.g. blurry receipt)")}
+                                            value={rejectionReason}
+                                            onChange={(e) => setRejectionReason(e.target.value)}
+                                            className="w-full bg-slate-50 dark:bg-card border border-slate-300 dark:border-white/15 rounded-xl px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                        />
+                                    </div>
                                 </div>
                             )
                         }
@@ -498,6 +557,16 @@ export function LandlordPaymentsView() {
                     />
                 )}
             </div>
+            {/* Mobile Offline Payment Collection Drawer */}
+            <MobileCollectPaymentDrawer
+                isOpen={isCollectDrawerOpen}
+                onClose={() => {
+                    setIsCollectDrawerOpen(false);
+                    setSelectedCollectInvoiceId(null);
+                }}
+                initialInvoiceId={selectedCollectInvoiceId}
+                onPaymentRecorded={() => fetchInvoices()}
+            />
         </PullToRefresh>
     );
 }

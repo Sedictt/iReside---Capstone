@@ -70,7 +70,7 @@ import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropert
 import { ActionRequired } from '@/components/landlord/dashboard/ActionRequired';
 import { MobilePaymentDrawer } from '@/components/mobile/landlord/MobilePaymentDrawer';
 import { MobileVacantUnitsDrawer } from '@/components/mobile/landlord/MobileVacantUnitsDrawer';
-import { CollectPaymentModal } from '@/components/landlord/dashboard/CollectPaymentModal';
+import { MobileCollectPaymentDrawer } from '@/components/mobile/landlord/MobileCollectPaymentDrawer';
 import { WalkInApplicationModal } from '@/components/landlord/applications/WalkInApplicationModal';
 import { VacantUnitsModal } from '@/components/landlord/dashboard/VacantUnitsModal';
 import { TenantInviteManager } from '@/components/landlord/applications/TenantInviteManager';
@@ -1107,7 +1107,7 @@ export function LandlordOverviewView() {
             </AnimatePresence>
 
             {/* Collect / Record Payment Modal */}
-            <CollectPaymentModal
+            <MobileCollectPaymentDrawer
                 isOpen={isCollectPaymentModalOpen}
                 onClose={() => setIsCollectPaymentModalOpen(false)}
                 onPaymentRecorded={() => {
