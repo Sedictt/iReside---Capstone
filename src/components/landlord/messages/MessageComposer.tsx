@@ -196,7 +196,7 @@ export function MessageComposer({
                     )}
                 </AnimatePresence>
 
-                <div className="flex items-end gap-3 neumorphic-inset rounded-[2rem] p-2 pl-4 pr-2 transition-all relative overflow-visible group/composer">
+                <div className="flex items-end gap-3 neumorphic-inset !border !border-divider !bg-surface-2 focus-within:!border-primary/40 rounded-[2rem] p-2 pl-4 pr-2 transition-all relative overflow-visible group/composer">
                     {/* Attachment & Actions Dropdown */}
                     <div className="relative" ref={attachMenuRef}>
                         <button 

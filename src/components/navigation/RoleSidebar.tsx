@@ -392,7 +392,8 @@ export function RoleSidebar({
                             }
                         }}
                         className={cn(
-                            "group relative flex items-center justify-between py-2 px-3 mx-1 my-0.5 rounded-xl transition-colors duration-150 ease-out cursor-pointer flex-1 min-w-0",
+                            "group relative flex items-center justify-between mx-1 rounded-xl transition-colors duration-150 ease-out cursor-pointer flex-1 min-w-0",
+                            nested ? "py-1.5 px-2.5 my-px" : "py-2 px-3 my-0.5",
                             isItemLocked
                                 ? "opacity-35 cursor-not-allowed text-muted-foreground hover:text-muted-foreground active:scale-100 shadow-none pointer-events-auto"
                                 : cn(
@@ -403,18 +404,22 @@ export function RoleSidebar({
                                 )
                         )}
                     >
-                        {/* Flat 2D Active Indicator Bar - vertically centered */}
+                        {/* Active indicator: an edge bar for top-level items; nested items light up their segment of the section's guide line. */}
                         {isActive && !isItemLocked && (
-                            <span 
-                                className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-primary"
-                                aria-hidden="true" 
+                            <span
+                                className={cn(
+                                    "absolute top-1/2 -translate-y-1/2 bg-primary",
+                                    nested ? "-left-[9.5px] h-full w-0.5 rounded-full" : "left-0 h-5 w-1 rounded-r-full"
+                                )}
+                                aria-hidden="true"
                             />
                         )}
 
-                        <div className="flex items-center gap-2.5 min-w-0">
-                            <item.icon 
+                        <div className={cn("flex items-center min-w-0", nested ? "gap-2" : "gap-2.5")}>
+                            <item.icon
                                 className={cn(
-                                    "size-4.5 shrink-0 transition-transform duration-200", 
+                                    "shrink-0 transition-transform duration-200",
+                                    nested ? "size-4" : "size-4.5",
                                     isActive && !isItemLocked ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
                                 )} 
                                 aria-hidden="true" 
@@ -620,15 +625,15 @@ export function RoleSidebar({
                                             aria-controls={sectionId}
                                             onClick={() => toggleSection(section.category, fallbackExpanded)}
                                             className={cn(
-                                                "group flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
-                                                hasActiveItem ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground",
+                                                "group mx-1 mt-2 flex w-[calc(100%-0.5rem)] items-center justify-between rounded-xl px-3 py-2 text-left transition-colors cursor-pointer hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
+                                                hasActiveItem ? "text-foreground" : "text-foreground/85 hover:text-foreground",
                                             )}
                                         >
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-2.5">
                                                 {SectionIcon && (
-                                                    <SectionIcon className={cn("size-3.5", hasActiveItem ? "text-primary" : "text-muted-foreground")} />
+                                                    <SectionIcon className={cn("size-4.5 shrink-0", hasActiveItem ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
                                                 )}
-                                                <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/80">{t(section.category)}</span>
+                                                <span className="text-xs font-bold tracking-normal">{t(section.category)}</span>
                                             </div>
                                             <div className="flex items-center gap-1.5">
                                                 {!isExpanded && section.items.some((i) => i.badge || i.urgent || i.warning) && (
@@ -651,9 +656,12 @@ export function RoleSidebar({
                                                         animate={prefersReducedMotion ? { opacity: 1 } : { height: "auto", opacity: 1 }}
                                                         exit={prefersReducedMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
                                                         transition={{ duration: prefersReducedMotion ? 0 : 0.18 }}
-                                                        className="space-y-0.5 overflow-visible"
+                                                        className="overflow-visible"
                                                     >
+                                                        {/* Guide line ties child items to their section heading */}
+                                                        <div className="ml-6 mt-0.5 mb-1 border-l border-border/70 pl-1">
                                                         {section.items.map((item) => renderNavItem(item, true))}
+                                                        </div>
                                                     </motion.div>
                                                 )}
                                             </AnimatePresence>

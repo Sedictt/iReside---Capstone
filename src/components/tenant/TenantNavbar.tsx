@@ -21,7 +21,6 @@ import {
     Menu,
     X,
     LayoutGrid,
-    Sparkles,
     Check,
     BookOpen,
     Download,
@@ -43,49 +42,7 @@ import { LogoutConfirmationModal } from "@/components/ui/LogoutConfirmationModal
 import { m as motion, AnimatePresence } from "framer-motion";
 import { DEFAULT_AVATAR_URL, getSafeAvatarBgColor, isProfileIncomplete } from "@/lib/constants";
 import type { Notification, Profile } from "@/types/database";
-import type { TranslationParams } from "@/lib/i18n";
-
-function formatTimeAgo(
-    value: string,
-    t: (phrase: string, params?: TranslationParams) => string,
-    locale: string
-) {
-    const timestamp = new Date(value);
-    const now = new Date();
-    const diffMs = now.getTime() - timestamp.getTime();
-
-    if (Number.isNaN(diffMs) || diffMs < 0) {
-        return t("Recently");
-    }
-
-    const minute = 60 * 1000;
-    const hour = 60 * minute;
-    const day = 24 * hour;
-
-    if (diffMs < hour) {
-        const minutes = Math.max(1, Math.floor(diffMs / minute));
-        return t("{minutes}m ago", { minutes });
-    }
-
-    if (diffMs < day) {
-        const hours = Math.max(1, Math.floor(diffMs / hour));
-        return t("{hours}h ago", { hours });
-    }
-
-    const days = Math.floor(diffMs / day);
-    if (days === 1) {
-        return t("Yesterday");
-    }
-
-    if (days < 7) {
-        return t("{days}d ago", { days });
-    }
-
-    return timestamp.toLocaleDateString(locale, {
-        month: "short",
-        day: "numeric",
-    });
-}
+import { formatNotificationFullTime, formatNotificationTime, getNotificationVisual } from "@/lib/notification-display";
 
 type TenantPropertyInfo = { name: string; detail: string | null };
 
@@ -659,7 +616,7 @@ function NotificationPanelContent({
                     </div>
                 ) : notifications.length === 0 ? (
                     <div className="px-6 py-12 text-center text-muted-foreground">
-                        <Sparkles className="size-8 mx-auto mb-3 opacity-20" />
+                        <Bell className="size-8 mx-auto mb-3 opacity-20" />
                         <p className="text-sm font-black">{t("All caught up!")}</p>
                         <p className="text-[10px] mt-1 opacity-60">{t("You have no notifications yet")}</p>
                     </div>
@@ -673,7 +630,16 @@ function NotificationPanelContent({
                                 !notification.read ? "bg-primary/[0.04]" : "opacity-75 hover:opacity-100"
                             )}
                         >
-                            <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-start justify-between gap-3">
+                                {(() => {
+                                    const visual = getNotificationVisual(notification.type);
+                                    const Icon = visual.icon;
+                                    return (
+                                        <div className={cn("flex size-9 shrink-0 items-center justify-center rounded-xl", visual.tileClassName)}>
+                                            <Icon className="size-4" aria-hidden="true" />
+                                        </div>
+                                    );
+                                })()}
                                 <div className="flex-1 min-w-0">
                                     <p className={cn(
                                         "text-sm font-black transition-colors truncate",
@@ -701,9 +667,13 @@ function NotificationPanelContent({
                                             </Link>
                                         </div>
                                     )}
-                                    <p className="mt-2 text-[10px] font-black text-muted-foreground/40 uppercase tracking-wider">
-                                        {formatTimeAgo(notification.created_at, t, locale)}
-                                    </p>
+                                    <time
+                                        dateTime={notification.created_at}
+                                        title={formatNotificationFullTime(notification.created_at, locale)}
+                                        className="mt-2 block text-[10px] font-black text-muted-foreground/40 uppercase tracking-wider"
+                                    >
+                                        {formatNotificationTime(notification.created_at, t, locale)}
+                                    </time>
                                 </div>
                                 <div className="flex items-center justify-center size-7 shrink-0 mt-0.5">
                                     {!notification.read ? (

@@ -105,7 +105,7 @@ export function OperationsCenter({ className }: OperationsCenterProps) {
                 onClick={() => setIsOpen((prev) => !prev)}
                 className={cn(
                     // On desktop, stay clear of docked mini chat windows (see MINI_CHAT_DOCK_EXTENT_VAR).
-                    "fixed bottom-6 right-6 md:right-[max(7rem,calc(var(--mini-chat-dock-extent,0px)+1rem))] z-[60] group flex items-center gap-2.5 px-4 py-3 min-h-[48px] rounded-full",
+                    "fixed bottom-6 right-6 md:right-[max(7rem,calc(var(--mini-chat-sidebar-extent,0px)+1rem),calc(var(--mini-chat-dock-extent,0px)+1rem))] z-[60] group flex items-center gap-2.5 px-4 py-3 min-h-[48px] rounded-full",
                     "transition-[right] duration-500 ease-in-out",
                     "bg-primary text-primary-foreground font-bold shadow-[0_10px_30px_rgba(var(--primary-rgb),0.35)]",
                     "hover:bg-primary/95 hover:shadow-[0_14px_35px_rgba(var(--primary-rgb),0.5)]",

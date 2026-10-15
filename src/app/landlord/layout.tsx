@@ -207,7 +207,7 @@ export default function LandlordLayout({
                                     showContactsSidebar ? "md:pr-24" : ""
                                 )}
                             >
-                                {!isOnboarding && (
+                                {!isOnboarding && !isDocs && (
                                     <div className={cn(
                                         "w-full pointer-events-none z-[100]",
                                         showContactsSidebar && "md:pr-24"

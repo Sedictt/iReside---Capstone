@@ -3,15 +3,8 @@
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-    Bell,
-    CreditCard,
-    Wrench,
-    FileText,
-    MessageCircle,
-    FileCheck,
     CheckCheck,
     Trash2,
-    Sparkles,
     Clock,
     AlertCircle,
     ChevronRight,
@@ -25,47 +18,7 @@ import { MobileConfirmModal } from '@/components/mobile/shared/MobileConfirmModa
 import { cn } from '@/lib/utils';
 import type { Notification, NotificationType } from '@/types/database';
 import { useLanguageContext } from '@/context/LanguageContext';
-import type { TranslationParams } from '@/lib/i18n';
-
-type Translate = (phrase: string, params?: TranslationParams) => string;
-
-function formatTimeAgo(value: string, t: Translate, locale: string) {
-    const timestamp = new Date(value);
-    const now = new Date();
-    const diffMs = now.getTime() - timestamp.getTime();
-
-    if (Number.isNaN(diffMs) || diffMs < 0) {
-        return t('Recently');
-    }
-
-    const minute = 60 * 1000;
-    const hour = 60 * minute;
-    const day = 24 * hour;
-
-    if (diffMs < hour) {
-        const minutes = Math.max(1, Math.floor(diffMs / minute));
-        return t('{count}m ago', { count: minutes });
-    }
-
-    if (diffMs < day) {
-        const hours = Math.max(1, Math.floor(diffMs / hour));
-        return t('{count}h ago', { count: hours });
-    }
-
-    const days = Math.floor(diffMs / day);
-    if (days === 1) {
-        return t('Yesterday');
-    }
-
-    if (days < 7) {
-        return t('{count}d ago', { count: days });
-    }
-
-    return timestamp.toLocaleDateString(locale, {
-        month: 'short',
-        day: 'numeric',
-    });
-}
+import { formatNotificationFullTime, formatNotificationTime, getNotificationVisual } from '@/lib/notification-display';
 
 const IMPORTANT_TYPES: NotificationType[] = [
     'lease',
@@ -269,60 +222,6 @@ export function MobileNotificationsView() {
         }
     };
 
-    const getNotificationVisuals = (type: NotificationType) => {
-        switch (type) {
-            case 'payment':
-                return {
-                    icon: CreditCard,
-                    iconColor: 'text-emerald-500',
-                    badgeStyle: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-                    badge: 'Payment',
-                };
-            case 'maintenance':
-                return {
-                    icon: Wrench,
-                    iconColor: 'text-blue-500',
-                    badgeStyle: 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20',
-                    badge: 'Maintenance',
-                };
-            case 'lease':
-            case 'lease_renewal_request':
-            case 'lease_renewal_approved':
-            case 'lease_renewal_rejected':
-            case 'move_out_approved':
-            case 'move_out_denied':
-            case 'move_out_inspection_completed':
-            case 'move_out_finalized':
-                return {
-                    icon: FileText,
-                    iconColor: 'text-amber-500',
-                    badgeStyle: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20',
-                    badge: 'Lease',
-                };
-            case 'application':
-                return {
-                    icon: FileCheck,
-                    iconColor: 'text-purple-500',
-                    badgeStyle: 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/20',
-                    badge: 'Application',
-                };
-            case 'message':
-                return {
-                    icon: MessageCircle,
-                    iconColor: 'text-indigo-500',
-                    badgeStyle: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
-                    badge: 'Message',
-                };
-            default:
-                return {
-                    icon: Bell,
-                    iconColor: 'text-primary',
-                    badgeStyle: 'bg-primary/15 text-primary border-primary/20',
-                    badge: 'Notice',
-                };
-        }
-    };
-
     return (
         <PullToRefresh onRefresh={refresh} className="min-h-full pb-10">
             <div className="px-4 pt-2.5 pb-6 flex flex-col gap-3.5">
@@ -448,7 +347,7 @@ export function MobileNotificationsView() {
                             {activeTab === 'unread' ? (
                                 <CheckCircle2 className="size-7" strokeWidth={1.8} />
                             ) : activeTab === 'urgent' ? (
-                                <Sparkles className="size-7" strokeWidth={1.8} />
+                                <AlertCircle className="size-7" strokeWidth={1.8} />
                             ) : (
                                 <Inbox className="size-7" strokeWidth={1.8} />
                             )}
@@ -473,7 +372,7 @@ export function MobileNotificationsView() {
                 ) : (
                     <div className="space-y-3">
                         {filteredNotifications.map((item) => {
-                            const visuals = getNotificationVisuals(item.type);
+                            const visuals = getNotificationVisual(item.type);
                             const Icon = visuals.icon;
                             return (
                                 <div
@@ -489,7 +388,7 @@ export function MobileNotificationsView() {
                                     <div className="flex items-start gap-3.5">
                                         {/* Type Icon with Neumorphic Inset */}
                                         <div className="neumorphic-inset-card flex size-11 items-center justify-center rounded-2xl shrink-0 text-primary">
-                                            <Icon className={cn("size-5", visuals.iconColor)} />
+                                            <Icon className={cn("size-5", visuals.iconClassName)} />
                                         </div>
 
                                         {/* Content */}
@@ -498,19 +397,23 @@ export function MobileNotificationsView() {
                                                 <div className="flex items-center gap-1.5 overflow-hidden">
                                                     <span className={cn(
                                                         'text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border',
-                                                        visuals.badgeStyle
+                                                        visuals.badgeClassName
                                                     )}>
-                                                        {t(visuals.badge)}
+                                                        {t(visuals.label)}
                                                     </span>
                                                     {!item.read && (
                                                         <span className="size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] shrink-0 animate-pulse" />
                                                     )}
                                                 </div>
 
-                                                <span className="text-[10px] font-bold text-muted-foreground/70 flex items-center gap-1 shrink-0 font-mono">
+                                                <time
+                                                    dateTime={item.created_at}
+                                                    title={formatNotificationFullTime(item.created_at, locale)}
+                                                    className="text-[10px] font-bold text-muted-foreground/70 flex items-center gap-1 shrink-0 font-mono"
+                                                >
                                                     <Clock className="size-3" />
-                                                    {formatTimeAgo(item.created_at, t, locale)}
-                                                </span>
+                                                    {formatNotificationTime(item.created_at, t, locale)}
+                                                </time>
                                             </div>
 
                                             <h4 className={cn(

@@ -7,7 +7,6 @@ import {
     CreditCard, 
     Home, 
     AlertCircle, 
-    Sparkles, 
     Check, 
     FileText, 
     Wrench, 
@@ -28,6 +27,7 @@ import {
     Banknote,
     AlertTriangle
 } from "lucide-react";
+import { formatNotificationFullTime, formatNotificationTime, getNotificationVisual } from "@/lib/notification-display";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -328,48 +328,6 @@ const FEATURE_INDEX: SearchResult[] = [
         keywords: ["data", "privacy", "export", "backup", "audit", "compliance"]
     }
 ];
-
-function formatTimeAgo(
-    value: string,
-    t: (phrase: string, params?: Record<string, string | number>) => string,
-    locale: string
-) {
-    const timestamp = new Date(value);
-    const now = new Date();
-    const diffMs = now.getTime() - timestamp.getTime();
-
-    if (Number.isNaN(diffMs) || diffMs < 0) {
-        return t("Recently");
-    }
-
-    const minute = 60 * 1000;
-    const hour = 60 * minute;
-    const day = 24 * hour;
-
-    if (diffMs < hour) {
-        const minutes = Math.max(1, Math.floor(diffMs / minute));
-        return t("{count}m ago", { count: minutes });
-    }
-
-    if (diffMs < day) {
-        const hours = Math.max(1, Math.floor(diffMs / hour));
-        return t("{count}h ago", { count: hours });
-    }
-
-    const days = Math.floor(diffMs / day);
-    if (days === 1) {
-        return t("Yesterday");
-    }
-
-    if (days < 7) {
-        return t("{count}d ago", { count: days });
-    }
-
-    return timestamp.toLocaleDateString(locale, {
-        month: "short",
-        day: "numeric",
-    });
-}
 
 interface DashboardHeaderActionsProps {
     onQuestPanelOpen: () => void;
@@ -802,21 +760,15 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                                                     !n.read && "bg-primary/[0.03]"
                                                 )}
                                             >
-                                                <div className={cn(
-                                                    "flex size-9 shrink-0 items-center justify-center rounded-xl",
-                                                    n.type === "payment" ? "bg-emerald-500/10 text-emerald-500" :
-                                                    n.type === "maintenance" ? "bg-amber-500/10 text-amber-500" :
-                                                    n.type === "application" ? "bg-blue-500/10 text-blue-500" :
-                                                    n.type === "lease" ? "bg-purple-500/10 text-purple-500" :
-                                                    n.type === "announcement" ? "bg-blue-500/10 text-blue-400" :
-                                                    "bg-primary/10 text-primary"
-                                                )}>
-                                                    {n.type === "announcement" ? (
-                                                        <ShieldCheck className="size-4" />
-                                                    ) : (
-                                                        <Sparkles className="size-4" />
-                                                    )}
-                                                </div>
+                                                {(() => {
+                                                    const visual = getNotificationVisual(n.type);
+                                                    const Icon = visual.icon;
+                                                    return (
+                                                        <div className={cn("flex size-9 shrink-0 items-center justify-center rounded-xl", visual.tileClassName)}>
+                                                            <Icon className="size-4" aria-hidden="true" />
+                                                        </div>
+                                                    );
+                                                })()}
                                                 
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-xs font-black text-foreground truncate">{n.title}</p>
@@ -836,7 +788,18 @@ export function DashboardHeaderActions({ onQuestPanelOpen, isTourHighlighted = f
                                                             </Link>
                                                         </div>
                                                     )}
-                                                    <span className="text-[10px] text-muted-foreground/60 mt-1 block font-mono">{formatTimeAgo(n.created_at || (n as any).createdAt || new Date().toISOString(), t, locale)}</span>
+                                                    {(() => {
+                                                        const createdAt = n.created_at || (n as any).createdAt || new Date().toISOString();
+                                                        return (
+                                                            <time
+                                                                dateTime={createdAt}
+                                                                title={formatNotificationFullTime(createdAt, locale)}
+                                                                className="text-[10px] text-muted-foreground/60 mt-1 block font-mono"
+                                                            >
+                                                                {formatNotificationTime(createdAt, t, locale)}
+                                                            </time>
+                                                        );
+                                                    })()}
                                                 </div>
 
                                                 {!n.read && (
