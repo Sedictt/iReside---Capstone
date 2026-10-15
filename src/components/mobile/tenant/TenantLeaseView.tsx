@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FileText, 
+import { FileText, LogOut, 
     Calendar, 
     Clock, 
     CheckCircle2, 
@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils';
 import { triggerHaptic } from '@/lib/haptics';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import LeaseModal from '@/components/tenant/LeaseModal';
-import MoveOutRequest from '@/components/tenant/MoveOutRequest';
+import { MobileMoveOutDrawer } from '@/components/mobile/tenant/MobileMoveOutDrawer';
 import { MobileAmenityBookingDrawer } from '@/components/mobile/tenant/MobileAmenityBookingDrawer';
 import { LeaseData } from '@/types/lease';
 import { getSafeAvatarBgColor } from '@/lib/constants';
@@ -73,12 +73,15 @@ export function TenantLeaseView() {
     const [showAmenities, setShowAmenities] = useState(false);
     const [isAmenityDrawerOpen, setIsAmenityDrawerOpen] = useState(false);
     const [selectedAmenityId, setSelectedAmenityId] = useState<string | null>(null);
+    const [isMoveOutDrawerOpen, setIsMoveOutDrawerOpen] = useState(false);
+    const [moveOutStatus, setMoveOutStatus] = useState<string | null>(null);
 
     const fetchLeaseData = async () => {
         try {
-            const [leaseRes, renewalsRes] = await Promise.all([
+            const [leaseRes, renewalsRes, moveOutRes] = await Promise.all([
                 fetch('/api/tenant/lease', { cache: 'no-store' }),
-                fetch('/api/tenant/renewals', { cache: 'no-store' }).catch(() => null)
+                fetch('/api/tenant/renewals', { cache: 'no-store' }).catch(() => null),
+                fetch('/api/tenant/lease/move-out/status', { cache: 'no-store' }).catch(() => null),
             ]);
 
             if (leaseRes.ok) {
@@ -93,6 +96,15 @@ export function TenantLeaseView() {
                                 r.current_lease_id === leaseData.lease.id && (r.status === 'pending' || r.status === 'approved')
                             ) || renewals.find((r: RenewalRequestItem) => r.current_lease_id === leaseData.lease.id);
                             setRenewalRequest(active || null);
+                        }
+                    }
+
+                    if (moveOutRes && moveOutRes.ok) {
+                        const moveOutData = await moveOutRes.json();
+                        if (moveOutData?.hasRequest && moveOutData?.request) {
+                            setMoveOutStatus(moveOutData.request.status);
+                        } else {
+                            setMoveOutStatus(null);
                         }
                     }
                 } else {
@@ -543,9 +555,46 @@ export function TenantLeaseView() {
                     </button>
                     )}
 
-                    {/* Move Out Trigger */}
+                    {/* Move Out Action Card */}
                     <div className="pt-1">
-                        <MoveOutRequest variant="hub" leaseEndDate={lease.end_date ?? null} />
+                        <button
+                            type="button"
+                            onClick={() => {
+                                triggerHaptic('medium');
+                                setIsMoveOutDrawerOpen(true);
+                            }}
+                            className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-white/10 bg-card hover:bg-muted/40 transition-all flex items-center justify-between text-left cursor-pointer active:scale-98 shadow-2xs"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className={cn(
+                                    "size-10 rounded-xl flex items-center justify-center shrink-0",
+                                    moveOutStatus === 'pending' ? "bg-amber-500/10 text-amber-500" :
+                                    moveOutStatus === 'approved' ? "bg-blue-500/10 text-blue-500" :
+                                    moveOutStatus === 'completed' ? "bg-emerald-500/10 text-emerald-500" :
+                                    "bg-rose-500/10 text-rose-500"
+                                )}>
+                                    <LogOut className="size-5" />
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-black text-foreground">
+                                        {moveOutStatus === 'pending' ? t('Move-Out: Pending Review') :
+                                         moveOutStatus === 'approved' ? t('Move-Out: Approved') :
+                                         moveOutStatus === 'completed' ? t('Move-Out: Completed') :
+                                         moveOutStatus === 'denied' ? t('Move-Out: Denied') :
+                                         t('Notice to Vacate')}
+                                    </h4>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                                        {moveOutStatus
+                                            ? t('View clearance progress & checklist')
+                                            : t('Initiate residency termination protocol')}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-1 text-[11px] font-bold text-muted-foreground">
+                                <span>{moveOutStatus ? t('Status') : t('Request')}</span>
+                                <ArrowUpRight className="size-3.5" />
+                            </div>
+                        </button>
                     </div>
                 </div>
 
@@ -794,6 +843,14 @@ export function TenantLeaseView() {
                     setSelectedAmenityId(null);
                 }}
                 initialAmenityId={selectedAmenityId}
+            />
+
+            {/* Mobile Move-Out & Clearance Drawer */}
+            <MobileMoveOutDrawer
+                isOpen={isMoveOutDrawerOpen}
+                onClose={() => setIsMoveOutDrawerOpen(false)}
+                leaseEndDate={lease.end_date ?? null}
+                onSubmitted={fetchLeaseData}
             />
         </PullToRefresh>
     );
