@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Database, UnitStatus, UserRole } from "@/types/database";
 import { generateSecurityKey, encryptSecurityKey } from "@/lib/security/recovery-keys";
 import { logUserActivity } from "@/lib/audit/audit-logger";
+import { describeAuditEvent } from "@/lib/audit/audit-display";
 import { parseJsonBody } from "@/lib/validation/server";
 import { isUrlToken, landlordOnboardingSchema } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 
@@ -534,8 +535,7 @@ export async function POST(request: Request, context: RouteParams) {
             userRole: "landlord",
             action: "security_key_generated",
             category: "security",
-            title: "Security Recovery Key Created",
-            description: "Landlord initial security recovery key generated during onboarding.",
+            ...describeAuditEvent({ action: "security_key_generated" }),
             severity: "info",
         });
 

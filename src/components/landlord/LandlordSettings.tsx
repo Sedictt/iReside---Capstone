@@ -2,63 +2,35 @@
 
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { m as motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import {
-    User,
-    Shield,
-    Bell,
-    CreditCard,
-    Globe,
-    Download,
-    Trash2,
-    Building2,
-    Mail,
-    Phone,
-    MapPin,
-    FileText,
-    Camera,
-    Save,
-    Loader2,
-    ChevronRight,
-    CheckCircle,
-    Key,
-    Smartphone,
-    Monitor,
-    LogOut,
-    Eye,
-    Info,
-    AlertTriangle,
-    Zap,
-    Droplets,
-    Layout,
-    Facebook,
-    Instagram,
-    Twitter,
-    Linkedin,
-    UploadCloud,
     ArrowLeft,
-    RotateCcw,
-    Palette,
-    Sun,
-    Moon,
-    Contrast,
-    Upload,
+    Bell,
+    Building2,
+    Camera,
     Check,
-    ExternalLink,
-    Lock,
-    RefreshCw,
-    SlidersHorizontal,
-    X,
-    Pipette,
-    ChevronLeft,
+    CreditCard,
+    Download,
+    Droplets,
+    FileText,
+    HelpCircle,
+    History,
+    ImageIcon,
+    KeyRound,
+    Megaphone,
+    MessageSquare,
+    Palette,
+    RotateCcw,
     ShieldCheck,
-    Clock,
-    EyeOff,
-    AlertCircle,
-    CheckCircle2,
-    Calendar,
-    ChevronDown,
-    FileSpreadsheet
+    SlidersHorizontal,
+    Trash2,
+    Type,
+    Upload,
+    UploadCloud,
+    User,
+    Wallet,
+    Wrench,
+    Zap,
 } from "lucide-react";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -68,27 +40,17 @@ import { AuditLogsSettingsTab } from "@/components/landlord/settings/AuditLogsSe
 import { useAuth } from "@/hooks/useAuth";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
 import { AvatarPicker } from "@/components/profile/AvatarPicker";
-import { ProfileCoverUploader } from "@/components/profile/ProfileCoverUploader";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
-import { parseUserAgent } from "@/lib/utils/device-parser";
 import { signOut } from "@/lib/supabase/client-auth";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
-import { useTheme } from "next-themes";
-import { useHighContrast } from "@/hooks/useHighContrast";
-import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
-import { TimeFormatToggle } from "@/components/ui/TimeFormatToggle";
-import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { CURATED_BANNER_PRESETS, DEFAULT_BANNER_URL } from "@/components/landlord/dashboard/BannerCustomizerModal";
 import { ColorPickerModal } from "@/components/ui/ColorPickerModal";
-import { UnsavedChangesModal } from "@/components/ui/UnsavedChangesModal";
 import { useBrand, DEFAULT_BRANDING } from "@/context/BrandContext";
 import { applyBrandCssVariables } from "@/lib/branding/colors";
 import { SecurityKeyManagementCard } from "@/components/auth/SecurityKeyManagementCard";
 import { TwoFactorManagementCard } from "@/components/auth/TwoFactorManagementCard";
-import Link from "next/link";
 import {
     validateFullName,
     validateBusinessName,
@@ -110,6 +72,32 @@ import {
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import { DISALLOWED_PRESEEDED_DATA, isPreseededPhone } from "@/lib/validation/brand-setup";
 import { tr } from "@/hooks/useLanguage";
+import {
+    SettingsButton,
+    SettingsCard,
+    SettingsChoiceGroup,
+    SettingsField,
+    SettingsHub,
+    SettingsLeaveDialog,
+    SettingsLinkRow,
+    SettingsNotice,
+    SettingsPasswordInput,
+    SettingsSaveBar,
+    SettingsSectionLayout,
+    SettingsSwitchRow,
+    settingsButtonClass,
+    settingsInputClass,
+    useSettingsNavigation,
+    type SettingsGroupDef,
+    type SettingsQuickTask,
+    type SettingsSectionDef,
+} from "@/components/settings/settings-ui";
+import {
+    CloseAccountCard,
+    DisplaySettingsSection,
+    NotificationTopicsList,
+    SignedInDevicesCard,
+} from "@/components/settings/settings-shared-sections";
 
 export function normalizeRentalArchetype(val?: string | null): "apartment" | "dormitory" | "boarding_house" {
     if (!val) return "apartment";
@@ -119,8 +107,80 @@ export function normalizeRentalArchetype(val?: string | null): "apartment" | "do
     return "apartment";
 }
 
+// --- Pages ---
+
+const SECTION_IDS = [
+    "profile",
+    "security",
+    "business",
+    "branding",
+    "payments",
+    "utilities",
+    "display",
+    "notifications",
+    "activity",
+    "help",
+    "data",
+] as const;
+type SectionId = (typeof SECTION_IDS)[number];
+
+type PendingNavigation = { kind: "section"; id: SectionId | null } | { kind: "url"; href: string } | { kind: "back" };
+
+/** Old links used ?category=...&subtab=...; keep them working (dashboard search, docs, 2FA callback). */
+function resolveLegacyLink(category: string, subtab: string | null): SectionId | null {
+    switch (category) {
+        case "Identity":
+            return subtab === "Socials" || subtab === "Business Permit" ? "business" : "profile";
+        case "Personalization":
+            return subtab === "Themes & Contrast" ? "display" : "branding";
+        case "Finance":
+            return subtab === "Utilities" ? "utilities" : "payments";
+        case "Security":
+            return "security";
+        case "Notifications":
+            return "notifications";
+        case "AuditLogs":
+            return "activity";
+        case "Data":
+            return subtab === "Tour" ? "help" : "data";
+        default:
+            return null;
+    }
+}
+
+/** Which page each validated field lives on, so a failed save can take people straight to it. */
+const FIELD_SECTIONS: Record<string, SectionId> = {
+    full_name: "profile",
+    email: "profile",
+    phone: "profile",
+    address: "profile",
+    bio: "profile",
+    emergency_contact_name: "profile",
+    emergency_contact_phone: "profile",
+    business_name: "business",
+    website: "business",
+    business_permit_number: "business",
+    socials_facebook: "business",
+    socials_instagram: "business",
+    socials_twitter: "business",
+    socials_linkedin: "business",
+    propertyTradeName: "branding",
+    propertyTagline: "branding",
+    brandPrimaryHex: "branding",
+    brandSecondaryHex: "branding",
+};
+
+const fieldId = (name: string) => `landlord-setting-${name.replace(/_/g, "-")}`;
+
+const COLOR_PALETTES = [
+    { name: "Royal Lavender", primary: "#c4b0ff", secondary: "#8b5cf6" },
+    { name: "Emerald Oasis", primary: "#10b981", secondary: "#065f46" },
+    { name: "Amber Sunset", primary: "#f59e0b", secondary: "#ea580c" },
+    { name: "Electric Indigo", primary: "#6366f1", secondary: "#3b82f6" },
+    { name: "Ruby Crimson", primary: "#f43f5e", secondary: "#9f1239" },
+];
+
 // --- Types ---
-type SettingsCategory = "Identity" | "Personalization" | "Finance" | "Security" | "Notifications" | "Data" | "AuditLogs";
 
 interface NotificationChannelPreferences {
     email: boolean;
@@ -138,173 +198,6 @@ const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
     messages: { email: true, push: true },
     announcements: { email: true, push: true },
 };
-
-interface SidebarItem {
-    id: SettingsCategory;
-    label: string;
-    icon: any;
-    description: string;
-}
-
-const SIDEBAR_ITEMS: SidebarItem[] = [
-    { 
-        id: "Identity", 
-        label: "Identity", 
-        icon: User,
-        description: "Manage your profile"
-    },
-    { 
-        id: "Personalization", 
-        label: "Personalization", 
-        icon: Palette,
-        description: "Themes, high contrast, brand colors & banner customization"
-    },
-    { 
-        id: "Finance", 
-        label: "Finance & Utilities", 
-        icon: CreditCard,
-        description: "Payment methods and utility rates"
-    },
-    { 
-        id: "Security", 
-        label: "Security & Login", 
-        icon: Shield,
-        description: "Password, 2FA and active sessions"
-    },
-    { 
-        id: "Notifications", 
-        label: "Notifications", 
-        icon: Bell,
-        description: "Communication and alert preferences"
-    },
-    { 
-        id: "AuditLogs", 
-        label: "Activity & Audit Logs", 
-        icon: ShieldCheck,
-        description: "Tamper-proof activity trail & security records"
-    },
-    { 
-        id: "Data", 
-        label: "Data & Privacy", 
-        icon: Globe,
-        description: "Export data and account deletion"
-    },
-];
-
-// --- Components ---
-
-function GlassCard({ children, className, title, description, headerExtra }: { children: React.ReactNode; className?: string; title?: string; description?: string; headerExtra?: React.ReactNode }) {
-    const { t } = useLanguageContext();
-    return (
-        <div className={cn("relative overflow-hidden rounded-2xl sm:rounded-[2rem] neumorphic-panel transition-all duration-500", className)}>
-            {(title || description || headerExtra) && (
-                <div className="border-b border-border/60 px-4 py-3.5 sm:px-6 sm:py-5 md:px-8 md:py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div>
-                        {title && <h3 className="text-base sm:text-lg font-black text-foreground">{t(title)}</h3>}
-                        {description && <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">{t(description)}</p>}
-                    </div>
-                    {headerExtra && <div className="shrink-0">{headerExtra}</div>}
-                </div>
-            )}
-            <div className="p-4 sm:p-6 md:p-8 text-foreground">{children}</div>
-        </div>
-    );
-}
-
-function SettingField({ 
-    label, 
-    children, 
-    description, 
-    icon: Icon,
-    error,
-    required,
-    counter,
-}: { 
-    label: string; 
-    children: React.ReactNode; 
-    description?: string; 
-    icon?: any;
-    error?: string;
-    required?: boolean;
-    counter?: { current: number; max: number };
-}) {
-    const { t } = useLanguageContext();
-    return (
-        <div className="space-y-1.5">
-            <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-2">
-                    {Icon && <Icon className="size-3.5 text-primary shrink-0" />}
-                    <label className="text-xs font-black uppercase tracking-wider text-foreground/80">
-                        {t(label)}
-                        {required && <span className="ml-1 text-rose-500 font-bold" title={t("Required field")}>*</span>}
-                    </label>
-                </div>
-                {counter && (
-                    <span className={cn(
-                        "text-[10px] font-mono font-bold tracking-tight",
-                        counter.current > counter.max ? "text-rose-500 font-black" : "text-muted-foreground/70"
-                    )}>
-                        {counter.current} / {counter.max}
-                    </span>
-                )}
-            </div>
-            {children}
-            {error ? (
-                <p className="px-1 text-[11px] font-bold text-rose-500 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
-                    <AlertCircle className="size-3 shrink-0" />
-                    <span>{t(error)}</span>
-                </p>
-            ) : (
-                description && <p className="px-1 text-xs text-muted-foreground">{t(description)}</p>
-            )}
-        </div>
-    );
-}
-
-function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
-    return (
-        <button
-            type="button"
-            onClick={() => onToggle()}
-            className={cn(
-                "relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 cursor-pointer",
-                enabled ? "neumorphic-primary" : "neumorphic-inset"
-            )}
-        >
-            <span
-                className={cn(
-                    "inline-block size-4 transform rounded-full transition-all duration-300",
-                    enabled ? "translate-x-6 bg-white" : "translate-x-1 bg-neutral-400"
-                )}
-            />
-        </button>
-    );
-}
-
-function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: string; onTabChange: (tab: string) => void }) {
-    const { t } = useLanguageContext();
-    return (
-        <div className="relative">
-            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 pt-0.5 scrollbar-hide px-0.5">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab}
-                        type="button"
-                        onClick={() => onTabChange(tab)}
-                        className={cn(
-                            "whitespace-nowrap rounded-xl px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs font-black transition-all cursor-pointer shrink-0",
-                            activeTab === tab
-                                ? "neumorphic-primary text-primary-foreground font-black shadow-md"
-                                : "neumorphic-extruded text-muted-foreground hover:text-foreground font-bold"
-                        )}
-                    >
-                        {t(tab)}
-                    </button>
-                ))}
-            </div>
-        </div>
-    );
-}
 
 // --- Cache Persistence Types & Helpers ---
 export interface CachedLandlordSettings {
@@ -373,67 +266,14 @@ export function saveCachedSettings(settings: CachedLandlordSettings, userId?: st
         console.warn("[LandlordSettings] Failed to cache settings:", err);
     }
 }
-
-// --- Main Component ---
-
-export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
+export function LandlordSettings({ embedded = false }: { embedded?: boolean } = {}) {
     const router = useRouter();
     const { user, profile, loading, refreshProfile } = useAuth();
     const { t, locale } = useLanguageContext();
-    // UI State
-    const [activeTab, setActiveTab] = useState<SettingsCategory>("Identity");
-    const [activeSubTab, setActiveSubTab] = useState<string>("Profile");
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [justSaved, setJustSaved] = useState(false);
     const supabase = useMemo(() => createClient(), []);
 
-    // Mobile Tab Rail Horizontal Scroll State & Affordance
-    const mobileTabRailRef = useRef<HTMLDivElement>(null);
-    const [canScrollLeft, setCanScrollLeft] = useState(false);
-    const [canScrollRight, setCanScrollRight] = useState(true);
-
-    const updateScrollIndicators = useCallback(() => {
-        const el = mobileTabRailRef.current;
-        if (!el) return;
-        const { scrollLeft, scrollWidth, clientWidth } = el;
-        setCanScrollLeft(scrollLeft > 6);
-        setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 6);
-    }, []);
-
-    useEffect(() => {
-        const el = mobileTabRailRef.current;
-        if (!el) return;
-        updateScrollIndicators();
-        el.addEventListener("scroll", updateScrollIndicators, { passive: true });
-        window.addEventListener("resize", updateScrollIndicators);
-        return () => {
-            el.removeEventListener("scroll", updateScrollIndicators);
-            window.removeEventListener("resize", updateScrollIndicators);
-        };
-    }, [updateScrollIndicators]);
-
-    const scrollMobileTabs = useCallback((direction: "left" | "right") => {
-        const el = mobileTabRailRef.current;
-        if (!el) return;
-        const delta = direction === "left" ? -200 : 200;
-        el.scrollBy({ left: delta, behavior: "smooth" });
-    }, []);
-
-    const handleMobileTabClick = useCallback((tabId: SettingsCategory) => {
-        if (tabId === activeTab) return;
-        if (isDirtyRef.current) {
-            pendingTabRef.current = tabId;
-            setIsUnsavedModalOpen(true);
-            return;
-        }
-        setActiveTab(tabId);
-        const el = mobileTabRailRef.current;
-        if (el) {
-            const btn = el.querySelector(`[data-tab-id="${tabId}"]`) as HTMLElement | null;
-            btn?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-        }
-    }, [activeTab]);
 
     // Sync & Cache States
     const [isSyncing, setIsSyncing] = useState(true);
@@ -444,50 +284,11 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
     });
     const [hasLoadedOnce, setHasLoadedOnce] = useState(() => !!getCachedSettings());
 
-    // Mapping of Sub-tabs
-    const SUB_TABS: Record<SettingsCategory, string[]> = {
-        Identity: ["Profile", "Emergency Contact", "Socials", "Business Permit"],
-        Personalization: ["Themes & Contrast", "Branding & Logo", "Dashboard Banner"],
-        Finance: ["GCash", "Utilities"],
-        Security: ["Account", "Protection", "Sessions"],
-        Notifications: ["Alerts"],
-        AuditLogs: ["Activity Logs"],
-        Data: ["Export", "Tour", "Danger"],
-    };
-
-    // Reset sub-tab when main tab changes (skip if restoring from URL)
-    const isRestoringFromUrl = useRef(false);
     useEffect(() => {
         if (!loading && profile && profile.role !== "landlord" && profile.role !== "admin") {
             router.replace("/tenant/dashboard");
         }
     }, [loading, profile, router]);
-
-    useEffect(() => {
-        if (!isRestoringFromUrl.current) {
-            setActiveSubTab(SUB_TABS[activeTab][0]);
-        } else if (!SUB_TABS[activeTab].includes(activeSubTab)) {
-            setActiveSubTab(SUB_TABS[activeTab][0]);
-        }
-        isRestoringFromUrl.current = false;
-    }, [activeTab]);
-
-    // Read URL params on mount to restore tab state from OAuth callback
-    useEffect(() => {
-        const searchParams = new URLSearchParams(window.location.search);
-        const category = searchParams.get("category");
-        const subtab = searchParams.get("subtab");
-
-        if (category && SUB_TABS[category as SettingsCategory]) {
-            isRestoringFromUrl.current = true;
-            setActiveTab(category as SettingsCategory);
-            if (subtab && SUB_TABS[category as SettingsCategory].includes(subtab)) {
-                setActiveSubTab(subtab);
-            } else {
-                setActiveSubTab(SUB_TABS[category as SettingsCategory][0]);
-            }
-        }
-    }, []);
 
     // Scoped Data Export State
     type ExportCategory = "financials" | "properties" | "rent_roll";
@@ -567,16 +368,6 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
         }
     };
 
-    const handleDeleteAccount = async () => {
-        if (deleteConfirmText !== "DELETE") return;
-        toast.error(t("Account deletion requires administrative verification to protect active tenant leases and financial ledgers. Please contact support to submit an account closure request."));
-        setShowDeleteConfirm(false);
-        setDeleteConfirmText("");
-    };
-
-    // Theme & High Contrast
-    const { theme, setTheme, resolvedTheme } = useTheme();
-    const { isHighContrast, toggleHighContrast } = useHighContrast();
     const brand = useBrand();
 
     // Personalization & Branding State
@@ -607,28 +398,10 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
     });
     const [isPrimaryColorPickerOpen, setIsPrimaryColorPickerOpen] = useState(false);
     const [isSecondaryColorPickerOpen, setIsSecondaryColorPickerOpen] = useState(false);
-    const [isUnsavedModalOpen, setIsUnsavedModalOpen] = useState(false);
     const [hasUserEdited, setHasUserEdited] = useState(false);
     const [isFinanceDirty, setIsFinanceDirty] = useState(false);
     const financeSaveRef = useRef<(() => Promise<boolean>) | null>(null);
     const financeDiscardRef = useRef<(() => void) | null>(null);
-    const pendingExitUrlRef = useRef<string | null>(null);
-    const pendingTabRef = useRef<SettingsCategory | null>(null);
-    const [hasVisitedFinance, setHasVisitedFinance] = useState(() => activeTab === "Finance");
-
-    useEffect(() => {
-        if (activeTab === "Finance") setHasVisitedFinance(true);
-    }, [activeTab]);
-
-    const handleTabChange = useCallback((tabId: SettingsCategory) => {
-        if (tabId === activeTab) return;
-        if (isDirtyRef.current) {
-            pendingTabRef.current = tabId;
-            setIsUnsavedModalOpen(true);
-            return;
-        }
-        setActiveTab(tabId);
-    }, [activeTab]);
 
     const logoFileInputRef = useRef<HTMLInputElement>(null);
     const bannerFileInputRef = useRef<HTMLInputElement>(null);
@@ -728,17 +501,6 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
         toast.info(t("Logo removed in preview. Save all changes to apply permanently."));
     };
 
-    const toggleThemeWithTransition = (newTheme: string) => {
-        if (typeof document !== "undefined" && "startViewTransition" in document) {
-            (document as any).startViewTransition(() => {
-                setTheme(newTheme);
-            });
-        } else {
-            setTheme(newTheme);
-        }
-    };
-
-
     const [formData, setFormData] = useState(() => {
         const cached = getCachedSettings();
         const storedPropName = typeof window !== "undefined" ? (localStorage.getItem("ireside_property_name") || "") : "";
@@ -823,11 +585,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
     });
     const [newPassword, setNewPassword] = useState("");
     const [confirmNewPassword, setConfirmNewPassword] = useState("");
-    const [showNewPassword, setShowNewPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
     // 2FA States
     const [twoFAStatus, setTwoFAStatus] = useState<'loading' | 'disabled' | 'gmail_connected' | 'pending_otp' | 'enabled'>(() => {
@@ -1216,6 +974,18 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
     const isDirtyRef = useRef(false);
     isDirtyRef.current = isDirty;
 
+    // Page navigation (URL-backed). Leaving a page with unsaved changes asks first, including
+    // leaving Settings with the browser Back button.
+    const [pendingNavigation, setPendingNavigation] = useState<PendingNavigation | null>(null);
+    const { section, ready: isNavReady, open: openSection, leave: leaveSettings } = useSettingsNavigation<SectionId>({
+        sectionIds: SECTION_IDS,
+        resolveLegacy: resolveLegacyLink,
+        shouldBlock: () => isDirtyRef.current,
+        onBlocked: (target) => setPendingNavigation({ kind: "section", id: target }),
+        isDirty,
+        onLeaveBlocked: () => setPendingNavigation({ kind: "back" }),
+    });
+
     // Sync brand fields when BrandContext updates from server or realtime broadcast
     useEffect(() => {
         if (!hasUserEdited && brand && !brand.isLoading) {
@@ -1277,8 +1047,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
             if (href && !href.startsWith("#") && !href.startsWith("javascript:") && href !== window.location.pathname) {
                 e.preventDefault();
                 e.stopPropagation();
-                pendingExitUrlRef.current = href;
-                setIsUnsavedModalOpen(true);
+                setPendingNavigation({ kind: "url", href });
             }
         };
 
@@ -1286,14 +1055,9 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
         return () => document.removeEventListener("click", handleClickCapture, true);
     }, []);
 
-    const handleRequestExit = (targetUrl?: string | React.MouseEvent) => {
-        const url = typeof targetUrl === "string" ? targetUrl : undefined;
-        if (isDirty) {
-            if (url) pendingExitUrlRef.current = url;
-            setIsUnsavedModalOpen(true);
-        } else {
-            router.push(url || "/landlord/dashboard");
-        }
+    const goToDashboard = () => {
+        if (isDirtyRef.current) setPendingNavigation({ kind: "url", href: "/landlord/dashboard" });
+        else router.push("/landlord/dashboard");
     };
 
     const handleDiscardChanges = () => {
@@ -1325,7 +1089,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
     useEffect(() => {
-        if (activeTab === "Security" && activeSubTab === "Sessions") {
+        if (section === "security") {
             const fetchSessions = async () => {
                 setIsSessionsLoading(true);
                 try {
@@ -1343,7 +1107,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
             };
             fetchSessions();
         }
-    }, [activeTab, activeSubTab, supabase]);
+    }, [section, supabase]);
 
     // Handle OAuth callback params on mount (independent of tab state)
     useEffect(() => {
@@ -1377,7 +1141,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 sendOtpAsync();
             }
 
-            window.history.replaceState({}, "", window.location.pathname + "?category=Security&subtab=Protection");
+            window.history.replaceState(window.history.state, "", window.location.pathname + "?section=security");
         }
 
         if (error) {
@@ -1389,12 +1153,12 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 callback_failed: "Something went wrong.",
             };
             toast.error(t(errorMessages[error] || "An error occurred."));
-            window.history.replaceState({}, "", window.location.pathname + "?category=Security&subtab=Protection");
+            window.history.replaceState(window.history.state, "", window.location.pathname + "?section=security");
         }
     }, []);
 
     useEffect(() => {
-        if (activeTab === "Security") {
+        if (section === "security") {
             const fetchSecurityStatus = async () => {
                 try {
                     const res = await fetch("/api/landlord/2fa?action=status");
@@ -1422,7 +1186,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
             };
             fetchSecurityStatus();
         }
-    }, [activeTab, activeSubTab]);
+    }, [section]);
 
     const passwordContext = {
         name: formData.full_name || profile?.full_name,
@@ -1580,18 +1344,20 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
             }, {} as Record<string, boolean>);
             setTouchedFields((prev) => ({ ...prev, ...touchedUpdates }));
 
-            if (validation.firstErrorTab) {
-                setActiveTab(validation.firstErrorTab.category);
-                setActiveSubTab(validation.firstErrorTab.subtab);
-                toast.error(t("Please fix the errors in {section} ({tab}) before saving.", { section: t(validation.firstErrorTab.category), tab: t(validation.firstErrorTab.subtab) }));
+            const firstField = validation.firstErrorTab?.fieldName ?? Object.keys(validation.errors)[0];
+            const targetSection = firstField ? FIELD_SECTIONS[firstField] : undefined;
+            if (targetSection) {
+                openSection(targetSection, { force: true, anchor: fieldId(firstField) });
+                const pageTitle = sections.find((s) => s.id === targetSection)?.title ?? "";
+                toast.error(t("Some details need fixing on the \"{page}\" page. Look for the red messages.", { page: pageTitle }));
             } else {
-                toast.error(t("Please correct the highlighted errors before saving."));
+                toast.error(t("Some details need fixing. Look for the red messages."));
             }
-            return false;
+                        return false;
         }
 
         setIsSaving(true);
-        const loadingToast = toast.loading(t("Saving all changes across settings…"));
+        const loadingToast = toast.loading(t("Saving your changes…"));
 
         // Failsafe timer so save button can never be trapped in perpetual saving state
         const safetyTimer = setTimeout(() => {
@@ -1746,7 +1512,7 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
 
             clearTimeout(safetyTimer);
             toast.dismiss(loadingToast);
-            toast.success(t("All settings saved successfully!"));
+            toast.success(t("Your changes are saved."));
             setJustSaved(true);
             setTimeout(() => setJustSaved(false), 2500);
             return true;
@@ -1876,2551 +1642,1082 @@ export function LandlordSettings({ isMobile }: { isMobile?: boolean } = {}) {
             toast.error(t("Failed to update preferences"));
         }
     };
-    const renderIdentity = () => {
-        const currentSubTab = SUB_TABS.Identity.includes(activeSubTab) ? activeSubTab : SUB_TABS.Identity[0];
-        const renderSubContent = () => {
-            switch (currentSubTab) {
-                case "Profile":
-                    return (
-                        <GlassCard title={t("Profile Information")} description="Basic details about you and your business.">
-                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <SettingField 
-                                    label="Full Name" 
-                                    icon={User} 
-                                    description="Your legal or preferred display name."
-                                    required
-                                    error={touchedFields.full_name ? fieldErrors.full_name : undefined}
-                                >
-                                    <input
-                                        type="text"
-                                        value={formData.full_name}
-                                        maxLength={70}
-                                        onBlur={() => {
-                                            markFieldTouched("full_name");
-                                            const check = validateFullName(formData.full_name);
-                                            setFieldError("full_name", check.error);
-                                        }}
-                                        onChange={(e) => {
-                                            updateFormData({ full_name: e.target.value });
-                                            if (touchedFields.full_name) {
-                                                const check = validateFullName(e.target.value);
-                                                setFieldError("full_name", check.error);
-                                            }
-                                        }}
-                                        placeholder={t("e.g. John Doe")}
-                                        className={cn(
-                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
-                                            touchedFields.full_name && fieldErrors.full_name 
-                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
-                                                : "focus:ring-primary/20"
-                                        )}
-                                        aria-invalid={!!(touchedFields.full_name && fieldErrors.full_name)}
-                                    />
-                                </SettingField>
 
-                                {(() => {
-                                    const whiteLabelName = (propertyTradeName || brand.propertyName || "").trim();
-                                    const hasWhiteLabel = Boolean(whiteLabelName && !DISALLOWED_PRESEEDED_DATA.propertyNames.includes(whiteLabelName.toLowerCase()));
+    // ------------------------------------------------------------------
+    // Page definitions
+    // ------------------------------------------------------------------
 
-                                    return (
-                                        <SettingField 
-                                            label="Business Name" 
-                                            icon={Building2} 
-                                            description="Registered entity or enterprise business name."
-                                            error={touchedFields.business_name ? fieldErrors.business_name : undefined}
-                                        >
-                                            <div className="relative">
-                                                <input
-                                                    type="text"
-                                                    value={formData.business_name}
-                                                    maxLength={100}
-                                                    onBlur={() => {
-                                                        markFieldTouched("business_name");
-                                                        const check = validateBusinessName(formData.business_name);
-                                                        setFieldError("business_name", check.error);
-                                                    }}
-                                                    onChange={(e) => {
-                                                        updateFormData({ business_name: e.target.value });
-                                                        if (touchedFields.business_name) {
-                                                            const check = validateBusinessName(e.target.value);
-                                                            setFieldError("business_name", check.error);
-                                                        }
-                                                    }}
-                                                    placeholder={hasWhiteLabel ? whiteLabelName : "e.g. Acme Residences LLC"}
-                                                    className={cn(
-                                                        "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
-                                                        touchedFields.business_name && fieldErrors.business_name 
-                                                            ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
-                                                            : "focus:ring-primary/20",
-                                                        hasWhiteLabel && !formData.business_name ? "pr-32" : ""
-                                                    )}
-                                                    aria-invalid={!!(touchedFields.business_name && fieldErrors.business_name)}
-                                                />
-                                                {hasWhiteLabel && !formData.business_name && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            updateFormData({ business_name: whiteLabelName });
-                                                            setFieldError("business_name", undefined);
-                                                            toast.info(t("Applied white-label name"), {
-                                                                description: t("Business name set to \"{name}\".", { name: whiteLabelName }),
-                                                            });
-                                                        }}
-                                                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1 text-[11px] font-bold rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors cursor-pointer"
-                                                        title={t("Fill with white-label property name: {name}", { name: whiteLabelName })}
-                                                    >
-                                                        {t("Use White-Label")}
-                                                    </button>
-                                                )}
-                                            </div>
-                                            {hasWhiteLabel && (
-                                                 <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
-                                                     <span>
-                                                         {t("White-label brand name:")} <strong className="text-foreground font-semibold">{whiteLabelName}</strong>
-                                                     </span>
-                                                     {formData.business_name && formData.business_name !== whiteLabelName && (
-                                                         <button
-                                                             type="button"
-                                                             onClick={() => {
-                                                                 updateFormData({ business_name: whiteLabelName });
-                                                                 setFieldError("business_name", undefined);
-                                                                 toast.info(t("Synced with white-label name"), {
-                                                                     description: t("Business name updated to \"{name}\".", { name: whiteLabelName }),
-                                                                 });
-                                                             }}
-                                                             className="text-primary hover:underline font-bold text-[10px] cursor-pointer"
-                                                         >
-                                                             {t("Sync with White-Label")}
-                                                         </button>
-                                                     )}
-                                                 </div>
-                                            )}
-                                        </SettingField>
-                                    );
-                                })()}
+    const groups: SettingsGroupDef[] = [
+        { id: "account", title: t("Your account") },
+        { id: "business", title: t("Your business") },
+        { id: "comfort", title: t("Your screen and alerts") },
+        { id: "records", title: t("Records and help") },
+    ];
 
-                                <SettingField 
-                                    label="Contact Email" 
-                                    icon={Mail} 
-                                    description="Primary contact email used for inquiries and notifications."
-                                    required
-                                    error={touchedFields.email ? fieldErrors.email : undefined}
-                                >
-                                    <input
-                                        type="email"
-                                        value={formData.email}
-                                        maxLength={254}
-                                        onBlur={() => {
-                                            markFieldTouched("email");
-                                            const check = validateEmail(formData.email);
-                                            setFieldError("email", check.error);
-                                        }}
-                                        onChange={(e) => {
-                                            updateFormData({ email: e.target.value });
-                                            if (touchedFields.email) {
-                                                const check = validateEmail(e.target.value);
-                                                setFieldError("email", check.error);
-                                            }
-                                        }}
-                                        placeholder="name@example.com"
-                                        className={cn(
-                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
-                                            touchedFields.email && fieldErrors.email 
-                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
-                                                : "focus:ring-primary/20"
-                                        )}
-                                        aria-invalid={!!(touchedFields.email && fieldErrors.email)}
-                                    />
-                                </SettingField>
+    const sections: SettingsSectionDef<SectionId>[] = [
+        { id: "profile", group: "account", icon: User, title: t("My profile"), description: t("Your name, photo, contact details and emergency contact.") },
+        { id: "security", group: "account", icon: KeyRound, title: t("Password and sign-in"), description: t("Change your password, add extra protection, and see where you are signed in.") },
+        { id: "business", group: "business", icon: Building2, title: t("Business details"), description: t("Business name, website, business permit and social media.") },
+        { id: "branding", group: "business", icon: Palette, title: t("Logo, colors and banner"), description: t("How your business looks to tenants: name, logo, colors and dashboard photo.") },
+        { id: "payments", group: "business", icon: Wallet, title: t("GCash payments"), description: t("The GCash number and QR code your tenants use to pay you.") },
+        { id: "utilities", group: "business", icon: Zap, title: t("Water and electricity rates"), description: t("How much you charge tenants for water and electricity.") },
+        { id: "display", group: "comfort", icon: Type, title: t("Text size and display"), description: t("Make the words bigger, change the language, use a dark screen, and more.") },
+        { id: "notifications", group: "comfort", icon: Bell, title: t("Notifications"), description: t("Choose which alerts you get, by email or in the app.") },
+        { id: "activity", group: "records", icon: History, title: t("Activity history"), description: t("A record of important changes made in your account.") },
+        { id: "help", group: "records", icon: HelpCircle, title: t("Help and lessons"), description: t("Open the help guide and manage the step-by-step lessons.") },
+        { id: "data", group: "records", icon: ShieldCheck, title: t("My records and account"), description: t("Download your records, or ask to close your account.") },
+    ];
 
-                                <SettingField 
-                                    label="Phone Number" 
-                                    icon={Phone}
-                                    description="Philippine mobile (09XXXXXXXXX) or international format."
-                                    error={touchedFields.phone ? fieldErrors.phone : undefined}
-                                >
-                                    <input
-                                        type="tel"
-                                        value={formData.phone}
-                                        maxLength={25}
-                                        onBlur={() => {
-                                            markFieldTouched("phone");
-                                            const check = validatePhoneNumber(formData.phone);
-                                            setFieldError("phone", check.error);
-                                        }}
-                                        onChange={(e) => {
-                                            updateFormData({ phone: e.target.value });
-                                            if (touchedFields.phone) {
-                                                const check = validatePhoneNumber(e.target.value);
-                                                setFieldError("phone", check.error);
-                                            }
-                                        }}
-                                        placeholder={t("e.g. 0917 123 4567 or +63 917 123 4567")}
-                                        className={cn(
-                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
-                                            touchedFields.phone && fieldErrors.phone 
-                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
-                                                : "focus:ring-primary/20"
-                                        )}
-                                        aria-invalid={!!(touchedFields.phone && fieldErrors.phone)}
-                                    />
-                                </SettingField>
+    const quickTasks: SettingsQuickTask<SectionId>[] = [
+        { label: t("Make the text bigger"), section: "display", icon: Type, anchor: "settings-text-size" },
+        { label: t("Change my password"), section: "security", icon: KeyRound, anchor: "settings-password" },
+        { label: t("Set up GCash payments"), section: "payments", icon: Wallet },
+        { label: t("Change water or electricity rates"), section: "utilities", icon: Zap },
+    ];
 
-                                <SettingField 
-                                    label="Website" 
-                                    icon={Globe}
-                                    description="Official property or business website."
-                                    error={touchedFields.website ? fieldErrors.website : undefined}
-                                >
-                                    <input
-                                        type="url"
-                                        value={formData.website}
-                                        maxLength={255}
-                                        onBlur={() => {
-                                            markFieldTouched("website");
-                                            const check = validateWebsiteUrl(formData.website);
-                                            setFieldError("website", check.error);
-                                        }}
-                                        onChange={(e) => {
-                                            updateFormData({ website: e.target.value });
-                                            if (touchedFields.website) {
-                                                const check = validateWebsiteUrl(e.target.value);
-                                                setFieldError("website", check.error);
-                                            }
-                                        }}
-                                        placeholder="https://myresidence.ph"
-                                        className={cn(
-                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
-                                            touchedFields.website && fieldErrors.website 
-                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
-                                                : "focus:ring-primary/20"
-                                        )}
-                                        aria-invalid={!!(touchedFields.website && fieldErrors.website)}
-                                    />
-                                </SettingField>
+    // ------------------------------------------------------------------
+    // Field helpers
+    // ------------------------------------------------------------------
 
-                                <div className="md:col-span-2">
-                                    <SettingField 
-                                        label="Office Address" 
-                                        icon={MapPin}
-                                        error={touchedFields.address ? fieldErrors.address : undefined}
-                                    >
-                                        <input
-                                            type="text"
-                                            value={formData.address}
-                                            maxLength={250}
-                                            onBlur={() => {
-                                                markFieldTouched("address");
-                                                const check = validateAddress(formData.address);
-                                                setFieldError("address", check.error);
-                                            }}
-                                            onChange={(e) => {
-                                                updateFormData({ address: e.target.value });
-                                                if (touchedFields.address) {
-                                                    const check = validateAddress(e.target.value);
-                                                    setFieldError("address", check.error);
-                                                }
-                                            }}
-                                            placeholder={t("e.g. Unit 101, Taft Tower, Manila")}
-                                            className={cn(
-                                                "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
-                                                touchedFields.address && fieldErrors.address 
-                                                    ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
-                                                    : "focus:ring-primary/20"
-                                            )}
-                                            aria-invalid={!!(touchedFields.address && fieldErrors.address)}
-                                        />
-                                    </SettingField>
-                                </div>
+    type TextFieldName =
+        | "full_name"
+        | "business_name"
+        | "email"
+        | "phone"
+        | "website"
+        | "address"
+        | "bio"
+        | "emergency_contact_name"
+        | "emergency_contact_phone"
+        | "business_permit_number";
 
-                                <div className="md:col-span-2">
-                                    <SettingField 
-                                        label="Short Bio" 
-                                        icon={FileText} 
-                                        description="Briefly describe your property management style."
-                                        counter={{ current: formData.bio?.length || 0, max: 500 }}
-                                        error={touchedFields.bio ? fieldErrors.bio : undefined}
-                                    >
-                                        <textarea
-                                            rows={4}
-                                            maxLength={500}
-                                            value={formData.bio}
-                                            onBlur={() => {
-                                                markFieldTouched("bio");
-                                                const check = validateBio(formData.bio);
-                                                setFieldError("bio", check.error);
-                                            }}
-                                            onChange={(e) => {
-                                                updateFormData({ bio: e.target.value });
-                                                if (touchedFields.bio) {
-                                                    const check = validateBio(e.target.value);
-                                                    setFieldError("bio", check.error);
-                                                }
-                                            }}
-                                            placeholder={t("Tell prospective tenants about your rental community, values, and policies...")}
-                                            className={cn(
-                                                "w-full resize-none rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
-                                                touchedFields.bio && fieldErrors.bio 
-                                                    ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
-                                                    : "focus:ring-primary/20"
-                                            )}
-                                            aria-invalid={!!(touchedFields.bio && fieldErrors.bio)}
-                                        />
-                                    </SettingField>
-                                </div>
-                            </div>
-                        </GlassCard>
-                    );
-                case "Emergency Contact":
-                    return (
-                        <GlassCard title={t("Emergency Contact")} description="Designated emergency contact person and 24/7 phone number for urgent property escalations and tenant emergencies.">
-                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <SettingField 
-                                    label="Emergency Contact Name" 
-                                    icon={User} 
-                                    description="Designated manager, partner, or emergency kin."
-                                    error={touchedFields.emergency_contact_name ? fieldErrors.emergency_contact_name : undefined}
-                                >
-                                    <input
-                                        type="text"
-                                        value={formData.emergency_contact_name}
-                                        maxLength={70}
-                                        onBlur={() => {
-                                            markFieldTouched("emergency_contact_name");
-                                            if (formData.emergency_contact_name && formData.emergency_contact_name.trim().length < 2) {
-                                                setFieldError("emergency_contact_name", t("Emergency contact name must be at least 2 characters."));
-                                            } else if (formData.emergency_contact_name && !REGEX_NAME.test(formData.emergency_contact_name.trim())) {
-                                                setFieldError("emergency_contact_name", t("Name can only contain letters, spaces, hyphens, and periods."));
-                                            } else {
-                                                setFieldError("emergency_contact_name", undefined);
-                                            }
-                                        }}
-                                        onChange={(e) => {
-                                            updateFormData({ emergency_contact_name: e.target.value });
-                                            if (touchedFields.emergency_contact_name) {
-                                                if (e.target.value && e.target.value.trim().length < 2) {
-                                                    setFieldError("emergency_contact_name", t("Emergency contact name must be at least 2 characters."));
-                                                } else {
-                                                    setFieldError("emergency_contact_name", undefined);
-                                                }
-                                            }
-                                        }}
-                                        placeholder={t("e.g. Jane Doe (Property Manager)")}
-                                        className={cn(
-                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
-                                            touchedFields.emergency_contact_name && fieldErrors.emergency_contact_name 
-                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
-                                                : "focus:ring-primary/20"
-                                        )}
-                                        aria-invalid={!!(touchedFields.emergency_contact_name && fieldErrors.emergency_contact_name)}
-                                    />
-                                </SettingField>
-                                <SettingField 
-                                    label="Emergency Contact Phone" 
-                                    icon={Phone} 
-                                    description="Direct phone line reachable 24/7."
-                                    error={touchedFields.emergency_contact_phone ? fieldErrors.emergency_contact_phone : undefined}
-                                >
-                                    <input
-                                        type="tel"
-                                        value={formData.emergency_contact_phone}
-                                        maxLength={25}
-                                        onBlur={() => {
-                                            markFieldTouched("emergency_contact_phone");
-                                            const check = validatePhoneNumber(formData.emergency_contact_phone);
-                                            if (!check.isValid) {
-                                                setFieldError("emergency_contact_phone", check.error);
-                                            } else if (formData.emergency_contact_name.trim() && !formData.emergency_contact_phone.trim()) {
-                                                setFieldError("emergency_contact_phone", t("Emergency phone number is required when a contact name is provided."));
-                                            } else {
-                                                setFieldError("emergency_contact_phone", undefined);
-                                            }
-                                        }}
-                                        onChange={(e) => {
-                                            updateFormData({ emergency_contact_phone: e.target.value });
-                                            if (touchedFields.emergency_contact_phone) {
-                                                const check = validatePhoneNumber(e.target.value);
-                                                setFieldError("emergency_contact_phone", check.error);
-                                            }
-                                        }}
-                                        placeholder="e.g. +63 917 123 4567"
-                                        className={cn(
-                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
-                                            touchedFields.emergency_contact_phone && fieldErrors.emergency_contact_phone 
-                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
-                                                : "focus:ring-primary/20"
-                                        )}
-                                        aria-invalid={!!(touchedFields.emergency_contact_phone && fieldErrors.emergency_contact_phone)}
-                                    />
-                                </SettingField>
-                            </div>
-                        </GlassCard>
-                    );
-                case "Branding":
-                    return (
-                        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-                            <GlassCard title={t("Cover Photo")} description="A cinematic background for your public page.">
-                                <div className="relative h-64 w-full overflow-hidden rounded-[1.5rem] neumorphic-inset">
-                                    <ProfileCoverUploader 
-                                        initialCoverUrl={profile?.cover_url || null} 
-                                        fullName={formData.full_name || profile?.full_name || "Landlord"} 
-                                    />
-                                </div>
-                            </GlassCard>
-                            <GlassCard title={t("Avatar & Identity")} description="Your primary identification photo.">
-                                <div className="flex flex-col items-center py-4">
-                                    <div 
-                                        className="group relative flex size-40 items-center justify-center rounded-[3rem] border-4 border-white/10 shadow-2xl transition-transform hover:scale-105"
-                                        style={{ backgroundColor: profile?.avatar_bg_color || "#22C55E" }}
-                                    >
-                                        {profile?.avatar_url ? (
-                                            <Image src={profile.avatar_url} alt={t("Avatar")} fill sizes="160px" className="rounded-[2.8rem] object-cover" />
-                                        ) : (
-                                            <span className="text-5xl font-black text-white">
-                                                {(formData.full_name || profile?.full_name || "L").charAt(0).toUpperCase()}
-                                            </span>
-                                        )}
-                                        <button 
-                                            onClick={() => setIsAvatarPickerOpen(true)}
-                                            className="absolute -bottom-2 -right-2 flex size-12 items-center justify-center rounded-2xl neumorphic-primary transition-all hover:scale-110 active:scale-95"
-                                        >
-                                            <Camera className="size-6" />
-                                        </button>
-                                    </div>
-                                    <h4 className="mt-6 text-xl font-black text-white">{formData.full_name || profile?.full_name}</h4>
-                                    <p className="text-sm text-neutral-500">{t("Verified Landlord")}</p>
-                                </div>
-                            </GlassCard>
-                        </div>
-                    );
-                case "Socials":
-                    return (
-                        <GlassCard title={t("Social Media Links")} description="Connect your social profiles to build more trust.">
-                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <SettingField 
-                                    label="Facebook" 
-                                    icon={Facebook}
-                                    error={touchedFields.socials_facebook ? fieldErrors.socials_facebook : undefined}
-                                >
-                                    <input maxLength={120}
-                                        type="text"
-                                        placeholder={t("https://facebook.com/your-page or page-handle")}
-                                        value={formData.socials.facebook}
-                                        onBlur={() => {
-                                            markFieldTouched("socials_facebook");
-                                            const check = validateSocialHandleOrUrl("facebook", formData.socials.facebook);
-                                            setFieldError("socials_facebook", check.error);
-                                        }}
-                                        onChange={(e) => {
-                                            setHasUserEdited(true);
-                                            setFormData((prev) => ({ ...prev, socials: { ...prev.socials, facebook: e.target.value } }));
-                                            if (touchedFields.socials_facebook) {
-                                                const check = validateSocialHandleOrUrl("facebook", e.target.value);
-                                                setFieldError("socials_facebook", check.error);
-                                            }
-                                        }}
-                                        className={cn(
-                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
-                                            touchedFields.socials_facebook && fieldErrors.socials_facebook 
-                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
-                                                : "focus:ring-primary/20"
-                                        )}
-                                        aria-invalid={!!(touchedFields.socials_facebook && fieldErrors.socials_facebook)}
-                                    />
-                                </SettingField>
-                                <SettingField 
-                                    label="Instagram" 
-                                    icon={Instagram}
-                                    error={touchedFields.socials_instagram ? fieldErrors.socials_instagram : undefined}
-                                >
-                                    <input maxLength={120}
-                                        type="text"
-                                        placeholder={t("https://instagram.com/your-profile or @handle")}
-                                        value={formData.socials.instagram}
-                                        onBlur={() => {
-                                            markFieldTouched("socials_instagram");
-                                            const check = validateSocialHandleOrUrl("instagram", formData.socials.instagram);
-                                            setFieldError("socials_instagram", check.error);
-                                        }}
-                                        onChange={(e) => {
-                                            setHasUserEdited(true);
-                                            setFormData((prev) => ({ ...prev, socials: { ...prev.socials, instagram: e.target.value } }));
-                                            if (touchedFields.socials_instagram) {
-                                                const check = validateSocialHandleOrUrl("instagram", e.target.value);
-                                                setFieldError("socials_instagram", check.error);
-                                            }
-                                        }}
-                                        className={cn(
-                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
-                                            touchedFields.socials_instagram && fieldErrors.socials_instagram 
-                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
-                                                : "focus:ring-primary/20"
-                                        )}
-                                        aria-invalid={!!(touchedFields.socials_instagram && fieldErrors.socials_instagram)}
-                                    />
-                                </SettingField>
-                                <SettingField 
-                                    label="Twitter / X" 
-                                    icon={Twitter}
-                                    error={touchedFields.socials_twitter ? fieldErrors.socials_twitter : undefined}
-                                >
-                                    <input maxLength={120}
-                                        type="text"
-                                        placeholder={t("https://x.com/your-handle or @handle")}
-                                        value={formData.socials.twitter}
-                                        onBlur={() => {
-                                            markFieldTouched("socials_twitter");
-                                            const check = validateSocialHandleOrUrl("twitter", formData.socials.twitter);
-                                            setFieldError("socials_twitter", check.error);
-                                        }}
-                                        onChange={(e) => {
-                                            setHasUserEdited(true);
-                                            setFormData((prev) => ({ ...prev, socials: { ...prev.socials, twitter: e.target.value } }));
-                                            if (touchedFields.socials_twitter) {
-                                                const check = validateSocialHandleOrUrl("twitter", e.target.value);
-                                                setFieldError("socials_twitter", check.error);
-                                            }
-                                        }}
-                                        className={cn(
-                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
-                                            touchedFields.socials_twitter && fieldErrors.socials_twitter 
-                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
-                                                : "focus:ring-primary/20"
-                                        )}
-                                        aria-invalid={!!(touchedFields.socials_twitter && fieldErrors.socials_twitter)}
-                                    />
-                                </SettingField>
-                                <SettingField 
-                                    label="LinkedIn" 
-                                    icon={Linkedin}
-                                    error={touchedFields.socials_linkedin ? fieldErrors.socials_linkedin : undefined}
-                                >
-                                    <input maxLength={120}
-                                        type="text"
-                                        placeholder={t("https://linkedin.com/in/your-profile or username")}
-                                        value={formData.socials.linkedin}
-                                        onBlur={() => {
-                                            markFieldTouched("socials_linkedin");
-                                            const check = validateSocialHandleOrUrl("linkedin", formData.socials.linkedin);
-                                            setFieldError("socials_linkedin", check.error);
-                                        }}
-                                        onChange={(e) => {
-                                            setHasUserEdited(true);
-                                            setFormData((prev) => ({ ...prev, socials: { ...prev.socials, linkedin: e.target.value } }));
-                                            if (touchedFields.socials_linkedin) {
-                                                const check = validateSocialHandleOrUrl("linkedin", e.target.value);
-                                                setFieldError("socials_linkedin", check.error);
-                                            }
-                                        }}
-                                        className={cn(
-                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
-                                            touchedFields.socials_linkedin && fieldErrors.socials_linkedin 
-                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
-                                                : "focus:ring-primary/20"
-                                        )}
-                                        aria-invalid={!!(touchedFields.socials_linkedin && fieldErrors.socials_linkedin)}
-                                    />
-                                </SettingField>
-                            </div>
-                        </GlassCard>
-                    );
-                case "Business Permit":
-                    return (
-                        <GlassCard title={t("Business Permit (Optional)")} description="Optionally provide your business permit number and document photo.">
-                            <div className="space-y-6">
-                                <SettingField 
-                                    label="Business Permit Number (Optional)" 
-                                    icon={FileText}
-                                    error={touchedFields.business_permit_number ? fieldErrors.business_permit_number : undefined}
-                                >
-                                    <input
-                                        type="text"
-                                        value={formData.business_permit_number}
-                                        maxLength={50}
-                                        onBlur={() => {
-                                            markFieldTouched("business_permit_number");
-                                            const check = validateBusinessPermitNumber(formData.business_permit_number);
-                                            setFieldError("business_permit_number", check.error);
-                                        }}
-                                        onChange={(e) => {
-                                            updateFormData({ business_permit_number: e.target.value });
-                                            if (touchedFields.business_permit_number) {
-                                                const check = validateBusinessPermitNumber(e.target.value);
-                                                setFieldError("business_permit_number", check.error);
-                                            }
-                                        }}
-                                        placeholder={t("e.g. BP-2026-VAL-09124")}
-                                        className={cn(
-                                            "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
-                                            touchedFields.business_permit_number && fieldErrors.business_permit_number 
-                                                ? "ring-1 ring-rose-500/50 focus:ring-rose-500/40" 
-                                                : "focus:ring-primary/20"
-                                        )}
-                                        aria-invalid={!!(touchedFields.business_permit_number && fieldErrors.business_permit_number)}
-                                    />
-                                </SettingField>
-                                
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2">
-                                        <label className="text-xs font-black uppercase tracking-wider text-neutral-400">{t("Permit Document (Photo)")}</label>
-                                        <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-muted text-muted-foreground border border-border/60">
-                                            {t("Optional")}
-                                        </span>
-                                    </div>
-                                    <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-                                        <div className="relative h-48 w-full md:w-80 overflow-hidden rounded-2xl neumorphic-inset border-dashed border-white/10 transition-all hover:opacity-80">
-                                            {profile?.business_permit_url ? (
-                                                <Image src={profile.business_permit_url} alt={t("Business Permit")} fill sizes="(max-width: 768px) 100vw, 320px" className="object-cover" />
-                                            ) : (
-                                                <div className="flex h-full flex-col items-center justify-center gap-2 text-neutral-500">
-                                                    <UploadCloud className="size-8" />
-                                                    <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
-                                                        {t("No document uploaded")}
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="flex-1 space-y-4">
-                                            <p className="text-sm text-neutral-500 leading-relaxed">
-                                                {t("Optionally upload a photo of your business permit. Supported formats: JPG, PNG. Max size: 15MB.")}
-                                            </p>
-                                            <div className="flex items-center gap-3 flex-wrap">
-                                                {profile?.business_permit_url && (
-                                                    <button 
-                                                        type="button"
-                                                        onClick={handlePermitRemove}
-                                                        disabled={isUploadingPermit}
-                                                        className="inline-flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-5 py-3 text-sm font-black text-red-500 transition-all hover:bg-red-500/20 disabled:opacity-50 cursor-pointer"
-                                                    >
-                                                        <Trash2 className="size-4" />
-                                                        {t("Remove")}
-                                                    </button>
-                                                )}
-                                                <button 
-                                                    type="button"
-                                                    onClick={() => permitInputRef.current?.click()}
-                                                    disabled={isUploadingPermit}
-                                                    className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-6 py-3 text-sm font-black text-primary transition-all hover:bg-primary/20 disabled:opacity-50 cursor-pointer"
-                                                >
-                                                    <UploadCloud className="size-5" /> 
-                                                    {isUploadingPermit ? t("Uploading…") : profile?.business_permit_url ? t("Replace Document") : t("Upload Document (Optional)")}
-                                                </button>
-                                            </div>
-                                            <input 
-                                                ref={permitInputRef}
-                                                type="file" 
-                                                accept={MEDIA_ACCEPT_STRINGS.image} 
-                                                className="hidden" 
-                                                onChange={handlePermitUpload}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </GlassCard>
-                    );
-                default: return null;
+    const validateTextField = (name: TextFieldName, value: string): string | undefined => {
+        switch (name) {
+            case "full_name": return validateFullName(value).error;
+            case "business_name": return validateBusinessName(value).error;
+            case "email": return validateEmail(value).error;
+            case "phone": return validatePhoneNumber(value).error;
+            case "website": return validateWebsiteUrl(value).error;
+            case "address": return validateAddress(value).error;
+            case "bio": return validateBio(value).error;
+            case "business_permit_number": return validateBusinessPermitNumber(value).error;
+            case "emergency_contact_name":
+                if (value && value.trim().length < 2) return "Emergency contact name must be at least 2 characters.";
+                if (value && !REGEX_NAME.test(value.trim())) return "Name can only contain letters, spaces, hyphens, and periods.";
+                return undefined;
+            case "emergency_contact_phone": {
+                const phoneError = validatePhoneNumber(value).error;
+                if (phoneError) return phoneError;
+                if (formData.emergency_contact_name.trim() && !value.trim()) return "Emergency phone number is required when a contact name is provided.";
+                return undefined;
             }
-        };
-
-        return (
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-8"
-            >
-                <div>
-                    <h2 className="text-3xl font-black text-foreground">{t("Identity")}</h2>
-                    <p className="text-muted-foreground">{t("Control how you appear to others.")}</p>
-                </div>
-
-                <SubNav 
-                    tabs={SUB_TABS.Identity} 
-                    activeTab={currentSubTab} 
-                    onTabChange={setActiveSubTab} 
-                />
-
-                <div className="mt-8">
-                    {renderSubContent()}
-                </div>
-            </motion.div>
-        );
+        }
     };
 
-    const renderPersonalization = () => {
-        const currentSubTab = SUB_TABS.Personalization.includes(activeSubTab) ? activeSubTab : SUB_TABS.Personalization[0];
-        const renderSubContent = () => {
-            switch (currentSubTab) {
-                case "Themes & Contrast":
-                    return (
-                        <div className="space-y-8">
-                            <GlassCard 
-                                title={t("Visual Theme")} 
-                                description="Choose how iReside renders across all screens. Default is light mode."
-                            >
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 p-4 rounded-2xl bg-surface-2 border border-border/60">
-                                    <div className="flex items-start gap-4">
-                                        <div className={cn(
-                                            "size-12 rounded-xl flex items-center justify-center shrink-0 border transition-all",
-                                            resolvedTheme === "dark"
-                                                ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
-                                                : "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                                        )}>
-                                            {resolvedTheme === "dark" ? <Moon className="size-6" /> : <Sun className="size-6" />}
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="text-sm font-black text-foreground">{t("Dark Mode")}</h4>
-                                                <span className={cn(
-                                                    "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
-                                                    resolvedTheme === "dark" 
-                                                        ? "bg-primary/20 text-primary border border-primary/30" 
-                                                        : "bg-surface-3 text-muted-foreground"
-                                                )}>
-                                                    {resolvedTheme === "dark" ? t("Enabled") : t("Disabled")}
-                                                </span>
-                                            </div>
-                                            <p className="text-xs text-muted-foreground mt-1 max-w-xl">
-                                                {resolvedTheme === "dark"
-                                                    ? t("Sleek, eye-friendly low-light atmosphere active across all screens.")
-                                                    : t("Clean, high-brightness daylight aesthetic active by default across all screens.")}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <ToggleSwitch 
-                                        enabled={resolvedTheme === "dark"} 
-                                        onToggle={() => toggleThemeWithTransition(resolvedTheme === "dark" ? "light" : "dark")} 
-                                    />
-                                </div>
-                            </GlassCard>
+    const errorFor = (name: string) => (fieldErrors[name] ? t(fieldErrors[name]) : undefined);
 
-                            <GlassCard 
-                                title={t("Brand Accent Colors Studio")} 
-                                description="Tune the primary and secondary signature tones used in buttons, active states & metrics."
-                            >
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <SettingField 
-                                        label="Primary Brand Accent" 
-                                        icon={Palette} 
-                                        description="Used for primary buttons, active tabs, and key badges."
-                                        error={touchedFields.brandPrimaryHex ? fieldErrors.brandPrimaryHex : undefined}
-                                    >
-                                        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsPrimaryColorPickerOpen(true)}
-                                                className="flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl neumorphic-extruded border border-border/80 hover:border-primary/80 transition-all group cursor-pointer shrink-0"
-                                                title={t("Open modern color picker")}
-                                            >
-                                                <span 
-                                                    className="size-5 sm:size-6 rounded-lg shadow-sm border border-white/20 shrink-0 transition-transform group-hover:scale-105" 
-                                                    style={{ backgroundColor: brandPrimaryHex }} 
-                                                />
-                                                <span className="font-mono text-xs font-black uppercase text-foreground">
-                                                    {brandPrimaryHex}
-                                                </span>
-                                                <Pipette className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors ml-0.5 sm:ml-1" />
-                                            </button>
-                                            <input
-                                                type="text"
-                                                value={brandPrimaryHex}
-                                                maxLength={7}
-                                                onBlur={() => {
-                                                    markFieldTouched("brandPrimaryHex");
-                                                    const check = validateHexColor(brandPrimaryHex);
-                                                    if (!check.isValid) {
-                                                        setFieldError("brandPrimaryHex", check.error);
-                                                    } else {
-                                                        setBrandPrimaryHex(check.formatted);
-                                                        setFieldError("brandPrimaryHex", undefined);
-                                                        applyBrandCssVariables(check.formatted, brandSecondaryHex);
-                                                    }
-                                                }}
-                                                onChange={(e) => {
-                                                    setHasUserEdited(true);
-                                                    setBrandPrimaryHex(e.target.value);
-                                                    if (touchedFields.brandPrimaryHex) {
-                                                        const check = validateHexColor(e.target.value);
-                                                        setFieldError("brandPrimaryHex", check.error);
-                                                        if (check.isValid) {
-                                                            applyBrandCssVariables(check.formatted, brandSecondaryHex);
-                                                        }
-                                                    }
-                                                }}
-                                                placeholder="#C4B0FF"
-                                                className={cn(
-                                                    "w-24 sm:w-28 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-2.5 sm:py-3 text-foreground transition-all",
-                                                    touchedFields.brandPrimaryHex && fieldErrors.brandPrimaryHex ? "ring-1 ring-rose-500/50" : ""
-                                                )}
-                                                aria-invalid={!!(touchedFields.brandPrimaryHex && fieldErrors.brandPrimaryHex)}
-                                            />
-                                            <div 
-                                                className="size-9 sm:size-10 rounded-xl border border-white/20 shadow-md flex items-center justify-center text-xs font-black shrink-0"
-                                                style={{ backgroundColor: brandPrimaryHex, color: "#000" }}
-                                            >
-                                                Aa
-                                            </div>
-                                        </div>
-                                    </SettingField>
+    const describedBy = (id: string, hasHelp: boolean, hasError: boolean) =>
+        [hasHelp ? `${id}-help` : null, hasError ? `${id}-error` : null].filter(Boolean).join(" ") || undefined;
 
-                                    <SettingField 
-                                        label="Secondary Ambient Accent" 
-                                        icon={SlidersHorizontal} 
-                                        description="Used for gradients, glowing highlights, and secondary tags."
-                                        error={touchedFields.brandSecondaryHex ? fieldErrors.brandSecondaryHex : undefined}
-                                    >
-                                        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsSecondaryColorPickerOpen(true)}
-                                                className="flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl neumorphic-extruded border border-border/80 hover:border-primary/80 transition-all group cursor-pointer shrink-0"
-                                                title={t("Open modern color picker")}
-                                            >
-                                                <span 
-                                                    className="size-5 sm:size-6 rounded-lg shadow-sm border border-white/20 shrink-0 transition-transform group-hover:scale-105" 
-                                                    style={{ backgroundColor: brandSecondaryHex }} 
-                                                />
-                                                <span className="font-mono text-xs font-black uppercase text-foreground">
-                                                    {brandSecondaryHex}
-                                                </span>
-                                                <Pipette className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors ml-0.5 sm:ml-1" />
-                                            </button>
-                                            <input
-                                                type="text"
-                                                value={brandSecondaryHex}
-                                                maxLength={7}
-                                                onBlur={() => {
-                                                    markFieldTouched("brandSecondaryHex");
-                                                    const check = validateHexColor(brandSecondaryHex);
-                                                    if (!check.isValid) {
-                                                        setFieldError("brandSecondaryHex", check.error);
-                                                    } else {
-                                                        setBrandSecondaryHex(check.formatted);
-                                                        setFieldError("brandSecondaryHex", undefined);
-                                                        applyBrandCssVariables(brandPrimaryHex, check.formatted);
-                                                    }
-                                                }}
-                                                onChange={(e) => {
-                                                    setHasUserEdited(true);
-                                                    setBrandSecondaryHex(e.target.value);
-                                                    if (touchedFields.brandSecondaryHex) {
-                                                        const check = validateHexColor(e.target.value);
-                                                        setFieldError("brandSecondaryHex", check.error);
-                                                        if (check.isValid) {
-                                                            applyBrandCssVariables(brandPrimaryHex, check.formatted);
-                                                        }
-                                                    }
-                                                }}
-                                                placeholder="#8B5CF6"
-                                                className={cn(
-                                                    "w-24 sm:w-28 uppercase font-mono text-xs font-bold rounded-xl neumorphic-inset px-3 py-2.5 sm:py-3 text-foreground transition-all",
-                                                    touchedFields.brandSecondaryHex && fieldErrors.brandSecondaryHex ? "ring-1 ring-rose-500/50" : ""
-                                                )}
-                                                aria-invalid={!!(touchedFields.brandSecondaryHex && fieldErrors.brandSecondaryHex)}
-                                            />
-                                            <div 
-                                                className="size-9 sm:size-10 rounded-xl border border-white/20 shadow-md flex items-center justify-center text-xs font-black text-white shrink-0"
-                                                style={{ backgroundColor: brandSecondaryHex }}
-                                            >
-                                                Aa
-                                            </div>
-                                        </div>
-                                    </SettingField>
-                                </div>
-
-                                <div className="mt-6 flex flex-wrap gap-2 items-center pt-4 border-t border-border/40">
-                                    <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground mr-2">{t("Curated Palettes:")}</span>
-                                    {[
-                                        { name: "Royal Lavender", primary: "#c4b0ff", secondary: "#8b5cf6" },
-                                        { name: "Emerald Oasis", primary: "#10b981", secondary: "#065f46" },
-                                        { name: "Amber Sunset", primary: "#f59e0b", secondary: "#ea580c" },
-                                        { name: "Electric Indigo", primary: "#6366f1", secondary: "#3b82f6" },
-                                        { name: "Ruby Crimson", primary: "#f43f5e", secondary: "#9f1239" },
-                                    ].map((preset) => (
-                                        <button
-                                            key={preset.name}
-                                            type="button"
-                                            onClick={() => {
-                                                setHasUserEdited(true);
-                                                setBrandPrimaryHex(preset.primary);
-                                                setBrandSecondaryHex(preset.secondary);
-                                                setFieldError("brandPrimaryHex", undefined);
-                                                setFieldError("brandSecondaryHex", undefined);
-                                                applyBrandCssVariables(preset.primary, preset.secondary);
-                                                toast.success(t("Applied {name} palette", { name: preset.name }));
-                                            }}
-                                            className="px-3 py-1.5 rounded-xl border border-border/60 hover:border-primary/60 bg-surface-2 text-xs font-bold text-foreground flex items-center gap-2 transition-all active:scale-95"
-                                        >
-                                            <span className="size-2.5 rounded-full" style={{ backgroundColor: preset.primary }} />
-                                            <span>{preset.name}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </GlassCard>
-
-                            <GlassCard 
-                                title={t("Language / Wika")} 
-                                description="Choose between everyday conversational Filipino (Taglish) and standard English."
-                            >
-                                <LanguageToggle variant="segmented" showPreview={true} />
-                            </GlassCard>
-
-                            <GlassCard 
-                                title={t("Time & Clock Format")} 
-                                description="Choose between 12-hour (AM/PM) and 24-hour military format for dashboards, digital clocks, and operational timestamps."
-                            >
-                                <TimeFormatToggle variant="segmented" showPreview={true} />
-                            </GlassCard>
-
-                            <GlassCard 
-                                title={t("Accessibility: Text Size & Readability")} 
-                                description="Adjust interface font scaling for maximum comfort without compromising card structures or layout symmetry."
-                            >
-                                <FontSizeToggle variant="slider" showPreview={true} />
-                            </GlassCard>
-
-                            <GlassCard 
-                                title={t("Accessibility: High Contrast Mode")} 
-                                description="Engineered per WCAG 2.1 AAA standards for maximum legibility and visibility."
-                            >
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 p-4 rounded-2xl bg-surface-2 border border-border/60">
-                                    <div className="flex items-start gap-4">
-                                        <div className={cn(
-                                            "size-12 rounded-xl flex items-center justify-center shrink-0 border transition-all",
-                                            isHighContrast 
-                                                ? "bg-foreground text-background border-foreground font-black" 
-                                                : "bg-surface-3 text-muted-foreground border-border"
-                                        )}>
-                                            <Contrast className="size-6" />
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="text-sm font-black text-foreground">{t("Universal High Contrast")}</h4>
-                                                <span className={cn(
-                                                    "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
-                                                    isHighContrast ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-surface-3 text-muted-foreground"
-                                                )}>
-                                                    {isHighContrast ? t("Active (WCAG AAA)") : t("Off")}
-                                                </span>
-                                            </div>
-                                            <p className="text-xs text-muted-foreground mt-1 max-w-xl">
-                                                {t("Replaces all soft neumorphic shadows with crisp 2.5px solid borders, pure black/white contrasts, and reinforced bold text across the landlord & tenant portals.")}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <ToggleSwitch 
-                                        enabled={isHighContrast} 
-                                        onToggle={toggleHighContrast} 
-                                    />
-                                </div>
-                            </GlassCard>
-                        </div>
-                    );
-
-                case "Branding & Logo":
-                    return (
-                        <div className="space-y-8">
-                            <GlassCard title={t("Property Identity")} description="Configure how your business is branded on leases, receipts & the tenant portal.">
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                    <SettingField 
-                                        label="Property Trade Name" 
-                                        icon={Building2} 
-                                        description="Appears on dashboard banner, top navbars, and invoice headers."
-                                        error={touchedFields.propertyTradeName ? fieldErrors.propertyTradeName : undefined}
-                                    >
-                                        <input
-                                            type="text"
-                                            value={propertyTradeName}
-                                            maxLength={80}
-                                            onBlur={() => {
-                                                markFieldTouched("propertyTradeName");
-                                                const check = validatePropertyTradeName(propertyTradeName);
-                                                setFieldError("propertyTradeName", check.error);
-                                            }}
-                                            onChange={(e) => {
-                                                setHasUserEdited(true);
-                                                const newTradeName = e.target.value;
-                                                const previousTradeName = propertyTradeName;
-                                                setPropertyTradeName(newTradeName);
-                                                if (touchedFields.propertyTradeName) {
-                                                    const check = validatePropertyTradeName(newTradeName);
-                                                    setFieldError("propertyTradeName", check.error);
-                                                }
-                                                // Automatically propagate to business_name if it was previously empty, preseeded, or matched previous trade name
-                                                setFormData((prev) => {
-                                                    const currentBiz = (prev.business_name || "").trim();
-                                                    if (
-                                                        !currentBiz ||
-                                                        DISALLOWED_PRESEEDED_DATA.propertyNames.includes(currentBiz.toLowerCase()) ||
-                                                        currentBiz === previousTradeName.trim()
-                                                    ) {
-                                                        return { ...prev, business_name: newTradeName };
-                                                    }
-                                                    return prev;
-                                                });
-                                            }}
-                                            placeholder={t("e.g., Skyline Lofts")}
-                                            className={cn(
-                                                "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none font-bold transition-all",
-                                                touchedFields.propertyTradeName && fieldErrors.propertyTradeName ? "ring-1 ring-rose-500/50" : ""
-                                            )}
-                                            aria-invalid={!!(touchedFields.propertyTradeName && fieldErrors.propertyTradeName)}
-                                        />
-                                    </SettingField>
-
-                                    <SettingField 
-                                        label="Property Tagline / Subtitle" 
-                                        icon={FileText} 
-                                        description="Displayed below your property name."
-                                        counter={{ current: propertyTagline?.length || 0, max: 120 }}
-                                        error={touchedFields.propertyTagline ? fieldErrors.propertyTagline : undefined}
-                                    >
-                                        <input
-                                            type="text"
-                                            value={propertyTagline}
-                                            maxLength={120}
-                                            onBlur={() => {
-                                                markFieldTouched("propertyTagline");
-                                                const check = validatePropertyTagline(propertyTagline);
-                                                setFieldError("propertyTagline", check.error);
-                                            }}
-                                            onChange={(e) => {
-                                                setHasUserEdited(true);
-                                                setPropertyTagline(e.target.value);
-                                                if (touchedFields.propertyTagline) {
-                                                    const check = validatePropertyTagline(e.target.value);
-                                                    setFieldError("propertyTagline", check.error);
-                                                }
-                                            }}
-                                            placeholder={t("e.g., Modern Urban Residences & Studios")}
-                                            className={cn(
-                                                "w-full rounded-xl neumorphic-inset px-4 py-3 text-sm focus:outline-none transition-all",
-                                                touchedFields.propertyTagline && fieldErrors.propertyTagline ? "ring-1 ring-rose-500/50" : ""
-                                            )}
-                                            aria-invalid={!!(touchedFields.propertyTagline && fieldErrors.propertyTagline)}
-                                        />
-                                    </SettingField>
-                                </div>
-                            </GlassCard>
-
-                            <GlassCard title={t("Property Logo & Monogram")} description="Upload a custom logo or customize your dynamic monogram badge.">
-                                <div className="flex flex-col md:flex-row items-center gap-8 p-4">
-                                    <div className="relative flex size-32 items-center justify-center rounded-[2rem] border-4 border-border/80 neumorphic-extruded overflow-hidden shrink-0 bg-surface-2 shadow-xl">
-                                        {propertyLogoUrl ? (
-                                            <Image 
-                                                src={propertyLogoUrl} 
-                                                alt={t("Property Logo")} 
-                                                fill 
-                                                sizes="128px" 
-                                                className="object-cover" 
-                                            />
-                                        ) : (
-                                            <div className="flex flex-col items-center justify-center text-center p-2">
-                                                <Building2 className="size-8 text-primary mb-1" />
-                                                <span className="text-sm font-black text-foreground uppercase tracking-wider">
-                                                    {propertyTradeName ? propertyTradeName.slice(0, 2).toUpperCase() : "SL"}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="flex-1 space-y-4 text-center md:text-left">
-                                        <div>
-                                            <h4 className="text-base font-black text-foreground">
-                                                {propertyLogoUrl ? t("Custom Brand Logo Active") : t("Dynamic Monogram Badge Active")}
-                                            </h4>
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                {t("Supports PNG, JPG, SVG or WebP (up to 5MB). Automatically rendered across navigation bars, PDF invoices, and tenant invitation links.")}
-                                            </p>
-                                        </div>
-
-                                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-                                            <input
-                                                ref={logoFileInputRef}
-                                                type="file"
-                                                accept={MEDIA_ACCEPT_STRINGS.branding_logo}
-                                                onChange={handleLogoFileUpload}
-                                                className="hidden"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => logoFileInputRef.current?.click()}
-                                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-wider transition-all hover:scale-[1.02] active:scale-95"
-                                            >
-                                                <Upload className="size-4" />
-                                                {t("Upload Logo")}
-                                            </button>
-
-                                            {propertyLogoUrl && (
-                                                <button
-                                                    type="button"
-                                                    onClick={handleRemoveLogo}
-                                                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs font-bold transition-all"
-                                                >
-                                                    <Trash2 className="size-4" />
-                                                    {t("Reset to Monogram")}
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </GlassCard>
-
-                            <GlassCard 
-                                title={t("Turnkey Workspace Personalization Wizard")} 
-                                description="Need to re-evaluate your visual theme, dynamic HSL color harmonies, or setup flow?"
-                                headerExtra={
-                                    <Link
-                                        href="/setup?reconfigure=true"
-                                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl neumorphic-panel text-xs font-black uppercase tracking-wider text-foreground hover:text-primary transition-all active:scale-95 shadow-xs"
-                                    >
-                                        <SlidersHorizontal className="size-3.5 text-primary" />
-                                        <span>{t("Re-run Setup Wizard")}</span>
-                                    </Link>
-                                }
-                            >
-                                <div className="p-2 text-xs text-muted-foreground leading-relaxed">
-                                    {t("The 3-step personalization wizard guides you through property identity, WCAG contrast verification, and theme setup. Running it in reconfiguration mode updates your branding and operational settings without affecting active leases or units.")}
-                                </div>
-                            </GlassCard>
-                        </div>
-                    );
-
-                case "Dashboard Banner":
-                    return (
-                        <div className="space-y-8">
-                            <GlassCard title={t("Active Dashboard Banner Preview")} description="This photo serves as the panoramic hero header of your landlord dashboard.">
-                                <div className="relative h-56 sm:h-64 w-full rounded-2xl overflow-hidden border border-border/80 shadow-2xl group">
-                                    <Image
-                                        src={bannerUrl}
-                                        alt={t("Banner Preview")}
-                                        fill
-                                        sizes="(max-width: 1024px) 100vw, 800px"
-                                        className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
-                                    <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
-                                        <div>
-                                            <span className="px-2.5 py-1 rounded-lg bg-primary/90 text-primary-foreground text-[10px] font-black uppercase tracking-widest">
-                                                {t("Active Hero Header")}
-                                            </span>
-                                            <h3 className="text-xl font-black text-white mt-2 drop-shadow-md">
-                                                {propertyTradeName || "Skyline Lofts"}
-                                            </h3>
-                                            <p className="text-xs text-white/80 font-medium">
-                                                {propertyTagline || "Modern Urban Residences & Studios"}
-                                            </p>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={handleResetBanner}
-                                            className="px-3 py-1.5 rounded-xl bg-black/60 hover:bg-black/90 text-white border border-white/20 backdrop-blur-md text-xs font-bold flex items-center gap-1.5 transition-all"
-                                        >
-                                            <RotateCcw className="size-3.5" />
-                                            {t("Reset")}
-                                        </button>
-                                    </div>
-                                </div>
-                            </GlassCard>
-
-                            <GlassCard title={t("Architectural Preset Library")} description="Select from 6 hand-curated ultra high-resolution architectural hero photos.">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {CURATED_BANNER_PRESETS.map((preset) => {
-                                        const isSelected = bannerUrl === preset.url;
-                                        return (
-                                            <button
-                                                key={preset.id}
-                                                type="button"
-                                                onClick={() => handleSelectBannerPreset(preset.url)}
-                                                className={cn(
-                                                    "group relative overflow-hidden rounded-2xl border text-left transition-all duration-300",
-                                                    isSelected 
-                                                        ? "border-primary ring-2 ring-primary/50 shadow-lg" 
-                                                        : "border-border/60 hover:border-border hover:shadow-md"
-                                                )}
-                                            >
-                                                <div className="relative h-28 w-full">
-                                                    <Image
-                                                        src={preset.url}
-                                                        alt={t(preset.name)}
-                                                        fill
-                                                        sizes="(max-width: 768px) 100vw, 300px"
-                                                        className="object-cover transition-transform duration-500 group-hover:scale-110"
-                                                    />
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                                                    {isSelected && (
-                                                        <div className="absolute top-2 right-2 size-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
-                                                            <Check className="size-3.5 stroke-[3]" />
-                                                        </div>
-                                                    )}
-                                                    <div className="absolute bottom-2 left-3 right-3">
-                                                        <span className="text-[10px] font-black uppercase tracking-wider text-primary">
-                                                            {t(preset.category)}
-                                                        </span>
-                                                        <h4 className="text-xs font-bold text-white truncate">
-                                                            {t(preset.name)}
-                                                        </h4>
-                                                    </div>
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </GlassCard>
-
-                            <GlassCard title={t("Custom Photo Upload")} description="Upload your property's real exterior or interior photography.">
-                                <div className="p-6 rounded-2xl border border-dashed border-border flex flex-col items-center justify-center text-center gap-3">
-                                    <div className="size-12 rounded-2xl bg-surface-2 flex items-center justify-center text-primary border border-border">
-                                        <Upload className="size-6" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-sm font-black text-foreground">{t("Upload Photo File")}</h4>
-                                        <p className="text-xs text-muted-foreground mt-1">{t("PNG, JPG or WebP up to 8MB")}</p>
-                                    </div>
-                                    <input
-                                        ref={bannerFileInputRef}
-                                        type="file"
-                                        accept={MEDIA_ACCEPT_STRINGS.image}
-                                        onChange={handleBannerFileUpload}
-                                        className="hidden"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => bannerFileInputRef.current?.click()}
-                                        className="mt-2 px-5 py-2.5 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-wider transition-all"
-                                    >
-                                        {t("Browse Device")}
-                                    </button>
-                                </div>
-                            </GlassCard>
-                        </div>
-                    );
-
-                default:
-                    return null;
-            }
+    /** Props for an input bound to a top-level profile field. */
+    const bindText = (name: TextFieldName, hasHelp = false) => {
+        const id = fieldId(name);
+        const error = errorFor(name);
+        return {
+            id,
+            value: formData[name],
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+                updateFormData({ [name]: e.target.value } as Partial<typeof formData>);
+                if (touchedFields[name] || fieldErrors[name]) setFieldError(name, validateTextField(name, e.target.value));
+            },
+            onBlur: () => {
+                markFieldTouched(name);
+                setFieldError(name, validateTextField(name, formData[name]));
+            },
+            "aria-invalid": error ? true : undefined,
+            "aria-describedby": describedBy(id, hasHelp, Boolean(error)),
+            className: settingsInputClass(Boolean(error)),
         };
-
-        return (
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-8"
-            >
-                <div>
-                    <h2 className="text-3xl font-black text-foreground">{t("Personalization")}</h2>
-                    <p className="text-muted-foreground">{t("Customize branding, themes, banner imagery & accessibility.")}</p>
-                </div>
-
-                <SubNav 
-                    tabs={SUB_TABS.Personalization} 
-                    activeTab={currentSubTab} 
-                    onTabChange={setActiveSubTab} 
-                />
-
-                <div className="mt-8">
-                    {renderSubContent()}
-                </div>
-            </motion.div>
-        );
     };
 
-    const renderFinance = () => {
-        const currentSubTab = SUB_TABS.Finance.includes(activeSubTab) ? activeSubTab : SUB_TABS.Finance[0];
-        const renderSubContent = () => {
-            switch (currentSubTab) {
-                case "GCash":
-                    return (
-                        <BillingOperationsPanel 
-                            viewMode="gcash"
-                            propertyId={selectedPropertyId}
-                            embedded={true}
-                            onDirtyChange={setIsFinanceDirty}
-                            onRegisterSave={(fn) => { financeSaveRef.current = fn; }}
-                            onRegisterDiscard={(fn) => { financeDiscardRef.current = fn; }}
-                        />
-                    );
-                case "Utilities":
-                    return (
-                        <div className="space-y-6">
-                            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                                {["Water", "Electricity"].map((tab) => (
-                                    <button
-                                        key={tab}
-                                        className={cn(
-                                            "flex items-center gap-3 rounded-2xl px-6 py-4 text-sm font-black transition-all",
-                                            activeFinanceTab === tab 
-                                                ? "neumorphic-panel text-primary" 
-                                                : "neumorphic-extruded opacity-70 hover:opacity-100"
-                                        )}
-                                        onClick={() => setActiveFinanceTab(tab as any)}
-                                    >
-                                        {tab === "Water" && <Droplets className="size-4" />}
-                                        {tab === "Electricity" && <Zap className="size-4" />}
-                                        {t(tab === "Water" ? "Water Configuration" : "Electricity Configuration")}
-                                    </button>
-                                ))}
-                            </div>
-                            <BillingOperationsPanel 
-                                viewMode="rates"
-                                utilityType={activeFinanceTab === "Water" ? "water" : "electricity"}
-                                propertyId={selectedPropertyId}
-                                embedded={true}
-                                onDirtyChange={setIsFinanceDirty}
-                                onRegisterSave={(fn) => { financeSaveRef.current = fn; }}
-                                onRegisterDiscard={(fn) => { financeDiscardRef.current = fn; }}
-                            />
-                        </div>
-                    );
-                default: return null;
-            }
+    type SocialKey = "facebook" | "instagram" | "twitter" | "linkedin";
+    const bindSocial = (key: SocialKey) => {
+        const name = `socials_${key}`;
+        const id = fieldId(name);
+        const error = errorFor(name);
+        return {
+            id,
+            value: formData.socials[key],
+            onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                setHasUserEdited(true);
+                const value = e.target.value;
+                setFormData((prev) => ({ ...prev, socials: { ...prev.socials, [key]: value } }));
+                if (touchedFields[name] || fieldErrors[name]) setFieldError(name, validateSocialHandleOrUrl(key, value).error);
+            },
+            onBlur: () => {
+                markFieldTouched(name);
+                setFieldError(name, validateSocialHandleOrUrl(key, formData.socials[key]).error);
+            },
+            "aria-invalid": error ? true : undefined,
+            "aria-describedby": describedBy(id, true, Boolean(error)),
+            className: settingsInputClass(Boolean(error)),
         };
-
-        return (
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-8"
-            >
-                <div className="flex flex-col md:flex-row md:items-center gap-4">
-                    <div className="flex-1">
-                        <h2 className="text-3xl font-black text-foreground">{t("Finance & Utilities")}</h2>
-                        <p className="text-muted-foreground">{t("Configure how you receive payments and manage utility rates.")}</p>
-                    </div>
-                    
-                    {/* Property Selector */}
-                    {activeSubTab !== "GCash" && (
-                        <div className="flex items-center gap-3 rounded-2xl neumorphic-panel p-1">
-                            <div className="flex items-center gap-2 px-3 py-1">
-                                <Building2 className="size-4 text-primary" />
-                                <span className="text-xs font-black text-foreground whitespace-nowrap">{t("Property:")}</span>
-                            </div>
-                            <select
-                                value={selectedPropertyId}
-                                onChange={(e) => setSelectedPropertyId(e.target.value)}
-                                className="bg-transparent text-sm font-black text-foreground outline-none pr-8 py-2 cursor-pointer appearance-none"
-                                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center', backgroundSize: '1rem' }}
-                            >
-                                <option value="all" className="bg-surface-1 text-foreground">{t("All Properties")}</option>
-                                {properties.map(p => (
-                                    <option key={p.id} value={p.id} className="bg-surface-1 text-foreground">{p.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
-                </div>
-
-                <SubNav 
-                    tabs={SUB_TABS.Finance} 
-                    activeTab={currentSubTab} 
-                    onTabChange={setActiveSubTab} 
-                />
-
-                <div className="mt-8">
-                    {renderSubContent()}
-                </div>
-            </motion.div>
-        );
     };
 
-
-
-    const renderSecurity = () => {
-        const currentSubTab = SUB_TABS.Security.includes(activeSubTab) ? activeSubTab : SUB_TABS.Security[0];
-        const renderSubContent = () => {
-            switch (currentSubTab) {
-                case "Account":
-                    return (
-                        <GlassCard 
-                            title={t("Change Password")} 
-                            description="Ensure your account is using a long, random password to stay secure."
-                            headerExtra={
-                                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
-                                    <Clock className="size-3.5 shrink-0 text-primary" />
-                                    <span>
-                                        {t("Last updated:")}{" "}
-                                        <span className="font-bold text-foreground">
-                                            {passwordLastUpdated ? (
-                                                <ClientOnlyDate 
-                                                    date={passwordLastUpdated} 
-                                                    format={{ 
-                                                        month: 'short', 
-                                                        day: 'numeric', 
-                                                        year: 'numeric' 
-                                                    }} 
-                                                />
-                                            ) : (
-                                                t("Never")
-                                            )}
-                                        </span>
-                                    </span>
-                                </div>
-                            }
-                        >
-                            <form onSubmit={handleUpdatePassword} className="space-y-6 max-w-lg">
-                                {passwordLastUpdated && (
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between p-3.5 rounded-xl bg-white/[0.02] border border-white/5 text-xs text-muted-foreground">
-                                            <div className="flex items-center gap-2">
-                                                <ShieldCheck className="size-4 text-emerald-400 shrink-0" />
-                                                <span>{t("Password last modified")}</span>
-                                            </div>
-                                            <span className="font-mono font-medium text-foreground">
-                                                <ClientOnlyDate 
-                                                    date={passwordLastUpdated} 
-                                                    format={{ 
-                                                        month: 'short', 
-                                                        day: 'numeric', 
-                                                        year: 'numeric', 
-                                                        hour: 'numeric', 
-                                                        minute: '2-digit' 
-                                                    }} 
-                                                />
-                                            </span>
-                                        </div>
-
-                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 rounded-xl bg-red-500/[0.06] border border-red-500/20 text-xs">
-                                            <div className="flex items-center gap-2 text-red-500 font-medium">
-                                                <AlertTriangle className="size-4 shrink-0" />
-                                                <span>{t("Is this not you? Someone may have accessed your account.")}</span>
-                                            </div>
-                                            <Link 
-                                                href={`/forgot-password?email=${encodeURIComponent(user?.email || profile?.email || "")}`}
-                                                className="inline-flex items-center gap-1 font-bold text-red-500 hover:text-red-400 hover:underline transition-colors shrink-0 cursor-pointer"
-                                            >
-                                                <span>{t("Reset password now")} &rarr;</span>
-                                            </Link>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <SettingField 
-                                    label="New Password" 
-                                    icon={Key}
-                                    required
-                                    error={fieldErrors["newPassword"]}
-                                >
-                                    <div className="relative">
-                                        <input maxLength={72}
-                                            type={showNewPassword ? "text" : "password"} 
-                                            value={newPassword}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                setNewPassword(val);
-                                                if (fieldErrors["newPassword"]) {
-                                                    const pair = validatePasswordPair(val, confirmNewPassword, passwordContext);
-                                                    setFieldError("newPassword", pair.newPasswordError);
-                                                }
-                                                if (confirmNewPassword && fieldErrors["confirmNewPassword"]) {
-                                                    const pair = validatePasswordPair(val, confirmNewPassword, passwordContext);
-                                                    setFieldError("confirmNewPassword", pair.confirmPasswordError);
-                                                }
-                                            }}
-                                            onBlur={() => {
-                                                markFieldTouched("newPassword");
-                                                const pair = validatePasswordPair(newPassword, confirmNewPassword, passwordContext);
-                                                setFieldError("newPassword", pair.newPasswordError);
-                                            }}
-                                            placeholder="••••••••" 
-                                            required
-                                            minLength={6}
-                                            className={cn(
-                                                "w-full rounded-xl neumorphic-inset px-4 py-3 pr-11 text-sm focus:outline-none transition-colors",
-                                                fieldErrors["newPassword"] && "ring-1 ring-rose-500/50"
-                                            )}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowNewPassword(!showNewPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 transition-colors cursor-pointer"
-                                            aria-label={showNewPassword ? t("Hide password") : t("Show password")}
-                                        >
-                                            {showNewPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                                        </button>
-                                    </div>
-                                </SettingField>
-
-                                {/* Password Strength Meter & Live Checklist */}
-                                {newPassword.length > 0 && (() => {
-                                    const strength = evaluatePasswordStrength(newPassword, passwordContext);
-                                    return (
-                                        <div className="space-y-2.5 rounded-xl neumorphic-panel p-3.5 animate-in fade-in duration-200">
-                                            <div className="flex items-center justify-between text-xs">
-                                                <span className="font-bold text-muted-foreground">{t("Password Strength:")}</span>
-                                                <span className={cn("font-black", strength.color)}>{t(strength.label)}</span>
-                                            </div>
-                                            <div className="grid grid-cols-4 gap-1.5">
-                                                {[1, 2, 3, 4].map((step) => (
-                                                    <div 
-                                                        key={step}
-                                                        className={cn(
-                                                            "h-1.5 rounded-full transition-all duration-300",
-                                                            step <= strength.score
-                                                                ? strength.score === 1 ? "bg-rose-500"
-                                                                : strength.score === 2 ? "bg-amber-500"
-                                                                : strength.score === 3 ? "bg-sky-500"
-                                                                : "bg-emerald-500"
-                                                                : "bg-muted"
-                                                        )}
-                                                    />
-                                                ))}
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-1.5 pt-1 text-[11px]">
-                                                <div className={cn("flex items-center gap-1.5 font-medium", strength.checks.hasMinLength ? "text-emerald-500" : "text-muted-foreground")}>
-                                                    <CheckCircle2 className={cn("size-3 shrink-0", strength.checks.hasMinLength ? "text-emerald-500" : "opacity-40")} />
-                                                    <span>{t("At least 8 characters")}</span>
-                                                </div>
-                                                <div className={cn("flex items-center gap-1.5 font-medium", strength.checks.hasUppercase ? "text-emerald-500" : "text-muted-foreground")}>
-                                                    <CheckCircle2 className={cn("size-3 shrink-0", strength.checks.hasUppercase ? "text-emerald-500" : "opacity-40")} />
-                                                    <span>{t("Uppercase letter")}</span>
-                                                </div>
-                                                <div className={cn("flex items-center gap-1.5 font-medium", strength.checks.hasLetter ? "text-emerald-500" : "text-muted-foreground")}>
-                                                    <CheckCircle2 className={cn("size-3 shrink-0", strength.checks.hasLetter ? "text-emerald-500" : "opacity-40")} />
-                                                    <span>{t("Letters")}</span>
-                                                </div>
-                                                <div className={cn("flex items-center gap-1.5 font-medium", strength.checks.hasNumberOrSymbol ? "text-emerald-500" : "text-muted-foreground")}>
-                                                    <CheckCircle2 className={cn("size-3 shrink-0", strength.checks.hasNumberOrSymbol ? "text-emerald-500" : "opacity-40")} />
-                                                    <span>{t("Number or symbol")}</span>
-                                                </div>
-                                                <div className={cn("col-span-2 flex items-center gap-1.5 font-medium", (strength.checks.isNotCommon && strength.checks.isNotRepetitive && strength.checks.isNotPersonal) ? "text-emerald-500" : "text-muted-foreground")}>
-                                                    <CheckCircle2 className={cn("size-3 shrink-0", (strength.checks.isNotCommon && strength.checks.isNotRepetitive && strength.checks.isNotPersonal) ? "text-emerald-500" : "opacity-40")} />
-                                                    <span>{t("Not common, repetitive, or your name/email")}</span>
-                                                </div>
-                                            </div>
-                                            {strength.error && (
-                                                <p className="text-[11px] font-semibold text-rose-500" role="alert">{strength.error}</p>
-                                            )}
-                                        </div>
-                                    );
-                                })()}
-
-                                <SettingField 
-                                    label="Confirm New Password" 
-                                    icon={Key}
-                                    required
-                                    error={fieldErrors["confirmNewPassword"]}
-                                >
-                                    <div className="relative">
-                                        <input maxLength={72}
-                                            type={showConfirmPassword ? "text" : "password"} 
-                                            value={confirmNewPassword}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                setConfirmNewPassword(val);
-                                                if (fieldErrors["confirmNewPassword"]) {
-                                                    const pair = validatePasswordPair(newPassword, val, passwordContext);
-                                                    setFieldError("confirmNewPassword", pair.confirmPasswordError);
-                                                }
-                                            }}
-                                            onBlur={() => {
-                                                markFieldTouched("confirmNewPassword");
-                                                const pair = validatePasswordPair(newPassword, confirmNewPassword, passwordContext);
-                                                setFieldError("confirmNewPassword", pair.confirmPasswordError);
-                                            }}
-                                            placeholder="••••••••" 
-                                            className={cn(
-                                                "w-full rounded-xl neumorphic-inset px-4 py-3 pr-11 text-sm focus:outline-none transition-colors",
-                                                fieldErrors["confirmNewPassword"] && "ring-1 ring-rose-500/50"
-                                            )}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 transition-colors cursor-pointer"
-                                            aria-label={showConfirmPassword ? t("Hide password") : t("Show password")}
-                                        >
-                                            {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                                        </button>
-                                    </div>
-                                    {confirmNewPassword && !fieldErrors["confirmNewPassword"] && newPassword === confirmNewPassword && (
-                                        <p className="px-1 text-[11px] font-bold text-emerald-500 flex items-center gap-1.5 animate-in fade-in">
-                                            <CheckCircle2 className="size-3 shrink-0" />
-                                            <span>{t("Passwords match")}</span>
-                                        </p>
-                                    )}
-                                </SettingField>
-
-                                <button 
-                                    type="submit"
-                                    disabled={isUpdatingPassword || !newPassword || !confirmNewPassword}
-                                    className="w-full rounded-2xl neumorphic-extruded py-3 text-sm font-black transition-all hover:text-primary disabled:opacity-50 cursor-pointer"
-                                >
-                                    {isUpdatingPassword ? t("Updating Password...") : t("Update Password")}
-                                </button>
-                            </form>
-                        </GlassCard>
-                    );
-                case "Protection":
-                    return (
-                        <div className="space-y-6 max-w-2xl">
-                            <SecurityKeyManagementCard accountEmail={user?.email || profile?.email || undefined} />
-
-                            <TwoFactorManagementCard
-                                apiEndpoint="/api/landlord/2fa"
-                                accountEmail={user?.email || profile?.email || undefined}
-                                onStatusChange={(enabled) => {
-                                    setTwoFAStatus(enabled ? 'enabled' : 'disabled');
-                                }}
-                            />
-                        </div>
-                    );
-                case "Sessions":
-                    return (
-                        <GlassCard title={t("Active Sessions")} description="Devices and browsers currently logged into your landlord account.">
-                            <div className="space-y-4 max-w-xl">
-                                {isSessionsLoading && sessions.length === 0 ? (
-                                    <div className="text-center py-6 text-xs text-muted-foreground uppercase tracking-widest font-black flex items-center justify-center gap-2">
-                                        <RefreshCw className="size-4 animate-spin text-primary" /> {t("Loading active sessions…")}
-                                    </div>
-                                ) : sessions.length === 0 ? (
-                                    <div className="text-center py-6 text-xs text-muted-foreground uppercase tracking-widest font-black">{t("No active sessions found")}</div>
-                                ) : (
-                                    sessions.map((sess) => {
-                                        const deviceInfo = parseUserAgent(sess.user_agent);
-                                        const isCurrent = sess.id === currentSessionId;
-                                        const isMobile = deviceInfo.deviceType === "mobile" || deviceInfo.deviceType === "tablet";
-                                        const Icon = isMobile ? Smartphone : Monitor;
-
-                                        return (
-                                            <div key={sess.id} className={cn(
-                                                "flex items-center justify-between rounded-2xl p-4 transition-all gap-4",
-                                                isCurrent 
-                                                    ? "neumorphic-inset border border-primary/30" 
-                                                    : "neumorphic-panel hover:border-border/80"
-                                            )}>
-                                                <div className="flex items-center gap-4 min-w-0">
-                                                    <div className={cn(
-                                                        "flex size-10 items-center justify-center rounded-xl shrink-0",
-                                                        isCurrent ? "bg-primary/20 text-primary" : "bg-surface-2 text-muted-foreground"
-                                                    )}>
-                                                        <Icon className="size-5" />
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <div className="flex items-center gap-2">
-                                                            <h4 className="text-sm font-black text-foreground truncate">{deviceInfo.label}</h4>
-                                                            {isCurrent && (
-                                                                <span className="rounded-md bg-primary/20 px-2 py-0.5 text-[10px] font-black text-primary uppercase tracking-wider shrink-0">
-                                                                    {t("This Device")}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <p className="text-[11px] text-muted-foreground truncate">
-                                                            {isCurrent ? t("Active now") : <>{t("Last active")} <ClientOnlyDate date={sess.updated_at} format={{ month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }} /></>} • IP: {sess.ip || t("Unknown IP")}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                {!isCurrent && (
-                                                    <button
-                                                        onClick={() => handleRevokeSession(sess.id)}
-                                                        className="px-3 py-1.5 rounded-xl text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors shrink-0"
-                                                        title={t("Revoke this device")}
-                                                    >
-                                                        {t("Revoke")}
-                                                    </button>
-                                                )}
-                                            </div>
-                                        );
-                                    })
-                                )}
-                                
-                                {sessions.length > 1 && (
-                                    <div className="pt-4 flex flex-wrap items-center gap-4 border-t border-border/40">
-                                        <button 
-                                            onClick={handleSignOutOthers}
-                                            disabled={isSessionsLoading}
-                                            className="flex items-center gap-2 text-xs font-black text-amber-500 hover:text-amber-400 transition-colors disabled:opacity-50"
-                                        >
-                                            <LogOut className="size-3.5" /> {t("Sign out all other devices")}
-                                        </button>
-
-                                        <button 
-                                            onClick={handleSignOutAll}
-                                            disabled={isSessionsLoading}
-                                            className="flex items-center gap-2 text-xs font-black text-red-500 hover:text-red-400 transition-colors disabled:opacity-50"
-                                        >
-                                            <ShieldCheck className="size-3.5" /> {t("Sign out of all devices (Global Reset)")}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </GlassCard>
-                    );
-                default: return null;
-            }
-        };
-
-        return (
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-8"
-            >
-                <div>
-                    <h2 className="text-3xl font-black text-foreground">{t("Security & Login")}</h2>
-                    <p className="text-muted-foreground">{t("Protect your account and manage active sessions.")}</p>
-                </div>
-
-                <SubNav 
-                    tabs={SUB_TABS.Security} 
-                    activeTab={currentSubTab} 
-                    onTabChange={setActiveSubTab} 
-                />
-
-                <div className="mt-8">
-                    {renderSubContent()}
-                </div>
-            </motion.div>
-        );
+    const setBrandColors = (primary: string, secondary: string) => {
+        setHasUserEdited(true);
+        setBrandPrimaryHex(primary);
+        setBrandSecondaryHex(secondary);
+        setFieldError("brandPrimaryHex", undefined);
+        setFieldError("brandSecondaryHex", undefined);
+        applyBrandCssVariables(primary, secondary);
     };
 
-    const renderNotifications = () => (
-        <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-8"
-        >
-            <div>
-                <h2 className="text-3xl font-black text-foreground">{t("Notifications")}</h2>
-                <p className="text-muted-foreground">{t("Choose how and when you want to be alerted.")}</p>
-            </div>
-
-            <SubNav 
-                tabs={SUB_TABS.Notifications} 
-                activeTab={activeSubTab} 
-                onTabChange={setActiveSubTab} 
-            />
-
-            <div className="mt-8">
-                <GlassCard className="!p-0 overflow-hidden">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="border-b border-border/60 bg-surface-2/50">
-                                <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-muted-foreground">{t("Activity Type")}</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground w-32">{t("Email")}</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground w-32">{t("Push")}</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/40">
-                            {[
-                                { key: "lease_applications" as const, label: "New Lease Applications", desc: "When a prospective tenant submits an application." },
-                                { key: "maintenance" as const, label: "Maintenance Requests", desc: "Urgent notifications for unit repairs." },
-                                { key: "payments" as const, label: "Payment Confirmations", desc: "When rent is successfully received." },
-                                { key: "messages" as const, label: "Direct Messages", desc: "Messages from active or prospective tenants." },
-                                { key: "announcements" as const, label: "System Announcements", desc: "Product updates and platform news." },
-                            ].map((item) => (
-                                <tr key={item.key} className="transition-colors hover:bg-surface-2/50">
-                                    <td className="px-8 py-6">
-                                        <h4 className="text-sm font-black text-foreground">{t(item.label)}</h4>
-                                        <p className="text-xs text-muted-foreground">{t(item.desc)}</p>
-                                    </td>
-                                    <td className="px-4 py-6 text-center">
-                                        <div className="flex justify-center">
-                                            <ToggleSwitch 
-                                                enabled={notificationPreferences[item.key].email} 
-                                                onToggle={() => handleToggleNotification(item.key, "email")} 
-                                            />
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-6 text-center">
-                                        <div className="flex justify-center">
-                                            <ToggleSwitch 
-                                                enabled={notificationPreferences[item.key].push} 
-                                                onToggle={() => handleToggleNotification(item.key, "push")} 
-                                            />
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    <div className="flex items-center justify-end gap-3 border-t border-border/60 p-6 bg-surface-2/30">
-                        <button 
-                            type="button"
-                            onClick={handleResetNotificationDefaults}
-                            className="text-xs font-black text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                        >
-                            {t("Reset to Defaults")}
-                        </button>
-                    </div>
-                </GlassCard>
-            </div>
-        </motion.div>
-    );
-
-    const renderData = () => {
-        const currentSubTab = SUB_TABS.Data.includes(activeSubTab) ? activeSubTab : SUB_TABS.Data[0];
-        const renderSubContent = () => {
-            switch (currentSubTab) {
-                case "Export":
-                    return (
-                        <GlassCard title={t("Data Export")} description="Download structured business records in CSV (Excel) or JSON format.">
-                            <div className="space-y-6 max-w-2xl">
-                                {/* Dataset Category */}
-                                <div className="space-y-3">
-                                    <label className="text-xs font-black uppercase tracking-wider text-foreground/80">
-                                        {t("Select Dataset")}
-                                    </label>
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                        {[
-                                            {
-                                                id: "financials" as const,
-                                                label: "Financial Ledger",
-                                                desc: "Invoices, payments, balances, and utility records",
-                                                icon: CreditCard,
-                                            },
-                                            {
-                                                id: "properties" as const,
-                                                label: "Property Portfolio",
-                                                desc: "Buildings, unit inventory, and occupancy rates",
-                                                icon: Building2,
-                                            },
-                                            {
-                                                id: "rent_roll" as const,
-                                                label: "Active Rent Roll",
-                                                desc: "Tenant leases, contact info, and rental terms",
-                                                icon: FileText,
-                                            },
-                                        ].map((item) => {
-                                            const isSelected = exportCategory === item.id;
-                                            const Icon = item.icon;
-                                            return (
-                                                <button
-                                                    key={item.id}
-                                                    type="button"
-                                                    onClick={() => setExportCategory(item.id)}
-                                                    className={cn(
-                                                        "flex flex-col justify-between p-4 rounded-2xl border text-left transition-all cursor-pointer h-full",
-                                                        isSelected
-                                                            ? "neumorphic-inset border-primary/40 bg-primary/[0.04]"
-                                                            : "neumorphic-panel border-border/60 hover:border-border/90"
-                                                    )}
-                                                >
-                                                    <div className="flex items-center justify-between w-full mb-3">
-                                                        <div className={cn(
-                                                            "size-9 rounded-xl flex items-center justify-center transition-colors",
-                                                            isSelected ? "bg-primary/20 text-primary" : "bg-surface-2 text-muted-foreground"
-                                                        )}>
-                                                            <Icon className="size-4" />
-                                                        </div>
-                                                        <div className={cn(
-                                                            "size-4 rounded-full border flex items-center justify-center transition-all",
-                                                            isSelected ? "border-primary bg-primary" : "border-border bg-transparent"
-                                                        )}>
-                                                            {isSelected && <div className="size-1.5 rounded-full bg-white" />}
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <span className="text-xs font-black tracking-tight text-foreground block">
-                                                            {t(item.label)}
-                                                        </span>
-                                                        <span className="text-[11px] text-muted-foreground mt-1 leading-snug block">
-                                                            {t(item.desc)}
-                                                        </span>
-                                                    </div>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                {/* Options: Date Range & Format */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                                    {exportCategory === "financials" ? (
-                                        <SettingField label="Date Range" icon={Calendar}>
-                                            <div className="relative">
-                                                <select
-                                                    value={exportRange}
-                                                    onChange={(e) => setExportRange(e.target.value as ExportRange)}
-                                                    className="w-full rounded-xl neumorphic-inset px-4 py-3 text-xs font-bold text-foreground focus:outline-none appearance-none cursor-pointer bg-transparent"
-                                                >
-                                                    <option value="ytd" className="bg-card text-foreground">{t("Year to Date (2026)")}</option>
-                                                    <option value="12m" className="bg-card text-foreground">{t("Past 12 Months")}</option>
-                                                    <option value="all" className="bg-card text-foreground">{t("All Time (Full History)")}</option>
-                                                </select>
-                                                <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-                                            </div>
-                                        </SettingField>
-                                    ) : (
-                                        <SettingField label="Date Range" icon={Calendar} description="All active records included">
-                                            <div className="w-full rounded-xl neumorphic-inset px-4 py-3 text-xs font-bold text-muted-foreground flex items-center justify-between">
-                                                <span>{t("Active Records")}</span>
-                                                <span className="text-[10px] uppercase font-black tracking-wider text-muted-foreground/80">{t("Current State")}</span>
-                                            </div>
-                                        </SettingField>
-                                    )}
-
-                                    <SettingField label="File Format" icon={FileSpreadsheet}>
-                                        <div className="relative">
-                                            <select
-                                                value={exportFormat}
-                                                onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
-                                                className="w-full rounded-xl neumorphic-inset px-4 py-3 text-xs font-bold text-foreground focus:outline-none appearance-none cursor-pointer bg-transparent"
-                                            >
-                                                <option value="csv" className="bg-card text-foreground">{t("CSV (Microsoft Excel / Spreadsheets)")}</option>
-                                                <option value="json" className="bg-card text-foreground">{t("JSON (Raw Structured Data)")}</option>
-                                            </select>
-                                            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-                                        </div>
-                                    </SettingField>
-                                </div>
-
-                                {/* All Time Scope Warning */}
-                                {exportCategory === "financials" && exportRange === "all" && (
-                                    <div className="flex items-start gap-3 p-3.5 rounded-xl border border-amber-500/25 bg-amber-500/[0.08] text-xs">
-                                        <AlertTriangle className="size-4 text-amber-500 shrink-0 mt-0.5" />
-                                        <div className="space-y-0.5">
-                                            <p className="font-bold text-amber-600 dark:text-amber-400">{t("Large Export Warning")}</p>
-                                            <p className="text-muted-foreground leading-relaxed">
-                                                {t("Exporting all-time financial records will retrieve all historical invoices and payments. This may take longer to generate and result in a larger file.")}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Action & File Summary Bar */}
-                                <div className="pt-4 border-t border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                    <div className="text-xs text-muted-foreground">
-                                        <span className="font-bold text-foreground">{t("Scope:")}</span>{" "}
-                                        {exportCategory === "financials"
-                                            ? t("Financial Ledger")
-                                            : exportCategory === "properties"
-                                            ? t("Property Portfolio")
-                                            : t("Active Rent Roll")}
-                                        {exportCategory === "financials" && ` (${exportRange === "ytd" ? t("YTD 2026") : exportRange === "12m" ? t("Past 12M") : t("All Time")})`}
-                                        {" • "}
-                                        <span className="uppercase font-bold text-foreground">{exportFormat}</span>
-                                    </div>
-
-                                    <button
-                                        type="button"
-                                        onClick={handleExportData}
-                                        disabled={isExporting}
-                                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl neumorphic-primary text-xs font-black uppercase tracking-wider text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 cursor-pointer shrink-0"
-                                    >
-                                        {isExporting ? (
-                                            <>
-                                                <Loader2 className="size-3.5 animate-spin" />
-                                                <span>{t("Exporting...")}</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Download className="size-3.5" />
-                                                <span>{t("Download {format}", { format: exportFormat.toUpperCase() })}</span>
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        </GlassCard>
-                    );
-                case "Tour":
-                    return (
-                        <GlassCard title={t("Product Mastery Quests")} description="Reset your progress or manage your learning experience.">
-                            <div className="space-y-6 max-w-lg">
-                                <div className="flex items-center justify-between">
-                                    <div className="space-y-1">
-                                        <h4 className="text-sm font-black text-foreground">{t("Show Completed Quests")}</h4>
-                                        <p className="text-xs text-muted-foreground">{t("Keep the mastery board visible even after completion.")}</p>
-                                    </div>
-                                    <ToggleSwitch 
-                                        enabled={!!tourState?.metadata?.show_completed_quests} 
-                                        onToggle={handleToggleCompletedQuests} 
-                                    />
-                                </div>
-                                
-                                <div className="pt-6 border-t border-border/60">
-                                    <h4 className="text-sm font-black text-foreground">{t("Hard Reset")}</h4>
-                                    <p className="mt-1 text-xs text-muted-foreground">{t("This will wipe all tour progress and event logs, allowing you to start all quests from zero.")}</p>
-                                    <button 
-                                        onClick={handleHardResetTour}
-                                        disabled={isResetting}
-                                        className="mt-4 flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/5 px-6 py-3 text-sm font-black text-red-500 transition-all hover:bg-red-500/10 disabled:opacity-50"
-                                    >
-                                        <RotateCcw className="size-4" /> 
-                                        {isResetting ? t("Resetting…") : t("Reset All Quests")}
-                                    </button>
-                                </div>
-                            </div>
-                        </GlassCard>
-                    );
-                case "Danger":
-                    return (
-                        <GlassCard className="border-red-500/20 bg-red-500/5 hover:bg-red-500/10" title={t("Danger Zone")} description="Irreversible account actions.">
-                            <div className="space-y-6 max-w-lg">
-                                <div className="flex items-start gap-4">
-                                    <div className="size-10 rounded-2xl bg-rose-500/20 text-rose-500 flex items-center justify-center shrink-0">
-                                        <AlertTriangle className="size-5" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-base font-black text-rose-600 dark:text-rose-400">{t("Delete Account")}</h4>
-                                        <p className="text-sm text-muted-foreground mt-1">{t("Permanently delete your account and all associated data. This action cannot be undone.")}</p>
-                                    </div>
-                                </div>
-
-                                <div className="rounded-2xl neumorphic-inset p-4">
-                                    <h5 className="text-xs font-black uppercase tracking-wider text-foreground mb-3">{t("What will be deleted:")}</h5>
-                                    <ul className="space-y-2">
-                                        {[
-                                            "Your landlord profile and business credentials",
-                                            "Property portfolios, buildings, and unit inventory",
-                                            "Tenant lease contracts and rental agreements",
-                                            "Invoices, payment logs, and financial records",
-                                            "Custom brand settings and system preferences",
-                                        ].map((text) => (
-                                            <li key={text} className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                <X className="size-3 text-rose-500 flex-shrink-0" />
-                                                <span>{t(text)}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                {!showDeleteConfirm ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowDeleteConfirm(true)}
-                                        className="px-6 py-3 rounded-xl sm:rounded-2xl bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-black transition-all shadow-md cursor-pointer"
-                                    >
-                                        {t("I understand, delete my account")}
-                                    </button>
-                                ) : (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: "auto" }}
-                                        className="space-y-4 border-t border-rose-500/20 pt-4"
-                                    >
-                                        <p className="text-xs text-muted-foreground">
-                                            {t("Please type")} <span className="text-rose-600 dark:text-rose-400 font-mono font-black">DELETE</span> {t("to confirm:")}
-                                        </p>
-                                        <input maxLength={60}
-                                            type="text"
-                                            value={deleteConfirmText}
-                                            onChange={(e) => setDeleteConfirmText(e.target.value)}
-                                            placeholder={t("Type DELETE")}
-                                            className="w-full max-w-xs rounded-xl neumorphic-inset border border-rose-500/30 px-4 py-3 text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-rose-500 transition-colors"
-                                        />
-                                        <div className="flex gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={handleDeleteAccount}
-                                                disabled={deleteConfirmText !== "DELETE"}
-                                                className={cn(
-                                                    "px-6 py-3 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black transition-all cursor-pointer",
-                                                    deleteConfirmText === "DELETE"
-                                                        ? "bg-rose-600 hover:bg-rose-500 text-white shadow-md"
-                                                        : "bg-muted text-muted-foreground cursor-not-allowed"
-                                                )}
-                                            >
-                                                {t("Permanently Delete")}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(""); }}
-                                                className="px-4 py-3 rounded-xl sm:rounded-2xl border border-border text-xs sm:text-sm font-black text-muted-foreground hover:text-foreground transition-all cursor-pointer"
-                                            >
-                                                {t("Cancel")}
-                                            </button>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </div>
-                        </GlassCard>
-                    );
-                default: return null;
-            }
+    const bindHex = (which: "primary" | "secondary") => {
+        const name = which === "primary" ? "brandPrimaryHex" : "brandSecondaryHex";
+        const value = which === "primary" ? brandPrimaryHex : brandSecondaryHex;
+        const setValue = which === "primary" ? setBrandPrimaryHex : setBrandSecondaryHex;
+        const id = fieldId(name);
+        const error = errorFor(name);
+        const apply = (hex: string) =>
+            which === "primary" ? applyBrandCssVariables(hex, brandSecondaryHex) : applyBrandCssVariables(brandPrimaryHex, hex);
+        return {
+            id,
+            value,
+            maxLength: 7,
+            onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                setHasUserEdited(true);
+                setValue(e.target.value);
+                const check = validateHexColor(e.target.value);
+                if (touchedFields[name] || fieldErrors[name]) setFieldError(name, check.error);
+                if (check.isValid) apply(check.formatted);
+            },
+            onBlur: () => {
+                markFieldTouched(name);
+                const check = validateHexColor(value);
+                if (!check.isValid) {
+                    setFieldError(name, check.error);
+                } else {
+                    setValue(check.formatted);
+                    setFieldError(name, undefined);
+                    apply(check.formatted);
+                }
+            },
+            "aria-invalid": error ? true : undefined,
+            "aria-describedby": describedBy(id, false, Boolean(error)),
+            className: settingsInputClass(Boolean(error), "w-40 font-mono uppercase"),
         };
-
-        return (
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-8"
-            >
-                <div>
-                    <h2 className="text-3xl font-black text-foreground">{t("Data & Privacy")}</h2>
-                    <p className="text-muted-foreground">{t("Manage your data and account longevity.")}</p>
-                </div>
-
-                <SubNav 
-                    tabs={SUB_TABS.Data} 
-                    activeTab={currentSubTab} 
-                    onTabChange={setActiveSubTab} 
-                />
-
-                <div className="mt-8">
-                    {renderSubContent()}
-                </div>
-            </motion.div>
-        );
     };
 
-    const renderContent = () => {
+    // ------------------------------------------------------------------
+    // Pages
+    // ------------------------------------------------------------------
+
+    const renderProfile = () => {
+        const displayName = formData.full_name || profile?.full_name || t("Landlord");
         return (
             <>
-                <div style={{ display: activeTab === "Finance" ? "block" : "none" }}>
-                    {(activeTab === "Finance" || hasVisitedFinance) && renderFinance()}
-                </div>
-                {activeTab !== "Finance" && (
-                    <>
-                        {activeTab === "Identity" && renderIdentity()}
-                        {activeTab === "Personalization" && renderPersonalization()}
-                        {activeTab === "Security" && renderSecurity()}
-                        {activeTab === "Notifications" && renderNotifications()}
-                        {activeTab === "AuditLogs" && <AuditLogsSettingsTab />}
-                        {activeTab === "Data" && renderData()}
-                    </>
-                )}
+                <SettingsCard id="settings-photo" title={t("Your photo")} description={t("Tenants see this photo next to your name.")}>
+                    <div className="flex flex-col items-center gap-5 sm:flex-row">
+                        <div
+                            className="relative flex size-28 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-foreground/15"
+                            style={{ backgroundColor: profile?.avatar_bg_color || "#22C55E" }}
+                        >
+                            {profile?.avatar_url ? (
+                                <Image src={profile.avatar_url} alt={t("Your photo")} fill sizes="112px" className="object-cover" />
+                            ) : (
+                                <span className="text-5xl font-black text-white" aria-hidden>
+                                    {displayName.charAt(0).toUpperCase()}
+                                </span>
+                            )}
+                        </div>
+                        <div className="space-y-3 text-center sm:text-left">
+                            <p className="text-xl font-bold text-foreground">{displayName}</p>
+                            <SettingsButton variant="secondary" icon={Camera} onClick={() => setIsAvatarPickerOpen(true)}>
+                                {t("Change my photo")}
+                            </SettingsButton>
+                        </div>
+                    </div>
+                </SettingsCard>
+
+                <SettingsCard id="settings-about-you" title={t("About you")} description={t("Press Save changes at the bottom of the screen when you are done.")}>
+                    <div className="space-y-6">
+                        <SettingsField label={t("Full name")} htmlFor={fieldId("full_name")} error={errorFor("full_name")}>
+                            <input type="text" autoComplete="name" maxLength={70} {...bindText("full_name")} />
+                        </SettingsField>
+                        <SettingsField
+                            label={t("Email address")}
+                            htmlFor={fieldId("email")}
+                            help={t("We send important messages to this email.")}
+                            error={errorFor("email")}
+                        >
+                            <input type="email" autoComplete="email" maxLength={254} {...bindText("email", true)} />
+                        </SettingsField>
+                        <SettingsField
+                            label={t("Phone number")}
+                            htmlFor={fieldId("phone")}
+                            optional
+                            help={t("Example: 0917 123 4567")}
+                            error={errorFor("phone")}
+                        >
+                            <input type="tel" inputMode="tel" autoComplete="tel" maxLength={25} {...bindText("phone", true)} />
+                        </SettingsField>
+                        <SettingsField label={t("Office address")} htmlFor={fieldId("address")} optional error={errorFor("address")}>
+                            <input type="text" autoComplete="street-address" maxLength={250} {...bindText("address")} />
+                        </SettingsField>
+                        <SettingsField
+                            label={t("A few words about you")}
+                            htmlFor={fieldId("bio")}
+                            optional
+                            help={t("Tell tenants about your place and how you manage it.")}
+                            counter={{ current: formData.bio?.length || 0, max: 500 }}
+                            error={errorFor("bio")}
+                        >
+                            <textarea rows={4} maxLength={500} {...bindText("bio", true)} className={settingsInputClass(Boolean(errorFor("bio")), "resize-y")} />
+                        </SettingsField>
+                    </div>
+                </SettingsCard>
+
+                <SettingsCard
+                    id="settings-emergency"
+                    title={t("Emergency contact")}
+                    description={t("A person tenants can call in an emergency if they cannot reach you. For example, a caretaker or family member.")}
+                >
+                    <div className="space-y-6">
+                        <SettingsField label={t("Their name")} htmlFor={fieldId("emergency_contact_name")} optional error={errorFor("emergency_contact_name")}>
+                            <input type="text" maxLength={70} {...bindText("emergency_contact_name")} />
+                        </SettingsField>
+                        <SettingsField
+                            label={t("Their phone number")}
+                            htmlFor={fieldId("emergency_contact_phone")}
+                            optional
+                            help={t("A number that can be reached any time.")}
+                            error={errorFor("emergency_contact_phone")}
+                        >
+                            <input type="tel" inputMode="tel" maxLength={25} {...bindText("emergency_contact_phone", true)} />
+                        </SettingsField>
+                    </div>
+                </SettingsCard>
             </>
         );
     };
 
-    return (
-        <div className="space-y-6 sm:space-y-10">
-            {/* Top Navigation Bar */}
-            <div className="flex items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-border/40">
-                <button
-                    type="button"
-                    onClick={handleRequestExit}
-                    className="flex items-center gap-2 sm:gap-2.5 text-muted-foreground hover:text-primary transition-colors group cursor-pointer w-fit shrink-0"
+    const renderBusiness = () => {
+        const whiteLabelName = (propertyTradeName || brand.propertyName || "").trim();
+        const hasWhiteLabel = Boolean(whiteLabelName && !DISALLOWED_PRESEEDED_DATA.propertyNames.includes(whiteLabelName.toLowerCase()));
+        const canUseWhiteLabel = hasWhiteLabel && formData.business_name.trim() !== whiteLabelName;
+
+        return (
+            <>
+                <SettingsCard id="settings-business-name" title={t("Business name and website")} description={t("Press Save changes at the bottom of the screen when you are done.")}>
+                    <div className="space-y-6">
+                        <SettingsField
+                            label={t("Business name")}
+                            htmlFor={fieldId("business_name")}
+                            optional
+                            help={t("The registered name of your business, if you have one.")}
+                            error={errorFor("business_name")}
+                        >
+                            <input type="text" maxLength={100} {...bindText("business_name", true)} />
+                            {canUseWhiteLabel && (
+                                <SettingsButton
+                                    variant="ghost"
+                                    className="mt-2"
+                                    onClick={() => {
+                                        updateFormData({ business_name: whiteLabelName });
+                                        setFieldError("business_name", undefined);
+                                    }}
+                                >
+                                    {t("Use my property name: {name}", { name: whiteLabelName })}
+                                </SettingsButton>
+                            )}
+                        </SettingsField>
+                        <SettingsField
+                            label={t("Website")}
+                            htmlFor={fieldId("website")}
+                            optional
+                            help={t("Example: https://myresidence.ph")}
+                            error={errorFor("website")}
+                        >
+                            <input type="url" inputMode="url" maxLength={255} {...bindText("website", true)} />
+                        </SettingsField>
+                    </div>
+                </SettingsCard>
+
+                <SettingsCard
+                    id="settings-permit"
+                    title={t("Business permit (optional)")}
+                    description={t("Adding your permit helps tenants trust you. You can skip this.")}
                 >
-                    <div className="size-8 rounded-full neumorphic-extruded flex items-center justify-center transition-all group-hover:scale-105 group-hover:text-primary">
-                        <ChevronLeft className="size-4" />
-                    </div>
-                    <span className="text-xs sm:text-sm font-black tracking-wide hidden sm:inline">{t("Back to Dashboard")}</span>
-                    <span className="text-xs font-black tracking-wide sm:hidden">{t("Dashboard")}</span>
-                </button>
+                    <div className="space-y-6">
+                        <SettingsField
+                            label={t("Permit number")}
+                            htmlFor={fieldId("business_permit_number")}
+                            optional
+                            help={t("Example: BP-2026-VAL-09124")}
+                            error={errorFor("business_permit_number")}
+                        >
+                            <input type="text" maxLength={50} {...bindText("business_permit_number", true)} />
+                        </SettingsField>
 
-                <div className="flex items-center gap-2 sm:gap-3">
-                    {/* Background Sync Status Indicator */}
-                    <div
-                        className={cn(
-                            "flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-sm",
-                            isSyncing
-                                ? "bg-primary/10 border-primary/20 text-primary animate-pulse"
-                                : syncError
-                                ? "bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400"
-                                : "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-                        )}
-                        title={
-                            isSyncing
-                                ? t("Syncing settings with database in the background...")
-                                : syncError
-                                ? t("Sync failed: {error}", { error: syncError })
-                                : lastSyncedAt
-                                ? t("Synced with cloud database (Last synced: {time})", { time: lastSyncedAt.toLocaleTimeString(locale) })
-                                : t("Synced with cloud database")
-                        }
-                    >
-                        {isSyncing ? (
-                            <>
-                                <RefreshCw className="size-3.5 animate-spin text-primary" />
-                                <span className="hidden sm:inline">{t("Syncing with database…")}</span>
-                                <span className="sm:hidden">{t("Syncing…")}</span>
-                            </>
-                        ) : syncError ? (
-                            <>
-                                <AlertCircle className="size-3.5 text-rose-500" />
-                                <span className="hidden sm:inline">{t("Sync Error")}</span>
-                                <span className="sm:hidden">{t("Error")}</span>
-                            </>
-                        ) : (
-                            <>
-                                <CheckCircle2 className="size-3.5 text-emerald-500" />
-                                <span className="hidden sm:inline">{t("Synced with cloud")}</span>
-                                <span className="sm:hidden">{t("Synced")}</span>
-                            </>
-                        )}
-                    </div>
-
-                    <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-muted/40 border border-border/40 text-xs font-bold text-muted-foreground">
-                        <span>{t("Control Center")}</span>
-                        <span className="text-muted-foreground/40">•</span>
-                        <span className="text-foreground font-black">{t(SIDEBAR_ITEMS.find(i => i.id === activeTab)?.label ?? activeTab)}</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Sync Error Banner (Shown if background sync fails) */}
-            {syncError && (
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 shadow-sm animate-fade-in">
-                    <div className="flex items-start gap-3">
-                        <div className="p-2 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400 mt-0.5 shrink-0">
-                            <AlertCircle className="size-5" />
-                        </div>
-                        <div>
-                            <h4 className="text-sm font-black text-rose-900 dark:text-rose-200">
-                                {t("Unable to sync latest settings with the database")}
-                            </h4>
-                            <p className="text-xs text-rose-700/90 dark:text-rose-300/90 mt-0.5">
-                                {t("Showing cached data. Background synchronization encountered an error ({error}). We recommend refreshing the page or retrying the sync.", { error: syncError })}
+                        <div className="space-y-3">
+                            <p className="text-lg font-bold text-foreground">
+                                {t("Photo of your permit")} <span className="text-base font-semibold text-muted-foreground">({t("optional")})</span>
                             </p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                        <button
-                            type="button"
-                            onClick={() => syncSettingsWithDatabase(true)}
-                            disabled={isSyncing}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-rose-500/20 hover:bg-rose-500/30 text-rose-800 dark:text-rose-200 transition-colors cursor-pointer disabled:opacity-50"
-                        >
-                            <RefreshCw className={cn("size-3.5", isSyncing && "animate-spin")} />
-                            <span>{t("Retry Sync")}</span>
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => window.location.reload()}
-                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-colors cursor-pointer"
-                        >
-                            <RotateCcw className="size-3.5" />
-                            <span>{t("Refresh Page")}</span>
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            <div className="min-h-[80vh] flex flex-col lg:flex-row gap-6 lg:gap-12">
-                {/* Mobile / Tablet Horizontal Navigation (< lg) */}
-                <div className="block lg:hidden space-y-3">
-                    <div className="flex items-center justify-between px-1">
-                        <div className="flex items-center gap-2.5">
-                            <div className="flex size-9 items-center justify-center rounded-xl bg-primary/20 text-primary border border-primary/20">
-                                <Layout className="size-4.5" />
-                            </div>
-                            <div>
-                                <h1 className="text-base font-black text-foreground leading-tight">{t("Settings")}</h1>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                    {t(SIDEBAR_ITEMS.find(i => i.id === activeTab)?.label ?? "")}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Swipe / Slide affordance hint */}
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-full border border-border/40 select-none">
-                            <SlidersHorizontal className="size-3 text-primary/70" />
-                            <span>{t("Swipe to reveal")}</span>
-                            <ChevronRight className="size-3 text-primary animate-pulse" />
-                        </div>
-                    </div>
-
-                    <div className="relative group/rail">
-                        {/* Left Fade Gradient & Scroll Arrow */}
-                        <AnimatePresence>
-                            {canScrollLeft && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="absolute left-0 top-0 bottom-0 z-10 flex items-center pr-3 pl-0.5 bg-gradient-to-r from-background via-background/95 to-transparent pointer-events-none"
-                                >
-                                    <button
-                                        type="button"
-                                        onClick={() => scrollMobileTabs("left")}
-                                        aria-label={t("Scroll tabs left")}
-                                        className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto"
-                                    >
-                                        <ChevronLeft className="size-3.5" />
-                                    </button>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
-                        {/* Scrollable Pills Container */}
-                        <div 
-                            ref={mobileTabRailRef}
-                            className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-1 scrollbar-hide -mx-1 px-1 scroll-smooth"
-                        >
-                            {SIDEBAR_ITEMS.map((item) => {
-                                const Icon = item.icon;
-                                const isActive = activeTab === item.id;
-                                return (
-                                    <button
-                                        key={item.id}
-                                        data-tab-id={item.id}
-                                        type="button"
-                                        onClick={() => handleMobileTabClick(item.id)}
-                                        className={cn(
-                                            "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black whitespace-nowrap transition-all duration-300 cursor-pointer shrink-0",
-                                            isActive
-                                                ? "neumorphic-panel text-primary font-black shadow-sm border-primary/30 ring-1 ring-primary/20"
-                                                : "neumorphic-extruded text-muted-foreground hover:text-foreground font-bold"
-                                        )}
-                                    >
-                                        <Icon className={cn("size-4 transition-transform", isActive ? "scale-110 text-primary" : "text-muted-foreground")} />
-                                        <span>{t(item.label)}</span>
-                                        {isActive && (
-                                            <span className="size-1.5 rounded-full bg-primary" />
-                                        )}
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        {/* Right Fade Gradient & Scroll Arrow */}
-                        <AnimatePresence>
-                            {canScrollRight && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="absolute right-0 top-0 bottom-0 z-10 flex items-center pl-3 pr-0.5 bg-gradient-to-l from-background via-background/95 to-transparent pointer-events-none"
-                                >
-                                    <button
-                                        type="button"
-                                        onClick={() => scrollMobileTabs("right")}
-                                        aria-label={t("Scroll tabs right")}
-                                        title={t("Slide to view more tabs")}
-                                        className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto animate-pulse hover:animate-none"
-                                    >
-                                        <ChevronRight className="size-3.5" />
-                                    </button>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                </div>
-
-                {/* Desktop Collapsible Sidebar (lg+) */}
-                <div className={cn(
-                    "hidden lg:block flex-shrink-0 space-y-6 transition-all duration-300",
-                    isSidebarCollapsed ? "w-20" : "w-80"
-                )}>
-                    <div className="flex items-center justify-between px-2">
-                        <div className={cn("flex items-center gap-4 transition-opacity", isSidebarCollapsed && "justify-center w-full")}>
-                            <div className="flex size-12 items-center justify-center rounded-[1.2rem] bg-primary/20 text-primary border border-primary/20 shrink-0">
-                                <Layout className="size-6" />
-                            </div>
-                            {!isSidebarCollapsed && (
-                                <div>
-                                    <h1 className="text-xl font-black text-foreground">{t("Settings")}</h1>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Control Center")}</p>
-                                </div>
-                            )}
-                        </div>
-                        {!isSidebarCollapsed && (
-                            <button
-                                type="button"
-                                onClick={() => setIsSidebarCollapsed(true)}
-                                className="size-8 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all cursor-pointer"
-                                title={t("Collapse sidebar")}
-                            >
-                                <ChevronLeft className="size-4" />
-                            </button>
-                        )}
-                    </div>
-
-                    {isSidebarCollapsed && (
-                        <div className="flex justify-center">
-                            <button
-                                type="button"
-                                onClick={() => setIsSidebarCollapsed(false)}
-                                className="size-8 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all cursor-pointer"
-                                title={t("Expand sidebar")}
-                            >
-                                <ChevronRight className="size-4" />
-                            </button>
-                        </div>
-                    )}
-
-                    <nav className="space-y-2">
-                        {SIDEBAR_ITEMS.map((item) => {
-                            const Icon = item.icon;
-                            const isActive = activeTab === item.id;
-                            return (
-                                <button
-                                    key={item.id}
-                                    type="button"
-                                    onClick={() => handleTabChange(item.id)}
-                                    title={isSidebarCollapsed ? `${t(item.label)} — ${t(item.description)}` : undefined}
-                                    className={cn(
-                                        "group relative flex flex-col transition-all duration-300 text-left cursor-pointer",
-                                        isSidebarCollapsed
-                                            ? "w-full items-center justify-center rounded-2xl p-3.5"
-                                            : "w-full items-start rounded-[1.5rem] px-6 py-5",
-                                        isActive 
-                                            ? "neumorphic-panel text-primary font-black shadow-md border-primary/30 ring-1 ring-primary/20" 
-                                            : "neumorphic-extruded text-muted-foreground hover:text-foreground"
+                            <div className="flex flex-col gap-5 md:flex-row md:items-center">
+                                <div className="relative flex h-44 w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-foreground/25 bg-muted/40 md:w-72">
+                                    {profile?.business_permit_url ? (
+                                        <Image src={profile.business_permit_url} alt={t("Your business permit")} fill sizes="(max-width: 768px) 100vw, 288px" className="object-cover" />
+                                    ) : (
+                                        <span className="flex flex-col items-center gap-2 text-base text-muted-foreground">
+                                            <UploadCloud className="size-8" aria-hidden />
+                                            {t("No photo added yet")}
+                                        </span>
                                     )}
-                                >
-                                    <div className={cn("flex items-center", isSidebarCollapsed ? "justify-center" : "w-full justify-between")}>
-                                        <Icon className={cn("size-5 transition-transform duration-300", isActive ? "scale-110 text-primary" : "text-muted-foreground group-hover:text-foreground")} />
-                                        {isActive && (
-                                            <motion.div 
-                                                layoutId="active-indicator"
-                                                className={cn("rounded-full bg-primary", isSidebarCollapsed ? "hidden" : "size-1.5")} 
-                                            />
+                                </div>
+                                <div className="space-y-4">
+                                    <p className="text-base text-muted-foreground">{t("Take a clear photo of the permit. JPG or PNG, up to 15 MB. This uploads right away.")}</p>
+                                    <div className="flex flex-wrap gap-3">
+                                        <SettingsButton variant="secondary" icon={UploadCloud} loading={isUploadingPermit} onClick={() => permitInputRef.current?.click()}>
+                                            {profile?.business_permit_url ? t("Replace the photo") : t("Add a photo")}
+                                        </SettingsButton>
+                                        {profile?.business_permit_url && (
+                                            <SettingsButton variant="ghost" icon={Trash2} disabled={isUploadingPermit} onClick={handlePermitRemove} className="text-rose-700 dark:text-rose-400">
+                                                {t("Remove the photo")}
+                                            </SettingsButton>
                                         )}
                                     </div>
-                                    {!isSidebarCollapsed && (
-                                        <>
-                                            <span className={cn("mt-3 text-sm font-black transition-colors", isActive ? "text-primary" : "text-foreground group-hover:text-primary")}>
-                                                {t(item.label)}
-                                            </span>
-                                            <span className="text-[10px] font-medium text-muted-foreground mt-0.5 line-clamp-1">
-                                                {t(item.description)}
-                                            </span>
-                                        </>
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </nav>
-                </div>
+                                    <input ref={permitInputRef} type="file" accept={MEDIA_ACCEPT_STRINGS.image} className="hidden" onChange={handlePermitUpload} aria-hidden tabIndex={-1} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </SettingsCard>
 
-                {/* Content Area */}
-                <main className="flex-1 min-w-0">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={activeTab}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.3, ease: "easeOut" }}
+                <SettingsCard id="settings-socials" title={t("Social media (optional)")} description={t("Links to your pages so tenants can learn more about you. Leave blank if you do not use them.")}>
+                    <div className="space-y-6">
+                        <SettingsField label="Facebook" htmlFor={fieldId("socials_facebook")} optional help={t("Your page link or name, for example facebook.com/mypage")} error={errorFor("socials_facebook")}>
+                            <input type="text" maxLength={120} {...bindSocial("facebook")} />
+                        </SettingsField>
+                        <SettingsField label="Instagram" htmlFor={fieldId("socials_instagram")} optional help={t("Your profile link or @name")} error={errorFor("socials_instagram")}>
+                            <input type="text" maxLength={120} {...bindSocial("instagram")} />
+                        </SettingsField>
+                        <SettingsField label="X (Twitter)" htmlFor={fieldId("socials_twitter")} optional help={t("Your profile link or @name")} error={errorFor("socials_twitter")}>
+                            <input type="text" maxLength={120} {...bindSocial("twitter")} />
+                        </SettingsField>
+                        <SettingsField label="LinkedIn" htmlFor={fieldId("socials_linkedin")} optional help={t("Your profile link or user name")} error={errorFor("socials_linkedin")}>
+                            <input type="text" maxLength={120} {...bindSocial("linkedin")} />
+                        </SettingsField>
+                    </div>
+                </SettingsCard>
+            </>
+        );
+    };
+
+    const renderBranding = () => {
+        const matchingPalette = COLOR_PALETTES.find(
+            (p) => p.primary.toLowerCase() === brandPrimaryHex.toLowerCase() && p.secondary.toLowerCase() === brandSecondaryHex.toLowerCase(),
+        );
+        const tradeNameError = errorFor("propertyTradeName");
+        const taglineError = errorFor("propertyTagline");
+
+        return (
+            <>
+                <SettingsNotice tone="info">
+                    {t("You will see changes on this page right away. Press Save changes at the bottom to keep them.")}
+                </SettingsNotice>
+
+                <SettingsCard id="settings-property-name" title={t("Your property name")} description={t("Shown at the top of the tenant app, on receipts and on invitations.")}>
+                    <div className="space-y-6">
+                        <SettingsField label={t("Property name")} htmlFor={fieldId("propertyTradeName")} help={t("Example: Skyline Lofts")} error={tradeNameError}>
+                            <input
+                                id={fieldId("propertyTradeName")}
+                                type="text"
+                                maxLength={80}
+                                value={propertyTradeName}
+                                aria-invalid={tradeNameError ? true : undefined}
+                                aria-describedby={describedBy(fieldId("propertyTradeName"), true, Boolean(tradeNameError))}
+                                onBlur={() => {
+                                    markFieldTouched("propertyTradeName");
+                                    setFieldError("propertyTradeName", validatePropertyTradeName(propertyTradeName).error);
+                                }}
+                                onChange={(e) => {
+                                    setHasUserEdited(true);
+                                    const newTradeName = e.target.value;
+                                    const previousTradeName = propertyTradeName;
+                                    setPropertyTradeName(newTradeName);
+                                    if (touchedFields.propertyTradeName || fieldErrors.propertyTradeName) {
+                                        setFieldError("propertyTradeName", validatePropertyTradeName(newTradeName).error);
+                                    }
+                                    // Keep the business name in step if it was empty, preseeded or matched the old name.
+                                    setFormData((prev) => {
+                                        const currentBiz = (prev.business_name || "").trim();
+                                        if (!currentBiz || DISALLOWED_PRESEEDED_DATA.propertyNames.includes(currentBiz.toLowerCase()) || currentBiz === previousTradeName.trim()) {
+                                            return { ...prev, business_name: newTradeName };
+                                        }
+                                        return prev;
+                                    });
+                                }}
+                                className={settingsInputClass(Boolean(tradeNameError))}
+                            />
+                        </SettingsField>
+                        <SettingsField
+                            label={t("Short tagline")}
+                            htmlFor={fieldId("propertyTagline")}
+                            optional
+                            help={t("A short line under the name. Example: Modern studios near the university")}
+                            counter={{ current: propertyTagline?.length || 0, max: 120 }}
+                            error={taglineError}
                         >
-                            {renderContent()}
-                        </motion.div>
-                    </AnimatePresence>
-                </main>
+                            <input
+                                id={fieldId("propertyTagline")}
+                                type="text"
+                                maxLength={120}
+                                value={propertyTagline}
+                                aria-invalid={taglineError ? true : undefined}
+                                aria-describedby={describedBy(fieldId("propertyTagline"), true, Boolean(taglineError))}
+                                onBlur={() => {
+                                    markFieldTouched("propertyTagline");
+                                    setFieldError("propertyTagline", validatePropertyTagline(propertyTagline).error);
+                                }}
+                                onChange={(e) => {
+                                    setHasUserEdited(true);
+                                    setPropertyTagline(e.target.value);
+                                    if (touchedFields.propertyTagline || fieldErrors.propertyTagline) {
+                                        setFieldError("propertyTagline", validatePropertyTagline(e.target.value).error);
+                                    }
+                                }}
+                                className={settingsInputClass(Boolean(taglineError))}
+                            />
+                        </SettingsField>
+                    </div>
+                </SettingsCard>
 
-                {isAvatarPickerOpen && (
-                    <AvatarPicker 
-                        key={avatarPickerKey}
-                        isOpen={isAvatarPickerOpen}
-                        onClose={() => setIsAvatarPickerOpen(false)}
-                        currentAvatarUrl={profile?.avatar_url || null}
-                        currentBgColor={profile?.avatar_bg_color || null}
-                        onProfileUpdate={handleAvatarPickerUpdate}
-                    />
-                )}
+                <SettingsCard id="settings-logo" title={t("Your logo")} description={t("Shown in menus, on receipts and on tenant invitations. If you have no logo, we show the first letters of your property name.")}>
+                    <div className="flex flex-col items-center gap-6 sm:flex-row">
+                        <div className="relative flex size-32 shrink-0 items-center justify-center overflow-hidden rounded-3xl border-2 border-foreground/15 bg-muted">
+                            {propertyLogoUrl ? (
+                                <Image src={propertyLogoUrl} alt={t("Your logo")} fill sizes="128px" className="object-cover" />
+                            ) : (
+                                <span className="text-3xl font-black text-foreground" aria-hidden>
+                                    {propertyTradeName ? propertyTradeName.slice(0, 2).toUpperCase() : "IR"}
+                                </span>
+                            )}
+                        </div>
+                        <div className="space-y-4 text-center sm:text-left">
+                            <p className="text-base text-muted-foreground">{t("PNG, JPG, SVG or WebP, up to 5 MB.")}</p>
+                            <div className="flex flex-wrap justify-center gap-3 sm:justify-start">
+                                <SettingsButton variant="secondary" icon={Upload} onClick={() => logoFileInputRef.current?.click()}>
+                                    {propertyLogoUrl ? t("Choose a different logo") : t("Add my logo")}
+                                </SettingsButton>
+                                {propertyLogoUrl && (
+                                    <SettingsButton variant="ghost" icon={Trash2} onClick={handleRemoveLogo} className="text-rose-700 dark:text-rose-400">
+                                        {t("Remove logo")}
+                                    </SettingsButton>
+                                )}
+                            </div>
+                            <input ref={logoFileInputRef} type="file" accept={MEDIA_ACCEPT_STRINGS.branding_logo} onChange={handleLogoFileUpload} className="hidden" aria-hidden tabIndex={-1} />
+                        </div>
+                    </div>
+                </SettingsCard>
 
-                {/* Modern Color Picker Modals */}
-                <ColorPickerModal
-                    isOpen={isPrimaryColorPickerOpen}
-                    onClose={() => setIsPrimaryColorPickerOpen(false)}
-                    color={brandPrimaryHex}
-                    title={t("Primary Brand Accent")}
-                    onChange={(newColor) => {
-                        setHasUserEdited(true);
-                        setBrandPrimaryHex(newColor);
-                        applyBrandCssVariables(newColor, brandSecondaryHex);
-                    }}
+                <SettingsCard id="settings-colors" title={t("Colors")} description={t("Pick a color set for buttons and highlights. The whole app changes color so you can see it.")}>
+                    <div className="space-y-8">
+                        <SettingsChoiceGroup
+                            legend={t("Color sets")}
+                            hideLegend
+                            value={matchingPalette?.name ?? "custom"}
+                            onChange={(name) => {
+                                const palette = COLOR_PALETTES.find((p) => p.name === name);
+                                if (palette) setBrandColors(palette.primary, palette.secondary);
+                            }}
+                            options={[
+                                // When the colors were picked by hand, show them first so people can see what is active.
+                                ...(matchingPalette ? [] : [{ name: "custom", label: t("Your current colors"), primary: brandPrimaryHex, secondary: brandSecondaryHex }]),
+                                ...COLOR_PALETTES.map((palette) => ({ ...palette, label: t(palette.name) })),
+                            ].map((palette) => ({
+                                value: palette.name,
+                                label: palette.label,
+                                preview: (
+                                    <span className="flex gap-2" aria-hidden>
+                                        <span className="h-8 w-14 rounded-lg border-2 border-foreground/15" style={{ backgroundColor: palette.primary }} />
+                                        <span className="h-8 w-14 rounded-lg border-2 border-foreground/15" style={{ backgroundColor: palette.secondary }} />
+                                    </span>
+                                ),
+                            }))}
+                        />
+
+                        <details className="group rounded-2xl border-2 border-foreground/15 p-4 open:pb-6">
+                            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-lg font-bold text-foreground">
+                                <span>{t("Pick my own colors (advanced)")}</span>
+                                <span className="text-base font-semibold text-muted-foreground group-open:hidden">{t("Show")}</span>
+                                <span className="hidden text-base font-semibold text-muted-foreground group-open:inline">{t("Hide")}</span>
+                            </summary>
+                            <div className="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                {(["primary", "secondary"] as const).map((which) => {
+                                    const name = which === "primary" ? "brandPrimaryHex" : "brandSecondaryHex";
+                                    const value = which === "primary" ? brandPrimaryHex : brandSecondaryHex;
+                                    return (
+                                        <SettingsField
+                                            key={which}
+                                            label={which === "primary" ? t("Main color") : t("Second color")}
+                                            htmlFor={fieldId(name)}
+                                            error={errorFor(name)}
+                                        >
+                                            <div className="flex flex-wrap items-center gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => (which === "primary" ? setIsPrimaryColorPickerOpen(true) : setIsSecondaryColorPickerOpen(true))}
+                                                    className={settingsButtonClass("secondary", "md")}
+                                                >
+                                                    <span className="size-6 rounded-md border-2 border-foreground/20" style={{ backgroundColor: value }} aria-hidden />
+                                                    <span>{t("Choose color")}</span>
+                                                </button>
+                                                <input type="text" {...bindHex(which)} aria-label={which === "primary" ? t("Main color code") : t("Second color code")} />
+                                            </div>
+                                        </SettingsField>
+                                    );
+                                })}
+                            </div>
+                        </details>
+
+                        <SettingsButton
+                            variant="ghost"
+                            icon={RotateCcw}
+                            onClick={() => setBrandColors(DEFAULT_BRANDING.primaryColor, DEFAULT_BRANDING.secondaryColor)}
+                        >
+                            {t("Go back to the original iReside colors")}
+                        </SettingsButton>
+                    </div>
+                </SettingsCard>
+
+                <SettingsCard id="settings-banner" title={t("Dashboard photo")} description={t("The large photo at the top of your dashboard.")}>
+                    <div className="space-y-6">
+                        <div className="relative h-48 w-full overflow-hidden rounded-2xl border-2 border-foreground/15 sm:h-56">
+                            <Image src={bannerUrl} alt={t("Your current dashboard photo")} fill sizes="(max-width: 1024px) 100vw, 768px" className="object-cover" />
+                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-5">
+                                <p className="text-xl font-black text-white">{propertyTradeName || t("Your property")}</p>
+                                {propertyTagline && <p className="text-base text-white/90">{propertyTagline}</p>}
+                            </div>
+                        </div>
+
+                        <fieldset className="space-y-3">
+                            <legend className="text-lg font-bold text-foreground">{t("Choose a photo")}</legend>
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                {CURATED_BANNER_PRESETS.map((preset) => {
+                                    const isSelected = bannerUrl === preset.url;
+                                    return (
+                                        <label
+                                            key={preset.id}
+                                            className={cn(
+                                                "cursor-pointer overflow-hidden rounded-2xl border-2 transition-colors",
+                                                "has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-primary/50",
+                                                isSelected ? "border-foreground/70" : "border-foreground/15 hover:border-foreground/40",
+                                            )}
+                                        >
+                                            <input type="radio" name="dashboard-banner" className="sr-only" checked={isSelected} onChange={() => handleSelectBannerPreset(preset.url)} />
+                                            <span className="relative block h-28 w-full">
+                                                <Image src={preset.url} alt="" fill sizes="(max-width: 768px) 100vw, 300px" className="object-cover" />
+                                            </span>
+                                            <span className={cn("flex items-center gap-2 px-3 py-3 text-base font-bold", isSelected ? "bg-primary/20 text-foreground" : "bg-card text-foreground")}>
+                                                {isSelected && <Check className="size-5 shrink-0" aria-hidden />}
+                                                <span>{t(preset.name)}</span>
+                                            </span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        </fieldset>
+
+                        <div className="flex flex-wrap gap-3">
+                            <SettingsButton variant="secondary" icon={ImageIcon} onClick={() => bannerFileInputRef.current?.click()}>
+                                {t("Use my own photo")}
+                            </SettingsButton>
+                            {bannerUrl !== DEFAULT_BANNER_URL && (
+                                <SettingsButton variant="ghost" icon={RotateCcw} onClick={handleResetBanner}>
+                                    {t("Use the original photo")}
+                                </SettingsButton>
+                            )}
+                            <input ref={bannerFileInputRef} type="file" accept={MEDIA_ACCEPT_STRINGS.image} onChange={handleBannerFileUpload} className="hidden" aria-hidden tabIndex={-1} />
+                        </div>
+                        <p className="text-base text-muted-foreground">{t("PNG, JPG or WebP, up to 8 MB.")}</p>
+                    </div>
+                </SettingsCard>
+
+                <SettingsLinkRow
+                    title={t("Set everything up again with the helper")}
+                    description={t("A short 3-step helper for your name, colors and look. Your leases and units are not changed.")}
+                    action={
+                        <Link href="/setup?reconfigure=true" className={settingsButtonClass("secondary", "md")}>
+                            <SlidersHorizontal className="size-5" aria-hidden />
+                            <span>{t("Open the setup helper")}</span>
+                        </Link>
+                    }
                 />
+            </>
+        );
+    };
 
-                <ColorPickerModal
-                    isOpen={isSecondaryColorPickerOpen}
-                    onClose={() => setIsSecondaryColorPickerOpen(false)}
-                    color={brandSecondaryHex}
-                    title={t("Secondary Ambient Accent")}
-                    onChange={(newColor) => {
-                        setHasUserEdited(true);
-                        setBrandSecondaryHex(newColor);
-                        applyBrandCssVariables(brandPrimaryHex, newColor);
-                    }}
-                />
+    const financePanelProps = {
+        propertyId: selectedPropertyId,
+        embedded: true,
+        onDirtyChange: setIsFinanceDirty,
+        onRegisterSave: (fn: () => Promise<boolean>) => { financeSaveRef.current = fn; },
+        onRegisterDiscard: (fn: () => void) => { financeDiscardRef.current = fn; },
+    };
 
-                {/* Unsaved Changes Exit Protection Modal */}
-                <UnsavedChangesModal
-                    isOpen={isUnsavedModalOpen}
-                    onClose={() => {
-                        setIsUnsavedModalOpen(false);
-                        pendingExitUrlRef.current = null;
-                        pendingTabRef.current = null;
-                    }}
-                    isSaving={isSaving}
-                    onConfirmDiscard={() => {
-                        handleDiscardChanges();
-                        setIsUnsavedModalOpen(false);
-                        if (pendingTabRef.current) {
-                            const nextTab = pendingTabRef.current;
-                            pendingTabRef.current = null;
-                            setActiveTab(nextTab);
-                            return;
-                        }
-                        const destination = pendingExitUrlRef.current || "/landlord/dashboard";
-                        pendingExitUrlRef.current = null;
-                        router.push(destination);
-                    }}
-                    onSaveAndExit={async () => {
-                        const success = await handleSaveAll();
-                        if (success) {
-                            setIsUnsavedModalOpen(false);
-                            if (pendingTabRef.current) {
-                                const nextTab = pendingTabRef.current;
-                                pendingTabRef.current = null;
-                                setActiveTab(nextTab);
+    const renderPayments = () => (
+        <>
+            <SettingsNotice tone="info">{t("Press Save changes at the bottom of the screen when you are done.")}</SettingsNotice>
+            <BillingOperationsPanel viewMode="gcash" {...financePanelProps} />
+        </>
+    );
+
+    const renderUtilities = () => (
+        <>
+            <SettingsCard title={t("Which rates do you want to change?")}>
+                <div className="space-y-6">
+                    <div className="space-y-2">
+                        <label htmlFor="landlord-utilities-property" className="block text-lg font-bold text-foreground">
+                            {t("Property")}
+                        </label>
+                        <select
+                            id="landlord-utilities-property"
+                            value={selectedPropertyId}
+                            onChange={(e) => setSelectedPropertyId(e.target.value)}
+                            className={settingsInputClass(false, "cursor-pointer")}
+                        >
+                            <option value="all">{t("All my properties")}</option>
+                            {properties.map((p) => (
+                                <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <SettingsChoiceGroup
+                        legend={t("Utility")}
+                        value={activeFinanceTab === "Electricity" ? "Electricity" : "Water"}
+                        onChange={(v) => {
+                            if (isFinanceDirty) {
+                                toast.info(t("Please save or undo your changes first."));
                                 return;
                             }
-                            const destination = pendingExitUrlRef.current || "/landlord/dashboard";
-                            pendingExitUrlRef.current = null;
-                            router.push(destination);
-                        }
-                    }}
-                />
+                            setActiveFinanceTab(v);
+                        }}
+                        options={[
+                            { value: "Water", label: t("Water"), preview: <Droplets className="size-7 text-foreground" aria-hidden /> },
+                            { value: "Electricity", label: t("Electricity"), preview: <Zap className="size-7 text-foreground" aria-hidden /> },
+                        ]}
+                    />
+                </div>
+            </SettingsCard>
+            <BillingOperationsPanel
+                viewMode="rates"
+                utilityType={activeFinanceTab === "Electricity" ? "electricity" : "water"}
+                {...financePanelProps}
+            />
+        </>
+    );
 
-                {/* Floating Save Action Bar (Appears when changes are pending or recently saved) */}
-                <AnimatePresence>
-                    {(isDirty || isSaving || justSaved) && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 50, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 50, scale: 0.95 }}
-                            transition={{ type: "spring", stiffness: 450, damping: 30 }}
-                            className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 sm:gap-3.5 p-2 sm:p-2.5 pl-3 sm:pl-4 rounded-2xl bg-card/95 backdrop-blur-xl border border-border/80 shadow-2xl shadow-black/25 dark:shadow-primary/10 max-w-[calc(100vw-1.5rem)] ring-1 ring-border/20 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] sm:pb-2.5"
-                        >
-                            {justSaved && !isDirty && !isSaving ? (
-                                <div className="flex items-center gap-2 px-3 py-1.5 text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                                    <CheckCircle className="size-4 text-emerald-500" />
-                                    <span>{t("All Changes Saved")}</span>
-                                </div>
-                            ) : (
+    const renderSecurity = () => {
+        const strength = newPassword.length > 0 ? evaluatePasswordStrength(newPassword, passwordContext) : null;
+        const checks = strength
+            ? [
+                  { ok: strength.checks.hasMinLength, label: t("At least 8 characters") },
+                  { ok: strength.checks.hasUppercase, label: t("A capital letter (A–Z)") },
+                  { ok: strength.checks.hasNumberOrSymbol, label: t("A number or symbol (1, 2, !, ?)") },
+                  { ok: strength.checks.isNotCommon && strength.checks.isNotRepetitive && strength.checks.isNotPersonal, label: t("Not your name, email or an easy guess") },
+              ]
+            : [];
+
+        return (
+            <>
+                <SettingsCard id="settings-password" title={t("Change your password")} description={t("Use at least 8 characters. A short sentence you can remember works well.")}>
+                    <form onSubmit={handleUpdatePassword} className="space-y-6" noValidate>
+                        <p className="text-base text-muted-foreground">
+                            {passwordLastUpdated ? (
                                 <>
-                                    {/* Unsaved status badge */}
-                                    <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/30 text-[11px] sm:text-xs font-black shrink-0">
-                                        <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
-                                        <span className="hidden sm:inline">{t("Unsaved Changes")}</span>
-                                        <span className="sm:hidden">{t("Unsaved")}</span>
-                                    </div>
-
-                                    {/* Discard button */}
-                                    <button
-                                        type="button"
-                                        onClick={handleDiscardChanges}
-                                        disabled={isSaving}
-                                        className="flex items-center gap-1 px-2.5 sm:px-3 py-2 text-xs font-black text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-                                        title={t("Discard all pending changes")}
+                                    {t("Last changed on")}{" "}
+                                    <span className="font-bold text-foreground">
+                                        <ClientOnlyDate date={passwordLastUpdated} locale={locale} format={{ month: "long", day: "numeric", year: "numeric" }} />
+                                    </span>
+                                    .{" "}
+                                    <Link
+                                        href={`/forgot-password?email=${encodeURIComponent(user?.email || profile?.email || "")}`}
+                                        className="font-semibold text-foreground underline underline-offset-4"
                                     >
-                                        <RotateCcw className="size-3.5" />
-                                        <span className="hidden sm:inline">{t("Discard")}</span>
-                                    </button>
-
-                                    {/* Save All Changes Button */}
-                                    <button
-                                        type="button"
-                                        onClick={handleSaveAll}
-                                        disabled={isSaving}
-                                        className="flex items-center gap-1.5 sm:gap-2 rounded-xl px-3.5 sm:px-5 py-2.5 text-xs font-black uppercase tracking-wider transition-all shadow-md neumorphic-primary text-primary-foreground hover:scale-[1.02] active:scale-95 shadow-primary/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-                                    >
-                                        {isSaving ? (
-                                            <>
-                                                <Loader2 className="size-4 animate-spin" />
-                                                <span>{t("Saving…")}</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Save className="size-4" />
-                                                <span className="hidden sm:inline">{t("Save All Changes")}</span>
-                                                <span className="sm:hidden">{t("Save")}</span>
-                                            </>
-                                        )}
-                                    </button>
+                                        {t("Was this not you? Reset your password")}
+                                    </Link>
                                 </>
+                            ) : (
+                                t("You have not changed your password here yet.")
                             )}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                        </p>
+
+                        <SettingsField label={t("New password")} htmlFor={fieldId("newPassword")} error={errorFor("newPassword")}>
+                            <SettingsPasswordInput
+                                id={fieldId("newPassword")}
+                                autoComplete="new-password"
+                                maxLength={72}
+                                value={newPassword}
+                                hasError={Boolean(errorFor("newPassword"))}
+                                aria-invalid={errorFor("newPassword") ? true : undefined}
+                                aria-describedby={describedBy(fieldId("newPassword"), false, Boolean(errorFor("newPassword")))}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setNewPassword(val);
+                                    if (fieldErrors["newPassword"]) setFieldError("newPassword", validatePasswordPair(val, confirmNewPassword, passwordContext).newPasswordError);
+                                    if (confirmNewPassword && fieldErrors["confirmNewPassword"]) {
+                                        setFieldError("confirmNewPassword", validatePasswordPair(val, confirmNewPassword, passwordContext).confirmPasswordError);
+                                    }
+                                }}
+                                onBlur={() => {
+                                    markFieldTouched("newPassword");
+                                    if (newPassword) setFieldError("newPassword", validatePasswordPair(newPassword, confirmNewPassword, passwordContext).newPasswordError);
+                                }}
+                            />
+                        </SettingsField>
+
+                        {strength && (
+                            <div className="rounded-2xl border-2 border-foreground/15 p-4" aria-live="polite">
+                                <p className="text-lg font-bold text-foreground">
+                                    {t("Password strength:")} <span className={strength.color}>{t(strength.label)}</span>
+                                </p>
+                                <ul className="mt-3 space-y-2">
+                                    {checks.map((check) => (
+                                        <li key={check.label} className="flex items-center gap-3 text-base">
+                                            <span
+                                                aria-hidden
+                                                className={cn(
+                                                    "flex size-6 shrink-0 items-center justify-center rounded-full border-2",
+                                                    check.ok ? "border-emerald-600 bg-emerald-600 text-white" : "border-foreground/30",
+                                                )}
+                                            >
+                                                {check.ok && <Check className="size-4" strokeWidth={3} />}
+                                            </span>
+                                            <span className={check.ok ? "text-foreground" : "text-muted-foreground"}>
+                                                {check.label}
+                                                <span className="sr-only">{check.ok ? ` — ${t("done")}` : ` — ${t("not yet")}`}</span>
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        <SettingsField label={t("Type the new password again")} htmlFor={fieldId("confirmNewPassword")} error={errorFor("confirmNewPassword")}>
+                            <SettingsPasswordInput
+                                id={fieldId("confirmNewPassword")}
+                                autoComplete="new-password"
+                                maxLength={72}
+                                value={confirmNewPassword}
+                                hasError={Boolean(errorFor("confirmNewPassword"))}
+                                aria-invalid={errorFor("confirmNewPassword") ? true : undefined}
+                                aria-describedby={describedBy(fieldId("confirmNewPassword"), false, Boolean(errorFor("confirmNewPassword")))}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setConfirmNewPassword(val);
+                                    if (fieldErrors["confirmNewPassword"]) setFieldError("confirmNewPassword", validatePasswordPair(newPassword, val, passwordContext).confirmPasswordError);
+                                }}
+                                onBlur={() => {
+                                    markFieldTouched("confirmNewPassword");
+                                    if (confirmNewPassword) setFieldError("confirmNewPassword", validatePasswordPair(newPassword, confirmNewPassword, passwordContext).confirmPasswordError);
+                                }}
+                            />
+                            {confirmNewPassword && !fieldErrors["confirmNewPassword"] && newPassword === confirmNewPassword && (
+                                <p className="mt-2 flex items-center gap-2 text-base font-semibold text-emerald-700 dark:text-emerald-400">
+                                    <Check className="size-5" aria-hidden /> {t("The two passwords match.")}
+                                </p>
+                            )}
+                        </SettingsField>
+
+                        <SettingsButton type="submit" size="lg" icon={KeyRound} loading={isUpdatingPassword} disabled={!newPassword || !confirmNewPassword} className="w-full sm:w-auto">
+                            {isUpdatingPassword ? t("Changing your password…") : t("Change my password")}
+                        </SettingsButton>
+                    </form>
+                </SettingsCard>
+
+                <SettingsCard
+                    id="settings-extra-protection"
+                    title={t("Extra protection (optional)")}
+                    description={t("These add a second check when you sign in, so no one else can get in even if they learn your password.")}
+                >
+                    <div className="space-y-6">
+                        <TwoFactorManagementCard
+                            apiEndpoint="/api/landlord/2fa"
+                            accountEmail={user?.email || profile?.email || undefined}
+                            onStatusChange={(enabled) => setTwoFAStatus(enabled ? "enabled" : "disabled")}
+                        />
+                        <SecurityKeyManagementCard accountEmail={user?.email || profile?.email || undefined} />
+                    </div>
+                </SettingsCard>
+
+                <SignedInDevicesCard
+                    sessions={sessions}
+                    loading={isSessionsLoading}
+                    currentSessionId={currentSessionId}
+                    onSignOutDevice={handleRevokeSession}
+                    onSignOutOthers={handleSignOutOthers}
+                    onSignOutEverywhere={handleSignOutAll}
+                />
+            </>
+        );
+    };
+
+    const renderNotifications = () => (
+        <SettingsCard title={t("What should we tell you about?")} description={t("Tap a button to turn it on or off. Then press Save changes at the bottom.")}>
+            <NotificationTopicsList<NotificationCategoryKey, "email" | "push">
+                topics={[
+                    { key: "lease_applications", icon: FileText, label: t("Rental applications"), description: t("When someone applies to rent one of your units.") },
+                    { key: "maintenance", icon: Wrench, label: t("Repair requests"), description: t("When a tenant reports something that needs fixing.") },
+                    { key: "payments", icon: CreditCard, label: t("Payments received"), description: t("When a tenant's rent payment comes in.") },
+                    { key: "messages", icon: MessageSquare, label: t("Messages"), description: t("When a tenant or applicant sends you a message.") },
+                    { key: "announcements", icon: Megaphone, label: t("News from iReside"), description: t("New features and important notices.") },
+                ]}
+                channels={[
+                    { key: "email", label: t("Email") },
+                    { key: "push", label: t("Alert in the app") },
+                ]}
+                isOn={(topic, channel) => notificationPreferences[topic][channel]}
+                onToggle={(topic, channel) => handleToggleNotification(topic, channel)}
+            />
+            <div className="mt-6 border-t-2 border-border pt-6">
+                <SettingsButton variant="ghost" icon={RotateCcw} onClick={handleResetNotificationDefaults}>
+                    {t("Turn everything back on")}
+                </SettingsButton>
             </div>
+        </SettingsCard>
+    );
+
+    const renderHelp = () => (
+        <>
+            <SettingsCard title={t("Help guide")} description={t("Simple, step-by-step instructions for every part of iReside.")}>
+                <Link href="/landlord/docs" className={settingsButtonClass("primary", "lg")}>
+                    <HelpCircle className="size-5" aria-hidden />
+                    <span>{t("Open the help guide")}</span>
+                </Link>
+            </SettingsCard>
+
+            <SettingsCard title={t("Step-by-step lessons")} description={t("Short lessons on your dashboard that teach you how to use iReside. Changes here save right away.")}>
+                <div className="space-y-6">
+                    <SettingsSwitchRow
+                        label={t("Keep finished lessons on my dashboard")}
+                        description={t("Turn this on to keep seeing lessons you have already finished.")}
+                        checked={Boolean(tourState?.metadata?.show_completed_quests)}
+                        onChange={() => handleToggleCompletedQuests()}
+                    />
+                    <div className="space-y-3 border-t-2 border-border pt-6">
+                        <p className="text-lg font-bold text-foreground">{t("Start all lessons over")}</p>
+                        <p className="text-base text-muted-foreground">{t("This clears your lesson progress so you can do them again from the beginning.")}</p>
+                        <SettingsButton variant="secondary" icon={RotateCcw} loading={isResetting} onClick={handleHardResetTour}>
+                            {isResetting ? t("Starting over…") : t("Start lessons over")}
+                        </SettingsButton>
+                    </div>
+                </div>
+            </SettingsCard>
+        </>
+    );
+
+    const renderData = () => (
+        <>
+            <SettingsCard id="settings-export" title={t("Download your records")} description={t("Save a copy of your records to your computer. You can open it in Excel.")}>
+                <div className="space-y-8">
+                    <SettingsChoiceGroup
+                        legend={t("1. What do you want to download?")}
+                        columns={1}
+                        value={exportCategory}
+                        onChange={(v) => setExportCategory(v)}
+                        options={[
+                            { value: "financials", label: t("Money records"), description: t("Bills, payments, balances and utility charges.") },
+                            { value: "properties", label: t("My properties"), description: t("Buildings, units and which ones are rented.") },
+                            { value: "rent_roll", label: t("My tenants and leases"), description: t("Who rents each unit, their contact details and lease terms.") },
+                        ]}
+                    />
+
+                    {exportCategory === "financials" && (
+                        <SettingsChoiceGroup
+                            legend={t("2. Which dates?")}
+                            columns={3}
+                            value={exportRange}
+                            onChange={(v) => setExportRange(v)}
+                            options={[
+                                { value: "ytd", label: t("This year") },
+                                { value: "12m", label: t("Last 12 months") },
+                                { value: "all", label: t("Everything") },
+                            ]}
+                        />
+                    )}
+
+                    <SettingsChoiceGroup
+                        legend={exportCategory === "financials" ? t("3. What kind of file?") : t("2. What kind of file?")}
+                        value={exportFormat}
+                        onChange={(v) => setExportFormat(v)}
+                        options={[
+                            { value: "csv", label: t("Spreadsheet (CSV)"), description: t("Opens in Excel or Google Sheets. Choose this if unsure.") },
+                            { value: "json", label: "JSON", description: t("For technical use only.") },
+                        ]}
+                    />
+
+                    {exportCategory === "financials" && exportRange === "all" && (
+                        <SettingsNotice tone="warning" title={t("This may take a little while")}>
+                            {t("Downloading everything collects all your past bills and payments, so the file may be large.")}
+                        </SettingsNotice>
+                    )}
+
+                    <SettingsButton size="lg" icon={Download} loading={isExporting} onClick={handleExportData} className="w-full sm:w-auto">
+                        {isExporting ? t("Preparing your file…") : t("Download my file")}
+                    </SettingsButton>
+                </div>
+            </SettingsCard>
+
+            <CloseAccountCard
+                accountEmail={user?.email || profile?.email}
+                extraNote={t("Before closing, make sure your tenants have been told and all leases are finished.")}
+            />
+        </>
+    );
+
+    const renderSection = (id: SectionId) => {
+        switch (id) {
+            case "profile": return renderProfile();
+            case "security": return renderSecurity();
+            case "business": return renderBusiness();
+            case "branding": return renderBranding();
+            case "payments": return renderPayments();
+            case "utilities": return renderUtilities();
+            case "display": return <DisplaySettingsSection showTheme />;
+            case "notifications": return renderNotifications();
+            case "activity": return <AuditLogsSettingsTab />;
+            case "help": return renderHelp();
+            case "data": return renderData();
+        }
+    };
+
+    if (!isNavReady) return <PageLoader message={t("Loading your settings...")} />;
+
+    const syncBanner = syncError ? (
+        <SettingsNotice
+            tone="warning"
+            title={t("We could not load your latest settings")}
+            action={
+                <SettingsButton variant="secondary" icon={RotateCcw} loading={isSyncing} onClick={() => syncSettingsWithDatabase(true)}>
+                    {t("Try again")}
+                </SettingsButton>
+            }
+            className="mb-8"
+        >
+            {t("You may be seeing older details. Check your internet connection, then press Try again.")}
+        </SettingsNotice>
+    ) : null;
+
+    const helpFooter = (
+        <SettingsNotice
+            tone="info"
+            title={t("Need help?")}
+            action={
+                <Link href="/landlord/docs" className={settingsButtonClass("secondary", "md")}>
+                    <HelpCircle className="size-5" aria-hidden />
+                    <span>{t("Open the help guide")}</span>
+                </Link>
+            }
+        >
+            {t("The help guide explains each part of iReside with simple steps.")}
+        </SettingsNotice>
+    );
+
+    return (
+        <div className="pb-40">
+            {syncBanner}
+
+            {section === null ? (
+                <SettingsHub
+                    title={t("Settings")}
+                    intro={t("Choose what you want to change. You can come back to this page at any time.")}
+                    groups={groups}
+                    sections={sections}
+                    quickTasks={quickTasks}
+                    onOpen={(id, opts) => openSection(id, opts)}
+                    topSlot={
+                        embedded ? undefined : (
+                            <button type="button" onClick={goToDashboard} className={settingsButtonClass("secondary", "md")}>
+                                <ArrowLeft className="size-5" aria-hidden />
+                                <span>{t("Back to Dashboard")}</span>
+                            </button>
+                        )
+                    }
+                    footer={helpFooter}
+                />
+            ) : (
+                <SettingsSectionLayout groups={groups} sections={sections} activeId={section} onOpen={(id) => openSection(id)} onHome={() => openSection(null)}>
+                    {renderSection(section)}
+                </SettingsSectionLayout>
+            )}
+
+            {isAvatarPickerOpen && (
+                <AvatarPicker
+                    key={avatarPickerKey}
+                    isOpen={isAvatarPickerOpen}
+                    onClose={() => setIsAvatarPickerOpen(false)}
+                    currentAvatarUrl={profile?.avatar_url || null}
+                    currentBgColor={profile?.avatar_bg_color || null}
+                    onProfileUpdate={handleAvatarPickerUpdate}
+                />
+            )}
+
+            <ColorPickerModal
+                isOpen={isPrimaryColorPickerOpen}
+                onClose={() => setIsPrimaryColorPickerOpen(false)}
+                color={brandPrimaryHex}
+                title={t("Main color")}
+                onChange={(newColor) => {
+                    setHasUserEdited(true);
+                    setBrandPrimaryHex(newColor);
+                    applyBrandCssVariables(newColor, brandSecondaryHex);
+                }}
+            />
+
+            <ColorPickerModal
+                isOpen={isSecondaryColorPickerOpen}
+                onClose={() => setIsSecondaryColorPickerOpen(false)}
+                color={brandSecondaryHex}
+                title={t("Second color")}
+                onChange={(newColor) => {
+                    setHasUserEdited(true);
+                    setBrandSecondaryHex(newColor);
+                    applyBrandCssVariables(brandPrimaryHex, newColor);
+                }}
+            />
+
+            <SettingsSaveBar
+                visible={isDirty}
+                saving={isSaving}
+                justSaved={justSaved}
+                onSave={() => { void handleSaveAll(); }}
+                onDiscard={handleDiscardChanges}
+                raised={embedded}
+            />
+
+            <SettingsLeaveDialog
+                open={pendingNavigation !== null}
+                saving={isSaving}
+                onStay={() => setPendingNavigation(null)}
+                onDiscard={() => {
+                    const nav = pendingNavigation;
+                    handleDiscardChanges();
+                    setPendingNavigation(null);
+                    if (nav?.kind === "url") router.push(nav.href);
+                    else if (nav?.kind === "back") leaveSettings();
+                    else if (nav) openSection(nav.id, { force: true });
+                }}
+                onSave={async () => {
+                    const nav = pendingNavigation;
+                    const ok = await handleSaveAll();
+                    setPendingNavigation(null);
+                    if (!ok || !nav) return;
+                    if (nav.kind === "url") router.push(nav.href);
+                    else if (nav.kind === "back") leaveSettings();
+                    else openSection(nav.id, { force: true });
+                }}
+            />
         </div>
     );
 }

@@ -9,6 +9,7 @@ import {
     normalizeSecurityKey,
 } from "@/lib/security/recovery-keys";
 import { logUserActivity } from "@/lib/audit/audit-logger";
+import { describeAuditEvent } from "@/lib/audit/audit-display";
 import { parseJsonBody } from "@/lib/validation/server";
 import { escapeLikePattern, securityKeyRecoverSchema } from "@/lib/validation/schemas/account.schema";
 
@@ -98,9 +99,9 @@ export async function POST(request: Request) {
                 userRole: (profile.role as any) || "tenant",
                 action: "security_key_failed",
                 category: "security",
-                title: "Failed Security Key Recovery Attempt",
-                description: `Invalid security key submitted for recovery. Failed attempt ${failure.failedAttempts}.`,
+                ...describeAuditEvent({ action: "security_key_failed", metadata: { failedAttempts: failure.failedAttempts } }),
                 severity: "warning",
+                metadata: { failedAttempts: failure.failedAttempts },
             });
 
             if (failure.lockedUntil) {
@@ -172,8 +173,7 @@ export async function POST(request: Request) {
             userRole: (profile.role as any) || "tenant",
             action: "security_key_recovered",
             category: "security",
-            title: "Account Recovered via Security Key",
-            description: `User recovered account and reset credentials using their single-use security key. Previous key consumed and new key issued.`,
+            ...describeAuditEvent({ action: "security_key_recovered" }),
             severity: "critical",
         });
 

@@ -41,14 +41,17 @@ export default function TenantLayout({
                         storageKey="ireside-tenant-theme"
                     >
                     <div className={cn(
-                        "tenant-light min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 flex overflow-hidden",
+                        "tenant-light min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 flex",
+                        // Settings keeps its topic list in view while scrolling; clip (unlike hidden) allows sticky.
+                        isSettingsPage ? "overflow-clip" : "overflow-hidden",
                         (isChatPage || isUnitMapPage) && "h-screen"
                     )}>
                         {!useImmersiveLayout && <TenantSidebar />}
                         
                         <main 
                             className={cn(
-                                "min-w-0 h-full flex-1 flex flex-col overflow-x-hidden relative",
+                                "min-w-0 h-full flex-1 flex flex-col relative",
+                                isSettingsPage ? "overflow-x-clip" : "overflow-x-hidden",
                                 !useImmersiveLayout && "ml-[280px]"
                             )}
                         >
@@ -56,7 +59,7 @@ export default function TenantLayout({
                                 "w-full z-[100] pointer-events-none",
                                 !useImmersiveLayout && "w-full px-4 sm:px-6 lg:px-8 md:pr-[104px] lg:pr-[112px]"
                             )}>
-                                <NotificationBanner />
+                                {!isDocsPage && <NotificationBanner />}
                                 {!useImmersiveLayout && <PendingLeaseSignatureBanner />}
                             </div>
                             <Suspense fallback={

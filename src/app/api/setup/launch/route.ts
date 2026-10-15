@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { DEFAULT_BRANDING, BrandConfig } from "@/context/BrandContext";
 import { generateSecurityKey, encryptSecurityKey } from "@/lib/security/recovery-keys";
 import { logUserActivity } from "@/lib/audit/audit-logger";
+import { describeAuditEvent } from "@/lib/audit/audit-display";
 import { setupLaunchSchema, DISALLOWED_PRESEEDED_DATA, isPreseededPhone } from "@/lib/validation/brand-setup";
 import { zodFieldErrors } from "@/lib/validation/server";
 import { newPasswordRule } from "@/lib/validation/rules";
@@ -329,8 +330,7 @@ export async function POST(request: NextRequest) {
         userRole: "landlord",
         action: "security_key_generated",
         category: "security",
-        title: "Security Recovery Key Created",
-        description: "Landlord initial security recovery key generated during workspace launch.",
+        ...describeAuditEvent({ action: "security_key_generated" }),
         severity: "info",
       });
     }

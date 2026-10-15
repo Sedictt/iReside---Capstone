@@ -44,8 +44,15 @@ import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import { utilityRateRule } from "@/lib/validation/schemas/properties.schema";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { tr } from "@/hooks/useLanguage";
+import { focusAnchor } from "@/components/settings/settings-ui";
+import {
+	BillingSettingsLoading,
+	BillingSettingsMessage,
+	GcashSettingsView,
+	UtilityRatesSettingsView,
+} from "@/components/landlord/settings/BillingSettingsViews";
 
-type UtilityConfigDraft = {
+export type UtilityConfigDraft = {
  localId: string;
  id?: string;
  property_id: string;
@@ -320,7 +327,7 @@ export function BillingOperationsPanel({
 				});
 			} catch (err) {
 				console.error(err);
-				if (alive) dispatch({ type: "SET_MESSAGE", payload: { type: "error", value: t("Unable to load billing settings.") } });
+				if (alive) dispatch({ type: "SET_MESSAGE", payload: { type: "error", value: t("We could not load your payment settings. Please refresh the page and try again.") } });
 			} finally {
 				if (alive) dispatch({ type: "SET_LOADING", payload: false });
 			}
@@ -488,7 +495,7 @@ export function BillingOperationsPanel({
 				if (!cleanName || cleanName.length < 2) {
 					dispatch({
 						type: "SET_MESSAGE",
-						payload: { type: "error", value: t("Please provide a valid Account Name (minimum 2 characters).") }
+						payload: { type: "error", value: t("Type the name on your GCash account. Use at least 2 letters.") }
 					});
 					return false;
 				}
@@ -496,7 +503,7 @@ export function BillingOperationsPanel({
 				if (!/^09\d{9}$/.test(cleanNumber)) {
 					dispatch({
 						type: "SET_MESSAGE",
-						payload: { type: "error", value: t("Please provide a valid 11-digit GCash mobile number starting with 09 (e.g. 09171234567).") }
+						payload: { type: "error", value: t("Type your 11-number GCash number. It starts with 09, like 09171234567.") }
 					});
 					return false;
 				}
@@ -533,7 +540,7 @@ export function BillingOperationsPanel({
 			const response = await fetch("/api/landlord/payment-settings", { method: "POST", body: formData });
 			if (!response.ok) {
 				const errorData = await response.json().catch(() => null);
-				throw new Error(errorData?.error || t("Failed to save settings."));
+				throw new Error(errorData?.error || t("We could not save your changes. Please try again."));
 			}
 			const payload = (await response.json()) as BillingWorkspace;
 			
@@ -612,7 +619,7 @@ export function BillingOperationsPanel({
 			onSaved?.(payload);
 			return true;
 		} catch (error: any) {
-			dispatch({ type: "SET_MESSAGE", payload: { type: "error", value: error?.message || t("Failed to save settings.") } });
+			dispatch({ type: "SET_MESSAGE", payload: { type: "error", value: error?.message || t("We could not save your changes. Please try again.") } });
 			return false;
 		} finally {
 			dispatch({ type: "SET_SAVING", payload: false });
@@ -660,7 +667,7 @@ export function BillingOperationsPanel({
 			if (!cleanName || cleanName.length < 2) {
 				dispatch({
 					type: "SET_MESSAGE",
-					payload: { type: "error", value: t("Please provide a valid Account Name (minimum 2 characters).") }
+					payload: { type: "error", value: t("Type the name on your GCash account. Use at least 2 letters.") }
 				});
 				return;
 			}
@@ -668,7 +675,7 @@ export function BillingOperationsPanel({
 			if (!/^09\d{9}$/.test(cleanNumber)) {
 				dispatch({
 					type: "SET_MESSAGE",
-					payload: { type: "error", value: t("Please provide a valid 11-digit GCash mobile number starting with 09 (e.g. 09171234567).") }
+					payload: { type: "error", value: t("Type your 11-number GCash number. It starts with 09, like 09171234567.") }
 				});
 				return;
 			}
@@ -699,6 +706,8 @@ export function BillingOperationsPanel({
 	}, [save]);
 
 	useEffect(() => {
+		// In Settings the page's own save bar does the saving, so this panel's shortcut and dialogs stay off.
+		if (embedded) return;
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
 				if (isPanelDirty && !saving) {
@@ -712,7 +721,7 @@ export function BillingOperationsPanel({
 		};
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [isPanelDirty, saving, handleRequestSave, showSaveConfirm, showDiscardConfirm]);
+	}, [embedded, isPanelDirty, saving, handleRequestSave, showSaveConfirm, showDiscardConfirm]);
 
 	useEffect(() => {
 		if (embedded) {
@@ -720,6 +729,50 @@ export function BillingOperationsPanel({
 			onRegisterDiscard?.(discard);
 		}
 	}, [embedded, onRegisterSave, onRegisterDiscard, save, discard]);
+
+	// A failed save from the Settings save bar must be seen, even when the person has scrolled away.
+	useEffect(() => {
+		if (embedded && message?.type === "error") focusAnchor("billing-settings-message", "start");
+	}, [embedded, message]);
+
+	if (embedded) {
+		if (loading) return <BillingSettingsLoading />;
+		const messageNotice = message ? (
+			<BillingSettingsMessage
+				id="billing-settings-message"
+				type={message.type}
+				value={message.value}
+				onClose={() => dispatch({ type: "SET_MESSAGE", payload: null })}
+			/>
+		) : null;
+		if (!workspace) return messageNotice;
+		return (
+			<>
+				{messageNotice}
+				{viewMode === "gcash" ? (
+					<GcashSettingsView
+						accountName={accountName}
+						accountNumber={accountNumber}
+						isEnabled={isEnabled}
+						qrPreview={qrPreview}
+						onChange={(patch) => dispatch({ type: "UPDATE_PAYMENT", payload: patch })}
+					/>
+				) : (
+					<UtilityRatesSettingsView
+						properties={workspace.properties}
+						propertyId={propertyId}
+						utilityType={utilityType}
+						configs={configs}
+						originalConfigs={originalConfigsRef.current ?? []}
+						changes={diff.items}
+						onUpdateConfig={updateConfig}
+						onAddRoom={addOverride}
+						onRemoveConfig={removeConfig}
+					/>
+				)}
+			</>
+		);
+	}
 
 
 	if (loading) {

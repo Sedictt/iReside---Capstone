@@ -505,7 +505,7 @@ export const landlordFinance: TranslationDictionary = {
   "Tenants receive easy-to-read receipts with exact meter numbers and charges.": "Makakatanggap ang mga tenant ng madaling basahing resibo na may eksaktong metro at singil.",
 
   // ─── Billing operations panel (rates & GCash) ─────────────────────────
-  "Unable to load billing settings.": "Hindi ma-load ang billing settings.",
+  "We could not load your payment settings. Please refresh the page and try again.": "Hindi namin ma-load ang payment settings mo. Paki-refresh ang page at subukan ulit.",
   "Included in Rent": "Kasama sa Upa",
   "Direct to Provider": "Diretso sa Provider",
   "Submetered ({rate})": "May Submeter ({rate})",
@@ -518,9 +518,9 @@ export const landlordFinance: TranslationDictionary = {
   "Effective date changed from {from} to {to}": "Binago ang petsa ng bisa mula {from} patungong {to}",
   "Unit rule removed (reverts to Property Default)": "Inalis ang patakaran ng unit (babalik sa default ng paupahan)",
   "Property Default": "Default ng Paupahan",
-  "Please provide a valid Account Name (minimum 2 characters).": "Maglagay ng wastong Account Name (hindi bababa sa 2 karakter).",
-  "Please provide a valid 11-digit GCash mobile number starting with 09 (e.g. 09171234567).": "Maglagay ng wastong 11-digit na GCash number na nagsisimula sa 09 (hal. 09171234567).",
-  "Failed to save settings.": "Hindi na-save ang settings.",
+  "Type the name on your GCash account. Use at least 2 letters.": "I-type ang pangalan sa GCash account mo. Gumamit ng kahit 2 letra.",
+  "Type your 11-number GCash number. It starts with 09, like 09171234567.": "I-type ang 11 numerong GCash number mo. Nagsisimula ito sa 09, gaya ng 09171234567.",
+  "We could not save your changes. Please try again.": "Hindi namin na-save ang mga binago mo. Pakisubukan ulit.",
   "Loading settings...": "Kinakarga ang settings...",
   "Review Pending Changes": "Suriin ang mga Pagbabago",
   "{count} Update": "{count} Pagbabago",

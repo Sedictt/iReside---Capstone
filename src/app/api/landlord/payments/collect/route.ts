@@ -4,6 +4,7 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { upsertPaymentReceipt, generateNextMonthInvoice } from "@/lib/billing/server";
 import { insertPaymentAuditEvent, sendPaymentNotifications } from "@/lib/billing/workflow";
 import { logUserActivity } from "@/lib/audit/audit-logger";
+import { describeAuditEvent } from "@/lib/audit/audit-display";
 import { databaseErrorResponse, parseJsonBody } from "@/lib/validation/server";
 import { amountWithinBalanceRule, collectPaymentSchema, outstandingBalance, roundCentavos } from "@/lib/validation/schemas/billing.schema";
 
@@ -133,8 +134,7 @@ export async function POST(request: Request) {
                 userRole: "landlord",
                 action: "PAYMENT_COLLECTED",
                 category: "billing",
-                title: `Rent Payment Collected (₱${amount.toLocaleString()})`,
-                description: `Recorded ${method.toUpperCase()} collection of ₱${amount.toLocaleString()} (Receipt #${receipt.receipt_number}).`,
+                ...describeAuditEvent({ action: "PAYMENT_COLLECTED", metadata: { amount, method, receiptNumber: receipt.receipt_number } }),
                 severity: "info",
                 targetId: payment.id,
                 targetType: "payment",

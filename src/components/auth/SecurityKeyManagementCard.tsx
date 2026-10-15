@@ -1,29 +1,23 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { m as motion, AnimatePresence } from "framer-motion";
-import {
-    KeyRound,
-    ShieldCheck,
-    AlertCircle,
-    RefreshCw,
-    Lock,
-    Mail,
-    Eye,
-    EyeOff,
-    CheckCircle2,
-    X,
-    Loader2,
-} from "lucide-react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { KeyRound, AlertCircle, RefreshCw, Mail, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
 import { useFormValidation } from "@/hooks/useFormValidation";
-import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
 import { otpRule } from "@/lib/validation/rules";
 import { CURRENT_PASSWORD_MAX_LENGTH, currentPasswordRule } from "@/lib/validation/schemas/account.schema";
+import {
+    SettingsButton,
+    SettingsField,
+    SettingsNotice,
+    SettingsPasswordInput,
+    settingsInputClass,
+} from "@/components/settings/settings-ui";
 
 interface SecurityKeyManagementCardProps {
     className?: string;
@@ -42,7 +36,6 @@ export function SecurityKeyManagementCard({
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentPassword, setCurrentPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
     const [otpCode, setOtpCode] = useState("");
     const [isSendingOtp, setIsSendingOtp] = useState(false);
     const [otpCooldown, setOtpCooldown] = useState(0);
@@ -169,291 +162,170 @@ export function SecurityKeyManagementCard({
         fetchStatus();
     };
 
+    const openModal = () => {
+        setRotationError(null);
+        setNewSecurityKey(null);
+        setIsAcknowledged(false);
+        setCurrentPassword("");
+        setOtpCode("");
+        setIsModalOpen(true);
+    };
+
     return (
         <>
-            <div
-                className={cn(
-                    "relative overflow-hidden rounded-2xl sm:rounded-3xl border border-border/70 bg-card p-5 sm:p-7 shadow-xs space-y-5",
-                    className
-                )}
-            >
-                {/* Header Row */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3.5">
-                        <div className="size-11 rounded-2xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
-                            <KeyRound className="size-5" />
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-2.5 flex-wrap">
-                                <h3 className="text-base sm:text-lg font-black text-foreground">
-                                    {t("Security Recovery Key")}
-                                </h3>
-                                {isLoading ? (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground">
-                                        <Loader2 className="size-3 animate-spin" /> {t("Checking...")}
-                                    </span>
-                                ) : hasSecurityKey ? (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                        <CheckCircle2 className="size-3" /> {t("Active & Encrypted")}
-                                    </span>
-                                ) : (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                        <AlertCircle className="size-3" /> {t("Not Configured")}
-                                    </span>
-                                )}
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                {t("Single-use emergency recovery mechanism protected by AES-256-GCM encryption.")}
-                            </p>
-                        </div>
+            <div className={cn("space-y-5 rounded-2xl border-2 border-foreground/15 p-5", className)}>
+                <div className="flex items-start gap-3">
+                    <KeyRound className="mt-0.5 size-7 shrink-0 text-foreground" aria-hidden />
+                    <div className="space-y-1">
+                        <h3 className="flex flex-wrap items-center gap-2 text-xl font-bold text-foreground">
+                            <span>{t("Backup recovery key")}</span>
+                            {!isLoading && (
+                                <span
+                                    className={cn(
+                                        "inline-flex items-center gap-1 rounded-full px-3 py-0.5 text-sm font-bold",
+                                        hasSecurityKey ? "bg-emerald-700 text-white" : "bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-100",
+                                    )}
+                                >
+                                    {hasSecurityKey ? <CheckCircle2 className="size-4" aria-hidden /> : <AlertCircle className="size-4" aria-hidden />}
+                                    {hasSecurityKey ? t("Ready") : t("Not made yet")}
+                                </span>
+                            )}
+                        </h3>
+                        <p className="text-base text-muted-foreground leading-relaxed">
+                            {t("A secret code you keep somewhere safe, like a notebook. If you ever cannot sign in, this code lets you back in. Each code works one time.")}
+                        </p>
                     </div>
-
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setRotationError(null);
-                            setNewSecurityKey(null);
-                            setIsAcknowledged(false);
-                            setCurrentPassword("");
-                            setOtpCode("");
-                            setIsModalOpen(true);
-                        }}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border shrink-0 active:scale-95 cursor-pointer"
-                    >
-                        <RefreshCw className="size-3.5" />
-                        <span>{hasSecurityKey ? t("Rotate Recovery Key") : t("Generate Recovery Key")}</span>
-                    </button>
                 </div>
 
-                {/* Information Card & Status Details */}
-                <div className="rounded-xl bg-muted/40 border border-border/50 p-4 space-y-3 text-xs">
-                    <p className="text-muted-foreground leading-relaxed">
-                        {t("If you ever lose access to your registered email inbox or get locked out of your account, you can use your single-use security recovery key to regain access. For maximum security, keys are encrypted at rest and are never stored or displayed in plain text after generation.")}
+                {isLoading ? (
+                    <p role="status" className="flex items-center gap-2 text-lg text-muted-foreground">
+                        <Loader2 className="size-5 motion-safe:animate-spin" aria-hidden /> {t("Checking…")}
                     </p>
-
-                    <div className="pt-2 border-t border-border/40 grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-[11px]">
-                        <div className="flex items-center gap-2">
-                            <ShieldCheck className="size-4 text-emerald-500 shrink-0" />
-                            <span className="text-muted-foreground">{t("Storage Method:")}</span>
-                            <span className="font-semibold text-foreground">AES-256-GCM (Zero Plaintext)</span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <KeyRound className="size-4 text-primary shrink-0" />
-                            <span className="text-muted-foreground">{t("Last Rotated:")}</span>
-                            <span className="font-semibold text-foreground">
-                                {updatedAt ? (
-                                    <ClientOnlyDate
-                                        date={updatedAt}
-                                        format={{ month: "short", day: "numeric", year: "numeric" }}
-                                    />
-                                ) : (
-                                    t("Initial Account Setup")
-                                )}
+                ) : (
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-base text-foreground">
+                            {t("Last made:")}{" "}
+                            <span className="font-bold">
+                                {updatedAt ? <ClientOnlyDate date={updatedAt} format={{ month: "long", day: "numeric", year: "numeric" }} /> : t("Not made yet")}
                             </span>
-                        </div>
+                        </p>
+                        <SettingsButton variant="secondary" icon={RefreshCw} onClick={openModal}>
+                            {hasSecurityKey ? t("Make a new recovery key") : t("Make my recovery key")}
+                        </SettingsButton>
                     </div>
-                </div>
+                )}
             </div>
 
-            {/* Protected Rotation Modal */}
-            <AnimatePresence>
-                {isModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={handleCloseModal}
-                            className="fixed inset-0"
-                        />
+            <Dialog.Root open={isModalOpen} onOpenChange={(open) => { if (!open) handleCloseModal(); }}>
+                <Dialog.Portal>
+                    <Dialog.Overlay className="fixed inset-0 z-[200] bg-black/60" />
+                    <Dialog.Content className="fixed left-1/2 top-1/2 z-[201] max-h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl border-2 border-foreground/15 bg-card p-6 sm:p-8 shadow-2xl focus:outline-none">
+                        <div className="mb-6 space-y-2">
+                            <Dialog.Title className="text-2xl font-bold text-foreground">
+                                {newSecurityKey ? t("Your new recovery key") : t("Make a new recovery key")}
+                            </Dialog.Title>
+                            <Dialog.Description className="text-lg text-muted-foreground leading-relaxed">
+                                {newSecurityKey
+                                    ? t("Write this down or save it somewhere safe before you close this window.")
+                                    : t("To make sure it is really you, type your password and the code we email you.")}
+                            </Dialog.Description>
+                        </div>
 
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.96, y: 12 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.96, y: 12 }}
-                            transition={{ duration: 0.2, ease: "easeOut" }}
-                            className="relative z-10 w-full max-w-lg rounded-3xl border border-border bg-card p-6 shadow-2xl space-y-5"
-                        >
-                            {/* Modal Header */}
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="size-10 rounded-2xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
-                                        <KeyRound className="size-5" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-base font-bold text-foreground">
-                                            {newSecurityKey ? t("New Security Recovery Key") : t("Rotate Security Recovery Key")}
-                                        </h3>
-                                        <p className="text-xs text-muted-foreground">
-                                            {newSecurityKey
-                                                ? t("Save your new recovery key safely.")
-                                                : t("Verify your identity to generate a new key.")}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={handleCloseModal}
-                                    className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                                    aria-label={t("Close modal")}
-                                >
-                                    <X className="size-4" />
-                                </button>
+                        {newSecurityKey ? (
+                            <div className="space-y-5">
+                                <SecurityKeyDisplayCard
+                                    securityKey={newSecurityKey}
+                                    isAcknowledged={isAcknowledged}
+                                    onToggleAcknowledge={setIsAcknowledged}
+                                    title={t("New Single-Use Recovery Key")}
+                                    description={t("Your previous security key has been invalidated. Save this new recovery key in a password manager or offline file.")}
+                                    accountEmail={accountEmail}
+                                />
+                                <SettingsButton size="lg" icon={CheckCircle2} disabled={!isAcknowledged} onClick={handleCloseModal} className="w-full">
+                                    {t("I saved it. Close")}
+                                </SettingsButton>
                             </div>
+                        ) : (
+                            <form onSubmit={handleRotateSubmit} className="space-y-6" noValidate>
+                                {hasSecurityKey && (
+                                    <SettingsNotice tone="warning">{t("Your old recovery key will stop working once you make a new one.")}</SettingsNotice>
+                                )}
+                                {rotationError && (
+                                    <SettingsNotice tone="danger" live>
+                                        {rotationError}
+                                    </SettingsNotice>
+                                )}
 
-                            {/* Modal Body */}
-                            {newSecurityKey ? (
-                                <div className="space-y-4">
-                                    <SecurityKeyDisplayCard
-                                        securityKey={newSecurityKey}
-                                        isAcknowledged={isAcknowledged}
-                                        onToggleAcknowledge={setIsAcknowledged}
-                                        title={t("New Single-Use Recovery Key")}
-                                        description={t("Your previous security key has been invalidated. Save this new recovery key in a password manager or offline file.")}
-                                        accountEmail={accountEmail}
+                                <SettingsField
+                                    label={t("Your password")}
+                                    htmlFor="security-key-password"
+                                    error={rotateForm.errorFor("currentPassword") ? t(rotateForm.errorFor("currentPassword")!) : undefined}
+                                    errorId={rotateForm.errorId("currentPassword")}
+                                >
+                                    <SettingsPasswordInput
+                                        id="security-key-password"
+                                        {...rotateForm.fieldProps("currentPassword")}
+                                        maxLength={CURRENT_PASSWORD_MAX_LENGTH}
+                                        autoComplete="current-password"
+                                        value={currentPassword}
+                                        onChange={(e) => setCurrentPassword(e.target.value)}
+                                        hasError={Boolean(rotateForm.errorFor("currentPassword"))}
                                     />
+                                </SettingsField>
 
-                                    <button
-                                        type="button"
-                                        disabled={!isAcknowledged}
-                                        onClick={handleCloseModal}
-                                        className="w-full h-10 rounded-xl bg-primary text-primary-foreground text-xs font-bold transition-all hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                                <SettingsField
+                                    label={t("Code from your email")}
+                                    htmlFor="security-key-otp"
+                                    help={t("Press the button below and we will email you a 6-digit code.")}
+                                    error={rotateForm.errorFor("otpCode") ? t(rotateForm.errorFor("otpCode")!) : undefined}
+                                    errorId={rotateForm.errorId("otpCode")}
+                                >
+                                    <input
+                                        id="security-key-otp"
+                                        {...rotateForm.fieldProps("otpCode")}
+                                        type="text"
+                                        inputMode="numeric"
+                                        autoComplete="one-time-code"
+                                        maxLength={6}
+                                        value={otpCode}
+                                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                                        placeholder="000000"
+                                        className={settingsInputClass(Boolean(rotateForm.errorFor("otpCode")), "max-w-xs text-center font-mono text-2xl tracking-[0.4em] placeholder:tracking-normal")}
+                                    />
+                                    <SettingsButton
+                                        variant="secondary"
+                                        icon={Mail}
+                                        className="mt-3"
+                                        loading={isSendingOtp}
+                                        disabled={otpCooldown > 0}
+                                        onClick={handleSendOtp}
                                     >
-                                        <CheckCircle2 className="size-4" />
-                                        <span>{t("Done & Close")}</span>
-                                    </button>
-                                </div>
-                            ) : (
-                                <form onSubmit={handleRotateSubmit} className="space-y-4">
-                                    <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-300 space-y-1">
-                                        <p className="font-semibold flex items-center gap-1.5">
-                                            <AlertCircle className="size-3.5 shrink-0" />
-                                            {t("Immediate Invalidation")}
+                                        {isSendingOtp
+                                            ? t("Sending the code…")
+                                            : otpCooldown > 0
+                                              ? t("Send a new code in {seconds} seconds", { seconds: otpCooldown })
+                                              : t("Email me a code")}
+                                    </SettingsButton>
+                                    {otpSentMessage && (
+                                        <p role="status" className="mt-2 text-base font-semibold text-emerald-700 dark:text-emerald-400">
+                                            {otpSentMessage}
                                         </p>
-                                        <p className="leading-relaxed text-[11px] opacity-90">
-                                            {t("Generating a new key immediately revokes any previously issued recovery key. You will need your current password and a verification code sent to your registered email.")}
-                                        </p>
-                                    </div>
-
-                                    {rotationError && (
-                                        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400 flex items-start gap-2">
-                                            <AlertCircle className="size-4 shrink-0 mt-0.5" />
-                                            <p className="font-medium">{rotationError}</p>
-                                        </div>
                                     )}
+                                </SettingsField>
 
-                                    {/* Current Password Field */}
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                                            <Lock className="size-3.5 text-muted-foreground" />
-                                            {t("Current Password")}
-                                        </label>
-                                        <div className="relative flex items-center">
-                                            <input maxLength={CURRENT_PASSWORD_MAX_LENGTH}
-                                                {...rotateForm.fieldProps("currentPassword")}
-                                                aria-label={t("Current password")}
-                                                type={showPassword ? "text" : "password"}
-                                                required
-                                                autoComplete="current-password"
-                                                value={currentPassword}
-                                                onChange={(e) => setCurrentPassword(e.target.value)}
-                                                placeholder={t("Enter your current password")}
-                                                className={cn(
-                                                    "h-10 w-full rounded-xl border border-border bg-background pl-3.5 pr-10 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary",
-                                                    rotateForm.errorFor("currentPassword") && fieldErrorClass
-                                                )}
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors p-1"
-                                                aria-label={showPassword ? t("Hide password") : t("Show password")}
-                                            >
-                                                {showPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-                                            </button>
-                                        </div>
-                                        <FieldError id={rotateForm.errorId("currentPassword")} message={rotateForm.errorFor("currentPassword")} />
-                                    </div>
-
-                                    {/* Verification Code Field */}
-                                    <div className="space-y-1.5">
-                                        <div className="flex items-center justify-between">
-                                            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                                                <Mail className="size-3.5 text-muted-foreground" />
-                                                {t("Email Verification Code")}
-                                            </label>
-                                            <button
-                                                type="button"
-                                                disabled={isSendingOtp || otpCooldown > 0}
-                                                onClick={handleSendOtp}
-                                                className="text-[11px] font-bold text-primary hover:underline disabled:opacity-50 disabled:no-underline cursor-pointer"
-                                            >
-                                                {isSendingOtp
-                                                    ? t("Sending...")
-                                                    : otpCooldown > 0
-                                                    ? t("Resend in {seconds}s", { seconds: otpCooldown })
-                                                    : t("Send Code to Email")}
-                                            </button>
-                                        </div>
-                                        <input
-                                            {...rotateForm.fieldProps("otpCode")}
-                                            aria-label={t("Email verification code")}
-                                            type="text"
-                                            inputMode="numeric"
-                                            autoComplete="one-time-code"
-                                            required
-                                            maxLength={6}
-                                            value={otpCode}
-                                            onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                                            placeholder={t("6-digit verification code")}
-                                            className={cn(
-                                                "h-10 w-full rounded-xl border border-border bg-background px-3.5 text-xs text-foreground font-mono tracking-widest placeholder:tracking-normal placeholder:font-sans placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary",
-                                                rotateForm.errorFor("otpCode") && fieldErrorClass
-                                            )}
-                                        />
-                                        <FieldError id={rotateForm.errorId("otpCode")} message={rotateForm.errorFor("otpCode")} />
-                                        {otpSentMessage && (
-                                            <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                                                {otpSentMessage}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* Modal Actions */}
-                                    <div className="flex items-center justify-end gap-2.5 pt-2">
-                                        <button
-                                            type="button"
-                                            onClick={handleCloseModal}
-                                            className="px-4 py-2 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                                        >
-                                            {t("Cancel")}
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            disabled={isRotating}
-                                            className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5"
-                                        >
-                                            {isRotating ? (
-                                                <>
-                                                    <Loader2 className="size-3.5 animate-spin" />
-                                                    <span>{t("Verifying & Generating...")}</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <KeyRound className="size-3.5" />
-                                                    <span>{t("Verify & Generate Key")}</span>
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-                                </form>
-                            )}
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                                    <SettingsButton variant="ghost" onClick={handleCloseModal}>
+                                        {t("Cancel")}
+                                    </SettingsButton>
+                                    <SettingsButton type="submit" icon={KeyRound} loading={isRotating}>
+                                        {isRotating ? t("Making your key…") : t("Make my recovery key")}
+                                    </SettingsButton>
+                                </div>
+                            </form>
+                        )}
+                    </Dialog.Content>
+                </Dialog.Portal>
+            </Dialog.Root>
         </>
     );
 }

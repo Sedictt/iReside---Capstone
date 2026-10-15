@@ -15,6 +15,7 @@ import { sharedFeatures } from "./shared-features";
 import { publicPages } from "./public-pages";
 import { runtimeMessages } from "./runtime-messages";
 import { commonPhrases } from "./common";
+import { settingsPages } from "./settings";
 
 /**
  * Per-module Filipino phrase dictionaries, keyed by the exact English UI string.
@@ -40,4 +41,5 @@ export const filModuleDictionary: TranslationDictionary = {
   ...tenantPages,
   ...mobileLandlord,
   ...mobileTenantShared,
+  ...settingsPages,
 };

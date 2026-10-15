@@ -10,6 +10,7 @@ import {
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { logUserActivity } from "@/lib/audit/audit-logger";
+import { describeAuditEvent } from "@/lib/audit/audit-display";
 import { isUuid } from "@/lib/validation/schemas/billing.schema";
 
 type RouteContext = {
@@ -122,8 +123,7 @@ export async function POST(request: Request, context: RouteContext) {
             userRole: "landlord",
             action: "INVOICE_REMINDER_SENT",
             category: "billing",
-            title: "Rent Invoice & Reminder Dispatched",
-            description: `Dispatched payment notice & Pay Now link for invoice ${updatedPayment.invoice_number || updatedPayment.id}.`,
+            ...describeAuditEvent({ action: "INVOICE_REMINDER_SENT", metadata: { invoiceNumber: updatedPayment.invoice_number || updatedPayment.id } }),
             severity: "info",
             targetId: updatedPayment.id,
             targetType: "invoice",

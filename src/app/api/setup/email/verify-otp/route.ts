@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { logUserActivity } from "@/lib/audit/audit-logger";
+import { describeAuditEvent } from "@/lib/audit/audit-display";
 import { parseJsonBody } from "@/lib/validation/server";
 import { setupVerifyOtpSchema } from "@/lib/validation/schemas/account.schema";
 import { evaluateOtpAttempt, persistOtpAttempt } from "@/lib/security/otp-verification";
@@ -128,8 +129,7 @@ export async function POST(request: NextRequest) {
       userRole: "landlord",
       action: "email_updated",
       category: "security",
-      title: "Email Address Linked",
-      description: `Landlord successfully verified and linked new email address ${normalizedEmail} via OTP.`,
+      ...describeAuditEvent({ action: "email_updated" }),
       severity: "info",
     });
 

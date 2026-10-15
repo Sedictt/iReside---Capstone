@@ -1,51 +1,32 @@
 "use client";
 
-import { useState, useEffect, useRef, useReducer, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { m as motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import {
-    User,
-    Shield,
+    ArrowLeft,
     Bell,
-    CreditCard,
-    Globe,
+    Camera,
+    FileText,
+    HelpCircle,
+    KeyRound,
+    Megaphone,
+    Phone,
+    Receipt,
+    ShieldCheck,
+    Tag,
+    Type,
+    User,
+    Wallet,
+    Wrench,
     Download,
     Mail,
-    Phone,
-    FileText,
-    Save,
-    CheckCircle,
-    Key,
-    Smartphone,
-    Monitor,
-    LogOut,
-    Eye,
-    AlertTriangle,
-    Layout,
-    ShieldCheck,
-    Home,
-    Wallet,
-    Receipt,
-    EyeOff,
-    Plus,
-    Info,
-    X,
-    Palette,
-    Contrast,
-    Camera,
-    ChevronLeft,
-    ChevronRight,
-    SlidersHorizontal,
-    RefreshCw,
-    AlertCircle,
-    CheckCircle2,
 } from "lucide-react";
-
-import { cn } from "@/lib/utils";
 import { createClient as createStandaloneSupabaseClient } from "@supabase/supabase-js";
+import { toast } from "sonner";
+
 import { useFormValidation } from "@/hooks/useFormValidation";
-import { FieldError } from "@/components/ui/field-error";
 import {
     PASSWORD_MAX_LENGTH,
     TEXT_LIMITS,
@@ -60,317 +41,144 @@ import { useAuth } from "@/hooks/useAuth";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
 import { AvatarPicker } from "@/components/profile/AvatarPicker";
 import { createClient } from "@/lib/supabase/client";
-import { toast } from "sonner";
 import { updateTenantPassword, signOut } from "@/lib/supabase/client-auth";
-import { parseUserAgent } from "@/lib/utils/device-parser";
-import { ClientOnlyDate } from "@/components/ui/client-only-date";
-import { useHighContrast } from "@/hooks/useHighContrast";
-import { FontSizeToggle } from "@/components/ui/FontSizeToggle";
-import { TimeFormatToggle } from "@/components/ui/TimeFormatToggle";
-import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { SecurityKeyManagementCard } from "@/components/auth/SecurityKeyManagementCard";
 import { TwoFactorManagementCard } from "@/components/auth/TwoFactorManagementCard";
 import { tr } from "@/hooks/useLanguage";
+import {
+    SettingsButton,
+    SettingsCard,
+    SettingsField,
+    SettingsHub,
+    SettingsLeaveDialog,
+    SettingsLinkRow,
+    SettingsNotice,
+    SettingsPasswordInput,
+    SettingsSaveBar,
+    SettingsSectionLayout,
+    settingsButtonClass,
+    settingsInputClass,
+    useSettingsNavigation,
+    type SettingsGroupDef,
+    type SettingsQuickTask,
+    type SettingsSectionDef,
+} from "@/components/settings/settings-ui";
+import {
+    CloseAccountCard,
+    DisplaySettingsSection,
+    NotificationTopicsList,
+    PRIVACY_CONTACT_EMAIL,
+    SignedInDevicesCard,
+    type SignedInSession,
+} from "@/components/settings/settings-shared-sections";
 
-// --- Types ---
-type SettingsCategory = "Identity" | "Accessibility" | "Security" | "Notifications" | "Billing" | "Data";
+// --- Pages ---
 
-interface SidebarItem {
-    id: SettingsCategory;
-    label: string;
-    icon: any;
-    description: string;
+const SECTION_IDS = ["profile", "security", "display", "notifications", "payments", "privacy"] as const;
+type SectionId = (typeof SECTION_IDS)[number];
+
+/** Old links used ?category=...&subtab=...; keep them working. */
+function resolveLegacyLink(category: string): SectionId | null {
+    switch (category) {
+        case "Identity": return "profile";
+        case "Accessibility": return "display";
+        case "Security": return "security";
+        case "Notifications": return "notifications";
+        case "Billing": return "payments";
+        case "Data": return "privacy";
+        default: return null;
+    }
 }
 
-const SIDEBAR_ITEMS: SidebarItem[] = [
-    { 
-        id: "Identity", 
-        label: "Profile", 
-        icon: User,
-        description: "Manage your personal information"
-    },
-    { 
-        id: "Accessibility", 
-        label: "Display & Accessibility", 
-        icon: Palette,
-        description: "Text size, contrast and readability"
-    },
-    { 
-        id: "Security", 
-        label: "Security & Login", 
-        icon: Shield,
-        description: "Password, 2FA and active sessions"
-    },
-    { 
-        id: "Notifications", 
-        label: "Notifications", 
-        icon: Bell,
-        description: "Communication and alert preferences"
-    },
-    { 
-        id: "Billing", 
-        label: "Billing & Payments", 
-        icon: CreditCard,
-        description: "Payment methods and transaction history"
-    },
-    { 
-        id: "Data", 
-        label: "Data & Privacy", 
-        icon: Globe,
-        description: "Export data and account management"
-    },
-];
+type NotificationTopicKey = "rent" | "maintenance" | "lease" | "community" | "offers";
+type NotificationChannelKey = "email" | "push";
+type NotificationPrefs = Record<NotificationTopicKey, Record<NotificationChannelKey, boolean>>;
 
-// --- Components ---
+const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
+    rent: { email: true, push: true },
+    maintenance: { email: true, push: true },
+    lease: { email: true, push: true },
+    community: { email: false, push: true },
+    offers: { email: false, push: false },
+};
 
-function GlassCard({
-    children,
-    className,
-    title,
-    description,
-    headerExtra,
-}: {
-    children: React.ReactNode;
-    className?: string;
-    title?: string;
-    description?: string;
-    headerExtra?: React.ReactNode;
-}) {
-    return (
-        <div className={cn("relative overflow-hidden rounded-2xl sm:rounded-[2rem] neumorphic-panel transition-all duration-500", className)}>
-            {(title || description || headerExtra) && (
-                <div className="border-b border-border/60 px-4 py-3.5 sm:px-6 sm:py-5 md:px-8 md:py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div>
-                        {title && <h3 className="text-base sm:text-lg font-black text-foreground">{title}</h3>}
-                        {description && <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">{description}</p>}
-                    </div>
-                    {headerExtra && <div className="shrink-0">{headerExtra}</div>}
-                </div>
-            )}
-            <div className="p-4 sm:p-6 md:p-8 text-foreground">{children}</div>
-        </div>
-    );
+function readNotificationPrefs(socials: unknown): NotificationPrefs {
+    const saved = (socials as { notification_preferences?: Partial<NotificationPrefs> } | null)?.notification_preferences;
+    const next = JSON.parse(JSON.stringify(DEFAULT_NOTIFICATION_PREFS)) as NotificationPrefs;
+    if (saved && typeof saved === "object") {
+        for (const key of Object.keys(next) as NotificationTopicKey[]) {
+            next[key] = { ...next[key], ...(saved[key] ?? {}) };
+        }
+    }
+    return next;
 }
 
-function SettingField({ label, children, description, icon: Icon }: { label: string; children: React.ReactNode; description?: string; icon?: any }) {
-    return (
-        <div className="space-y-2">
-            <div className="flex items-center gap-2 px-1">
-                {Icon && <Icon className="size-3.5 text-primary" />}
-                <label className="text-xs font-black uppercase tracking-wider text-foreground/80">{label}</label>
-            </div>
-            {children}
-            {description && <p className="px-1 text-xs text-muted-foreground">{description}</p>}
-        </div>
-    );
-}
+type ProfileForm = {
+    full_name: string;
+    email: string;
+    phone: string;
+    address: string;
+    bio: string;
+    emergency_name: string;
+    emergency_phone: string;
+};
 
-function ToggleSwitch({ enabled, onToggle, size = "default" }: { enabled: boolean; onToggle: () => void; size?: "default" | "small" }) {
-    const isSmall = size === "small";
-    return (
-        <button
-            type="button"
-            onClick={() => onToggle()}
-            className={cn(
-                "relative inline-flex items-center rounded-full transition-all duration-300 cursor-pointer",
-                enabled ? "neumorphic-primary" : "neumorphic-inset",
-                isSmall ? "h-5 w-9" : "h-6 w-11"
-            )}
-        >
-            <span
-                className={cn(
-                    "inline-block transform rounded-full transition-all duration-300",
-                    isSmall ? "size-3" : "size-4",
-                    enabled
-                        ? isSmall ? "translate-x-5 bg-white" : "translate-x-6 bg-white"
-                        : "translate-x-1 bg-neutral-400"
-                )}
-            />
-        </button>
-    );
-}
+const EMPTY_PROFILE: ProfileForm = { full_name: "", email: "", phone: "", address: "", bio: "", emergency_name: "", emergency_phone: "" };
 
-function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: string; onTabChange: (tab: string) => void }) {
-    const { t } = useLanguageContext();
-    return (
-        <div className="relative">
-            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 pt-0.5 scrollbar-hide px-0.5">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab}
-                        type="button"
-                        onClick={() => onTabChange(tab)}
-                        className={cn(
-                            "whitespace-nowrap rounded-xl px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs font-black transition-all cursor-pointer shrink-0",
-                            activeTab === tab
-                                ? "neumorphic-primary text-primary-foreground font-black shadow-md"
-                                : "neumorphic-extruded text-muted-foreground hover:text-foreground font-bold"
-                        )}
-                    >
-                        {t(tab)}
-                    </button>
-                ))}
-            </div>
-        </div>
-    );
-}
+type PendingNavigation = { kind: "section"; id: SectionId | null } | { kind: "url"; href: string } | { kind: "back" };
 
 // --- Main Component ---
 
-export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
+export function TenantSettings({ embedded = false }: { embedded?: boolean } = {}) {
     const router = useRouter();
     const { profile, loading, refreshProfile } = useAuth();
-    const { t, locale } = useLanguageContext();
+    const { t } = useLanguageContext();
     const tErr = (message?: string) => (message ? t(message) : message);
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
 
-    // UI State
-    const [activeTab, setActiveTab] = useState<SettingsCategory>("Identity");
-    const [activeSubTab, setActiveSubTab] = useState<string>("Profile");
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
+    // --- Page definitions (translated) ---
+    const groups: SettingsGroupDef[] = [
+        { id: "account", title: t("Your account") },
+        { id: "comfort", title: t("Your screen and alerts") },
+        { id: "money", title: t("Payments and privacy") },
+    ];
+    const sections: SettingsSectionDef<SectionId>[] = [
+        { id: "profile", group: "account", icon: User, title: t("My profile"), description: t("Your name, photo, phone number, address and emergency contact.") },
+        { id: "security", group: "account", icon: KeyRound, title: t("Password and sign-in"), description: t("Change your password and see where you are signed in.") },
+        { id: "display", group: "comfort", icon: Type, title: t("Text size and display"), description: t("Make the words bigger, change the language, and more.") },
+        { id: "notifications", group: "comfort", icon: Bell, title: t("Notifications"), description: t("Choose which reminders and messages you get.") },
+        { id: "payments", group: "money", icon: Wallet, title: t("Bills and payments"), description: t("Where to find your bills, receipts and payment history.") },
+        { id: "privacy", group: "money", icon: ShieldCheck, title: t("My data and account"), description: t("Get a copy of your information or close your account.") },
+    ];
+    const quickTasks: SettingsQuickTask<SectionId>[] = [
+        { label: t("Make the text bigger"), section: "display", icon: Type, anchor: "settings-text-size" },
+        { label: t("Change my password"), section: "security", icon: KeyRound, anchor: "settings-password" },
+        { label: t("Update my phone number"), section: "profile", icon: Phone, anchor: "settings-about-you" },
+        { label: t("Choose my reminders"), section: "notifications", icon: Bell },
+    ];
 
-    // Mobile Tab Rail Horizontal Scroll State & Affordance
-    const mobileTabRailRef = useRef<HTMLDivElement>(null);
-    const [canScrollLeft, setCanScrollLeft] = useState(false);
-    const [canScrollRight, setCanScrollRight] = useState(true);
-
-    const updateScrollIndicators = useCallback(() => {
-        const el = mobileTabRailRef.current;
-        if (!el) return;
-        const { scrollLeft, scrollWidth, clientWidth } = el;
-        setCanScrollLeft(scrollLeft > 6);
-        setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 6);
-    }, []);
+    // --- Profile form ---
+    const [formData, setFormData] = useState<ProfileForm>(EMPTY_PROFILE);
+    const [savedProfile, setSavedProfile] = useState<ProfileForm>(EMPTY_PROFILE);
+    const [isSavingProfile, setIsSavingProfile] = useState(false);
+    const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
 
     useEffect(() => {
-        const el = mobileTabRailRef.current;
-        if (!el) return;
-        updateScrollIndicators();
-        el.addEventListener("scroll", updateScrollIndicators, { passive: true });
-        window.addEventListener("resize", updateScrollIndicators);
-        return () => {
-            el.removeEventListener("scroll", updateScrollIndicators);
-            window.removeEventListener("resize", updateScrollIndicators);
+        if (!profile) return;
+        const next: ProfileForm = {
+            full_name: profile.full_name || "",
+            email: profile.email || "",
+            phone: profile.phone || "",
+            address: profile.address || "",
+            bio: profile.bio || "",
+            emergency_name: (profile as any).emergency_contact_name || "",
+            emergency_phone: (profile as any).emergency_contact_phone || "",
         };
-    }, [updateScrollIndicators]);
+        setFormData(next);
+        setSavedProfile(next);
+    }, [profile]);
 
-    const scrollMobileTabs = useCallback((direction: "left" | "right") => {
-        const el = mobileTabRailRef.current;
-        if (!el) return;
-        const delta = direction === "left" ? -200 : 200;
-        el.scrollBy({ left: delta, behavior: "smooth" });
-    }, []);
-
-    const handleMobileTabClick = useCallback((tabId: SettingsCategory) => {
-        if (tabId === activeTab) return;
-        setActiveTab(tabId);
-        const el = mobileTabRailRef.current;
-        if (el) {
-            const btn = el.querySelector(`[data-tab-id="${tabId}"]`) as HTMLElement | null;
-            btn?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-        }
-    }, [activeTab]);
-
-    // Mapping of Sub-tabs
-    const SUB_TABS: Record<SettingsCategory, string[]> = {
-        Identity: ["Profile", "Emergency Contact"],
-        Accessibility: ["Readability"],
-        Security: ["Account", "Protection", "Sessions"],
-        Notifications: ["Alerts"],
-        Billing: ["Payment Methods", "History"],
-        Data: ["Export", "Danger"],
-    };
-
-    const { isHighContrast, toggleHighContrast } = useHighContrast();
-
-    // Reset sub-tab when main tab changes
-    const isRestoringFromUrl = useRef(false);
-    useEffect(() => {
-        if (!isRestoringFromUrl.current) {
-            setActiveSubTab(SUB_TABS[activeTab][0]);
-        }
-        isRestoringFromUrl.current = false;
-    }, [activeTab]);
-
-    // Read URL params on mount
-    useEffect(() => {
-        const searchParams = new URLSearchParams(window.location.search);
-        const category = searchParams.get("category");
-        const subtab = searchParams.get("subtab");
-
-        if (category && SUB_TABS[category as SettingsCategory]) {
-            isRestoringFromUrl.current = true;
-            setActiveTab(category as SettingsCategory);
-            if (subtab && SUB_TABS[category as SettingsCategory].includes(subtab)) {
-                setActiveSubTab(subtab);
-            }
-        }
-    }, []);
-
-    const [formData, setFormData] = useState({
-        full_name: "",
-        email: "",
-        phone: "",
-        address: "",
-        bio: "",
-        emergency_name: "",
-        emergency_phone: "",
-    });
-
-    // Security States
-    const [twoFAStatus, setTwoFAStatus] = useState<'loading' | 'disabled' | 'enabled'>('loading');
-    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-    const [showNewPassword, setShowNewPassword] = useState(false);
-    const [currentPassword, setCurrentPassword] = useState("");
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [passwordUpdating, setPasswordUpdating] = useState(false);
-    const [passwordError, setPasswordError] = useState<string | null>(null);
-    const [passwordSuccess, setPasswordSuccess] = useState(false);
-
-    // Sessions States
-    type SessionsState = { sessions: any[]; isSessionsLoading: boolean; currentSessionId: string | null };
-    type SessionsAction =
-        | { type: 'FETCH_SESSIONS_START' }
-        | { type: 'FETCH_SESSIONS_SUCCESS'; payload: { sessions: any[]; currentSessionId: string | null } }
-        | { type: 'FETCH_SESSIONS_ERROR' };
-
-    const sessionsReducer = (state: SessionsState, action: SessionsAction): SessionsState => {
-        switch (action.type) {
-            case 'FETCH_SESSIONS_START':
-                return { ...state, isSessionsLoading: true };
-            case 'FETCH_SESSIONS_SUCCESS':
-                return { ...state, isSessionsLoading: false, sessions: action.payload.sessions, currentSessionId: action.payload.currentSessionId };
-            case 'FETCH_SESSIONS_ERROR':
-                return { ...state, isSessionsLoading: false };
-            default:
-                return state;
-        }
-    };
-
-    const [sessionsState, dispatchSessions] = useReducer(sessionsReducer, {
-        sessions: [], isSessionsLoading: false, currentSessionId: null
-    });
-    const { sessions, isSessionsLoading, currentSessionId } = sessionsState;
-
-    // Notification States
-    const [notifications, setNotifications] = useState({
-        rentEmail: true,
-        rentPush: true,
-        rentSms: true,
-        maintenanceEmail: true,
-        maintenancePush: true,
-        maintenanceSms: false,
-        leaseEmail: true,
-        leasePush: true,
-        leaseSms: false,
-        communityPush: true,
-        offersPush: false,
-    });
-
-    // Inline validation (same rules as the profile API and the other password flows).
     const profileForm = useFormValidation(formData, {
         full_name: (value) => personNameRule(value),
         phone: (value) => phoneRule(value),
@@ -379,93 +187,31 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
         emergency_name: (value) => personNameRule(value, { label: "Contact name", required: false }),
         emergency_phone: (value) => phoneRule(value),
     });
-    const passwordForm = useFormValidation(
-        { currentPassword, newPassword, confirmPassword },
-        {
-            currentPassword: (value) => currentPasswordRule(value, { label: "Current password" }),
-            newPassword: (value) => newPasswordRule(value, { label: "New password" }),
-            confirmPassword: (value, all) => confirmMatchRule(value, all.newPassword, { label: "New passwords" }),
-        },
-    );
 
-    // Data/Export States
-    const [deleteConfirmText, setDeleteConfirmText] = useState("");
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const isProfileDirty = JSON.stringify(formData) !== JSON.stringify(savedProfile);
+    const setField = (name: keyof ProfileForm, value: string) => setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Avatar picker
-    const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
+    /** Props for a text input bound to the profile form. */
+    const bindProfileInput = (name: keyof ProfileForm, id: string, hasHelp = false) => {
+        const props = profileForm.fieldProps(name);
+        const error = tErr(profileForm.errorFor(name));
+        return {
+            ...props,
+            id,
+            "aria-describedby": [hasHelp ? `${id}-help` : null, props["aria-describedby"]].filter(Boolean).join(" ") || undefined,
+            value: formData[name],
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setField(name, e.target.value),
+            className: settingsInputClass(Boolean(error)),
+        };
+    };
 
-    useEffect(() => {
-        if (profile) {
-            setFormData({
-                full_name: profile.full_name || "",
-                email: profile.email || "",
-                phone: profile.phone || "",
-                address: profile.address || "",
-                bio: profile.bio || "",
-                emergency_name: (profile as any).emergency_contact_name || "",
-                emergency_phone: (profile as any).emergency_contact_phone || "",
-            });
-        }
-    }, [profile]);
-
-    // Fetch sessions when Security > Sessions tab is active
-    useEffect(() => {
-        if (activeTab === "Security" && activeSubTab === "Sessions") {
-            const fetchSessions = async () => {
-                dispatchSessions({ type: 'FETCH_SESSIONS_START' });
-                try {
-                    const { data, error } = await (supabase as any).from('user_sessions').select('*').order('updated_at', { ascending: false });
-                    if (error) throw error;
-
-                    const { data: { session } } = await supabase.auth.getSession();
-                    dispatchSessions({
-                        type: 'FETCH_SESSIONS_SUCCESS',
-                        payload: { sessions: data || [], currentSessionId: session ? (session as any).id : null }
-                    });
-                } catch (err) {
-                    console.error("[Sessions] Failed to fetch sessions:", err);
-                    dispatchSessions({ type: 'FETCH_SESSIONS_ERROR' });
-                }
-            };
-            fetchSessions();
-        }
-    }, [activeTab, activeSubTab, supabase]);
-
-    // Fetch 2FA status when Security > Protection is active
-    useEffect(() => {
-        if (activeTab === "Security" && activeSubTab === "Protection") {
-            const fetchTwoFAStatus = async () => {
-                try {
-                    const res = await fetch("/api/tenant/2fa?action=status");
-                    const data = await res.json();
-                    
-                    if (data.enabled) {
-                        setTwoFAStatus('enabled');
-                    } else {
-                        setTwoFAStatus('disabled');
-                    }
-                } catch (err) {
-                    console.error("[2FA] Failed to fetch status:", err);
-                    setTwoFAStatus('disabled');
-                }
-            };
-            fetchTwoFAStatus();
-        }
-    }, [activeTab, activeSubTab]);
-
-    const handleSaveProfile = async () => {
-        if (!profile || isSaving) return;
+    const handleSaveProfile = async (): Promise<boolean> => {
+        if (!profile || isSavingProfile) return false;
         if (!profileForm.validateAll()) {
-            // Errors may sit on the other Identity sub-tab; bring it into view.
-            const emergencyInvalid = Boolean(profileForm.errors.emergency_name || profileForm.errors.emergency_phone);
-            const profileInvalid = Boolean(profileForm.errors.full_name || profileForm.errors.phone || profileForm.errors.address || profileForm.errors.bio);
-            if (!profileInvalid && emergencyInvalid && activeSubTab !== "Emergency Contact") setActiveSubTab("Emergency Contact");
-            if (profileInvalid && activeSubTab !== "Profile") setActiveSubTab("Profile");
-            toast.error(t("Please fix the highlighted fields before saving."));
-            return;
+            toast.error(t("Some details need fixing. Look for the red messages."));
+            return false;
         }
-        setIsSaving(true);
+        setIsSavingProfile(true);
         try {
             const socialsWithEmergency = {
                 ...((profile.socials as any) || {}),
@@ -475,21 +221,13 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
 
             const { error } = await supabase
                 .from("profiles")
-                .update({
-                    full_name: formData.full_name.trim(),
-                    bio: formData.bio.trim(),
-                    socials: socialsWithEmergency,
-                } as any)
+                .update({ full_name: formData.full_name.trim(), bio: formData.bio.trim(), socials: socialsWithEmergency } as any)
                 .eq("id", profile.id);
-
             if (error) throw error;
 
             try {
                 await supabase.auth.updateUser({
-                    data: {
-                        emergency_contact_name: formData.emergency_name,
-                        emergency_contact_phone: formData.emergency_phone,
-                    }
+                    data: { emergency_contact_name: formData.emergency_name, emergency_contact_phone: formData.emergency_phone },
                 });
             } catch {
                 // non-blocking
@@ -498,37 +236,147 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
             const { error: privateError } = await (supabase as any)
                 .from("profile_private")
                 .upsert(
-                    {
-                        profile_id: profile.id,
-                        phone: formData.phone.trim() || null,
-                        address: formData.address.trim() || null,
-                        updated_at: new Date().toISOString(),
-                    },
-                    { onConflict: "profile_id" }
+                    { profile_id: profile.id, phone: formData.phone.trim() || null, address: formData.address.trim() || null, updated_at: new Date().toISOString() },
+                    { onConflict: "profile_id" },
                 );
-
             if (privateError) throw privateError;
 
+            setSavedProfile(formData);
             await refreshProfile();
-            toast.success(t("Profile updated successfully"));
+            flashSaved();
+            toast.success(t("Your profile is saved."));
+            return true;
         } catch (error: any) {
             toast.error(tr(error.message || t("Failed to update profile")));
+            return false;
         } finally {
-            setIsSaving(false);
+            setIsSavingProfile(false);
         }
     };
 
-    const handlePasswordUpdate = async () => {
+    // --- Notifications ---
+    const [notificationPrefs, setNotificationPrefs] = useState<NotificationPrefs>(DEFAULT_NOTIFICATION_PREFS);
+    const [savedNotificationPrefs, setSavedNotificationPrefs] = useState<NotificationPrefs>(DEFAULT_NOTIFICATION_PREFS);
+    const [isSavingNotifications, setIsSavingNotifications] = useState(false);
+
+    useEffect(() => {
+        if (!profile) return;
+        const prefs = readNotificationPrefs(profile.socials);
+        setNotificationPrefs(prefs);
+        setSavedNotificationPrefs(prefs);
+    }, [profile]);
+
+    const isNotificationsDirty = JSON.stringify(notificationPrefs) !== JSON.stringify(savedNotificationPrefs);
+
+    const handleSaveNotifications = async (): Promise<boolean> => {
+        if (!profile || isSavingNotifications) return false;
+        setIsSavingNotifications(true);
+        try {
+            const { error } = await supabase
+                .from("profiles")
+                .update({ socials: { ...((profile.socials as any) || {}), notification_preferences: notificationPrefs } } as any)
+                .eq("id", profile.id);
+            if (error) throw error;
+            setSavedNotificationPrefs(notificationPrefs);
+            await refreshProfile();
+            flashSaved();
+            toast.success(t("Your notification choices are saved."));
+            return true;
+        } catch (error: any) {
+            toast.error(tr(error.message || t("Could not save your notification choices.")));
+            return false;
+        } finally {
+            setIsSavingNotifications(false);
+        }
+    };
+
+    // --- Save bar / unsaved-changes guard ---
+    const [justSaved, setJustSaved] = useState(false);
+    const justSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const flashSaved = () => {
+        setJustSaved(true);
+        if (justSavedTimer.current) clearTimeout(justSavedTimer.current);
+        justSavedTimer.current = setTimeout(() => setJustSaved(false), 3000);
+    };
+
+    const isDirty = isProfileDirty || isNotificationsDirty;
+    const isDirtyRef = useRef(false);
+    useEffect(() => {
+        isDirtyRef.current = isDirty;
+    }, [isDirty]);
+    const [pendingNavigation, setPendingNavigation] = useState<PendingNavigation | null>(null);
+
+    const { section, ready, open, leave } = useSettingsNavigation<SectionId>({
+        sectionIds: SECTION_IDS,
+        resolveLegacy: resolveLegacyLink,
+        shouldBlock: () => isDirtyRef.current,
+        onBlocked: (target) => setPendingNavigation({ kind: "section", id: target }),
+        isDirty,
+        onLeaveBlocked: () => setPendingNavigation({ kind: "back" }),
+    });
+
+    const saveAll = async () => {
+        let ok = true;
+        if (isProfileDirty) ok = (await handleSaveProfile()) && ok;
+        if (isNotificationsDirty) ok = (await handleSaveNotifications()) && ok;
+        return ok;
+    };
+
+    const discardAll = () => {
+        setFormData(savedProfile);
+        profileForm.reset();
+        setNotificationPrefs(savedNotificationPrefs);
+    };
+
+    const continuePendingNavigation = (nav: PendingNavigation) => {
+        setPendingNavigation(null);
+        if (nav.kind === "url") router.push(nav.href);
+        else if (nav.kind === "back") leave();
+        else open(nav.id, { force: true });
+    };
+
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (!isDirtyRef.current) return;
+            e.preventDefault();
+            e.returnValue = "";
+        };
+        window.addEventListener("beforeunload", handleBeforeUnload);
+        return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    }, []);
+
+    const goToDashboard = () => {
+        if (isDirtyRef.current) setPendingNavigation({ kind: "url", href: "/tenant/dashboard" });
+        else router.push("/tenant/dashboard");
+    };
+
+    // --- Security ---
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [passwordUpdating, setPasswordUpdating] = useState(false);
+    const [passwordError, setPasswordError] = useState<string | null>(null);
+    const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+    const passwordForm = useFormValidation(
+        { currentPassword, newPassword, confirmPassword },
+        {
+            currentPassword: (value) => currentPasswordRule(value, { label: "Current password" }),
+            newPassword: (value) => newPasswordRule(value, { label: "New password" }),
+            confirmPassword: (value, all) => confirmMatchRule(value, all.newPassword, { label: "New passwords" }),
+        },
+    );
+
+    const handlePasswordUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
         if (passwordUpdating) return;
         setPasswordError(null);
         setPasswordSuccess(false);
-
         if (!passwordForm.validateAll()) return;
 
         setPasswordUpdating(true);
         try {
-            // The form asks for the current password, so actually verify it
-            // (on a throwaway client so the active session is untouched).
+            // Verify the current password on a throwaway client so the active session is untouched.
             const accountEmail = profile?.email;
             if (accountEmail) {
                 const verifier = createStandaloneSupabaseClient(
@@ -560,8 +408,42 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
         }
     };
 
+    type SessionsState = { sessions: SignedInSession[]; loading: boolean; currentSessionId: string | null };
+    type SessionsAction =
+        | { type: "start" }
+        | { type: "success"; sessions: SignedInSession[]; currentSessionId: string | null }
+        | { type: "error" };
+    const [sessionsState, dispatchSessions] = useReducer(
+        (state: SessionsState, action: SessionsAction): SessionsState => {
+            switch (action.type) {
+                case "start": return { ...state, loading: true };
+                case "success": return { loading: false, sessions: action.sessions, currentSessionId: action.currentSessionId };
+                case "error": return { ...state, loading: false };
+                default: return state;
+            }
+        },
+        { sessions: [], loading: false, currentSessionId: null },
+    );
+
+    const loadSessions = useCallback(async () => {
+        dispatchSessions({ type: "start" });
+        try {
+            const { data, error } = await (supabase as any).from("user_sessions").select("*").order("updated_at", { ascending: false });
+            if (error) throw error;
+            const { data: { session } } = await supabase.auth.getSession();
+            dispatchSessions({ type: "success", sessions: data || [], currentSessionId: session ? (session as any).id : null });
+        } catch (err) {
+            console.error("[Sessions] Failed to fetch sessions:", err);
+            dispatchSessions({ type: "error" });
+        }
+    }, [supabase]);
+
+    useEffect(() => {
+        if (section === "security") loadSessions();
+    }, [section, loadSessions]);
+
     const handleRevokeSession = async (sessionId: string) => {
-        const loadingToast = toast.loading(t("Revoking session..."));
+        const loadingToast = toast.loading(t("Signing out that device…"));
         try {
             const res = await fetch("/api/auth/sessions", {
                 method: "DELETE",
@@ -570,14 +452,11 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Failed to revoke session");
-
-            toast.success(t("Session revoked successfully"), { id: loadingToast });
+            toast.success(t("That device is now signed out."), { id: loadingToast });
             dispatchSessions({
-                type: 'FETCH_SESSIONS_SUCCESS',
-                payload: {
-                    sessions: sessions.filter(s => s.id !== sessionId),
-                    currentSessionId,
-                },
+                type: "success",
+                sessions: sessionsState.sessions.filter((s) => s.id !== sessionId),
+                currentSessionId: sessionsState.currentSessionId,
             });
         } catch (error: any) {
             toast.error(tr(error.message || t("Failed to revoke session")), { id: loadingToast });
@@ -585,29 +464,21 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
     };
 
     const handleSignOutOthers = async () => {
-        dispatchSessions({ type: 'FETCH_SESSIONS_START' });
+        dispatchSessions({ type: "start" });
         const loadingToast = toast.loading(t("Signing out other devices..."));
         try {
             const { error } = await supabase.auth.signOut({ scope: "others" });
             if (error) throw error;
-
             await fetch("/api/auth/sessions", {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ scope: "others" }),
             }).catch(() => null);
-
             toast.success(t("Signed out of all other devices successfully"), { id: loadingToast });
-            const { data } = await (supabase as any).from('user_sessions').select('*').order('updated_at', { ascending: false });
-            if (data) {
-                dispatchSessions({ 
-                    type: 'FETCH_SESSIONS_SUCCESS', 
-                    payload: { sessions: data, currentSessionId: currentSessionId } 
-                });
-            }
+            await loadSessions();
         } catch (error: any) {
             toast.error(tr(error.message || t("Failed to sign out other devices")), { id: loadingToast });
-            dispatchSessions({ type: 'FETCH_SESSIONS_ERROR' });
+            dispatchSessions({ type: "error" });
         }
     };
 
@@ -619,1123 +490,356 @@ export function TenantSettings({ isMobile }: { isMobile?: boolean } = {}) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ scope: "global" }),
             }).catch(() => null);
-
             await signOut({ scope: "global" });
         } catch (error: any) {
             toast.error(tr(error.message || t("Failed to sign out globally")), { id: loadingToast });
         }
     };
 
-    const handleDeleteAccount = async () => {
-        if (deleteConfirmText !== "DELETE") return;
-        
-        toast.error(t("Account deletion is not yet implemented. Please contact support."));
-        setShowDeleteConfirm(false);
-        setDeleteConfirmText("");
+    // --- Page renderers ---
+
+    const renderProfile = () => {
+        const displayName = formData.full_name || profile?.full_name || t("Resident");
+        return (
+            <>
+                <SettingsCard id="settings-photo" title={t("Your photo")} description={t("This photo helps your landlord recognize you.")}>
+                    <div className="flex flex-col items-center gap-5 sm:flex-row">
+                        <div
+                            className="relative flex size-28 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-foreground/15"
+                            style={{ backgroundColor: profile?.avatar_bg_color || "#3B82F6" }}
+                        >
+                            {profile?.avatar_url ? (
+                                <Image src={profile.avatar_url} alt={t("Your photo")} fill sizes="112px" className="object-cover" />
+                            ) : (
+                                <span className="text-5xl font-black text-white" aria-hidden>
+                                    {displayName.charAt(0).toUpperCase()}
+                                </span>
+                            )}
+                        </div>
+                        <div className="space-y-3 text-center sm:text-left">
+                            <p className="text-xl font-bold text-foreground">{displayName}</p>
+                            <SettingsButton variant="secondary" icon={Camera} onClick={() => setIsAvatarPickerOpen(true)}>
+                                {t("Change my photo")}
+                            </SettingsButton>
+                        </div>
+                    </div>
+                </SettingsCard>
+
+                <SettingsCard id="settings-about-you" title={t("About you")} description={t("Press Save changes at the bottom of the screen when you are done.")}>
+                    <div className="space-y-6">
+                        <SettingsField label={t("Full name")} htmlFor="tenant-full-name" error={tErr(profileForm.errorFor("full_name"))} errorId={profileForm.errorId("full_name")}>
+                            <input type="text" autoComplete="name" maxLength={TEXT_LIMITS.personName} {...bindProfileInput("full_name", "tenant-full-name")} />
+                        </SettingsField>
+
+                        <SettingsField label={t("Email address")} htmlFor="tenant-email" help={t("You use this email to sign in, so it cannot be changed here.")}>
+                            <input id="tenant-email" type="email" value={formData.email} disabled aria-describedby="tenant-email-help" className={settingsInputClass(false)} />
+                        </SettingsField>
+
+                        <SettingsField
+                            label={t("Phone number")}
+                            htmlFor="tenant-phone"
+                            help={t("Example: 0917 123 4567")}
+                            error={tErr(profileForm.errorFor("phone"))}
+                            errorId={profileForm.errorId("phone")}
+                        >
+                            <input type="tel" inputMode="tel" autoComplete="tel" maxLength={25} {...bindProfileInput("phone", "tenant-phone", true)} />
+                        </SettingsField>
+
+                        <SettingsField label={t("Home address")} htmlFor="tenant-address" optional error={tErr(profileForm.errorFor("address"))} errorId={profileForm.errorId("address")}>
+                            <input type="text" autoComplete="street-address" maxLength={TEXT_LIMITS.address} {...bindProfileInput("address", "tenant-address")} />
+                        </SettingsField>
+
+                        <SettingsField
+                            label={t("A few words about you")}
+                            htmlFor="tenant-bio"
+                            optional
+                            help={t("Your landlord can see this.")}
+                            counter={{ current: formData.bio.length, max: BIO_MAX_LENGTH }}
+                            error={tErr(profileForm.errorFor("bio"))}
+                            errorId={profileForm.errorId("bio")}
+                        >
+                            <textarea rows={4} maxLength={BIO_MAX_LENGTH} {...bindProfileInput("bio", "tenant-bio", true)} className={settingsInputClass(Boolean(profileForm.errorFor("bio")), "resize-y")} />
+                        </SettingsField>
+                    </div>
+                </SettingsCard>
+
+                <SettingsCard id="settings-emergency" title={t("Emergency contact")} description={t("Someone we can call if something happens to you. For example, a family member.")}>
+                    <div className="space-y-6">
+                        <SettingsField label={t("Their name")} htmlFor="tenant-emergency-name" optional error={tErr(profileForm.errorFor("emergency_name"))} errorId={profileForm.errorId("emergency_name")}>
+                            <input type="text" maxLength={TEXT_LIMITS.personName} {...bindProfileInput("emergency_name", "tenant-emergency-name")} />
+                        </SettingsField>
+                        <SettingsField
+                            label={t("Their phone number")}
+                            htmlFor="tenant-emergency-phone"
+                            optional
+                            error={tErr(profileForm.errorFor("emergency_phone"))}
+                            errorId={profileForm.errorId("emergency_phone")}
+                        >
+                            <input type="tel" inputMode="tel" maxLength={25} {...bindProfileInput("emergency_phone", "tenant-emergency-phone")} />
+                        </SettingsField>
+                    </div>
+                </SettingsCard>
+            </>
+        );
     };
 
-    const renderIdentity = () => {
-        const renderSubContent = () => {
-            switch (activeSubTab) {
-                case "Profile":
-                    return (
-                        <div className="space-y-6 sm:space-y-8">
-                            <GlassCard title={t("Avatar & Identity")} description={t("Your primary identification photo.")}>
-                                <div className="flex flex-col items-center py-4">
-                                    <div 
-                                        className="group relative flex size-32 sm:size-40 items-center justify-center rounded-[2.5rem] sm:rounded-[3rem] neumorphic-inset shadow-xl transition-transform hover:scale-105"
-                                        style={{ backgroundColor: profile?.avatar_bg_color || "#3B82F6" }}
-                                    >
-                                        {profile?.avatar_url ? (
-                                            <Image src={profile.avatar_url} alt={t("Avatar")} fill sizes="160px" className="rounded-[2.3rem] sm:rounded-[2.8rem] object-cover" />
-                                        ) : (
-                                            <span className="text-4xl sm:text-5xl font-black text-white">
-                                                {(formData.full_name || profile?.full_name || "T").charAt(0).toUpperCase()}
-                                            </span>
-                                        )}
-                                        <button 
-                                            type="button"
-                                            onClick={() => setIsAvatarPickerOpen(true)}
-                                            className="absolute -bottom-2 -right-2 flex size-10 sm:size-12 items-center justify-center rounded-2xl neumorphic-primary text-primary-foreground transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-md"
-                                            title={t("Change avatar")}
-                                        >
-                                            <Camera className="size-5 sm:size-6" />
-                                        </button>
-                                    </div>
-                                    <h4 className="mt-5 sm:mt-6 text-lg sm:text-xl font-black text-foreground">{formData.full_name || profile?.full_name || t("Resident")}</h4>
-                                    <p className="text-xs sm:text-sm text-muted-foreground">{t("Verified Resident")}</p>
-                                </div>
-                            </GlassCard>
-
-                            <GlassCard title={t("Profile Information")} description={t("Basic details about you.")}>
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                    <SettingField label={t("Full Name")} icon={User} description={t("Your verified name.")}>
-                                        <input maxLength={TEXT_LIMITS.personName}
-                                            {...profileForm.fieldProps("full_name")}
-                                            aria-label={t("Full name")}
-                                            type="text"
-                                            autoComplete="name"
-                                            value={formData.full_name}
-                                            onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                            className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("full_name") && "ring-1 ring-rose-500/50")}
-                                        />
-                                        <FieldError id={profileForm.errorId("full_name")} message={tErr(profileForm.errorFor("full_name"))} />
-                                    </SettingField>
-                                    <SettingField label={t("Email")} icon={Mail} description={t("Your verified email.")}>
-                                        <input maxLength={50}
-                                            type="email"
-                                            value={formData.email}
-                                            disabled
-                                            className="w-full cursor-not-allowed rounded-xl neumorphic-inset opacity-60 px-4 py-3 text-sm text-muted-foreground"
-                                        />
-                                    </SettingField>
-                                    <SettingField label={t("Phone Number")} icon={Phone}>
-                                        <input maxLength={25}
-                                            {...profileForm.fieldProps("phone")}
-                                            aria-label={t("Phone number")}
-                                            type="tel"
-                                            inputMode="tel"
-                                            autoComplete="tel"
-                                            value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                            className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("phone") && "ring-1 ring-rose-500/50")}
-                                        />
-                                        <FieldError id={profileForm.errorId("phone")} message={tErr(profileForm.errorFor("phone"))} />
-                                    </SettingField>
-                                    <SettingField label={t("Address")} icon={Home}>
-                                        <input maxLength={TEXT_LIMITS.address}
-                                            {...profileForm.fieldProps("address")}
-                                            aria-label={t("Address")}
-                                            type="text"
-                                            autoComplete="street-address"
-                                            value={formData.address}
-                                            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                            className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("address") && "ring-1 ring-rose-500/50")}
-                                        />
-                                        <FieldError id={profileForm.errorId("address")} message={tErr(profileForm.errorFor("address"))} />
-                                    </SettingField>
-                                    <div className="md:col-span-2">
-                                        <SettingField label={t("Bio")} icon={FileText} description={t("Tell landlords a bit about yourself.")}>
-                                            <textarea maxLength={BIO_MAX_LENGTH}
-                                                {...profileForm.fieldProps("bio")}
-                                                aria-label={t("Bio")}
-                                                rows={4}
-                                                value={formData.bio}
-                                                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                                                className={cn("w-full resize-none rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("bio") && "ring-1 ring-rose-500/50")}
-                                            />
-                                            <FieldError id={profileForm.errorId("bio")} message={tErr(profileForm.errorFor("bio"))} />
-                                        </SettingField>
-                                    </div>
-                                </div>
-                            </GlassCard>
-                        </div>
-                    );
-                case "Emergency Contact":
-                    return (
-                        <GlassCard title={t("Emergency Contact")} description={t("Someone we can contact in case of emergency.")}>
-                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <SettingField label={t("Contact Name")} icon={User}>
-                                    <input maxLength={TEXT_LIMITS.personName}
-                                        {...profileForm.fieldProps("emergency_name")}
-                                        aria-label={t("Emergency contact name")}
-                                        type="text"
-                                        value={formData.emergency_name}
-                                        onChange={(e) => setFormData({ ...formData, emergency_name: e.target.value })}
-                                        className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("emergency_name") && "ring-1 ring-rose-500/50")}
-                                    />
-                                    <FieldError id={profileForm.errorId("emergency_name")} message={tErr(profileForm.errorFor("emergency_name"))} />
-                                </SettingField>
-                                <SettingField label={t("Contact Phone")} icon={Phone}>
-                                    <input maxLength={25}
-                                        {...profileForm.fieldProps("emergency_phone")}
-                                        aria-label={t("Emergency contact phone")}
-                                        type="tel"
-                                        inputMode="tel"
-                                        value={formData.emergency_phone}
-                                        onChange={(e) => setFormData({ ...formData, emergency_phone: e.target.value })}
-                                        className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", profileForm.errorFor("emergency_phone") && "ring-1 ring-rose-500/50")}
-                                    />
-                                    <FieldError id={profileForm.errorId("emergency_phone")} message={tErr(profileForm.errorFor("emergency_phone"))} />
-                                </SettingField>
-                            </div>
-                        </GlassCard>
-                    );
-                default: return null;
-            }
-        };
-
-        return (
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6 sm:space-y-8"
-            >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
-                    <div>
-                        <h2 className="text-2xl sm:text-3xl font-black text-foreground">{t("Profile")}</h2>
-                        <p className="text-xs sm:text-sm text-muted-foreground">{t("Control your personal information.")}</p>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={handleSaveProfile}
-                        disabled={isSaving}
-                        className="flex items-center gap-2 rounded-xl sm:rounded-2xl neumorphic-primary px-6 sm:px-8 py-2.5 sm:py-3.5 text-xs sm:text-sm font-black text-primary-foreground shadow-md transition-all active:scale-95 disabled:opacity-50 cursor-pointer w-fit"
+    const renderSecurity = () => (
+        <>
+            <SettingsCard id="settings-password" title={t("Change your password")} description={t("Use at least 8 characters. A short sentence you can remember works well.")}>
+                <form onSubmit={handlePasswordUpdate} className="space-y-6" noValidate>
+                    {passwordSuccess && (
+                        <SettingsNotice tone="success" title={t("Your password is changed.")} live>
+                            {t("Use your new password the next time you sign in.")}
+                        </SettingsNotice>
+                    )}
+                    {passwordError && (
+                        <SettingsNotice tone="danger" title={t("Your password was not changed.")} live>
+                            {t(passwordError)}
+                        </SettingsNotice>
+                    )}
+                    <SettingsField
+                        label={t("Your current password")}
+                        htmlFor="tenant-current-password"
+                        error={tErr(passwordForm.errorFor("currentPassword"))}
+                        errorId={passwordForm.errorId("currentPassword")}
                     >
-                        {isSaving ? t("Saving...") : <><Save className="size-4 sm:size-5" /> {t("Save Changes")}</>}
-                    </button>
-                </div>
+                        <SettingsPasswordInput
+                            id="tenant-current-password"
+                            autoComplete="current-password"
+                            maxLength={CURRENT_PASSWORD_MAX_LENGTH}
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            hasError={Boolean(passwordForm.errorFor("currentPassword"))}
+                            {...passwordForm.fieldProps("currentPassword")}
+                        />
+                    </SettingsField>
+                    <SettingsField
+                        label={t("New password")}
+                        htmlFor="tenant-new-password"
+                        error={tErr(passwordForm.errorFor("newPassword"))}
+                        errorId={passwordForm.errorId("newPassword")}
+                    >
+                        <SettingsPasswordInput
+                            id="tenant-new-password"
+                            autoComplete="new-password"
+                            maxLength={PASSWORD_MAX_LENGTH}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            hasError={Boolean(passwordForm.errorFor("newPassword"))}
+                            {...passwordForm.fieldProps("newPassword")}
+                        />
+                    </SettingsField>
+                    <SettingsField
+                        label={t("Type the new password again")}
+                        htmlFor="tenant-confirm-password"
+                        error={tErr(passwordForm.errorFor("confirmPassword"))}
+                        errorId={passwordForm.errorId("confirmPassword")}
+                    >
+                        <SettingsPasswordInput
+                            id="tenant-confirm-password"
+                            autoComplete="new-password"
+                            maxLength={PASSWORD_MAX_LENGTH}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            hasError={Boolean(passwordForm.errorFor("confirmPassword"))}
+                            {...passwordForm.fieldProps("confirmPassword")}
+                        />
+                    </SettingsField>
+                    <SettingsButton type="submit" size="lg" icon={KeyRound} loading={passwordUpdating} className="w-full sm:w-auto">
+                        {passwordUpdating ? t("Changing your password…") : t("Change my password")}
+                    </SettingsButton>
+                </form>
+            </SettingsCard>
 
-                <SubNav 
-                    tabs={SUB_TABS.Identity} 
-                    activeTab={activeSubTab} 
-                    onTabChange={setActiveSubTab} 
-                />
-
-                <div className="mt-6 sm:mt-8">
-                    {renderSubContent()}
-                </div>
-            </motion.div>
-        );
-    };
-
-    const renderSecurity = () => {
-        const renderSubContent = () => {
-            switch (activeSubTab) {
-                case "Account":
-                    return (
-                        <GlassCard title={t("Change Password")} description={t("Ensure your account is using a long, random password to stay secure.")}>
-                            <div className="space-y-6 max-w-lg">
-                                <SettingField label={t("Current Password")} icon={Key}>
-                                    <div className="relative">
-                                        <input maxLength={CURRENT_PASSWORD_MAX_LENGTH}
-                                            {...passwordForm.fieldProps("currentPassword")}
-                                            aria-label={t("Current password")}
-                                            type={showCurrentPassword ? "text" : "password"}
-                                            autoComplete="current-password"
-                                            value={currentPassword}
-                                            onChange={(e) => setCurrentPassword(e.target.value)}
-                                            placeholder="••••••••"
-                                            className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary pr-10", passwordForm.errorFor("currentPassword") && "ring-1 ring-rose-500/50")}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                            aria-label={showCurrentPassword ? t("Hide password") : t("Show password")}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                                        >
-                                            {showCurrentPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                                        </button>
-                                    </div>
-                                    <FieldError id={passwordForm.errorId("currentPassword")} message={tErr(passwordForm.errorFor("currentPassword"))} />
-                                </SettingField>
-                                <SettingField label={t("New Password")} icon={Key}>
-                                    <div className="relative">
-                                        <input maxLength={PASSWORD_MAX_LENGTH}
-                                            {...passwordForm.fieldProps("newPassword")}
-                                            aria-label={t("New password")}
-                                            type={showNewPassword ? "text" : "password"}
-                                            autoComplete="new-password"
-                                            value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
-                                            placeholder="••••••••"
-                                            className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary pr-10", passwordForm.errorFor("newPassword") && "ring-1 ring-rose-500/50")}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowNewPassword(!showNewPassword)}
-                                            aria-label={showNewPassword ? t("Hide password") : t("Show password")}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                                        >
-                                            {showNewPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                                        </button>
-                                    </div>
-                                    <FieldError id={passwordForm.errorId("newPassword")} message={tErr(passwordForm.errorFor("newPassword"))} />
-                                </SettingField>
-                                <SettingField label={t("Confirm New Password")} icon={Key}>
-                                    <input maxLength={PASSWORD_MAX_LENGTH}
-                                        {...passwordForm.fieldProps("confirmPassword")}
-                                        aria-label={t("Confirm new password")}
-                                        type="password"
-                                        autoComplete="new-password"
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        placeholder="••••••••"
-                                        className={cn("w-full rounded-xl neumorphic-inset px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary", passwordForm.errorFor("confirmPassword") && "ring-1 ring-rose-500/50")}
-                                    />
-                                    <FieldError id={passwordForm.errorId("confirmPassword")} message={tErr(passwordForm.errorFor("confirmPassword"))} />
-                                </SettingField>
-                                
-                                {/* Password Strength Indicator */}
-                                {newPassword && (
-                                    <div className="space-y-2">
-                                        <div className="flex gap-1">
-                                            {[1, 2, 3, 4].map((i) => (
-                                                <div
-                                                    key={`strength-${i}`}
-                                                    className={cn(
-                                                        "h-1.5 flex-1 rounded-full transition-colors",
-                                                        newPassword.length >= i * 3
-                                                            ? newPassword.length >= 12 ? "bg-emerald-500" : newPassword.length >= 8 ? "bg-amber-500" : "bg-rose-500"
-                                                            : "bg-muted"
-                                                    )}
-                                                />
-                                            ))}
-                                        </div>
-                                        <p className="text-xs text-muted-foreground">
-                                            {newPassword.length < 8 ? t("Weak password") : newPassword.length < 10 ? t("Fair password") : t("Strong password")}
-                                        </p>
-                                    </div>
-                                )}
-                                
-                                {passwordSuccess && (
-                                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                                        <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">{t("Password updated successfully!")}</p>
-                                    </div>
-                                )}
-                                {passwordError && (
-                                    <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20">
-                                        <p className="text-sm text-rose-600 dark:text-rose-400 font-medium">{t(passwordError)}</p>
-                                    </div>
-                                )}
-                                <button 
-                                    type="button"
-                                    onClick={handlePasswordUpdate}
-                                    disabled={passwordUpdating}
-                                    className="w-full rounded-xl sm:rounded-2xl neumorphic-primary py-3 text-sm font-black text-primary-foreground transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer"
-                                >
-                                    {passwordUpdating ? t("Updating...") : t("Update Password")}
-                                </button>
-                            </div>
-                        </GlassCard>
-                    );
-                case "Protection":
-                    return (
-                        <div className="space-y-6 max-w-2xl">
-                            <SecurityKeyManagementCard accountEmail={profile?.email || undefined} />
-
-                            <TwoFactorManagementCard
-                                apiEndpoint="/api/tenant/2fa"
-                                accountEmail={profile?.email || undefined}
-                            />
-                        </div>
-                    );
-                case "Sessions":
-                    return (
-                        <GlassCard title={t("Active Sessions")} description={t("Devices and browsers currently logged into your tenant account.")}>
-                            <div className="space-y-4 max-w-xl">
-                                {isSessionsLoading && sessions.length === 0 ? (
-                                    <div className="text-center py-6 text-xs text-muted-foreground uppercase tracking-widest font-black">{t("Loading sessions...")}</div>
-                                ) : sessions.length === 0 ? (
-                                    <div className="text-center py-6 text-xs text-muted-foreground uppercase tracking-widest font-black">{t("No active sessions found")}</div>
-                                ) : (
-                                    sessions.map((sess) => {
-                                        const deviceInfo = parseUserAgent(sess.user_agent);
-                                        const isCurrent = sess.id === currentSessionId;
-                                        const isMobile = deviceInfo.deviceType === "mobile" || deviceInfo.deviceType === "tablet";
-                                        const Icon = isMobile ? Smartphone : Monitor;
-
-                                        return (
-                                            <div key={sess.id} className={cn(
-                                                "flex items-center justify-between rounded-2xl border p-4 transition-all gap-4",
-                                                isCurrent 
-                                                    ? "border-primary/40 bg-primary/5 neumorphic-panel" 
-                                                    : "border-border/60 neumorphic-extruded hover:border-border"
-                                            )}>
-                                                <div className="flex items-center gap-4 min-w-0">
-                                                    <div className={cn(
-                                                        "flex size-10 items-center justify-center rounded-xl shrink-0",
-                                                        isCurrent ? "bg-primary/20 text-primary" : "neumorphic-inset text-muted-foreground"
-                                                    )}>
-                                                        <Icon className="size-5" />
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <div className="flex items-center gap-2">
-                                                            <h4 className="text-sm font-black text-foreground truncate">{deviceInfo.label}</h4>
-                                                            {isCurrent && (
-                                                                <span className="rounded-md bg-primary/20 px-2 py-0.5 text-[10px] font-black text-primary uppercase tracking-wider shrink-0">
-                                                                    {t("This Device")}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <p className="text-[11px] text-muted-foreground truncate">
-                                                            {isCurrent ? t("Active now") : <>{t("Last active")} <ClientOnlyDate date={sess.updated_at} locale={locale} format={{ month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }} /></>} • IP: {sess.ip || t("Unknown IP")}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                {!isCurrent && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRevokeSession(sess.id)}
-                                                        className="px-3 py-1.5 rounded-xl text-xs font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 transition-colors shrink-0 cursor-pointer"
-                                                        title={t("Revoke this device")}
-                                                    >
-                                                        {t("Revoke")}
-                                                    </button>
-                                                )}
-                                            </div>
-                                        );
-                                    })
-                                )}
-                                
-                                {sessions.length > 1 && (
-                                    <div className="pt-4 flex flex-wrap items-center gap-4 border-t border-border/60">
-                                        <button 
-                                            type="button"
-                                            onClick={handleSignOutOthers}
-                                            disabled={isSessionsLoading}
-                                            className="flex items-center gap-2 text-xs font-black text-amber-600 dark:text-amber-400 hover:underline transition-colors disabled:opacity-50 cursor-pointer"
-                                        >
-                                            <LogOut className="size-3.5" /> {t("Sign out all other devices")}
-                                        </button>
-
-                                        <button 
-                                            type="button"
-                                            onClick={handleSignOutAll}
-                                            disabled={isSessionsLoading}
-                                            className="flex items-center gap-2 text-xs font-black text-rose-600 dark:text-rose-400 hover:underline transition-colors disabled:opacity-50 cursor-pointer"
-                                        >
-                                            <ShieldCheck className="size-3.5" /> {t("Sign out of all devices (Global Reset)")}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </GlassCard>
-                    );
-                default: return null;
-            }
-        };
-
-        return (
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6 sm:space-y-8"
+            <SettingsCard
+                id="settings-extra-protection"
+                title={t("Extra protection (optional)")}
+                description={t("These add a second check when you sign in, so no one else can get in even if they learn your password.")}
             >
-                <div>
-                    <h2 className="text-2xl sm:text-3xl font-black text-foreground">{t("Security & Login")}</h2>
-                    <p className="text-xs sm:text-sm text-muted-foreground">{t("Protect your account and manage active sessions.")}</p>
+                <div className="space-y-6">
+                    <TwoFactorManagementCard apiEndpoint="/api/tenant/2fa" accountEmail={profile?.email || undefined} />
+                    <SecurityKeyManagementCard accountEmail={profile?.email || undefined} />
                 </div>
+            </SettingsCard>
 
-                <SubNav 
-                    tabs={SUB_TABS.Security} 
-                    activeTab={activeSubTab} 
-                    onTabChange={setActiveSubTab} 
-                />
-
-                <div className="mt-6 sm:mt-8">
-                    {renderSubContent()}
-                </div>
-            </motion.div>
-        );
-    };
-
-    const renderNotifications = () => (
-        <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6 sm:space-y-8"
-        >
-            <div>
-                <h2 className="text-2xl sm:text-3xl font-black text-foreground">{t("Notifications")}</h2>
-                <p className="text-xs sm:text-sm text-muted-foreground">{t("Choose how and when you want to be alerted.")}</p>
-            </div>
-
-            <SubNav 
-                tabs={SUB_TABS.Notifications} 
-                activeTab={activeSubTab} 
-                onTabChange={setActiveSubTab} 
+            <SignedInDevicesCard
+                sessions={sessionsState.sessions}
+                loading={sessionsState.loading}
+                currentSessionId={sessionsState.currentSessionId}
+                onSignOutDevice={handleRevokeSession}
+                onSignOutOthers={handleSignOutOthers}
+                onSignOutEverywhere={handleSignOutAll}
             />
-
-            <div className="mt-6 sm:mt-8">
-                <GlassCard className="!p-0 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr className="border-b border-border/60 bg-muted/30">
-                                    <th className="px-6 sm:px-8 py-4 sm:py-5 text-xs font-black uppercase tracking-widest text-muted-foreground">{t("Activity Type")}</th>
-                                    <th className="px-4 py-4 sm:py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">Email</th>
-                                    <th className="px-4 py-4 sm:py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">Push</th>
-                                    <th className="px-4 py-4 sm:py-5 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">SMS</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border/40">
-                                {[
-                                    { key: "rent", label: "Rent Reminders", desc: "When rent is due and payment confirmations." },
-                                    { key: "maintenance", label: "Maintenance Updates", desc: "Status changes for your maintenance requests." },
-                                    { key: "lease", label: "Lease Updates", desc: "Renewals, expirations and document signing." },
-                                    { key: "community", label: "Community Announcements", desc: "News and updates from your property." },
-                                    { key: "offers", label: "Special Offers", desc: "Exclusive deals and recommendations." },
-                                ].map((item) => (
-                                    <tr key={item.key} className="transition-colors hover:bg-muted/10">
-                                        <td className="px-6 sm:px-8 py-5 sm:py-6">
-                                            <h4 className="text-sm font-black text-foreground">{t(item.label)}</h4>
-                                            <p className="text-xs text-muted-foreground">{t(item.desc)}</p>
-                                        </td>
-                                        <td className="px-4 py-5 sm:py-6 text-center">
-                                            <ToggleSwitch 
-                                                size="small"
-                                                enabled={notifications[`${item.key}Email` as keyof typeof notifications] ?? false} 
-                                                onToggle={() => setNotifications(prev => ({ ...prev, [`${item.key}Email`]: !prev[`${item.key}Email` as keyof typeof notifications] }))} 
-                                            />
-                                        </td>
-                                        <td className="px-4 py-5 sm:py-6 text-center">
-                                            <ToggleSwitch 
-                                                size="small"
-                                                enabled={notifications[`${item.key}Push` as keyof typeof notifications] ?? false} 
-                                                onToggle={() => setNotifications(prev => ({ ...prev, [`${item.key}Push`]: !prev[`${item.key}Push` as keyof typeof notifications] }))} 
-                                            />
-                                        </td>
-                                        <td className="px-4 py-5 sm:py-6 text-center">
-                                            <ToggleSwitch 
-                                                size="small"
-                                                enabled={notifications[`${item.key}Sms` as keyof typeof notifications] ?? false} 
-                                                onToggle={() => setNotifications(prev => ({ ...prev, [`${item.key}Sms`]: !prev[`${item.key}Sms` as keyof typeof notifications] }))} 
-                                            />
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div className="flex items-center justify-end gap-3 border-t border-border/60 p-4 sm:p-6 bg-muted/20">
-                        <button 
-                            type="button"
-                            onClick={() => {
-                                setNotifications({
-                                    rentEmail: true,
-                                    rentPush: true,
-                                    rentSms: true,
-                                    maintenanceEmail: true,
-                                    maintenancePush: true,
-                                    maintenanceSms: false,
-                                    leaseEmail: true,
-                                    leasePush: true,
-                                    leaseSms: false,
-                                    communityPush: true,
-                                    offersPush: false,
-                                });
-                                toast.info(t("Reset to default preferences"));
-                            }}
-                            className="text-xs font-black text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                        >
-                            {t("Reset to Defaults")}
-                        </button>
-                        <button 
-                            type="button"
-                            onClick={() => toast.success(t("Notification preferences saved"))}
-                            className="rounded-xl neumorphic-primary px-5 py-2 text-xs font-black text-primary-foreground shadow-md transition-all active:scale-95 cursor-pointer"
-                        >
-                            {t("Save Preferences")}
-                        </button>
-                    </div>
-                </GlassCard>
-            </div>
-        </motion.div>
+        </>
     );
 
-    const renderBilling = () => {
-        const renderSubContent = () => {
-            switch (activeSubTab) {
-                case "Payment Methods":
-                    return (
-                        <div className="space-y-6">
-                            <GlassCard title={t("Payment Methods")} description={t("Manage your payment options.")}>
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between p-4 rounded-2xl border border-primary/30 bg-primary/5 neumorphic-panel">
-                                        <div className="flex items-center gap-3">
-                                            <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                                <Wallet className="size-5 text-primary" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-foreground">GCash (E-Wallet)</p>
-                                                <p className="text-xs text-muted-foreground">{t("Connected")}</p>
-                                            </div>
-                                        </div>
-                                        <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-black text-primary">{t("DEFAULT")}</span>
-                                    </div>
-                                    
-                                    <button 
-                                        type="button"
-                                        onClick={() => toast.info(t("Additional payment methods can be configured during checkout."))}
-                                        className="flex items-center justify-center gap-2 w-full p-4 rounded-2xl border border-dashed border-border/80 text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all cursor-pointer"
-                                    >
-                                        <Plus className="size-4" /> {t("Add Payment Method")}
-                                    </button>
-                                </div>
-                            </GlassCard>
-                        </div>
-                    );
-                case "History":
-                    return (
-                        <GlassCard title={t("Payment History")} description={t("Your recent transactions.")}>
-                            <div className="space-y-3">
-                                {[
-                                    { date: "Feb 1, 2026", amount: "₱2,450.00", status: "Paid", receipt: "#REC-2026-02" },
-                                    { date: "Jan 1, 2026", amount: "₱2,450.00", status: "Paid", receipt: "#REC-2026-01" },
-                                    { date: "Dec 1, 2025", amount: "₱2,450.00", status: "Paid", receipt: "#REC-2025-12" },
-                                    { date: "Nov 1, 2025", amount: "₱2,450.00", status: "Paid", receipt: "#REC-2025-11" },
-                                ].map((item) => (
-                                    <div key={item.receipt} className="flex items-center justify-between p-4 rounded-2xl neumorphic-extruded hover:shadow-md transition-all group">
-                                        <div className="flex items-center gap-4">
-                                            <div className="size-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                                                <CheckCircle className="size-5" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-foreground">{item.receipt}</p>
-                                                <p className="text-xs text-muted-foreground">{item.date}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <span className="text-sm font-black text-foreground">{item.amount}</span>
-                                            <button 
-                                                type="button"
-                                                onClick={() => toast.success(t("Downloading {receipt}", { receipt: item.receipt }))}
-                                                aria-label={t("Download receipt {receipt}", { receipt: item.receipt })}
-                                                className="opacity-0 group-hover:opacity-100 text-xs text-primary hover:text-primary/80 font-medium transition-all cursor-pointer"
-                                            >
-                                                <Download className="size-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </GlassCard>
-                    );
-                default: return null;
-            }
-        };
+    const renderNotifications = () => (
+        <SettingsCard title={t("What should we tell you about?")} description={t("Tap a button to turn it on or off. Then press Save changes at the bottom.")}>
+            <NotificationTopicsList<NotificationTopicKey, NotificationChannelKey>
+                topics={[
+                    { key: "rent", icon: Receipt, label: t("Rent reminders"), description: t("Before rent is due, and when we receive your payment.") },
+                    { key: "maintenance", icon: Wrench, label: t("Repair updates"), description: t("When your repair request moves forward.") },
+                    { key: "lease", icon: FileText, label: t("Lease updates"), description: t("Renewals, end dates and papers to sign.") },
+                    { key: "community", icon: Megaphone, label: t("News from your building"), description: t("Announcements from your landlord.") },
+                    { key: "offers", icon: Tag, label: t("Special offers"), description: t("Deals and suggestions. You can leave this off.") },
+                ]}
+                channels={[
+                    { key: "email", label: t("Email") },
+                    { key: "push", label: t("Alert in the app") },
+                ]}
+                isOn={(topic, channel) => notificationPrefs[topic][channel]}
+                onToggle={(topic, channel) =>
+                    setNotificationPrefs((prev) => ({ ...prev, [topic]: { ...prev[topic], [channel]: !prev[topic][channel] } }))
+                }
+            />
+            <div className="mt-6 border-t-2 border-border pt-6">
+                <SettingsButton variant="ghost" onClick={() => setNotificationPrefs(DEFAULT_NOTIFICATION_PREFS)}>
+                    {t("Go back to the recommended choices")}
+                </SettingsButton>
+            </div>
+        </SettingsCard>
+    );
 
-        return (
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6 sm:space-y-8"
-            >
-                <div>
-                    <h2 className="text-2xl sm:text-3xl font-black text-foreground">{t("Billing & Payments")}</h2>
-                    <p className="text-xs sm:text-sm text-muted-foreground">{t("Manage your payment methods and view transaction history.")}</p>
-                </div>
-
-                <SubNav 
-                    tabs={SUB_TABS.Billing} 
-                    activeTab={activeSubTab} 
-                    onTabChange={setActiveSubTab} 
+    const renderPayments = () => (
+        <SettingsCard title={t("Your bills and payments")} description={t("Bills, receipts and your payment history are kept on the Payments page.")}>
+            <div className="space-y-4">
+                <SettingsLinkRow
+                    title={t("See my bills and pay rent")}
+                    description={t("View what you owe, pay, and download receipts.")}
+                    action={
+                        <Link href="/tenant/payments" className={settingsButtonClass("primary", "md")}>
+                            <Wallet className="size-5" aria-hidden />
+                            <span>{t("Go to Payments")}</span>
+                        </Link>
+                    }
                 />
-
-                <div className="mt-6 sm:mt-8">
-                    {renderSubContent()}
-                </div>
-            </motion.div>
-        );
-    };
-
-    const renderData = () => {
-        const renderSubContent = () => {
-            switch (activeSubTab) {
-                case "Export":
-                    return (
-                        <GlassCard title={t("Data Export")} description={t("Download a copy of your data from iReside.")}>
-                            <div className="space-y-6 max-w-lg">
-                                <p className="text-sm text-muted-foreground">{t("Request a copy of your personal data including profile, lease history, payment records, and communications.")}</p>
-                                
-                                <div className="grid gap-3">
-                                    {[
-                                        { icon: User, label: "Profile Information", desc: "Personal details and preferences" },
-                                        { icon: FileText, label: "Lease Documents", desc: "Agreements and records" },
-                                        { icon: Receipt, label: "Payment History", desc: "Transaction records" },
-                                        { icon: Mail, label: "Communications", desc: "Messages and requests" },
-                                    ].map((item) => (
-                                        <label key={item.label} className="flex items-center gap-4 p-4 rounded-2xl neumorphic-extruded border border-border/40 hover:border-border cursor-pointer transition-all group">
-                                            <input type="checkbox" defaultChecked className="accent-primary size-4" />
-                                            <div className="flex items-center gap-3 flex-1">
-                                                <div className="size-8 rounded-lg bg-muted/50 flex items-center justify-center">
-                                                    <item.icon className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-medium text-foreground">{t(item.label)}</p>
-                                                    <p className="text-xs text-muted-foreground">{t(item.desc)}</p>
-                                                </div>
-                                            </div>
-                                        </label>
-                                    ))}
-                                </div>
-
-                                <div className="flex items-center justify-between pt-4 border-t border-border/40">
-                                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                        <Info className="size-3" /> {t("Export may take up to 24 hours.")}
-                                    </p>
-                                    <button 
-                                        type="button"
-                                        onClick={() => toast.success(t("Export request submitted. You will receive an email once ready."))}
-                                        className="flex items-center gap-2 rounded-xl sm:rounded-2xl neumorphic-primary px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-black text-primary-foreground transition-all active:scale-95 shadow-md cursor-pointer"
-                                    >
-                                        <Download className="size-4" /> {t("Request Export")}
-                                    </button>
-                                </div>
-                            </div>
-                        </GlassCard>
-                    );
-                case "Danger":
-                    return (
-                        <GlassCard className="border border-rose-500/30 bg-rose-500/5" title={t("Danger Zone")} description={t("Irreversible account actions.")}>
-                            <div className="space-y-6 max-w-lg">
-                                <div className="flex items-start gap-4">
-                                    <div className="size-12 rounded-xl bg-rose-500/10 flex items-center justify-center flex-shrink-0 text-rose-500">
-                                        <AlertTriangle className="size-6" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-base font-black text-rose-600 dark:text-rose-400">{t("Delete Account")}</h4>
-                                        <p className="text-sm text-muted-foreground mt-1">{t("Permanently delete your account and all associated data. This action cannot be undone.")}</p>
-                                    </div>
-                                </div>
-
-                                <div className="rounded-2xl neumorphic-inset p-4">
-                                    <h5 className="text-sm font-black text-foreground mb-3">{t("What will be deleted:")}</h5>
-                                    <ul className="space-y-2">
-                                        {[
-                                            "Your profile and personal information",
-                                            "Lease history and documents",
-                                            "Payment records and receipts",
-                                            "Communication history",
-                                            "Saved preferences",
-                                        ].map((text) => (
-                                            <li key={text} className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                <X className="size-3 text-rose-500 flex-shrink-0" />
-                                                {t(text)}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                            {!showDeleteConfirm ? (
-                                <button
-                                    type="button"
-                                    onClick={() => setShowDeleteConfirm(true)}
-                                    className="px-6 py-3 rounded-xl sm:rounded-2xl bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-black transition-all shadow-md cursor-pointer"
-                                >
-                                    {t("I understand, delete my account")}
-                                </button>
-                            ) : (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: "auto" }}
-                                    className="space-y-4 border-t border-rose-500/20 pt-4"
-                                >
-                                    <p className="text-sm text-muted-foreground">
-                                        {t("Please type")} <span className="text-rose-600 dark:text-rose-400 font-mono font-black">DELETE</span> {t("to confirm:")}
-                                    </p>
-                                    <input maxLength={60}
-                                        type="text"
-                                        value={deleteConfirmText}
-                                        onChange={(e) => setDeleteConfirmText(e.target.value)}
-                                        placeholder={t("Type DELETE")}
-                                        className="w-full max-w-xs rounded-xl neumorphic-inset border border-rose-500/30 px-4 py-3 text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-rose-500 transition-colors"
-                                    />
-                                    <div className="flex gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={handleDeleteAccount}
-                                            disabled={deleteConfirmText !== "DELETE"}
-                                            className={cn(
-                                                "px-6 py-3 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black transition-all cursor-pointer",
-                                                deleteConfirmText === "DELETE"
-                                                    ? "bg-rose-600 hover:bg-rose-500 text-white shadow-md"
-                                                    : "bg-muted text-muted-foreground cursor-not-allowed"
-                                            )}
-                                        >
-                                            {t("Permanently Delete")}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(""); }}
-                                            className="px-4 py-3 rounded-xl sm:rounded-2xl border border-border text-xs sm:text-sm font-black text-muted-foreground hover:text-foreground transition-all cursor-pointer"
-                                        >
-                                            {t("Cancel")}
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            )}
-                            </div>
-                        </GlassCard>
-                    );
-                default: return null;
-            }
-        };
-
-        return (
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6 sm:space-y-8"
-            >
-                <div>
-                    <h2 className="text-2xl sm:text-3xl font-black text-foreground">{t("Data & Privacy")}</h2>
-                    <p className="text-xs sm:text-sm text-muted-foreground">{t("Manage your data and account longevity.")}</p>
-                </div>
-
-                <SubNav 
-                    tabs={SUB_TABS.Data} 
-                    activeTab={activeSubTab} 
-                    onTabChange={setActiveSubTab} 
+                <SettingsLinkRow
+                    title={t("Water and electricity")}
+                    description={t("See your utility readings and charges.")}
+                    action={
+                        <Link href="/tenant/utilities" className={settingsButtonClass("secondary", "md")}>
+                            <span>{t("Go to Utilities")}</span>
+                        </Link>
+                    }
                 />
+            </div>
+        </SettingsCard>
+    );
 
-                <div className="mt-6 sm:mt-8">
-                    {renderSubContent()}
-                </div>
-            </motion.div>
-        );
-    };
-
-    const renderAccessibility = () => {
+    const renderPrivacy = () => {
+        const subject = encodeURIComponent("Request for a copy of my data");
+        const body = encodeURIComponent(`Hello iReside team,\n\nPlease send me a copy of my personal data${profile?.email ? ` (${profile.email})` : ""}.\n\nThank you.`);
         return (
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-6 sm:space-y-8"
-            >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h2 className="text-2xl sm:text-3xl font-black text-foreground">{t("Display & Accessibility")}</h2>
-                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                            {t("Customize text readability, contrast, and visual appearance for optimal comfort.")}
+            <>
+                <SettingsCard id="settings-data-copy" title={t("Get a copy of your information")} description={t("You can ask for a copy of your profile, lease, payment records and messages.")}>
+                    <div className="space-y-5">
+                        <p className="text-lg text-foreground leading-relaxed">
+                            {t("Send us an email and we will reply with your information. This can take a few days.")}
+                        </p>
+                        <a href={`mailto:${PRIVACY_CONTACT_EMAIL}?subject=${subject}&body=${body}`} className={settingsButtonClass("secondary", "md")}>
+                            <Download className="size-5" aria-hidden />
+                            <span>{t("Email a request for my data")}</span>
+                        </a>
+                        <p className="flex items-center gap-2 text-base text-muted-foreground">
+                            <Mail className="size-5 shrink-0" aria-hidden />
+                            <span>{PRIVACY_CONTACT_EMAIL}</span>
                         </p>
                     </div>
-                </div>
-
-                <div className="space-y-6">
-                    <GlassCard 
-                        title={t("Language")} 
-                        description={t("Choose between everyday conversational Filipino (Taglish) and standard English.")}
-                    >
-                        <LanguageToggle variant="segmented" showPreview={true} />
-                    </GlassCard>
-
-                    <GlassCard 
-                        title={t("Text Size & Readability")} 
-                        description={t("Adjust the interface typography scale without distorting card layouts or button heights.")}
-                    >
-                        <FontSizeToggle variant="slider" showPreview={true} />
-                    </GlassCard>
-
-                    <GlassCard 
-                        title={t("Time & Clock Format")} 
-                        description={t("Choose between 12-hour (AM/PM) and 24-hour military format for your dashboard, clock, and notifications.")}
-                    >
-                        <TimeFormatToggle variant="segmented" showPreview={true} />
-                    </GlassCard>
-
-                    <GlassCard 
-                        title={t("Universal High Contrast")} 
-                        description={t("Reinforces borders, sharpens text outlines, and improves visibility across all tenant pages per WCAG 2.1 AAA standards.")}
-                    >
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-muted/30 border border-border/60">
-                            <div className="flex items-start gap-4">
-                                <div className={cn(
-                                    "size-12 rounded-xl flex items-center justify-center shrink-0 border transition-all",
-                                    isHighContrast 
-                                        ? "bg-foreground text-background border-foreground font-black" 
-                                        : "neumorphic-inset text-muted-foreground border-border/40"
-                                )}>
-                                    <Contrast className="size-6" />
-                                </div>
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <h4 className="text-sm font-bold text-foreground">{t("Universal High Contrast")}</h4>
-                                        <span className={cn(
-                                            "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
-                                            isHighContrast ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" : "bg-muted text-muted-foreground"
-                                        )}>
-                                            {isHighContrast ? t("Active (WCAG AAA)") : t("Off")}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        {t("Replaces soft shadows with solid high-contrast borders and high-visibility text.")}
-                                    </p>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => toggleHighContrast()}
-                                className={cn(
-                                    "px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer border",
-                                    isHighContrast
-                                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                                        : "bg-muted text-foreground border-border hover:bg-muted/80"
-                                )}
-                            >
-                                {isHighContrast ? t("Disable High Contrast") : t("Enable High Contrast")}
-                            </button>
-                        </div>
-                    </GlassCard>
-                </div>
-            </motion.div>
+                </SettingsCard>
+                <CloseAccountCard accountEmail={profile?.email} extraNote={t("If you still have an active lease, please talk to your landlord first.")} />
+            </>
         );
     };
 
-    const renderContent = () => {
-        switch (activeTab) {
-            case "Identity": return renderIdentity();
-            case "Accessibility": return renderAccessibility();
-            case "Security": return renderSecurity();
-            case "Notifications": return renderNotifications();
-            case "Billing": return renderBilling();
-            case "Data": return renderData();
-            default: return null;
+    const renderSection = (id: SectionId) => {
+        switch (id) {
+            case "profile": return renderProfile();
+            case "security": return renderSecurity();
+            case "display": return <DisplaySettingsSection />;
+            case "notifications": return renderNotifications();
+            case "payments": return renderPayments();
+            case "privacy": return renderPrivacy();
         }
     };
 
-    return loading ? (
-        <PageLoader message={t("Loading your settings...")} />
-    ) : (
-        <div className="space-y-6 sm:space-y-10">
-            {/* Top Navigation Bar */}
-            <div className="flex items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-border/40">
-                <button
-                    type="button"
-                    onClick={() => router.push("/tenant/dashboard")}
-                    className="flex items-center gap-2 sm:gap-2.5 text-muted-foreground hover:text-primary transition-colors group cursor-pointer w-fit shrink-0"
-                >
-                    <div className="size-8 rounded-full neumorphic-extruded flex items-center justify-center transition-all group-hover:scale-105 group-hover:text-primary">
-                        <ChevronLeft className="size-4" />
-                    </div>
-                    <span className="text-xs sm:text-sm font-black tracking-wide hidden sm:inline">{t("Back to Dashboard")}</span>
-                    <span className="text-xs font-black tracking-wide sm:hidden">{t("Dashboard")}</span>
-                </button>
+    if (loading || !ready) return <PageLoader message={t("Loading your settings...")} />;
 
-                <div className="flex items-center gap-2 sm:gap-3">
-                    {/* Background Sync Status Indicator */}
-                    <div
-                        className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-sm bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-                        title={t("Synced with cloud database")}
-                    >
-                        <CheckCircle2 className="size-3.5 text-emerald-500" />
-                        <span className="hidden sm:inline">{t("Synced with cloud")}</span>
-                        <span className="sm:hidden">{t("Synced")}</span>
-                    </div>
+    const helpFooter = (
+        <SettingsNotice
+            tone="info"
+            title={t("Need help?")}
+            action={
+                <Link href="/tenant/docs" className={settingsButtonClass("secondary", "md")}>
+                    <HelpCircle className="size-5" aria-hidden />
+                    <span>{t("Open the help guide")}</span>
+                </Link>
+            }
+        >
+            {t("The help guide explains each part of iReside with simple steps.")}
+        </SettingsNotice>
+    );
 
-                    <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-muted/40 border border-border/40 text-xs font-bold text-muted-foreground">
-                        <span>{t("Control Center")}</span>
-                        <span className="text-muted-foreground/40">•</span>
-                        <span className="text-foreground font-black">{t(activeTab)}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div className="min-h-[80vh] flex flex-col lg:flex-row gap-6 lg:gap-12">
-                {/* Mobile / Tablet Horizontal Navigation (< lg) */}
-                <div className="block lg:hidden space-y-3">
-                    <div className="flex items-center justify-between px-1">
-                        <div className="flex items-center gap-2.5">
-                            <div className="flex size-9 items-center justify-center rounded-xl bg-primary/20 text-primary border border-primary/20">
-                                <Layout className="size-4.5" />
-                            </div>
-                            <div>
-                                <h1 className="text-base font-black text-foreground leading-tight">{t("Settings")}</h1>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                    {t(SIDEBAR_ITEMS.find(i => i.id === activeTab)?.label ?? "")}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Swipe / Slide affordance hint */}
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-full border border-border/40 select-none">
-                            <SlidersHorizontal className="size-3 text-primary/70" />
-                            <span>{t("Swipe to reveal")}</span>
-                            <ChevronRight className="size-3 text-primary animate-pulse" />
-                        </div>
-                    </div>
-
-                    <div className="relative group/rail">
-                        {/* Left Fade Gradient & Scroll Arrow */}
-                        <AnimatePresence>
-                            {canScrollLeft && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="absolute left-0 top-0 bottom-0 z-10 flex items-center pr-3 pl-0.5 bg-gradient-to-r from-background via-background/95 to-transparent pointer-events-none"
-                                >
-                                    <button
-                                        type="button"
-                                        onClick={() => scrollMobileTabs("left")}
-                                        aria-label={t("Scroll tabs left")}
-                                        className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto"
-                                    >
-                                        <ChevronLeft className="size-3.5" />
-                                    </button>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
-                        {/* Scrollable Pills Container */}
-                        <div 
-                            ref={mobileTabRailRef}
-                            className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-1 scrollbar-hide -mx-1 px-1 scroll-smooth"
-                        >
-                            {SIDEBAR_ITEMS.map((item) => {
-                                const Icon = item.icon;
-                                const isActive = activeTab === item.id;
-                                return (
-                                    <button
-                                        key={item.id}
-                                        data-tab-id={item.id}
-                                        type="button"
-                                        onClick={() => handleMobileTabClick(item.id)}
-                                        className={cn(
-                                            "flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black whitespace-nowrap transition-all duration-300 cursor-pointer shrink-0",
-                                            isActive
-                                                ? "neumorphic-panel text-primary font-black shadow-sm border-primary/30 ring-1 ring-primary/20"
-                                                : "neumorphic-extruded text-muted-foreground hover:text-foreground font-bold"
-                                        )}
-                                    >
-                                        <Icon className={cn("size-4 transition-transform", isActive ? "scale-110 text-primary" : "text-muted-foreground")} />
-                                        <span>{t(item.label)}</span>
-                                        {isActive && (
-                                            <span className="size-1.5 rounded-full bg-primary" />
-                                        )}
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        {/* Right Fade Gradient & Scroll Arrow */}
-                        <AnimatePresence>
-                            {canScrollRight && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="absolute right-0 top-0 bottom-0 z-10 flex items-center pl-3 pr-0.5 bg-gradient-to-l from-background via-background/95 to-transparent pointer-events-none"
-                                >
-                                    <button
-                                        type="button"
-                                        onClick={() => scrollMobileTabs("right")}
-                                        aria-label={t("Scroll tabs right")}
-                                        title={t("Slide to view more tabs")}
-                                        className="size-7 rounded-full neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all shadow-md active:scale-90 cursor-pointer pointer-events-auto animate-pulse hover:animate-none"
-                                    >
-                                        <ChevronRight className="size-3.5" />
-                                    </button>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                </div>
-
-                {/* Desktop Collapsible Sidebar (lg+) */}
-                <div className={cn(
-                    "hidden lg:block flex-shrink-0 space-y-6 transition-all duration-300",
-                    isSidebarCollapsed ? "w-20" : "w-80"
-                )}>
-                    <div className="flex items-center justify-between px-2">
-                        <div className={cn("flex items-center gap-4 transition-opacity", isSidebarCollapsed && "justify-center w-full")}>
-                            <div className="flex size-12 items-center justify-center rounded-[1.2rem] bg-primary/20 text-primary border border-primary/20 shrink-0">
-                                <Layout className="size-6" />
-                            </div>
-                            {!isSidebarCollapsed && (
-                                <div>
-                                    <h1 className="text-xl font-black text-foreground">{t("Settings")}</h1>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Control Center")}</p>
-                                </div>
-                            )}
-                        </div>
-                        {!isSidebarCollapsed && (
-                            <button
-                                type="button"
-                                onClick={() => setIsSidebarCollapsed(true)}
-                                className="size-8 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all cursor-pointer"
-                                title={t("Collapse sidebar")}
-                            >
-                                <ChevronLeft className="size-4" />
+    return (
+        <div className="pb-40">
+            {section === null ? (
+                <SettingsHub
+                    title={t("Settings")}
+                    intro={t("Choose what you want to change. You can come back to this page at any time.")}
+                    groups={groups}
+                    sections={sections}
+                    quickTasks={quickTasks}
+                    onOpen={(id, opts) => open(id, opts)}
+                    topSlot={
+                        embedded ? undefined : (
+                            <button type="button" onClick={goToDashboard} className={settingsButtonClass("secondary", "md")}>
+                                <ArrowLeft className="size-5" aria-hidden />
+                                <span>{t("Back to Dashboard")}</span>
                             </button>
-                        )}
-                    </div>
+                        )
+                    }
+                    footer={helpFooter}
+                />
+            ) : (
+                <SettingsSectionLayout groups={groups} sections={sections} activeId={section} onOpen={(id) => open(id)} onHome={() => open(null)}>
+                    {renderSection(section)}
+                </SettingsSectionLayout>
+            )}
 
-                    {isSidebarCollapsed && (
-                        <div className="flex justify-center">
-                            <button
-                                type="button"
-                                onClick={() => setIsSidebarCollapsed(false)}
-                                className="size-8 rounded-xl neumorphic-extruded flex items-center justify-center text-muted-foreground hover:text-primary transition-all cursor-pointer"
-                                title={t("Expand sidebar")}
-                            >
-                                <ChevronRight className="size-4" />
-                            </button>
-                        </div>
-                    )}
+            <SettingsSaveBar
+                visible={isDirty}
+                saving={isSavingProfile || isSavingNotifications}
+                justSaved={justSaved}
+                onSave={saveAll}
+                onDiscard={discardAll}
+                raised={embedded}
+            />
 
-                    <nav className="space-y-2">
-                        {SIDEBAR_ITEMS.map((item) => {
-                            const Icon = item.icon;
-                            const isActive = activeTab === item.id;
-                            return (
-                                <button
-                                    key={item.id}
-                                    type="button"
-                                    onClick={() => setActiveTab(item.id)}
-                                    title={isSidebarCollapsed ? `${t(item.label)} — ${t(item.description)}` : undefined}
-                                    className={cn(
-                                        "group relative flex flex-col transition-all duration-300 text-left cursor-pointer",
-                                        isSidebarCollapsed
-                                            ? "w-full items-center justify-center rounded-2xl p-3.5"
-                                            : "w-full items-start rounded-[1.5rem] px-6 py-5",
-                                        isActive 
-                                            ? "neumorphic-panel text-primary font-black shadow-md border-primary/30 ring-1 ring-primary/20" 
-                                            : "neumorphic-extruded text-muted-foreground hover:text-foreground"
-                                    )}
-                                >
-                                    <div className={cn("flex items-center", isSidebarCollapsed ? "justify-center" : "w-full justify-between")}>
-                                        <Icon className={cn("size-5 transition-transform duration-300", isActive ? "scale-110 text-primary" : "text-muted-foreground group-hover:text-foreground")} />
-                                        {isActive && (
-                                            <motion.div 
-                                                layoutId="active-indicator"
-                                                className={cn("rounded-full bg-primary", isSidebarCollapsed ? "hidden" : "size-1.5")} 
-                                            />
-                                        )}
-                                    </div>
-                                    {!isSidebarCollapsed && (
-                                        <>
-                                            <span className={cn("mt-3 text-sm font-black transition-colors", isActive ? "text-primary" : "text-foreground group-hover:text-primary")}>
-                                                {t(item.label)}
-                                            </span>
-                                            <span className="text-[10px] font-medium text-muted-foreground mt-0.5 line-clamp-1">
-                                                {t(item.description)}
-                                            </span>
-                                        </>
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </nav>
-                </div>
+            <SettingsLeaveDialog
+                open={pendingNavigation !== null}
+                saving={isSavingProfile || isSavingNotifications}
+                onStay={() => setPendingNavigation(null)}
+                onDiscard={() => {
+                    const nav = pendingNavigation;
+                    discardAll();
+                    if (nav) continuePendingNavigation(nav);
+                }}
+                onSave={async () => {
+                    const nav = pendingNavigation;
+                    const ok = await saveAll();
+                    if (ok && nav) continuePendingNavigation(nav);
+                    else if (!ok) setPendingNavigation(null);
+                }}
+            />
 
-                {/* Content Area */}
-                <main className="flex-1 min-w-0">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={activeTab}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.3, ease: "easeOut" }}
-                        >
-                            {renderContent()}
-                        </motion.div>
-                    </AnimatePresence>
-                </main>
-            </div>
-
-            <AvatarPicker 
+            <AvatarPicker
                 isOpen={isAvatarPickerOpen}
                 onClose={() => setIsAvatarPickerOpen(false)}
                 currentAvatarUrl={profile?.avatar_url || null}
                 currentBgColor={profile?.avatar_bg_color || null}
-                onProfileUpdate={() => router.refresh()}
+                onProfileUpdate={() => {
+                    refreshProfile();
+                    router.refresh();
+                }}
             />
         </div>
     );

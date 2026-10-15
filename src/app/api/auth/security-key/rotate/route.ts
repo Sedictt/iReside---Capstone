@@ -4,6 +4,7 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { createClient } from "@supabase/supabase-js";
 import { generateSecurityKey, encryptSecurityKey } from "@/lib/security/recovery-keys";
 import { logUserActivity } from "@/lib/audit/audit-logger";
+import { describeAuditEvent } from "@/lib/audit/audit-display";
 import { sendRegistrationOTP } from "@/lib/email";
 import { parseJsonBody } from "@/lib/validation/server";
 import { securityKeyRotateSchema } from "@/lib/validation/schemas/account.schema";
@@ -153,8 +154,7 @@ export async function POST(request: Request) {
             userRole: (userRole as any) || "tenant",
             action: "security_key_rotated",
             category: "security",
-            title: "Security Recovery Key Rotated",
-            description: "User verified their credentials and rotated their single-use security recovery key.",
+            ...describeAuditEvent({ action: "security_key_rotated" }),
             severity: "warning",
         });
 

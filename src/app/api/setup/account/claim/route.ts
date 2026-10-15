@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { logUserActivity } from "@/lib/audit/audit-logger";
+import { describeAuditEvent } from "@/lib/audit/audit-display";
 import {
   validateAdminFullName,
   validateAdminEmail,
@@ -237,8 +238,7 @@ export async function POST(request: NextRequest) {
       userRole: "landlord",
       action: "security_key_generated",
       category: "security",
-      title: "Security Recovery Key Generated",
-      description: `Initial single-use security recovery key generated during account claiming for ${normalizedEmail}.`,
+      ...describeAuditEvent({ action: "security_key_generated" }),
       severity: "info",
     });
 
@@ -247,8 +247,7 @@ export async function POST(request: NextRequest) {
       userRole: "landlord",
       action: "account_claimed",
       category: "security",
-      title: "Workspace Administrator Account Claimed",
-      description: `Landlord claimed account with verified email ${normalizedEmail} and updated credentials.`,
+      ...describeAuditEvent({ action: "account_claimed" }),
       severity: "info",
     });
 
