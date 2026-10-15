@@ -1886,4 +1886,6 @@ export const publicPages: TranslationDictionary = {
   "Base URL": "Base URL",
   "Authentication": "Authentication",
   "Available Route Namespaces": "Mga Available na Route Namespace",
+  "Signing you in...": "Sina-sign in ka na...",
+  "You're verified. We're opening your portal now. This can take a few seconds, so please don't refresh or sign in again.": "Verified ka na. Binubuksan na namin ang iyong portal. Ilang segundo lang ito, kaya huwag i-refresh o mag-sign in ulit.",
 };

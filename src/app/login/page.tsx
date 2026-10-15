@@ -105,6 +105,9 @@ function LoginContent() {
     const [twoFactorError, setTwoFactorError] = useState<string | null>(null);
     const [twoFactorCooldown, setTwoFactorCooldown] = useState(0);
     const [isResendingTwoFactor, setIsResendingTwoFactor] = useState(false);
+    // Set once credentials (and 2FA) are accepted, so the form never reappears while the
+    // browser navigates to the portal — otherwise users think sign-in failed and retry.
+    const [isSigningIn, setIsSigningIn] = useState(false);
 
     const passwordInputRef = useRef<HTMLInputElement>(null);
 
@@ -120,6 +123,15 @@ function LoginContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectUrl = searchParams.get('redirect');
+
+    useEffect(() => {
+        // Returning via the back button restores this page from bfcache mid-"signing in".
+        const handlePageShow = (event: PageTransitionEvent) => {
+            if (event.persisted) setIsSigningIn(false);
+        };
+        window.addEventListener("pageshow", handlePageShow);
+        return () => window.removeEventListener("pageshow", handlePageShow);
+    }, []);
 
     useEffect(() => {
         if (twoFactorCooldown <= 0) return;
@@ -406,6 +418,7 @@ function LoginContent() {
 
             await completeSuccessfulLogin(data.user, role);
         } catch (err) {
+            setIsSigningIn(false);
             console.error('[Login] Unexpected error:', err);
             setError(err instanceof Error ? t(err.message) : t("An unexpected error occurred. Please try again."));
         } finally {
@@ -415,6 +428,7 @@ function LoginContent() {
 
 
     const completeSuccessfulLogin = async (userData: any, userRole?: string) => {
+        setIsSigningIn(true);
         const role = userRole || userData?.user_metadata?.role;
         const isClaimed = userData?.user_metadata?.is_account_claimed;
         const userEmail = (userData?.email || "").toLowerCase().trim();
@@ -435,6 +449,7 @@ function LoginContent() {
             });
             setShowActivationModal(true);
             setTwoFactorChallenge(null);
+            setIsSigningIn(false);
             setLoading(false);
             return;
         }
@@ -519,11 +534,12 @@ function LoginContent() {
                 return;
             }
 
-            // 2FA Verified! Complete login
+            // 2FA verified — keep the challenge mounted until navigation; the signing-in
+            // panel covers it so the sign-in form doesn't flash back.
             const { userData, role } = twoFactorChallenge;
-            setTwoFactorChallenge(null);
             await completeSuccessfulLogin(userData, role);
         } catch (err) {
+            setIsSigningIn(false);
             setTwoFactorError(err instanceof Error ? t(err.message) : t("Verification failed. Please try again."));
         } finally {
             setTwoFactorLoading(false);
@@ -790,7 +806,27 @@ function LoginContent() {
                             transition={{ duration: 0.4 }}
                             className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-xl space-y-6"
                         >
-                            {twoFactorChallenge ? (
+                            {isSigningIn ? (
+                                <div
+                                    className="flex flex-col items-center text-center py-10 space-y-5"
+                                    role="status"
+                                    aria-live="polite"
+                                >
+                                    <div className="relative size-16">
+                                        <div className="absolute inset-0 rounded-full border-2 border-primary/15" />
+                                        <Loader2 className="absolute inset-0 size-16 text-primary animate-spin" strokeWidth={1.5} />
+                                        <ShieldCheck className="absolute inset-0 m-auto size-6 text-primary" />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <h2 className="text-2xl font-black tracking-tight text-foreground">
+                                            {t("Signing you in...")}
+                                        </h2>
+                                        <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
+                                            {t("You're verified. We're opening your portal now. This can take a few seconds, so please don't refresh or sign in again.")}
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : twoFactorChallenge ? (
                                 <div className="space-y-6">
                                     <div className="space-y-2">
                                         <div className="size-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-3">
