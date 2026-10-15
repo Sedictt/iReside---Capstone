@@ -21,7 +21,11 @@ import {
     ArrowUpRight,
     Shield,
     Sparkles,
-    Filter
+    Filter,
+    Share2,
+    Infinity as InfinityIcon,
+    CalendarRange,
+    Edit3
 } from 'lucide-react';
 import { useProperty } from '@/context/PropertyContext';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
@@ -146,6 +150,21 @@ export function LandlordLeasesView() {
     const [rejectNotes, setRejectNotes] = useState('');
     const [actionSubmitting, setActionSubmitting] = useState(false);
 
+    // Interactive Renewal Approval Overrides
+    const [proposedStartDate, setProposedStartDate] = useState('');
+    const [proposedEndDate, setProposedEndDate] = useState('');
+    const [proposedRent, setProposedRent] = useState('');
+    const [proposedDeposit, setProposedDeposit] = useState('');
+
+    // Lease Term Switch State
+    const [termSwitchLease, setTermSwitchLease] = useState<LeaseItem | null>(null);
+    const [targetTermType, setTargetTermType] = useState<'open_ended' | 'fixed'>('open_ended');
+    const [fixedEndDate, setFixedEndDate] = useState('');
+    const [termSwitchSubmitting, setTermSwitchSubmitting] = useState(false);
+
+    // Sharing Signing Link State
+    const [sharingLeaseId, setSharingLeaseId] = useState<string | null>(null);
+
     // Lease preview modal state
     const [previewLease, setPreviewLease] = useState<LeaseData | null>(null);
     const [previewOpen, setPreviewOpen] = useState(false);
@@ -245,15 +264,57 @@ export function LandlordLeasesView() {
         return list;
     }, [renewals, searchQuery]);
 
-    // Handle Renewal Decision (Approve / Reject)
+    // Modal Open Helpers with pre-population
+    const openApproveModal = (renewal: RenewalRequestItem) => {
+        triggerHaptic('medium');
+        setSelectedRenewal(renewal);
+        setDecisionMode('approve');
+        setProposedStartDate(renewal.proposed_start_date ? renewal.proposed_start_date.split('T')[0] : '');
+        setProposedEndDate(renewal.proposed_end_date ? renewal.proposed_end_date.split('T')[0] : '');
+        setProposedRent(renewal.proposed_monthly_rent ? String(renewal.proposed_monthly_rent) : '');
+        setProposedDeposit(renewal.proposed_security_deposit ? String(renewal.proposed_security_deposit) : '');
+    };
+
+    const openRejectModal = (renewal: RenewalRequestItem) => {
+        triggerHaptic('light');
+        setSelectedRenewal(renewal);
+        setDecisionMode('reject');
+        setRejectNotes('');
+    };
+
+    // Handle Renewal Decision (Approve / Reject with overrides)
     const handleRenewalDecision = async (action: 'approve' | 'reject') => {
         if (!selectedRenewal) return;
+
+        if (action === 'approve') {
+            if (!proposedStartDate || !proposedEndDate) {
+                toast.error(t('Please provide both start and end dates'));
+                return;
+            }
+            if (proposedEndDate <= proposedStartDate) {
+                toast.error(t('New end date must be after the new start date'));
+                return;
+            }
+            const rentNum = parseFloat(proposedRent);
+            if (isNaN(rentNum) || rentNum <= 0) {
+                toast.error(t('Monthly rent must be greater than 0'));
+                return;
+            }
+        }
+
         setActionSubmitting(true);
         triggerHaptic('medium');
 
         try {
             const body: any = { action };
-            if (action === 'reject') {
+            if (action === 'approve') {
+                body.proposed_start_date = proposedStartDate;
+                body.proposed_end_date = proposedEndDate;
+                body.proposed_monthly_rent = parseFloat(proposedRent);
+                if (proposedDeposit) {
+                    body.proposed_security_deposit = parseFloat(proposedDeposit);
+                }
+            } else {
                 body.landlord_notes = rejectNotes.trim() || 'Declined by property manager';
             }
 
@@ -268,7 +329,7 @@ export function LandlordLeasesView() {
                 throw new Error(data.error || t('Failed to update renewal request'));
             }
 
-            toast.success(action === 'approve' ? t('Renewal request approved!') : t('Renewal request declined.'));
+            toast.success(action === 'approve' ? t('Renewal request approved with updated terms!') : t('Renewal request declined.'));
             setSelectedRenewal(null);
             setDecisionMode(null);
             setRejectNotes('');
@@ -278,6 +339,140 @@ export function LandlordLeasesView() {
             toast.error(tr(err.message || t('Action failed')));
         } finally {
             setActionSubmitting(false);
+        }
+    };
+
+    // Preset Rejection Reasons
+    const REJECT_PRESETS = [
+        'Property scheduled for renovation',
+        'Owner personal use / occupancy',
+        'Adjusting lease terms / price negotiation',
+        'Lease terms non-compliant',
+    ];
+
+    // Open Term Switch Modal
+    const openTermSwitch = (lease: LeaseItem) => {
+        triggerHaptic('light');
+        setTermSwitchLease(lease);
+        const isCurrentlyOpenEnded = lease.term_type === 'open_ended' || (!lease.end_date && lease.status === 'active');
+        if (isCurrentlyOpenEnded) {
+            setTargetTermType('fixed');
+            const d = new Date();
+            d.setFullYear(d.getFullYear() + 1);
+            setFixedEndDate(d.toISOString().split('T')[0]);
+        } else {
+            setTargetTermType('open_ended');
+            setFixedEndDate('');
+        }
+    };
+
+    // Apply quick duration preset to fixedEndDate
+    const applyDurationPreset = (months: number) => {
+        triggerHaptic('light');
+        const base = termSwitchLease?.start_date ? new Date(termSwitchLease.start_date) : new Date();
+        const start = base > new Date() ? base : new Date();
+        start.setMonth(start.getMonth() + months);
+        setFixedEndDate(start.toISOString().split('T')[0]);
+    };
+
+    // Handle Term Switch Submission
+    const handleTermSwitchSubmit = async () => {
+        if (!termSwitchLease) return;
+
+        if (targetTermType === 'fixed') {
+            if (!fixedEndDate) {
+                toast.error(t('Please select an end date for the fixed-term lease'));
+                return;
+            }
+            if (termSwitchLease.start_date && fixedEndDate <= termSwitchLease.start_date.split('T')[0]) {
+                toast.error(t('End date must be after lease start date'));
+                return;
+            }
+        }
+
+        setTermSwitchSubmitting(true);
+        triggerHaptic('medium');
+
+        try {
+            const payload = targetTermType === 'fixed'
+                ? { term_type: 'fixed', end_date: fixedEndDate }
+                : { term_type: 'open_ended' };
+
+            const res = await fetch(`/api/landlord/leases/${termSwitchLease.id}/term`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.error || t('Failed to update lease term'));
+            }
+
+            toast.success(
+                targetTermType === 'fixed'
+                    ? t('Fixed term set. Lease now ends {date}.', { date: formatDate(fixedEndDate) })
+                    : t('Lease switched to month-to-month (open-ended).')
+            );
+            setTermSwitchLease(null);
+            fetchData();
+        } catch (err: any) {
+            toast.error(tr(err.message || t('Failed to update lease term')));
+        } finally {
+            setTermSwitchSubmitting(false);
+        }
+    };
+
+    // Share or Copy Signing Link
+    const handleShareSigningLink = async (lease: LeaseItem) => {
+        triggerHaptic('light');
+        setSharingLeaseId(lease.id);
+
+        try {
+            const res = await fetch(`/api/landlord/leases/${lease.id}/signing-link`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role: 'tenant' }),
+            });
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.error || t('Failed to generate tenant signing link'));
+            }
+
+            const data = await res.json();
+            const signingUrl = data.signingUrl;
+            if (!signingUrl) {
+                throw new Error(t('No signing link returned from server'));
+            }
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: t('iReside Lease Agreement - Digital Signature'),
+                        text: t('Please review and digitally sign your lease agreement:'),
+                        url: signingUrl,
+                    });
+                    triggerHaptic('success');
+                    toast.success(t('Signing link shared successfully!'));
+                    return;
+                } catch (shareErr: any) {
+                    if (shareErr.name === 'AbortError') return;
+                }
+            }
+
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(signingUrl);
+                triggerHaptic('success');
+                toast.success(t('Signing link copied to clipboard!'));
+            } else {
+                toast.success(t('Signing link ready: {url}', { url: signingUrl }));
+            }
+        } catch (err: any) {
+            console.error('Error sharing signing link:', err);
+            toast.error(tr(err.message || t('Failed to share signing link')));
+        } finally {
+            setSharingLeaseId(null);
         }
     };
 
@@ -550,22 +745,14 @@ export function LandlordLeasesView() {
                                         {isPending && (
                                             <div className="flex items-center gap-2 pt-1">
                                                 <button
-                                                    onClick={() => {
-                                                        triggerHaptic('medium');
-                                                        setSelectedRenewal(renewal);
-                                                        setDecisionMode('approve');
-                                                    }}
+                                                    onClick={() => openApproveModal(renewal)}
                                                     className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-all"
                                                 >
                                                     <Check className="size-3.5" />
                                                     {t('Approve')}
                                                 </button>
                                                 <button
-                                                    onClick={() => {
-                                                        triggerHaptic('light');
-                                                        setSelectedRenewal(renewal);
-                                                        setDecisionMode('reject');
-                                                    }}
+                                                    onClick={() => openRejectModal(renewal)}
                                                     className="py-2.5 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 active:scale-98 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
                                                 >
                                                     <X className="size-3.5" />
@@ -702,8 +889,50 @@ export function LandlordLeasesView() {
                                             </div>
                                         </div>
 
+                                        {/* Actions Bar: Signing Link & Term Switch */}
+                                        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 dark:border-white/5">
+                                            {/* Share Signing Link for pending leases */}
+                                            {['pending', 'pending_signature', 'pending_tenant_signature', 'pending_landlord_signature', 'draft'].includes(lease.status) && (
+                                                <button
+                                                    onClick={() => handleShareSigningLink(lease)}
+                                                    disabled={sharingLeaseId === lease.id}
+                                                    className="py-1.5 px-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary active:scale-95 transition-all text-xs font-bold flex items-center gap-1.5"
+                                                    aria-label={t("Share signing link")}
+                                                >
+                                                    {sharingLeaseId === lease.id ? (
+                                                        <RefreshCw className="size-3.5 animate-spin" />
+                                                    ) : (
+                                                        <Share2 className="size-3.5" />
+                                                    )}
+                                                    <span>{sharingLeaseId === lease.id ? t('Sharing...') : t('Share Signing Link')}</span>
+                                                </button>
+                                            )}
+
+                                            {/* Term Switcher Button for active or pending leases */}
+                                            {['active', 'pending', 'pending_signature', 'pending_tenant_signature'].includes(lease.status) && (
+                                                <button
+                                                    onClick={() => openTermSwitch(lease)}
+                                                    className="py-1.5 px-2.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200/70 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground active:scale-95 transition-all text-xs font-semibold flex items-center gap-1.5"
+                                                    aria-label={t("Change lease term")}
+                                                >
+                                                    {lease.term_type === 'open_ended' || (!lease.end_date && lease.status === 'active') ? (
+                                                        <>
+                                                            <InfinityIcon className="size-3.5 text-primary" />
+                                                            <span>{t('Month-to-Month')}</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <CalendarRange className="size-3.5 text-amber-500" />
+                                                            <span>{t('Fixed-Term')}</span>
+                                                        </>
+                                                    )}
+                                                    <Edit3 className="size-3 opacity-60 ml-0.5" />
+                                                </button>
+                                            )}
+                                        </div>
+
                                         {/* Quick Actions Footer */}
-                                        <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-white/5">
+                                        <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100/80 dark:border-white/5">
                                             <button
                                                 onClick={() => handleViewContract(lease)}
                                                 className="text-xs font-bold text-primary flex items-center gap-1 active:scale-95 transition-all"
@@ -743,7 +972,7 @@ export function LandlordLeasesView() {
                 {/* DECISION DRAWER / MODAL */}
                 {selectedRenewal && decisionMode && (
                     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-                        <div className="w-full sm:max-w-md bg-background rounded-t-3xl sm:rounded-2xl p-5 border border-slate-200 dark:border-white/10 shadow-xl flex flex-col gap-4 animate-in slide-in-from-bottom duration-200">
+                        <div className="w-full sm:max-w-md bg-background rounded-t-3xl sm:rounded-2xl p-5 border border-slate-200 dark:border-white/10 shadow-xl flex flex-col gap-4 animate-in slide-in-from-bottom duration-200 max-h-[90vh] overflow-y-auto">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-base font-black text-foreground">
                                     {decisionMode === 'approve' ? t('Approve Lease Extension') : t('Decline Renewal Request')}
@@ -760,23 +989,117 @@ export function LandlordLeasesView() {
                                 </button>
                             </div>
 
-                            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-xs space-y-1.5">
+                            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-xs space-y-1">
                                 <div className="font-bold text-foreground">
                                     {t('Unit {unit}', { unit: selectedRenewal.current_lease?.unit?.name ?? '' })} • {selectedRenewal.current_lease?.tenant?.full_name}
                                 </div>
                                 <div className="text-muted-foreground">
-                                    {t('Proposed Period: {start} - {end}', { start: formatDate(selectedRenewal.proposed_start_date), end: formatDate(selectedRenewal.proposed_end_date) })}
+                                    {t('Tenant Proposed Period: {start} - {end}', {
+                                        start: formatDate(selectedRenewal.proposed_start_date),
+                                        end: formatDate(selectedRenewal.proposed_end_date)
+                                    })}
                                 </div>
                                 <div className="text-muted-foreground font-semibold">
-                                    {t('Monthly Rent: {amount}', { amount: formatCurrency(selectedRenewal.proposed_monthly_rent) })}
+                                    {t('Tenant Proposed Rent: {amount}', {
+                                        amount: formatCurrency(selectedRenewal.proposed_monthly_rent)
+                                    })}
                                 </div>
                             </div>
 
+                            {/* APPROVE MODE: INTERACTIVE TERM & RENT OVERRIDES */}
+                            {decisionMode === 'approve' && (
+                                <div className="space-y-3">
+                                    <div className="grid grid-cols-2 gap-2.5">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                                {t('New Start Date')}
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={proposedStartDate}
+                                                onChange={(e) => setProposedStartDate(e.target.value)}
+                                                className="w-full p-2.5 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                                {t('New End Date')}
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={proposedEndDate}
+                                                onChange={(e) => setProposedEndDate(e.target.value)}
+                                                className="w-full p-2.5 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2.5">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                                {t('Monthly Rent (₱)')}
+                                            </label>
+                                            <input
+                                                type="number"
+                                                step="any"
+                                                min="0"
+                                                value={proposedRent}
+                                                onChange={(e) => setProposedRent(e.target.value)}
+                                                placeholder="0.00"
+                                                className="w-full p-2.5 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                                {t('Security Deposit (₱)')}
+                                            </label>
+                                            <input
+                                                type="number"
+                                                step="any"
+                                                min="0"
+                                                value={proposedDeposit}
+                                                onChange={(e) => setProposedDeposit(e.target.value)}
+                                                placeholder="0.00"
+                                                className="w-full p-2.5 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <p className="text-[11px] text-muted-foreground bg-primary/5 p-2.5 rounded-xl border border-primary/15 leading-relaxed">
+                                        {t('Adjust terms if needed. Approving will create the renewal agreement with these binding parameters and notify the tenant.')}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* REJECT MODE: PRESET CHIPS & REASON */}
                             {decisionMode === 'reject' && (
-                                <div className="space-y-1.5">
+                                <div className="space-y-2.5">
                                     <label className="text-xs font-bold text-muted-foreground">
                                         {t('Reason for Declining (Sent to Tenant)')}
                                     </label>
+
+                                    {/* Preset Reason Chips */}
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {REJECT_PRESETS.map((preset) => (
+                                            <button
+                                                key={preset}
+                                                type="button"
+                                                onClick={() => {
+                                                    triggerHaptic('light');
+                                                    setRejectNotes(preset);
+                                                }}
+                                                className={cn(
+                                                    "px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-all text-left",
+                                                    rejectNotes === preset
+                                                        ? "bg-red-500/15 border-red-500/30 text-red-600 dark:text-red-400 font-bold"
+                                                        : "bg-slate-100 dark:bg-white/5 border-slate-200/60 dark:border-white/10 text-muted-foreground hover:text-foreground"
+                                                )}
+                                            >
+                                                {t(preset)}
+                                            </button>
+                                        ))}
+                                    </div>
+
                                     <textarea
                                         value={rejectNotes}
                                         onChange={(e) => setRejectNotes(e.target.value)}
@@ -785,12 +1108,6 @@ export function LandlordLeasesView() {
                                         className="w-full p-3 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                                     />
                                 </div>
-                            )}
-
-                            {decisionMode === 'approve' && (
-                                <p className="text-xs text-muted-foreground">
-                                    {t('Approving will notify the tenant and prepare the renewed lease terms based on their proposed schedule.')}
-                                </p>
                             )}
 
                             <div className="flex items-center gap-2 pt-1">
@@ -825,6 +1142,153 @@ export function LandlordLeasesView() {
                                         <>
                                             <X className="size-4" />
                                             {t('Confirm Decline')}
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* LEASE TERM SWITCH DRAWER / MODAL */}
+                {termSwitchLease && (
+                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+                        <div className="w-full sm:max-w-md bg-background rounded-t-3xl sm:rounded-2xl p-5 border border-slate-200 dark:border-white/10 shadow-xl flex flex-col gap-4 animate-in slide-in-from-bottom duration-200">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                        {targetTermType === 'fixed' ? <CalendarRange className="size-4" /> : <InfinityIcon className="size-4" />}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-base font-black text-foreground">{t('Change Lease Term')}</h3>
+                                        <p className="text-[10px] text-muted-foreground font-semibold">
+                                            {t('Unit {unit}', { unit: termSwitchLease.unit?.name || '' })} • {termSwitchLease.tenant?.full_name}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setTermSwitchLease(null)}
+                                    className="p-1 rounded-full text-muted-foreground hover:text-foreground"
+                                    aria-label={t('Close')}
+                                >
+                                    <X className="size-5" />
+                                </button>
+                            </div>
+
+                            {/* Current Term Banner */}
+                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-xs flex items-center justify-between">
+                                <span className="text-muted-foreground font-medium">{t('Current Lease Type:')}</span>
+                                <span className="font-bold text-foreground">
+                                    {termSwitchLease.term_type === 'open_ended' || (!termSwitchLease.end_date && termSwitchLease.status === 'active')
+                                        ? t('Month-to-Month (Open-Ended)')
+                                        : t('Fixed Term until {date}', { date: formatDate(termSwitchLease.end_date) })}
+                                </span>
+                            </div>
+
+                            {/* Target Term Type Selection */}
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        triggerHaptic('light');
+                                        setTargetTermType('open_ended');
+                                    }}
+                                    className={cn(
+                                        "p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all",
+                                        targetTermType === 'open_ended'
+                                            ? "bg-primary/10 border-primary text-primary font-bold shadow-2xs"
+                                            : "bg-card border-slate-200 dark:border-white/10 text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    <InfinityIcon className="size-5" />
+                                    <span className="text-xs">{t('Month-to-Month')}</span>
+                                    <span className="text-[9px] opacity-75 font-normal text-center">{t('Open-ended tenancy')}</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        triggerHaptic('light');
+                                        setTargetTermType('fixed');
+                                    }}
+                                    className={cn(
+                                        "p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all",
+                                        targetTermType === 'fixed'
+                                            ? "bg-amber-500/10 border-amber-500 text-amber-600 dark:text-amber-400 font-bold shadow-2xs"
+                                            : "bg-card border-slate-200 dark:border-white/10 text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    <CalendarRange className="size-5" />
+                                    <span className="text-xs">{t('Fixed-Term')}</span>
+                                    <span className="text-[9px] opacity-75 font-normal text-center">{t('Specific end date')}</span>
+                                </button>
+                            </div>
+
+                            {/* If Fixed Term selected: End Date & Presets */}
+                            {targetTermType === 'fixed' && (
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                            {t('New End Date')}
+                                        </label>
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => applyDurationPreset(6)}
+                                                className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-muted-foreground hover:text-foreground"
+                                            >
+                                                +6 Mo
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => applyDurationPreset(12)}
+                                                className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-muted-foreground hover:text-foreground"
+                                            >
+                                                +1 Yr
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => applyDurationPreset(24)}
+                                                className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-muted-foreground hover:text-foreground"
+                                            >
+                                                +2 Yrs
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <input
+                                        type="date"
+                                        value={fixedEndDate}
+                                        onChange={(e) => setFixedEndDate(e.target.value)}
+                                        className="w-full p-2.5 rounded-xl bg-card border border-slate-200 dark:border-white/10 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
+                                    />
+                                </div>
+                            )}
+
+                            {targetTermType === 'open_ended' && (
+                                <p className="text-[11px] text-muted-foreground bg-slate-50 dark:bg-white/5 p-2.5 rounded-xl border border-slate-200/60 dark:border-white/10 leading-relaxed">
+                                    {t('Converting to open-ended (month-to-month) removes the fixed expiration date. The lease remains active until either party serves a move-out notice.')}
+                                </p>
+                            )}
+
+                            <div className="flex items-center gap-2 pt-1">
+                                <button
+                                    disabled={termSwitchSubmitting}
+                                    onClick={() => setTermSwitchLease(null)}
+                                    className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-muted-foreground hover:text-foreground active:scale-98 transition-all"
+                                >
+                                    {t('Cancel')}
+                                </button>
+                                <button
+                                    disabled={termSwitchSubmitting}
+                                    onClick={handleTermSwitchSubmit}
+                                    className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold active:scale-98 transition-all flex items-center justify-center gap-1.5 shadow-xs"
+                                >
+                                    {termSwitchSubmitting ? (
+                                        <RefreshCw className="size-4 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <Check className="size-4" />
+                                            {t('Save Changes')}
                                         </>
                                     )}
                                 </button>
