@@ -14,6 +14,7 @@ import {
 } from "@/lib/application-intake";
 import { todayIsoDate } from "@/lib/validation/rules";
 import { useLanguageContext } from "@/context/LanguageContext";
+import { PhoneNumberInput } from "@/components/ui/PhoneNumberInput";
 import type { TranslationParams } from "@/lib/i18n";
 import {
     AlertCircle,
@@ -66,9 +67,11 @@ interface GlassInputProps extends InputHTMLAttributes<HTMLInputElement> {
     id: string;
     nextFieldId?: string;
     blockNumbers?: boolean;
+    /** Makes this a phone field (fixed +63, PH mobile number); gets "" or "+63…". */
+    onPhoneChange?: (value: string) => void;
 }
 
-function GlassInput({ icon: Icon, label, error, id, nextFieldId, onKeyDown, blockNumbers, ...props }: GlassInputProps) {
+function GlassInput({ icon: Icon, label, error, id, nextFieldId, onKeyDown, blockNumbers, onPhoneChange, ...props }: GlassInputProps) {
     const { t } = useLanguageContext();
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" && nextFieldId) {
@@ -105,17 +108,30 @@ function GlassInput({ icon: Icon, label, error, id, nextFieldId, onKeyDown, bloc
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-all duration-500 transform group-focus-within:rotate-[5deg] group-focus-within:scale-110 group-focus-within:text-primary">
                     <Icon size={18} strokeWidth={1.5} />
                 </div>
-                <input maxLength={resolvedMaxLength}
-                    {...props}
-                    id={id}
-                    aria-invalid={error ? true : undefined}
-                    aria-describedby={error ? `${id}-error` : undefined}
-                    onKeyDown={handleKeyDown}
-                    className={cn(
-                        "h-15 w-full rounded-2xl bg-transparent py-4 pl-12 pr-4 text-sm font-medium tracking-tight text-foreground outline-none transition-all placeholder:text-muted-foreground",
-                        "focus-visible:ring-0"
-                    )}
-                />
+                {onPhoneChange ? (
+                    <PhoneNumberInput
+                        id={id}
+                        value={typeof props.value === "string" ? props.value : ""}
+                        onValueChange={onPhoneChange}
+                        onBlur={props.onBlur}
+                        aria-invalid={error ? true : undefined}
+                        aria-describedby={error ? `${id}-error` : undefined}
+                        onKeyDown={handleKeyDown}
+                        className="h-15 w-full rounded-2xl bg-transparent py-4 pl-12 pr-4 text-sm font-medium tracking-tight text-foreground outline-none transition-all placeholder:text-muted-foreground focus-visible:ring-0"
+                    />
+                ) : (
+                    <input maxLength={resolvedMaxLength}
+                        {...props}
+                        id={id}
+                        aria-invalid={error ? true : undefined}
+                        aria-describedby={error ? `${id}-error` : undefined}
+                        onKeyDown={handleKeyDown}
+                        className={cn(
+                            "h-15 w-full rounded-2xl bg-transparent py-4 pl-12 pr-4 text-sm font-medium tracking-tight text-foreground outline-none transition-all placeholder:text-muted-foreground",
+                            "focus-visible:ring-0"
+                        )}
+                    />
+                )}
             </div>
             {error && <p id={`${id}-error`} role="alert" className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{t(error)}</p>}
         </div>
@@ -510,15 +526,11 @@ export function ApplicationIdentityStep({
                         <GlassInput
                             id="applicant-phone"
                             icon={Phone}
-                            label="Phone Number"
-                            type="tel"
-                            inputMode="tel"
-                            maxLength={11}
-                            placeholder="09171234567"
+                            label="Mobile Number"
                             value={formData.applicant_phone}
                             error={formErrors.applicant_phone}
                             nextFieldId="move-in-date"
-                            onChange={(e: ChangeEvent<HTMLInputElement>) => onFieldChange("applicant_phone", e.target.value.replace(/\s/g, ""), ["applicant_phone"])}
+                            onPhoneChange={(value) => onFieldChange("applicant_phone", value, ["applicant_phone"])}
                         />
                     </div>
 
@@ -569,14 +581,10 @@ export function ApplicationIdentityStep({
                         <GlassInput
                             id="emergency-contact-phone"
                             icon={Phone}
-                            label="Contact Number"
-                            type="tel"
-                            inputMode="tel"
-                            maxLength={11}
-                            placeholder="09171234567"
+                            label="Mobile Number"
                             value={formData.emergency_contact_phone}
                             error={formErrors.emergency_contact_phone}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) => onFieldChange("emergency_contact_phone", e.target.value.replace(/\s/g, ""), ["emergency_contact_phone"])}
+                            onPhoneChange={(value) => onFieldChange("emergency_contact_phone", value, ["emergency_contact_phone"])}
                         />
                     </div>
                 </section>

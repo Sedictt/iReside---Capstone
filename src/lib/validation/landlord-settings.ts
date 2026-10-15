@@ -10,6 +10,7 @@
 
 import { z } from "zod";
 import { getPasswordPolicyError, type PasswordContext } from "./password-policy";
+import { isPhMobileEmpty, phMobileError } from "@/lib/phone";
 
 // ---------------------------------------------------------------------------
 // Regular Expressions & Constants
@@ -84,38 +85,12 @@ export function validateEmail(value: string): { isValid: boolean; error?: string
 }
 
 /**
- * Validates a phone number (Philippine or international standard).
- * Requirements: 7 to 15 digits; accepts '+', '-', '()', spaces.
+ * Validates a contact number: a Philippine mobile number (+63 9XX XXX XXXX).
+ * "09…" and "+63…" forms are both accepted; see src/lib/phone.ts.
  */
 export function validatePhoneNumber(value: string, isRequired = false): { isValid: boolean; error?: string } {
-    const trimmed = value?.trim() ?? "";
-    if (!trimmed) {
-        if (isRequired) {
-            return { isValid: false, error: "Phone number is required." };
-        }
-        return { isValid: true };
-    }
-
-    // Strip non-digit characters except leading plus
-    const cleanDigits = trimmed.replace(/[^\d+]/g, "");
-    const digitsOnly = trimmed.replace(/\D/g, "");
-
-    if (digitsOnly.length < 7) {
-        return { isValid: false, error: "Phone number must have at least 7 digits." };
-    }
-    if (digitsOnly.length > 15) {
-        return { isValid: false, error: "Phone number cannot exceed 15 digits." };
-    }
-
-    // Check if Philippine mobile: e.g. 09XXXXXXXXX (11 digits) or +639XXXXXXXXX (12 digits)
-    if (trimmed.startsWith("09") && digitsOnly.length !== 11) {
-        return { isValid: false, error: "Philippine mobile numbers starting with 09 must be 11 digits." };
-    }
-    if (cleanDigits.startsWith("+639") && digitsOnly.length !== 12) {
-        return { isValid: false, error: "Philippine mobile numbers starting with +639 must have 12 digits." };
-    }
-
-    return { isValid: true };
+    const error = phMobileError(value, { required: isRequired });
+    return error ? { isValid: false, error } : { isValid: true };
 }
 
 /**
@@ -420,9 +395,9 @@ export function validateAllLandlordSettings(
     if (!emergPhoneCheck.isValid) {
         errors["emergency_contact_phone"] = emergPhoneCheck.error!;
     }
-    // Cross check: if one is present, both are recommended
-    if (formData.emergency_contact_name.trim() && !formData.emergency_contact_phone.trim()) {
-        errors["emergency_contact_phone"] = "Emergency phone number is required when a contact name is provided.";
+    // Cross check: a name without a number can't be called.
+    if (formData.emergency_contact_name.trim() && isPhMobileEmpty(formData.emergency_contact_phone)) {
+        errors["emergency_contact_phone"] = "Please also type their mobile number, or clear their name.";
     }
 
     // 3. Identity -> Socials

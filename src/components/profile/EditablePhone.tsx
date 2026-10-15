@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { phoneRule } from "@/lib/validation/rules";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { tr } from "@/hooks/useLanguage";
+import { PhoneNumberInput } from "@/components/ui/PhoneNumberInput";
+import { formatPhMobile, toPhMobileE164 } from "@/lib/phone";
 
 type EditablePhoneProps = {
     initialPhone?: string | null;
@@ -25,9 +27,7 @@ export function EditablePhone({ initialPhone, userId, className }: EditablePhone
     const [error, setError] = useState<string | null>(null);
 
     const handlePhoneChange = (val: string) => {
-        // Strict real-time sanitization: keep only digits, spaces, plus, hyphens, and parens
-        const sanitized = val.replace(/[^0-9+\-()\s]/g, "");
-        setTempPhone(sanitized);
+        setTempPhone(val);
         if (error) setError(null);
     };
 
@@ -51,14 +51,15 @@ export function EditablePhone({ initialPhone, userId, className }: EditablePhone
 
         try {
             const supabase = createClient();
+            const saved = toPhMobileE164(tempPhone) ?? tempPhone.trim();
             const { error: updateError } = await supabase
                 .from("profiles")
-                .update({ phone: tempPhone.trim() })
+                .update({ phone: saved })
                 .eq("id", userId);
 
             if (updateError) throw updateError;
 
-            setPhone(tempPhone.trim());
+            setPhone(saved);
             setIsEditing(false);
             toast.success(t("Phone number updated successfully"));
             window.dispatchEvent(new CustomEvent("profile-updated"));
@@ -76,19 +77,15 @@ export function EditablePhone({ initialPhone, userId, className }: EditablePhone
         return (
             <form onSubmit={handleSave} noValidate className="flex flex-col items-center gap-2 w-full max-w-xs animate-in fade-in">
                 <div className="relative w-full">
-                    <input maxLength={25}
-                        type="tel"
-                        inputMode="tel"
-                        autoComplete="tel"
+                    <PhoneNumberInput
                         aria-label={t("Phone number")}
                         aria-invalid={error ? true : undefined}
                         aria-describedby={error ? `phone-error-${userId}` : undefined}
                         value={tempPhone}
-                        onChange={(e) => handlePhoneChange(e.target.value)}
+                        onValueChange={handlePhoneChange}
                         onBlur={() => validatePhone(tempPhone)}
-                        placeholder="+63 912 345 6789"
                         autoFocus
-                        className="w-full bg-background border border-border focus:border-primary rounded-xl px-3 py-1.5 text-sm text-foreground text-center focus:outline-none transition-colors neumorphic-inset"
+                        className="w-full bg-background border-2 border-foreground/25 focus:border-foreground/60 rounded-xl px-3 py-2 text-base text-foreground focus:outline-none transition-colors"
                     />
                 </div>
                 {error && (
@@ -145,10 +142,10 @@ export function EditablePhone({ initialPhone, userId, className }: EditablePhone
     return (
         <div className="group/phone flex items-center justify-center gap-2">
             <a
-                href={`tel:${phone}`}
+                href={`tel:${toPhMobileE164(phone) ?? phone}`}
                 className="text-sm font-medium hover:text-primary transition-colors"
             >
-                {phone}
+                {formatPhMobile(phone)}
             </a>
             <button
                 type="button"

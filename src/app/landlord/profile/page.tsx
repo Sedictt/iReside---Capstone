@@ -22,6 +22,7 @@ import { SocialsHeader } from '@/components/profile/SocialsHeader';
 import { ProfileSetupBanner } from '@/components/profile/ProfileSetupBanner';
 import { EditablePhone } from '@/components/profile/EditablePhone';
 import { T } from '@/context/LanguageContext';
+import { formatPhMobile } from "@/lib/phone";
 
 type LandlordProperty = {
     id: string;
@@ -391,7 +392,7 @@ export default async function LandlordProfilePage() {
                                     <p className="text-[10px] font-black tracking-widest text-red-400 opacity-80 uppercase mt-2">
                                         {emergencyContactName ? <T params={{ name: emergencyContactName }}>{"Emergency ({name})"}</T> : <T>Emergency Contact</T>}
                                     </p>
-                                    <a href={`tel:${emergencyContactPhone}`} className="text-sm font-bold text-red-400 hover:underline">{emergencyContactPhone}</a>
+                                    <a href={`tel:${emergencyContactPhone}`} className="text-sm font-bold text-red-400 hover:underline">{formatPhMobile(emergencyContactPhone)}</a>
                                 </div>
                             )}
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">

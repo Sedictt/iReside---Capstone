@@ -32,6 +32,7 @@ import {
     Search,
 } from "lucide-react";
 import { useLanguageContext } from "@/context/LanguageContext";
+import { PhoneNumberInput } from "@/components/ui/PhoneNumberInput";
 import { tr } from "@/hooks/useLanguage";
 
 const SignaturePad = dynamic(() => import("./SignaturePad").then(mod => mod.SignaturePad), {
@@ -68,6 +69,7 @@ import {
     ADVANCE_TEMPLATE_KEYS,
     DEPOSIT_TEMPLATE_KEYS,
 } from "@/lib/application-payment-pending";
+import { formatPhMobile } from "@/lib/phone";
 
 // ─── Types ────────────────────────────────────────────────────────────
 interface LeaseData {
@@ -236,9 +238,11 @@ interface GlassInputProps extends InputHTMLAttributes<HTMLInputElement> {
     error?: string;
     id: string;
     nextFieldId?: string;
+    /** Makes this a phone field (fixed +63, PH mobile number); gets "" or "+63…". */
+    onPhoneChange?: (value: string) => void;
 }
 
-const GlassInput = ({ icon: Icon, label, error, id, nextFieldId, onKeyDown, ...props }: GlassInputProps) => {
+const GlassInput = ({ icon: Icon, label, error, id, nextFieldId, onKeyDown, onPhoneChange, ...props }: GlassInputProps) => {
     const { t } = useLanguageContext();
     const isTextType = !props.type || ['text', 'email', 'search', 'tel', 'url'].includes(props.type);
     const resolvedMaxLength = props.maxLength ?? (
@@ -271,15 +275,26 @@ const GlassInput = ({ icon: Icon, label, error, id, nextFieldId, onKeyDown, ...p
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-all duration-500 transform group-focus-within:rotate-[5deg] group-focus-within:scale-110 group-focus-within:text-primary">
                     <Icon size={18} strokeWidth={1.5} />
                 </div>
-                <input maxLength={resolvedMaxLength}
-                    {...props}
-                    id={id}
-                    onKeyDown={handleKeyDown}
-                    className={cn(
-                        "h-15 w-full rounded-2xl bg-transparent py-4 pl-12 pr-4 text-sm font-medium tracking-tight text-foreground outline-none transition-all placeholder:text-muted-foreground",
-                        "focus-visible:ring-0"
-                    )}
-                />
+                {onPhoneChange ? (
+                    <PhoneNumberInput
+                        id={id}
+                        value={typeof props.value === "string" ? props.value : ""}
+                        onValueChange={onPhoneChange}
+                        onBlur={props.onBlur}
+                        onKeyDown={handleKeyDown}
+                        className="h-15 w-full rounded-2xl bg-transparent py-4 pl-12 pr-4 text-sm font-medium tracking-tight text-foreground outline-none transition-all placeholder:text-muted-foreground focus-visible:ring-0"
+                    />
+                ) : (
+                    <input maxLength={resolvedMaxLength}
+                        {...props}
+                        id={id}
+                        onKeyDown={handleKeyDown}
+                        className={cn(
+                            "h-15 w-full rounded-2xl bg-transparent py-4 pl-12 pr-4 text-sm font-medium tracking-tight text-foreground outline-none transition-all placeholder:text-muted-foreground",
+                            "focus-visible:ring-0"
+                        )}
+                    />
+                )}
             </div>
             {error && <p className="text-[10px] text-red-400 font-black uppercase tracking-wider ml-1 mt-1">{t(error)}</p>}
         </div>
@@ -1259,12 +1274,11 @@ export function WalkInApplicationModal({
                                                       <GlassInput 
                                                           id="applicant-phone"
                                                           icon={Phone} 
-                                                          label="Phone Number" 
-                                                         placeholder="+63 9xx xxx xxxx"
+                                                          label="Mobile Number" 
                                                          value={formData.applicant_phone}
                                                          error={formErrors.applicant_phone}
                                                          nextFieldId="move-in-date"
-                                                         onChange={(e: ChangeEvent<HTMLInputElement>) => updateField("applicant_phone", e.target.value, ["applicant_phone"])}
+                                                         onPhoneChange={(value: string) => updateField("applicant_phone", value, ["applicant_phone"])}
                                                      />
                                                  </div>
 
@@ -1312,11 +1326,10 @@ export function WalkInApplicationModal({
                                                      <GlassInput
                                                          id="emergency-contact-phone"
                                                          icon={Phone}
-                                                         label="Contact Number"
-                                                         placeholder="+63 9xx xxx xxxx"
+                                                         label="Mobile Number"
                                                          value={formData.emergency_contact_phone}
                                                          error={formErrors.emergency_contact_phone}
-                                                         onChange={(e: ChangeEvent<HTMLInputElement>) => updateField("emergency_contact_phone", e.target.value, ["emergency_contact_phone"])}
+                                                         onPhoneChange={(value: string) => updateField("emergency_contact_phone", value, ["emergency_contact_phone"])}
                                                      />
                                                  </div>
                                             </section>
@@ -1980,7 +1993,7 @@ export function WalkInApplicationModal({
                                                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("Emergency Contact")}</p>
                                                  <p className="text-xl font-black tracking-tighter text-foreground">{formData.emergency_contact_name || "—"}</p>
                                                  <div className="pt-2">
-                                                     <p className="text-[9px] font-black text-red-400 uppercase tracking-[0.3em]">{formData.emergency_contact_phone || "—"}</p>
+                                                     <p className="text-[9px] font-black text-red-400 uppercase tracking-[0.3em]">{formatPhMobile(formData.emergency_contact_phone) || "—"}</p>
                                                  </div>
                                              </div>
                                         </div>

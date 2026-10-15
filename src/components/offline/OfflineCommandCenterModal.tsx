@@ -34,6 +34,8 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useLanguageContext } from "@/context/LanguageContext";
+import { PhoneNumberInput } from "@/components/ui/PhoneNumberInput";
+import { phMobileError, toPhMobileE164 } from "@/lib/phone";
 
 type ActiveView = 
   | "menu" 
@@ -1029,12 +1031,17 @@ function OfflineRegistrationView({ onDone }: { onDone: () => void }) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !phone.trim()) return;
+    if (!name.trim()) return;
+    const phoneError = phMobileError(phone, { required: true });
+    if (phoneError) {
+      toast.error(t(phoneError));
+      return;
+    }
 
     const generatedVoucher = `INVITE-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
     const payload = {
       fullName: name,
-      phone,
+      phone: toPhMobileE164(phone) ?? phone,
       unitName: unit,
       monthlyRent: Number(rent),
       voucherCode: generatedVoucher,
@@ -1099,12 +1106,13 @@ function OfflineRegistrationView({ onDone }: { onDone: () => void }) {
         </div>
         <div>
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">{t("Mobile Phone Number")}</label>
-          <input maxLength={15}
-            type="tel"
+          <PhoneNumberInput
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="e.g. 09171234567"
-            className="w-full mt-1.5 px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-primary/30 outline-none transition-all"
+            onValueChange={setPhone}
+            aria-label={t("Mobile Phone Number")}
+            wrapperClassName="mt-1.5"
+            prefixClassName="text-slate-900 dark:text-white"
+            className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/5 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-primary/30 outline-none transition-all"
             required
           />
         </div>

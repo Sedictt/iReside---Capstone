@@ -29,6 +29,7 @@ import { useFormValidation } from "@/hooks/useFormValidation";
 import { textRule } from "@/lib/validation/rules";
 import { LIFECYCLE_LIMITS } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { tr } from "@/hooks/useLanguage";
+import { formatPhMobile } from "@/lib/phone";
 
 interface MoveOutRequest {
  id: string;
@@ -322,7 +323,7 @@ export function MoveOutRequestDetails({ request, onBack, onUpdate }: MoveOutRequ
  </a>
  {request.lease.tenant.phone && (
  <div className="flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
- <MessageSquare className="size-3.5" /> {request.lease.tenant.phone}
+ <MessageSquare className="size-3.5" /> {formatPhMobile(request.lease.tenant.phone)}
  </div>
  )}
  </div>

@@ -72,6 +72,8 @@ import {
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import { DISALLOWED_PRESEEDED_DATA, isPreseededPhone } from "@/lib/validation/brand-setup";
 import { tr } from "@/hooks/useLanguage";
+import { PhoneNumberInput } from "@/components/ui/PhoneNumberInput";
+import { isPhMobileEmpty } from "@/lib/phone";
 import {
     SettingsButton,
     SettingsCard,
@@ -1708,7 +1710,7 @@ export function LandlordSettings({ embedded = false }: { embedded?: boolean } = 
             case "emergency_contact_phone": {
                 const phoneError = validatePhoneNumber(value).error;
                 if (phoneError) return phoneError;
-                if (formData.emergency_contact_name.trim() && !value.trim()) return "Emergency phone number is required when a contact name is provided.";
+                if (formData.emergency_contact_name.trim() && isPhMobileEmpty(value)) return "Please also type their mobile number, or clear their name.";
                 return undefined;
             }
         }
@@ -1737,6 +1739,18 @@ export function LandlordSettings({ embedded = false }: { embedded?: boolean } = 
             "aria-invalid": error ? true : undefined,
             "aria-describedby": describedBy(id, hasHelp, Boolean(error)),
             className: settingsInputClass(Boolean(error)),
+        };
+    };
+
+    /** Phone fields use the shared +63 input, which reports the number instead of an event. */
+    const bindPhone = (name: "phone" | "emergency_contact_phone", hasHelp = false) => {
+        const { onChange: _textOnChange, ...rest } = bindText(name, hasHelp);
+        return {
+            ...rest,
+            onValueChange: (next: string) => {
+                updateFormData({ [name]: next } as Partial<typeof formData>);
+                if (touchedFields[name] || fieldErrors[name]) setFieldError(name, validateTextField(name, next));
+            },
         };
     };
 
@@ -1857,10 +1871,10 @@ export function LandlordSettings({ embedded = false }: { embedded?: boolean } = 
                             label={t("Phone number")}
                             htmlFor={fieldId("phone")}
                             optional
-                            help={t("Example: 0917 123 4567")}
+                            help={t("A mobile number. Example: +63 917 123 4567")}
                             error={errorFor("phone")}
                         >
-                            <input type="tel" inputMode="tel" autoComplete="tel" maxLength={25} {...bindText("phone", true)} />
+                            <PhoneNumberInput {...bindPhone("phone", true)} />
                         </SettingsField>
                         <SettingsField label={t("Office address")} htmlFor={fieldId("address")} optional error={errorFor("address")}>
                             <input type="text" autoComplete="street-address" maxLength={250} {...bindText("address")} />
@@ -1888,13 +1902,13 @@ export function LandlordSettings({ embedded = false }: { embedded?: boolean } = 
                             <input type="text" maxLength={70} {...bindText("emergency_contact_name")} />
                         </SettingsField>
                         <SettingsField
-                            label={t("Their phone number")}
+                            label={t("Their mobile number")}
                             htmlFor={fieldId("emergency_contact_phone")}
-                            optional
+                            optional={!formData.emergency_contact_name.trim()}
                             help={t("A number that can be reached any time.")}
                             error={errorFor("emergency_contact_phone")}
                         >
-                            <input type="tel" inputMode="tel" maxLength={25} {...bindText("emergency_contact_phone", true)} />
+                            <PhoneNumberInput {...bindPhone("emergency_contact_phone", true)} autoComplete="off" />
                         </SettingsField>
                     </div>
                 </SettingsCard>

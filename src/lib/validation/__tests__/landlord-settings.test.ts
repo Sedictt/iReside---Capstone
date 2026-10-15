@@ -71,11 +71,15 @@ describe("Landlord Settings Validation", () => {
             expect(validatePhoneNumber("091234").isValid).toBe(false); // Philippine 09 must be 11 digits
         });
 
-        it("accepts valid Philippine and international numbers", () => {
+        it("accepts Philippine mobile numbers in any common form", () => {
             expect(validatePhoneNumber("09171234567").isValid).toBe(true);
             expect(validatePhoneNumber("+639171234567").isValid).toBe(true);
             expect(validatePhoneNumber("+63 917 123 4567").isValid).toBe(true);
-            expect(validatePhoneNumber("+14155552671").isValid).toBe(true);
+        });
+
+        it("rejects numbers that are not Philippine mobile numbers", () => {
+            expect(validatePhoneNumber("+14155552671").isValid).toBe(false); // foreign
+            expect(validatePhoneNumber("(02) 8123 4567").isValid).toBe(false); // landline
         });
     });
 

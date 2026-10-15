@@ -73,6 +73,7 @@ import { FieldError } from "@/components/ui/field-error";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { MAX_MONEY_AMOUNT, moneyRule, textRule } from "@/lib/validation/rules";
 import { LIFECYCLE_LIMITS } from "@/lib/validation/schemas/tenant-lifecycle.schema";
+import { formatPhMobile } from "@/lib/phone";
 
 // ─── Types ────────────────────────────────────────────────────────────
 type ApplicationStatus =
@@ -1612,7 +1613,7 @@ export function RentApplications() {
  <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
  <Phone className="size-3" /> {t("Phone")}
  </span>
- <p className="text-sm font-black text-foreground">{selectedApp.applicant.phone || t("Not provided")}</p>
+ <p className="text-sm font-black text-foreground">{formatPhMobile(selectedApp.applicant.phone) || t("Not provided")}</p>
  </div>
  <div className="space-y-1">
  <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">

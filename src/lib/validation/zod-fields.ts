@@ -20,6 +20,7 @@ import {
   phoneRule,
   type DateRuleOptions,
 } from "./rules";
+import { toPhMobileE164 } from "@/lib/phone";
 
 /** Required trimmed text. Whitespace-only is rejected as empty. */
 export const zRequiredText = (label: string, max: number, min = 1) =>
@@ -57,6 +58,7 @@ export const zPersonName = (label = "Full name") =>
       if (error) ctx.addIssue({ code: "custom", message: error });
     });
 
+/** Optional PH mobile number; saved as "+639XXXXXXXXX" (or null when empty). */
 export const zOptionalPhone = () =>
   z
     .string({ error: "Phone number must be text." })
@@ -67,16 +69,19 @@ export const zOptionalPhone = () =>
       const error = phoneRule(value ?? "", { required: false });
       if (error) ctx.addIssue({ code: "custom", message: error });
     })
-    .transform((value) => (value ? value : null));
+    .transform((value) => toPhMobileE164(value) ?? null);
 
+/** Required PH mobile number; saved as "+639XXXXXXXXX". */
 export const zRequiredPhone = () =>
   z
-    .string({ error: "Phone number is required." })
+    .string({ error: "Please type a mobile number." })
     .trim()
+    .max(25, "Phone number is too long.")
     .superRefine((value, ctx) => {
       const error = phoneRule(value, { required: true });
       if (error) ctx.addIssue({ code: "custom", message: error });
-    });
+    })
+    .transform((value) => toPhMobileE164(value) ?? value);
 
 export const zNewPassword = (label = "Password") =>
   z.string({ error: `${label} is required.` }).superRefine((value, ctx) => {

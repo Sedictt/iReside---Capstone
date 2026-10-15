@@ -42,6 +42,7 @@ const properties = [
 type Property = typeof properties[0];
 
 import { m as motion, AnimatePresence } from "framer-motion";
+import { PhoneNumberInput } from "@/components/ui/PhoneNumberInput";
 
 // import PropertyDetailModal from "@/components/PropertyDetailModal"; // Removed legacy component
 const PropertyDetailModal = ({ property, isLiked, onLike, open, onOpenChange }: any) => null; 
@@ -66,7 +67,7 @@ export default function RentApplicationPage() {
         lastName: "Cooper",
         middleName: "",
         email: "jane.cooper@example.com",
-        phone: "+63 912 345 6789",
+        phone: "+639123456789",
         currentAddress: "123 Maple Street, Quezon City",
         emergencyContactName: "",
         emergencyContactPhone: "",
@@ -348,7 +349,7 @@ export default function RentApplicationPage() {
                                                 <FormField label={t("First Name")} value={formData.firstName} onChange={(v: string) => setFormData(prev => ({ ...prev, firstName: v }))} placeholder={t("e.g. Jane")} />
                                                 <FormField label={t("Last Name")} value={formData.lastName} onChange={(v: string) => setFormData(prev => ({ ...prev, lastName: v }))} placeholder={t("e.g. Cooper")} />
                                                 <FormField label={t("Email")} value={formData.email} onChange={(v: string) => setFormData(prev => ({ ...prev, email: v }))} type="email" placeholder="email@example.com" />
-                                                <FormField label={t("Phone")} value={formData.phone} onChange={(v: string) => setFormData(prev => ({ ...prev, phone: v }))} placeholder="+63 900 000 0000" />
+                                                <FormField label={t("Phone")} type="tel" value={formData.phone} onChange={(v: string) => setFormData(prev => ({ ...prev, phone: v }))} />
                                                 <div className="md:col-span-2">
                                                     <div className="flex items-center gap-2 mb-4">
                                                         <div className="h-px flex-1 bg-white/10" />
@@ -357,7 +358,7 @@ export default function RentApplicationPage() {
                                                     </div>
                                                 </div>
                                                 <FormField label={t("Contact Person")} value={formData.emergencyContactName} onChange={(v: string) => setFormData(prev => ({ ...prev, emergencyContactName: v }))} placeholder={t("Full Name")} />
-                                                <FormField label={t("Contact Phone")} value={formData.emergencyContactPhone} onChange={(v: string) => setFormData(prev => ({ ...prev, emergencyContactPhone: v }))} placeholder={t("Mobile Number")} />
+                                                <FormField label={t("Contact Phone")} type="tel" value={formData.emergencyContactPhone} onChange={(v: string) => setFormData(prev => ({ ...prev, emergencyContactPhone: v }))} />
                                                 <div className="md:col-span-2">
                                                     <FormField label={t("Desired Move-in")} value={formData.moveInDate} onChange={(v: string) => setFormData(prev => ({ ...prev, moveInDate: v }))} type="date" />
                                                 </div>
@@ -397,7 +398,7 @@ export default function RentApplicationPage() {
                                                 </p>
                                             </div>
                                             <FormField label={t("Reference Person")} value={formData.referenceName} onChange={(v: string) => setFormData(prev => ({ ...prev, referenceName: v }))} placeholder={t("Employer or Previous Landlord")} />
-                                            <FormField label={t("Reference Contact")} value={formData.referencePhone} onChange={(v: string) => setFormData(prev => ({ ...prev, referencePhone: v }))} placeholder={t("Mobile Number")} />
+                                            <FormField label={t("Reference Contact")} type="tel" value={formData.referencePhone} onChange={(v: string) => setFormData(prev => ({ ...prev, referencePhone: v }))} />
 
                                             <div className="md:col-span-2 p-6 rounded-3xl bg-blue-500/5 border border-blue-500/10 flex items-start gap-4 shadow-inner">
                                                 <Shield className="size-6 text-blue-400 shrink-0 mt-0.5" />
@@ -798,19 +799,25 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
 }
 
 function FormField({ label, value, onChange, placeholder, type = "text" }: any) {
+    const inputClass = "w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:bg-white/[0.06] transition-all font-black text-white placeholder:text-white/10 text-sm";
     return (
         <div className="group space-y-3">
             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1 group-focus-within:text-primary transition-colors">
                 {label}
             </label>
             <div className="relative">
-                <input maxLength={120}
-                    type={type}
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    placeholder={placeholder}
-                    className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:bg-white/[0.06] transition-all font-black text-white placeholder:text-white/10 text-sm"
-                />
+                {type === "tel" ? (
+                    // Phone numbers: fixed +63 and the PH mobile rule, like every phone field.
+                    <PhoneNumberInput aria-label={label} value={value} onValueChange={onChange} prefixClassName="text-white" className={inputClass} />
+                ) : (
+                    <input maxLength={120}
+                        type={type}
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        placeholder={placeholder}
+                        className={inputClass}
+                    />
+                )}
                 {/* Accent Line */}
                 <div className="absolute bottom-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-primary/0 to-transparent group-focus-within:via-primary/50 transition-all duration-500" />
             </div>

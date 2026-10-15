@@ -14,7 +14,8 @@
  * @module lib/validation/rules
  */
 
-import { REGEX_EMAIL, REGEX_NAME, validatePhoneNumber } from "./landlord-settings";
+import { REGEX_EMAIL, REGEX_NAME } from "./landlord-settings";
+import { phMobileError } from "@/lib/phone";
 import { getPasswordPolicyError, type PasswordContext } from "./password-policy";
 
 export type FieldRuleResult = string | undefined;
@@ -79,11 +80,10 @@ export function emailRule(value: unknown, { label = "Email address", required = 
   return undefined;
 }
 
-/** Philippine or international phone (7–15 digits). Delegates to the existing settings rule. */
+/** Philippine mobile number (+63 9XX XXX XXXX). Same rule as every phone field; see src/lib/phone.ts. */
 export function phoneRule(value: unknown, { required = false } = {}): FieldRuleResult {
-  if (isBlank(value)) return required ? "Phone number is required." : undefined;
-  const check = validatePhoneNumber(String(value), required);
-  return check.isValid ? undefined : check.error;
+  if (isBlank(value)) return required ? "Please type a mobile number." : undefined;
+  return phMobileError(value, { required });
 }
 
 /**

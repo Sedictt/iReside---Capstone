@@ -22,6 +22,7 @@ import {
 import { cn } from '@/lib/utils';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { useLanguageContext } from '@/context/LanguageContext';
+import { formatPhMobile } from "@/lib/phone";
 
 interface LeaseInfo {
     id: string;
@@ -273,7 +274,7 @@ export function TenantHomeView() {
                                     {lease.landlordName}
                                 </h4>
                                 <p className="text-[10px] text-muted-foreground truncate">
-                                    {lease.landlordPhone || lease.landlordEmail || t('Tap to message')}
+                                    {formatPhMobile(lease.landlordPhone) || lease.landlordEmail || t('Tap to message')}
                                 </p>
                             </div>
                             <Link

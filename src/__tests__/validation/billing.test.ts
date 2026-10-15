@@ -142,8 +142,12 @@ describe("billing rules", () => {
     it("gcashNumberRule accepts PH mobile formats only", () => {
         expect(gcashNumberRule("0917 123 4567")).toBeUndefined();
         expect(gcashNumberRule("+639171234567")).toBeUndefined();
-        expect(gcashNumberRule("12345")).toMatch(/valid GCash number/);
-        expect(gcashNumberRule("", { required: true })).toBe("GCash number is required.");
+        expect(gcashNumberRule("+63 917 123 4567")).toBeUndefined();
+        expect(gcashNumberRule("12345")).toMatch(/must start with 9/);
+        expect(gcashNumberRule("0917123456")).toMatch(/all 10 numbers after \+63/);
+        expect(gcashNumberRule("abc")).toBe("A mobile number can only have numbers.");
+        expect(gcashNumberRule("+63")).toBeUndefined();
+        expect(gcashNumberRule("", { required: true })).toBe("Please type your GCash mobile number.");
     });
 
     it("rejectionReasonRule requires a reason only when rejecting", () => {

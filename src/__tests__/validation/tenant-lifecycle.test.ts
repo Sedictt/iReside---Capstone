@@ -85,8 +85,10 @@ describe("applicant field rules", () => {
     expect(phMobileRule("09171234567")).toBeUndefined();
     expect(phMobileRule("9171234567")).toBeUndefined();
     expect(phMobileRule("+639171234567")).toBeUndefined();
-    expect(phMobileRule("0917123456")).toMatch(/valid Philippine mobile/);
-    expect(phMobileRule("02-8123-4567")).toMatch(/valid Philippine mobile/);
+    expect(phMobileRule("+63 917 123 4567")).toBeUndefined();
+    expect(phMobileRule("0917123456")).toMatch(/all 10 numbers after \+63/);
+    expect(phMobileRule("02-8123-4567")).toMatch(/must start with 9/);
+    expect(phMobileRule("+63", { required: true })).toBe("Phone number is required.");
     expect(phMobileRule("", { required: true })).toBe("Phone number is required.");
   });
 

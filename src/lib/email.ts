@@ -22,6 +22,7 @@ import {
     peso,
     longDate,
 } from "./email/layout";
+import { formatPhMobile } from "@/lib/phone";
 
 export async function sendTenantCredentials({
     to,
@@ -923,7 +924,7 @@ export async function sendNewApplicationReceivedEmail({
         { label: "Applicant Name", value: applicantName },
         { label: "Email", value: applicantEmail, accent: true, strong: false },
     ];
-    if (applicantPhone) rows.push({ label: "Phone", value: applicantPhone, strong: false });
+    if (applicantPhone) rows.push({ label: "Phone", value: formatPhMobile(applicantPhone), strong: false });
     if (moveInDate) rows.push({ label: "Target Move-In", value: moveInDate, strong: false });
     rows.push({ label: "Property / Unit", value: `${propertyName}${cleanUnit}` });
 
@@ -947,7 +948,7 @@ You have received a new rental application for ${propertyName}${cleanUnit}.
 
 Applicant: ${applicantName}
 Email: ${applicantEmail}
-${applicantPhone ? `Phone: ${applicantPhone}\n` : ""}${moveInDate ? `Move-in Date: ${moveInDate}\n` : ""}
+${applicantPhone ? `Phone: ${formatPhMobile(applicantPhone)}\n` : ""}${moveInDate ? `Move-in Date: ${moveInDate}\n` : ""}
 Review the application dossier here: ${dossierUrl}
 
 — iReside Property Management`;

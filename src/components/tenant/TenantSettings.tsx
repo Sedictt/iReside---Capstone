@@ -27,6 +27,8 @@ import { createClient as createStandaloneSupabaseClient } from "@supabase/supaba
 import { toast } from "sonner";
 
 import { useFormValidation } from "@/hooks/useFormValidation";
+import { PhoneNumberInput } from "@/components/ui/PhoneNumberInput";
+import { toPhMobileE164 } from "@/lib/phone";
 import {
     PASSWORD_MAX_LENGTH,
     TEXT_LIMITS,
@@ -205,6 +207,12 @@ export function TenantSettings({ embedded = false }: { embedded?: boolean } = {}
         };
     };
 
+    /** Props for a phone field: the shared +63 input reports the number, not an event. */
+    const bindProfilePhone = (name: "phone" | "emergency_phone", id: string, hasHelp = false) => {
+        const { onChange: _textOnChange, ...rest } = bindProfileInput(name, id, hasHelp);
+        return { ...rest, onValueChange: (next: string) => setField(name, next) };
+    };
+
     const handleSaveProfile = async (): Promise<boolean> => {
         if (!profile || isSavingProfile) return false;
         if (!profileForm.validateAll()) {
@@ -216,7 +224,7 @@ export function TenantSettings({ embedded = false }: { embedded?: boolean } = {}
             const socialsWithEmergency = {
                 ...((profile.socials as any) || {}),
                 emergency_contact_name: formData.emergency_name,
-                emergency_contact_phone: formData.emergency_phone,
+                emergency_contact_phone: toPhMobileE164(formData.emergency_phone) ?? "",
             };
 
             const { error } = await supabase
@@ -227,7 +235,7 @@ export function TenantSettings({ embedded = false }: { embedded?: boolean } = {}
 
             try {
                 await supabase.auth.updateUser({
-                    data: { emergency_contact_name: formData.emergency_name, emergency_contact_phone: formData.emergency_phone },
+                    data: { emergency_contact_name: formData.emergency_name, emergency_contact_phone: toPhMobileE164(formData.emergency_phone) ?? "" },
                 });
             } catch {
                 // non-blocking
@@ -236,7 +244,7 @@ export function TenantSettings({ embedded = false }: { embedded?: boolean } = {}
             const { error: privateError } = await (supabase as any)
                 .from("profile_private")
                 .upsert(
-                    { profile_id: profile.id, phone: formData.phone.trim() || null, address: formData.address.trim() || null, updated_at: new Date().toISOString() },
+                    { profile_id: profile.id, phone: toPhMobileE164(formData.phone), address: formData.address.trim() || null, updated_at: new Date().toISOString() },
                     { onConflict: "profile_id" },
                 );
             if (privateError) throw privateError;
@@ -538,11 +546,11 @@ export function TenantSettings({ embedded = false }: { embedded?: boolean } = {}
                         <SettingsField
                             label={t("Phone number")}
                             htmlFor="tenant-phone"
-                            help={t("Example: 0917 123 4567")}
+                            help={t("A mobile number. Example: +63 917 123 4567")}
                             error={tErr(profileForm.errorFor("phone"))}
                             errorId={profileForm.errorId("phone")}
                         >
-                            <input type="tel" inputMode="tel" autoComplete="tel" maxLength={25} {...bindProfileInput("phone", "tenant-phone", true)} />
+                            <PhoneNumberInput {...bindProfilePhone("phone", "tenant-phone", true)} />
                         </SettingsField>
 
                         <SettingsField label={t("Home address")} htmlFor="tenant-address" optional error={tErr(profileForm.errorFor("address"))} errorId={profileForm.errorId("address")}>
@@ -569,13 +577,13 @@ export function TenantSettings({ embedded = false }: { embedded?: boolean } = {}
                             <input type="text" maxLength={TEXT_LIMITS.personName} {...bindProfileInput("emergency_name", "tenant-emergency-name")} />
                         </SettingsField>
                         <SettingsField
-                            label={t("Their phone number")}
+                            label={t("Their mobile number")}
                             htmlFor="tenant-emergency-phone"
                             optional
                             error={tErr(profileForm.errorFor("emergency_phone"))}
                             errorId={profileForm.errorId("emergency_phone")}
                         >
-                            <input type="tel" inputMode="tel" maxLength={25} {...bindProfileInput("emergency_phone", "tenant-emergency-phone")} />
+                            <PhoneNumberInput {...bindProfilePhone("emergency_phone", "tenant-emergency-phone")} autoComplete="off" />
                         </SettingsField>
                     </div>
                 </SettingsCard>

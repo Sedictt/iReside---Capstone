@@ -38,6 +38,7 @@ import {
 } from '@/lib/lease-term';
 import { toast } from 'sonner';
 import { useLanguageContext } from '@/context/LanguageContext';
+import { formatPhMobile } from "@/lib/phone";
 
 interface RenewalRequestItem {
     id: string;
@@ -575,7 +576,7 @@ export function TenantLeaseView() {
                                         {lease.landlord.full_name}
                                     </h4>
                                     <p className="text-[11px] text-muted-foreground truncate">
-                                        {lease.landlord.phone || lease.landlord.email || t('Contact Landlord')}
+                                        {formatPhMobile(lease.landlord.phone) || lease.landlord.email || t('Contact Landlord')}
                                     </p>
                                 </div>
                             </div>

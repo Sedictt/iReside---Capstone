@@ -26,6 +26,7 @@ import {
   type FieldRuleResult,
 } from "../rules";
 import { zInteger, zMoney, zOptionalText, zRequiredText, zUuid } from "../zod-fields";
+import { isPhMobileEmpty, phMobileError, toPhMobileLocal } from "@/lib/phone";
 import { DEFAULT_PROPERTY_AMENITIES, isAmenityDuplicate, normalizeAmenityName } from "@/lib/constants/amenities";
 import { DEFAULT_PROPERTY_RULES, isRuleDuplicate, normalizeRuleText } from "@/lib/constants/rules";
 
@@ -207,14 +208,10 @@ export function gcashAccountNameRule(value: unknown): FieldRuleResult {
   return undefined;
 }
 
-export const GCASH_NUMBER_MESSAGE =
-  "GCash mobile number must be an 11-digit Philippine mobile number starting with 09 (e.g. 09171234567).";
-
+/** Same PH mobile rule as every phone field (+63 9XX XXX XXXX); "09…" is accepted too. */
 export function gcashNumberRule(value: unknown): FieldRuleResult {
-  const digits = String(value ?? "").replace(/\D/g, "");
-  if (!digits) return "GCash mobile number is required.";
-  if (!/^09\d{9}$/.test(digits)) return GCASH_NUMBER_MESSAGE;
-  return undefined;
+  if (isPhMobileEmpty(value)) return "Please type your GCash mobile number.";
+  return phMobileError(value);
 }
 
 export const utilityRateRule = (value: unknown): FieldRuleResult => moneyRule(value, { label: "Rate" });
@@ -637,9 +634,10 @@ export const gcashSettingsSchema = z.object({
     .trim()
     .superRefine(ruleRefine(gcashAccountNameRule)),
   accountNumber: z
-    .string({ error: "GCash mobile number is required." })
+    .string({ error: "Please type your GCash mobile number." })
     .superRefine(ruleRefine(gcashNumberRule))
-    .transform((value) => value.replace(/\D/g, "")),
+    // Kept in GCash's own "09…" form: tenants copy it straight into the GCash app.
+    .transform((value) => toPhMobileLocal(value) ?? value.replace(/\D/g, "")),
   isEnabled: zBooleanString(true),
   removeQr: zBooleanString(false),
 });

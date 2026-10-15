@@ -32,6 +32,7 @@ import {
     leaseEndState,
     leaseProgressPercent,
 } from '@/lib/lease-term';
+import { formatPhMobile } from "@/lib/phone";
 
 function formatCurrency(amount: number) {
     return new Intl.NumberFormat('en-PH', {
@@ -241,7 +242,7 @@ export default async function TenantProfilePage() {
                                     <p className="text-[10px] font-black tracking-widest text-red-400 opacity-80 uppercase mt-2">
                                         {emergencyContactName ? <T params={{ name: emergencyContactName }}>{"Emergency ({name})"}</T> : <T>Emergency Contact</T>}
                                     </p>
-                                    <a href={`tel:${emergencyContactPhone}`} className="text-sm font-bold text-red-400 hover:underline">{emergencyContactPhone}</a>
+                                    <a href={`tel:${emergencyContactPhone}`} className="text-sm font-bold text-red-400 hover:underline">{formatPhMobile(emergencyContactPhone)}</a>
                                 </div>
                             )}
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">

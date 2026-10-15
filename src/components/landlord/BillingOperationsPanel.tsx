@@ -45,6 +45,8 @@ import { utilityRateRule } from "@/lib/validation/schemas/properties.schema";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { tr } from "@/hooks/useLanguage";
 import { focusAnchor } from "@/components/settings/settings-ui";
+import { phMobileDigits, phMobileError, toPhMobileLocal } from "@/lib/phone";
+import { PhoneNumberInput } from "@/components/ui/PhoneNumberInput";
 import {
 	BillingSettingsLoading,
 	BillingSettingsMessage,
@@ -353,7 +355,8 @@ export function BillingOperationsPanel({
 		const init = initialPaymentRef.current;
 		return (
 			accountName !== init.accountName ||
-			accountNumber !== init.accountNumber ||
+			// Compare the numbers, not how they are written ("+63 917…" vs the saved "0917…").
+			phMobileDigits(accountNumber) !== phMobileDigits(init.accountNumber) ||
 			isEnabled !== init.isEnabled ||
 			removeQr ||
 			state.qrFile !== null
@@ -490,7 +493,8 @@ export function BillingOperationsPanel({
 
 			if (viewMode === "gcash") {
 				const cleanName = accountName.trim();
-				const cleanNumber = accountNumber.replace(/\D/g, "");
+				// Saved in GCash's own "09…" form so tenants can paste it into the GCash app.
+				const cleanNumber = toPhMobileLocal(accountNumber) ?? "";
 
 				if (!cleanName || cleanName.length < 2) {
 					dispatch({
@@ -500,10 +504,10 @@ export function BillingOperationsPanel({
 					return false;
 				}
 
-				if (!/^09\d{9}$/.test(cleanNumber)) {
+				if (!cleanNumber) {
 					dispatch({
 						type: "SET_MESSAGE",
-						payload: { type: "error", value: t("Type your 11-number GCash number. It starts with 09, like 09171234567.") }
+						payload: { type: "error", value: t("Type your GCash number: the 10 numbers after +63, like +63 917 123 4567.") }
 					});
 					return false;
 				}
@@ -662,7 +666,7 @@ export function BillingOperationsPanel({
 	const handleRequestSave = useCallback(() => {
 		if (viewMode === "gcash") {
 			const cleanName = accountName.trim();
-			const cleanNumber = accountNumber.replace(/\D/g, "");
+			const cleanNumber = toPhMobileLocal(accountNumber) ?? "";
 
 			if (!cleanName || cleanName.length < 2) {
 				dispatch({
@@ -672,10 +676,10 @@ export function BillingOperationsPanel({
 				return;
 			}
 
-			if (!/^09\d{9}$/.test(cleanNumber)) {
+			if (!cleanNumber) {
 				dispatch({
 					type: "SET_MESSAGE",
-					payload: { type: "error", value: t("Type your 11-number GCash number. It starts with 09, like 09171234567.") }
+					payload: { type: "error", value: t("Type your GCash number: the 10 numbers after +63, like +63 917 123 4567.") }
 				});
 				return;
 			}
@@ -787,6 +791,9 @@ export function BillingOperationsPanel({
 	if (!workspace) return null;
 
 	const pendingChangesCount = diff.totalCount;
+	const gcashDigits = phMobileDigits(accountNumber);
+	const gcashNumberError =
+		gcashDigits.length > 0 && (!gcashDigits.startsWith("9") || gcashDigits.length === 10) ? phMobileError(accountNumber) : undefined;
 
 	return (
 		<div className="space-y-12">
@@ -1390,38 +1397,22 @@ export function BillingOperationsPanel({
 												<Phone className="size-3.5 text-primary shrink-0" />
 												<label className="text-xs font-black uppercase tracking-wider text-foreground/80 whitespace-nowrap">{t("GCash Number")}</label>
 											</div>
-											<input
-												type="tel"
-												inputMode="numeric"
+											<PhoneNumberInput
 												value={accountNumber}
-												placeholder="09171234567"
-												maxLength={11}
-												onChange={(event) => {
-													const digitsOnly = event.target.value.replace(/\D/g, "").slice(0, 11);
-													dispatch({ type: 'UPDATE_PAYMENT', payload: { accountNumber: digitsOnly } });
-												}}
+												onValueChange={(next) => dispatch({ type: 'UPDATE_PAYMENT', payload: { accountNumber: next } })}
 												className={cn(
-													"w-full rounded-xl neumorphic-inset px-4 py-3 text-sm font-mono font-bold text-foreground placeholder:text-muted-foreground/40 outline-none transition-all focus:ring-2",
-													accountNumber.length > 0 && !/^09\d{9}$/.test(accountNumber)
-														? (accountNumber.length >= 2 && !accountNumber.startsWith("09"))
-															? "ring-1 ring-rose-500/40 focus:ring-rose-500/30"
-															: "ring-1 ring-amber-500/40 focus:ring-amber-500/30"
-														: "focus:ring-primary/20"
+													"w-full rounded-xl border-2 border-foreground/20 bg-background px-4 py-3 text-sm font-bold text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:ring-2",
+													gcashNumberError ? "border-rose-500/60 focus:ring-rose-500/30" : "focus:ring-primary/20"
 												)}
 											/>
-											{accountNumber.length >= 2 && !accountNumber.startsWith("09") ? (
-												<p className="px-1 text-[11px] font-bold text-rose-500 flex items-center gap-1 whitespace-nowrap">
-													<AlertCircle className="size-3 shrink-0" />
-													{t("Must begin with 09 (e.g. 0917...)")}
-												</p>
-											) : accountNumber.length > 0 && accountNumber.length < 11 ? (
-												<p className="px-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1 whitespace-nowrap">
-													<AlertCircle className="size-3 shrink-0" />
-													{11 - accountNumber.length > 1 ? t("{count} more digits needed", { count: 11 - accountNumber.length }) : t("{count} more digit needed", { count: 11 - accountNumber.length })}
+											{gcashNumberError ? (
+												<p className="px-1 text-sm font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1">
+													<AlertCircle className="size-4 shrink-0" />
+													{t(gcashNumberError)}
 												</p>
 											) : (
-												<p className="px-1 text-[11px] text-muted-foreground whitespace-nowrap truncate">
-													{t("11-digit mobile number starting with 09")}
+												<p className="px-1 text-sm text-muted-foreground">
+													{t("Type the 10 numbers after +63. Example: +63 917 123 4567")}
 												</p>
 											)}
 										</div>

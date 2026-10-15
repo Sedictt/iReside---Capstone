@@ -26,6 +26,7 @@ import { formatTenure, leaseEndState, leaseTermLabel } from "@/lib/lease-term";
 import { TenantDetailModal } from "@/components/landlord/tenants/TenantDetailModal";
 import { AnimatedFilterPills } from "@/components/ui/AnimatedFilterPills";
 import { useLanguageContext } from "@/context/LanguageContext";
+import { formatPhMobile } from "@/lib/phone";
 
 interface PropertyTenantsModalProps {
     isOpen: boolean;
@@ -344,7 +345,7 @@ export function PropertyTenantsModal({
                                                         {t.phone && (
                                                             <span className="flex items-center gap-1 truncate">
                                                                 <Phone className="size-3 text-neutral-500" />
-                                                                {t.phone}
+                                                                {formatPhMobile(t.phone)}
                                                             </span>
                                                         )}
                                                     </div>

@@ -380,15 +380,22 @@ describe("AddTenantModal", () => {
         fireEvent.blur(emailInput);
         expect(screen.getByText("Please enter a valid email address.")).toBeDefined();
 
-        // Letters typed into phone are stripped; when blurred while empty, shows required message
+        // Letters typed into phone are dropped; when blurred while empty, shows required message
         fireEvent.change(phoneInput, { target: { value: "asxasaxas" } });
         fireEvent.blur(phoneInput);
-        expect(screen.getByText("Phone number is required.")).toBeDefined();
+        expect(screen.getByText("Please type a mobile number.")).toBeDefined();
 
-        // Insufficient digits
+        // "+63" is fixed in front; the box shows the rest grouped, without the leading 0
         fireEvent.change(phoneInput, { target: { value: "091234" } });
+        expect((phoneInput as HTMLInputElement).value).toBe("912 34");
         fireEvent.blur(phoneInput);
-        expect(screen.getByText("Please enter a valid phone number (10–15 digits).")).toBeDefined();
+        expect(screen.getByText("Type all 10 numbers after +63, like +63 917 123 4567.")).toBeDefined();
+
+        // A complete number clears the message
+        fireEvent.change(phoneInput, { target: { value: "9171234567" } });
+        expect((phoneInput as HTMLInputElement).value).toBe("917 123 4567");
+        fireEvent.blur(phoneInput);
+        expect(screen.queryByText("Type all 10 numbers after +63, like +63 917 123 4567.")).toBeNull();
     });
 
     it("does not accept digits in full name and strips them in real time", () => {

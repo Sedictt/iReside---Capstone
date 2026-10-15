@@ -22,8 +22,10 @@ const sensitivePatterns: RegExp[] = [
     /\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})\b/g,
     /\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g,
     /\b\d{3}-\d{2}-\d{4}\b/g,
-    /\b09\d{9}\b/g,
-    /\b(?:\+63\s?\d{10}|\+1\s?\d{10})\b/g,
+    // PH mobile numbers in any common form: 09171234567, 0917 123 4567, +63 917-123-4567, 639171234567.
+    // (A leading \b never matches before "+", so the edges are checked with lookarounds.)
+    /(?<![\d+])(?:\+?63|0)[\s-]?9\d{2}[\s-]?\d{3}[\s-]?\d{4}(?!\d)/g,
+    /(?<![\d+])\+1\s?\d{10}(?!\d)/g,
     /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi,
     new RegExp(`${CREDENTIAL_KEYWORDS}\\s*(?:is|:|=)?\\s*([A-Za-z0-9!@#$%^&*()_+\\-=]{3,})`, "gi"),
 ];

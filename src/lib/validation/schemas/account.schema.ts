@@ -25,6 +25,7 @@ import {
   phoneRule,
   type FieldRuleResult,
 } from "../rules";
+import { toPhMobileE164 } from "@/lib/phone";
 import { zEmail, zNewPassword, zPersonName, zUuid } from "../zod-fields";
 import {
   REGEX_HEX_COLOR,
@@ -276,8 +277,8 @@ export const tenantProfilePatchSchema = z.object({
       if (error) ctx.addIssue({ code: "custom", message: error });
     })
     .nullish()
-    // Absent stays absent (field untouched); blank clears it.
-    .transform((value) => (value === undefined ? undefined : value ? value : null)),
+    // Absent stays absent (field untouched); blank clears it; a number is saved as "+639XXXXXXXXX".
+    .transform((value) => (value === undefined ? undefined : value ? toPhMobileE164(value) : null)),
   address: zClearableText("Address", TEXT_LIMITS.address).nullish(),
 });
 
@@ -285,6 +286,12 @@ const optionalLandlordField = (label: string, max: number, rule?: (value: string
   const base = zClearableText(label, max);
   return (rule ? base.superRefine(fromRule(rule)) : base).optional();
 };
+
+/** Optional PH mobile number; a non-blank value is saved as "+639XXXXXXXXX". */
+const optionalLandlordPhone = (label: string) =>
+  optionalLandlordField(label, 25, (v) => phoneRule(v, { required: false })).transform((v) =>
+    v ? toPhMobileE164(v) ?? v : v,
+  );
 
 /**
  * PATCH /api/landlord/profile — mirrors the inline rules in LandlordSettings
@@ -306,7 +313,7 @@ export const landlordProfilePatchSchema = z.object({
     .superRefine(fromRule((v) => emailRule(v, { label: "Contact email", required: false })))
     .transform((v) => v.toLowerCase())
     .optional(),
-  phone: optionalLandlordField("Phone number", 25, (v) => phoneRule(v, { required: false })),
+  phone: optionalLandlordPhone("Phone number"),
   website: optionalLandlordField("Website", 255, (v) => {
     const check = validateWebsiteUrl(v);
     return check.isValid ? undefined : check.error;
@@ -316,7 +323,7 @@ export const landlordProfilePatchSchema = z.object({
   emergency_contact_name: optionalLandlordField("Emergency contact name", 70, (v) =>
     v ? personNameRule(v, { label: "Emergency contact name", required: false }) : undefined,
   ),
-  emergency_contact_phone: optionalLandlordField("Emergency contact phone", 25, (v) => phoneRule(v, { required: false })),
+  emergency_contact_phone: optionalLandlordPhone("Emergency contact phone"),
   business_permit_number: optionalLandlordField("Permit number", 50, (v) =>
     v && !REGEX_PERMIT_NUMBER.test(v) ? "Permit number contains invalid characters." : undefined,
   ),

@@ -56,8 +56,11 @@ describe("phoneRule", () => {
   it("validates PH mobile formats", () => {
     expect(phoneRule("09171234567")).toBeUndefined();
     expect(phoneRule("+639171234567")).toBeUndefined();
-    expect(phoneRule("0917123456")).toMatch(/11 digits/);
-    expect(phoneRule("", { required: true })).toBe("Phone number is required.");
+    expect(phoneRule("+63 917 123 4567")).toBeUndefined();
+    expect(phoneRule("0917123456")).toMatch(/all 10 numbers after \+63/);
+    expect(phoneRule("+63 817 123 4567")).toMatch(/must start with 9/);
+    expect(phoneRule("+63")).toBeUndefined();
+    expect(phoneRule("", { required: true })).toBe("Please type a mobile number.");
   });
 });
 

@@ -16,6 +16,7 @@ import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { FieldError, fieldErrorClass } from "@/components/ui/field-error";
 import { REFUND_DETAILS_REQUIRED, gcashNumberRule } from "@/lib/validation/schemas/billing.schema";
+import { PhoneNumberInput } from "@/components/ui/PhoneNumberInput";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { tr } from "@/hooks/useLanguage";
 
@@ -211,15 +212,12 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                                     <div className="space-y-4 p-6 rounded-2xl border border-white/5 bg-surface-1 animate-in zoom-in-95 duration-300">
                                         <div className="space-y-2">
                                             <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">{t("GCash Number")}</p>
-                                            <input maxLength={16}
+                                            <PhoneNumberInput
                                                 {...refundForm.fieldProps("gcashNumber")}
                                                 aria-label={t("GCash number")}
-                                                type="text"
-                                                inputMode="tel"
-                                                autoComplete="tel"
                                                 value={gcashNumber}
-                                                onChange={(e) => setGcashNumber(e.target.value)}
-                                                placeholder="09XX XXX XXXX"
+                                                onValueChange={setGcashNumber}
+                                                prefixClassName="text-text-high"
                                                 className={cn("w-full rounded-xl border border-white/10 bg-surface-2 px-4 py-3 text-sm font-black text-text-high outline-none focus:border-primary/50 transition-all", refundForm.errorFor("gcashNumber") && fieldErrorClass)}
                                             />
                                             <FieldError id={refundForm.errorId("gcashNumber")} message={refundForm.errorFor("gcashNumber")} />

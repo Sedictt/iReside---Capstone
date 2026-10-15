@@ -21,6 +21,7 @@ import { toast } from 'sonner'
 import { ClientOnlyDate } from '@/components/ui/client-only-date'
 import { useLanguageContext } from '@/context/LanguageContext'
 import { tr } from '@/hooks/useLanguage'
+import { formatPhMobile } from "@/lib/phone";
 
 interface TenantDetailModalProps {
  isOpen: boolean
@@ -148,7 +149,7 @@ export function TenantDetailModal({ isOpen, onClose, tenantId, initialTab = 'pro
  <div className="space-y-0.5">
  <h2 className="text-xl font-black tracking-tight text-foreground">{tenantInfo?.full_name || t('Resident Details')}</h2>
  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
- {tenantInfo?.phone || t('Loading...')}
+ {formatPhMobile(tenantInfo?.phone) || t('Loading...')}
  </p>
  </div>
  </div>
@@ -204,7 +205,7 @@ export function TenantDetailModal({ isOpen, onClose, tenantId, initialTab = 'pro
  </div>
  <div className="flex items-center gap-3 text-sm">
  <Phone className="size-4 text-muted-foreground" />
- <span className="font-black">{tenantInfo?.phone || t('N/A')}</span>
+ <span className="font-black">{formatPhMobile(tenantInfo?.phone) || t('N/A')}</span>
  </div>
  </div>
  </div>

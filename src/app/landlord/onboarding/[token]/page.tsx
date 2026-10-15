@@ -44,6 +44,7 @@ import html2canvas from "html2canvas";
 import { LucideIcon } from "lucide-react";
 import { SecurityKeyDisplayCard } from "@/components/auth/SecurityKeyDisplayCard";
 import { phoneRule } from "@/lib/validation/rules";
+import { PhoneNumberInput } from "@/components/ui/PhoneNumberInput";
 import { applicantNameRule } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { tr } from "@/hooks/useLanguage";
@@ -1315,15 +1316,12 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 {t("Administrative Contact")}
                                             </label>
                                             <div className="relative group">
-                                                <input 
+                                                <PhoneNumberInput
                                                     id="admin-contact"
-                                                    type="tel"
-                                                    inputMode="tel"
-                                                    maxLength={11}
                                                     value={phone}
-                                                    onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 11))}
-                                                    placeholder="09123456789"
-                                                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-primary/50 transition-all outline-none font-black"
+                                                    onValueChange={setPhone}
+                                                    prefixClassName="text-white"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-primary/50 transition-all outline-none font-black placeholder:text-white/30"
                                                 />
                                             </div>
                                         </div>

@@ -16,6 +16,8 @@ import type { BillingWorkspace } from "@/lib/billing/server";
 import { cn } from "@/lib/utils";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import { utilityRateRule } from "@/lib/validation/schemas/properties.schema";
+import { PH_MOBILE_DIGITS, isPhMobile, phMobileDigits, toPhMobileLocal } from "@/lib/phone";
+import { PhoneNumberInput } from "@/components/ui/PhoneNumberInput";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { tr } from "@/hooks/useLanguage";
 import {
@@ -86,10 +88,11 @@ export function GcashSettingsView({ accountName, accountNumber, isEnabled, qrPre
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const nameError = accountName.length > 0 && accountName.trim().length < 2 ? t("Please type at least 2 letters.") : undefined;
-    const numberError = accountNumber.length >= 2 && !accountNumber.startsWith("09") ? t("The number must start with 09.") : undefined;
-    const digitsLeft = 11 - accountNumber.length;
+    const numberDigits = phMobileDigits(accountNumber);
+    const numberError = numberDigits.length > 0 && !numberDigits.startsWith("9") ? t("The number after +63 must start with 9, like +63 917 123 4567.") : undefined;
+    const digitsLeft = PH_MOBILE_DIGITS - numberDigits.length;
     const numberProgress =
-        !numberError && accountNumber.length > 0 && digitsLeft > 0
+        !numberError && numberDigits.length > 0 && digitsLeft > 0
             ? digitsLeft === 1
                 ? t("Type 1 more number.")
                 : t("Type {count} more numbers.", { count: digitsLeft })
@@ -127,22 +130,14 @@ export function GcashSettingsView({ accountName, accountNumber, isEnabled, qrPre
                     <SettingsField
                         label={t("GCash mobile number")}
                         htmlFor="gcash-account-number"
-                        help={t("11 numbers that start with 09. Example: 09171234567")}
+                        help={t("Type the 10 numbers after +63. Example: +63 917 123 4567")}
                         error={numberError}
                     >
-                        <input
+                        <PhoneNumberInput
                             {...fieldAria("gcash-account-number", { help: true, error: numberError })}
-                            type="tel"
-                            inputMode="numeric"
-                            autoComplete="tel"
                             value={accountNumber}
-                            placeholder="09171234567"
-                            maxLength={11}
-                            onChange={(event) => {
-                                const digitsOnly = event.target.value.replace(/\D/g, "").slice(0, 11);
-                                onChange({ accountNumber: digitsOnly });
-                            }}
-                            className={settingsInputClass(Boolean(numberError), "font-mono tracking-wider")}
+                            onValueChange={(next) => onChange({ accountNumber: next })}
+                            className={settingsInputClass(Boolean(numberError), "tracking-wide")}
                         />
                         {numberProgress && <p className="text-base font-semibold text-amber-800 dark:text-amber-300">{numberProgress}</p>}
                     </SettingsField>
@@ -252,7 +247,7 @@ export function GcashSettingsView({ accountName, accountNumber, isEnabled, qrPre
                                 {accountName.trim() && <CheckCircle2 className="size-5 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />}
                             </p>
                             <p className="font-mono text-lg font-bold tracking-wider text-foreground">
-                                {accountNumber || <span className="font-sans tracking-normal text-muted-foreground">{t("Your number will show here")}</span>}
+                                {(isPhMobile(accountNumber) ? toPhMobileLocal(accountNumber) : null) || <span className="font-sans tracking-normal text-muted-foreground">{t("Your number will show here")}</span>}
                             </p>
                         </div>
                     </div>

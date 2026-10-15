@@ -25,6 +25,7 @@ import {
   type FieldRuleResult,
 } from "../rules";
 import { zEmail, zInteger, zIsoDate, zMoney, zOptionalPhone, zOptionalText, zRequiredText } from "../zod-fields";
+import { isPhMobileEmpty, phMobileError, toPhMobileE164 } from "@/lib/phone";
 import { DEFAULT_LEASE_TERM_TYPE, LEASE_TERM_TYPES, OPEN_ENDED_NOTICE_DAYS, type LeaseTermType } from "@/lib/lease-term";
 
 // ---------------------------------------------------------------------------
@@ -103,22 +104,13 @@ export function applicantNameRule(
   return undefined;
 }
 
-const PH_MOBILE_11 = /^(\+?63|0)?9\d{9}$/;
-const PH_MOBILE_10 = /^9\d{9}$/;
-
-/** Philippine mobile number (09XXXXXXXXX, 9XXXXXXXXX or +639XXXXXXXXX). */
+/** Philippine mobile number (+63 9XX XXX XXXX; "09…" accepted). Same rule as src/lib/phone.ts. */
 export function phMobileRule(
   value: unknown,
   { required = false, label = "Phone number" }: { required?: boolean; label?: string } = {},
 ): FieldRuleResult {
-  if (isBlank(value)) return required ? `${label} is required.` : undefined;
-  const raw = String(value).trim();
-  if (!/^[+()\-\s\d]+$/.test(raw)) return "Enter a valid Philippine mobile number (e.g. 09171234567).";
-  const digits = raw.replace(/\D/g, "");
-  if (digits.length === 11 && PH_MOBILE_11.test(digits)) return undefined;
-  if (digits.length === 10 && PH_MOBILE_10.test(digits)) return undefined;
-  if (digits.length === 12 && PH_MOBILE_11.test(digits)) return undefined; // 639XXXXXXXXX
-  return "Enter a valid Philippine mobile number (e.g. 09171234567).";
+  if (isBlank(value) || isPhMobileEmpty(value)) return required ? `${label} is required.` : undefined;
+  return phMobileError(value);
 }
 
 export function occupationRule(value: unknown): FieldRuleResult {
@@ -269,16 +261,19 @@ const zOptionalApplicantName = (label: string) =>
     z.string({ error: `${label} must be text.` }).trim().superRefine(fromRule((v: string) => applicantNameRule(v, { label }))).nullish(),
   ).transform((v) => v ?? null);
 
+/** Saved as "+639XXXXXXXXX". */
 const zPhMobile = (label = "Phone number") =>
   z.string({ error: `${label} is required.` }).trim().max(25, `${label} is too long.`)
-    .superRefine(fromRule((v: string) => phMobileRule(v, { required: true, label })));
+    .superRefine(fromRule((v: string) => phMobileRule(v, { required: true, label })))
+    .transform((v) => toPhMobileE164(v) ?? v);
 
+/** Saved as "+639XXXXXXXXX", or null when empty. */
 const zOptionalPhMobile = (label = "Phone number") =>
   z.preprocess(
     blankToUndefined,
     z.string({ error: `${label} must be text.` }).trim().max(25, `${label} is too long.`)
       .superRefine(fromRule((v: string) => phMobileRule(v, { label }))).nullish(),
-  ).transform((v) => v ?? null);
+  ).transform((v) => (v ? toPhMobileE164(v) : null));
 
 const zOptionalDate = (label: string, extra?: (iso: string) => FieldRuleResult) =>
   z.preprocess(
@@ -563,9 +558,10 @@ export const manualTenantSchema = z
     phone: z.preprocess(
       blankToUndefined,
       z.string().trim().max(25).superRefine((value, ctx) => {
-        if (phoneRule(value)) ctx.addIssue({ code: "custom", message: "Please enter a valid phone number (10 to 15 digits)." });
+        const error = phoneRule(value);
+        if (error) ctx.addIssue({ code: "custom", message: error });
       }).nullish(),
-    ).transform((v) => v ?? null),
+    ).transform((v) => (v ? toPhMobileE164(v) : null)),
     propertyId: zId("Property"),
     unitId: zId("Unit"),
     startDate: z.string({ error: "Please provide valid lease start and end dates." }).trim().superRefine(fromRule((v: string) => leaseStartDateRule(v, { label: "Lease start date" }))),
@@ -776,7 +772,8 @@ export const landlordOnboardingSchema = z.object({
     .regex(/[0-9]/, "Password must contain at least one number")
     .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
   fullName: z.string({ error: "Full name is required" }).trim().superRefine(fromRule((v: string) => applicantNameRule(v, { label: "Full name" }))),
-  phone: z.string({ error: "Valid phone number is required" }).trim().superRefine(fromRule((v: string) => phoneRule(v, { required: true }))),
+  phone: z.string({ error: "Please type a mobile number." }).trim().superRefine(fromRule((v: string) => phoneRule(v, { required: true })))
+    .transform((v) => toPhMobileE164(v) ?? v),
   propertyConfig: z
     .object({
       propertyPhoto: zOnboardingImage("Property photo"),

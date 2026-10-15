@@ -143,7 +143,6 @@ export const settingsPages: TranslationDictionary = {
     "About you": "Tungkol sa iyo",
     "You use this email to sign in, so it cannot be changed here.": "Ginagamit mo ang email na ito sa pag-sign in, kaya hindi ito mapapalitan dito.",
     "We send important messages to this email.": "Dito namin ipinapadala ang mahahalagang mensahe.",
-    "Example: 0917 123 4567": "Halimbawa: 0917 123 4567",
     "Home address": "Address ng bahay",
     "A few words about you": "Kaunting salita tungkol sa iyo",
     "Your landlord can see this.": "Nakikita ito ng landlord mo.",
@@ -152,7 +151,6 @@ export const settingsPages: TranslationDictionary = {
     "A person tenants can call in an emergency if they cannot reach you. For example, a caretaker or family member.": "Taong puwedeng tawagan ng mga tenant kapag may emergency at hindi ka nila makontak. Halimbawa, caretaker o kapamilya.",
     "Emergency contact": "Emergency contact",
     "Their name": "Pangalan niya",
-    "Their phone number": "Numero ng telepono niya",
     "A number that can be reached any time.": "Numerong puwedeng tawagan kahit anong oras.",
     "Your profile is saved.": "Na-save na ang profile mo.",
 
@@ -362,8 +360,6 @@ export const settingsPages: TranslationDictionary = {
     "Type it the same way it shows in your GCash app.": "I-type ito nang eksakto kung paano nakasulat sa GCash app mo.",
     "Please type at least 2 letters.": "Mag-type ng kahit 2 letra.",
     "GCash mobile number": "GCash mobile number",
-    "11 numbers that start with 09. Example: 09171234567": "11 numero na nagsisimula sa 09. Halimbawa: 09171234567",
-    "The number must start with 09.": "Dapat nagsisimula sa 09 ang number.",
     "Type 1 more number.": "Mag-type pa ng 1 numero.",
     "Type {count} more numbers.": "Mag-type pa ng {count} numero.",
     "Let tenants pay with GCash": "Payagang magbayad ang mga tenant gamit ang GCash",
@@ -510,4 +506,9 @@ export const settingsPages: TranslationDictionary = {
     "Payment checked": "Na-check ang bayad",
     "You updated the payment for bill {bill}.": "In-update mo ang bayad para sa bill {bill}.",
     "You updated a payment.": "In-update mo ang isang bayad.",
+
+    // Phone fields
+    "A mobile number. Example: +63 917 123 4567": "Isang mobile number. Halimbawa: +63 917 123 4567",
+    "Their mobile number": "Ang mobile number nila",
+    "Type the 10 numbers after +63. Example: +63 917 123 4567": "I-type ang 10 numero pagkatapos ng +63. Halimbawa: +63 917 123 4567",
 };

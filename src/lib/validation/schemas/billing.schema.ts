@@ -32,6 +32,7 @@ import {
     type FieldRuleResult,
 } from "../rules";
 import { zIsoDate, zMoney, zOptionalText, zRequiredText, zUuid } from "../zod-fields";
+import { isPhMobileEmpty, phMobileError, toPhMobileLocal } from "@/lib/phone";
 
 // ---------------------------------------------------------------------------
 // Enums (exact Postgres enum values)
@@ -155,11 +156,10 @@ export function billingMonthRule(value: unknown, { label = "Billing month", requ
 }
 
 /** Philippine mobile number used for GCash (09XXXXXXXXX or +639XXXXXXXXX; spaces/dashes ignored). */
+/** Same PH mobile rule as every phone field (+63 9XX XXX XXXX); "09…" is accepted too. */
 export function gcashNumberRule(value: unknown, { required = false } = {}): FieldRuleResult {
-    if (isBlank(value)) return required ? "GCash number is required." : undefined;
-    const digits = String(value).replace(/[\s-]/g, "");
-    if (!/^(09\d{9}|\+639\d{9}|639\d{9})$/.test(digits)) return "Enter a valid GCash number (e.g. 0917 123 4567).";
-    return undefined;
+    if (isBlank(value) || isPhMobileEmpty(value)) return required ? "Please type your GCash mobile number." : undefined;
+    return phMobileError(value);
 }
 
 export const REJECTION_REASON_REQUIRED = "Rejection reason is required.";
@@ -476,13 +476,14 @@ export const refundInfoSchema = z.object({
     gcashNumber: z
         .string()
         .trim()
-        .max(20, "Enter a valid GCash number (e.g. 0917 123 4567).")
+        .max(25, "That number is too long. Type only the 10 numbers after +63.")
         .nullish()
         .superRefine((value, ctx) => {
             const error = gcashNumberRule(value);
             if (error) ctx.addIssue({ code: "custom", message: error });
         })
-        .transform((value) => (value ? value.replace(/[\s-]/g, "") : null)),
+        // GCash's own "09…" form, ready to send the refund to.
+        .transform((value) => toPhMobileLocal(value) ?? null),
 });
 
 export const REFUND_DETAILS_REQUIRED = "Enter your GCash number or upload a GCash QR code to receive the refund.";

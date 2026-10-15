@@ -35,6 +35,8 @@ import { toast } from 'sonner'
 import type { WalkInUnit } from '@/components/landlord/applications/application-intake-shared'
 import { useLanguageContext } from '@/context/LanguageContext'
 import { tr } from "@/hooks/useLanguage";
+import { PhoneNumberInput } from '@/components/ui/PhoneNumberInput'
+import { phMobileError, toPhMobileE164 } from '@/lib/phone'
 
 const WalkInApplicationModal = dynamic(
   () => import('@/components/landlord/applications/WalkInApplicationModal').then(mod => mod.WalkInApplicationModal),
@@ -325,10 +327,6 @@ export function AddTenantModal({
     return formatCurrencyInput(val, false)
   }
 
-  const sanitizePhoneInput = (val: string) => {
-    return val.replace(/[^0-9+\-()\s]/g, '')
-  }
-
   const handleFullNameChange = (val: string) => {
     const sanitized = sanitizeNameInput(val)
     setFormData(prev => ({ ...prev, fullName: sanitized }))
@@ -370,25 +368,16 @@ export function AddTenantModal({
     }
   }
 
+  // Phone: the shared +63 field hands back "+63…"; the rule is the same PH mobile rule as everywhere.
   const handlePhoneChange = (val: string) => {
-    const sanitized = sanitizePhoneInput(val)
-    setFormData(prev => ({ ...prev, phone: sanitized }))
-    const digits = sanitized.replace(/\D/g, '')
-    if (fieldErrors.phone && digits.length >= 10 && digits.length <= 15) {
+    setFormData(prev => ({ ...prev, phone: val }))
+    if (fieldErrors.phone && !phMobileError(val, { required: true })) {
       setFieldErrors(prev => ({ ...prev, phone: undefined }))
     }
   }
 
   const handlePhoneBlur = () => {
-    const phone = formData.phone.trim()
-    const digits = phone.replace(/\D/g, '')
-    if (!phone) {
-      setFieldErrors(prev => ({ ...prev, phone: 'Phone number is required.' }))
-    } else if (digits.length < 10 || digits.length > 15) {
-      setFieldErrors(prev => ({ ...prev, phone: 'Please enter a valid phone number (10–15 digits).' }))
-    } else {
-      setFieldErrors(prev => ({ ...prev, phone: undefined }))
-    }
+    setFieldErrors(prev => ({ ...prev, phone: phMobileError(formData.phone, { required: true }) }))
   }
 
   const handleRentChange = (val: string) => {
@@ -612,11 +601,8 @@ export function AddTenantModal({
       errs.email = 'Please enter a valid email address.'
     }
 
-    const phone = formData.phone.trim()
-    const digits = phone.replace(/\D/g, '')
-    if (!phone || digits.length < 10 || digits.length > 15) {
-      errs.phone = 'Please enter a valid phone number (10–15 digits).'
-    }
+    const phoneError = phMobileError(formData.phone, { required: true })
+    if (phoneError) errs.phone = phoneError
 
     if (!formData.propertyId) {
       errs.propertyId = 'Please select a property.'
@@ -683,7 +669,7 @@ export function AddTenantModal({
       const payload = {
         fullName: formData.fullName.trim(),
         email: formData.email.trim(),
-        phone: formData.phone.trim(),
+        phone: toPhMobileE164(formData.phone) ?? formData.phone.trim(),
         propertyId: formData.propertyId,
         unitId: formData.unitId,
         startDate: formData.startDate,
@@ -1007,15 +993,10 @@ export function AddTenantModal({
                             </label>
                             <div className="relative">
                               <Phone className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
-                              <input
+                              <PhoneNumberInput
                                 id="phone"
-                                type="tel"
-                                inputMode="tel"
-                                maxLength={15}
-                                autoComplete="tel"
-                                placeholder={t("e.g. 0917 123 4567")}
                                 value={formData.phone}
-                                onChange={(e) => handlePhoneChange(e.target.value)}
+                                onValueChange={handlePhoneChange}
                                 onBlur={handlePhoneBlur}
                                 className={cn(
                                   "w-full rounded-2xl neumorphic-inset py-3.5 pl-12 pr-5 text-sm font-black outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4",

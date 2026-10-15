@@ -24,6 +24,7 @@ import { useLanguageContext } from '@/context/LanguageContext';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { MobileConfirmModal } from '@/components/mobile/shared/MobileConfirmModal';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
+import { formatPhMobile } from "@/lib/phone";
 
 const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80";
 
@@ -117,7 +118,7 @@ export function LandlordProfileView() {
                         {profile?.phone && (
                             <div className="flex items-center gap-2.5 text-muted-foreground">
                                 <Phone className="size-3.5 text-primary shrink-0" />
-                                <span className="text-foreground">{profile.phone}</span>
+                                <span className="text-foreground">{formatPhMobile(profile.phone)}</span>
                             </div>
                         )}
                         {profile?.address && (

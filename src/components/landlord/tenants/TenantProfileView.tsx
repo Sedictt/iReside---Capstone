@@ -24,6 +24,7 @@ import { ClientOnlyDate } from '@/components/ui/client-only-date'
 import { formatTenure, leaseEndState, leaseProgressPercent, leaseTermLabel, tenureSinceLabel } from '@/lib/lease-term'
 import { useLanguageContext } from '@/context/LanguageContext'
 import { tr } from '@/hooks/useLanguage'
+import { formatPhMobile } from "@/lib/phone";
 
 interface TenantProfileViewProps {
  tenantId: string
@@ -216,7 +217,7 @@ export function TenantProfileView({ tenantId, onClose, onMessage }: TenantProfil
 										<Phone size={18} className="text-[#c4b0ff]" />
 									</div>
 									<p className="text-[10px] font-black tracking-widest opacity-50 uppercase mt-2">{t("Phone Number")}</p>
-									<a href={`tel:${profile.phone}`} className="text-sm font-medium hover:text-primary transition-colors">{profile.phone || '+63 (---) --- ----'}</a>
+									<a href={`tel:${profile.phone}`} className="text-sm font-medium hover:text-primary transition-colors">{formatPhMobile(profile.phone) || '+63 (---) --- ----'}</a>
 								</div>
 								<div className="flex flex-col items-center gap-2 group/item transition-all text-center">
 									<div className="size-12 rounded-full neumorphic-inset-card flex items-center justify-center group-hover/item:scale-110 transition-transform">

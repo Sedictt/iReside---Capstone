@@ -586,7 +586,6 @@ export const landlordApplicationsTenants: TranslationDictionary = {
   "Full Name": "Buong Pangalan",
   "e.g. Maria Santos": "hal. Maria Santos",
   "e.g. maria.santos@gmail.com": "hal. maria.santos@gmail.com",
-  "e.g. 0917 123 4567": "hal. 0917 123 4567",
   "Move-In Payment Terms": "Bayad sa Paglipat",
   "Configure initial advance rent and security deposit required upon move-in.": "I-set ang advance na upa at security deposit na kailangan sa paglipat.",
   "Applied towards first month(s)": "Ilalapat sa unang buwan",

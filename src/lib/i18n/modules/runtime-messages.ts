@@ -474,6 +474,15 @@ const validationMessages: TranslationDictionary = {
   "Invalid utility billing option.": "Hindi valid na opsyon sa utility billing.",
   "Invalid contract option.": "Hindi valid na opsyon sa kontrata.",
   "Status filter is invalid.": "Hindi valid ang status filter.",
+  // PH mobile numbers (src/lib/phone.ts)
+  "Please type a mobile number.": "Mag-type ng mobile number.",
+  "A mobile number can only have numbers.": "Numero lang ang puwede sa mobile number.",
+  "The number after +63 must start with 9, like +63 917 123 4567.": "Dapat nagsisimula sa 9 ang numero pagkatapos ng +63, gaya ng +63 917 123 4567.",
+  "That number is too long. Type only the 10 numbers after +63.": "Masyadong mahaba ang numero. I-type lang ang 10 numero pagkatapos ng +63.",
+  "Type all 10 numbers after +63, like +63 917 123 4567.": "I-type ang lahat ng 10 numero pagkatapos ng +63, gaya ng +63 917 123 4567.",
+  "Please type your GCash mobile number.": "I-type ang GCash mobile number mo.",
+  "Please also type their mobile number, or clear their name.": "I-type din ang mobile number nila, o burahin ang pangalan nila.",
+  "The country code +63 is already filled in. Type the 10 numbers after it.": "Nakalagay na ang country code na +63. I-type ang 10 numero pagkatapos nito.",
 };
 
 /** Error and success messages returned by src/app/api/** routes. */
