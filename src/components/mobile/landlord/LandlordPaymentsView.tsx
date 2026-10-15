@@ -15,10 +15,14 @@ import {
     X,
     Banknote,
     Receipt,
-    Plus
+    Plus,
+    FilePlus2,
+    TrendingDown
 } from 'lucide-react';
 import { triggerHaptic } from '@/lib/haptics';
 import { MobileCollectPaymentDrawer } from '@/components/mobile/landlord/MobileCollectPaymentDrawer';
+import { MobileIssueInvoiceDrawer } from '@/components/mobile/landlord/MobileIssueInvoiceDrawer';
+import { MobileRecordExpenseDrawer } from '@/components/mobile/landlord/MobileRecordExpenseDrawer';
 import { cn } from '@/lib/utils';
 import { useLanguageContext } from '@/context/LanguageContext';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
@@ -68,6 +72,8 @@ export function LandlordPaymentsView() {
     
     // Lightbox state for inspecting payment proof receipts
     const [isCollectDrawerOpen, setIsCollectDrawerOpen] = useState(false);
+    const [isInvoiceDrawerOpen, setIsInvoiceDrawerOpen] = useState(false);
+    const [isExpenseDrawerOpen, setIsExpenseDrawerOpen] = useState(false);
     const [selectedCollectInvoiceId, setSelectedCollectInvoiceId] = useState<string | null>(null);
     const [inspectInvoice, setInspectInvoice] = useState<InvoiceItem | null>(null);
     const [processingId, setProcessingId] = useState<string | null>(null);
@@ -190,24 +196,48 @@ export function LandlordPaymentsView() {
     return (
         <PullToRefresh onRefresh={fetchInvoices}>
             <div className="flex flex-col gap-3 pb-6">
-                {/* 1. Property Selector & Fast Collect CTA */}
-                <div className="px-4 pt-2.5 shrink-0 flex items-center gap-2">
-                    <div className="flex-1 min-w-0">
-                        <MobilePropertySelector />
+                {/* 1. Property Selector & Fast Action CTAs */}
+                <div className="px-4 pt-2.5 shrink-0 flex flex-col gap-2">
+                    <MobilePropertySelector />
+                    <div className="grid grid-cols-3 gap-2">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                triggerHaptic('light');
+                                setSelectedCollectInvoiceId(null);
+                                setIsCollectDrawerOpen(true);
+                            }}
+                            className="h-10 px-2 rounded-xl neumorphic-primary text-primary-foreground font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 shadow-sm cursor-pointer"
+                            aria-label={t("Record offline payment")}
+                        >
+                            <Receipt className="size-3.5 shrink-0" />
+                            <span className="truncate">{t("Collect")}</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                triggerHaptic('light');
+                                setIsInvoiceDrawerOpen(true);
+                            }}
+                            className="h-10 px-2 rounded-xl neumorphic-extruded border border-primary/30 text-primary font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 shadow-sm cursor-pointer"
+                            aria-label={t("Issue new invoice")}
+                        >
+                            <FilePlus2 className="size-3.5 shrink-0" />
+                            <span className="truncate">{t("+ Invoice")}</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                triggerHaptic('light');
+                                setIsExpenseDrawerOpen(true);
+                            }}
+                            className="h-10 px-2 rounded-xl neumorphic-extruded border border-rose-500/30 text-rose-600 dark:text-rose-400 font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 shadow-sm cursor-pointer"
+                            aria-label={t("Record property expense")}
+                        >
+                            <TrendingDown className="size-3.5 shrink-0" />
+                            <span className="truncate">{t("- Expense")}</span>
+                        </button>
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            triggerHaptic('light');
-                            setSelectedCollectInvoiceId(null);
-                            setIsCollectDrawerOpen(true);
-                        }}
-                        className="shrink-0 h-11 px-3.5 rounded-2xl neumorphic-primary text-primary-foreground font-black text-xs uppercase tracking-wider flex items-center gap-1.5 active:scale-95 shadow-sm cursor-pointer"
-                        aria-label={t("Record offline payment")}
-                    >
-                        <Receipt className="size-4" />
-                        <span className="inline">{t("Collect")}</span>
-                    </button>
                 </div>
 
                 {/* 2. Sticky Search & Tab Filter Bar (Matching Maintenance Page Behavior) */}
@@ -566,6 +596,22 @@ export function LandlordPaymentsView() {
                 }}
                 initialInvoiceId={selectedCollectInvoiceId}
                 onPaymentRecorded={() => fetchInvoices()}
+            />
+
+            {/* Mobile Issue Invoice Drawer */}
+            <MobileIssueInvoiceDrawer
+                isOpen={isInvoiceDrawerOpen}
+                onClose={() => setIsInvoiceDrawerOpen(false)}
+                onIssued={() => fetchInvoices()}
+                propertyId={selectedPropertyId}
+            />
+
+            {/* Mobile Record Expense Drawer */}
+            <MobileRecordExpenseDrawer
+                isOpen={isExpenseDrawerOpen}
+                onClose={() => setIsExpenseDrawerOpen(false)}
+                onSaved={() => fetchInvoices()}
+                propertyId={selectedPropertyId}
             />
         </PullToRefresh>
     );

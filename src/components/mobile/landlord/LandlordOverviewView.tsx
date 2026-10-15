@@ -20,6 +20,8 @@ import {
     HelpCircle,
     Banknote,
     UserPlus,
+    FilePlus2,
+    TrendingDown,
     RefreshCw,
     SlidersHorizontal,
     EyeOff,
@@ -70,7 +72,10 @@ import { MobilePropertySelector } from '@/components/mobile/shared/MobilePropert
 import { ActionRequired } from '@/components/landlord/dashboard/ActionRequired';
 import { MobilePaymentDrawer } from '@/components/mobile/landlord/MobilePaymentDrawer';
 import { MobileVacantUnitsDrawer } from '@/components/mobile/landlord/MobileVacantUnitsDrawer';
+import { triggerHaptic } from '@/lib/haptics';
 import { MobileCollectPaymentDrawer } from '@/components/mobile/landlord/MobileCollectPaymentDrawer';
+import { MobileIssueInvoiceDrawer } from '@/components/mobile/landlord/MobileIssueInvoiceDrawer';
+import { MobileRecordExpenseDrawer } from '@/components/mobile/landlord/MobileRecordExpenseDrawer';
 import { WalkInApplicationModal } from '@/components/landlord/applications/WalkInApplicationModal';
 import { VacantUnitsModal } from '@/components/landlord/dashboard/VacantUnitsModal';
 import { TenantInviteManager } from '@/components/landlord/applications/TenantInviteManager';
@@ -207,6 +212,8 @@ export function LandlordOverviewView() {
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isFlyerModalOpen, setIsFlyerModalOpen] = useState(false);
     const [isCollectPaymentModalOpen, setIsCollectPaymentModalOpen] = useState(false);
+    const [isIssueInvoiceDrawerOpen, setIsIssueInvoiceDrawerOpen] = useState(false);
+    const [isRecordExpenseDrawerOpen, setIsRecordExpenseDrawerOpen] = useState(false);
     const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
 
     // Payments, Units, Invites data state
@@ -908,13 +915,39 @@ export function LandlordOverviewView() {
                             </div>
                         </div>
 
-                        <Link
-                            href="/mobile/landlord/payments"
-                            className="px-2.5 py-1.5 rounded-xl text-[10px] font-bold neumorphic-extruded text-muted-foreground hover:text-primary flex items-center gap-1 active:scale-95"
-                        >
-                            <span>{t('Ledger')}</span>
-                            <ArrowUpRight className="size-3" />
-                        </Link>
+                        <div className="flex items-center gap-1.5">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    triggerHaptic('light');
+                                    setIsIssueInvoiceDrawerOpen(true);
+                                }}
+                                className="px-2 py-1.5 rounded-xl text-[10px] font-black neumorphic-extruded border border-primary/20 text-primary flex items-center gap-1 active:scale-95 cursor-pointer"
+                                aria-label={t("Issue invoice")}
+                            >
+                                <FilePlus2 className="size-3 shrink-0" />
+                                <span>{t("Bill")}</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    triggerHaptic('light');
+                                    setIsRecordExpenseDrawerOpen(true);
+                                }}
+                                className="px-2 py-1.5 rounded-xl text-[10px] font-black neumorphic-extruded border border-rose-500/20 text-rose-500 flex items-center gap-1 active:scale-95 cursor-pointer"
+                                aria-label={t("Record expense")}
+                            >
+                                <TrendingDown className="size-3 shrink-0" />
+                                <span>{t("Expense")}</span>
+                            </button>
+                            <Link
+                                href="/mobile/landlord/payments"
+                                className="px-2 py-1.5 rounded-xl text-[10px] font-bold neumorphic-extruded text-muted-foreground hover:text-primary flex items-center gap-1 active:scale-95"
+                            >
+                                <span>{t('Ledger')}</span>
+                                <ArrowUpRight className="size-3" />
+                            </Link>
+                        </div>
                     </div>
 
                     {/* 3 Payment Category Tabs / Cards */}
@@ -1147,6 +1180,26 @@ export function LandlordOverviewView() {
                 onPaymentRecorded={() => {
                     void loadAll();
                 }}
+            />
+
+            {/* Mobile Issue Invoice Drawer */}
+            <MobileIssueInvoiceDrawer
+                isOpen={isIssueInvoiceDrawerOpen}
+                onClose={() => setIsIssueInvoiceDrawerOpen(false)}
+                onIssued={() => {
+                    void loadAll();
+                }}
+                propertyId={selectedPropertyId}
+            />
+
+            {/* Mobile Record Expense Drawer */}
+            <MobileRecordExpenseDrawer
+                isOpen={isRecordExpenseDrawerOpen}
+                onClose={() => setIsRecordExpenseDrawerOpen(false)}
+                onSaved={() => {
+                    void loadAll();
+                }}
+                propertyId={selectedPropertyId}
             />
 
             {/* Lobby QR Code Flyer Generator Modal */}
