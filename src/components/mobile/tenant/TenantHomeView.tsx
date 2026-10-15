@@ -198,6 +198,14 @@ export function TenantHomeView() {
                                 <CreditCard className="size-3.5" />
                                 <span>{t('Pay Rent / Upload Proof')}</span>
                             </Link>
+                            <Link
+                                href="/mobile/tenant/calendar"
+                                className="py-2 px-3 rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-card/80 text-foreground text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs active:scale-[0.98] transition-all"
+                                aria-label={t("Schedule")}
+                            >
+                                <Calendar className="size-3.5 text-sky-500" />
+                                <span>{t('Schedule')}</span>
+                            </Link>
                         </div>
                     </div>
                 </div>

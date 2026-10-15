@@ -543,7 +543,7 @@ export function LandlordOverviewView() {
 
                         {/* 4. Building Calendar */}
                         <Link
-                            href="/mobile/calendar"
+                            href="/mobile/landlord/calendar"
                             className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-sky-500/25 bg-sky-500/10 hover:bg-sky-500/15 p-2 min-h-[58px] active:scale-95 transition-all text-sky-600 dark:text-sky-400 group shadow-2xs text-center"
                         >
                             <Calendar className="size-5 text-sky-500 group-hover:scale-110 transition-transform" />
