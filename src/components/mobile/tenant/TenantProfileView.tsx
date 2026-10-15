@@ -30,8 +30,9 @@ import { cn } from '@/lib/utils';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { MobileConfirmModal } from '@/components/mobile/shared/MobileConfirmModal';
 import { formatLeaseDate, formatTenure, leaseEndState, tenureSinceLabel } from '@/lib/lease-term';
+import { ART, artOr } from "@/lib/art/abstract-art";
 
-const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80";
+const FALLBACK_AVATAR = ART.avatar;
 
 interface LeaseDetails {
     id: string;
@@ -113,7 +114,7 @@ export function TenantProfileView() {
         user?.user_metadata?.full_name || 
         user?.user_metadata?.name || 
         t('Resident');
-    const avatarUrl = profile?.avatar_url || FALLBACK_AVATAR;
+    const avatarUrl = artOr(profile?.avatar_url, FALLBACK_AVATAR);
     const formatCurrency = (amt: number) => `₱${amt.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
 
     // Open-ended leases (the default) have no end date: show tenure rather than a date range.

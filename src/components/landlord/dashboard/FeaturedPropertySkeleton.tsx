@@ -2,13 +2,14 @@
 
 import { Skeleton } from "@/components/ui/Skeleton";
 import { FeaturedPropertyCard } from "./FeaturedPropertyCard";
+import { ART } from "@/lib/art/abstract-art";
 
 export function FeaturedPropertySkeleton({ className }: { className?: string }) {
     const fixtureData = {
         propertyName: "Sunset Valley Apartments",
         totalSales: "₱243,000",
         totalViews: "20K+",
-        image: "/hero-images/apartment-03.png",
+        image: ART.property,
         momGrowth: "+12.4%",
         occupancyRate: "100%"
     };

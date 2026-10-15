@@ -28,9 +28,9 @@ import { cn } from "@/lib/utils";
 import { useLanguageContext } from "@/context/LanguageContext";
 // import { properties } from "@/lib/data"; // Removed legacy data
 const properties = [
-    { id: "1", name: "The Obsidian Tower", address: "123 Dark St, Metro City", type: "Studio", images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop"], price: "18,500" },
-    { id: "2", name: "The Vertex", address: "456 High St, Metro City", type: "1BR", images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=600&fit=crop"], price: "12,000" },
-    { id: "4", name: "Emerald Heights", address: "789 Park Ave, Metro City", type: "2BR", images: ["https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&h=600&fit=crop"], price: "25,000" },
+    { id: "1", name: "The Obsidian Tower", address: "123 Dark St, Metro City", type: "Studio", images: ["/art/property.svg"], price: "18,500" },
+    { id: "2", name: "The Vertex", address: "456 High St, Metro City", type: "1BR", images: ["/art/property.svg"], price: "12,000" },
+    { id: "4", name: "Emerald Heights", address: "789 Park Ave, Metro City", type: "2BR", images: ["/art/property.svg"], price: "25,000" },
 ];
 import { m as motion, AnimatePresence } from "framer-motion";
 

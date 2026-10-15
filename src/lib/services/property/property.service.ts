@@ -19,9 +19,10 @@ import {
   PropertyValidationError,
   UnitNotFoundError,
 } from "./property.errors";
+import { ART, artOr } from "@/lib/art/abstract-art";
 
 const FALLBACK_PROPERTY_IMAGE =
-  "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&auto=format&fit=crop&q=80";
+  ART.property;
 
 const formatCompactCurrency = (value: number): string => {
   if (value >= 1_000_000) return `₱${(value / 1_000_000).toFixed(1)}M`;
@@ -351,7 +352,7 @@ export class PropertyService {
         name: property.name,
         address: property.address,
         type: property.type,
-        image: imageList[0] ?? FALLBACK_PROPERTY_IMAGE,
+        image: artOr(imageList[0], FALLBACK_PROPERTY_IMAGE),
         totalUnits,
         occupiedUnits,
         occupancyRate: totalUnits > 0 ? Math.min(100, Math.round((occupiedUnits / totalUnits) * 100)) : 0,

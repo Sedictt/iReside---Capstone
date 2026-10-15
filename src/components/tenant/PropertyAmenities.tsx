@@ -4,6 +4,7 @@ import { m as motion } from "framer-motion";
 import * as LucideIcons from "lucide-react";
 import Image from "next/image";
 import { useLanguageContext } from "@/context/LanguageContext";
+import { isRetiredPhotoUrl } from "@/lib/art/abstract-art";
 
 interface Amenity {
     id: string;
@@ -51,7 +52,7 @@ export function PropertyAmenities({ amenities }: { amenities: Amenity[] }) {
                     >
                         {/* Image/Icon Area */}
                         <div className="relative h-48 xl:h-auto xl:w-48 rounded-xl overflow-hidden shrink-0 neumorphic-inset">
-                            {amenity.image_url ? (
+                            {amenity.image_url && !isRetiredPhotoUrl(amenity.image_url) ? (
                                 <Image 
                                     src={amenity.image_url} 
                                     alt={amenity.name}

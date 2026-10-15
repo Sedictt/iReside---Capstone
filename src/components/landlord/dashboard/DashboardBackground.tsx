@@ -4,17 +4,18 @@ import React from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useLanguageContext } from "@/context/LanguageContext";
+import { DEFAULT_BANNER_ART_URL, resolveBannerUrl } from "@/lib/art/abstract-art";
 
 interface DashboardBackgroundProps {
     image: string;
     className?: string;
 }
 
-export function DashboardBackground({ image, className }: DashboardBackgroundProps) {
+export function DashboardBackground({ image: rawImage, className }: DashboardBackgroundProps) {
     const { t } = useLanguageContext();
+    const image = resolveBannerUrl(rawImage) ?? DEFAULT_BANNER_ART_URL;
     const isWhitelistedHost =
         image.startsWith("/") ||
-        image.includes("images.unsplash.com") ||
         image.includes("supabase.co") ||
         image.includes("googleusercontent.com") ||
         image.includes("ui-avatars.com") ||

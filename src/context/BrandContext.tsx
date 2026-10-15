@@ -8,6 +8,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 export type { BrandConfig } from "@/lib/branding/defaults";
 export { DEFAULT_BRANDING } from "@/lib/branding/defaults";
 import { DEFAULT_BRANDING, type BrandConfig } from "@/lib/branding/defaults";
+import { resolveBannerUrl } from "@/lib/art/abstract-art";
 
 export interface BrandContextValue extends BrandConfig {
   monogramInitials: string;
@@ -345,6 +346,8 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
 
   const value: BrandContextValue = {
     ...branding,
+    // Old stock-photo banners show as the art preset that replaced them.
+    bannerUrl: resolveBannerUrl(branding.bannerUrl),
     monogramInitials,
     isCustomBranded,
     isLoading,

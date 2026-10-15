@@ -22,9 +22,10 @@ import {
   ApplicationValidationError,
 } from "./application.errors";
 import { validateApplicationTransition } from "./application-state-machine";
+import { ART, artOr } from "@/lib/art/abstract-art";
 
 const FALLBACK_PROPERTY_IMAGE =
-  "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1200&auto=format&fit=crop&q=80";
+  ART.property;
 
 function buildComplianceChecklist(
   complianceChecklist: Record<string, boolean> | null,
@@ -141,7 +142,7 @@ export class ApplicationService {
       const propertyImages = Array.isArray(property?.images) ? property.images : [];
       const propertyImage =
         typeof propertyImages[0] === "string" && propertyImages[0].length > 0
-          ? propertyImages[0]
+          ? artOr(propertyImages[0], FALLBACK_PROPERTY_IMAGE)
           : FALLBACK_PROPERTY_IMAGE;
 
       const walkInName = row.applicant_name ?? null;

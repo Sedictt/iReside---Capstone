@@ -44,6 +44,7 @@ import { toast } from "sonner";
 import { useBrand } from "@/context/BrandContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguageContext } from "@/context/LanguageContext";
+import { ART, artOr, resolveBannerUrl } from "@/lib/art/abstract-art";
 
 // Dynamically import HTMLFlipBook to ensure SSR compatibility
 const HTMLFlipBook = dynamic(() => import("react-pageflip"), {
@@ -219,15 +220,15 @@ export function EBookReader({
     if (typeof window !== "undefined") {
       try {
         const customBanner = localStorage.getItem("ireside_landlord_custom_banner_url");
-        if (customBanner) return customBanner;
+        if (customBanner) return resolveBannerUrl(customBanner) ?? ART.workspace;
 
         const cachedProps = localStorage.getItem("iReside_cached_properties");
         if (cachedProps) {
           const parsed = JSON.parse(cachedProps);
           if (Array.isArray(parsed) && parsed.length > 0) {
             const firstProp = parsed[0];
-            if (firstProp.image) return firstProp.image;
-            if (Array.isArray(firstProp.images) && firstProp.images.length > 0) return firstProp.images[0];
+            if (firstProp.image) return artOr(firstProp.image, ART.workspace);
+            if (Array.isArray(firstProp.images) && firstProp.images.length > 0) return artOr(firstProp.images[0], ART.workspace);
           }
         }
       } catch {
@@ -235,7 +236,7 @@ export function EBookReader({
       }
     }
 
-    return "/images/ebook_workspace_bg.jpg";
+    return ART.workspace;
   }, [brand.bannerUrl, brand.logoUrl]);
 
   useEffect(() => {

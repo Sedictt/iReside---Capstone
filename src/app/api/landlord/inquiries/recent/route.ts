@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { ART, artOr } from "@/lib/art/abstract-art";
 
 type InquiryItem = {
     id: string;
@@ -13,7 +14,7 @@ type InquiryItem = {
 };
 
 const FALLBACK_PROPERTY_IMAGE =
-    "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=600&fit=crop";
+    ART.property;
 
 const formatRelativeDate = (value: string) => {
     const date = new Date(value);
@@ -150,7 +151,7 @@ export async function GET() {
             const propertyImages = property?.images;
             const propertyImage =
                 Array.isArray(propertyImages) && typeof propertyImages[0] === "string" && propertyImages[0].trim().length > 0
-                    ? propertyImages[0]
+                    ? artOr(propertyImages[0], FALLBACK_PROPERTY_IMAGE)
                     : FALLBACK_PROPERTY_IMAGE;
 
             return {

@@ -333,7 +333,7 @@ async function provisionTenantAccount() {
     status: 'in_progress',
     repair_method: 'third_party',
     third_party_name: 'Mario Rossi (Master Plumber - PipeWorks PH)',
-    images: ['https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80'],
+    images: ['/art/property.svg'],
     tenant_repair_status: 'repairing',
   });
   console.log('  \x1b[32m✓\x1b[0m Created repair ticket with assigned technician "Mario Rossi"');

@@ -6,6 +6,7 @@ import { brandingUpdateSchema } from "@/lib/validation/brand-setup";
 import { zodFieldErrors } from "@/lib/validation/server";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { isRetiredPhotoUrl, resolveBannerUrl } from "@/lib/art/abstract-art";
 
 interface CachedBrandingEntry {
   payload: BrandConfig;
@@ -195,8 +196,8 @@ export async function GET(request: NextRequest) {
         profileTheme?.secondaryColor ||
         propertyTheme?.secondaryColor ||
         DEFAULT_BRANDING.secondaryColor,
-      logoUrl: customTheme?.logoUrl !== undefined ? customTheme.logoUrl : (property?.images?.[0] ? property.images[0] : null),
-      bannerUrl: customTheme?.bannerUrl !== undefined ? customTheme.bannerUrl : (property?.images?.[0] ? property.images[0] : null),
+      logoUrl: customTheme?.logoUrl !== undefined ? customTheme.logoUrl : (property?.images?.[0] && !isRetiredPhotoUrl(property.images[0]) ? property.images[0] : null),
+      bannerUrl: resolveBannerUrl(customTheme?.bannerUrl !== undefined ? customTheme.bannerUrl : (property?.images?.[0] ? property.images[0] : null)),
       setupCompleted: (customTheme as any)?.setup_completed ?? (customTheme as any)?.setupCompleted ?? false,
       setupCompletedAt: (customTheme as any)?.setup_completed_at ?? (customTheme as any)?.setupCompletedAt ?? null,
     };

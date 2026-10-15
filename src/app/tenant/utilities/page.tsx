@@ -21,6 +21,7 @@ import { useLanguageContext } from "@/context/LanguageContext";
 import { textRule, todayIsoDate } from "@/lib/validation/rules";
 import { BOOKING_NOTES_MAX, bookingDateRule } from "@/lib/validation/schemas/operations.schema";
 import { tr } from "@/hooks/useLanguage";
+import { ART, artOr } from "@/lib/art/abstract-art";
 
 interface Amenity {
     id: string;
@@ -272,7 +273,7 @@ export default function TenantUtilitiesPage() {
             price: amenity.price_per_unit,
             unit: amenity.unit_type,
             capacity: amenity.capacity ? t("{count} people", { count: amenity.capacity }) : t("N/A"),
-            image: amenity.image_url || "/amenities/default.png",
+            image: artOr(amenity.image_url, ART.amenity),
             icon_name: amenity.icon_name || "Zap",
             color: getColorByType(amenity.type),
         };
@@ -400,7 +401,7 @@ export default function TenantUtilitiesPage() {
                                     >
                                         <div className="relative h-48 w-full overflow-hidden">
                                             <Image 
-                                                src={amenity.image_url || "/amenities/default.png"} 
+                                                src={artOr(amenity.image_url, ART.amenity)} 
                                                 alt={amenity.name} 
                                                 fill 
                                                 className="object-cover transition-transform duration-500 group-hover:scale-110"

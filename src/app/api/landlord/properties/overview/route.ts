@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
+import { ART, artOr } from "@/lib/art/abstract-art";
 
 type PortfolioStatus = "Performing" | "Stable" | "Attention Required";
 
 const FALLBACK_PROPERTY_IMAGE =
-    "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&auto=format&fit=crop&q=80";
+    ART.property;
 
 const formatCompactCurrency = (value: number) => {
     if (value >= 1_000_000) {
@@ -217,7 +218,7 @@ export async function GET() {
                 Array.isArray(property.images) &&
                 typeof property.images[0] === "string" &&
                 property.images[0].trim().length > 0
-                    ? property.images[0]
+                    ? artOr(property.images[0], FALLBACK_PROPERTY_IMAGE)
                     : FALLBACK_PROPERTY_IMAGE,
         };
     });

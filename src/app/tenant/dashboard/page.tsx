@@ -20,7 +20,6 @@ import {
     ArrowRight,
     CheckCircle2
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { m as motion, AnimatePresence } from "framer-motion";
@@ -411,16 +410,6 @@ export default function TenantDashboard() {
 
     return (
         <div className="w-full relative md:pr-[104px] lg:pr-[112px]">
-            <div className="fixed inset-0 z-0 pointer-events-none">
-                <Image
-                    src="https://images.unsplash.com/photo-1481277542470-605612bd2d61?q=80&w=2600&auto=format&fit=crop"
-                    alt=""
-                    fill
-                    className="object-cover opacity-[0.03]"
-                    priority
-                />
-            </div>
-
             <LeaseRenewalReminder lease={reminderLease} leaseId={lease?.id} />
 
             <div className="space-y-6 relative z-10 text-foreground">

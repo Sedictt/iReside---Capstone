@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { buildInviteQrUrl } from "@/lib/tenant-intake-invites";
 import { useLanguageContext } from "@/context/LanguageContext";
+import { ART, artOr } from "@/lib/art/abstract-art";
 
 export interface VacantUnitItem {
     id: string;
@@ -47,7 +48,7 @@ interface VacantUnitsModalProps {
 }
 
 const FALLBACK_PROPERTY_HERO =
-    "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&auto=format&fit=crop&q=80";
+    ART.property;
 
 function getUnitBadge(name: string): string {
     const clean = name.trim();
@@ -446,7 +447,7 @@ export function VacantUnitsModal({
                             {/* Hero Image / Banner */}
                             <div className="relative h-48 sm:h-56 w-full bg-slate-900 overflow-hidden">
                                 <Image
-                                    src={previewUnit.property_image || FALLBACK_PROPERTY_HERO}
+                                    src={artOr(previewUnit.property_image, FALLBACK_PROPERTY_HERO)}
                                     alt={previewUnit.name}
                                     fill
                                     className="object-cover opacity-85"

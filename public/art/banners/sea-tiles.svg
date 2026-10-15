@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+<defs></defs>
+<rect x="0" y="0" width="180" height="180" fill="#115e59"/>
+<circle cx="90" cy="90" r="70" fill="#0f766e"/>
+<rect x="180" y="0" width="180" height="180" fill="#2dd4bf"/>
+<path d="M180 0H360L180 180Z" fill="#14b8a6"/>
+<rect x="360" y="0" width="180" height="180" fill="#f2e8cf"/>
+<circle cx="450" cy="90" r="70" fill="#99f6e4"/>
+<rect x="540" y="0" width="180" height="180" fill="#0f766e"/>
+<path d="M540 0H720L540 180Z" fill="#115e59"/>
+<rect x="720" y="0" width="180" height="180" fill="#14b8a6"/>
+<circle cx="810" cy="90" r="70" fill="#2dd4bf"/>
+<rect x="900" y="0" width="180" height="180" fill="#99f6e4"/>
+<path d="M900 0H1080L900 180Z" fill="#f2e8cf"/>
+<rect x="1080" y="0" width="180" height="180" fill="#115e59"/>
+<circle cx="1170" cy="90" r="70" fill="#0f766e"/>
+<rect x="1260" y="0" width="180" height="180" fill="#2dd4bf"/>
+<path d="M1260 0H1440L1260 180Z" fill="#14b8a6"/>
+<rect x="1440" y="0" width="180" height="180" fill="#f2e8cf"/>
+<circle cx="1530" cy="90" r="70" fill="#99f6e4"/>
+<rect x="0" y="180" width="180" height="180" fill="#0f766e"/>
+<path d="M0 360A180 180 0 0 1 180 180V360Z" fill="#115e59"/>
+<rect x="180" y="180" width="180" height="180" fill="#14b8a6"/>
+<path d="M180 360A90 90 0 0 1 360 360Z" fill="#2dd4bf"/>
+<rect x="360" y="180" width="180" height="180" fill="#99f6e4"/>
+<path d="M360 360A180 180 0 0 1 540 180V360Z" fill="#f2e8cf"/>
+<rect x="540" y="180" width="180" height="180" fill="#115e59"/>
+<path d="M540 360A90 90 0 0 1 720 360Z" fill="#0f766e"/>
+<rect x="720" y="180" width="180" height="180" fill="#2dd4bf"/>
+<path d="M720 360A180 180 0 0 1 900 180V360Z" fill="#14b8a6"/>
+<rect x="900" y="180" width="180" height="180" fill="#f2e8cf"/>
+<path d="M900 360A90 90 0 0 1 1080 360Z" fill="#99f6e4"/>
+<rect x="1080" y="180" width="180" height="180" fill="#0f766e"/>
+<path d="M1080 360A180 180 0 0 1 1260 180V360Z" fill="#115e59"/>
+<rect x="1260" y="180" width="180" height="180" fill="#14b8a6"/>
+<path d="M1260 360A90 90 0 0 1 1440 360Z" fill="#2dd4bf"/>
+<rect x="1440" y="180" width="180" height="180" fill="#99f6e4"/>
+<path d="M1440 360A180 180 0 0 1 1620 180V360Z" fill="#f2e8cf"/>
+<rect x="0" y="360" width="180" height="180" fill="#115e59"/>
+<path d="M0 360H180L0 540Z" fill="#0f766e"/>
+<rect x="180" y="360" width="180" height="180" fill="#2dd4bf"/>
+<circle cx="270" cy="450" r="70" fill="#14b8a6"/>
+<rect x="360" y="360" width="180" height="180" fill="#f2e8cf"/>
+<path d="M360 360H540L360 540Z" fill="#99f6e4"/>
+<rect x="540" y="360" width="180" height="180" fill="#0f766e"/>
+<circle cx="630" cy="450" r="70" fill="#115e59"/>
+<rect x="720" y="360" width="180" height="180" fill="#14b8a6"/>
+<path d="M720 360H900L720 540Z" fill="#2dd4bf"/>
+<rect x="900" y="360" width="180" height="180" fill="#99f6e4"/>
+<circle cx="990" cy="450" r="70" fill="#f2e8cf"/>
+<rect x="1080" y="360" width="180" height="180" fill="#115e59"/>
+<path d="M1080 360H1260L1080 540Z" fill="#0f766e"/>
+<rect x="1260" y="360" width="180" height="180" fill="#2dd4bf"/>
+<circle cx="1350" cy="450" r="70" fill="#14b8a6"/>
+<rect x="1440" y="360" width="180" height="180" fill="#f2e8cf"/>
+<path d="M1440 360H1620L1440 540Z" fill="#99f6e4"/>
+<rect x="0" y="540" width="180" height="180" fill="#0f766e"/>
+<path d="M0 720A90 90 0 0 1 180 720Z" fill="#115e59"/>
+<rect x="180" y="540" width="180" height="180" fill="#14b8a6"/>
+<path d="M180 720A180 180 0 0 1 360 540V720Z" fill="#2dd4bf"/>
+<rect x="360" y="540" width="180" height="180" fill="#99f6e4"/>
+<path d="M360 720A90 90 0 0 1 540 720Z" fill="#f2e8cf"/>
+<rect x="540" y="540" width="180" height="180" fill="#115e59"/>
+<path d="M540 720A180 180 0 0 1 720 540V720Z" fill="#0f766e"/>
+<rect x="720" y="540" width="180" height="180" fill="#2dd4bf"/>
+<path d="M720 720A90 90 0 0 1 900 720Z" fill="#14b8a6"/>
+<rect x="900" y="540" width="180" height="180" fill="#f2e8cf"/>
+<path d="M900 720A180 180 0 0 1 1080 540V720Z" fill="#99f6e4"/>
+<rect x="1080" y="540" width="180" height="180" fill="#0f766e"/>
+<path d="M1080 720A90 90 0 0 1 1260 720Z" fill="#115e59"/>
+<rect x="1260" y="540" width="180" height="180" fill="#14b8a6"/>
+<path d="M1260 720A180 180 0 0 1 1440 540V720Z" fill="#2dd4bf"/>
+<rect x="1440" y="540" width="180" height="180" fill="#99f6e4"/>
+<path d="M1440 720A90 90 0 0 1 1620 720Z" fill="#f2e8cf"/>
+<rect x="0" y="720" width="180" height="180" fill="#115e59"/>
+<circle cx="90" cy="810" r="70" fill="#0f766e"/>
+<rect x="180" y="720" width="180" height="180" fill="#2dd4bf"/>
+<path d="M180 720H360L180 900Z" fill="#14b8a6"/>
+<rect x="360" y="720" width="180" height="180" fill="#f2e8cf"/>
+<circle cx="450" cy="810" r="70" fill="#99f6e4"/>
+<rect x="540" y="720" width="180" height="180" fill="#0f766e"/>
+<path d="M540 720H720L540 900Z" fill="#115e59"/>
+<rect x="720" y="720" width="180" height="180" fill="#14b8a6"/>
+<circle cx="810" cy="810" r="70" fill="#2dd4bf"/>
+<rect x="900" y="720" width="180" height="180" fill="#99f6e4"/>
+<path d="M900 720H1080L900 900Z" fill="#f2e8cf"/>
+<rect x="1080" y="720" width="180" height="180" fill="#115e59"/>
+<circle cx="1170" cy="810" r="70" fill="#0f766e"/>
+<rect x="1260" y="720" width="180" height="180" fill="#2dd4bf"/>
+<path d="M1260 720H1440L1260 900Z" fill="#14b8a6"/>
+<rect x="1440" y="720" width="180" height="180" fill="#f2e8cf"/>
+<circle cx="1530" cy="810" r="70" fill="#99f6e4"/>
+</svg>

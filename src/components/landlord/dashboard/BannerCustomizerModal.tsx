@@ -18,48 +18,12 @@ import { useBrand } from "@/context/BrandContext";
 import { handleMediaSelection, MEDIA_ACCEPT_STRINGS } from "@/lib/validation";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { tr } from "@/hooks/useLanguage";
+import { BANNER_ART_PRESETS, DEFAULT_BANNER_ART_URL, resolveBannerUrl } from "@/lib/art/abstract-art";
 
 
-export const CURATED_BANNER_PRESETS = [
-  {
-    id: "glass_tower",
-    name: "Modern Glass High-Rise",
-    category: "Commercial & High-Rise",
-    url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop",
-  },
-  {
-    id: "contemporary_apartments",
-    name: "Urban Residential Complex",
-    category: "Apartments",
-    url: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=2070&auto=format&fit=crop",
-  },
-  {
-    id: "scandinavian_studio",
-    name: "Minimalist Loft & Studio",
-    category: "Lofts & Dorms",
-    url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop",
-  },
-  {
-    id: "warm_townhouse",
-    name: "Warm Brick Townhouses",
-    category: "Townhouses & Units",
-    url: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?q=80&w=2070&auto=format&fit=crop",
-  },
-  {
-    id: "tropical_oasis",
-    name: "Tropical Residential Oasis",
-    category: "Villa & Estates",
-    url: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop",
-  },
-  {
-    id: "obsidian_skyline",
-    name: "Obsidian Metropolis Skyline",
-    category: "Night Skyline",
-    url: "https://images.unsplash.com/photo-1577495508048-b635879837f1?q=80&w=2070&auto=format&fit=crop",
-  },
-];
+export const CURATED_BANNER_PRESETS = BANNER_ART_PRESETS;
 
-export const DEFAULT_BANNER_URL = CURATED_BANNER_PRESETS[0].url;
+export const DEFAULT_BANNER_URL = DEFAULT_BANNER_ART_URL;
 
 interface BannerCustomizerModalProps {
   isOpen: boolean;
@@ -77,7 +41,7 @@ export function BannerCustomizerModal({
   const brand = useBrand();
   const { t } = useLanguageContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedBanner, setSelectedBanner] = useState(currentBanner);
+  const [selectedBanner, setSelectedBanner] = useState(resolveBannerUrl(currentBanner) ?? DEFAULT_BANNER_ART_URL);
 
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -85,7 +49,7 @@ export function BannerCustomizerModal({
   // Sync with currentBanner when opened
   React.useEffect(() => {
     if (isOpen) {
-      setSelectedBanner(currentBanner);
+      setSelectedBanner(resolveBannerUrl(currentBanner) ?? DEFAULT_BANNER_ART_URL);
     }
   }, [isOpen, currentBanner]);
 
@@ -168,7 +132,7 @@ export function BannerCustomizerModal({
       }
 
       await brand.updateBranding({ bannerUrl: null }, true);
-      toast.info(t("Banner restored to default glass high-rise."));
+      toast.info(t("Banner restored to the default design."));
       onClose();
     } catch (err) {
       console.error("[BannerCustomizerModal] Reset error:", err);
@@ -219,7 +183,7 @@ export function BannerCustomizerModal({
                 {t("Customize Dashboard Banner")}
               </h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                {t("Upload your property photography or choose from curated architect presets")}
+                {t("Upload a photo of your property or pick a ready-made design")}
               </p>
             </div>
           </div>
@@ -271,9 +235,8 @@ export function BannerCustomizerModal({
           <div className="flex items-center justify-between">
             <label className="text-[11px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
               <Building2 className="size-3.5 text-primary" />
-              <span>{t("Curated Property Architecture Presets")}</span>
+              <span>{t("Ready-made designs")}</span>
             </label>
-            <span className="text-[10px] text-zinc-400">{t("High Definition")}</span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">

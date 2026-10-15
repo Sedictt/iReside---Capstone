@@ -5,6 +5,7 @@ import { ArrowUpRight, X, TrendingUp, Users, DollarSign, Activity } from "lucide
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useLanguageContext } from "@/context/LanguageContext";
+import { ART, artOr } from "@/lib/art/abstract-art";
 
 interface FeaturedPropertyCardProps {
     propertyName?: string;
@@ -21,7 +22,7 @@ export function FeaturedPropertyCard({
     propertyName = "Sunset Valley Apartments",
     totalSales = "₱243,000",
     totalViews = "20K+",
-    image = "/hero-images/apartment-03.png", // Temporarily using local hero-image
+    image = ART.property,
     className,
     simplifiedMode = false,
     momGrowth = "+12.4%",
@@ -45,7 +46,7 @@ export function FeaturedPropertyCard({
                 {/* Background Image */}
                 <div className="absolute inset-0 z-0">
                     <Image
-                        src={image}
+                        src={artOr(image, ART.property)}
                         alt={propertyName}
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

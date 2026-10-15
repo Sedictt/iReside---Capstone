@@ -4,6 +4,7 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/admin";
 import { requireAuthenticatedUser } from "@/lib/api/auth-guard";
 import type { ApplicationStatus, LeaseStatus } from "@/types/database";
 import type { InvitePaymentTerms } from "@/lib/tenant-invite-payment-terms";
+import { ART, artOr } from "@/lib/art/abstract-art";
 
 
 type ApplicationResponse = {
@@ -204,7 +205,7 @@ type PaymentRequestRow = {
 };
 
 const FALLBACK_PROPERTY_IMAGE =
-    "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1200&auto=format&fit=crop&q=80";
+    ART.property;
 
 const isNonEmptyString = (value: unknown): value is string =>
     typeof value === "string" && value.trim().length > 0;
@@ -558,7 +559,7 @@ export async function GET(request: Request) {
         const propertyImages = property?.images;
         const propertyImage =
             Array.isArray(propertyImages) && isNonEmptyString(propertyImages[0])
-                ? propertyImages[0]
+                ? artOr(propertyImages[0], FALLBACK_PROPERTY_IMAGE)
                 : FALLBACK_PROPERTY_IMAGE;
 
         // For walk-in applications, prefer the walk-in-specific fields over the profile lookup.
