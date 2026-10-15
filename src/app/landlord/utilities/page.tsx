@@ -36,6 +36,7 @@ import { AddAmenityModal } from "@/components/landlord/AddAmenityModal";
 
 import * as LucideIcons from 'lucide-react';
 import { tr } from "@/hooks/useLanguage";
+import { isRetiredPhotoUrl } from "@/lib/art/abstract-art";
 
 const getIconByName = (name: string | null) => {
     if (!name) return LucideIcons.Zap;
@@ -284,7 +285,7 @@ export default function LandlordUtilitiesPage() {
                                             {/* Thumbnail Image */}
                                             <div className="relative h-44 w-full overflow-hidden">
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent z-10" />
-                                                {utility.image_url ? (
+                                                {utility.image_url && !isRetiredPhotoUrl(utility.image_url) ? (
                                                     <Image 
                                                         src={utility.image_url} 
                                                         alt={utility.name}

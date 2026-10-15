@@ -19,6 +19,7 @@ import { TenantMaintenanceModal } from "@/components/tenant/maintenance/TenantMa
 import { ViewToggle } from "@/components/shared/ViewToggle";
 import { useViewMode } from "@/hooks/useViewMode";
 import { useLanguageContext } from "@/context/LanguageContext";
+import { ART } from "@/lib/art/abstract-art";
 
 type MaintenanceStatus = "Pending" | "Assigned" | "In Progress" | "Resolved";
 type Priority = "Critical" | "High" | "Medium" | "Low";
@@ -159,7 +160,7 @@ export default function TenantMaintenancePage() {
                                 photoRequested: true,
                                 tenantRepairStatus: "done",
                                 tenantProvidedPhotos: [
-                                    "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=300&q=80"
+                                    ART.repair
                                 ]
                             };
                         } else if (preview === "third_party_personnel_arrived") {
@@ -198,7 +199,7 @@ export default function TenantMaintenancePage() {
                                 thirdPartyName: "John's Plumbing Co.",
                                 tenantRepairStatus: "done",
                                 tenantProvidedPhotos: [
-                                    "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=300&q=80"
+                                    ART.repair
                                 ]
                             };
                         }

@@ -33,8 +33,9 @@ import {
 } from '@/lib/messages/client';
 import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { useLanguageContext } from '@/context/LanguageContext';
+import { ART, artOr } from "@/lib/art/abstract-art";
 
-const FALLBACK_AVATAR = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80';
+const FALLBACK_AVATAR = ART.avatar;
 
 const ROLE_LABELS: Record<string, string> = {
     landlord: 'Landlord',
@@ -198,7 +199,7 @@ export function TenantMessagesView() {
     if (activeConversation && mounted) {
         const otherParticipant = activeConversation.otherParticipants?.[0];
         const landlordName = otherParticipant?.fullName || t('Property Manager');
-        const landlordAvatar = otherParticipant?.avatarUrl || FALLBACK_AVATAR;
+        const landlordAvatar = artOr(otherParticipant?.avatarUrl, FALLBACK_AVATAR);
 
         return createPortal(
             <div className="fixed inset-0 z-[120] bg-background flex flex-col max-w-md mx-auto h-[100dvh]">
@@ -462,7 +463,7 @@ export function TenantMessagesView() {
                                 {filteredConversations.map((conv) => {
                                     const otherParticipant = conv.otherParticipants?.[0];
                                     const name = otherParticipant?.fullName || t('Property Manager');
-                                    const avatar = otherParticipant?.avatarUrl || FALLBACK_AVATAR;
+                                    const avatar = artOr(otherParticipant?.avatarUrl, FALLBACK_AVATAR);
                                     const lastMsg = conv.lastMessage?.content || t('No messages yet');
                                     const time = conv.lastMessage?.createdAt 
                                         ? new Date(conv.lastMessage.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) 

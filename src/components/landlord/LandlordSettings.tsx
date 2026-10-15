@@ -46,6 +46,7 @@ import { signOut } from "@/lib/supabase/client-auth";
 import { ClientOnlyDate } from "@/components/ui/client-only-date";
 import { useLanguageContext } from "@/context/LanguageContext";
 import { CURATED_BANNER_PRESETS, DEFAULT_BANNER_URL } from "@/components/landlord/dashboard/BannerCustomizerModal";
+import { resolveBannerUrl } from "@/lib/art/abstract-art";
 import { ColorPickerModal } from "@/components/ui/ColorPickerModal";
 import { useBrand, DEFAULT_BRANDING } from "@/context/BrandContext";
 import { applyBrandCssVariables } from "@/lib/branding/colors";
@@ -375,7 +376,7 @@ export function LandlordSettings({ embedded = false }: { embedded?: boolean } = 
     // Personalization & Branding State
     const [bannerUrl, setBannerUrl] = useState<string>(() => {
         const cached = getCachedSettings();
-        return cached?.personalization?.bannerUrl || (typeof window !== "undefined" ? (localStorage.getItem("ireside_landlord_custom_banner_url") || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL);
+        return resolveBannerUrl(cached?.personalization?.bannerUrl) || (typeof window !== "undefined" ? (resolveBannerUrl(localStorage.getItem("ireside_landlord_custom_banner_url")) || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL);
     });
 
     const [propertyTradeName, setPropertyTradeName] = useState<string>(() => {
@@ -675,7 +676,7 @@ export function LandlordSettings({ embedded = false }: { embedded?: boolean } = 
                 propertyTagline: cached.personalization?.propertyTagline || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_tagline") || brand.propertyTagline || DEFAULT_BRANDING.propertyTagline) : DEFAULT_BRANDING.propertyTagline),
                 brandPrimaryHex: cached.personalization?.brandPrimaryHex || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_primary") || brand.primaryColor || DEFAULT_BRANDING.primaryColor) : DEFAULT_BRANDING.primaryColor),
                 brandSecondaryHex: cached.personalization?.brandSecondaryHex || (typeof window !== "undefined" ? (localStorage.getItem("ireside_brand_secondary") || brand.secondaryColor || DEFAULT_BRANDING.secondaryColor) : DEFAULT_BRANDING.secondaryColor),
-                bannerUrl: cached.personalization?.bannerUrl || (typeof window !== "undefined" ? (localStorage.getItem("ireside_landlord_custom_banner_url") || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL),
+                bannerUrl: resolveBannerUrl(cached.personalization?.bannerUrl) || (typeof window !== "undefined" ? (resolveBannerUrl(localStorage.getItem("ireside_landlord_custom_banner_url")) || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL),
                 propertyLogoUrl: cached.personalization?.propertyLogoUrl ?? (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_logo") || brand.logoUrl || null) : (brand.logoUrl || null)),
             };
         }
@@ -805,7 +806,7 @@ export function LandlordSettings({ embedded = false }: { embedded?: boolean } = 
                 announcements: { ...DEFAULT_NOTIFICATION_PREFERENCES.announcements, ...(savedNotifs?.announcements || {}) },
             };
 
-            const savedBanner = serverBranding?.bannerUrl || (typeof window !== "undefined" ? (localStorage.getItem("ireside_landlord_custom_banner_url") || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL);
+            const savedBanner = resolveBannerUrl(serverBranding?.bannerUrl) || (typeof window !== "undefined" ? (resolveBannerUrl(localStorage.getItem("ireside_landlord_custom_banner_url")) || DEFAULT_BANNER_URL) : DEFAULT_BANNER_URL);
             const savedLogo = serverBranding?.logoUrl ?? (typeof window !== "undefined" ? localStorage.getItem("ireside_property_logo") : null);
             const savedName = serverBranding?.propertyName || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_name") || DEFAULT_BRANDING.propertyName) : DEFAULT_BRANDING.propertyName);
             const savedTagline = serverBranding?.propertyTagline || (typeof window !== "undefined" ? (localStorage.getItem("ireside_property_tagline") || DEFAULT_BRANDING.propertyTagline) : DEFAULT_BRANDING.propertyTagline);
@@ -1660,7 +1661,7 @@ export function LandlordSettings({ embedded = false }: { embedded?: boolean } = 
         { id: "profile", group: "account", icon: User, title: t("My profile"), description: t("Your name, photo, contact details and emergency contact.") },
         { id: "security", group: "account", icon: KeyRound, title: t("Password and sign-in"), description: t("Change your password, add extra protection, and see where you are signed in.") },
         { id: "business", group: "business", icon: Building2, title: t("Business details"), description: t("Business name, website, business permit and social media.") },
-        { id: "branding", group: "business", icon: Palette, title: t("Logo, colors and banner"), description: t("How your business looks to tenants: name, logo, colors and dashboard photo.") },
+        { id: "branding", group: "business", icon: Palette, title: t("Logo, colors and banner"), description: t("How your business looks to tenants: name, logo, colors and dashboard picture.") },
         { id: "payments", group: "business", icon: Wallet, title: t("GCash payments"), description: t("The GCash number and QR code your tenants use to pay you.") },
         { id: "utilities", group: "business", icon: Zap, title: t("Water and electricity rates"), description: t("How much you charge tenants for water and electricity.") },
         { id: "display", group: "comfort", icon: Type, title: t("Text size and display"), description: t("Make the words bigger, change the language, use a dark screen, and more.") },
@@ -2205,10 +2206,10 @@ export function LandlordSettings({ embedded = false }: { embedded?: boolean } = 
                     </div>
                 </SettingsCard>
 
-                <SettingsCard id="settings-banner" title={t("Dashboard photo")} description={t("The large photo at the top of your dashboard.")}>
+                <SettingsCard id="settings-banner" title={t("Dashboard picture")} description={t("The large picture at the top of your dashboard.")}>
                     <div className="space-y-6">
                         <div className="relative h-48 w-full overflow-hidden rounded-2xl border-2 border-foreground/15 sm:h-56">
-                            <Image src={bannerUrl} alt={t("Your current dashboard photo")} fill sizes="(max-width: 1024px) 100vw, 768px" className="object-cover" />
+                            <Image src={bannerUrl} alt={t("Your current dashboard picture")} fill sizes="(max-width: 1024px) 100vw, 768px" className="object-cover" />
                             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-5">
                                 <p className="text-xl font-black text-white">{propertyTradeName || t("Your property")}</p>
                                 {propertyTagline && <p className="text-base text-white/90">{propertyTagline}</p>}
@@ -2216,7 +2217,7 @@ export function LandlordSettings({ embedded = false }: { embedded?: boolean } = 
                         </div>
 
                         <fieldset className="space-y-3">
-                            <legend className="text-lg font-bold text-foreground">{t("Choose a photo")}</legend>
+                            <legend className="text-lg font-bold text-foreground">{t("Choose a design")}</legend>
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                 {CURATED_BANNER_PRESETS.map((preset) => {
                                     const isSelected = bannerUrl === preset.url;
@@ -2249,7 +2250,7 @@ export function LandlordSettings({ embedded = false }: { embedded?: boolean } = 
                             </SettingsButton>
                             {bannerUrl !== DEFAULT_BANNER_URL && (
                                 <SettingsButton variant="ghost" icon={RotateCcw} onClick={handleResetBanner}>
-                                    {t("Use the original photo")}
+                                    {t("Use the original design")}
                                 </SettingsButton>
                             )}
                             <input ref={bannerFileInputRef} type="file" accept={MEDIA_ACCEPT_STRINGS.image} onChange={handleBannerFileUpload} className="hidden" aria-hidden tabIndex={-1} />

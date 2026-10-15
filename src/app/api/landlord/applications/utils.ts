@@ -1,4 +1,5 @@
 import type { ComplianceChecklist } from "./types";
+import { ART } from "@/lib/art/abstract-art";
 
 export const DEFAULT_COMPLIANCE_CHECKLIST: ComplianceChecklist = {
     valid_id: false,
@@ -31,7 +32,7 @@ export const buildComplianceChecklist = (
 };
 
 export const FALLBACK_PROPERTY_IMAGE =
-    "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1200&auto=format&fit=crop&q=80";
+    ART.property;
 
 export const isNonEmptyString = (value: unknown): value is string =>
     typeof value === "string" && value.trim().length > 0;

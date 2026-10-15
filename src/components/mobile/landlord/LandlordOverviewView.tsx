@@ -77,6 +77,7 @@ import { TenantInviteManager } from '@/components/landlord/applications/TenantIn
 import { LobbyFlyerModal } from '@/components/landlord/flyer/LobbyFlyerModal';
 import { LandlordWelcomeLightbox } from '@/components/landlord/dashboard/LandlordWelcomeLightbox';
 import { BannerCustomizerModal, DEFAULT_BANNER_URL } from '@/components/landlord/dashboard/BannerCustomizerModal';
+import { ART } from "@/lib/art/abstract-art";
 
 type PaymentCategory = 'Overdue' | 'Near Due' | 'Paid';
 
@@ -120,7 +121,7 @@ function paymentsReducer(state: PaymentsState, action: PaymentsAction): Payments
 
 const OPEN_UNIT_STATUSES = ['available', 'vacant', 'open', 'listed'];
 const INACTIVE_INVITE_STATUSES = ['expired', 'revoked', 'inactive', 'disabled', 'cancelled'];
-const FALLBACK_AVATAR = 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80';
+const FALLBACK_AVATAR = ART.avatar;
 
 const PAYMENT_CATEGORIES: Array<{ key: PaymentCategory; label: string; hint: string; emptyState: string; tone: string; dot: string }> = [
     {

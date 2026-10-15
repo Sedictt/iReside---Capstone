@@ -19,6 +19,7 @@ import {
     UserRound,
     MapPin
 } from "lucide-react";
+import { ART } from "@/lib/art/abstract-art";
 
 type MaintenanceStatus = "Pending" | "Assigned" | "In Progress" | "Resolved";
 type Priority = "Critical" | "High" | "Medium" | "Low";
@@ -373,7 +374,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                             onUpdateRequest?.({
                                                                                 ...request,
                                                                                 tenantProvidedPhotos: [
-                                                                                    "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=300&q=80"
+                                                                                    ART.repair
                                                                                 ]
                                                                             });
                                                                         }}
@@ -554,7 +555,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                             onUpdateRequest?.({
                                                                                 ...request,
                                                                                 tenantProvidedPhotos: [
-                                                                                    "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=300&q=80"
+                                                                                    ART.repair
                                                                                 ]
                                                                             });
                                                                         }}

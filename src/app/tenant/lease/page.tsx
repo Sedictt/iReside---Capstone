@@ -45,6 +45,7 @@ import {
     parseLeaseDate,
     tenureSinceLabel,
 } from "@/lib/lease-term";
+import { ART, artOr } from "@/lib/art/abstract-art";
 
 type TabId = "agreement" | "property" | "services";
 
@@ -151,7 +152,7 @@ function LeaseHubContent() {
         );
     }
 
-    const propertyThumbnailUrl = lease.unit.property.images?.[0] || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2000&auto=format&fit=crop";
+    const propertyThumbnailUrl = artOr(lease.unit.property.images?.[0], ART.property);
     const shortHash = lease.id.replace(/-/g, "").substring(0, 8).toUpperCase();
 
     const tabs: { id: TabId; label: string; icon: LucideIcon }[] = [

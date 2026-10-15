@@ -21,7 +21,7 @@ export function buildProperty(overrides: Partial<PropertyRow> = {}): PropertyRow
     description: "Modern apartment complex",
     amenities: ["WiFi", "Swimming Pool", "Gym"],
     house_rules: ["No smoking", "Quiet hours after 10PM"],
-    images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00"],
+    images: ["/art/property.svg"],
     contract_template: null,
     total_units: 10,
     total_floors: 3,

@@ -94,6 +94,7 @@ import { FieldError, fieldErrorClass } from '@/components/ui/field-error'
 import { integerRule, moneyRule, textRule } from '@/lib/validation/rules'
 import { useLanguageContext } from '@/context/LanguageContext'
 import { tr } from "@/hooks/useLanguage";
+import { artOr } from "@/lib/art/abstract-art";
 
 const FACILITY_LIMITS = { name: 60, location: 120, description: 500, maxCapacity: 9999 } as const
 
@@ -322,9 +323,9 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId, editin
                 location_details: editingAmenity.location_details || '',
                 status: editingAmenity.status,
                 tags: editingAmenity.tags || [],
-                image_url: editingAmenity.image_url || ''
+                image_url: artOr(editingAmenity.image_url, '')
             });
-            setPhotoPreview(editingAmenity.image_url || null);
+            setPhotoPreview(artOr(editingAmenity.image_url, '') || null);
             setPhotoFile(null);
         } else if (isOpen) {
             // Reset form when opening for create

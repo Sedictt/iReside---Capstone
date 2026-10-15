@@ -25,8 +25,9 @@ import { PullToRefresh } from '@/components/mobile/shared/PullToRefresh';
 import { MobileConfirmModal } from '@/components/mobile/shared/MobileConfirmModal';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { formatPhMobile } from "@/lib/phone";
+import { ART, artOr } from "@/lib/art/abstract-art";
 
-const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80";
+const FALLBACK_AVATAR = ART.avatar;
 
 export function LandlordProfileView() {
     const { profile, user, refreshProfile } = useAuth();
@@ -55,7 +56,7 @@ export function LandlordProfileView() {
         user?.user_metadata?.full_name || 
         user?.user_metadata?.name || 
         t('Landlord');
-    const avatarUrl = profile?.avatar_url || FALLBACK_AVATAR;
+    const avatarUrl = artOr(profile?.avatar_url, FALLBACK_AVATAR);
 
     const totalUnits = properties.reduce((acc, p) => acc + (p.units?.length || 0), 0);
     const occupiedUnits = properties.reduce((acc, p) => {

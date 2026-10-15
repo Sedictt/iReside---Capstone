@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="#1b1235"/><stop offset="1" stop-color="#3a2a78"/></linearGradient></defs>
+<rect width="1600" height="900" fill="url(#bg)"/>
+<circle cx="1260" cy="230" r="150" fill="#c4b0ff" opacity="0.9"/>
+<circle cx="1260" cy="230" r="215" fill="none" stroke="#c4b0ff" stroke-width="2" opacity="0.35"/>
+<path d="M120 900V470A110 110 0 0 1 340 470V900Z" fill="#4c3a9a" opacity="1"/>
+<path d="M380 900V380A130 130 0 0 1 640 380V900Z" fill="#6d55c8" opacity="1"/>
+<path d="M680 900V520A100 100 0 0 1 880 520V900Z" fill="#8b5cf6" opacity="1"/>
+<path d="M920 900V420A120 120 0 0 1 1160 420V900Z" fill="#5b45b0" opacity="1"/>
+<path d="M1200 900V570A100 100 0 0 1 1400 570V900Z" fill="#a78bfa" opacity="0.85"/>
+<path d="M1430 900V490A110 110 0 0 1 1650 490V900Z" fill="#3f2f86" opacity="1"/>
+<path d="M430 900V410A80 80 0 0 1 590 410V900Z" fill="#2a1d5c" opacity="0.55"/>
+<path d="M975 900V445A65 65 0 0 1 1105 445V900Z" fill="#2a1d5c" opacity="0.5"/>
+</svg>

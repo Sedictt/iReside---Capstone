@@ -33,7 +33,7 @@ const properties = [
         name: "The Obsidian Tower", 
         address: "123 Dark St, Metro City", 
         type: "Studio", 
-        images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop"], 
+        images: ["/art/property.svg"], 
         price: "18,500",
         amenities: ["Concierge", "Rooftop Pool", "Fitness Center"]
     },
@@ -42,7 +42,7 @@ const properties = [
         name: "The Vertex", 
         address: "456 High St, Metro City", 
         type: "1BR", 
-        images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=600&fit=crop"], 
+        images: ["/art/property.svg"], 
         price: "12,000",
         amenities: ["In-unit Laundry", "Parking", "City View"]
     },

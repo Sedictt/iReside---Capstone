@@ -74,6 +74,7 @@ import { useFormValidation } from "@/hooks/useFormValidation";
 import { MAX_MONEY_AMOUNT, moneyRule, textRule } from "@/lib/validation/rules";
 import { LIFECYCLE_LIMITS } from "@/lib/validation/schemas/tenant-lifecycle.schema";
 import { formatPhMobile } from "@/lib/phone";
+import { ART, artOr } from "@/lib/art/abstract-art";
 
 // ─── Types ────────────────────────────────────────────────────────────
 type ApplicationStatus =
@@ -213,7 +214,7 @@ const STATUS_CONFIG: Record<ApplicationStatus, { label: string; color: string; b
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────
-const FALLBACK_PROPERTY_IMAGE = "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1200&auto=format&fit=crop&q=80";
+const FALLBACK_PROPERTY_IMAGE = ART.property;
 
 const formatCurrency = (value: number | null) => {
  if (typeof value !== "number" || !Number.isFinite(value)) return tr("Not provided");
@@ -260,7 +261,7 @@ const calculateApplicationProgress = (app: RentApplication) => {
  return { percentage, missing: items.filter(s => !s.done).map(i => i.label) };
 };
 
-const resolveImage = (value: string | null | undefined) => value?.trim() ? value : FALLBACK_PROPERTY_IMAGE;
+const resolveImage = (value: string | null | undefined) => value?.trim() ? artOr(value, FALLBACK_PROPERTY_IMAGE) : FALLBACK_PROPERTY_IMAGE;
 
 const getApplicantAvatarStyles = (applicant: { name: string; avatarBgColor?: string | null }) => {
   const rawBg = applicant.avatarBgColor?.trim().toLowerCase();

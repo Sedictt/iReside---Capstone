@@ -6269,7 +6269,7 @@ const UnitDetailsPanel = ({
             <div className="relative h-72 w-full shrink-0 group overflow-hidden">
                 {/* Background Image / Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-zinc-500/10 to-sky-500/20 z-0"></div>
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-60 z-0 grayscale-[0.2] transition-transform duration-1000 group-hover:scale-110"></div>
+                <div className="absolute inset-0 bg-[url('/art/property.svg')] bg-cover bg-center opacity-60 z-0 grayscale-[0.2] transition-transform duration-1000 group-hover:scale-110"></div>
 
                 {/* Depth Gradients */}
                 <div className="absolute inset-0 z-10 bg-gradient-to-t from-surface-0 via-surface-0/40 to-transparent dark:from-[#0a0a0a] dark:via-[#0a0a0a]/60 dark:to-transparent"></div>

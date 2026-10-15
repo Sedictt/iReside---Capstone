@@ -18,6 +18,7 @@ import {
 import { useState } from "react";
 import Image from "next/image";
 import { useLanguageContext } from "@/context/LanguageContext";
+import { ART, isRetiredPhotoUrl } from "@/lib/art/abstract-art";
 
 interface UnitShowcaseData {
     id: string;
@@ -47,7 +48,7 @@ interface UnitShowcaseModalProps {
 }
 
 const FALLBACK_IMAGE =
-    "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1200&auto=format&fit=crop&q=80";
+    ART.property;
 
 export function UnitShowcaseModal({
     isOpen,
@@ -60,7 +61,8 @@ export function UnitShowcaseModal({
 
     if (!isOpen || !unit) return null;
 
-    const images = unit.property.images?.length > 0 ? unit.property.images : [FALLBACK_IMAGE];
+    const ownImages = (unit.property.images ?? []).filter((url: string) => !isRetiredPhotoUrl(url));
+    const images = ownImages.length > 0 ? ownImages : [FALLBACK_IMAGE];
 
     const prevImage = () => setCurrentImage((i) => (i === 0 ? images.length - 1 : i - 1));
     const nextImage = () => setCurrentImage((i) => (i === images.length - 1 ? 0 : i + 1));
